@@ -1,7 +1,10 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
+#include <cstring>
+
 #include "mmcore/utility/DateTime.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/platform/RuntimeInfo.h"
 
 #ifdef _WIN32
@@ -120,19 +123,4 @@ std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::files
         // exif_data buffer seems to live inside exif_info and is disposed automatically
     }
     return content;
-}
-
-bool megamol::core::utility::graphics::ScreenShotComments::EndsWith(
-    const std::string& filename, const std::string& suffix) {
-    if (suffix.size() > filename.size())
-        return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), filename.rbegin());
-}
-
-bool megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(
-    const std::string& filename, const std::string& suffix) {
-    if (suffix.size() > filename.size())
-        return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), filename.rbegin(),
-        [](const char a, const char b) { return tolower(a) == tolower(b); });
 }

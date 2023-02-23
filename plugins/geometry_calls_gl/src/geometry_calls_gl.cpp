@@ -4,20 +4,19 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 
 
 namespace megamol::geocalls {
-class GeometryCallsGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class GeometryCallsGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(GeometryCallsGLPluginInstance)
 
 public:
     GeometryCallsGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "geometry_calls_gl", "The geometry_calls_gl plugin."){};
+            : megamol::core::factories::AbstractPluginInstance("geometry_calls_gl", "The geometry_calls_gl plugin."){};
 
     ~GeometryCallsGLPluginInstance() override = default;
 

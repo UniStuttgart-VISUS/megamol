@@ -6,11 +6,7 @@
  */
 
 
-#ifndef MEGAMOLPROTEIN_GRIDNEIGHBORFIND_H_INCLUDED
-#define MEGAMOLPROTEIN_GRIDNEIGHBORFIND_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/ArrayAllocator.h"
@@ -26,8 +22,7 @@ using namespace megamol;
 /**
  * Simple nearest-neighbour-search implementation which uses a regular grid to speed up search queries.
  */
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 template<class T /*, unigned int Dim> als template parameter?!*/>
 class GridNeighbourFinder {
     typedef vislib::math::Point<T, 3> Point;
@@ -178,7 +173,4 @@ private:
     /** short for gridResolution[0]*gridResolution[1]*gridResolution[2] */
     unsigned int gridSize;
 };
-} // namespace protein
-} // namespace megamol
-
-#endif
+} // namespace megamol::protein

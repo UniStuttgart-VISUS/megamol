@@ -95,7 +95,7 @@ VTIWriter::~VTIWriter() {
 /*
  * VTIWriter::IsRunning
  */
-bool VTIWriter::IsRunning(void) const {
+bool VTIWriter::IsRunning() const {
     return (!(this->jobDone));
 }
 
@@ -103,7 +103,7 @@ bool VTIWriter::IsRunning(void) const {
 /*
  * VTIWriter::Start
  */
-bool VTIWriter::Start(void) {
+bool VTIWriter::Start() {
 
     protein_calls::VTIDataCall* dc = this->dataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if (dc == NULL) {
@@ -115,7 +115,7 @@ bool VTIWriter::Start(void) {
     if (!(*dc)(protein_calls::VTIDataCall::CallForGetExtent))
         return false;
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Number of frames %u", this->ClassName(), dc->FrameCount());
+    Log::DefaultLog.WriteInfo("%s: Number of frames %u", this->ClassName(), dc->FrameCount());
 
     // Determine maximum frame to be written
     unsigned int maxFrame = this->minFrameSlot.Param<core::param::IntParam>()->Value() +
@@ -124,9 +124,8 @@ bool VTIWriter::Start(void) {
 
     // Check whether the selected frames are valid
     if (maxFrame >= dc->FrameCount()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Invalid frame selection (max frame is %u, but number of frames is %u", this->ClassName(), maxFrame,
-            dc->FrameCount());
+        Log::DefaultLog.WriteError("%s: Invalid frame selection (max frame is %u, but number of frames is %u",
+            this->ClassName(), maxFrame, dc->FrameCount());
         this->jobDone = true;
         return false;
     }
@@ -181,7 +180,7 @@ bool VTIWriter::Start(void) {
 /*
  * VTIWriter::Terminate
  */
-bool VTIWriter::Terminate(void) {
+bool VTIWriter::Terminate() {
     return true;
 }
 
@@ -189,7 +188,7 @@ bool VTIWriter::Terminate(void) {
 /*
  * VTIWriter::create
  */
-bool VTIWriter::create(void) {
+bool VTIWriter::create() {
     return true;
 }
 
@@ -197,7 +196,7 @@ bool VTIWriter::create(void) {
 /*
  * VTIWriter::release
  */
-void VTIWriter::release(void) {
+void VTIWriter::release() {
     this->buffEn.Release();
     this->buffDec.Release();
 }
@@ -442,15 +441,13 @@ bool VTIWriter::writeFile(protein_calls::VTIDataCall* dc) {
     filename.append((ss.str()).c_str());
     filename.append(".vti");
 
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "%s: Writing frame %u to file '%s'", this->ClassName(), dc->FrameID(), filename.data());
+    Log::DefaultLog.WriteInfo("%s: Writing frame %u to file '%s'", this->ClassName(), dc->FrameID(), filename.data());
 
     // Try to open the output file
     std::ofstream outfile;
     outfile.open(filename.data(), std::ios::out | std::ios::binary);
     if (!outfile.good()) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to open file '%s'\n", this->ClassName(), filename.data());
+        Log::DefaultLog.WriteError("%s: Unable to open file '%s'\n", this->ClassName(), filename.data());
         return false;
     }
 

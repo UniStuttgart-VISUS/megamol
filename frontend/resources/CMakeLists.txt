@@ -8,11 +8,11 @@
 project(frontend_resources)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-require_external(glm)
+find_package(glm REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
-require_external(json)
-if (ENABLE_CUESDK)
-  require_external(CUESDK)
+if (MEGAMOL_USE_CUESDK)
+  find_package(CUESDK CONFIG REQUIRED)
 endif()
 
 file(GLOB_RECURSE header_files "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp" )
@@ -33,13 +33,21 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
   #$<INSTALL_INTERFACE:include/>
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC json glm)
-if (ENABLE_CUESDK)
-  target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
+target_link_libraries(${PROJECT_NAME}
+  PUBLIC
+    glm::glm
+    nlohmann_json::nlohmann_json
+    core)
+if (MEGAMOL_USE_CUESDK)
+  target_include_directories(${PROJECT_NAME} PRIVATE ${CUESDK_INCLUDE_DIR})
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${CUESDK_LIB})
+endif()
+if (MEGAMOL_USE_OPENGL_DEBUGGROUPS)
+  find_package(glad REQUIRED)
+  target_link_libraries(${PROJECT_NAME} PUBLIC glad::glad)
 endif()
 
 # Grouping in Visual Studio
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
 source_group("Header Files" FILES ${header_files})
 source_group("Source Files" FILES ${source_files})
-

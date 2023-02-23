@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED
-#define MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -23,30 +19,29 @@
 #include "astro/AstroDataCall.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 class AstroParticleConverter : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "AstroParticleConverter";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts data contained in a AstroDataCall to a MultiParticleDataCall";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    AstroParticleConverter(void);
+    AstroParticleConverter();
 
     /** Dtor. */
-    virtual ~AstroParticleConverter(void);
+    ~AstroParticleConverter() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
 
 private:
     enum class ColoringMode : uint8_t {
@@ -113,7 +108,4 @@ private:
     std::vector<float> mw_;
 };
 
-} // namespace astro
-} // namespace megamol
-
-#endif /* MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED */
+} // namespace megamol::astro

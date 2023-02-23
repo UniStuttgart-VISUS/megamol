@@ -17,7 +17,7 @@ using namespace megamol::trisoup_gl;
 /*
  * AbstractTriMeshLoader::AbstractTriMeshLoader
  */
-AbstractTriMeshLoader::AbstractTriMeshLoader(void)
+AbstractTriMeshLoader::AbstractTriMeshLoader()
         : AbstractTriMeshDataSource()
         , filenameSlot("filename", "The path to the file to load") {
 
@@ -29,7 +29,7 @@ AbstractTriMeshLoader::AbstractTriMeshLoader(void)
 /*
  * AbstractTriMeshLoader::~AbstractTriMeshLoader
  */
-AbstractTriMeshLoader::~AbstractTriMeshLoader(void) {
+AbstractTriMeshLoader::~AbstractTriMeshLoader() {
     this->Release();
     ASSERT(this->objs.IsEmpty());
     ASSERT(this->mats.IsEmpty());
@@ -39,7 +39,7 @@ AbstractTriMeshLoader::~AbstractTriMeshLoader(void) {
 /*
  * AbstractTriMeshLoader::assertData
  */
-void AbstractTriMeshLoader::assertData(void) {
+void AbstractTriMeshLoader::assertData() {
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
         this->objs.Clear();
@@ -51,21 +51,18 @@ void AbstractTriMeshLoader::assertData(void) {
             retval =
                 this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         } catch (vislib::Exception ex) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
             retval = false;
         } catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unexpected exception: unkown exception\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected exception: unkown exception\n");
             retval = false;
         }
         if (retval) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "Loaded file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded file \"%s\"",
                 this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Failed to load file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load file \"%s\"",
                 this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             // ensure there is no partial data
             this->objs.Clear();

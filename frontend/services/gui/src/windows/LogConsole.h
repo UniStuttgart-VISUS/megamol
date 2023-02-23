@@ -5,20 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
-#define MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
 #pragma once
 
 
 #include "AbstractWindow.h"
 #include "CommonTypes.h"
-#include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /* ************************************************************************
@@ -30,7 +26,7 @@ public:
     ~LogBuffer() override = default;
 
     struct LogEntry {
-        unsigned int level;
+        core::utility::log::Log::log_level level;
         std::string message;
     };
 
@@ -88,15 +84,15 @@ private:
 
     LogBuffer echo_log_buffer;
     std::ostream echo_log_stream;
-    std::shared_ptr<megamol::core::utility::log::StreamTarget> echo_log_target;
 
     size_t log_msg_count;
     unsigned int scroll_down;
     unsigned int scroll_up;
     float last_window_height;
+    int selected_candidate_index;
 
-    unsigned int win_log_level; // [SAVED] Log level used in log window
-    bool win_log_force_open;    // [SAVED] flag indicating if log window should be forced open on warnings and errors
+    core::utility::log::Log::log_level win_log_level; // [SAVED] Log level used in log window
+    bool win_log_force_open; // [SAVED] flag indicating if log window should be forced open on warnings and errors
 
     // Widgets
     HoverToolTip tooltip;
@@ -109,12 +105,8 @@ private:
     lua_func_type* input_lua_func;
     bool is_autocomplete_popup_open;
 
-    // FUNCTIONS --------------------------------------------------------------
-    bool connect_log();
+    std::size_t sink_idx_;
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
+} // namespace megamol::gui

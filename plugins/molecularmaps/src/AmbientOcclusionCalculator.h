@@ -3,16 +3,16 @@
  * Copyright (C) 2006-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_AMBIENTOCCLUSIONCALCULATOR_H_INCLUDED
-#define MMMOLMAPPLG_AMBIENTOCCLUSIONCALCULATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/CoreInstance.h"
-#include "protein_calls/MolecularDataCall.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#pragma once
+
 #include <cfloat>
+#include <memory>
+
+#include <glowl/glowl.h>
+
+#include "RuntimeConfig.h"
+#include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
 namespace molecularmaps {
@@ -157,7 +157,7 @@ public:
      * @param mdc The call containing the necessary protein information.
      * @return True on success, false otherwise.
      */
-    bool initilialize(core::CoreInstance* instance, const std::vector<float>* vertices,
+    bool initilialize(frontend_resources::RuntimeConfig const& runtimeConf, const std::vector<float>* vertices,
         const std::vector<float>* vertex_normals, protein_calls::MolecularDataCall* mdc);
 
     /**
@@ -166,7 +166,7 @@ public:
      * @param instance Pointer to the megamol core instance.
      * @return True on success, false otherwise.
      */
-    bool loadShaders(core::CoreInstance* instance);
+    bool loadShaders(frontend_resources::RuntimeConfig const& runtimeConf);
 
 private:
     /**
@@ -216,7 +216,7 @@ private:
     void uploadVertexData();
 
     /** The compute shader for the ambient occlusion computation */
-    vislib::graphics::gl::GLSLComputeShader aoComputeShader;
+    std::unique_ptr<glowl::GLSLProgram> aoComputeShader;
 
     /** The maximum number of samples */
     int aoSampleMax;
@@ -269,5 +269,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_AMBIENTOCCLUSIONCALCULATOR_H_INCLUDED */

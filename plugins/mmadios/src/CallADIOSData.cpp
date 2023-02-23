@@ -9,8 +9,7 @@
 #include "mmcore/utility/log/Log.h"
 #include <algorithm>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 CallADIOSData::CallADIOSData() : dataHash(0), time(0), frameCount(0), dataptr(nullptr) {}
 
@@ -50,7 +49,7 @@ bool CallADIOSData::inquireVar(const std::string& varname) {
             this->inqVars.push_back(varname);
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[CallADIOSData] Variable %s is not in available varialbes", varname.c_str());
+                "[CallADIOSData] Variable %s is not in available variables", varname.c_str());
             return false;
         }
     } else {
@@ -71,6 +70,14 @@ std::vector<std::string> CallADIOSData::getVarsToInquire() const {
 
 std::vector<std::string> CallADIOSData::getAvailableVars() const {
     return availableVars;
+}
+
+void CallADIOSData::setAllVars(std::map<std::string, std::map<std::string, std::string>> vars) {
+    allVars = vars;
+}
+
+std::map<std::string, std::string> CallADIOSData::getVarProperties(std::string var) const {
+    return allVars.at(var);
 }
 
 void CallADIOSData::setAvailableVars(const std::vector<std::string>& avars) {
@@ -132,5 +139,4 @@ bool CallADIOSData::isInAttributes(std::string attr) {
            this->availableAttributes.end();
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

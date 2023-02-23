@@ -8,8 +8,8 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
 
 using namespace megamol::infovis_gl;
 
@@ -21,13 +21,13 @@ TextureHistogramRenderer2D::TextureHistogramRenderer2D()
         , flagStorageReadCallerSlot_("readFlagStorage", "Flag storage read input")
         , flagStorageWriteCallerSlot_("writeFlagStorage", "Flag storage write input") {
 
-    textureDataCallerSlot_.SetCompatibleCall<compositing::CallTexture2DDescription>();
+    textureDataCallerSlot_.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
     MakeSlotAvailable(&textureDataCallerSlot_);
 
-    flagStorageReadCallerSlot_.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    flagStorageReadCallerSlot_.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     MakeSlotAvailable(&flagStorageReadCallerSlot_);
 
-    flagStorageWriteCallerSlot_.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
+    flagStorageWriteCallerSlot_.SetCompatibleCall<mmstd_gl::FlagCallWrite_GLDescription>();
     MakeSlotAvailable(&flagStorageWriteCallerSlot_);
 }
 
@@ -46,7 +46,7 @@ bool TextureHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenG
         selectionProgram_ = core::utility::make_glowl_shader(
             "histo_tex_select", shaderOptions, "infovis_gl/histo/tex_select.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TextureHistogramRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("TextureHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -67,24 +67,24 @@ void TextureHistogramRenderer2D::releaseImpl() {
     glDeleteBuffers(1, &maxValueBuffer);
 }
 
-bool TextureHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call) {
-    auto textureCall = textureDataCallerSlot_.CallAs<compositing::CallTexture2D>();
+bool TextureHistogramRenderer2D::handleCall(mmstd_gl::CallRender2DGL& call) {
+    auto textureCall = textureDataCallerSlot_.CallAs<compositing_gl::CallTexture2D>();
     if (textureCall == nullptr) {
         return false;
     }
 
-    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core_gl::FlagCallRead_GL>();
+    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TextureHistogramRenderer2D requires a read flag storage!");
+        Log::DefaultLog.WriteError("TextureHistogramRenderer2D requires a read flag storage!");
         return false;
     }
-    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core_gl::FlagCallWrite_GL>();
+    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<mmstd_gl::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TextureHistogramRenderer2D requires a write flag storage!");
+        Log::DefaultLog.WriteError("TextureHistogramRenderer2D requires a write flag storage!");
         return false;
     }
 
-    (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
+    (*readFlagsCall)(mmstd_gl::FlagCallRead_GL::CallGetData);
 
     // stupid cheat, but is that really worth it?
     // static uint32_t lastFrame = -1;
@@ -92,7 +92,7 @@ bool TextureHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call)
     // if (lastFrame == currFrame)
     //    return true;
     // lastFrame = currFrame;
-    (*textureCall)(compositing::CallTexture2D::CallGetData);
+    (*textureCall)(compositing_gl::CallTexture2D::CallGetData);
     data_ = textureCall->getData();
 
     std::size_t numComponents = 0;
@@ -221,8 +221,8 @@ void TextureHistogramRenderer2D::updateSelection(SelectionMode selectionMode, in
 }
 
 void TextureHistogramRenderer2D::applySelections() {
-    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core_gl::FlagCallRead_GL>();
-    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core_gl::FlagCallWrite_GL>();
+    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
+    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<mmstd_gl::FlagCallWrite_GL>();
     if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
         selectionProgram_->use();
 
@@ -258,6 +258,6 @@ void TextureHistogramRenderer2D::applySelections() {
         glUseProgram(0);
 
         writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
-        (*writeFlagsCall)(core_gl::FlagCallWrite_GL::CallGetData);
+        (*writeFlagsCall)(mmstd_gl::FlagCallWrite_GL::CallGetData);
     }
 }

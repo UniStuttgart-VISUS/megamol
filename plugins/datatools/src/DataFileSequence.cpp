@@ -6,14 +6,14 @@
  */
 
 #include "DataFileSequence.h"
-#include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CoreInstance.h"
+#include "PluginsResource.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/String.h"
 #include "vislib/sys/File.h"
 
@@ -23,7 +23,7 @@ using namespace megamol;
 /*
  * moldyn::DataFileSequence::DataFileSequence
  */
-datatools::DataFileSequence::DataFileSequence(void)
+datatools::DataFileSequence::DataFileSequence()
         : core::Module()
         , fileNameTemplateSlot("fileNameTemplate", "The file name template"
                                                    " example: D:\\data\\Kohler\\nial\\nialout50_*5{0..599+2}*.crist "
@@ -82,7 +82,7 @@ datatools::DataFileSequence::DataFileSequence(void)
 /*
  * moldyn::DataFileSequence::~DataFileSequence
  */
-datatools::DataFileSequence::~DataFileSequence(void) {
+datatools::DataFileSequence::~DataFileSequence() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -90,8 +90,9 @@ datatools::DataFileSequence::~DataFileSequence(void) {
 /*
  * moldyn::DataFileSequence::create
  */
-bool datatools::DataFileSequence::create(void) {
-    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+bool datatools::DataFileSequence::create() {
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+    for (auto cd : pluginsRes.all_call_descriptions) {
         if (IsCallDescriptionCompatible(cd)) {
             this->outDataSlot.SetCallback(cd->ClassName(), "GetData", &DataFileSequence::getDataCallback);
             this->outDataSlot.SetCallback(cd->ClassName(), "GetExtent", &DataFileSequence::getExtentCallback);
@@ -107,7 +108,7 @@ bool datatools::DataFileSequence::create(void) {
 /*
  * moldyn::DataFileSequence::release
  */
-void datatools::DataFileSequence::release(void) {}
+void datatools::DataFileSequence::release() {}
 
 
 /*
@@ -167,7 +168,8 @@ bool datatools::DataFileSequence::getDataCallback(core::Call& caller) {
         if (!(*ggdc)(0)) {
             return false; // unable to get data
         }
-        this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
+        auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+        pluginsRes.all_call_descriptions.AssignmentCrowbar(pgdc, ggdc);
         ggdc->SetUnlocker(nullptr, false);
 
         pgdc->SetFrameID(frameID, true);
@@ -251,7 +253,8 @@ bool datatools::DataFileSequence::checkConnections(core::Call* outCall) {
     core::Call* inCall = this->inDataSlot.CallAs<core::Call>();
     if ((inCall == NULL) || (outCall == NULL))
         return false;
-    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+    for (auto cd : pluginsRes.all_call_descriptions) {
         if (IsCallDescriptionCompatible(cd)) {
             if (cd->IsDescribing(inCall) && cd->IsDescribing(outCall))
                 return true;
@@ -264,7 +267,7 @@ bool datatools::DataFileSequence::checkConnections(core::Call* outCall) {
 /*
  * moldyn::DataFileSequence::checkParameters
  */
-void datatools::DataFileSequence::checkParameters(void) {
+void datatools::DataFileSequence::checkParameters() {
     if (this->fileNumberMinSlot.IsDirty()) {
         this->fileNumberMinSlot.ResetDirty();
         this->fileNumMin = static_cast<unsigned int>(
@@ -440,7 +443,7 @@ bool datatools::DataFileSequence::onFileNameTemplateChanged(core::param::ParamSl
             break;
         }
         if (errMsg != NULL) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Parser Error at character %u: %s", i, errMsg);
+            Log::DefaultLog.WriteError("Parser Error at character %u: %s", i, errMsg);
             state = 0;
         }
     }
@@ -453,8 +456,8 @@ bool datatools::DataFileSequence::onFileNameTemplateChanged(core::param::ParamSl
         this->fileNumberStepSlot.Param<core::param::IntParam>()->SetValue(stepVal);
 
     this->fileNameTemplate = fnt;
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
+    Log::DefaultLog.WriteInfo(
+        "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
     this->needDataUpdate = true;
     return true;
 }
@@ -468,7 +471,7 @@ bool datatools::DataFileSequence::onFileNameSlotNameChanged(core::param::ParamSl
     this->ModuleGraphLock().LockExclusive();
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if ((P != NULL) && (this->findFileNameSlot() == NULL)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to connect to file name parameter slot \"%s\". Parameter resetted.", P->Value().c_str());
         P->SetValue("", false);
     }
@@ -481,7 +484,7 @@ bool datatools::DataFileSequence::onFileNameSlotNameChanged(core::param::ParamSl
 /*
  * moldyn::DataFileSequence::findFileNameSlot
  */
-core::param::ParamSlot* datatools::DataFileSequence::findFileNameSlot(void) {
+core::param::ParamSlot* datatools::DataFileSequence::findFileNameSlot() {
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if (P != NULL) {
         AbstractNamedObjectContainer::ptr_type anoc =
@@ -506,7 +509,7 @@ core::param::ParamSlot* datatools::DataFileSequence::findFileNameSlot(void) {
 /*
  * moldyn::DataFileSequence::assertData
  */
-void datatools::DataFileSequence::assertData(void) {
+void datatools::DataFileSequence::assertData() {
     using megamol::core::utility::log::Log;
     if (!this->needDataUpdate)
         return;
@@ -518,13 +521,13 @@ void datatools::DataFileSequence::assertData(void) {
 
     core::param::ParamSlot* fnSlot = this->findFileNameSlot();
     if (fnSlot == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to connect to file name slot");
+        Log::DefaultLog.WriteError("Unable to connect to file name slot");
         return;
     }
 
     core::AbstractGetData3DCall* gdc = this->inDataSlot.CallAs<core::AbstractGetData3DCall>();
     if (gdc == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to get input data call");
+        Log::DefaultLog.WriteError("Unable to get input data call");
         return;
     }
 
@@ -538,7 +541,7 @@ void datatools::DataFileSequence::assertData(void) {
         }
     }
     if (this->frameCnt == 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "DataFileSequence: No data files found");
+        Log::DefaultLog.WriteError("DataFileSequence: No data files found");
         return;
     }
 
@@ -548,8 +551,7 @@ void datatools::DataFileSequence::assertData(void) {
     gdc->SetFrameID(0);
     if (!(*gdc)(1)) {
         this->frameCnt = 0;
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "DataFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
+        Log::DefaultLog.WriteError("DataFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
         return;
     }
     this->clipbox = gdc->AccessBoundingBoxes().ClipBox();
@@ -561,7 +563,7 @@ void datatools::DataFileSequence::assertData(void) {
         gdc->SetFrameID(0);
         if (!(*gdc)(1)) {
             this->frameCnt = 0;
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "DataFileSequence: Unable to clipping box of file %u (#2)", idx);
+            Log::DefaultLog.WriteError("DataFileSequence: Unable to clipping box of file %u (#2)", idx);
             return;
         }
         this->clipbox.Union(gdc->AccessBoundingBoxes().ClipBox());
@@ -572,8 +574,7 @@ void datatools::DataFileSequence::assertData(void) {
             gdc->SetFrameID(0);
             if (!(*gdc)(1)) {
                 this->frameCnt = 0;
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "DataFileSequence: Unable to clipping box of file %u (#3)", idx);
+                Log::DefaultLog.WriteError("DataFileSequence: Unable to clipping box of file %u (#3)", idx);
                 return;
             }
             this->clipbox.Union(gdc->AccessBoundingBoxes().ClipBox());

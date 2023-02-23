@@ -31,7 +31,7 @@ vislib::IllegalStateException::IllegalStateException(const IllegalStateException
 /*
  * vislib::IllegalStateException::~IllegalStateException
  */
-vislib::IllegalStateException::~IllegalStateException(void) {}
+vislib::IllegalStateException::~IllegalStateException() {}
 
 
 /*

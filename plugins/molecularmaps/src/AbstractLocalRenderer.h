@@ -3,13 +3,9 @@
  * Copyright (C) 2006-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_ABSTRACTLOCALRENDERER_H_INCLUDED
-#define MMMOLMAPPLG_ABSTRACTLOCALRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 
 namespace megamol {
 namespace molecularmaps {
@@ -35,7 +31,7 @@ public:
      * @param call The incoming rendering call containing the necessary camera information
      * @return True on success, false otherwise.
      */
-    virtual bool Render(core::view::CallRender3DGL& call, bool lighting = true) = 0;
+    virtual bool Render(core_gl::view::CallRender3DGL& call, bool lighting = true) = 0;
 
     /**
      * Frees all needed resources used by this renderer
@@ -54,5 +50,3 @@ protected:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_ABSTRACTLOCALRENDERER_H_INCLUDED */

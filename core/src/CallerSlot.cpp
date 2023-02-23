@@ -27,7 +27,7 @@ CallerSlot::CallerSlot(const vislib::StringA& name, const vislib::StringA& desc)
 /*
  * CallerSlot::~CallerSlot
  */
-CallerSlot::~CallerSlot(void) {
+CallerSlot::~CallerSlot() {
     SAFE_DELETE(this->call);
     this->compDesc.clear();
 }
@@ -71,7 +71,7 @@ const Call* CallerSlot::IsConnectedTo(const CalleeSlot* target) const {
 /*
  * CallerSlot::ClearCleanupMark
  */
-void CallerSlot::ClearCleanupMark(void) {
+void CallerSlot::ClearCleanupMark() {
     if (!this->CleanupMark())
         return;
 
@@ -85,7 +85,7 @@ void CallerSlot::ClearCleanupMark(void) {
 /*
  * CallerSlot::DisconnectCalls
  */
-void CallerSlot::DisconnectCalls(void) {
+void CallerSlot::DisconnectCalls() {
     if (this->CleanupMark() && (this->call != NULL)) {
         this->SetStatusDisconnected();
         //::megamol::core::Call *c = this->call;
@@ -94,26 +94,4 @@ void CallerSlot::DisconnectCalls(void) {
         this->call = NULL;
         //delete c;
     }
-}
-
-
-/*
- * CallerSlot::IsParamRelevant
- */
-bool CallerSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
-
-    if ((this->call != NULL) && (this->call->PeekCalleeSlot() != NULL)) {
-        if (searched.Contains(this->call->PeekCalleeSlot())) {
-            return false;
-        } else {
-            searched.Add(this->call->PeekCalleeSlot());
-        }
-        const_ptr_type ano = this->call->PeekCalleeSlot()->Parent();
-        if (ano) {
-            return ano->IsParamRelevant(searched, param);
-        }
-    }
-
-    return false;
 }

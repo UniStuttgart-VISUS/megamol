@@ -11,7 +11,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayGlassMaterial::OSPRayGlassMaterial(void)
+OSPRayGlassMaterial::OSPRayGlassMaterial()
         : AbstractOSPRayMaterial()
         ,
         // GLASS
@@ -35,7 +35,7 @@ OSPRayGlassMaterial::OSPRayGlassMaterial(void)
     this->MakeSlotAvailable(&this->glassEtaOutside);
 }
 
-OSPRayGlassMaterial::~OSPRayGlassMaterial(void) {
+OSPRayGlassMaterial::~OSPRayGlassMaterial() {
     this->Release();
 }
 

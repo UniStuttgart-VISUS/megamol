@@ -19,7 +19,7 @@ using namespace megamol::ospray;
 /*
 ospray::OSPRayRenderer::OSPRaySphereRenderer
 */
-OSPRayRenderer::OSPRayRenderer(void)
+OSPRayRenderer::OSPRayRenderer()
         : AbstractOSPRayRenderer()
         , _cam()
         , _getStructureSlot("getStructure", "Connects to an OSPRay structure")
@@ -47,7 +47,7 @@ OSPRayRenderer::OSPRayRenderer(void)
 /*
 ospray::OSPRayRenderer::~OSPRaySphereRenderer
 */
-OSPRayRenderer::~OSPRayRenderer(void) {
+OSPRayRenderer::~OSPRayRenderer() {
     this->Release();
 }
 
@@ -220,8 +220,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
             _world->commit();
             auto t2 = std::chrono::high_resolution_clock::now();
             const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                242, "[OSPRayRenderer] Commiting World took: %d microseconds", duration);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[OSPRayRenderer] Commiting World took: %d microseconds", duration);
         }
         if (_material_has_changed && !_data_has_changed) {
             this->changeMaterial();
@@ -295,8 +295,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         _accum_time.count += 1;
         if (_accum_time.amount >= static_cast<unsigned long long int>(1e6)) {
             const unsigned long long int mean_rendertime = _accum_time.amount / _accum_time.count;
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                242, "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
             _accum_time.count = 0;
             _accum_time.amount = 0;
         }
@@ -360,8 +360,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         _accum_time.count += 1;
         if (_accum_time.amount >= static_cast<unsigned long long int>(1e6)) {
             const unsigned long long int mean_rendertime = _accum_time.amount / _accum_time.count;
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                242, "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[OSPRayRenderer] Rendering took: %d microseconds", mean_rendertime);
             _accum_time.count = 0;
             _accum_time.amount = 0;
         }

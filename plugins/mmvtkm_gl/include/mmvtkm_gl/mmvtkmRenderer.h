@@ -5,15 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
-#define MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "mmvtkm/mmvtkmDataCall.h"
 
 // #include "vtkm/rendering/Actor.h"
@@ -24,20 +20,19 @@
 // #include "vtkm/rendering/View3D.h"
 
 
-namespace megamol {
-namespace mmvtkm_gl {
+namespace megamol::mmvtkm_gl {
 
 /**
  * Renderer for vtkm data
  */
-class mmvtkmDataRenderer : public core_gl::view::Renderer3DModuleGL {
+class mmvtkmDataRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "vtkmDataRenderer";
     }
 
@@ -46,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for vtkm data.";
     }
 
@@ -55,15 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    mmvtkmDataRenderer(void);
+    mmvtkmDataRenderer();
 
     /** Dtor. */
-    virtual ~mmvtkmDataRenderer(void);
+    ~mmvtkmDataRenderer() override;
 
 protected:
     /**
@@ -71,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -85,7 +80,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -96,7 +91,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** Callback function for psColorTables paramslot */
@@ -148,7 +143,4 @@ private:
     bool localUpdate_;
 };
 
-} // namespace mmvtkm_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
+} // namespace megamol::mmvtkm_gl

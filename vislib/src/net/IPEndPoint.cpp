@@ -178,7 +178,7 @@ vislib::net::IPEndPoint::IPEndPoint(const IPEndPoint& address, const unsigned sh
 /*
  * vislib::net::IPEndPoint::~IPEndPoint
  */
-vislib::net::IPEndPoint::~IPEndPoint(void) {
+vislib::net::IPEndPoint::~IPEndPoint() {
     // Nothing to do.
 }
 
@@ -186,7 +186,7 @@ vislib::net::IPEndPoint::~IPEndPoint(void) {
 /*
  * vislib::net::IPAgnosticAddress
  */
-vislib::net::IPAgnosticAddress vislib::net::IPEndPoint::GetIPAddress(void) const {
+vislib::net::IPAgnosticAddress vislib::net::IPEndPoint::GetIPAddress() const {
     switch (this->address.ss_family) {
     case AF_INET:
         return IPAgnosticAddress(this->asV4().sin_addr);
@@ -205,7 +205,7 @@ vislib::net::IPAgnosticAddress vislib::net::IPEndPoint::GetIPAddress(void) const
 /*
  * vislib::net::IPEndPoint::GetIPAddress4
  */
-vislib::net::IPAddress vislib::net::IPEndPoint::GetIPAddress4(void) const {
+vislib::net::IPAddress vislib::net::IPEndPoint::GetIPAddress4() const {
     switch (this->address.ss_family) {
     case AF_INET:
         return IPAddress(this->asV4().sin_addr);
@@ -233,7 +233,7 @@ vislib::net::IPAddress vislib::net::IPEndPoint::GetIPAddress4(void) const {
 /*
  * vislib::net::IPEndPoint::GetIPAddress6
  */
-vislib::net::IPAddress6 vislib::net::IPEndPoint::GetIPAddress6(void) const {
+vislib::net::IPAddress6 vislib::net::IPEndPoint::GetIPAddress6() const {
     switch (this->address.ss_family) {
     case AF_INET:
         return IPAddress6(this->asV4().sin_addr);
@@ -252,7 +252,7 @@ vislib::net::IPAddress6 vislib::net::IPEndPoint::GetIPAddress6(void) const {
 /*
  * vislib::net::IPEndPoint::GetPort
  */
-unsigned short vislib::net::IPEndPoint::GetPort(void) const {
+unsigned short vislib::net::IPEndPoint::GetPort() const {
     switch (this->address.ss_family) {
     case AF_INET:
         return ntohs(this->asV4().sin_port);
@@ -329,7 +329,7 @@ void vislib::net::IPEndPoint::SetPort(const unsigned int port) {
 /*
  * vislib::net::IPEndPoint::ToStringA
  */
-vislib::StringA vislib::net::IPEndPoint::ToStringA(void) const {
+vislib::StringA vislib::net::IPEndPoint::ToStringA() const {
     StringA retval;
 
     switch (this->address.ss_family) {
@@ -422,7 +422,7 @@ bool vislib::net::IPEndPoint::operator==(const IPEndPoint& rhs) const {
 /*
  * vislib::net::IPEndPoint::operator vislib::net::SocketAddress
  */
-vislib::net::IPEndPoint::operator vislib::net::SocketAddress(void) const {
+vislib::net::IPEndPoint::operator vislib::net::SocketAddress() const {
     switch (this->address.ss_family) {
     case AF_INET:
         return SocketAddress(this->asV4());

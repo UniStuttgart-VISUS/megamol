@@ -6,21 +6,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED
-#define MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"
 
 
-namespace megamol {
-namespace trisoup {
+namespace megamol::trisoup {
 
 /**
  * Call transporting binary volume data
@@ -35,7 +30,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallBinaryVolumeData";
     }
 
@@ -44,7 +39,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting binary volume data";
     }
 
@@ -53,7 +48,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -69,10 +64,10 @@ public:
     }
 
     /** Ctor */
-    CallBinaryVolumeData(void);
+    CallBinaryVolumeData();
 
     /** Dtor */
-    virtual ~CallBinaryVolumeData(void);
+    ~CallBinaryVolumeData() override;
 
     /**
      * Gets the value of a single voxel
@@ -105,7 +100,7 @@ public:
      *
      * @return The number of voxels in x direction
      */
-    inline unsigned int GetSizeX(void) const {
+    inline unsigned int GetSizeX() const {
         return this->sizeX;
     }
 
@@ -114,7 +109,7 @@ public:
      *
      * @return The number of voxels in y direction
      */
-    inline unsigned int GetSizeY(void) const {
+    inline unsigned int GetSizeY() const {
         return this->sizeY;
     }
 
@@ -123,7 +118,7 @@ public:
      *
      * @return The number of voxels in z direction
      */
-    inline unsigned int GetSizeZ(void) const {
+    inline unsigned int GetSizeZ() const {
         return this->sizeZ;
     }
 
@@ -132,7 +127,7 @@ public:
      *
      * @return The size of a single voxel in x direction
      */
-    inline float GetVoxelSizeX(void) const {
+    inline float GetVoxelSizeX() const {
         return this->voxSizeX;
     }
 
@@ -141,7 +136,7 @@ public:
      *
      * @return The size of a single voxel in y direction
      */
-    inline float GetVoxelSizeY(void) const {
+    inline float GetVoxelSizeY() const {
         return this->voxSizeY;
     }
 
@@ -150,7 +145,7 @@ public:
      *
      * @return The size of a single voxel in z direction
      */
-    inline float GetVoxelSizeZ(void) const {
+    inline float GetVoxelSizeZ() const {
         return this->voxSizeZ;
     }
 
@@ -159,7 +154,7 @@ public:
      *
      * @return The volume pointer
      */
-    inline const bool* GetVolume(void) const {
+    inline const bool* GetVolume() const {
         return this->volume;
     }
 
@@ -217,7 +212,4 @@ private:
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallBinaryVolumeData> CallBinaryVolumeDataDescription;
 
-} /* end namespace trisoup */
-} /* end namespace megamol */
-
-#endif /* MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED */
+} // namespace megamol::trisoup

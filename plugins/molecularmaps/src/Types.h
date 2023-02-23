@@ -4,14 +4,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMMOLMAPPLG_TYPES_H_INCLUDED
-#define MMMOLMAPPLG_TYPES_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "helper_includes/helper_cuda.h"
 #include "helper_includes/helper_math.h"
+
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
+
+#include <map>
+#include <vector>
 
 // Typedefs used by MolecularMaps.
 typedef vislib::math::Vector<float, 2> vec2f;
@@ -833,5 +835,3 @@ enum MeshMode {
     MESH_SPHERE = MESH_CUT + 1,
     MESH_MAP = MESH_SPHERE + 1
 };
-
-#endif /* MMMOLMAPPLG_TYPES_H_INCLUDED */

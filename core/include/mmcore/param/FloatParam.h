@@ -1,8 +1,7 @@
-/*
- * FloatParam.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -10,7 +9,6 @@
 #include <sstream>
 
 #include "GenericParam.h"
-
 
 namespace megamol::core::param {
 
@@ -24,21 +22,11 @@ public:
 
     FloatParam(float initVal, float minVal, float maxVal, float stepSize) : Super(initVal, minVal, maxVal, stepSize) {}
 
-    virtual ~FloatParam() = default;
-
-    std::string Definition() const override {
-        std::ostringstream outDef;
-        outDef << "MMFLOT";
-        outDef.write(reinterpret_cast<char const*>(&MinValue()), sizeof(MinValue()));
-        outDef.write(reinterpret_cast<char const*>(&MaxValue()), sizeof(MaxValue()));
-        outDef.write(reinterpret_cast<char const*>(&StepSize()), sizeof(StepSize()));
-
-        return outDef.str();
-    }
+    ~FloatParam() override = default;
 
     bool ParseValue(std::string const& v) override {
         try {
-            this->SetValue((float)vislib::TCharTraits::ParseDouble(v.c_str()));
+            this->SetValue(std::stof(v));
             return true;
         } catch (...) {}
         return false;

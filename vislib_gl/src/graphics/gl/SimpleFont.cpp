@@ -20,7 +20,7 @@
 /*
  * vislib_gl::graphics::gl::SimpleFont::SimpleFont
  */
-vislib_gl::graphics::gl::SimpleFont::SimpleFont(void) : vislib::graphics::AbstractFont(), texId(0) {
+vislib_gl::graphics::gl::SimpleFont::SimpleFont() : vislib::graphics::AbstractFont(), texId(0) {
     // Intentionally empty
 }
 
@@ -28,7 +28,7 @@ vislib_gl::graphics::gl::SimpleFont::SimpleFont(void) : vislib::graphics::Abstra
 /*
  * vislib_gl::graphics::gl::SimpleFont::~SimpleFont
  */
-vislib_gl::graphics::gl::SimpleFont::~SimpleFont(void) {
+vislib_gl::graphics::gl::SimpleFont::~SimpleFont() {
     this->Deinitialise();
 }
 
@@ -245,7 +245,7 @@ float vislib_gl::graphics::gl::SimpleFont::LineWidth(float size, const wchar_t* 
 /*
  * vislib_gl::graphics::gl::SimpleFont::initialise
  */
-bool vislib_gl::graphics::gl::SimpleFont::initialise(void) {
+bool vislib_gl::graphics::gl::SimpleFont::initialise() {
     if (this->texId != 0) {
         ::glDeleteTextures(1, &this->texId);
     }
@@ -291,7 +291,7 @@ bool vislib_gl::graphics::gl::SimpleFont::initialise(void) {
 /*
  * vislib_gl::graphics::gl::SimpleFont::deinitialise
  */
-void vislib_gl::graphics::gl::SimpleFont::deinitialise(void) {
+void vislib_gl::graphics::gl::SimpleFont::deinitialise() {
     if (this->texId != 0) {
         ::glDeleteTextures(1, &this->texId);
         this->texId = 0;
@@ -366,7 +366,7 @@ void vislib_gl::graphics::gl::SimpleFont::drawText(float x, float y, float z,
 /*
  * vislib_gl::graphics::gl::SimpleFont::enterTextMode
  */
-void vislib_gl::graphics::gl::SimpleFont::enterTextMode(void) const {
+void vislib_gl::graphics::gl::SimpleFont::enterTextMode() const {
     this->texEnabled = (::glIsEnabled(GL_TEXTURE_2D) == GL_TRUE);
     if (!this->texEnabled) {
         ::glEnable(GL_TEXTURE_2D);
@@ -453,7 +453,7 @@ vislib_gl::graphics::gl::SimpleFont::TextLine* vislib_gl::graphics::gl::SimpleFo
 /*
  * vislib_gl::graphics::gl::SimpleFont::leaveTextMode
  */
-void vislib_gl::graphics::gl::SimpleFont::leaveTextMode(void) const {
+void vislib_gl::graphics::gl::SimpleFont::leaveTextMode() const {
     if (!this->texEnabled) {
         ::glDisable(GL_TEXTURE_2D);
     }

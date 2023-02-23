@@ -20,7 +20,7 @@ megamol::mesh::WavefrontObjWriter::WavefrontObjWriter()
 
 megamol::mesh::WavefrontObjWriter::~WavefrontObjWriter() {}
 
-bool megamol::mesh::WavefrontObjWriter::create(void) {
+bool megamol::mesh::WavefrontObjWriter::create() {
     return true;
 }
 
@@ -96,7 +96,6 @@ bool megamol::mesh::WavefrontObjWriter::run() {
         objIter = std::next(objIter);
         ++affix;
     }
-
 
     return true;
 }

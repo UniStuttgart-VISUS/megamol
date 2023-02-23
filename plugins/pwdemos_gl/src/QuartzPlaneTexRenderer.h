@@ -7,28 +7,30 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractTexQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * QuartzPlaneTexRenderer
  */
-class QuartzPlaneTexRenderer : public core_gl::view::Renderer2DModuleGL, public AbstractTexQuartzRenderer {
+class QuartzPlaneTexRenderer : public mmstd_gl::Renderer2DModuleGL, public AbstractTexQuartzRenderer {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzPlaneTexRenderer";
     }
 
@@ -37,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module rendering gridded quartz particles onto a clipping plane";
     }
 
@@ -46,19 +48,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /**
      * Ctor
      */
-    QuartzPlaneTexRenderer(void);
+    QuartzPlaneTexRenderer();
 
     /**
      * Dtor
      */
-    virtual ~QuartzPlaneTexRenderer(void);
+    ~QuartzPlaneTexRenderer() override;
 
 protected:
     /**
@@ -66,7 +68,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -77,12 +79,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -91,15 +93,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call);
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
 private:
     /** The crystalite shader */
-    vislib_gl::graphics::gl::GLSLShader cryShader;
+    std::unique_ptr<glowl::GLSLProgram> cryShader;
 
     /** Use clipping plane or grain colour for grains */
     core::param::ParamSlot useClipColSlot;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

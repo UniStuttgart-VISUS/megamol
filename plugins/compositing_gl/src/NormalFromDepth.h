@@ -5,24 +5,22 @@
  * All rights reserved.
  */
 
-#ifndef NORMAL_FROM_DEPTH_H_INCLUDED
-#define NORMAL_FROM_DEPTH_H_INCLUDED
+#pragma once
 
 #include <memory>
 
+#include <glowl/GLSLProgram.hpp>
+#include <glowl/Texture2D.hpp>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD2
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Texture2D.hpp"
+#include "mmstd_gl/ModuleGL.h"
 
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing_gl {
 
-class NormalFromDepth : public core::Module {
+class NormalFromDepth : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -52,7 +50,7 @@ public:
     }
 
     NormalFromDepth();
-    ~NormalFromDepth();
+    ~NormalFromDepth() override;
 
 protected:
     /**
@@ -60,12 +58,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO
@@ -96,7 +94,4 @@ private:
     megamol::core::CallerSlot m_camera_slot;
 };
 
-} // namespace compositing
-} // namespace megamol
-
-#endif // !NORMAL_FROM_DEPTH_H_INCLUDED
+} // namespace megamol::compositing_gl

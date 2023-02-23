@@ -13,9 +13,7 @@
 
 #include <chrono>
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 using namespace megamol::frontend_resources;
 
@@ -25,7 +23,7 @@ using namespace megamol::frontend_resources;
 #define GET_RESOURCE(TYPENAME) TYPENAME const& events = resource.getOptionalResource<TYPENAME>().value().get();
 
 
-void view_consume_keyboard_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
+void view_consume_keyboard_events(AbstractViewInterface& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(KeyboardEvents) //{
     for (auto& e : events.key_events)
         view.OnKey(std::get<0>(e), std::get<1>(e), std::get<2>(e));
@@ -35,7 +33,7 @@ void view_consume_keyboard_events(AbstractView& view, megamol::frontend::Fronten
 }
 
 
-void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
+void view_consume_mouse_events(AbstractViewInterface& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(MouseEvents)
     for (auto& e : events.buttons_events)
         view.OnMouseButton(std::get<0>(e), std::get<1>(e), std::get<2>(e));
@@ -49,7 +47,7 @@ void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendRe
     //for (auto& e: events.enter_events) {}
 }
 
-void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
+void view_consume_window_events(AbstractViewInterface& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(WindowEvents)
     events.is_focused_events;
 }
@@ -58,7 +56,7 @@ void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendR
 // this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
 
-void view_poke_rendering(AbstractView& view, megamol::frontend_resources::RenderInput const& render_input,
+void view_poke_rendering(AbstractViewInterface& view, megamol::frontend_resources::RenderInput const& render_input,
     megamol::frontend_resources::ImageWrapper& result_image) {
     static bool started_timer = false;
     if (!started_timer) {
@@ -164,15 +162,15 @@ std::vector<std::string> get_view_runtime_resources_requests() {
 
 bool view_rendering_execution(void* module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources,
     megamol::frontend_resources::ImageWrapper& result_image) {
-    megamol::core::view::AbstractView* view_ptr =
-        dynamic_cast<megamol::core::view::AbstractView*>(static_cast<megamol::core::Module*>(module_ptr));
+    megamol::core::view::AbstractViewInterface* view_ptr =
+        dynamic_cast<megamol::core::view::AbstractViewInterface*>(static_cast<megamol::core::Module*>(module_ptr));
 
     if (!view_ptr) {
         std::cout << "error. module is not a view module. could not use as rendering entry point." << std::endl;
         return false;
     }
 
-    megamol::core::view::AbstractView& view = *view_ptr;
+    megamol::core::view::AbstractViewInterface& view = *view_ptr;
 
     // resources are in order of initial requests from get_view_runtime_resources_requests()
     if (resources[1].getOptionalResource<KeyboardEvents>().has_value()) {
@@ -186,6 +184,4 @@ bool view_rendering_execution(void* module_ptr, std::vector<megamol::frontend::F
     return true;
 }
 
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

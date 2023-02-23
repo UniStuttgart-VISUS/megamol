@@ -1,12 +1,11 @@
-/*
- * ParamSlot.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/CoreInstance.h"
+
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/IllegalParamException.h"
@@ -29,7 +28,7 @@ param::ParamSlot::ParamSlot(const vislib::StringA& name, const vislib::StringA& 
 /*
  * param::ParamSlot::~ParamSlot
  */
-param::ParamSlot::~ParamSlot(void) {
+param::ParamSlot::~ParamSlot() {
     if (this->callback != NULL) {
         delete this->callback;
         this->callback = NULL;
@@ -40,25 +39,16 @@ param::ParamSlot::~ParamSlot(void) {
 /*
  * param::ParamSlot::MakeAvailable
  */
-void param::ParamSlot::MakeAvailable(void) {
+void param::ParamSlot::MakeAvailable() {
     ASSERT(this->isParamSet());
     AbstractSlot::MakeAvailable();
 }
 
 
 /*
- * param::ParamSlot::IsParamRelevant
- */
-bool param::ParamSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
-    return (this->Parameter() == param);
-}
-
-
-/*
  * param::ParamSlot::isSlotAvailable
  */
-bool param::ParamSlot::isSlotAvailable(void) const {
+bool param::ParamSlot::isSlotAvailable() const {
     return (this->GetStatus() != AbstractSlot::STATUS_UNAVAILABLE);
 }
 
@@ -68,16 +58,17 @@ bool param::ParamSlot::isSlotAvailable(void) const {
 void param::ParamSlot::QueueUpdateNotification(bool force) {
     if (this->Param<AbstractParam>()->ConsumeHasChanged() || force) {
         Module* m = dynamic_cast<Module*>(this->Parent().get());
-        if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
-            m->GetCoreInstance()->ParameterValueUpdate(*this);
-        }
+        // TODO what to with this after core instance is removed?
+        //if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
+        //    m->GetCoreInstance()->ParameterValueUpdate(*this);
+        //}
     }
 }
 
 /*
  * param::ParamSlot::update
  */
-void param::ParamSlot::update(void) {
+void param::ParamSlot::update() {
     bool oldDirty = this->IsDirty();
     AbstractParamSlot::update();
 

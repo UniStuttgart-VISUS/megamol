@@ -4,24 +4,19 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_gl/DeferredRenderingProvider.h"
 #include <map>
 #include <utility>
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 using namespace megamol::core;
 using namespace megamol::protein_calls;
@@ -29,14 +24,14 @@ using namespace megamol::protein_calls;
 /**
  * Renderer for simple sphere glyphs
  */
-class CartoonTessellationRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class CartoonTessellationRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CartoonTessellationRenderer";
     }
 
@@ -45,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers cartoon renderings for biomolecules (uses Tessellation Shaders).";
     }
 
@@ -54,15 +49,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    CartoonTessellationRenderer(void);
+    CartoonTessellationRenderer();
 
     /** Dtor. */
-    virtual ~CartoonTessellationRenderer(void);
+    ~CartoonTessellationRenderer() override;
 
 protected:
     /**
@@ -70,12 +65,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -86,7 +81,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * TODO: Document
@@ -100,7 +95,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     struct CAlpha {
@@ -160,7 +155,4 @@ private:
     DeferredRenderingProvider deferredProvider_;
 };
 
-} // namespace protein_gl
-} // namespace megamol
-
-#endif /* MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED */
+} // namespace megamol::protein_gl

@@ -7,8 +7,7 @@
 
 #include "LoopBuffer.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 #define DEFAULT_LOOP_VDATA_CAPACITY 10
 #define DEFAULT_LOOP_VDATA_INCREMENT 20
@@ -17,7 +16,7 @@ namespace demos_gl {
 /*
  * LoopBuffer::Loop::Loop
  */
-LoopBuffer::Loop::Loop(void)
+LoopBuffer::Loop::Loop()
         : area(0)
         , bbox(0, 0, 0, 0)
         , edgeVals(static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_CAPACITY), static_cast<SIZE_T>(DEFAULT_LOOP_VDATA_INCREMENT))
@@ -44,7 +43,7 @@ LoopBuffer::Loop::Loop(const LoopBuffer::Loop& src)
 /*
  * LoopBuffer::Loop::~Loop
  */
-LoopBuffer::Loop::~Loop(void) {
+LoopBuffer::Loop::~Loop() {
     this->enclosingLoop = NULL; // DO NOT DELETE
 }
 
@@ -68,7 +67,7 @@ void LoopBuffer::Loop::AddVertex(const vislib::math::Point<int, 2>& vertex, cons
 /*
  * LoopBuffer::Loop::ClearVertices
  */
-void LoopBuffer::Loop::ClearVertices(void) {
+void LoopBuffer::Loop::ClearVertices() {
     this->vertices.Clear();
     this->edgeVals.Clear();
     this->bbox.SetNull();
@@ -134,7 +133,7 @@ LoopBuffer::Loop& LoopBuffer::Loop::operator=(const LoopBuffer::Loop& rhs) {
 /*
  * LoopBuffer::LoopBuffer
  */
-LoopBuffer::LoopBuffer(void) : loops() {
+LoopBuffer::LoopBuffer() : loops() {
     // intentionally empty
 }
 
@@ -142,7 +141,7 @@ LoopBuffer::LoopBuffer(void) : loops() {
 /*
  * LoopBuffer::~LoopBuffer
  */
-LoopBuffer::~LoopBuffer(void) {
+LoopBuffer::~LoopBuffer() {
     // intentionally empty
 }
 
@@ -150,7 +149,7 @@ LoopBuffer::~LoopBuffer(void) {
 /*
  * LoopBuffer::Clear
  */
-void LoopBuffer::Clear(void) {
+void LoopBuffer::Clear() {
     this->loops.Clear();
 }
 
@@ -158,7 +157,7 @@ void LoopBuffer::Clear(void) {
 /*
  * LoopBuffer::NewLoop
  */
-LoopBuffer::Loop& LoopBuffer::NewLoop(void) {
+LoopBuffer::Loop& LoopBuffer::NewLoop() {
     this->loops.Add(Loop());
     return this->loops.Last();
 }
@@ -167,7 +166,7 @@ LoopBuffer::Loop& LoopBuffer::NewLoop(void) {
 /*
  * LoopBuffer::NewLoopComplete
  */
-void LoopBuffer::NewLoopComplete(void) {
+void LoopBuffer::NewLoopComplete() {
     bool emptyLoop = (this->loops.Last().Length() <= 2); // degenerated loop
 
     if (this->loops.Last().Length() == 3) { // test for degenerated triangles
@@ -187,5 +186,4 @@ void LoopBuffer::NewLoopComplete(void) {
     }
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -27,8 +27,8 @@ using namespace vislib;
 #define CCTLR_Z_MIDDLE (0.25f)
 #define CCTLR_Z_FRONT (0.75f)
 
-TimeLineRenderer::TimeLineRenderer(void)
-        : core_gl::view::Renderer2DModuleGL()
+TimeLineRenderer::TimeLineRenderer()
+        : mmstd_gl::Renderer2DModuleGL()
         , keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
         , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
         , moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame.")
@@ -85,16 +85,16 @@ TimeLineRenderer::TimeLineRenderer(void)
 }
 
 
-TimeLineRenderer::~TimeLineRenderer(void) {
+TimeLineRenderer::~TimeLineRenderer() {
 
     this->Release();
 }
 
 
-bool TimeLineRenderer::create(void) {
+bool TimeLineRenderer::create() {
 
     // Initialise render utils
-    if (!this->utils.Initialise(this->GetCoreInstance())) {
+    if (!this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TIMELINE RENDERER] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
@@ -125,10 +125,10 @@ bool TimeLineRenderer::create(void) {
 }
 
 
-void TimeLineRenderer::release(void) {}
+void TimeLineRenderer::release() {}
 
 
-bool TimeLineRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool TimeLineRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
 
     call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0.0f, this->viewport.x, this->viewport.y, 0.0f);
 
@@ -136,7 +136,7 @@ bool TimeLineRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
 }
 
 
-bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
+bool TimeLineRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
     auto lhsFbo = call.GetFramebuffer();
 
@@ -531,7 +531,7 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
 }
 
 
-bool TimeLineRenderer::recalcAxesData(void) {
+bool TimeLineRenderer::recalcAxesData() {
 
     for (size_t i = 0; i < Axis::COUNT; ++i) {
         if (this->axes[i].maxValue <= 0.0f) {

@@ -22,7 +22,7 @@ using namespace megamol;
 /*
  * datatools::ParticleIColGradientField::ParticleIColGradientField
  */
-datatools::ParticleIColGradientField::ParticleIColGradientField(void)
+datatools::ParticleIColGradientField::ParticleIColGradientField()
         : AbstractParticleManipulator("outData", "indata")
         , radiusSlot("radius", "The neighbourhood radius size")
         , datahash(0)
@@ -37,7 +37,7 @@ datatools::ParticleIColGradientField::ParticleIColGradientField(void)
 /*
  * datatools::ParticleIColGradientField::~ParticleIColGradientField
  */
-datatools::ParticleIColGradientField::~ParticleIColGradientField(void) {
+datatools::ParticleIColGradientField::~ParticleIColGradientField() {
     this->Release();
 }
 
@@ -135,7 +135,7 @@ void datatools::ParticleIColGradientField::compute_colors(geocalls::MultiParticl
 
     // construct a kd-tree index:
     typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, DataAdapter>, DataAdapter,
-        3 /* dim */>
+        3 /* dim */, std::size_t>
         my_kd_tree_t;
 
     my_kd_tree_t index(3 /*dim*/, data, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));

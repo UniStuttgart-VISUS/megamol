@@ -14,8 +14,7 @@
 #include <array>
 #include <chrono>
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 class FrameStatistics_Service final : public AbstractFrontendService {
 public:
@@ -26,7 +25,7 @@ public:
     }
 
     FrameStatistics_Service();
-    ~FrameStatistics_Service();
+    ~FrameStatistics_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;
@@ -63,8 +62,8 @@ public:
 private:
     megamol::frontend_resources::FrameStatistics m_statistics;
 
-    std::chrono::high_resolution_clock::time_point m_program_start_time;
-    std::chrono::high_resolution_clock::time_point m_frame_start_time;
+    std::chrono::steady_clock::time_point m_program_start_time;
+    std::chrono::steady_clock::time_point m_frame_start_time;
 
     std::array<long long, 30> m_frame_times_micro = {};
     unsigned int m_ring_buffer_ptr = 0;
@@ -72,10 +71,11 @@ private:
     void start_frame();
     void finish_frame();
 
+    void fill_lua_callbacks();
+
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

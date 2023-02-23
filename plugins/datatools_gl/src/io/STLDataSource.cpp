@@ -7,11 +7,12 @@
 
 #include "datatools_gl/io/STLDataSource.h"
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/DataHash.h"
+#include "mmcore/utility/String.h"
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 
@@ -29,9 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 STLDataSource::STLDataSource()
         : filename_slot("STL file", "The name of to the STL file to load")
         , mesh_output_slot("mesh_data", "Slot to request mesh data") {
@@ -155,7 +154,7 @@ void STLDataSource::read(const std::string& filename) {
         while (line.empty() && !ifs.eof()) {
             // Read and convert line to lower case
             std::getline(ifs, line);
-            std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+            core::utility::string::ToLowerAscii(line);
 
             line.erase(0, line.find_first_not_of("\f\n\r\t\v "));
         }
@@ -250,7 +249,7 @@ void STLDataSource::read_ascii(const std::string& filename) {
         while (!ifs.eof()) {
             // Read and convert line to lower case
             std::getline(ifs, line);
-            std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+            core::utility::string::ToLowerAscii(line);
 
             line.erase(0, line.find_first_not_of("\f\n\r\t\v "));
 
@@ -481,6 +480,4 @@ uint32_t STLDataSource::hash() const {
         // Last normal
         *(this->normal_buffer->cend() - 1), *(this->normal_buffer->cend() - 2), *(this->normal_buffer->cend() - 3));
 }
-} // namespace io
-} // namespace datatools_gl
-} // namespace megamol
+} // namespace megamol::datatools_gl::io

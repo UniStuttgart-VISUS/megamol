@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ERROR_H_INCLUDED
-#define VISLIB_ERROR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -29,7 +25,7 @@
  *
  * @return The last error.
  */
-static inline DWORD GetLastError(void) {
+static inline DWORD GetLastError() {
     return static_cast<DWORD>(errno);
 }
 
@@ -38,4 +34,3 @@ static inline DWORD GetLastError(void) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ERROR_H_INCLUDED */

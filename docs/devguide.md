@@ -32,6 +32,11 @@ This guide is intended to give MegaMol developers a useful insight into the inte
   - [GUI](#gui)
     - [Parameter Widgets](#parameter-widgets)
     - [Window/PopUp/Notification for Frontend Service](#windowpopupnotification-for-frontend-service)
+  - [Debugging / Introspection](#debugging--introspection)
+    - [OpenGL Error Callback](#opengl-error-callback)
+    - [Profiling](#profiling)
+    - [OpenGL DebugGroups](#opengl-debuggroups)
+    - [RenderDoc Integration](#renderdoc-integration)
 
 <!-- TODO
 - Add section describing all available LUA commands
@@ -49,22 +54,23 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 1. Copy the template folder `plugins/doc_template`.
 2. Rename the copied folder to the intended plugin name (style guide: only lower case letters, numbers, and underscore).
-3. Rename the `src/MegaMolPlugin.cpp` to your plugin name (file name can be arbitrary). Within the file change the following:
+3. Rename the `src/megamolplugin.cpp` to your plugin name (style guide: same as folder name). Within the file change the following:
     1. Use a unique namespace `megamol::pluginname`. (style guide: same as folder name)
     2. Change the plugin name and description in the parameters of the constructor.
     3. The class name can be changed to any name, but it must be set accordingly in the `REGISTERPLUGIN()` macro.
 4. Open the `CMakeLists.txt` file and to the following changes:
     1. Set the name of the target at the beginning of `megamol_plugin()`. (style guide: same as folder name)
-    2. List the targets of other plugin dependencies after `DEPENDS_PLUGINS`[*].
-    3. List the targets of external dependencies after `DEPENDS_EXTERNALS`[*]. Do not define new externals within the plugin CMake! Use the global externals file `externals/CMakeExternals.cmake`.
-    4. If additional custom CMake settings are required they can be put within `if (megamolplugin_PLUGIN_ENABLED)`. The variable defined at the beginning of `megamol_plugin()` is a regular CMake target that can be used.
-5. Add libraries/dependencies to `CMakeLists.txt` (optional, see [external dependencies](#external-dependencies)).
-6. Implement the content of your plugin.
+    2. List the required features of the plugin after `DEPENDS_FEATURES`.
+    3. List the targets of other plugin dependencies after `DEPENDS_PLUGINS`[*].
+    4. Add any dependencies or additional CMake configuration within `if (megamolplugin_PLUGIN_ENABLED)`.
+       Dependencies are defined in the regular vcpkg way (`find_package()`, `target_link_libraries()`, etc., see [external dependencies](#external-dependencies)).
+       The variable defined at the beginning of `megamol_plugin()` is a regular CMake target that can be used.
+5. Implement the content of your plugin.
     1. The private implementation should be in the `<pluginname>/src` directory. Source files are added automatically within CMake.
     2. If the plugin has a public interface, add the headers in the `<pluginname>/include` directory (set visibility of dependencies accordingly, see [*]).
     3. If the plugin uses shaders, add them into the `<pluginname>/shaders/<pluginname>` directory (see shader guide for more details).
     4. If the plugin uses resources, add them to `<pluginname>/resources`.
-7. Write a `README.md` for your plugin (mandatory).
+6. Write a `README.md` for your plugin (mandatory).
 
 [*] You can prefix the dependency targets with the keywords `PUBLIC`, `PRIVATE`, or `INTERFACE` the same way `target_link_libraries()` works. Defaults to `PRIVATE` if nothing is set.
 
@@ -121,7 +127,7 @@ The constructor of the wrapper requires paths to source files of all shader stag
 
 Here is a full example:
 ```cpp
-const auto shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+const auto shader_options = core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 auto program = core::utility::make_glowl_shader("name", shader_options, "pluginname/shader.comp.glsl");
 ```
 
@@ -179,7 +185,7 @@ Usage: ```DATACallRead```
 - In the ```GetData``` callback, make sure you can **supply unchanged data very cheaply**.
   - If parameters or incoming data (downstream) have changed, modify your ```DATA``` accordingly, **increasing** ```version_DATA```.
   - **ALWAYS** set the data in the call, supplying the version.
-  
+
 Usage: ```DataCallWrite```
 - In the ```GetData``` callback
   - If the incoming set data is newer than what you last got: ```call::hasUpdate()```
@@ -294,158 +300,56 @@ For building MegaMol, CMake is used. For developers, two aspects are of importan
 
 ### External dependencies
 
-**All externals must be build STATIC now!**
-The installation of shared libraries was removed, therefore the megamol binary will not find the so/dll files of externals if they are used as SHARED library.
+We are using [vcpkg](https://github.com/microsoft/vcpkg) (in manifest mode) for managing external dependencies.
+In short, vcpkg will automatically download, build and cache any dependency during configuring MegaMol.
+After that common CMake methods are used to use the library (i.e. `find_package()` and `target_link_libraries()`, but of course depends on the external library).
 
-The system for including external dependencies in MegaMol is a process split into two phases, corresponding to CMake configuration and the build process.
+For dependencies already available within the vcpkg ecosystem, just add them to `vcpkg.json`.
+For dependencies not already available, an overlay port must be created within `cmake/vcpkg_ports/<port-name>`.
+Further information on writing new ports is available in the [vcpkg documentation](https://vcpkg.io/en/docs/README.html).
 
-In the CMake configuration run, in which the external is first requested, it is downloaded from a git repository by providing a URL and tag (or commit hash), and configured in a separate process and folder. 
-This is done to prevent global CMake options from clashing. 
-In later CMake configuration runs, this configuration of the external dependencies is not re-run, except when manually requested by setting the appropriate CMake cache variable ```EXTERNAL_<NAME>_NEW_VERSION``` to ```TRUE```, or when the URL, tag or build type change.
+Larger (especially in the meaning of build times) and/or very specialized libraries could be wrapped within vcpkg features in `vcpkg.json`.
+If doing so add an option to the beginning of `CMakeLists.txt` using `megamol_feature_option()` to allow using that feature.
 
-When building MegaMol, all external dependencies are only built if they have not been built before. 
-Afterwards, only by setting ```EXTERNAL_<NAME>_NEW_VERSION``` to ```TRUE``` can the build process be triggered again. 
-This ensures that they are not rebuilt unnecessarily, but built when their version change.
+#### Overriding dependencies
 
-#### Using external dependencies
+If you need customized veriants of a dependency, say, an OSPRay build with custom modules, you can switch to a version that lives somewhere else on your system.
+For this, you can (temporarily) create an additional port with the same name in cmake/vcpkg_ports. **NEVER COMMIT THIS PORT!**
 
-External dependencies are split into two categories: header-only libraries and libraries that have to be built into a static (```.a```/```.lib```) library. 
-Both kinds are defined in the ```CMakeExternals.cmake``` file in the MegaMol main directory and can be requested in the plugins using the command ```require_external(<NAME>)```. 
-Generally, this command makes available the target ```<NAME>```, which provides all necessary information on where to find the library and include files.
+The port needs to contain a `vcpkg.json` that includes all relevant dependencies and features that are requested by megamol.
+You can just use the file from the port you are overriding.
+You also need to place a *completely empty* `portfile.cmake` in the port directory.
 
-#### Adding new external dependencies
+You are responsible for building the custom version in the correct way yourself.
+A custom drop-in replacement OSPRay that re-uses all the dependencies that are built with MegaMol anyway would, for example, be configured using options along the lines of:
 
-The setup for header-only and built libraries need different parameters and commands.
+```-DCMAKE_PREFIX_PATH="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows" -DISPC_EXECUTABLE="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows/tools/ispc/ispc.exe" -DOSPRAY_ENABLE_APPS_EXAMPLES="0" -DOSPRAY_ENABLE_APPS_TESTING="0" -DOSPRAY_ENABLE_APPS_BENCHMARK="0" -DOSPRAY_ENABLE_APPS_TUTORIALS="0"```
 
-##### Header-only libraries
+Do not use the OSPRay superbuild as it includes and references its own set of transitive dependencies, which could mean that you end up with two different versions of TBB, for example.
+It also pollutes CMake with additional targets that confuse vcpkg.
 
-For setting up a header-only library, the following command is used:
+To make sure the megamol build finds the custom dependency build, you can set the corresponding environment variable manually or in your `CMakeUserPresets.json`.
+Keeping with the previous example, this could read `"environment": {"OSPRAY_ROOT": "drive:/some/directory/ospray/install"}`.
+You can then either copy the resulting dlls manually to the MegaMol binary directory or alternatively configure the local `PATH` environment variable to contain the path of the custom dependency dlls.
 
-```
-add_external_headeronly_project(<NAME>
-   GIT_REPOSITORY <GIT_REPOSITORY>
-  [GIT_TAG <GIT_TAG>]
-  [INCLUDE_DIR <INCLUDE_DIR>]
-  [DEPENDS <DEPENDS>...])
-```
+### Using third-party code
 
-| Parameter              | Description                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| ```<NAME>```           | Target name, usually the official name of the library or its abbreviation.                                                |
-| ```<GIT_REPOSITORY>``` | URL of the git repository.                                                                                                |
-| ```<GIT_TAG>```        | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
-| ```<INCLUDE_DIR>```    | Relative directory where the include files can be found, usually ```include```. Defaults to the main source directory.    |
-| ```<DEPENDS>```        | Targets this library depends on, if any.                                                                                  |
+Including third-party code as library with vcpkg is the preferred way, but in rare cases, it may is required to directly include third-party code into MegaMol.
+In this case, all external code must be placed within a `3rd` directory in the corresponding plugin root (`plugins/<plugin-name>/3rd/<code-name>`).
+In addition, a readme and license file must be included with the third-party code.
+The readme must contain the exact source of the third-party code (meaning including the exact version, repo hash, download URL, etc., not just a project website).
+This should allow to easily compare the files to their original source, i.e. in case of future upstream updates.
+Therefore, also the MegaMol style guide does not apply to third-party code and third-party code should be kept in its original state.
 
-In the following example, the library Delaunator is downloaded from ```https://github.com/delfrrr/delaunator-cpp.git``` in its version ```v0.4.0```. 
-The header files can be found in the folder ```include```.
+(TODO: how should third-party shaders be organized?)
 
-```
-add_external_headeronly_project(Delaunator
-  GIT_REPOSITORY https://github.com/delfrrr/delaunator-cpp.git
-  GIT_TAG "v0.4.0"
-  INCLUDE_DIR "include")
-```
+#### Third-party code requires changes or patches?
 
-For more examples on how to include header-only libraries, see the ```CMakeExternals.cmake``` file in the MegaMol main directory.
-
-Additionally, information about the header-only libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
-
-| Variable       | Description                                           |
-| -------------- | ----------------------------------------------------- |
-| GIT_REPOSITORY | The URL of the git repository.                        |
-| GIT_TAG        | The git tag or commit hash of the downloaded library. |
-| SOURCE_DIR     | Source directory, where the downloaded files reside.  |
-
-##### Built libraries
-
-Libraries that are built into static libraries, follow a process executing two different commands. 
-The first command is responsible for setting up the project, while the second command creates the interface targets.
-
-Similarly to the header-only libraries, the setup uses a command specifying the source and type of the library, additionally providing information for the configuration and build processes:
-
-```
-add_external_project(<NAME> STATIC
-   GIT_REPOSITORY <GIT_REPOSITORY>
-  [GIT_TAG <GIT_TAG>]
-  [PATCH_COMMAND <PATCH_COMMAND>...]
-  [CMAKE_ARGS <CMAKE_ARGUMENTS>...]
-  BUILD_BYPRODUCTS <OUTPUT_LIBRARIES>...
-  [COMMANDS <INSTALL_COMMANDS>...]
-  [DEBUG_SUFFIX <DEBUG_SUFFIX>]
-  [DEPENDS <DEPENDS>...])
-```
-
-| Parameter                     | Description |
-| ----------------------------- | ----------- |
-| ```<NAME>```                  | Project name, usually the official name of the library or its abbreviation. |
-| ```STATIC```                  | Indicate to build a static (```.a```/```.lib```) library. Static libraries are always built according to user selection. |
-| ```<GIT_REPOSITORY>```        | URL of the git repository. |
-| ```<GIT_TAG>```               | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
-| ```<PATCH_COMMAND>```         | Command that is run before the configuration step and is mostly used to apply patches or providing a modified ```CMakeLists.txt``` file. |
-| ```<CMAKE_ARGS>```            | Arguments that are passed to CMake for the configuration of the external library. |
-| ```<BUILD_BYPRODUCTS>```      | Specifies the output libraries, which are automatically installed if it is a dynamic library. This must include the import library on Windows systems. |
-| ```<COMMANDS>```              | Commands that are executed after the build process finished, allowing for custom install commands. |
-| ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name. |
-| ```<DEPENDS>```               | Targets this library depends on, if any. |
-
-The second command creates the actual interface targets. Note that for some libraries, multiple targets have to be created.
-
-```
-add_external_library(<NAME> [PROJECT <PROJECT>]
-   LIBRARY <LIBRARY>
-  [IMPORT_LIBRARY <IMPORT_LIBRARY>]
-  [INTERFACE_LIBRARIES <INTERFACE_LIBRARIES>...]
-  [DEBUG_SUFFIX <DEBUG_SUFFIX>])
-```
-
-| Parameter                     | Description |
-| ----------------------------- | ----------- |
-| ```<NAME>```                  | Target name, for the main target this is usually the official name of the library or its abbreviation. |
-| ```<PROJECT>```               | If the target name does not match the name provided in the ```add_external_project``` command, the project has to be set accordingly. |
-| ```<LIBRARY>```               | The created library file, in case of a shared library a ```.so``` or ```.dll``` file, or ```.a``` or ```.lib``` for a static library. |
-| ```<INTERFACE_LIBRARIES>```   | Additional libraries the external library depends on. |
-| ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name and has to match the debug suffix provided to the ```add_external_project``` command. |
-
-An example for a static library is as follows, where the ```tracking``` library ```v2.0``` is defined as a static library and downloaded from the VISUS github repository at ```https://github.com/UniStuttgart-VISUS/mm-tracking```. 
-It builds two libraries, ```tracking``` and ```NatNetLib```, and uses the CMake flag ```-DCREATE_TRACKING_TEST_PROGRAM=OFF``` to prevent the building of a test program. 
-Both libraries are created providing the paths to the respective import libraries. 
-Note that only the ```NatNetLib``` has to specify the project as its name does not match the external library.
-
-```
-    set(TRACKING_LIB "lib/tracking.lib")
-    set(TRACKING_NATNET_LIB "lib/NatNetLib.lib")
-
-    add_external_project(tracking STATIC
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking.git
-      GIT_TAG "v2.0"
-      BUILD_BYPRODUCTS
-        "<INSTALL_DIR>/${TRACKING_LIB}"
-        "<INSTALL_DIR>/${TRACKING_NATNET_LIB}"
-      CMAKE_ARGS
-        -DCREATE_TRACKING_TEST_PROGRAM=OFF)
-
-    add_external_library(tracking
-      LIBRARY ${TRACKING_LIB})
-
-    add_external_library(natnet
-      PROJECT tracking
-      LIBRARY ${TRACKING_NATNET_LIB})
-```
-
-Further examples on how to include static libraries can be found in the ```CMakeExternals.cmake``` file in the MegaMol main directory.
-
-Additionally, information about the libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
-
-| Variable       | Description                                                                                                                                                                 |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GIT_REPOSITORY | The URL of the git repository.                                                                                                                                              |
-| GIT_TAG        | The git tag or commit hash of the downloaded library.                                                                                                                       |
-| SOURCE_DIR     | Source directory, where the downloaded files reside.                                                                                                                        |
-| BINARY_DIR     | Directory of the CMake configuration files.                                                                                                                                 |
-| INSTALL_DIR    | Target directory for the local installation. Note that for multi-configuration systems, the built static libraries are in a subdirectory corresponding to their build type. |
-| SHARED         | Indicates that the library was built as a dynamic library if ```TRUE```, or a static library otherwise.                                                                     |
-| BUILD_TYPE     | Build type of the output library on single-configuration systems.                                                                                                           |
+The code must still remain in the `3rd` directory.
+Having any third-party code within regular MegaMol source files (so everything not in a `3rd` directory) must be avoided at any possible cost!
+In addition to the above points, the changes must be documented in a reasonable way, i.e. using comments within the code, including a patch file, or writing a descriptive changelog.
+Again the motivation is maintainability, that another developer is able to understand the changes made and can merge possible upstream updates.
+Therefore, it is strongly recommended to keep changes/patches as small as possible and implement extensions within regular MegaMol source files, while the third-party code is included using the standard C++ includes.
 
 
 <!-- ###################################################################### -->
@@ -459,3 +363,71 @@ See [developer information for GUI Service](../../frontend/services/gui#new-para
 ### Window/PopUp/Notification for other Frontend Services
 
 See [developer information for GUI Service](../../frontend/services/gui#gui-windowpopupnotification-for-frontend-service).
+
+<!-- ###################################################################### -->
+-----
+## Debugging / Introspection
+
+### OpenGL Error Callback
+
+You can enable OpenGL error reporting by using the command line switch `--khrdebug`.
+Note that this enables `GL_DEBUG_OUTPUT_SYNCHRONOUS`, which will affect performance, but is required to enable the output of valid stack traces.
+
+### Profiling
+
+You can enable internal profiling at compile time using `MEGAMOL_USE_PROFILING` via CMake.
+This comes at a performance cost, but gives CPU and OpenGL timings for all calls in the graph out of the box (small speedometer icons in the graph editor).
+
+#### Custom Regions
+
+Inside guarded `#ifdef MEGAMOL_USE_PROFILING` regions, you can declare a local `frontend_resources::PerformanceManager::handle_vector` of timers in any Module.
+1. In `requested_lifetime_resources()`, make sure you ask for the `PerformanceManager` as a resource:
+```cpp
+resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+```
+2. In `create()`, fetch the `frontend_resources::PerformanceManager` as a resource, e.g.,:
+```cpp
+perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::PerformanceManager>());
+```
+3. In `create()`, declare one or several timers, configure them
+```cpp
+frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+upload_timer.name = "upload";
+upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+```
+4. Pass them to the `PerformanceManager`:
+```cpp
+timers_ = perf_manager_->add_timers(this, {upload_timer});
+```
+These timers also automatically show up in the graph.
+
+#### Timer Dumps
+
+Once profiling is enabled, you can ask MegaMol to log all timings to a CSV file using the command line switch `--profiling-log <filename>`.
+
+### OpenGL DebugGroups
+
+Similar to the automatic profiling regions, all calls with OpenGL capability can automatically Push/Pop OpenGL DebugGroups if you switch on `MEGAMOL_USE_OPENGL_DEBUGGROUPS` in CMake.
+These are interpreted by RenderDoc or NSight, making the output easier to parse.
+**Note: there currently seems to be a race condition or some other issue with this.
+MegaMol has been observed to crash in NVOGL.dll occasionally, so only use this when necessary.**
+
+### RenderDoc Integration
+
+You can use the RenderDoc API to programmatically ask for frame captures.
+This is not generally implemented yet as the logic asking for the capture could be required anywhere.
+Integration basically works as described here https://renderdoc.org/docs/in_application_api.html.
+
+You could, for example, place the ProcAddress fetching in `megamol::gui::GUIManager::init_state()`,
+and put `if (rdoc_api) rdoc_api->StartFrameCapture(nullptr, nullptr);` in `GUIManager::PreDraw`.
+If the `GUIManager` has enough information to decide whether to capture or not, you can just augment `GUIManager::PostDraw` like so:
+```cpp
+if (some_weird_condition) {
+    if(rdoc_api) rdoc_api->EndFrameCapture(nullptr, nullptr);
+} else {
+    if(rdoc_api) rdoc_api->DiscardFrameCapture(nullptr, nullptr);
+}
+```
+
+Do not forget to include the headers installed with RenderDoc, e.g. `#include "C:/Program Files/RenderDoc/renderdoc_app.h"`

@@ -5,24 +5,20 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_PROTEIN_CALL_MOLECULARDATACALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_MOLECULARDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 #include "vislib/math/Vector.h"
+#include <filesystem>
 #include <vector>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Base class of rendering graph calls and of data interfaces for
@@ -51,7 +47,7 @@ public:
         enum ResidueType { UNSPECIFIC = 0, AMINOACID = 1 };
 
         /** Default ctor initialising all fields to zero. */
-        Residue(void);
+        Residue();
 
         /**
          * Copy ctor performin a deep copy from 'src'.
@@ -74,7 +70,7 @@ public:
             int moleculeIdx, unsigned int origResIdx);
 
         /** Dtor. */
-        ~Residue(void);
+        ~Residue();
 
         /**
          * Get the type of the residue
@@ -88,7 +84,7 @@ public:
          *
          * @return The number of atoms.
          */
-        inline unsigned int AtomCount(void) const {
+        inline unsigned int AtomCount() const {
             return this->atomCnt;
         }
 
@@ -97,7 +93,7 @@ public:
          *
          * @return The index of the first atom in the residue.
          */
-        inline unsigned int FirstAtomIndex(void) const {
+        inline unsigned int FirstAtomIndex() const {
             return this->firstAtomIdx;
         }
 
@@ -106,7 +102,7 @@ public:
          *
          * @return The type index of the residue.
          */
-        unsigned int Type(void) const {
+        unsigned int Type() const {
             return type;
         };
 
@@ -115,7 +111,7 @@ public:
          *
          * @return The bounding box of the residue.
          */
-        inline vislib::math::Cuboid<float> BoundingBox(void) const {
+        inline vislib::math::Cuboid<float> BoundingBox() const {
             return this->boundingBox;
         }
 
@@ -145,7 +141,7 @@ public:
         inline void SetMoleculeIndex(int moleculeIndex) {
             this->moleculeIndex = moleculeIndex;
         }
-        inline int MoleculeIndex(void) const {
+        inline int MoleculeIndex() const {
             return moleculeIndex;
         }
 
@@ -203,7 +199,7 @@ public:
          *
          * @return The index.
          */
-        unsigned int OriginalResIndex(void) const {
+        unsigned int OriginalResIndex() const {
             return this->origResIndex;
         };
 
@@ -221,7 +217,7 @@ public:
          *
          * @return The filter value.
          */
-        int Filter(void) const {
+        int Filter() const {
             return this->filter;
         };
 
@@ -256,7 +252,7 @@ public:
     class AminoAcid : public Residue {
     public:
         /** Default ctor initialising all fields to zero. */
-        AminoAcid(void);
+        AminoAcid();
 
         /**
          * Copy ctor performin a deep copy from 'src'.
@@ -289,12 +285,12 @@ public:
             int moleculeIdx, unsigned int origResIdx);
 
         /** Dtor. */
-        ~AminoAcid(void);
+        ~AminoAcid();
 
         /**
          * Get the type of the residue
          */
-        virtual ResidueType Identifier() const {
+        ResidueType Identifier() const override {
             return AMINOACID;
         }
 
@@ -303,7 +299,7 @@ public:
          *
          * @return The index of the C alpha atom.
          */
-        inline unsigned int CAlphaIndex(void) const {
+        inline unsigned int CAlphaIndex() const {
             return this->cAlphaIdx;
         }
 
@@ -312,7 +308,7 @@ public:
          *
          * @return The index of the C atom of the carboxyl group.
          */
-        inline unsigned int CCarbIndex(void) const {
+        inline unsigned int CCarbIndex() const {
             return this->cCarbIdx;
         }
 
@@ -321,7 +317,7 @@ public:
          *
          * @return The index of the N atom.
          */
-        inline unsigned int NIndex(void) const {
+        inline unsigned int NIndex() const {
             return this->nIdx;
         }
 
@@ -330,7 +326,7 @@ public:
          *
          * @return The index of the O atom.
          */
-        inline unsigned int OIndex(void) const {
+        inline unsigned int OIndex() const {
             return this->oIdx;
         }
 
@@ -476,7 +472,7 @@ public:
          *
          * @return The number of residues.
          */
-        inline unsigned int ResidueCount(void) const {
+        inline unsigned int ResidueCount() const {
             return this->residueCount;
         }
 
@@ -485,7 +481,7 @@ public:
          *
          * @return The index of the first residue in the molecule.
          */
-        inline unsigned int FirstResidueIndex(void) const {
+        inline unsigned int FirstResidueIndex() const {
             return this->firstResidueIndex;
         }
 
@@ -494,7 +490,7 @@ public:
          *
          * @return The first connection index.
          */
-        inline unsigned int FirstConnectionIndex(void) const {
+        inline unsigned int FirstConnectionIndex() const {
             return firstConIdx;
         }
 
@@ -503,7 +499,7 @@ public:
          *
          * @return The connection count.
          */
-        inline unsigned int ConnectionCount(void) const {
+        inline unsigned int ConnectionCount() const {
             return conCount;
         }
 
@@ -512,7 +508,7 @@ public:
          *
          * @return The number of sec struct elems.
          */
-        inline unsigned int SecStructCount(void) const {
+        inline unsigned int SecStructCount() const {
             return this->secStructCount;
         }
 
@@ -521,7 +517,7 @@ public:
          *
          * @return The index of the first sec struct elem.
          */
-        inline unsigned int FirstSecStructIndex(void) const {
+        inline unsigned int FirstSecStructIndex() const {
             return this->firstSecStructIdx;
         }
 
@@ -570,7 +566,7 @@ public:
          *
          * @return The filter value.
          */
-        inline int Filter(void) const {
+        inline int Filter() const {
             return this->filter;
         };
 
@@ -579,7 +575,7 @@ public:
          *
          * @return The filter value.
          */
-        inline int ChainIndex(void) const {
+        inline int ChainIndex() const {
             return this->chainIndex;
         }
 
@@ -619,7 +615,7 @@ public:
          * Default ctor initialising all elements to zero (or equivalent
          * values).
          */
-        SecStructure(void);
+        SecStructure();
 
         /**
          * Copy ctor performing a deep copy.
@@ -629,14 +625,14 @@ public:
         SecStructure(const SecStructure& src);
 
         /** Dtor. */
-        ~SecStructure(void);
+        ~SecStructure();
 
         /**
          * Returns the size of the element in (partial) amino acids.
          *
          * @return The size of the element in (partial) amino acids.
          */
-        inline unsigned int AminoAcidCount(void) const {
+        inline unsigned int AminoAcidCount() const {
             return this->aminoAcidCnt;
         }
 
@@ -647,7 +643,7 @@ public:
          * @return The index of the amino acid in which this element
          *         starts.
          */
-        inline unsigned int FirstAminoAcidIndex(void) const {
+        inline unsigned int FirstAminoAcidIndex() const {
             return this->firstAminoAcidIdx;
         }
 
@@ -675,7 +671,7 @@ public:
          *
          * @return The type of this element.
          */
-        inline ElementType Type(void) const {
+        inline ElementType Type() const {
             return this->type;
         }
 
@@ -765,7 +761,7 @@ public:
          *
          * @return The type of the chain.
          */
-        inline ChainType Type(void) const {
+        inline ChainType Type() const {
             return this->type;
         }
 
@@ -783,7 +779,7 @@ public:
          *
          * @return The name of the chain.
          */
-        inline char Name(void) const {
+        inline char Name() const {
             return this->name;
         }
 
@@ -804,7 +800,7 @@ public:
          *
          * @return The number of molecules.
          */
-        inline unsigned int MoleculeCount(void) const {
+        inline unsigned int MoleculeCount() const {
             return this->moleculeCount;
         }
 
@@ -813,7 +809,7 @@ public:
          *
          * @return The index of the first molecule in the chain.
          */
-        inline unsigned int FirstMoleculeIndex(void) const {
+        inline unsigned int FirstMoleculeIndex() const {
             return this->firstMoleculeIndex;
         }
 
@@ -862,7 +858,7 @@ public:
          *
          * @return The filter value.
          */
-        int Filter(void) const {
+        int Filter() const {
             return this->filter;
         };
 
@@ -890,7 +886,7 @@ public:
          * Produces an atom type with empty name, rad = 0.5 and 75% gray
          * colour.
          */
-        AtomType(void);
+        AtomType();
 
         /**
          * Ctor.
@@ -912,7 +908,7 @@ public:
         AtomType(const AtomType& src);
 
         /** Dtor. */
-        ~AtomType(void);
+        ~AtomType();
 
         /**
          * Sets the colour for atoms of this type.
@@ -959,7 +955,7 @@ public:
          *
          * @return The colour for atoms of this type.
          */
-        inline const unsigned char* Colour(void) const {
+        inline const unsigned char* Colour() const {
             return this->col;
         }
 
@@ -968,7 +964,7 @@ public:
          *
          * @return The name of the atom type.
          */
-        inline const vislib::StringA& Name(void) const {
+        inline const vislib::StringA& Name() const {
             return this->name;
         }
 
@@ -977,7 +973,7 @@ public:
          *
          * @return The element symbol of the atom type.
          */
-        inline const vislib::StringA& Element(void) const {
+        inline const vislib::StringA& Element() const {
             return this->element;
         }
 
@@ -986,7 +982,7 @@ public:
          *
          * @return The radius for atoms of this type.
          */
-        inline float Radius(void) const {
+        inline float Radius() const {
             return this->rad;
         }
 
@@ -1036,7 +1032,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MolecularDataCall";
     }
 
@@ -1045,7 +1041,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get molecular data";
     }
 
@@ -1054,7 +1050,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -1076,10 +1072,10 @@ public:
     }
 
     /** Ctor. */
-    MolecularDataCall(void);
+    MolecularDataCall();
 
     /** Dtor. */
-    virtual ~MolecularDataCall(void);
+    ~MolecularDataCall() override;
 
     // -------------------- get and set routines --------------------
 
@@ -1088,7 +1084,7 @@ public:
      *
      * @return The atom count.
      */
-    unsigned int AtomCount(void) const {
+    unsigned int AtomCount() const {
         return atomCount;
     }
 
@@ -1097,7 +1093,7 @@ public:
      *
      * @return The atom position array.
      */
-    const float* AtomPositions(void) const {
+    const float* AtomPositions() const {
         return atomPos;
     }
 
@@ -1106,7 +1102,7 @@ public:
      *
      * @return The atom b-factor array.
      */
-    float* AtomBFactors(void) const {
+    const float* AtomBFactors() const {
         return atomBFactors;
     }
 
@@ -1115,7 +1111,7 @@ public:
      *
      * @return The atom charge array.
      */
-    const float* AtomCharges(void) const {
+    const float* AtomCharges() const {
         return atomCharges;
     }
 
@@ -1124,7 +1120,7 @@ public:
      *
      * @return The atom occupancy array.
      */
-    const float* AtomOccupancies(void) const {
+    const float* AtomOccupancies() const {
         return atomOccupancies;
     }
 
@@ -1133,7 +1129,7 @@ public:
      *
      * @return The atom type index array.
      */
-    const unsigned int* AtomTypeIndices(void) const {
+    const unsigned int* AtomTypeIndices() const {
         return atomTypeIdx;
     }
 
@@ -1142,7 +1138,7 @@ public:
      *
      * @return The atom residue index array.
      */
-    const int* AtomResidueIndices(void) const {
+    const int* AtomResidueIndices() const {
         return atomResidueIdx;
     }
     // void SetAtomResidueIndices(const int*indices) { atomResidueIdx = indices; }
@@ -1153,11 +1149,11 @@ public:
      *
      * @return The atom hydrogen bonds index array.
      */
-    const int* AtomHydrogenBondIndices(void) const {
+    const int* AtomHydrogenBondIndices() const {
         return atomHydrogenBondIdx;
     }
 
-    const int* AtomFormerIndices(void) const {
+    const int* AtomFormerIndices() const {
         return atomFormerIdx;
     }
 
@@ -1177,7 +1173,7 @@ public:
      *
      * @return The maximal distance of a atom hydrogen bond.
      */
-    float AtomHydrogenBondDistance(void) const {
+    float AtomHydrogenBondDistance() const {
         return atomHydrogenBondDistance;
     }
 
@@ -1197,7 +1193,7 @@ public:
      *
      * @return The statistics array
      */
-    const unsigned int* AtomHydrogenBondStatistics(void) const {
+    const unsigned int* AtomHydrogenBondStatistics() const {
         return atomHydrogenBondStatistics;
     }
 
@@ -1206,7 +1202,7 @@ public:
      *
      * @return The number of solvent residues.
      */
-    unsigned int AtomSolventResidueCount(void) const {
+    unsigned int AtomSolventResidueCount() const {
         return atomSolventResCount;
     }
 
@@ -1225,7 +1221,7 @@ public:
      *
      * @return True, if the hydrogen bonds are fake. False otherwise.
      */
-    bool AtomHydrogenBondsFake(void) {
+    bool AtomHydrogenBondsFake() {
         return this->atomHydrogenBondsFake;
     }
 
@@ -1254,7 +1250,7 @@ public:
      *
      * @return The solvent residue index array.
      */
-    const unsigned int* SolventResidueIndices(void) const {
+    const unsigned int* SolventResidueIndices() const {
         return solventResidueIdx;
     }
 
@@ -1277,7 +1273,7 @@ public:
      *
      * @return The hydrogen bond array.
      */
-    const unsigned int* GetHydrogenBonds(void) const {
+    const unsigned int* GetHydrogenBonds() const {
         return this->hydrogenBonds;
     }
 
@@ -1286,7 +1282,7 @@ public:
      *
      * @param The number of hydrogen bonds.
      */
-    unsigned int HydrogenBondCount(void) const {
+    unsigned int HydrogenBondCount() const {
         return this->numHydrogenBonds;
     }
 
@@ -1295,7 +1291,7 @@ public:
      *
      * @return The residue count.
      */
-    unsigned int ResidueCount(void) const {
+    unsigned int ResidueCount() const {
         return resCount;
     }
 
@@ -1304,7 +1300,7 @@ public:
      *
      * @return The residue array.
      */
-    const Residue** Residues(void) const {
+    const Residue** Residues() const {
         return residues;
     }
 
@@ -1313,7 +1309,7 @@ public:
      *
      * @return The residue type name array.
      */
-    const vislib::StringA* ResidueTypeNames(void) const {
+    const vislib::StringA* ResidueTypeNames() const {
         return resTypeNames;
     }
 
@@ -1322,7 +1318,7 @@ public:
      *
      * @return The residue type name count.
      */
-    unsigned int ResidueTypeNameCount(void) const {
+    unsigned int ResidueTypeNameCount() const {
         return resTypeNameCnt;
     }
 
@@ -1331,7 +1327,7 @@ public:
      *
      * @return The atom count.
      */
-    unsigned int AtomTypeCount(void) const {
+    unsigned int AtomTypeCount() const {
         return atomTypeCount;
     }
 
@@ -1340,7 +1336,7 @@ public:
      *
      * @return The atom type array.
      */
-    const AtomType* AtomTypes(void) const {
+    const AtomType* AtomTypes() const {
         return atomType;
     }
 
@@ -1349,7 +1345,7 @@ public:
      *
      * @return The connection count.
      */
-    unsigned int ConnectionCount(void) const {
+    unsigned int ConnectionCount() const {
         return connectionCount;
     }
 
@@ -1358,7 +1354,7 @@ public:
      *
      * @return The connections.
      */
-    const unsigned int* Connection(void) const {
+    const unsigned int* Connection() const {
         return connections;
     }
 
@@ -1367,7 +1363,7 @@ public:
      *
      * @return The molecule count.
      */
-    unsigned int MoleculeCount(void) const {
+    unsigned int MoleculeCount() const {
         return molCount;
     }
 
@@ -1376,7 +1372,7 @@ public:
      *
      * @return The molecules.
      */
-    const Molecule* Molecules(void) const {
+    const Molecule* Molecules() const {
         return molecules;
     }
 
@@ -1385,7 +1381,7 @@ public:
      *
      * @return The chain count.
      */
-    unsigned int ChainCount(void) const {
+    unsigned int ChainCount() const {
         return chainCount;
     }
 
@@ -1394,7 +1390,7 @@ public:
      *
      * @return The chains.
      */
-    const Chain* Chains(void) const {
+    const Chain* Chains() const {
         return chains;
     }
 
@@ -1403,7 +1399,7 @@ public:
      *
      * @return The filter information
      */
-    const int* Filter(void) const {
+    const int* Filter() const {
         return atomFilter;
     }
 
@@ -1420,7 +1416,8 @@ public:
      * @param occupancies   The atom occupancies.
      */
     void SetAtoms(unsigned int atomCnt, unsigned int atomTypeCnt, const unsigned int* typeIdx, const float* pos,
-        const AtomType* types, const int* residueIdx, float* bfactor, const float* charge, const float* occupancy);
+        const AtomType* types, const int* residueIdx, const float* bfactor, const float* charge,
+        const float* occupancy);
 
     void SetAtomPositions(const float* atomPositions) {
         atomPos = atomPositions;
@@ -1611,7 +1608,7 @@ public:
      *
      * @return the calltime
      */
-    float Calltime(void) const {
+    float Calltime() const {
         return this->calltime;
     }
 
@@ -1631,7 +1628,7 @@ public:
      * @return The neighborhood sizes.
      *         May be null if no neighboring information is available
      */
-    const unsigned int* NeighborhoodSizes(void) const {
+    const unsigned int* NeighborhoodSizes() const {
         return this->neighborhoodSizes;
     }
 
@@ -1650,7 +1647,7 @@ public:
      * @return The neighborhood indices per atom.
      *         May be null if no neighboring information is available
      */
-    const unsigned int** Neighborhoods(void) const {
+    const unsigned int** Neighborhoods() const {
         return this->neighborhoods;
     }
 
@@ -1688,12 +1685,7 @@ public:
         this->atomSolventResCount = s.atomSolventResCount;
         this->atomType = s.atomType;
         this->ownsBFactorMemory = s.ownsBFactorMemory;
-        if (!this->ownsBFactorMemory) {
-            this->atomBFactors = s.atomBFactors;
-        } else {
-            this->atomBFactors = new float[this->atomCount];
-            memcpy(this->atomBFactors, s.atomBFactors, sizeof(float) * this->atomCount);
-        }
+        this->atomBFactors = s.atomBFactors;
         this->atomCharges = s.atomCharges;
         this->atomOccupancies = s.atomOccupancies;
         this->minBFactor = s.minBFactor;
@@ -1737,14 +1729,14 @@ public:
      *
      * @param pdbFilename The filename of the pdb file
      */
-    inline void SetPDBFilename(vislib::TString pdbFilename) {
+    inline void SetPDBFilename(std::filesystem::path pdbFilename) {
         this->pdbFilename = pdbFilename;
     }
 
     /*
      * Returns the filename of the containing pdb file.
      */
-    inline vislib::TString GetPDBFilename(void) const {
+    inline std::filesystem::path GetPDBFilename() const {
         return this->pdbFilename;
     }
 
@@ -1806,7 +1798,7 @@ private:
     const unsigned int* connections;
 
     /** The array of b-factors */
-    float* atomBFactors;
+    const float* atomBFactors;
     /** Flag whether the call owns the B-factor memory */
     bool ownsBFactorMemory;
     /** The minimum bfactor */
@@ -1848,15 +1840,11 @@ private:
     unsigned int numHydrogenBonds;
 
     /** The name of the pdb file the data is from */
-    VISLIB_MSVC_SUPPRESS_WARNING(4251)
-    vislib::TString pdbFilename;
+    std::filesystem::path pdbFilename;
 };
 
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<MolecularDataCall> MolecularDataCallDescription;
 
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_PROTEIN_CALL_MOLECULARDATACALL_H_INCLUDED */
+} // namespace megamol::protein_calls

@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_MEGAMOL101_ASCIISPHERELOADER_H
-#define MEGAMOL_MEGAMOL101_ASCIISPHERELOADER_H
+#pragma once
 
 #include <vector>
 
@@ -134,5 +133,3 @@ private:
 };
 
 } // namespace megamol::megamol101_gl
-
-#endif // MEGAMOL_MEGAMOL101_ASCIISPHERELOADER_H

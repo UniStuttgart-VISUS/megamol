@@ -24,7 +24,7 @@ using namespace megamol::geocalls_gl;
 /*
  * CallTriMeshData::Material::Material
  */
-CallTriMeshDataGL::Material::Material(void)
+CallTriMeshDataGL::Material::Material()
         : Ns(0.0f)
         , Ni(0.0f)
         , d(0.0f)
@@ -53,7 +53,7 @@ CallTriMeshDataGL::Material::Material(const CallTriMeshDataGL::Material& src) {
 /*
  * CallTriMeshData::Material::~Material
  */
-CallTriMeshDataGL::Material::~Material(void) {
+CallTriMeshDataGL::Material::~Material() {
     if (this->mapID != 0) {
         ::glDeleteTextures(1, &this->mapID);
         this->mapID = 0;
@@ -87,7 +87,7 @@ void CallTriMeshDataGL::Material::Dye(float r, float g, float b) {
 /*
  * CallTriMeshData::Material::GetMapID
  */
-unsigned int CallTriMeshDataGL::Material::GetMapID(void) const {
+unsigned int CallTriMeshDataGL::Material::GetMapID() const {
     if ((this->mapID == 0) && !this->mapFileName.IsEmpty()) {
         this->mapID = this->loadTexture(this->mapFileName);
     }
@@ -98,7 +98,7 @@ unsigned int CallTriMeshDataGL::Material::GetMapID(void) const {
 /*
  * CallTriMeshData::Material::GetBumpMapID
  */
-unsigned int CallTriMeshDataGL::Material::GetBumpMapID(void) const {
+unsigned int CallTriMeshDataGL::Material::GetBumpMapID() const {
     if ((this->bumpMapID == 0) && !this->bumpMapFileName.IsEmpty()) {
         this->bumpMapID = this->loadTexture(this->bumpMapFileName);
     }
@@ -109,7 +109,7 @@ unsigned int CallTriMeshDataGL::Material::GetBumpMapID(void) const {
 /*
  * CallTriMeshData::Material::MakeDefault
  */
-void CallTriMeshDataGL::Material::MakeDefault(void) {
+void CallTriMeshDataGL::Material::MakeDefault() {
     this->Ns = 0.0f;
     this->Ni = 0.0f;
     this->d = 0.0f;
@@ -222,13 +222,12 @@ unsigned int CallTriMeshDataGL::Material::loadTexture(vislib::TString& filename)
             throw vislib::Exception("No suitable codec found", __FILE__, __LINE__);
         }
     } catch (vislib::Exception ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to load texture \"%s\": %s (%s, %d)\n", vislib::StringA(filename).PeekBuffer(), ex.GetMsgA(),
-            ex.GetFile(), ex.GetLine());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load texture \"%s\": %s (%s, %d)\n",
+            vislib::StringA(filename).PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         filename.Clear();
         return 0;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load texture \"%s\": unexpected exception\n", vislib::StringA(filename).PeekBuffer());
         filename.Clear();
         return 0;
@@ -264,7 +263,7 @@ unsigned int CallTriMeshDataGL::Material::loadTexture(vislib::TString& filename)
 /*
  * CallTriMeshData::Mesh::Mesh
  */
-CallTriMeshDataGL::Mesh::Mesh(void)
+CallTriMeshDataGL::Mesh::Mesh()
         : triCnt(0)
         , triDT(DT_NONE)
         , /*tri(NULL), */ triMemOwned(false)
@@ -300,7 +299,7 @@ CallTriMeshDataGL::Mesh::Mesh(const CallTriMeshDataGL::Mesh& src) {
 /*
  * CallTriMeshData::Mesh::~Mesh
  */
-CallTriMeshDataGL::Mesh::~Mesh(void) {
+CallTriMeshDataGL::Mesh::~Mesh() {
     this->clearTriData();
     this->clearVrtData();
     this->mat = NULL; // DO NOT DELETE
@@ -374,7 +373,7 @@ bool CallTriMeshDataGL::Mesh::operator==(const CallTriMeshDataGL::Mesh& rhs) con
 /*
  * CallTriMeshData::Mesh::clearTriData
  */
-void CallTriMeshDataGL::Mesh::clearTriData(void) {
+void CallTriMeshDataGL::Mesh::clearTriData() {
     this->triCnt = 0;
     if (this->triMemOwned) {
         if (this->tri.dataByte != NULL) {
@@ -401,7 +400,7 @@ void CallTriMeshDataGL::Mesh::clearTriData(void) {
 /*
  * CallTriMeshData::Mesh::clearVrtData
  */
-void CallTriMeshDataGL::Mesh::clearVrtData(void) {
+void CallTriMeshDataGL::Mesh::clearVrtData() {
     this->vrtCnt = 0;
     if (this->vrtMemOwned) {
         if (this->vrt.dataFloat != NULL) {
@@ -510,12 +509,12 @@ void CallTriMeshDataGL::Mesh::clearVrtData(void) {
 /*
  * CallTriMeshData::CallTriMeshData
  */
-CallTriMeshDataGL::CallTriMeshDataGL(void) : core::AbstractGetData3DCall(), objCnt(0), objs(NULL) {}
+CallTriMeshDataGL::CallTriMeshDataGL() : core::AbstractGetData3DCall(), objCnt(0), objs(NULL) {}
 
 /*
  * CallTriMeshData::~CallTriMeshData
  */
-CallTriMeshDataGL::~CallTriMeshDataGL(void) {
+CallTriMeshDataGL::~CallTriMeshDataGL() {
     this->objCnt = 0;
     this->objs = NULL; // DO NOT DELETE
 }

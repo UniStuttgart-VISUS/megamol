@@ -5,22 +5,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_VTKMFILELOADER_H_INCLUDED
-#define MEGAMOL_MMVTKM_VTKMFILELOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 
 #include "mmvtkm/mmvtkmDataCall.h"
 
 
-namespace megamol {
-namespace mmvtkm {
+namespace megamol::mmvtkm {
 
 
 /**
@@ -33,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "vtkmFileLoader";
     }
 
@@ -42,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "File loader module for vtkm files.";
     }
 
@@ -51,15 +46,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    mmvtkmFileLoader(void);
+    mmvtkmFileLoader();
 
     /** Dtor. */
-    virtual ~mmvtkmFileLoader(void);
+    ~mmvtkmFileLoader() override;
 
 protected:
     /**
@@ -67,12 +62,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Callback receiving the update of the file name parameter.
@@ -121,7 +116,4 @@ private:
     bool fileChanged_;
 };
 
-} /* end namespace mmvtkm */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_MMVTKM_VTKMFILELOADER_H_INCLUDED */
+} // namespace megamol::mmvtkm

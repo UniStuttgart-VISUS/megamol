@@ -5,12 +5,11 @@
  * All rights reserved.
  */
 
-#ifndef FILTER_BY_PROBE_H_INCLUDED
-#define FILTER_BY_PROBE_H_INCLUDED
+#pragma once
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
@@ -20,7 +19,7 @@ namespace probe_gl {
 /**
  * TODO
  */
-class FilterByProbe : public megamol::core_gl::view::Renderer3DModuleGL {
+class FilterByProbe : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -78,7 +77,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -87,14 +86,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core_gl::view::CallRender3DGL& call);
+    void PreRender(mmstd_gl::CallRender3DGL& call);
 
 private:
     typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
@@ -125,5 +124,3 @@ private:
 
 } // namespace probe_gl
 } // namespace megamol
-
-#endif

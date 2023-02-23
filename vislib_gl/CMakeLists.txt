@@ -1,8 +1,6 @@
 if(BUILD_VISLIB)
   project(vislib_gl)
 
-  require_external(glad)
-
   # Build vislib
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
@@ -11,8 +9,10 @@ if(BUILD_VISLIB)
   # Target definition
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
 
+  find_package(glad REQUIRED)
+
   target_link_libraries(${PROJECT_NAME}
-    PUBLIC glad ${OPENGL_LIBRARIES} vislib)
+    PUBLIC glad::glad ${OPENGL_LIBRARIES} vislib)
 
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
 

@@ -6,16 +6,15 @@
  */
 #pragma once
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 /**
  * Call for transporting scalar data, attached with a transfer function, in an ready-to-use fashion (for OpenGL).
  *
@@ -125,5 +124,4 @@ protected:
     /** Store validity masks with their name */
     std::map<std::string, std::shared_ptr<std::vector<float>>> masks;
 };
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

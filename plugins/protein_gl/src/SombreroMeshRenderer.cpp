@@ -11,7 +11,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 //#include "mmcore/FlagCall.h"
@@ -41,8 +41,8 @@ using namespace megamol::core;
 /*
  * SombreroMeshRenderer::SombreroMeshRenderer
  */
-SombreroMeshRenderer::SombreroMeshRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+SombreroMeshRenderer::SombreroMeshRenderer()
+        : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getData", "The slot to fetch the tri-mesh data")
         , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
         , getFlagDataSlot("getFlagData", "The slot to fetch the data from the flag storage")
@@ -129,7 +129,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
 /*
  * SombreroMeshRenderer::~SombreroMeshRenderer
  */
-SombreroMeshRenderer::~SombreroMeshRenderer(void) {
+SombreroMeshRenderer::~SombreroMeshRenderer() {
     this->Release();
 }
 
@@ -137,7 +137,7 @@ SombreroMeshRenderer::~SombreroMeshRenderer(void) {
 /*
  * SombreroMeshRenderer::create
  */
-bool SombreroMeshRenderer::create(void) {
+bool SombreroMeshRenderer::create() {
     // intentionally empty
     return true;
 }
@@ -146,8 +146,8 @@ bool SombreroMeshRenderer::create(void) {
 /*
  * TriSoupRenderer::GetExtents
  */
-bool SombreroMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool SombreroMeshRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
     megamol::geocalls_gl::CallTriMeshDataGL* ctmd = this->getDataSlot.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
@@ -169,7 +169,7 @@ bool SombreroMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * SombreroMeshRenderer::release
  */
-void SombreroMeshRenderer::release(void) {
+void SombreroMeshRenderer::release() {
     // intentionally empty
 }
 
@@ -343,8 +343,8 @@ void SombreroMeshRenderer::overrideColors(const int meshIdx, const vislib::math:
 /*
  * SombreroMeshRenderer::Render
  */
-bool SombreroMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool SombreroMeshRenderer::Render(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
     megamol::geocalls_gl::CallTriMeshDataGL* ctmd = this->getDataSlot.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
@@ -1023,7 +1023,7 @@ bool SombreroMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glVertex3f(bb.Right(), closest.GetY(), closest.GetZ());
         glEnd();
 
-        if (this->theFont.Initialise(this->GetCoreInstance())) {
+        if (this->theFont.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
             float distleft = std::abs(bbCenter.GetX() - closest.GetX());
             float distright = std::abs(closest.GetX() - bb.Right());
             vislib::StringA textleft = (trunc(distleft, 2) + " Å").c_str();

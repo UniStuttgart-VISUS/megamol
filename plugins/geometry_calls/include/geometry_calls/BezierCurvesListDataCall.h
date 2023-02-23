@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/assert.h"
 
 
@@ -45,7 +45,7 @@ public:
         /**
          * Ctor
          */
-        Curves(void);
+        Curves();
 
         /**
          * Copy Ctor. Does take ownership of the memory!
@@ -57,19 +57,19 @@ public:
         /**
          * Dtor
          */
-        ~Curves(void);
+        ~Curves();
 
         /**
          * Clears all data
          */
-        void Clear(void);
+        void Clear();
 
         /**
          * Gets the data layout
          *
          * @return The data layout
          */
-        inline DataLayout GetDataLayout(void) const {
+        inline DataLayout GetDataLayout() const {
             return this->layout;
         }
 
@@ -81,7 +81,7 @@ public:
          * @return The data pointer
          */
         template<class T>
-        inline const T* GetData(void) const {
+        inline const T* GetData() const {
             return reinterpret_cast<const T*>(this->data);
         }
 
@@ -103,7 +103,7 @@ public:
          *
          * @return The data pointer
          */
-        inline const void* GetData(void) const {
+        inline const void* GetData() const {
             return static_cast<const void*>(this->data);
         }
 
@@ -124,7 +124,7 @@ public:
          *
          * @return The number of points in 'data'
          */
-        inline size_t GetDataPointCount(void) const {
+        inline size_t GetDataPointCount() const {
             return this->data_cnt;
         }
 
@@ -133,7 +133,7 @@ public:
          *
          * @return The index pointer
          */
-        inline const unsigned int* GetIndex(void) const {
+        inline const unsigned int* GetIndex() const {
             return this->index;
         }
 
@@ -143,7 +143,7 @@ public:
          *
          * @return The number of indices stored in 'index'
          */
-        inline size_t GetIndexCount(void) const {
+        inline size_t GetIndexCount() const {
             return this->index_cnt;
         }
 
@@ -152,7 +152,7 @@ public:
          *
          * @return The global radius
          */
-        inline float GetGlobalRadius(void) const {
+        inline float GetGlobalRadius() const {
             return this->rad;
         }
 
@@ -161,7 +161,7 @@ public:
          *
          * @return The global colour
          */
-        inline const unsigned char* GetGlobalColour(void) const {
+        inline const unsigned char* GetGlobalColour() const {
             return this->col;
         }
 
@@ -395,7 +395,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BezierCurvesListDataCall";
     }
 
@@ -404,7 +404,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get bezier curves list data";
     }
 
@@ -413,7 +413,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return core::AbstractGetData3DCall::FunctionCount();
     }
 
@@ -429,17 +429,17 @@ public:
     }
 
     /** Ctor. */
-    BezierCurvesListDataCall(void);
+    BezierCurvesListDataCall();
 
     /** Dtor. */
-    virtual ~BezierCurvesListDataCall(void);
+    ~BezierCurvesListDataCall() override;
 
     /**
      * Answer the number of bézier curves.
      *
      * @return The number of bézier curves
      */
-    inline size_t Count(void) const {
+    inline size_t Count() const {
         return this->count;
     }
 
@@ -449,7 +449,7 @@ public:
      *
      * @return The bézier curves
      */
-    inline const Curves* GetCurves(void) const {
+    inline const Curves* GetCurves() const {
         return this->curves;
     }
 
@@ -464,7 +464,7 @@ public:
      *
      * @return True if this data has static index data
      */
-    inline bool HasStaticIndices(void) const {
+    inline bool HasStaticIndices() const {
         return this->static_indices;
     }
 

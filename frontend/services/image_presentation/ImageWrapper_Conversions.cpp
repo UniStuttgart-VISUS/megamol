@@ -22,9 +22,7 @@ void gl_download_texture_to_vector(
     unsigned int handle, ImageWrapper::ImageSize size, ImageWrapper::DataChannels channels, std::vector<byte>& target);
 } // namespace gl_wrapper_impl
 
-namespace megamol {
-namespace frontend_resources {
-namespace conversion {
+namespace megamol::frontend_resources::conversion {
 unsigned int to_uint(void* ptr) {
     return static_cast<unsigned int>(reinterpret_cast<long>(ptr));
 }
@@ -32,12 +30,10 @@ unsigned int to_uint(void* ptr) {
 std::vector<byte>* to_vector(void* ptr) {
     return static_cast<std::vector<byte>*>(ptr);
 }
-} // namespace conversion
-} // namespace frontend_resources
-} // namespace megamol
+} // namespace megamol::frontend_resources::conversion
 
 gl_texture::gl_texture(ImageWrapper const& image) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     this->from_image(image);
 #else
     throw std::runtime_error("[ImageWrapper -> gl_texture] Trying to construct GL texture, but GL is not active.");
@@ -71,7 +67,7 @@ gl_texture& gl_texture::operator=(gl_texture&& other) noexcept {
 }
 
 gl_texture& gl_texture::operator=(ImageWrapper const& image) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     this->from_image(image);
 
     return *this;
@@ -111,7 +107,7 @@ void byte_texture::from_image(ImageWrapper const& image) {
         this->texture_ptr = conversion::to_vector(image.referenced_image_handle);
         break;
     case WrappedImageType::GLTexureHandle:
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
         this->texture_owned = true;
         auto gl_texture = conversion::to_uint(image.referenced_image_handle);
         gl_wrapper_impl::gl_download_texture_to_vector(gl_texture, image.size, image.channels, this->texture);

@@ -10,12 +10,11 @@
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include "mpi.h"
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module aggregating the density of several identically-sized volumes over MPI.
@@ -26,18 +25,18 @@ namespace datatools {
 class MPIVolumeAggregator : public AbstractVolumeManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MPIVolumeAggregator";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "merges object-space distributed MultiparticleDataCalls over MPI";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
-#ifdef WITH_MPI
+    static bool IsAvailable() {
+#ifdef MEGAMOL_USE_MPI
         return true;
 #else
         return false;
@@ -45,10 +44,10 @@ public:
     }
 
     /** Ctor */
-    MPIVolumeAggregator(void);
+    MPIVolumeAggregator();
 
     /** Dtor */
-    virtual ~MPIVolumeAggregator(void);
+    ~MPIVolumeAggregator() override;
 
 protected:
     /**
@@ -64,13 +63,13 @@ protected:
     bool manipulateData(geocalls::VolumetricDataCall& outData, geocalls::VolumetricDataCall& inData) override;
     bool initMPI();
 
-    void release(void) override;
+    void release() override;
 
 private:
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /** The communicator that the view uses. */
     MPI_Comm comm = MPI_COMM_NULL;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;
@@ -85,5 +84,4 @@ private:
     std::vector<float> theVolume;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

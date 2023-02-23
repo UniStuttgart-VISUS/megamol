@@ -8,11 +8,14 @@ option(BUILD_FRONTEND_SERVICES "build frontend services" ON)
 if(BUILD_FRONTEND_SERVICES)
   project(frontend_services)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-    
-  require_external(glm)
-  require_external(imgui)
-  require_external(implot)  
-  require_external(imguizmoquat)
+
+  find_package(glm CONFIG REQUIRED)
+  find_package(imgui CONFIG REQUIRED)
+  find_package(imgui_software_renderer CONFIG REQUIRED)
+  find_package(imguizmoquat CONFIG REQUIRED)
+  find_package(implot CONFIG REQUIRED)
+  find_package(ZeroMQ REQUIRED)
+  find_package(cppzmq REQUIRED)
 
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "include/*.h"
@@ -52,7 +55,7 @@ if(BUILD_FRONTEND_SERVICES)
   )
 
   # Remove files in gl subdirectories from source list if GL ist not enabled
-  if (NOT ENABLE_GL)
+  if (NOT MEGAMOL_USE_OPENGL)
     foreach(src_file ${source_files})
       string(FIND "${src_file}" "/gl/" match)
       if (NOT "${match}" STREQUAL "-1")
@@ -72,7 +75,7 @@ if(BUILD_FRONTEND_SERVICES)
   file(GLOB_RECURSE gui_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.h" "gui/*.hpp")
   file(GLOB_RECURSE gui_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "gui/*.cpp")
   # Remove files in gl subdirectories from source list if GL ist not enabled
-  if (NOT ENABLE_GL)
+  if (NOT MEGAMOL_USE_OPENGL)
     foreach(src_file ${gui_source_files})
       string(FIND "${src_file}" "/gl/" match)
       if (NOT "${match}" STREQUAL "-1")
@@ -118,7 +121,7 @@ if(BUILD_FRONTEND_SERVICES)
   )
   target_link_libraries(abstract_frontend_service INTERFACE frontend_resources)
 
-  if(ENABLE_CUDA)
+  if(MEGAMOL_USE_CUDA)
     find_package(CUDAToolkit)
     target_compile_definitions(${PROJECT_NAME} PUBLIC MM_CUDA_ENABLED)
     target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cuda_driver)
@@ -128,18 +131,15 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
   
-  # GLFW
-  if (ENABLE_GL)
-    require_external(glfw)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+  if (MEGAMOL_USE_OPENGL)
+    find_package(glfw3 CONFIG REQUIRED)
+    find_package(glad REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw PUBLIC glad::glad core_gl)
   endif()
 
-  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
-  if(NOT ENABLE_GL)
-    message( FATAL_ERROR "VR Service Unity Kolab Interop needs OpenGL enabled. Abort." )
-  endif()
-    require_external(mwk-mint)
-    target_link_libraries(${PROJECT_NAME} PUBLIC interop Spout2)
+  if (MEGAMOL_USE_VR_INTEROP)
+    find_package(mwk-mint-interop)
+    target_link_libraries(${PROJECT_NAME} PUBLIC mwk-mint-interop::mwk-mint-interop)
   endif()
 
   # Linux Stacktrace
@@ -168,13 +168,20 @@ if(BUILD_FRONTEND_SERVICES)
     endif ()
   endif ()
 
-  if (ENABLE_GL)
-    require_external(glad)
-    target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
-  endif()
-
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core glm imgui implot imguizmoquat)
-
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+      ${VERSION_LIBRARY}
+      ${CMAKE_DL_LIBS}
+    PUBLIC
+      abstract_frontend_service
+      core
+      glm::glm
+      imgui::imgui
+      imgui_software_renderer::imgui_software_renderer
+      imguizmoquat::imguizmoquat
+      implot::implot
+      libzmq
+      cppzmq)
 
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")

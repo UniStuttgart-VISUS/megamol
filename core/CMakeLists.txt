@@ -9,18 +9,15 @@ if (BUILD_CORE)
   project(core)
 
   # Add externals.
-  require_external(expat)
-  require_external(lua)
-  require_external(libzmq)
-  require_external(libcppzmq)
-  require_external(zlib)
-  require_external(libpng)
-  require_external(glm)
-  require_external(json)
-  require_external(tbb)
-
-  if (ENABLE_CUESDK)
-    require_external(CUESDK)
+  find_package(nlohmann_json CONFIG REQUIRED)
+  find_package(PNG REQUIRED)
+  find_package(ZLIB REQUIRED)
+  find_package(glm REQUIRED)
+  find_package(TBB CONFIG REQUIRED)
+  find_package(Lua REQUIRED)
+  
+  if (MEGAMOL_USE_CUESDK)
+    find_package(CUESDK CONFIG REQUIRED)
   endif ()
 
   # Collect source files
@@ -32,23 +29,45 @@ if (BUILD_CORE)
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    ${LUA_INCLUDE_DIR})
   target_link_libraries(${PROJECT_NAME}
-    PUBLIC vislib glm zlib libpng json lua expat frontend_resources libcppzmq libzmq tbb PUBLIC OpenMP::OpenMP_CXX
-    PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service megamol_build_info_rc) # abstract render api used by MegaMolGraph
+    PUBLIC
+      vislib
+      glm::glm
+      ZLIB::ZLIB
+      PNG::PNG
+      nlohmann_json::nlohmann_json
+      ${LUA_LIBRARIES}
+      frontend_resources
+      OpenMP::OpenMP_CXX
+      TBB::tbb
+    PRIVATE
+      ${CMAKE_DL_LIBS}
+      ${CMAKE_THREAD_LIBS_INIT}
+      abstract_frontend_service # abstract render api used by MegaMolGraph
+      megamol_build_info_rc
+    )
   if (UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
   endif ()
   if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE Version)
   endif ()
-  if (ENABLE_CUESDK)
-    target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
+  if (MEGAMOL_USE_CUESDK)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CUESDK_LIB})
   endif ()
 
   if (MPI_C_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif ()
+
+  # Tracy
+  if (MEGAMOL_USE_TRACY)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC TRACY_ENABLE)
+    find_package(Tracy CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Tracy::TracyClient)
+  endif()
 
   # Install resources
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")

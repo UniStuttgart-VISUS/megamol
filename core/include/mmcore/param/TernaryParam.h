@@ -1,24 +1,15 @@
-/*
- * TernaryParam.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_TERNARYPARAM_H_INCLUDED
-#define MEGAMOLCORE_TERNARYPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParam.h"
 #include "vislib/math/Ternary.h"
 
-
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /**
  * class for ternary parameter objects
@@ -35,15 +26,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~TernaryParam(void);
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    std::string Definition() const override;
+    ~TernaryParam() override;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -71,7 +54,7 @@ public:
      *
      * @return The value of the parameter
      */
-    inline const vislib::math::Ternary& Value(void) const {
+    inline const vislib::math::Ternary& Value() const {
         return this->val;
     }
 
@@ -80,31 +63,21 @@ public:
      *
      * @return The value of the parameter as string.
      */
-    std::string ValueString(void) const override;
+    std::string ValueString() const override;
 
     /**
      * Gets the value of the parameter
      *
      * @return The value of the parameter
      */
-    inline operator vislib::math::Ternary(void) const {
+    inline operator vislib::math::Ternary() const {
         return this->val;
     }
 
 private:
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** The value of the parameter */
     vislib::math::Ternary val;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TERNARYPARAM_H_INCLUDED */
+} // namespace megamol::core::param

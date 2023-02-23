@@ -8,13 +8,13 @@
 #pragma once
 
 #include "geometry_calls/SimpleSphericalParticles.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ADIOSFlexConvert : public core::Module {
 
@@ -50,12 +50,12 @@ public:
     ADIOSFlexConvert();
 
     /** Dtor. */
-    virtual ~ADIOSFlexConvert();
+    ~ADIOSFlexConvert() override;
 
-    bool create();
+    bool create() override;
 
 protected:
-    void release();
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -74,9 +74,11 @@ protected:
      * @return 'true' on success, 'false' on failure.
      */
     bool getExtentCallback(core::Call& caller);
-    bool paramChanged(core::param::ParamSlot& p);
 
 private:
+    bool inquireDataVariables(CallADIOSData* cad);
+    bool inquireMetaDataVariables(CallADIOSData* cad);
+
     core::CalleeSlot mpSlot;
     core::CallerSlot adiosSlot;
 
@@ -87,7 +89,13 @@ private:
     core::param::ParamSlot flexYSlot;
     core::param::ParamSlot flexZSlot;
     core::param::ParamSlot flexAlignedPosSlot;
+    core::param::ParamSlot flexIDSlot;
+    core::param::ParamSlot flexVXSlot;
+    core::param::ParamSlot flexVYSlot;
+    core::param::ParamSlot flexVZSlot;
 
+    vislib::math::Cuboid<float> bbox;
+    bool hasVel, hasID;
 
     std::vector<float> mix;
 
@@ -96,11 +104,11 @@ private:
     geocalls::SimpleSphericalParticles::ColourDataType colType = geocalls::SimpleSphericalParticles::COLDATA_NONE;
     geocalls::SimpleSphericalParticles::VertexDataType vertType = geocalls::SimpleSphericalParticles::VERTDATA_NONE;
     geocalls::SimpleSphericalParticles::IDDataType idType = geocalls::SimpleSphericalParticles::IDDATA_NONE;
+    geocalls::SimpleSphericalParticles::DirDataType dirType = geocalls::SimpleSphericalParticles::DIRDATA_NONE;
 
     size_t stride = 0;
 
     bool _trigger_recalc = false;
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

@@ -15,11 +15,9 @@
 #include <vector>
 
 namespace megamol {
-namespace core {
-namespace moldyn {
+namespace core::moldyn {
 class MultiParticleDataCall;
-}
-} // namespace core
+} // namespace core::moldyn
 
 namespace datatools {
 
@@ -27,22 +25,22 @@ class ParticleNeighborhoodGraph : public core::Module {
 public:
     typedef uint32_t index_t;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleNeighborhoodGraph";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes the direct neighborhood graph of a particle data set";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     ParticleNeighborhoodGraph();
-    virtual ~ParticleNeighborhoodGraph();
+    ~ParticleNeighborhoodGraph() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
 
     bool getData(core::Call& c);
     bool getExtent(core::Call& c);

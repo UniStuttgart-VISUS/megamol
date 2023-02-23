@@ -58,7 +58,7 @@ megamol::gui::Configurator::Configurator(
     // Configure CONFIGURATOR Window
     this->win_config.size = ImVec2(750.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
+    this->win_config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs;
     this->win_config.hotkey =
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F11, core::view::Modifier::NONE);
 }
@@ -141,7 +141,7 @@ bool megamol::gui::Configurator::Draw() {
         this->module_list_sidebar_width *= megamol::gui::gui_scaling.Get();
 
         this->splitter_widget.Widget("module_splitter", true, 0.0f, SplitterWidget::FixedSplitterSide::LEFT_TOP,
-            this->module_list_sidebar_width, this->graph_state.graph_width);
+            this->module_list_sidebar_width, this->graph_state.graph_width, ImGui::GetCursorScreenPos());
         this->draw_window_module_list(this->module_list_sidebar_width, 0.0f, this->show_module_list_popup);
 
         this->module_list_sidebar_width /= megamol::gui::gui_scaling.Get();
@@ -195,8 +195,6 @@ void megamol::gui::Configurator::PopUps() {
         if (valid_double_click || valid_double_click_callslot) {
             this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed = true;
             this->last_selected_callslot_uid = selected_callslot_uid;
-            // Force consume double click!
-            ImGui::GetIO().MouseDoubleClicked[0] = false;
         }
         if (this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed) {
             this->module_list_popup_hovered_group_uid = selected_graph_ptr->GetHoveredGroup();
@@ -246,7 +244,7 @@ void megamol::gui::Configurator::PopUps() {
                 module_list_popup_hovered = true;
             }
             if (((ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !module_list_popup_hovered)) ||
-                ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 this->show_module_list_popup = false;
                 ImGui::CloseCurrentPopup();
             }
@@ -268,7 +266,7 @@ void megamol::gui::Configurator::draw_window_menu() {
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
 
-            if (ImGui::MenuItem("New Project")) {
+            if (ImGui::MenuItem("New Empty Project")) {
                 this->graph_collection.AddEmptyProject();
             }
 
@@ -305,12 +303,12 @@ void megamol::gui::Configurator::draw_window_menu() {
                     (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 this->graph_state.show_parameter_sidebar = !this->graph_state.show_parameter_sidebar;
             }
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             if (ImGui::MenuItem(
                     "Profiling Bar", nullptr, this->graph_state.show_profiling_bar, is_running_graph_active)) {
                 this->graph_state.show_profiling_bar = !this->graph_state.show_profiling_bar;
             }
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
             ImGui::EndMenu();
         }
         ImGui::Separator();
@@ -329,32 +327,32 @@ void megamol::gui::Configurator::draw_window_menu() {
                 ImGui::TextUnformatted(
                     "Spawn module selection pop-up (Only compatible modules when call slo tis clicked)");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Double left-click");
+                ImGui::TextUnformatted("Mouse Double Left-Click");
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Show context menu of module/call/group");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Right-click");
+                ImGui::TextUnformatted("Mouse Right-Click");
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted(
                     "Drag call slot of module to other compatible call slot to create call between modules");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Drag & drop");
+                ImGui::TextUnformatted("Mouse Left Drag & Drop");
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Zoom graph");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Mouse wheel");
+                ImGui::TextUnformatted("Mouse Wheel");
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Scroll graph");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Middle-click");
+                ImGui::TextUnformatted("Mouse Middle Drag");
 
                 ImGui::EndTable();
             }
@@ -469,8 +467,8 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
 
             if (add_module) {
                 if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    if (auto module_ptr =
-                            selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name)) {
+                    if (auto module_ptr = selected_graph_ptr->AddModule(
+                            this->graph_collection.GetModulesStock(), mod.class_name, "", "")) {
 
                         // If there is a call slot selected, create call to compatible call slot of new module
                         bool add_call = compat_filter && (selected_callslot_ptr != nullptr);

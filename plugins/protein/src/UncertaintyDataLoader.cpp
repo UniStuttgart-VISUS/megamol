@@ -15,10 +15,10 @@
 #include "UncertaintyDataLoader.h"
 
 #include <algorithm>
+#include <cfloat>
 #include <math.h>
 #include <string>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -26,6 +26,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 
+#include "vislib/StringConverter.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
@@ -45,7 +46,7 @@ using namespace megamol::protein_calls;
 /*
  * UncertaintyDataLoader::UncertaintyDataLoader (CTOR)
  */
-UncertaintyDataLoader::UncertaintyDataLoader(void)
+UncertaintyDataLoader::UncertaintyDataLoader()
         : megamol::core::Module()
         , dataOutSlot("dataout", "The slot providing the uncertainty data")
         , filenameSlot("uidFilename", "The filename of the uncertainty input data file.")
@@ -73,7 +74,7 @@ UncertaintyDataLoader::UncertaintyDataLoader(void)
 /*
  * UncertaintyDataLoader::~UncertaintyDataLoader (DTOR)
  */
-UncertaintyDataLoader::~UncertaintyDataLoader(void) {
+UncertaintyDataLoader::~UncertaintyDataLoader() {
     this->Release();
 }
 
@@ -234,16 +235,15 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
     // check if file ending matches ".uid"
     if (!filenameA.Contains(".uid")) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Wrong file ending detected, must be \".uid\": \"%s\"", filenameA.PeekBuffer()); // ERROR
+        Log::DefaultLog.WriteError(
+            "Wrong file ending detected, must be \".uid\": \"%s\"", filenameA.PeekBuffer()); // ERROR
         return false;
     }
 
     // Try to load the file
     if (file.LoadFile(filename.c_str())) {
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "Reading uncertainty input data file: \"%s\"", filenameA.PeekBuffer()); // INFO
+        Log::DefaultLog.WriteInfo("Reading uncertainty input data file: \"%s\"", filenameA.PeekBuffer()); // INFO
 
         // Reset array size
         // (maximum number of entries in data arrays is ~9 less than line count of file)
@@ -614,13 +614,12 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
         // Clear ascii file buffer
         file.Clear();
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Retrieved secondary structure assignments for %i amino-acids.",
+        Log::DefaultLog.WriteInfo("Retrieved secondary structure assignments for %i amino-acids.",
             this->pdbIndex.Count()); // INFO
 
         return true;
     } else {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Coudn't find uncertainty input data file: \"%s\"", T2A(filename.c_str())); // ERROR
+        Log::DefaultLog.WriteError("Coudn't find uncertainty input data file: \"%s\"", T2A(filename.c_str())); // ERROR
         return false;
     }
 }
@@ -629,7 +628,7 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 /*
  * UncertaintyDataLoader::CalculateStructureLength
  */
-bool UncertaintyDataLoader::CalculateStructureLength(void) {
+bool UncertaintyDataLoader::CalculateStructureLength() {
 
     const unsigned int methodCnt = static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM);
 
@@ -685,7 +684,7 @@ bool UncertaintyDataLoader::CalculateStructureLength(void) {
 /*
  * UncertaintyDataLoader::CalculateUncertaintyExtended
  */
-bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
+bool UncertaintyDataLoader::CalculateUncertaintyExtended() {
     using megamol::core::utility::log::Log;
 
     // return if no data is present ...
@@ -1497,8 +1496,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
         this->sortedSecStructAssignment[uncMethod].Add(ssa);
         this->uncertainty.Add(unc);
     }
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
+    Log::DefaultLog.WriteInfo("Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
     return true;
 }
 
@@ -1506,7 +1504,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 /*
  * UncertaintyDataLoader::CalculateUncertaintyAverage
  */
-bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
+bool UncertaintyDataLoader::CalculateUncertaintyAverage() {
     using megamol::core::utility::log::Log;
 
     // return if no data is present ...
@@ -1591,8 +1589,8 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
         this->uncertainty.Add(unc);
     }
 
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Calculated AVERAGE uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
+    Log::DefaultLog.WriteInfo(
+        "Calculated AVERAGE uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
 
     return true;
 }

@@ -4,7 +4,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmstd/renderer/CallGetTransferFunction.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/StringConverter.h"
@@ -61,7 +61,7 @@ struct PointCloud {
 /*
  * FloattableToLines::FloattableToLines
  */
-TableToLines::TableToLines(void)
+TableToLines::TableToLines()
         : Module()
         , slotTF("gettransferfunction", "Connects to the transfer function module")
         , slotDeployData("linedata", "Provides the data as line data call.")
@@ -147,7 +147,7 @@ TableToLines::TableToLines(void)
 /*
  * FloattableToLines::~FloattableToLines
  */
-TableToLines::~TableToLines(void) {
+TableToLines::~TableToLines() {
     this->Release();
 }
 
@@ -155,7 +155,7 @@ TableToLines::~TableToLines(void) {
 /*
  * megamol::pcl::PclDataSource::create
  */
-bool TableToLines::create(void) {
+bool TableToLines::create() {
     bool retval = true;
     return true;
 }
@@ -539,11 +539,11 @@ bool TableToLines::getLineData(core::Call& call) {
 
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                                   _T("in callback getMultiParticleData."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getMultiParticleData."));
         return false;
     }
 }
@@ -572,11 +572,11 @@ bool TableToLines::getLineDataExtent(core::Call& call) {
         c.SetUnlocker(NULL);
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                                   _T("in callback getLineDataExtend."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getLineDataExtend."));
         return false;
     }
 }
@@ -585,7 +585,7 @@ bool TableToLines::getLineDataExtent(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void TableToLines::release(void) {}
+void TableToLines::release() {}
 
 
 void TableToLines::colorTransferGray(std::vector<float>& grayArray, float const* transferTable, unsigned int tableSize,

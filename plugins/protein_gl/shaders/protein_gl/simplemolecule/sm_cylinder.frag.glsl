@@ -26,8 +26,14 @@ void main(void) {
     coord /= coord.w;
     coord -= objPos; // ... and move
 
+    mat3 rotmat;
+    rotmat[0] = rotMatT0;
+    rotmat[1] = rotMatT1;
+    rotmat[2] = rotMatT2;
+    mat3 invrot = inverse(rotmat);
+
     // calc the viewing ray
-    ray = rotMatT0 * coord.x + rotMatT1 * coord.y + rotMatT2 * coord.z;
+    ray = rotmat * coord.xyz;
     ray = normalize(ray - camPos.xyz);
 
     // calculate the geometry-ray-intersection
@@ -67,8 +73,7 @@ void main(void) {
     if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
     vec3 normal = vec3(0.0, normalize(intersection.yz));
-    vec4 nn = inverse(NormalM) * vec4(normal, 0);
-    normal_out = nn.xyz;
+    normal_out = invrot * normal; // inverse the rotation into model space
 
     // chose color for lighting
     vec3 color = move_color.rgb;

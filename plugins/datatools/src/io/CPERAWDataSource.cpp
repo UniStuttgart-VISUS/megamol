@@ -24,7 +24,7 @@ using namespace megamol;
 using namespace megamol::datatools::io;
 
 
-CPERAWDataSource::CPERAWDataSource(void)
+CPERAWDataSource::CPERAWDataSource()
         : core::Module()
         , filenameSlot("filename", "The path to the CPERAW file to load.")
         , radiusSlot("radius", "the radius of the particles")
@@ -46,17 +46,17 @@ CPERAWDataSource::CPERAWDataSource(void)
 }
 
 
-CPERAWDataSource::~CPERAWDataSource(void) {
+CPERAWDataSource::~CPERAWDataSource() {
     this->Release();
 }
 
 
-bool CPERAWDataSource::create(void) {
+bool CPERAWDataSource::create() {
     return true;
 }
 
 
-void CPERAWDataSource::release(void) {}
+void CPERAWDataSource::release() {}
 
 
 bool CPERAWDataSource::assertData() {
@@ -131,12 +131,12 @@ bool CPERAWDataSource::assertData() {
 }
 
 
-bool CPERAWDataSource::isDirty(void) {
+bool CPERAWDataSource::isDirty() {
     return this->filenameSlot.IsDirty() || this->radiusSlot.IsDirty();
 }
 
 
-void CPERAWDataSource::resetDirty(void) {
+void CPERAWDataSource::resetDirty() {
     this->filenameSlot.ResetDirty();
     this->radiusSlot.ResetDirty();
 }
@@ -184,7 +184,9 @@ bool CPERAWDataSource::getDataCallback(core::Call& c) {
             mdc->SetParticleListCount(0);
             return true;
         }
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }
@@ -218,7 +220,9 @@ bool CPERAWDataSource::getExtentCallback(core::Call& c) {
         } else {
             return false;
         }
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }

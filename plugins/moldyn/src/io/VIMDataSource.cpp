@@ -7,7 +7,6 @@
 
 #include "io/VIMDataSource.h"
 #include "geometry_calls/EllipsoidalDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -64,7 +63,7 @@ VIMDataSource::Frame::~Frame() {
 /*
  * VIMDataSource::Frame::Clear
  */
-void VIMDataSource::Frame::Clear(void) {
+void VIMDataSource::Frame::Clear() {
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         this->pos[i].EnforceSize(0);
         this->quat[i].EnforceSize(0);
@@ -91,14 +90,12 @@ bool VIMDataSource::Frame::LoadFrame(
     vislib::StringA startLine = vislib::sys::ReadLineFromFileA(*file);
 
     if (startLine[0] != '#') {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Invalid Start Line Parsed");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid Start Line Parsed");
         return false;
     }
 
     if (startLine[1] == '#') {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_WARN, "Unexpected End of Data");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unexpected End of Data");
         return false;
     }
 
@@ -107,7 +104,9 @@ bool VIMDataSource::Frame::LoadFrame(
 
     try {
         lScale = static_cast<float>(vislib::CharTraitsA::ParseDouble(startLine.PeekBuffer()));
-    } catch (...) { lScale = 1.0f; }
+    } catch (...) {
+        lScale = 1.0f;
+    }
 
     this->frame = idx;
 
@@ -135,7 +134,7 @@ bool VIMDataSource::Frame::LoadFrame(
             try {
                 this->parseParticleLine(line, type, x, y, z, qx, qy, qz, qw);
             } catch (...) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(50, "Unable to parse particle line");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to parse particle line");
                 continue;
             }
             unsigned int idx = 0;
@@ -259,7 +258,7 @@ const float* VIMDataSource::Frame::PartRadii(unsigned int type, SimpleType& t) c
 /*
  * VIMDataSource::Frame::SizeOf
  */
-SIZE_T VIMDataSource::Frame::SizeOf(void) const {
+SIZE_T VIMDataSource::Frame::SizeOf() const {
     SIZE_T size = 0;
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         size += this->pos[i].GetSize();
@@ -375,7 +374,7 @@ void VIMDataSource::Frame::parseParticleLine(vislib::StringA& line, int& outType
 /*
  * VIMDataSource::VIMDataSource
  */
-VIMDataSource::VIMDataSource(void)
+VIMDataSource::VIMDataSource()
         : core::view::AnimDataModule()
         , filename("filename", "The path to the trisoup file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -406,7 +405,7 @@ VIMDataSource::VIMDataSource(void)
 /*
  * VIMDataSource::~VIMDataSource
  */
-VIMDataSource::~VIMDataSource(void) {
+VIMDataSource::~VIMDataSource() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -414,7 +413,7 @@ VIMDataSource::~VIMDataSource(void) {
 /*
  * VIMDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* VIMDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* VIMDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<VIMDataSource*>(this));
     f->SetTypeCount(this->typeCnt);
     return f;
@@ -424,7 +423,7 @@ core::view::AnimDataModule::Frame* VIMDataSource::constructFrame(void) const {
 /*
  * VIMDataSource::create
  */
-bool VIMDataSource::create(void) {
+bool VIMDataSource::create() {
     return true;
 }
 
@@ -450,7 +449,7 @@ void VIMDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsigned
 /*
  * VIMDataSource::release
  */
-void VIMDataSource::release(void) {
+void VIMDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;
@@ -467,7 +466,7 @@ void VIMDataSource::release(void) {
 /*
  * VIMDataSource::buildFrameTable
  */
-void VIMDataSource::buildFrameTable(void) {
+void VIMDataSource::buildFrameTable() {
     ASSERT(this->file != NULL);
 
     vislib::SingleLinkedList<vislib::sys::File::FileSize> framePoss;
@@ -547,7 +546,7 @@ void VIMDataSource::buildFrameTable(void) {
 /*
  * VIMDataSource::calcBoundingBox
  */
-void VIMDataSource::calcBoundingBox(void) {
+void VIMDataSource::calcBoundingBox() {
     float scale;
     this->boxScaling = 0.0f;
 
@@ -586,8 +585,7 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to open VIM-File \"%s\": %s",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open VIM-File \"%s\": %s",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
             static_cast<const char*>(err));
 
@@ -600,7 +598,7 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     this->buildFrameTable();
     if (!this->readHeader(this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to read VIM-Header from file \"%s\". Wrong format?",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 
@@ -631,12 +629,12 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
 
     this->initFrameCache(cacheSize);
@@ -800,7 +798,9 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
                     types.Last() = *element;
                 }
                 element = NULL;
-            } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteMsg(50, "Error parsing type line."); }
+            } catch (...) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Error parsing type line.");
+            }
             SAFE_DELETE(element);
         } else if (line[0] == '>') {
             // very extream file redirection

@@ -119,7 +119,7 @@ PDBWriter::~PDBWriter() {
 /*
  * PDBWriter::IsRunning
  */
-bool PDBWriter::IsRunning(void) const {
+bool PDBWriter::IsRunning() const {
     return (!(this->jobDone));
 }
 
@@ -134,7 +134,7 @@ bool PDBWriter::buttonCallback(core::param::ParamSlot& slot) {
 /*
  * PDBWriter::Start
  */
-bool PDBWriter::Start(void) {
+bool PDBWriter::Start() {
 
     uint frameCnt;
 
@@ -152,7 +152,7 @@ bool PDBWriter::Start(void) {
     }
     frameCnt = mol->FrameCount();
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Number of frames %u", this->ClassName(), frameCnt);
+    Log::DefaultLog.WriteInfo("%s: Number of frames %u", this->ClassName(), frameCnt);
 
     // Determine maximum frame to be written
     uint maxFrame = this->minFrameSlot.Param<core::param::IntParam>()->Value() +
@@ -161,9 +161,8 @@ bool PDBWriter::Start(void) {
 
     // Check whether the selected frames are valid
     if (maxFrame >= frameCnt) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Invalid frame selection (max frame is %u, but number of frames is %u", this->ClassName(), maxFrame,
-            frameCnt);
+        Log::DefaultLog.WriteError("%s: Invalid frame selection (max frame is %u, but number of frames is %u",
+            this->ClassName(), maxFrame, frameCnt);
         this->jobDone = true;
         return false;
     }
@@ -227,7 +226,7 @@ bool PDBWriter::Start(void) {
 /*
  * PDBWriter::Terminate
  */
-bool PDBWriter::Terminate(void) {
+bool PDBWriter::Terminate() {
     return true; // TODO What does this do?
 }
 
@@ -235,7 +234,7 @@ bool PDBWriter::Terminate(void) {
 /*
  * PDBWriter::create
  */
-bool PDBWriter::create(void) {
+bool PDBWriter::create() {
     return true;
 }
 
@@ -243,7 +242,7 @@ bool PDBWriter::create(void) {
 /*
  * PDBWriter::release
  */
-void PDBWriter::release(void) {}
+void PDBWriter::release() {}
 
 
 /**
@@ -313,8 +312,7 @@ bool PDBWriter::writePDB(MolecularDataCall* mol) {
         this->useModelRecord = true;
     }
 
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "%s: Writing frame %u to file '%s'", this->ClassName(), mol->FrameID(), filename.data());
+    Log::DefaultLog.WriteInfo("%s: Writing frame %u to file '%s'", this->ClassName(), mol->FrameID(), filename.data());
 
     // Try to open the output file
     std::ofstream outfile;
@@ -325,8 +323,7 @@ bool PDBWriter::writePDB(MolecularDataCall* mol) {
         outfile.open(filename.data(), std::ios::out | std::ios::binary | std::ios::app);
     }
     if (!outfile.good()) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to open file '%s'\n", this->ClassName(), filename.data());
+        Log::DefaultLog.WriteError("%s: Unable to open file '%s'\n", this->ClassName(), filename.data());
         return false;
     }
 
@@ -501,8 +498,7 @@ bool PDBWriter::writePQR(MolecularDataCall* mol) {
         filename.append(".pqr");
     }
 
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "%s: Writing frame %u to file '%s'", this->ClassName(), mol->FrameID(), filename.data());
+    Log::DefaultLog.WriteInfo("%s: Writing frame %u to file '%s'", this->ClassName(), mol->FrameID(), filename.data());
 
     // Try to open the output file
     std::ofstream outfile;
@@ -513,8 +509,7 @@ bool PDBWriter::writePQR(MolecularDataCall* mol) {
         outfile.open(filename.data(), std::ios::out | std::ios::binary | std::ios::app);
     }
     if (!outfile.good()) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to open file '%s'\n", this->ClassName(), filename.data());
+        Log::DefaultLog.WriteError("%s: Unable to open file '%s'\n", this->ClassName(), filename.data());
         return false;
     }
 

@@ -14,6 +14,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 
+#include "vtkm/Matrix.h"
 #include "vtkm/cont/DataSetBuilderExplicit.h"
 #include "vtkm/cont/DataSetFieldAdd.h"
 #include "vtkm/io/writer/VTKDataSetWriter.h"
@@ -27,7 +28,7 @@ typedef vtkm::Vec<float, 3> Vec3f;
 /*
  * mmvtkmDataSource::mmvtkmDataSource
  */
-mmvtkmDataSource::mmvtkmDataSource(void)
+mmvtkmDataSource::mmvtkmDataSource()
         : core::view::AnimDataModule()
         , getDataCalleeSlot_("getdata", "Slot to request data from this data source.")
         , nodesAdiosCallerSlot_("adiosNodeSlot", "Slot to request node data from adios.")
@@ -55,7 +56,7 @@ mmvtkmDataSource::mmvtkmDataSource(void)
 /*
  * mmvtkmDataSource::~mmvtkmDataSource
  */
-mmvtkmDataSource::~mmvtkmDataSource(void) {
+mmvtkmDataSource::~mmvtkmDataSource() {
     this->Release();
 }
 
@@ -63,7 +64,7 @@ mmvtkmDataSource::~mmvtkmDataSource(void) {
 /*
  mmvtkmDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* mmvtkmDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* mmvtkmDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<mmvtkmDataSource*>(this));
     return f;
 }
@@ -72,7 +73,7 @@ core::view::AnimDataModule::Frame* mmvtkmDataSource::constructFrame(void) const 
 /*
  * mmvtkmDataSource::create
  */
-bool mmvtkmDataSource::create(void) {
+bool mmvtkmDataSource::create() {
     return true;
 }
 
@@ -86,7 +87,7 @@ void mmvtkmDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
 /*
  * mmvtkmDataSource::release
  */
-void mmvtkmDataSource::release(void) {}
+void mmvtkmDataSource::release() {}
 
 
 /*

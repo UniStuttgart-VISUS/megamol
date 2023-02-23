@@ -1,8 +1,7 @@
-/*
- * TernaryParam.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/TernaryParam.h"
@@ -22,16 +21,8 @@ TernaryParam::TernaryParam(const vislib::math::Ternary& initVal) : AbstractParam
 /*
  * TernaryParam::~TernaryParam
  */
-TernaryParam::~TernaryParam(void) {
+TernaryParam::~TernaryParam() {
     // intentionally empty
-}
-
-
-/*
- * TernaryParam::Definition
- */
-std::string TernaryParam::Definition() const {
-    return "MMTRRY";
 }
 
 
@@ -59,6 +50,6 @@ void TernaryParam::SetValue(vislib::math::Ternary v, bool setDirty) {
 /*
  * TernaryParam::ValueString
  */
-std::string TernaryParam::ValueString(void) const {
+std::string TernaryParam::ValueString() const {
     return this->val.ToStringA().PeekBuffer();
 }

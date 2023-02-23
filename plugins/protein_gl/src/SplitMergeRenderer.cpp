@@ -1,5 +1,4 @@
 #include "SplitMergeRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -7,16 +6,15 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "vislib/math/FastMap.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib_gl/graphics/gl/SimpleFont.h"
-#include <math.h>
-//#include "mmcore/misc/ImageViewer.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include "vislib/math/FastMap.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <float.h>
+#include <math.h>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -30,8 +28,8 @@ protein_calls::SplitMergeCall* SplitMergeRenderer::FastMapWrapper::diagram;
 /*
  * SplitMergeRenderer::SplitMergeRenderer (CTOR)
  */
-SplitMergeRenderer::SplitMergeRenderer(void)
-        : core_gl::view::Renderer2DModuleGL()
+SplitMergeRenderer::SplitMergeRenderer()
+        : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the diagram rendering with data storage.")
         , selectionCallerSlot("getSelection", "Connects the diagram rendering with selection storage.")
         , hiddenCallerSlot("getHidden", "Connects the diagram rendering with visibility storage.")
@@ -82,7 +80,7 @@ SplitMergeRenderer::SplitMergeRenderer(void)
 /*
  * SplitMergeRenderer::~SplitMergeRenderer (DTOR)
  */
-SplitMergeRenderer::~SplitMergeRenderer(void) {
+SplitMergeRenderer::~SplitMergeRenderer() {
     this->Release();
 }
 
@@ -147,7 +145,7 @@ void SplitMergeRenderer::calcExtents() {
     this->bounds.Set(minX, -1.0f - (sortedSeries.Count() - 1) * seriesSpacing, maxX, 1.0f);
 }
 
-bool SplitMergeRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool SplitMergeRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
     // set the bounding box to 0..1
 
     if (diagram == NULL) {
@@ -173,7 +171,7 @@ bool SplitMergeRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                     float tmp = (y - 1) / -seriesSpacing;
                     int series = static_cast<int>(tmp);
                     if (series >= 0 && series < (int)sortedSeries.Count() && (tmp - static_cast<int>(tmp)) < 0.5f) {
-                        // Log::DefaultLog.WriteInfo(0, "I hit series %s",
+                        // Log::DefaultLog.WriteInfo( "I hit series %s",
                         // diagram->GetSeries(sortedSeries[series])->GetName());
                         consumeEvent = true;
                         selectedSeries = diagram->GetSeries(sortedSeries[series]);
@@ -228,7 +226,7 @@ void SplitMergeRenderer::closePath(protein_calls::SplitMergeCall::SplitMergeMapp
 /*
  * SplitMergeRenderer::Render
  */
-bool SplitMergeRenderer::Render(core_gl::view::CallRender2DGL& call) {
+bool SplitMergeRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     // get pointer to Diagram2DCall
     diagram = this->dataCallerSlot.CallAs<protein_calls::SplitMergeCall>();
     if (diagram == NULL)

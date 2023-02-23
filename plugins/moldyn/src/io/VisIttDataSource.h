@@ -5,16 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VISITTDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_VISITTDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/RawStorage.h"
@@ -26,9 +22,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -41,7 +35,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VisIttDataSource";
     }
 
@@ -50,7 +44,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for VisItt files.";
     }
 
@@ -59,15 +53,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    VisIttDataSource(void);
+    VisIttDataSource();
 
     /** Dtor. */
-    virtual ~VisIttDataSource(void);
+    ~VisIttDataSource() override;
 
 protected:
     /**
@@ -76,14 +70,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -94,12 +88,12 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Nested class of frame data */
@@ -113,12 +107,12 @@ private:
         Frame(core::view::AnimDataModule& owner);
 
         /** Dtor. */
-        virtual ~Frame(void);
+        ~Frame() override;
 
         /**
          * Clears the particle data
          */
-        inline void Clear(void) {
+        inline void Clear() {
             this->frame = 0;
             this->dat.clear();
         }
@@ -137,7 +131,7 @@ private:
          *
          * @return frame number
          */
-        inline unsigned int getFrameNumber(void) {
+        inline unsigned int getFrameNumber() {
             return this->frame;
         }
 
@@ -181,7 +175,7 @@ private:
          *
          * @return All stored particle types
          */
-        inline std::vector<unsigned int> ParticleTypes(void) const {
+        inline std::vector<unsigned int> ParticleTypes() const {
             std::vector<unsigned int> keys;
             for (const std::pair<unsigned int, std::vector<float>>& p : dat) {
                 keys.push_back(p.first);
@@ -194,7 +188,7 @@ private:
          *
          * @return The approximate size of the frame data
          */
-        inline uint64_t GetFrameSize(void) const {
+        inline uint64_t GetFrameSize() const {
             uint64_t fs = 0;
             for (const std::pair<unsigned int, std::vector<float>>& p : dat) {
                 fs += p.second.size() * sizeof(float);
@@ -226,13 +220,13 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!
@@ -245,7 +239,7 @@ private:
     };
 
     /** Builds up the frame index table. */
-    void buildFrameTable(void);
+    void buildFrameTable();
 
     ///** Calculates the bounding box from all frames. */
     //void calcBoundingBox(void);
@@ -296,13 +290,13 @@ private:
     bool getExtentCallback(core::Call& caller);
 
     /** Finds the data column used for filtering */
-    void findFilterColumn(void);
+    void findFilterColumn();
 
     /** Finds the data column used for the particle index */
-    void findIdColumn(void);
+    void findIdColumn();
 
     /** Finds the data column used for the color number */
-    void findTypeColumn(void);
+    void findTypeColumn();
 
     /** The file name */
     core::param::ParamSlot filename;
@@ -359,8 +353,4 @@ private:
     unsigned int typeIndex;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_VISITTDATASOURCE_H_INCLUDED */
+} // namespace megamol::moldyn::io

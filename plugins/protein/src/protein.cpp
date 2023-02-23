@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 // jobs
 #include "PDBWriter.h"
@@ -17,6 +17,7 @@
 #include "CaverTunnelResidueLoader.h"
 #include "CrystalStructureDataSource.h"
 #include "GROLoader.h"
+#include "MoleculeLoader.h"
 #include "PDBLoader.h"
 #include "SolPathDataSource.h"
 #include "SolventHydroBondGenerator.h"
@@ -46,13 +47,12 @@
 #include "vislib/Trace.h"
 
 namespace megamol::protein {
-class ProteinPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ProteinPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ProteinPluginInstance)
 
 public:
-    ProteinPluginInstance(void)
-            : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "protein", "Plugin for protein rendering (SFB716 D4)"){};
+    ProteinPluginInstance()
+            : megamol::core::factories::AbstractPluginInstance("protein", "Plugin for protein rendering (SFB716 D4)"){};
 
     ~ProteinPluginInstance() override = default;
 
@@ -65,6 +65,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventHydroBondGenerator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::GROLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::IntSelection>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CrystalStructureDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTILoader>();

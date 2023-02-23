@@ -76,33 +76,33 @@ class ASCIISphereLoader : public core::Module {
 public:
 
     // Constructor
-    ASCIISphereLoader(void);
+    ASCIISphereLoader();
 
     // Destructor
-    virtual ~ASCIISphereLoader(void);
+    virtual ~ASCIISphereLoader();
 
     // Returns the name of the module. Has to be unique!
-    static const char *ClassName(void) {
+    static const char *ClassName() {
         return "ASCIISphereLoader";
     }
 
-    // Returns a human readable description of the module.
-    static const char *Description(void) {
+    // Returns a human-readable description of the module.
+    static const char *Description() {
         return "Loads sphere data from a csv file that contains one sphere per line.";
     }
 
     // Answers whether this module is available on the current system, returns 'true' if the module is available, 'false' otherwise.
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
 private:
 
     // Implementation of 'Create' (called after constructor, loads shaders etc.) ‚ returns 'true' on success, 'false' otherwise.
-    virtual bool create(void);
+    virtual bool create();
 
     // Implementation of 'Release'. Should free all the memory used by member variables (called by destructor).
-    virtual void release(void);
+    virtual void release();
 
     [...]
 };
@@ -159,7 +159,7 @@ core::param::ParamSlot filenameSlot;
 From ``src/ASCIISphereLoader.cpp``:
 
 ```cpp
-ASCIISphereLoader::ASCIISphereLoader(void) : core::Module(),
+ASCIISphereLoader::ASCIISphereLoader() : core::Module(),
     filenameSlot("filename", "The path to the file that contains the data") {
         
     //…
@@ -239,7 +239,7 @@ The address of the loaded data has to be passed to other modules via Calls. Thes
 For each Callee slot, the hosting Module can provide callback functions. The following code links the right side of the Call to the CalleeSlot in the data loader ``ASCIISphereLoader``:
 
 ```cpp
-ASCIISphereLoader::ASCIISphereLoader(void): core::Module(),
+ASCIISphereLoader::ASCIISphereLoader(): core::Module(),
     getDataSlot("getdata", "The slot publishing the loaded data") {
 
     this->getDataSlot.SetCallback(CallSpheres::ClassName(), "GetData",                                                   &ASCIISphereLoader::getDataCallback);
@@ -259,7 +259,7 @@ This example exposes the two functions ``GetData`` and ``GetExtent``. These are 
 Once the right side of the call is handled in code, we have to have a look at the left side: the Renderer. This module requests data via the call and therefore provides a CallerSlot. In the ``SimplestSphereRenderer`` this looks like the following:
 
 ```cpp
-SimplestSphereRenderer::SimplestSphereRenderer(void): core::view::Renderer3DModule(),
+SimplestSphereRenderer::SimplestSphereRenderer(): core::view::Renderer3DModule(),
     sphereDataSlot("inData", "The input data slot for sphere data.") {
 
     this->sphereDataSlot.SetCompatibleCall<CallSpheresDescription>();
@@ -292,13 +292,13 @@ An example for a call is given in ``src/CallSpheres.cpp`` and ``src/CallSpheres.
 
 * Calls are derived from one of several abstract Call classes.
 * Calls have to provide two additional functions
-  1. ``FunctionCount(void) // returns the number of available callback functions``
+  1. ``FunctionCount() // returns the number of available callback functions``
   2. ``FunctionName(unsigned int idx) // returns the names of the callbacks``
 
 It is typically a good idea to override the assignment operator, especially if you plan to implement data manipulation modules in the future.  In ``src/CallSpheres.h`` the abovementioned functions look like this (the comments show the content of the functions below):
 
 ```cpp
-static unsigned int FunctionCount(void) {
+static unsigned int FunctionCount() {
     // return 2
     return core::AbstractGetData3DCall::FunctionCount();
 }
@@ -392,41 +392,27 @@ This method simply tells the connected View that the Renderer is able to render,
 As stated, most of the shader creation and compilation should happen in the create method. In our example this looks like the following, including error handling:
 
 ```cpp
-ShaderSource vertSrc;
-ShaderSource fragSrc;
-if (!this->GetCoreInstance()->ShaderSourceFactory()
-                               .MakeShaderSource("simplePoints::vertex", vertSrc)) {
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
-                            "Unable to load vertex shader source for simple points");
-    return false;
-}
+auto const shader_options =
+    core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-if (!this->GetCoreInstance()->ShaderSourceFactory()
-                               .MakeShaderSource("simplePoints::fragment", fragSrc)) {
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
-                            "Unable to load fragment shader source for simple points");
-    return false;
-}
 try {
-    if (!this->simpleShader.Create(vertSrc.Code(), vertSrc.Count(), 
-                                   fragSrc.Code(), fragSrc.Count())) {
-        throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    }
-} catch (vislib::Exception e) {
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
-                             "Unable to create point shader: %s\n", e.GetMsgA());
+    simpleShader = core::utility::make_glowl_shader("simplePoints", shader_options,
+        "megamol101_gl/simple_points.vert.glsl", "megamol101_gl/simple_points.frag.glsl");
+} catch (std::exception& e) {
+    Log::DefaultLog.WriteError(("SimplestSphereRenderer: " + std::string(e.what())).c_str());
     return false;
 }
 ```
 
-GLSL shader programs can be stored in simple text files or so called ``.btf`` files. ``.btf`` files are XML-based and allow the programmer to stitch together parts of shader programs to create new ones. Via vislib, all kinds of possible shader pipelines are supported:
+TODO outdated use new shaderfactory:
+~~GLSL shader programs can be stored in simple text files or so called ``.btf`` files. ``.btf`` files are XML-based and allow the programmer to stitch together parts of shader programs to create new ones. Via vislib, all kinds of possible shader pipelines are supported:~~
 
-* Vertex + Fragment Shader
-* Geometry Shader
-* Tessellation Shader
-* Compute Shader
+* ~~Vertex + Fragment Shader~~
+* ~~Geometry Shader~~
+* ~~Tessellation Shader~~
+* ~~Compute Shader~~
 
-The example in ``SimplestSphereRenderer`` uses a boolean Parameter Slot to switch between two different shader programs that are stored in ``Shaders/simplePoints.bft`` and ``Shaders/prettyPoints.btf`` respectively. Changing the slot value switches between the rendering of simple, unshaded points, or lit spheres:
+~~The example in ``SimplestSphereRenderer`` uses a boolean Parameter Slot to switch between two different shader programs that are stored in ``Shaders/simplePoints.bft`` and ``Shaders/prettyPoints.btf`` respectively. Changing the slot value switches between the rendering of simple, unshaded points, or lit spheres:~~
 
 ![Unshaded Points](images/ugly.png)![Lit Spheres](images/pretty.png)
 

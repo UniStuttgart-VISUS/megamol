@@ -16,7 +16,7 @@ unsigned int SimpleSphericalParticles::IDDataSize[] = {0, 4, 8};
 /*
  * SimpleSphericalParticles::SimpleSphericalParticles
  */
-SimpleSphericalParticles::SimpleSphericalParticles(void)
+SimpleSphericalParticles::SimpleSphericalParticles()
         : colDataType(COLDATA_NONE)
         , colPtr(nullptr)
         , colStride(0)
@@ -60,7 +60,7 @@ SimpleSphericalParticles::SimpleSphericalParticles(const SimpleSphericalParticle
 /*
  * SimpleSphericalParticles::~SimpleSphericalParticles
  */
-SimpleSphericalParticles::~SimpleSphericalParticles(void) {
+SimpleSphericalParticles::~SimpleSphericalParticles() {
     this->colDataType = COLDATA_NONE;
     this->colPtr = nullptr; // DO NOT DELETE
     this->count = 0;

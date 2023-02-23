@@ -14,15 +14,14 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/RendererModule.h"
-#include "mmcore_gl/ModuleGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/RendererModule.h"
+#include "mmstd_gl/ModuleGL.h"
 
-#include "FSRAMDHelper.h"
+#include "FSR/FSRAMDHelper.h"
 
 namespace megamol::mmstd_gl {
 
@@ -32,11 +31,11 @@ namespace megamol::mmstd_gl {
  * and returns the re-scaled framebuffer to the initial caller.
  */
 template<typename CALL>
-class ResolutionScalerBase : public core::view::RendererModule<CALL, core_gl::ModuleGL> {
+class ResolutionScalerBase : public core::view::RendererModule<CALL, mmstd_gl::ModuleGL> {
 public:
     /** ctor */
     ResolutionScalerBase()
-            : core::view::RendererModule<CALL, core_gl::ModuleGL>()
+            : core::view::RendererModule<CALL, mmstd_gl::ModuleGL>()
             , scale_mode_("Scale Mode", "Sets the scale mode for the input fbo, e.g. no scale, bilinear, FSR.")
             , rcas_sharpness_attenuation_("Sharpness", "Sets the sharpness attenuation parameter used in RCAS.")
             , fsr_resolution_presets_("Scale Factor", "Sets the scale factor for the resolution (i.e. 2x means the "
@@ -84,7 +83,8 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     bool create() override {
-        auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shader_options = core::utility::make_path_shader_options(
+            this->frontend_resources.template get<megamol::frontend_resources::RuntimeConfig>());
 
         try {
             naive_upsample_prgm_ = core::utility::make_glowl_shader(
@@ -105,7 +105,7 @@ protected:
             fsr_rcas_upsample_prgm_ = core::utility::make_glowl_shader(
                 "fsr_upscale_rcas", so_rcas, "mmstd_gl/upscaling/resolution_scaler_fsr.comp.glsl");
         } catch (std::exception& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 ("ResolutionScalerBase: " + std::string(e.what())).c_str());
         }
 
@@ -207,7 +207,7 @@ protected:
                 inter_tl_ = input_fbo_tl;
             }
 
-            if (scaled_fbo_->checkStatus(0) != GL_FRAMEBUFFER_COMPLETE) {
+            if (scaled_fbo_->checkStatus() != GL_FRAMEBUFFER_COMPLETE) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "The scaled_fbo_ in ResolutionScalerBase did not return GL_FRAMEBUFFER_COMPLETE");
                 return false;

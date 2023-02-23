@@ -13,13 +13,13 @@
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmstd/view/AbstractView.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include "IceT.h"
 #include "IceTMPI.h"
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 
 namespace megamol {
 namespace remote {
@@ -51,15 +51,6 @@ public:
      */
     static bool IsAvailable(void) {
         return true;
-    }
-
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
     }
 
     /**
@@ -125,7 +116,7 @@ private:
 
     bool aggregate_;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;
 
@@ -142,7 +133,7 @@ private:
     IceTCommunicator icet_comm_;
 
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 
     bool renderCompChanged(core::param::ParamSlot& slot);
 

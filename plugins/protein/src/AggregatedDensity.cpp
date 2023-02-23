@@ -7,7 +7,7 @@
 
 #include "AggregatedDensity.h"
 #include "geometry_calls/VolumetricDataCall.h"
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include <cfloat>
 #include <climits>
 #include <cmath>
@@ -20,7 +20,7 @@
 /*
  * megamol::protein::AggregatedDensity::AggregatedDensity
  */
-megamol::protein::AggregatedDensity::AggregatedDensity(void)
+megamol::protein::AggregatedDensity::AggregatedDensity()
         : getDensitySlot("sendAggregatedDensity", "Sends the aggrated density data")
         , getZvelocitySlot("sendAggregatedZvelocity", "Sends the aggrated velocity data")
         , is_aggregated(false)
@@ -66,13 +66,13 @@ megamol::protein::AggregatedDensity::AggregatedDensity(void)
 /*
  * megamol::protein::AggregatedDensity::~AggregatedDensity
  */
-megamol::protein::AggregatedDensity::~AggregatedDensity(void) {}
+megamol::protein::AggregatedDensity::~AggregatedDensity() {}
 
 
 /*
  * megamol::protein::AggregatedDensity::create
  */
-bool megamol::protein::AggregatedDensity::create(void) {
+bool megamol::protein::AggregatedDensity::create() {
     return true;
 }
 
@@ -80,7 +80,7 @@ bool megamol::protein::AggregatedDensity::create(void) {
 /*
  * megamol::protein::AggregatedDensity::release
  */
-void megamol::protein::AggregatedDensity::release(void) {
+void megamol::protein::AggregatedDensity::release() {
     ARY_SAFE_DELETE(this->vol);
 }
 

@@ -5,15 +5,12 @@
  * All rights reserved.
  */
 
-#ifndef TURNTABLE_MANIPULATOR_H_INCLUDED
-#define TURNTABLE_MANIPULATOR_H_INCLUDED
+#pragma once
 
 #include "mmcore/thecam/manipulator_base.h"
 #include <glm/ext.hpp>
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * Implements an orbtial camera maniupulator.
@@ -114,7 +111,7 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) {
+    inline void setInactive() {
         this->end_manipulation();
     }
 
@@ -126,9 +123,4 @@ private:
     screen_type m_last_sy;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
-
-
-#endif // !TURNTABLE_MANIPULATOR_H_INCLUDED
+} // namespace megamol::core::thecam

@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Rectangle.h"
@@ -15,8 +15,7 @@
 #include <memory>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 /**
  * Call for transporting a triangle mesh in an ready-to-use fashion (for OpenGL).
  *
@@ -144,5 +143,4 @@ protected:
     std::shared_ptr<std::vector<float>> normals;
     std::shared_ptr<std::vector<unsigned int>> indices;
 };
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

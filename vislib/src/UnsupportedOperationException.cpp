@@ -39,7 +39,7 @@ vislib::UnsupportedOperationException::UnsupportedOperationException(const Unsup
 /*
  * vislib::UnsupportedOperationException::~UnsupportedOperationException
  */
-vislib::UnsupportedOperationException::~UnsupportedOperationException(void) {}
+vislib::UnsupportedOperationException::~UnsupportedOperationException() {}
 
 
 /*

@@ -5,19 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED
-#define MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/assert.h"
 #include "vislib/forceinline.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 
 
-namespace megamol {
-namespace geocalls {
+namespace megamol::geocalls {
 
 
 /**
@@ -60,12 +57,12 @@ public:
         /**
          * Ctor
          */
-        Lines(void);
+        Lines();
 
         /**
          * Dtor
          */
-        ~Lines(void);
+        ~Lines();
 
         /**
          * Removes all data
@@ -89,7 +86,7 @@ public:
          *
          * @return The number of elements
          */
-        inline unsigned int Count(void) const {
+        inline unsigned int Count() const {
             return this->count;
         }
 
@@ -98,7 +95,7 @@ public:
          *
          * @return The colour data type
          */
-        inline ColourDataType ColourArrayType(void) const {
+        inline ColourDataType ColourArrayType() const {
             return this->colDT;
         }
 
@@ -108,7 +105,7 @@ public:
          *
          * @return The colour array
          */
-        inline const unsigned char* ColourArrayByte(void) const {
+        inline const unsigned char* ColourArrayByte() const {
             ASSERT((this->colDT == CDT_BYTE_RGB) || (this->colDT == CDT_BYTE_RGBA));
             return this->col.dataByte;
         }
@@ -119,7 +116,7 @@ public:
          *
          * @return The colour array
          */
-        inline const float* ColourArrayFloat(void) const {
+        inline const float* ColourArrayFloat() const {
             ASSERT((this->colDT == CDT_FLOAT_RGB) || (this->colDT == CDT_FLOAT_RGBA));
             return this->col.dataFloat;
         }
@@ -130,7 +127,7 @@ public:
          *
          * @return The colour array
          */
-        inline const double* ColourArrayDouble(void) const {
+        inline const double* ColourArrayDouble() const {
             ASSERT((this->colDT == CDT_DOUBLE_RGB) || (this->colDT == CDT_DOUBLE_RGBA));
             return this->col.dataDouble;
         }
@@ -140,7 +137,7 @@ public:
          *
          * @return The global colour value
          */
-        inline const vislib::graphics::ColourRGBAu8& GlobalColour(void) const {
+        inline const vislib::graphics::ColourRGBAu8& GlobalColour() const {
             return this->globCol;
         }
 
@@ -149,7 +146,7 @@ public:
          *
          * @return The ID
          */
-        inline const size_t ID(void) const {
+        inline const size_t ID() const {
             return this->id;
         }
 
@@ -158,7 +155,7 @@ public:
          *
          * @return The data type of the index array
          */
-        inline DataType IndexArrayDataType(void) const {
+        inline DataType IndexArrayDataType() const {
             return this->idxDT;
         }
 
@@ -167,7 +164,7 @@ public:
          *
          * @return The index array
          */
-        inline const unsigned char* IndexArrayByte(void) const {
+        inline const unsigned char* IndexArrayByte() const {
             ASSERT((this->idx.dataByte == NULL) || (this->idxDT == DT_BYTE));
             return this->idx.dataByte;
         }
@@ -177,7 +174,7 @@ public:
          *
          * @return The index array
          */
-        inline const unsigned short* IndexArrayUInt16(void) const {
+        inline const unsigned short* IndexArrayUInt16() const {
             ASSERT((this->idx.dataByte == NULL) || (this->idxDT == DT_UINT16));
             return this->idx.dataUInt16;
         }
@@ -187,7 +184,7 @@ public:
          *
          * @return The index array
          */
-        inline const unsigned int* IndexArrayUInt32(void) const {
+        inline const unsigned int* IndexArrayUInt32() const {
             ASSERT((this->idx.dataByte == NULL) || (this->idxDT == DT_UINT32));
             return this->idx.dataUInt32;
         }
@@ -306,7 +303,7 @@ public:
          *
          * @return The data type of the vertex array
          */
-        inline DataType VertexArrayDataType(void) const {
+        inline DataType VertexArrayDataType() const {
             return this->vrtDT;
         }
 
@@ -315,7 +312,7 @@ public:
          *
          * @return The vertex array
          */
-        inline const float* VertexArrayFloat(void) const {
+        inline const float* VertexArrayFloat() const {
             ASSERT(this->vrtDT == DT_FLOAT);
             return this->vrt.dataFloat;
         }
@@ -325,7 +322,7 @@ public:
          *
          * @return The vertex array
          */
-        inline const double* VertexArrayDouble(void) const {
+        inline const double* VertexArrayDouble() const {
             ASSERT(this->vrtDT == DT_DOUBLE);
             return this->vrt.dataDouble;
         }
@@ -584,7 +581,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "LinesDataCall";
     }
 
@@ -593,7 +590,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get lines data";
     }
 
@@ -602,7 +599,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return core::AbstractGetData3DCall::FunctionCount();
     }
 
@@ -618,17 +615,17 @@ public:
     }
 
     /** Ctor. */
-    LinesDataCall(void);
+    LinesDataCall();
 
     /** Dtor. */
-    virtual ~LinesDataCall(void);
+    ~LinesDataCall() override;
 
     /**
      * Answer the size of the lines lists
      *
      * @return The size of the lines lists
      */
-    VISLIB_FORCEINLINE unsigned int Count(void) const {
+    VISLIB_FORCEINLINE unsigned int Count() const {
         return this->count;
     }
 
@@ -638,7 +635,7 @@ public:
      *
      * @return The lines list
      */
-    VISLIB_FORCEINLINE const Lines* GetLines(void) const {
+    VISLIB_FORCEINLINE const Lines* GetLines() const {
         return this->lines;
     }
 
@@ -667,7 +664,7 @@ public:
      *
      * @return The time for which the lines are needed.
      */
-    VISLIB_FORCEINLINE const float Time(void) const {
+    VISLIB_FORCEINLINE const float Time() const {
         return this->time;
     }
 
@@ -698,7 +695,4 @@ private:
 typedef megamol::core::factories::CallAutoDescription<LinesDataCall> LinesDataCallDescription;
 
 
-} /* end namespace geocalls */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED */
+} // namespace megamol::geocalls

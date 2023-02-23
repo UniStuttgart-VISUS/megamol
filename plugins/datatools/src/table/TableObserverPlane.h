@@ -1,8 +1,4 @@
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLEOBSERVERPLANE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLEOBSERVERPLANE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -10,12 +6,10 @@
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include <map>
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * This module converts from a generic table to the MultiParticleDataCall.
@@ -28,7 +22,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TableObserverPlane";
     }
 
@@ -37,7 +31,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "A plane that observes relevant items in local (xy) coordinates over dicrete time steps and stacks them "
                "along the z axis.";
     }
@@ -47,19 +41,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableObserverPlane(void);
+    TableObserverPlane();
 
     /**
      * Finalises an instance.
      */
-    virtual ~TableObserverPlane(void);
+    ~TableObserverPlane() override;
 
 protected:
     /**
@@ -67,7 +61,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     bool getObservedData(core::Call& call);
 
@@ -76,7 +70,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     bool assertData(table::TableDataCall* ft, megamol::core::view::CallClipPlane* cp, table::TableDataCall& out);
@@ -147,8 +141,4 @@ private:
     int frameID;
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_FLOATTABLEOBSERVERPLANE_H_INCLUDED */
+} // namespace megamol::datatools::table

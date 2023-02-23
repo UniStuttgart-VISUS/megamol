@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMSPDDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_MMSPDDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -14,7 +12,7 @@
 #include "io/MMSPDHeader.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/math/Cuboid.h"
@@ -25,9 +23,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -40,7 +36,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MMSPDDataSource";
     }
 
@@ -49,7 +45,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for \"MegaMol Simple Particle Data\" files.";
     }
 
@@ -58,7 +54,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -86,7 +82,7 @@ public:
      *
      * @return The file name slot name
      */
-    static const char* FilenameSlotName(void) {
+    static const char* FilenameSlotName() {
         return "filename";
     }
 
@@ -95,15 +91,15 @@ public:
      *
      * @return The file type name
      */
-    static const char* FileTypeName(void) {
+    static const char* FileTypeName() {
         return "MegaMol Simple Particle Data";
     }
 
     /** Ctor. */
-    MMSPDDataSource(void);
+    MMSPDDataSource();
 
     /** Dtor. */
-    virtual ~MMSPDDataSource(void);
+    ~MMSPDDataSource() override;
 
 protected:
     /**
@@ -112,14 +108,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -130,12 +126,12 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Nested class of frame data */
@@ -149,12 +145,12 @@ private:
         Frame(core::view::AnimDataModule& owner);
 
         /** Dtor. */
-        virtual ~Frame(void);
+        ~Frame() override;
 
         /**
          * Clears the loaded data
          */
-        inline void Clear(void) {
+        inline void Clear() {
             this->Data().Clear();
             this->IndexReconstructionData().EnforceSize(0);
         }
@@ -257,13 +253,13 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!
@@ -287,7 +283,7 @@ private:
     /**
      * Clears the data
      */
-    void clearData(void);
+    void clearData();
 
     /**
      * Callback receiving the update of the file name parameter.
@@ -370,8 +366,4 @@ private:
     SIZE_T dataHash;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_MMSPDDATASOURCE_H_INCLUDED */
+} // namespace megamol::moldyn::io

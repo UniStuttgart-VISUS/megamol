@@ -23,7 +23,7 @@
 /*
  * megamol::astro::DirectionToColour::DirectionToColour
  */
-megamol::astro::DirectionToColour::DirectionToColour(void)
+megamol::astro::DirectionToColour::DirectionToColour()
         : Module()
         , frameID(0)
         , hashData((std::numeric_limits<std::size_t>::max)())
@@ -59,10 +59,10 @@ megamol::astro::DirectionToColour::DirectionToColour(void)
         this->MakeSlotAvailable(&this->paramMode);
     }
 
-    this->paramColour1 << new core::param::ColorParam(_T("Chartreuse"));
+    this->paramColour1 << new core::param::ColorParam("Chartreuse");
     this->MakeSlotAvailable(&this->paramColour1);
 
-    this->paramColour2 << new core::param::ColorParam(_T("Cyan"));
+    this->paramColour2 << new core::param::ColorParam("Cyan");
     this->MakeSlotAvailable(&this->paramColour2);
 }
 
@@ -70,7 +70,7 @@ megamol::astro::DirectionToColour::DirectionToColour(void)
 /*
  * megamol::astro::DirectionToColour::~DirectionToColour
  */
-megamol::astro::DirectionToColour::~DirectionToColour(void) {
+megamol::astro::DirectionToColour::~DirectionToColour() {
     this->Release();
 }
 
@@ -78,7 +78,7 @@ megamol::astro::DirectionToColour::~DirectionToColour(void) {
 /*
  * megamol::astro::DirectionToColour::create
  */
-bool megamol::astro::DirectionToColour::create(void) {
+bool megamol::astro::DirectionToColour::create() {
     return true;
 }
 
@@ -86,7 +86,7 @@ bool megamol::astro::DirectionToColour::create(void) {
 /*
  * megamol::astro::DirectionToColour::release
  */
-void megamol::astro::DirectionToColour::release(void) {}
+void megamol::astro::DirectionToColour::release() {}
 
 
 /*

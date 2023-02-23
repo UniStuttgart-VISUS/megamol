@@ -1,8 +1,4 @@
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLETOPARTICLES_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLETOPARTICLES_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -13,8 +9,7 @@
 #include <array>
 #include <map>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * This module converts from a generic table to the MultiParticleDataCall.
@@ -27,7 +22,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TableToParticles";
     }
 
@@ -36,7 +31,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Converts generic tables to Particles.";
     }
 
@@ -45,19 +40,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableToParticles(void);
+    TableToParticles();
 
     /**
      * Finalises an instance.
      */
-    virtual ~TableToParticles(void);
+    ~TableToParticles() override;
 
 protected:
     /**
@@ -65,7 +60,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     bool getMultiParticleData(core::Call& call);
 
@@ -74,7 +69,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     bool assertData(table::TableDataCall* ft, unsigned int frameID = 0);
@@ -144,6 +139,9 @@ private:
     /** The name of the float column holding the z-coordinate. */
     core::param::ParamSlot slotColumnZ;
 
+    /** The name of the int column holding the particle id. */
+    core::param::ParamSlot slotColumnID;
+
     /** The name of the float column holding the vx-coordinate. */
     core::param::ParamSlot slotColumnVX;
 
@@ -164,6 +162,7 @@ private:
 
     std::vector<float> everything;
 
+    bool haveIDs = false;
     bool haveVelocities = false;
     bool haveTensor = false;
     bool haveTensorMagnitudes = false;
@@ -175,7 +174,4 @@ private:
     uint32_t stride;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_FLOATTABLETOPARTICLES_H_INCLUDED */
+} // namespace megamol::datatools

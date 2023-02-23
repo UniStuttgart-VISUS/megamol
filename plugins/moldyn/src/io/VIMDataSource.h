@@ -5,16 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VIMDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_VIMDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"
@@ -22,9 +18,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 /**
  * Renderer for rendering the vis logo into the unit cube.
@@ -36,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VIMDataSource";
     }
 
@@ -45,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for VIM files.";
     }
 
@@ -54,15 +48,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    VIMDataSource(void);
+    VIMDataSource();
 
     /** Dtor. */
-    virtual ~VIMDataSource(void);
+    ~VIMDataSource() override;
 
 protected:
     /**
@@ -71,14 +65,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -89,12 +83,12 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Nested class of simple vim types */
@@ -115,7 +109,7 @@ private:
          *
          * @return The blue colour component of the type
          */
-        inline unsigned char Blue(void) const {
+        inline unsigned char Blue() const {
             return this->col[2];
         }
 
@@ -124,7 +118,7 @@ private:
          *
          * @return The RGB colour of the type
          */
-        inline const unsigned char* Colour(void) const {
+        inline const unsigned char* Colour() const {
             return this->col;
         }
 
@@ -133,7 +127,7 @@ private:
          *
          * @return The green colour component of the type
          */
-        inline unsigned char Green(void) const {
+        inline unsigned char Green() const {
             return this->col[1];
         }
 
@@ -142,7 +136,7 @@ private:
          *
          * @return The id of the type
          */
-        inline unsigned int ID(void) const {
+        inline unsigned int ID() const {
             return this->id;
         }
 
@@ -151,7 +145,7 @@ private:
          *
          * @return The radius of the type
          */
-        inline float Radius(void) const {
+        inline float Radius() const {
             return this->rad;
         }
 
@@ -160,7 +154,7 @@ private:
          *
          * @return The red colour component of the type.
          */
-        inline unsigned char Red(void) const {
+        inline unsigned char Red() const {
             return this->col[0];
         }
 
@@ -271,12 +265,12 @@ private:
         Frame(core::view::AnimDataModule& owner);
 
         /** Dtor. */
-        virtual ~Frame(void);
+        ~Frame() override;
 
         /**
          * Clears the internal data buffers
          */
-        void Clear(void);
+        void Clear();
 
         /**
          * Loads a frame from 'file' to this object.
@@ -341,7 +335,7 @@ private:
          *
          * @return The size of the loaded data in bytes.
          */
-        SIZE_T SizeOf(void) const;
+        SIZE_T SizeOf() const;
 
         /**
          * Replaces the data of this object with the interpolated data
@@ -411,13 +405,13 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!
@@ -430,10 +424,10 @@ private:
     };
 
     /** Builds up the frame index table. */
-    void buildFrameTable(void);
+    void buildFrameTable();
 
     /** Calculates the bounding box from all frames. */
-    void calcBoundingBox(void);
+    void calcBoundingBox();
 
     /**
      * Callback receiving the update of the file name parameter.
@@ -507,8 +501,4 @@ private:
     SIZE_T datahash;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_VIMDATASOURCE_H_INCLUDED */
+} // namespace megamol::moldyn::io

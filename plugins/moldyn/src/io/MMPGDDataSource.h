@@ -5,15 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "moldyn/ParticleGridDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
@@ -21,9 +17,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 using namespace megamol::core;
 
@@ -37,7 +31,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MMPGDDataSource";
     }
 
@@ -46,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for MMPGD files.";
     }
 
@@ -55,15 +49,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    MMPGDDataSource(void);
+    MMPGDDataSource();
 
     /** Dtor. */
-    virtual ~MMPGDDataSource(void);
+    ~MMPGDDataSource() override;
 
 protected:
     /**
@@ -72,14 +66,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual view::AnimDataModule::Frame* constructFrame(void) const;
+    view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -90,12 +84,12 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx);
+    void loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Nested class of frame data */
@@ -109,12 +103,12 @@ private:
         Frame(view::AnimDataModule& owner);
 
         /** Dtor. */
-        virtual ~Frame(void);
+        ~Frame() override;
 
         /**
          * Clears the loaded data
          */
-        inline void Clear(void) {
+        inline void Clear() {
             this->dat.EnforceSize(0);
         }
 
@@ -164,13 +158,13 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!
@@ -228,7 +222,4 @@ private:
     vislib::math::Cuboid<float> clipbox;
 };
 
-} // namespace io
-} // namespace moldyn
-} // namespace megamol
-#endif /* MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED */
+} // namespace megamol::moldyn::io

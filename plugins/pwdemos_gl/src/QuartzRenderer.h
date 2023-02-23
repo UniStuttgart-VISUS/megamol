@@ -7,30 +7,32 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractMultiShaderQuartzRenderer.h"
 #include "QuartzCrystalDataCall.h"
 #include "QuartzParticleGridDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module rendering gridded quarts particle data
  */
-class QuartzRenderer : public core_gl::view::Renderer3DModuleGL, public AbstractMultiShaderQuartzRenderer {
+class QuartzRenderer : public mmstd_gl::Renderer3DModuleGL, public AbstractMultiShaderQuartzRenderer {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzRenderer";
     }
 
@@ -39,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module rendering gridded quartz particles using GLSL ray casting shader";
     }
 
@@ -48,15 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return AbstractMultiShaderQuartzRenderer::IsAvailable();
     }
 
     /** Ctor */
-    QuartzRenderer(void);
+    QuartzRenderer();
 
     /** Dtor */
-    virtual ~QuartzRenderer(void);
+    ~QuartzRenderer() override;
 
 protected:
     /**
@@ -68,7 +70,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -77,19 +79,19 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -99,7 +101,7 @@ private:
      *
      * @return The shader
      */
-    virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
+    std::shared_ptr<glowl::GLSLProgram> makeShader(const CrystalDataCall::Crystal& c) override;
 
     /** Shows/Hides the axes (x and y) of the clipping plane */
     core::param::ParamSlot showClipAxesSlot;
@@ -111,5 +113,4 @@ private:
     GLuint vbo;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

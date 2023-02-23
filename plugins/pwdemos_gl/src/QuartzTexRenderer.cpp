@@ -6,32 +6,30 @@
  */
 
 #include "QuartzTexRenderer.h"
-#include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/light/PointLight.h"
-#include "vislib/graphics/graphicsfunctions.h"
-#include "vislib/memutils.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-#include "vislib_gl/graphics/gl/glfunctions.h"
+
 #include <cfloat>
 #include <glm/ext.hpp>
 
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "OpenGL_Context.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/light/PointLight.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "vislib/graphics/graphicsfunctions.h"
+#include "vislib/memutils.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/glfunctions.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * QuartzTexRenderer::QuartzTexRenderer
  */
-QuartzTexRenderer::QuartzTexRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+QuartzTexRenderer::QuartzTexRenderer()
+        : mmstd_gl::Renderer3DModuleGL()
         , AbstractTexQuartzRenderer()
         , cryShader()
         , showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
@@ -55,7 +53,7 @@ QuartzTexRenderer::QuartzTexRenderer(void)
 /*
  * QuartzTexRenderer::~QuartzTexRenderer
  */
-QuartzTexRenderer::~QuartzTexRenderer(void) {
+QuartzTexRenderer::~QuartzTexRenderer() {
     this->Release();
 }
 
@@ -63,7 +61,7 @@ QuartzTexRenderer::~QuartzTexRenderer(void) {
 /*
  * QuartzTexRenderer::GetExtents
  */
-bool QuartzTexRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool QuartzTexRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     ParticleGridDataCall* pgdc = this->dataInSlot.CallAs<ParticleGridDataCall>();
     if ((pgdc != NULL) && ((*pgdc)(ParticleGridDataCall::CallForGetExtent))) {
         call.AccessBoundingBoxes() = pgdc->AccessBoundingBoxes();
@@ -81,7 +79,7 @@ bool QuartzTexRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * QuartzTexRenderer::Render
  */
-bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool QuartzTexRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     ParticleGridDataCall* pgdc = this->getParticleData();
     if (pgdc == NULL)
         return false;
@@ -186,43 +184,43 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
         bboxmax.Set(0.0f, 0.0f, 0.0f);
     }
 
-    this->cryShader.Enable();
+    this->cryShader->use();
     ::glPointSize(shaderPointSize);
-    this->cryShader.SetParameterArray4("viewAttr", 1, glm::value_ptr(viewport));
-    this->cryShader.SetParameterArray3("camIn", 1, glm::value_ptr(camView));
-    this->cryShader.SetParameterArray3("camRight", 1, glm::value_ptr(camRight));
-    this->cryShader.SetParameterArray3("camUp", 1, glm::value_ptr(camUp));
-    this->cryShader.SetParameterArray4("camPosInit", 1, glm::value_ptr(camPos));
-    this->cryShader.SetParameterArray4("color", 1, glm::value_ptr(grainColor));
-    this->cryShader.SetParameterArray4("ambientCol", 1, glm::value_ptr(ambient));
-    this->cryShader.SetParameterArray4("diffuseCol", 1, glm::value_ptr(diffuse));
-    this->cryShader.SetParameterArray4("specularCol", 1, glm::value_ptr(specular));
-    this->cryShader.SetParameter("numLights", numLights);
+    glUniform4fv(this->cryShader->getUniformLocation("viewAttr"), 1, glm::value_ptr(viewport));
+    glUniform3fv(this->cryShader->getUniformLocation("camIn"), 1, glm::value_ptr(camView));
+    glUniform3fv(this->cryShader->getUniformLocation("camRight"), 1, glm::value_ptr(camRight));
+    glUniform3fv(this->cryShader->getUniformLocation("camUp"), 1, glm::value_ptr(camUp));
+    glUniform4fv(this->cryShader->getUniformLocation("camPosInit"), 1, glm::value_ptr(camPos));
+    glUniform4fv(this->cryShader->getUniformLocation("color"), 1, glm::value_ptr(grainColor));
+    glUniform4fv(this->cryShader->getUniformLocation("ambientCol"), 1, glm::value_ptr(ambient));
+    glUniform4fv(this->cryShader->getUniformLocation("diffuseCol"), 1, glm::value_ptr(diffuse));
+    glUniform4fv(this->cryShader->getUniformLocation("specularCol"), 1, glm::value_ptr(specular));
+    this->cryShader->setUniform("numLights", numLights);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssboLights);
     //::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverse"), 1,
     //  GL_FALSE, glm::value_ptr(MVinv));
-    ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewMatrixInverseTranspose"), 1, GL_FALSE,
+    ::glUniformMatrix4fv(this->cryShader->getUniformLocation("ModelViewMatrixInverseTranspose"), 1, GL_FALSE,
         glm::value_ptr(glm::transpose(MVinv)));
     ::glUniformMatrix4fv(
-        this->cryShader.ParameterLocation("ModelViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
+        this->cryShader->getUniformLocation("ModelViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
     ::glUniformMatrix4fv(
-        this->cryShader.ParameterLocation("ModelViewProjectionMatrixInverse"), 1, GL_FALSE, glm::value_ptr(MVPinv));
-    ::glUniformMatrix4fv(this->cryShader.ParameterLocation("ModelViewProjectionMatrixTranspose"), 1, GL_FALSE,
+        this->cryShader->getUniformLocation("ModelViewProjectionMatrixInverse"), 1, GL_FALSE, glm::value_ptr(MVPinv));
+    ::glUniformMatrix4fv(this->cryShader->getUniformLocation("ModelViewProjectionMatrixTranspose"), 1, GL_FALSE,
         glm::value_ptr(MVPtransp));
     if (ccp != NULL) {
-        this->cryShader.SetParameter("clipcol", static_cast<float>(ccp->GetColour()[0]) / 255.0f,
+        this->cryShader->setUniform("clipcol", static_cast<float>(ccp->GetColour()[0]) / 255.0f,
             static_cast<float>(ccp->GetColour()[1]) / 255.0f, static_cast<float>(ccp->GetColour()[2]) / 255.0f);
-        this->cryShader.SetParameter(
+        this->cryShader->setUniform(
             "clipplane", ccp->GetPlane().A(), ccp->GetPlane().B(), ccp->GetPlane().C(), ccp->GetPlane().D());
     } else {
-        this->cryShader.SetParameter("clipplane", 0.0f, 0.0f, 0.0f, 0.0f);
+        this->cryShader->setUniform("clipplane", 0.0f, 0.0f, 0.0f, 0.0f);
     }
-    this->cryShader.SetParameterArray3("bboxmin", 1, bboxmin.PeekCoordinates());
-    this->cryShader.SetParameterArray3("bboxmax", 1, bboxmax.PeekCoordinates());
+    glUniform3fv(this->cryShader->getUniformLocation("bboxmin"), 1, bboxmin.PeekCoordinates());
+    glUniform3fv(this->cryShader->getUniformLocation("bboxmax"), 1, bboxmax.PeekCoordinates());
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glBindTexture(GL_TEXTURE_2D, this->typeTexture);
-    this->cryShader.SetParameter("typeData", 0);
+    this->cryShader->setUniform("typeData", 0);
 
     for (int cellX = (fixPBC ? -1 : 0); cellX < static_cast<int>(pgdc->SizeX() + (fixPBC ? 1 : 0)); cellX++) {
         int ccx = cellX;
@@ -259,7 +257,7 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
                     ccz = 0;
                     zoff += bbox.Depth();
                 }
-                this->cryShader.SetParameter("posoffset", xoff, yoff, zoff);
+                this->cryShader->setUniform("posoffset", xoff, yoff, zoff);
 
                 unsigned int cellIdx = static_cast<unsigned int>(ccx + pgdc->SizeX() * (ccy + pgdc->SizeY() * ccz));
 
@@ -305,9 +303,9 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 for (unsigned int l = 0; l < cell.Count(); l++) {
                     const ParticleGridDataCall::List& list = cell.Lists()[l];
                     //if (list.Type() != 0) continue; // TODO: DEBUG! Remove me!
-                    this->cryShader.SetParameter("typeInfo", static_cast<int>(list.Type()),
+                    this->cryShader->setUniform("typeInfo", static_cast<int>(list.Type()),
                         static_cast<int>(tdc->GetCrystals()[list.Type()].GetFaceCount()));
-                    this->cryShader.SetParameter("outerRad", tdc->GetCrystals()[list.Type()].GetBoundingRadius());
+                    this->cryShader->setUniform("outerRad", tdc->GetCrystals()[list.Type()].GetBoundingRadius());
 
                     ::glBindBuffer(GL_ARRAY_BUFFER, vbo);
                     ::glBufferData(GL_ARRAY_BUFFER, list.Count() * 8 * sizeof(float), list.Data(), GL_STATIC_DRAW);
@@ -329,7 +327,7 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
         }
     }
 
-    this->cryShader.Disable();
+    glUseProgram(0);
     ::glBindTexture(GL_TEXTURE_2D, 0);
     //::glDisableClientState(GL_VERTEX_ARRAY); // xyzr
     //::glDisableClientState(GL_TEXTURE_COORD_ARRAY); // quart
@@ -431,36 +429,24 @@ bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
 /*
  * QuartzTexRenderer::create
  */
-bool QuartzTexRenderer::create(void) {
+bool QuartzTexRenderer::create() {
     using megamol::core::utility::log::Log;
-    using vislib_gl::graphics::gl::GLSLShader;
-    using vislib_gl::graphics::gl::ShaderSource;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.isVersionGEQ(2, 0) || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
-        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions())) {
+    if (!ogl_ctx.isVersionGEQ(2, 0) || !ogl_ctx.isExtAvailable("GL_ARB_multitexture")) {
         Log::DefaultLog.WriteError("GL2.0 not present");
         return false;
     }
 
-    ShaderSource vert, frag;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+
     try {
-        if (!ssf->MakeShaderSource("quartz::ray::tex::vertclipped", vert)) {
-            throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
-        }
-        if (!ssf->MakeShaderSource("quartz::ray::tex::fragclipped", frag)) {
-            throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
-        }
-        if (!this->cryShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            throw vislib::Exception("Generic shader create failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError("Unable to compile shader: %s", ex.GetMsgA());
-        this->release(); // Because I know that 'release' ONLY releases all the shaders
-        return false;
-    } catch (...) {
-        Log::DefaultLog.WriteError("Unable to compile shader: Unexpected Exception");
+        this->cryShader = core::utility::make_glowl_shader("cryShader", shader_options,
+            "pwdemos_gl/quartz/ray_tex_clipped.vert.glsl", "pwdemos_gl/quartz/ray_tex_clipped.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("QuartzTexRenderer: " + std::string(e.what())).c_str());
         this->release(); // Because I know that 'release' ONLY releases all the shaders
         return false;
     }
@@ -494,7 +480,7 @@ bool QuartzTexRenderer::create(void) {
 /*
  * QuartzTexRenderer::release
  */
-void QuartzTexRenderer::release(void) {
+void QuartzTexRenderer::release() {
     AbstractTexQuartzRenderer::releaseTypeTexture();
 
     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -504,5 +490,4 @@ void QuartzTexRenderer::release(void) {
     ::glDeleteBuffers(1, &vbo);
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

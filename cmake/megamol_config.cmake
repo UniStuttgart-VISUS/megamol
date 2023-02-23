@@ -1,8 +1,5 @@
 # MegaMol configuration
 
-# CMake Modules
-include(CMakeDependentOption)
-
 # C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 99)
@@ -31,13 +28,23 @@ add_compile_definitions("$<$<CONFIG:DEBUG>:DEBUG>")
 add_compile_definitions("$<$<CONFIG:DEBUG>:_DEBUG>")
 
 # Compiler flags
+# Note: special C++ and C-Compiler flags should be set for each language seperately as done below.
+# Otherwise, a possible compilation with CUDA will propagate those flags to the CUDA-Compiler and lead to a crash.
+# For certain systems, those flags should be set for both C++ and C compilers to work properly
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # nothing to do
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  add_compile_options("-fsized-deallocation") # TODO git history suggests this was required for cuda in 2019, still required?
-  add_compile_options("-Wno-narrowing" "-Wno-non-pod-varargs") # Prevent build fail.
+  # TODO git history suggests this was required for cuda in 2019, still required?
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fsized-deallocation>)
+
+  # Prevent build fail.
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-narrowing>)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-non-pod-vararg>)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  add_compile_options("/MP" "/permissive-" "/Zc:twoPhase-" "/utf-8")
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/MP>)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/permissive->)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Zc:twoPhase->)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/utf-8>)
   add_compile_definitions("NOMINMAX")
 else ()
   message(FATAL_ERROR "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
@@ -47,7 +54,25 @@ endif ()
 if (UNIX)
   set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+endif ()
+
+# Clang-tidy
+# Configure with:
+# > cmake -DMEGAMOL_RUN_CLANG_TIDY=ON -DMEGAMOL_WARNING_LEVEL=Off ../megamol
+# Build NOT in parallel, otherwise clang-tidy will mess up files!
+#
+# Alternative:
+# > cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ../megamol
+# > cd ../megamol && run-clang-tidy-14 -p ../build -fix -j 32
+# This uses the run-clang-tidy wrapper allowing very fast parallel execution, but also tries to fix not existent source files in the binary dir.
+#
+# Both solutions do not exclude 3rd directories and clang-tidy results seems to sometime trigger edge cases with weird results.
+# Therefore, results should be commited manually and currently do not run clang-tidy within the CI pipeline.
+option(MEGAMOL_RUN_CLANG_TIDY "Run clang-tidy." OFF)
+mark_as_advanced(FORCE MEGAMOL_RUN_CLANG_TIDY)
+if (MEGAMOL_RUN_CLANG_TIDY)
+  SET(CMAKE_CXX_CLANG_TIDY "clang-tidy-14;--fix")
 endif ()
 
 # Dependencies
@@ -60,62 +85,24 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # OpenGL
-option(ENABLE_GL "Enable GL support" ON)
-if (ENABLE_GL)
-  add_compile_definitions(WITH_GL)
+if (MEGAMOL_USE_OPENGL)
   find_package(OpenGL REQUIRED)
 endif ()
 
 # CUDA
-option(ENABLE_CUDA "Enable CUDA support" OFF)
-if (ENABLE_CUDA)
+if (MEGAMOL_USE_CUDA)
   enable_language(CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif ()
 
 # MPI
-option(ENABLE_MPI "Enable MPI support" OFF)
-set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "Override MPI library name, e.g., MSMPI, MPICH2")
-if (ENABLE_MPI)
-  if (MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
-    message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
-  endif ()
+if (MEGAMOL_USE_MPI)
   find_package(MPI REQUIRED)
-  if (MPI_C_FOUND)
-    target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
-  endif ()
 endif ()
 
 # CGAL
-option(ENABLE_CGAL "Enable CGAL support" OFF)
-if (ENABLE_CGAL)
-  add_compile_definitions(WITH_CGAL)
+if (MEGAMOL_USE_CGAL)
   find_package(CGAL REQUIRED)
-
-  if (NOT TARGET CGAL::CGAL)
-    message(FATAL_ERROR "Target for CGAL not found")
-  endif ()
-
-  if (TARGET CGAL)
-    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
-    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
-  endif ()
-endif()
-
-# Profiling
-cmake_dependent_option(ENABLE_PROFILING "Enable profiling code" OFF "ENABLE_GL" OFF)
-if (ENABLE_PROFILING)
-  add_compile_definitions(PROFILING)
-endif ()
-
-# VR Service / mwk-mint, interop, Spout2
-cmake_dependent_option(ENABLE_VR_SERVICE_UNITY_KOLABBW "Enable KolabBW-Unity-Interop in VR Service" OFF "ENABLE_GL" OFF)
-if (ENABLE_VR_SERVICE_UNITY_KOLABBW)
-  add_compile_definitions(WITH_VR_SERVICE_UNITY_KOLABBW)
-endif ()
-
-# CUE
-cmake_dependent_option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF "WIN32" OFF)
-if (ENABLE_CUESDK)
-  add_compile_definitions(CUESDK_ENABLED)
+  set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+  set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 endif ()

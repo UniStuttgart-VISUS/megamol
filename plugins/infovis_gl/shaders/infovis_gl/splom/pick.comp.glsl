@@ -1,6 +1,6 @@
 #version 430
 
-#include "core/bitflags.inc.glsl"
+#include "mmstd_gl/flags/bitflags.inc.glsl"
 #include "common/plots.inc.glsl"
 #include "common/data.inc.glsl"
 

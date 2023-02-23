@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED
-#define PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED
+#pragma once
 
 #include <typeindex>
 
@@ -69,8 +68,6 @@ private:
 
     core::CallerSlot m_event_slot;
 
-    core::CallerSlot m_material_slot;
-
     core::param::ParamSlot m_billboard_size_slot;
 
     core::param::ParamSlot m_rendering_mode_slot;
@@ -80,6 +77,8 @@ private:
     core::param::ParamSlot m_show_canvas_slot;
 
     core::param::ParamSlot m_canvas_color_slot;
+
+    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
     std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
 
@@ -227,6 +226,3 @@ inline ProbeBillboardGlyphRenderTasks::TexturedGlyphData ProbeBillboardGlyphRend
 
 } // namespace probe_gl
 } // namespace megamol
-
-
-#endif // !PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED

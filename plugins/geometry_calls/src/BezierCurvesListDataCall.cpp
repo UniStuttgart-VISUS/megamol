@@ -13,7 +13,7 @@ namespace megamol::geocalls {
 /*
  * BezierCurvesListDataCall::Curves::Curves
  */
-BezierCurvesListDataCall::Curves::Curves(void)
+BezierCurvesListDataCall::Curves::Curves()
         : layout(DATALAYOUT_NONE)
         , data(NULL)
         , data_memory_ownership(false)
@@ -46,7 +46,7 @@ BezierCurvesListDataCall::Curves::Curves(const BezierCurvesListDataCall::Curves&
 /*
  * BezierCurvesListDataCall::Curves::~Curves
  */
-BezierCurvesListDataCall::Curves::~Curves(void) {
+BezierCurvesListDataCall::Curves::~Curves() {
     this->Clear();
 }
 
@@ -54,7 +54,7 @@ BezierCurvesListDataCall::Curves::~Curves(void) {
 /*
  * BezierCurvesListDataCall::Curves::Curves
  */
-void BezierCurvesListDataCall::Curves::Clear(void) {
+void BezierCurvesListDataCall::Curves::Clear() {
     this->layout = DATALAYOUT_NONE;
     if (this->data != NULL) {
         if (this->data_memory_ownership) {
@@ -80,7 +80,7 @@ void BezierCurvesListDataCall::Curves::Clear(void) {
 /*
  * BezierCurvesListDataCall::BezierCurvesListDataCall
  */
-BezierCurvesListDataCall::BezierCurvesListDataCall(void)
+BezierCurvesListDataCall::BezierCurvesListDataCall()
         : AbstractGetData3DCall()
         , curves()
         , count()
@@ -92,7 +92,7 @@ BezierCurvesListDataCall::BezierCurvesListDataCall(void)
 /*
  * BezierCurvesListDataCallBezierCurvesListDataCallBezierDataCall
  */
-BezierCurvesListDataCall::~BezierCurvesListDataCall(void) {
+BezierCurvesListDataCall::~BezierCurvesListDataCall() {
     this->Unlock();
     this->curves = NULL;
     this->count = 0;

@@ -5,12 +5,12 @@
 
 megamol_plugin(megamolplugin
   BUILD_DEFAULT OFF
+  DEPENDS_FEATURES
+    # feature1
   DEPENDS_PLUGINS
+    mmstd
     # plugin1
     # plugin2
-  DEPENDS_EXTERNALS
-    # external1
-    # external2
   )
 
 if (megamolplugin_PLUGIN_ENABLED)

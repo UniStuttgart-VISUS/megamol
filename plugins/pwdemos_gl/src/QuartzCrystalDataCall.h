@@ -7,13 +7,12 @@
 
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Call transporting BDMD data frames
@@ -28,12 +27,12 @@ public:
         /**
          * Ctor
          */
-        Crystal(void);
+        Crystal();
 
         /**
          * Dtor
          */
-        ~Crystal(void);
+        ~Crystal();
 
         /**
          * Adds a face to the crystal
@@ -56,7 +55,7 @@ public:
         /**
          * Makes sure the mesh data is available
          */
-        void AssertMesh(void) const;
+        void AssertMesh() const;
 
         /**
          * Calculates the mesh data for the crystal
@@ -72,19 +71,19 @@ public:
         /**
          * Clears the crystal data
          */
-        void Clear(void);
+        void Clear();
 
         /**
          * Clears the mesh data
          */
-        void ClearMesh(void);
+        void ClearMesh();
 
         /**
          * Answer the base radius
          *
          * @return The base radius
          */
-        inline float GetBaseRadius(void) const {
+        inline float GetBaseRadius() const {
             return this->baseRad;
         }
 
@@ -93,7 +92,7 @@ public:
          *
          * @return The bounding radius
          */
-        inline float GetBoundingRadius(void) const {
+        inline float GetBoundingRadius() const {
             return this->boundRad;
         }
 
@@ -102,7 +101,7 @@ public:
          *
          * @return The mesh per-face triangle-fan vertex count
          */
-        inline const unsigned int* GetMeshTriangleCounts(void) const {
+        inline const unsigned int* GetMeshTriangleCounts() const {
             return this->triangleCnt;
         }
 
@@ -111,7 +110,7 @@ public:
          *
          * @return The mesh per-face triangle-fan data
          */
-        inline unsigned int** const GetMeshTriangles(void) const {
+        inline unsigned int** const GetMeshTriangles() const {
             return this->triangles;
         }
 
@@ -120,7 +119,7 @@ public:
          *
          * @return The mesh vertex data
          */
-        inline const float* GetMeshVertexData(void) const {
+        inline const float* GetMeshVertexData() const {
             return this->vertices;
         }
 
@@ -140,7 +139,7 @@ public:
          *
          * @return The number of faces
          */
-        inline unsigned int GetFaceCount(void) const {
+        inline unsigned int GetFaceCount() const {
             return static_cast<unsigned int>(this->faces.Count());
         }
 
@@ -149,7 +148,7 @@ public:
          *
          * @return False if at least one face is stored
          */
-        inline bool IsEmpty(void) const {
+        inline bool IsEmpty() const {
             return this->faces.IsEmpty();
         }
 
@@ -213,7 +212,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzCrystalDataCall";
     }
 
@@ -222,7 +221,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting quartz crystal definitions";
     }
 
@@ -231,7 +230,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -247,17 +246,17 @@ public:
     }
 
     /** Ctor */
-    CrystalDataCall(void);
+    CrystalDataCall();
 
     /** Dtor. */
-    virtual ~CrystalDataCall(void);
+    ~CrystalDataCall() override;
 
     /**
      * Gets the number of crystals
      *
      * @return The number of crystals
      */
-    inline unsigned int GetCount(void) const {
+    inline unsigned int GetCount() const {
         return this->count;
     }
 
@@ -266,7 +265,7 @@ public:
      *
      * @return Pointer to the array of crystals
      */
-    inline const Crystal* GetCrystals(void) const {
+    inline const Crystal* GetCrystals() const {
         return this->crystals;
     }
 
@@ -289,5 +288,4 @@ private:
     const Crystal* crystals;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

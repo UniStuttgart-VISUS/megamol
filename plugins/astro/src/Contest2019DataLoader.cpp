@@ -30,7 +30,7 @@ Contest2019DataLoader::Frame::Frame(view::AnimDataModule& owner) : view::AnimDat
 /*
  * Contest2019DataLoader::Frame::~Frame
  */
-Contest2019DataLoader::Frame::~Frame(void) {
+Contest2019DataLoader::Frame::~Frame() {
     // all the smart pointers are deleted automatically
 }
 
@@ -247,7 +247,7 @@ void Contest2019DataLoader::Frame::SetData(
 /*
  * Contest2019DataLoader::Frame::ZeroDerivatives
  */
-void Contest2019DataLoader::Frame::ZeroDerivatives(void) {
+void Contest2019DataLoader::Frame::ZeroDerivatives() {
     if (this->velocityDerivatives != nullptr) {
         std::fill(this->velocityDerivatives->begin(), this->velocityDerivatives->end(), glm::vec3(0.0f));
     }
@@ -278,7 +278,7 @@ void Contest2019DataLoader::Frame::ZeroDerivatives(void) {
 /*
  * Contest2019DataLoader::Frame::ZeroAGNDistances
  */
-void Contest2019DataLoader::Frame::ZeroAGNDistances(void) {
+void Contest2019DataLoader::Frame::ZeroAGNDistances() {
     if (this->agnDistances != nullptr) {
         std::fill(this->agnDistances->begin(), this->agnDistances->end(), 0.0f);
     }
@@ -452,7 +452,7 @@ void Contest2019DataLoader::Frame::CalculateDerivativesCentralDifferences(
 /*
  * Contest2019DataLoader::Frame::CalculateAGNDistances
  */
-void Contest2019DataLoader::Frame::CalculateAGNDistances(void) {
+void Contest2019DataLoader::Frame::CalculateAGNDistances() {
     if (this->positions == nullptr)
         return;
     if (this->isAGNFlags == nullptr)
@@ -498,7 +498,7 @@ void Contest2019DataLoader::Frame::CalculateAGNDistances(void) {
 /*
  * Contest2019DataLoader::Contest2019DataLoader
  */
-Contest2019DataLoader::Contest2019DataLoader(void)
+Contest2019DataLoader::Contest2019DataLoader()
         : view::AnimDataModule()
         , getDataSlot("getData", "Slot for handling the file loading requests")
         , firstFilename("firstFilename", "The name of the first file to load")
@@ -547,14 +547,14 @@ Contest2019DataLoader::Contest2019DataLoader(void)
 /*
  * Contest2019DataLoader::~Contest2019DataLoader
  */
-Contest2019DataLoader::~Contest2019DataLoader(void) {
+Contest2019DataLoader::~Contest2019DataLoader() {
     this->Release();
 }
 
 /*
  * Contest2019DataLoader::constructFrame
  */
-view::AnimDataModule::Frame* Contest2019DataLoader::constructFrame(void) const {
+view::AnimDataModule::Frame* Contest2019DataLoader::constructFrame() const {
     Frame* f = new Frame(*const_cast<Contest2019DataLoader*>(this));
     return f;
 }
@@ -562,7 +562,7 @@ view::AnimDataModule::Frame* Contest2019DataLoader::constructFrame(void) const {
 /*
  * Contest2019DataLoader::create
  */
-bool Contest2019DataLoader::create(void) {
+bool Contest2019DataLoader::create() {
     return true;
 }
 
@@ -601,18 +601,18 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
     }
     if (!filename.empty()) {
         if (!f->LoadFrame(filename, frameID, redshift)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from file\n", idx);
+            Log::DefaultLog.WriteError("Unable to read frame %d from file\n", idx);
         }
     }
     bool calcDerivatives = this->calculateDerivatives.Param<param::BoolParam>()->Value();
     if (!filenameBefore.empty() && calcDerivatives) {
         if (!fbefore->LoadFrame(filenameBefore, frameIDBefore, redshiftBefore)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame before frame %d from file\n", idx);
+            Log::DefaultLog.WriteError("Unable to read frame before frame %d from file\n", idx);
         }
     }
     if (!filenameAfter.empty() && calcDerivatives) {
         if (!fafter->LoadFrame(filenameAfter, frameIDAfter, redshiftAfter)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame after frame %d from file\n", idx);
+            Log::DefaultLog.WriteError("Unable to read frame after frame %d from file\n", idx);
         }
     }
     f->ZeroDerivatives();
@@ -630,7 +630,7 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
 /*
  * Contest2019DataLoader::release
  */
-void Contest2019DataLoader::release(void) {
+void Contest2019DataLoader::release() {
     this->resetFrameCache();
 }
 

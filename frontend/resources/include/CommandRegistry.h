@@ -6,16 +6,18 @@
  */
 
 #pragma once
+
 #include <functional>
 #include <regex>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "KeyboardMouseInput.h"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
-#ifdef CUESDK_ENABLED
+#include "KeyboardMouseInput.h"
+
+#ifdef MEGAMOL_USE_CUESDK
 #include "CUESDK.h"
 #endif
 
@@ -23,8 +25,7 @@ namespace megamol::core::param {
 class AbstractParam;
 }
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 static std::string CommandRegistry_Req_Name = "CommandRegistry";
 
@@ -109,7 +110,7 @@ private:
     std::unordered_map<std::string, int> command_index;
     std::vector<Command> commands;
 
-#ifdef CUESDK_ENABLED
+#ifdef MEGAMOL_USE_CUESDK
     static std::unordered_map<megamol::frontend_resources::Key, CorsairLedId> corsair_led_from_glfw_key;
     std::unordered_map<Modifiers, std::vector<CorsairLedColor>> key_colors;
     CorsairLedPositions* led_positions = nullptr;
@@ -119,5 +120,4 @@ private:
     Modifiers current_modifiers;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

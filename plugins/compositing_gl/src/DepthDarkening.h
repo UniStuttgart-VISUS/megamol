@@ -5,16 +5,17 @@
  */
 #pragma once
 
+#include <glowl/BufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+#include <glowl/Texture2D.hpp>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Texture2D.hpp"
+#include "mmstd_gl/ModuleGL.h"
 
-namespace megamol::compositing {
+namespace megamol::compositing_gl {
 /**
  * This module computes a depth darkening effect following the work:
  * T. Luft, C. Colditz, and O. Deussen. Image Enhancement by Unsharp Masking the Depth Buffer.
@@ -22,7 +23,7 @@ namespace megamol::compositing {
  *
  * For fast calculation it seperates the needed gauss kernel.
  */
-class DepthDarkening : public core::Module {
+class DepthDarkening : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -55,7 +56,7 @@ public:
     DepthDarkening();
 
     /** Dtor. */
-    virtual ~DepthDarkening();
+    ~DepthDarkening() override;
 
 protected:
     /**
@@ -63,12 +64,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * Implementation of 'getData'.
@@ -97,7 +98,7 @@ private:
     /**
      * Recalculates the contents of the kernel buffer based on the input
      */
-    void recalcKernel(void);
+    void recalcKernel();
 
     /** Slot for the output texture */
     core::CalleeSlot outputTexSlot_;
@@ -130,4 +131,4 @@ private:
     /** buffer for the gauss kernel */
     std::unique_ptr<glowl::BufferObject> gaussValues_;
 };
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "datatools_gl/TransferFunctionQuery.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -16,18 +16,18 @@ using namespace megamol::datatools_gl;
 /*
  * TransferFunctionQuery::TransferFunctionQuery
  */
-TransferFunctionQuery::TransferFunctionQuery(void)
+TransferFunctionQuery::TransferFunctionQuery()
         : getTFSlot("gettransferfunction", "Connects to the transfer function module")
         , texDat()
         , texDatSize(0) {
-    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->getTFSlot.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
 }
 
 
 /*
  * TransferFunctionQuery::~TransferFunctionQuery
  */
-TransferFunctionQuery::~TransferFunctionQuery(void) {
+TransferFunctionQuery::~TransferFunctionQuery() {
     this->texDat.EnforceSize(0);
     this->texDatSize = 0;
 }
@@ -41,8 +41,7 @@ void TransferFunctionQuery::Query(float* col, float val) {
 
     if (this->texDatSize < 2) {
         // fetch transfer function
-        core_gl::view::CallGetTransferFunctionGL* cgtf =
-            this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+        mmstd_gl::CallGetTransferFunctionGL* cgtf = this->getTFSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
         if ((cgtf != nullptr) && ((*cgtf)(0))) {
             ::glGetError();
             ::glEnable(GL_TEXTURE_1D);

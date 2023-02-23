@@ -7,24 +7,23 @@
 
 #define _USE_MATH_DEFINES
 #include "AbstractBezierRenderer.h"
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "OpenGL_Context.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
  * AbstractBezierRenderer::AbstractBezierRenderer
  */
-AbstractBezierRenderer::AbstractBezierRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+AbstractBezierRenderer::AbstractBezierRenderer()
+        : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , objsHash(0)
-        , shader(NULL) {
+        , shader(nullptr) {
     // intentionally empty
 }
 
@@ -32,7 +31,7 @@ AbstractBezierRenderer::AbstractBezierRenderer(void)
 /*
  * AbstractBezierRenderer::~AbstractBezierRenderer
  */
-AbstractBezierRenderer::~AbstractBezierRenderer(void) {
+AbstractBezierRenderer::~AbstractBezierRenderer() {
     this->Release();
 }
 
@@ -40,10 +39,8 @@ AbstractBezierRenderer::~AbstractBezierRenderer(void) {
 /*
  * AbstractBezierRenderer::create
  */
-bool AbstractBezierRenderer::create(void) {
+bool AbstractBezierRenderer::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
-        return false;
 
     return true;
 }
@@ -52,7 +49,7 @@ bool AbstractBezierRenderer::create(void) {
 /*
  * AbstractBezierRenderer::GetExtents
  */
-bool AbstractBezierRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool AbstractBezierRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     core::AbstractGetData3DCall* gd = this->getDataSlot.CallAs<core::AbstractGetData3DCall>();
     if ((gd != NULL) && ((*gd)(1))) {
@@ -70,7 +67,7 @@ bool AbstractBezierRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * AbstractBezierRenderer::release
  */
-void AbstractBezierRenderer::release(void) {
+void AbstractBezierRenderer::release() {
     this->shader = NULL; // Do not release or delete ...
 }
 
@@ -78,12 +75,11 @@ void AbstractBezierRenderer::release(void) {
 /*
  * AbstractBezierRenderer::Render
  */
-bool AbstractBezierRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool AbstractBezierRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     if (this->shader_required() && (this->shader == NULL))
         return false;
     return this->render(call);
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <functional>
@@ -5,12 +11,10 @@
 #include <string>
 #include <vector>
 
-#include "CommandRegistry.h"
 #include "FrontendResource.h"
 #include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
-#include "PerformanceManager.h"
-
+#include "ModuleGraphSubscription.h"
 #include "mmcore/MegaMolGraphTypes.h"
 #include "mmcore/MegaMolGraph_Convenience.h"
 #include "mmcore/RootModuleNamespace.h"
@@ -19,14 +23,12 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/serializable.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class MegaMolGraph {
 public:
-    MegaMolGraph(megamol::core::CoreInstance& core, factories::ModuleDescriptionManager const& moduleProvider,
+    MegaMolGraph(factories::ModuleDescriptionManager const& moduleProvider,
         factories::CallDescriptionManager const& callProvider);
 
     virtual ~MegaMolGraph();
@@ -63,6 +65,8 @@ public:
 
     megamol::core::param::AbstractParam* FindParameter(std::string const& paramName) const;
 
+    bool SetParameter(std::string const& paramName, std::string const& value);
+
     megamol::core::param::ParamSlot* FindParameterSlot(std::string const& paramName) const;
 
     std::vector<megamol::core::param::AbstractParam*> EnumerateModuleParameters(std::string const& moduleName) const;
@@ -88,12 +92,9 @@ public:
 
     MegaMolGraph_Convenience& Convenience();
 
-    frontend_resources::Command::EffectFunction Parameter_Lambda = [&](const frontend_resources::Command* self) {
-        auto my_p = this->FindParameter(self->parent);
-        if (my_p != nullptr) {
-            my_p->setDirty();
-        }
-    };
+    frontend_resources::MegaMolGraph_SubscriptionRegistry& GraphSubscribers();
+
+    bool Broadcast_graph_subscribers_parameter_changes();
 
 private:
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
@@ -135,15 +136,19 @@ private:
     std::list<Module::ptr_type> graph_entry_points;
     megamol::frontend_resources::ImagePresentationEntryPoints* m_image_presentation = nullptr;
 
-    megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
-
     MegaMolGraph_Convenience convenience_functions;
 
-#ifdef PROFILING
-    megamol::frontend_resources::PerformanceManager* m_perf_manager = nullptr;
-#endif
+    frontend_resources::MegaMolGraph_SubscriptionRegistry graph_subscribers;
+
+    // module params may change their internal value on their own
+    // the graph uses the AbstractParam::indicateChange() mechanism to inject
+    // a callback that notifies the graph of param changes.
+    // these parameter changes get collected in the following queue and are issued to graph subscribers when possible.
+    std::vector<core::param::AbstractParamSlot*> module_param_changes_queue;
+    core::param::AbstractParam::ParamChangeCallback param_change_callback = [&](core::param::AbstractParamSlot* slot) {
+        module_param_changes_queue.push_back(slot);
+        return true;
+    };
 };
 
-
-} /* namespace core */
-} // namespace megamol
+} // namespace megamol::core

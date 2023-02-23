@@ -5,11 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED
-#define MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -20,26 +16,25 @@
 #include "protein_calls/ProteinColor.h"
 #include "vislib/RawStorage.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class MoleculeBallifier : public megamol::core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MoleculeBallifier";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "MoleculeBallifier";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
-    MoleculeBallifier(void);
-    virtual ~MoleculeBallifier(void);
+    MoleculeBallifier();
+    ~MoleculeBallifier() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
 
 private:
     bool getData(core::Call& c);
@@ -69,7 +64,4 @@ private:
     int frameOld;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif /* MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED */
+} // namespace megamol::protein

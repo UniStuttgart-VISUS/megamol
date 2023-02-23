@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 // 3D renderers
 #include "CartoonTessellationRenderer.h"
@@ -20,8 +20,10 @@
 
 // 2D renderers
 #include "DiagramRenderer.h"
+#include "RamachandranPlot.h"
 #include "SequenceRenderer.h"
 #include "SplitMergeRenderer.h"
+#include "UncertaintySequenceRenderer.h"
 
 // modules depending on GL calls
 #include "MSMSCavityFinder.h"
@@ -32,12 +34,12 @@
 #include "vislib/Trace.h"
 
 namespace megamol::protein_gl {
-class ProteinGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ProteinGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ProteinGLPluginInstance)
 
 public:
-    ProteinGLPluginInstance(void)
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+    ProteinGLPluginInstance()
+            : megamol::core::factories::AbstractPluginInstance(
                   "protein_gl", "Plugin for protein rendering (SFB716 D4)"){};
 
     ~ProteinGLPluginInstance() override = default;
@@ -53,7 +55,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::GLSLVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::DiagramRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SplitMergeRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::RamachandranPlot>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::VariantMatchRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::UncertaintySequenceRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::CartoonTessellationRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SombreroMeshRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESRenderer>();

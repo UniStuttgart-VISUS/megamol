@@ -1,12 +1,10 @@
-/*
- * TransferFunctionParam.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/TransferFunctionParam.h"
-
 
 using namespace megamol::core::param;
 
@@ -20,17 +18,6 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : Abstr
 TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractParam(), val(), hash(0) {
     this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
     this->SetValue(std::string(initVal));
-}
-
-
-TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam(), val(), hash(0) {
-    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
-    this->SetValue(std::string(initVal.PeekBuffer()));
-}
-
-
-std::string TransferFunctionParam::Definition() const {
-    return "MMTFFC";
 }
 
 
@@ -57,7 +44,7 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
 }
 
 
-std::string TransferFunctionParam::ValueString(void) const {
+std::string TransferFunctionParam::ValueString() const {
     return this->val;
 }
 

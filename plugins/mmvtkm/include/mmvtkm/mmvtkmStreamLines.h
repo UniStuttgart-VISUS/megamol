@@ -4,8 +4,7 @@
  * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
-#define MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
+#pragma once
 
 #include <glm/glm.hpp>
 
@@ -16,14 +15,15 @@
 
 #include "mesh/MeshCalls.h"
 
+#include "vtkm/Particle.h"
+
 
 typedef vislib::math::Point<float, 3> visPoint3f;
 typedef vislib::math::Vector<float, 3> visVec3f;
 typedef vislib::math::Plane<float> visPlanef;
 
 
-namespace megamol {
-namespace mmvtkm {
+namespace megamol::mmvtkm {
 
 
 class mmvtkmStreamLines : public core::Module {
@@ -64,7 +64,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~mmvtkmStreamLines();
+    ~mmvtkmStreamLines() override;
 
 protected:
     /**
@@ -72,12 +72,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -441,7 +441,7 @@ private:
     std::vector<glm::vec3> originalSeedPlane_;
     std::vector<glm::vec3> stpqSeedPlane_;
     std::vector<Triangle> seedPlaneTriangles_;
-    std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds_;
+    std::vector<vtkm::Particle> seeds_;
 
     int planeMode_;
 
@@ -486,7 +486,4 @@ private:
     float epsilon5_ = 1e-5f;
 };
 
-} // end namespace mmvtkm
-} // end namespace megamol
-
-#endif // MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
+} // namespace megamol::mmvtkm

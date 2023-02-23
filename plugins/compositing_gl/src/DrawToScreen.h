@@ -5,33 +5,33 @@
  * All rights reserved.
  */
 
-#ifndef DRAW_TO_SCREEN_H_INCLUDED
-#define DRAW_TO_SCREEN_H_INCLUDED
+#pragma once
 
-#include "vislib/math/Matrix.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include <glowl/glowl.h>
 
+#include "FrameStatistics.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/Texture2D.hpp"
-
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing_gl {
 
 /**
  * TODO
  */
-class DrawToScreen : public megamol::core_gl::view::Renderer3DModuleGL {
+class DrawToScreen : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Renderer3DModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
+    }
+
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DrawToScreen";
     }
 
@@ -40,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "...TODO...";
     }
 
@@ -49,7 +49,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         /*TODO*/
         return true;
     }
@@ -58,7 +58,7 @@ public:
     DrawToScreen();
 
     /** Dtor. */
-    ~DrawToScreen();
+    ~DrawToScreen() override;
 
 protected:
     /**
@@ -66,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -82,7 +82,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -91,18 +91,16 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core_gl::view::CallRender3DGL& call);
+    void PreRender(mmstd_gl::CallRender3DGL& call) override;
 
 private:
-    typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;
-
     /** Dummy color texture to use when no texture is connected */
     std::shared_ptr<glowl::Texture2D> m_dummy_color_tx;
 
@@ -110,7 +108,7 @@ private:
     std::shared_ptr<glowl::Texture2D> m_dummy_depth_tx;
 
     /** Shader program for deferred shading pass */
-    std::unique_ptr<GLSLShader> m_drawToScreen_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_drawToScreen_prgm;
 
     /** */
     core::CallerSlot m_input_texture_call;
@@ -122,7 +120,4 @@ private:
     glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
-} // namespace compositing
-} // namespace megamol
-
-#endif
+} // namespace megamol::compositing_gl

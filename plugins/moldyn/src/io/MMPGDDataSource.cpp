@@ -7,7 +7,6 @@
 
 #include "MMPGDDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "moldyn/ParticleGridDataCall.h"
@@ -236,7 +235,7 @@ void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
 /*
  * MMPGDDataSource::MMPGDDataSource
  */
-MMPGDDataSource::MMPGDDataSource(void)
+MMPGDDataSource::MMPGDDataSource()
         : view::AnimDataModule()
         , filename("filename", "The path to the MMPGD file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -261,7 +260,7 @@ MMPGDDataSource::MMPGDDataSource(void)
 /*
  * MMPGDDataSource::~MMPGDDataSource
  */
-MMPGDDataSource::~MMPGDDataSource(void) {
+MMPGDDataSource::~MMPGDDataSource() {
     this->Release();
 }
 
@@ -269,7 +268,7 @@ MMPGDDataSource::~MMPGDDataSource(void) {
 /*
  * MMPGDDataSource::constructFrame
  */
-view::AnimDataModule::Frame* MMPGDDataSource::constructFrame(void) const {
+view::AnimDataModule::Frame* MMPGDDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<MMPGDDataSource*>(this));
     return f;
 }
@@ -278,7 +277,7 @@ view::AnimDataModule::Frame* MMPGDDataSource::constructFrame(void) const {
 /*
  * MMPGDDataSource::create
  */
-bool MMPGDDataSource::create(void) {
+bool MMPGDDataSource::create() {
     return true;
 }
 
@@ -299,7 +298,7 @@ void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame* frame, unsigned int
     this->file->Seek(this->frameIdx[idx]);
     if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx])) {
         // failed
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMPGD file\n", idx);
+        Log::DefaultLog.WriteError("Unable to read frame %d from MMPGD file\n", idx);
     }
 }
 
@@ -307,7 +306,7 @@ void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame* frame, unsigned int
 /*
  * MMPGDDataSource::release
  */
-void MMPGDDataSource::release(void) {
+void MMPGDDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;
@@ -338,7 +337,7 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPGD-File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open MMPGD-File \"%s\".",
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -349,7 +348,7 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
 #define _ERROR_OUT(MSG)                                    \
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG);       \
+    Log::DefaultLog.WriteError(MSG);                       \
     SAFE_DELETE(this->file);                               \
     this->setFrameCount(1);                                \
     this->initFrameCache(1);                               \
@@ -403,12 +402,12 @@ bool MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
 
     this->setFrameCount(frmCnt);

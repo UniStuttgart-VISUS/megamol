@@ -1,23 +1,16 @@
-/*
- * InputCall.h
- *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_INPUTCALL_H_INCLUDED
-#define MEGAMOLCORE_INPUTCALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/view/Input.h"
 #include "mmcore/view/MouseFlags.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 /**
  * Stateful input event.
@@ -77,7 +70,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 5;
     }
 
@@ -108,7 +101,7 @@ public:
     InputCall() = default;
 
     /** Dtor. */
-    virtual ~InputCall(void) = default;
+    ~InputCall() override = default;
 
 
     /**
@@ -116,7 +109,7 @@ public:
      *
      * @return The input event.
      */
-    inline const InputEvent& GetInputEvent(void) const {
+    inline const InputEvent& GetInputEvent() const {
         return this->e;
     }
 
@@ -143,8 +136,4 @@ private:
 };
 
 
-} /* end namespace view */
-} // namespace core
-} // namespace megamol
-
-#endif /* MEGAMOLCORE_INPUTCALL_H_INCLUDED */
+} // namespace megamol::core::view

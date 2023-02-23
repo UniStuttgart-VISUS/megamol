@@ -16,6 +16,7 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::core::utility;
+using megamol::core::utility::log::Log;
 
 
 SDFFont::SDFFont(PresetFontName fn) : SDFFont(fn, 1.0f, RenderMode::RENDERMODE_FILL, false) {}
@@ -109,7 +110,7 @@ megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
         , glyphKrns(src.glyphKrns) {}
 
 
-SDFFont::~SDFFont(void) {
+SDFFont::~SDFFont() {
 
     if (this->initialised) {
         this->Deinitialise();
@@ -117,10 +118,10 @@ SDFFont::~SDFFont(void) {
 }
 
 
-bool SDFFont::Initialise(megamol::core::CoreInstance* core_instance_ptr) {
+bool SDFFont::Initialise(megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
 
     if (!this->initialised) {
-        this->initialised = this->loadFont(core_instance_ptr);
+        this->initialised = this->loadFont(runtimeConf);
     }
     return this->initialised;
 }
@@ -343,7 +344,7 @@ void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const {
 }
 
 
-void SDFFont::Deinitialise(void) {
+void SDFFont::Deinitialise() {
 
     this->ClearBatchDrawCache();
     this->texture.reset();
@@ -826,20 +827,13 @@ void SDFFont::render(
 }
 
 
-bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
+bool SDFFont::loadFont(megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
 
     this->ResetRotation();
     this->SetBatchDrawMode(false);
     this->ClearBatchDrawCache();
     this->SetBillboardMode(false);
     this->SetSmoothMode(true);
-
-    if (core_instance_ptr == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[SDFFont] Pointer to MegaMol CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-        return false;
-    }
 
     // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
@@ -851,9 +845,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     // (2) Load font information -----------------------------------------------
     std::string infoFile = this->fontFileName;
     infoFile.append(".fnt");
-    vislib::StringW info_filename =
-        ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(infoFile.c_str()))
-            .PeekBuffer();
+    const auto info_filename = ResourceWrapper::GetResourcePath(runtimeConf, infoFile);
     if (!this->loadFontInfo(info_filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font info file: \"%s\". [%s, %s, line %d]\n", infoFile.c_str(), __FILE__,
@@ -864,11 +856,8 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     // (3) Load font texture --------------------------------------------------------
     std::string textureFile = this->fontFileName;
     textureFile.append(".png");
-    auto texture_filename = static_cast<std::wstring>(
-        ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(textureFile.c_str()))
-            .PeekBuffer());
-    if (!megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(
-            this->texture, megamol::core::utility::WChar2Utf8String(texture_filename))) {
+    const auto texture_filename = ResourceWrapper::GetResourcePath(runtimeConf, textureFile);
+    if (!megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(this->texture, texture_filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font texture: \"%s\". [%s, %s, line %d]\n", textureFile.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
@@ -876,7 +865,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     }
 
     // (4) Load shaders --------------------------------------------------------
-    if (!this->loadFontShader(core_instance_ptr)) {
+    if (!this->loadFontShader(runtimeConf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font shaders. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -972,7 +961,7 @@ bool SDFFont::loadFontBuffers() {
 
 
 // Bitmap Font file format: http://www.angelcode.com/products/fnont/doc/file_format.html
-bool SDFFont::loadFontInfo(vislib::StringW filename) {
+bool SDFFont::loadFontInfo(std::filesystem::path filepath) {
 
     // Reset font info
     for (unsigned int i = 0; i < this->glyphs.size(); i++) {
@@ -985,7 +974,7 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
     this->glyphs.clear();
     this->glyphIdcs.clear();
 
-    std::ifstream input_file(this->to_string(filename.PeekBuffer()));
+    std::ifstream input_file(filepath);
     if (!input_file.is_open() || !input_file.good()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SDFFont] Unable to open font file \"%s\": Bad file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -1119,9 +1108,9 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
 }
 
 
-bool SDFFont::loadFontShader(megamol::core::CoreInstance* core_instance_ptr) {
+bool SDFFont::loadFontShader(megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(core_instance_ptr->GetShaderPaths());
+    auto const shader_options = core::utility::make_path_shader_options(runtimeConf);
 
     try {
         auto shader_options_globcol = shader_options;
@@ -1133,7 +1122,7 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance* core_instance_ptr) {
             "vertcol", shader_options, "core/sdffont/sdffont.vert.glsl", "core/sdffont/sdffont.frag.glsl");
 
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("SimplestSphereRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("SimplestSphereRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 

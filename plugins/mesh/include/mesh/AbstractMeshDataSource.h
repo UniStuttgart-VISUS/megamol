@@ -6,8 +6,7 @@
  * All rights reserved.
  */
 
-#ifndef ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
-#define ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
+#pragma once
 
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
@@ -15,13 +14,12 @@
 #include "mmcore/Module.h"
 
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class AbstractMeshDataSource : public core::Module {
 public:
     AbstractMeshDataSource();
-    virtual ~AbstractMeshDataSource();
+    ~AbstractMeshDataSource() override;
 
 protected:
     /**
@@ -29,7 +27,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Gets the data from the source.
@@ -52,13 +50,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
-
-    /**
-     * Syncs the mesh access collection of this module with the lefthand side (lhs) and righthand side (rhs)
-     * connections if available. Takes over materials from previously used to collection if lhs connection changes.
-     */
-    void syncMeshAccessCollection(CallMesh* lhs_call, CallMesh* rhs_call);
+    void release() override;
 
     /**
      * Clears all mesh access entries made by this module from the used material collection.
@@ -66,9 +58,9 @@ protected:
     void clearMeshAccessCollection();
 
     /**
-     * Mesh collection that is used with a list of identifier strings of meshs accesses that this module added to
-     * the mesh collection. Needed to delete/update submeshes if the collection is shared across a chain of data
-     * sources modules.
+     * Local mesh collection that is used with a list of identifier strings of meshs accesses that this module added to
+     * the mesh collection.
+     * Append this each frame to the mesh collection passing trough the calls.
      */
     std::pair<std::shared_ptr<MeshDataAccessCollection>, std::vector<std::string>> m_mesh_access_collection;
 
@@ -79,8 +71,4 @@ protected:
     megamol::core::CalleeSlot m_mesh_lhs_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
-
-
-#endif // !ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
+} // namespace megamol::mesh

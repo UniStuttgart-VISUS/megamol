@@ -5,23 +5,22 @@
  * All rights reserved.
  */
 
-#ifndef TEXTURE_COMBINE_H_INCLUDED
-#define TEXTURE_COMBINE_H_INCLUDED
+#pragma once
 
 #include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
-#include "glowl/Texture2D.hpp"
+#include "mmstd_gl/ModuleGL.h"
 
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing_gl {
 
-class TextureCombine : public core::Module {
+class TextureCombine : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -51,7 +50,7 @@ public:
     }
 
     TextureCombine();
-    ~TextureCombine();
+    ~TextureCombine() override;
 
 protected:
     /**
@@ -59,12 +58,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO
@@ -82,15 +81,16 @@ protected:
     bool modeCallback(core::param::ParamSlot& slot);
 
 private:
-    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
-
     uint32_t m_version;
 
     /** Shader program for texture add */
-    std::unique_ptr<GLSLComputeShader> m_add_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_add_prgm;
 
     /** Shader program for texture multiply */
-    std::unique_ptr<GLSLComputeShader> m_mult_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_mult_prgm;
+
+    /** Shader program for texture multiply */
+    std::unique_ptr<glowl::GLSLProgram> m_over_prgm;
 
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
@@ -111,7 +111,4 @@ private:
     megamol::core::CallerSlot m_input_tex_1_slot;
 };
 
-} // namespace compositing
-} // namespace megamol
-
-#endif // !TEXTURE_COMBINE_H_INCLUDED
+} // namespace megamol::compositing_gl

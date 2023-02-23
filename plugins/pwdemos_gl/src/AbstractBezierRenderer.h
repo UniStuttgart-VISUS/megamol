@@ -7,34 +7,35 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Raycasting-based renderer for bézier curve tubes
  */
-class AbstractBezierRenderer : public core_gl::view::Renderer3DModuleGL {
+class AbstractBezierRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
 protected:
     /** Ctor. */
-    AbstractBezierRenderer(void);
+    AbstractBezierRenderer();
 
     /** Dtor. */
-    virtual ~AbstractBezierRenderer(void);
+    ~AbstractBezierRenderer() override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -45,12 +46,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -59,7 +60,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The implementation of the render callback
@@ -68,14 +69,14 @@ protected:
      *
      * @return The return value of the function
      */
-    virtual bool render(core_gl::view::CallRender3DGL& call) = 0;
+    virtual bool render(mmstd_gl::CallRender3DGL& call) = 0;
 
     /**
      * Informs the class if the shader is required
      *
      * @return True if the shader is required
      */
-    virtual bool shader_required(void) const {
+    virtual bool shader_required() const {
         // TODO: This is not cool at all
         return true;
     }
@@ -87,10 +88,9 @@ protected:
     SIZE_T objsHash;
 
     /** The selected shader */
-    vislib_gl::graphics::gl::GLSLShader* shader;
+    std::unique_ptr<glowl::GLSLProgram> shader;
 
 private:
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

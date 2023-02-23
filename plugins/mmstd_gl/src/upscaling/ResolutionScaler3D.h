@@ -7,7 +7,7 @@
 #pragma once
 
 #include "ResolutionScalerBase.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 namespace megamol::mmstd_gl {
 
@@ -17,7 +17,7 @@ namespace megamol::mmstd_gl {
  * and returns the re-scaled framebuffer to the initial caller.
  */
 
-class ResolutionScaler3D : public ResolutionScalerBase<core_gl::view::CallRender3DGL> {
+class ResolutionScaler3D : public ResolutionScalerBase<mmstd_gl::CallRender3DGL> {
 public:
     /**
      * Answer the name of this module.
@@ -51,7 +51,7 @@ public:
     ResolutionScaler3D() = default;
 
     /** dtor */
-    ~ResolutionScaler3D() {
+    ~ResolutionScaler3D() override {
         this->Release();
     };
 

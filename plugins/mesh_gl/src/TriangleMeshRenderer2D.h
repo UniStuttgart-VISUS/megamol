@@ -1,24 +1,10 @@
-/*
- * TriangleMeshRenderer2D.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
-
-#include "mesh/MeshDataCall.h"
-
-#include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Camera.h"
-#include "mmcore/view/MouseFlags.h"
-
-#include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
-
-#include "vislib/math/Rectangle.h"
-
-#include <glowl/glowl.h>
 
 #include <array>
 #include <memory>
@@ -26,14 +12,24 @@
 #include <type_traits>
 #include <vector>
 
-namespace megamol {
-namespace mesh_gl {
+#include <glowl/glowl.h>
+
+#include "mesh/MeshDataCall.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/Camera.h"
+#include "mmcore/view/MouseFlags.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
+#include "vislib/math/Rectangle.h"
+
+namespace megamol::mesh_gl {
 /**
  * Module for rendering a 2D triangle mesh.
  *
  * @author Alexander Straub
  */
-class TriangleMeshRenderer2D : public core_gl::view::Renderer2DModuleGL {
+class TriangleMeshRenderer2D : public mmstd_gl::Renderer2DModuleGL {
     static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
     static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
 
@@ -73,7 +69,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TriangleMeshRenderer2D();
+    ~TriangleMeshRenderer2D() override;
 
 protected:
     /**
@@ -81,12 +77,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
     /**
      * The render callback.
@@ -95,7 +91,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call) override;
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The extent callback.
@@ -104,33 +100,33 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * Forwards key events.
      */
-    virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
+    bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) override;
 
     /**
      * Forwards character events.
      */
-    virtual bool OnChar(unsigned int codePoint) override;
+    bool OnChar(unsigned int codePoint) override;
 
     /**
      * Forwards character events.
      */
-    virtual bool OnMouseButton(
+    bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
     /**
      * Forwards character events.
      */
-    virtual bool OnMouseMove(double x, double y) override;
+    bool OnMouseMove(double x, double y) override;
 
     /**
      * Forwards scroll events.
      */
-    virtual bool OnMouseScroll(double dx, double dy) override;
+    bool OnMouseScroll(double dx, double dy) override;
 
 private:
     /** Input render call */
@@ -181,5 +177,4 @@ private:
     /** Storing a copy of the camera */
     core::view::Camera camera;
 };
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

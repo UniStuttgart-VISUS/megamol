@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_BEZIERCURVE_H_INCLUDED
-#define VISLIB_BEZIERCURVE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,8 +18,7 @@
 #include "vislib/math/mathfunctions.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -44,10 +39,10 @@ public:
      * Creates an empty curve with all control points placed in the
      * origin.
      */
-    BezierCurve(void);
+    BezierCurve();
 
     /** Dtor. */
-    ~BezierCurve(void);
+    ~BezierCurve();
 
     /*
      * Evaluates the position on the bézier curve for the
@@ -173,7 +168,7 @@ private:
  * BezierCurve<T, E>::BezierCurve
  */
 template<class T, unsigned int E>
-BezierCurve<T, E>::BezierCurve(void) {
+BezierCurve<T, E>::BezierCurve() {
     // intentionally empty
 }
 
@@ -182,7 +177,7 @@ BezierCurve<T, E>::BezierCurve(void) {
  * BezierCurve<T, E>::~BezierCurve
  */
 template<class T, unsigned int E>
-BezierCurve<T, E>::~BezierCurve(void) {
+BezierCurve<T, E>::~BezierCurve() {
     // intentionally empty
 }
 
@@ -327,10 +322,8 @@ bool BezierCurve<T, E>::operator==(const BezierCurve<T, E>& rhs) const {
 }
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_BEZIERCURVE_H_INCLUDED */

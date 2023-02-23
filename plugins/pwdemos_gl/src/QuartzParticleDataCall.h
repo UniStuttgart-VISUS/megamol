@@ -7,13 +7,12 @@
 
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/OutOfRangeException.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Call transporting quartz crystal particle data
@@ -31,7 +30,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzParticleDataCall";
     }
 
@@ -40,7 +39,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting quartz crystal particle data";
     }
 
@@ -49,7 +48,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -65,10 +64,10 @@ public:
     }
 
     /** Ctor */
-    ParticleDataCall(void);
+    ParticleDataCall();
 
     /** Dtor. */
-    virtual ~ParticleDataCall(void);
+    ~ParticleDataCall() override;
 
     /**
      * Gets the number of groups
@@ -77,7 +76,7 @@ public:
      *
      * @return the number of groups
      */
-    inline unsigned int GetGroupCount(void) const {
+    inline unsigned int GetGroupCount() const {
         return this->grpCnt;
     }
 
@@ -156,5 +155,4 @@ private:
     const float* const* part;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

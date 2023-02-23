@@ -5,15 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "tinyply.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
@@ -22,9 +20,7 @@
 #include <map>
 #include <vector>
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 
 
 /**
@@ -37,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PLYDataSource";
     }
 
@@ -46,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for .PLY files.";
     }
 
@@ -55,19 +51,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /**
      * Constructor.
      */
-    PLYDataSource(void);
+    PLYDataSource();
 
     /**
      * Destructor.
      */
-    virtual ~PLYDataSource(void);
+    ~PLYDataSource() override;
 
 protected:
     /**
@@ -75,31 +71,31 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Reads the data from an open instream.
      *
      * @return True on success, false otherwise.
      */
-    bool assertData(void);
+    bool assertData();
 
     /**
      * Checks whether one the input parameters is dirty and resets the dirtyness state
      *
      * @return True if one of the parameters was dirty, false otherwise.
      */
-    bool checkParameterDirtyness(void);
+    bool checkParameterDirtyness();
 
     /**
      * Clears all allocated fields.
      */
-    void clearAllFields(void);
+    void clearAllFields();
 
     /**
      * Callback that is called when the filename is changed.
@@ -152,7 +148,7 @@ protected:
     /**
      * Resets the dirtyness of all parameters
      */
-    void resetParameterDirtyness(void);
+    void resetParameterDirtyness();
 
     /** Slot for the filepath of the .ply file */
     core::param::ParamSlot filename;
@@ -311,8 +307,4 @@ protected:
     size_t data_hash;
 };
 
-} /* end namespace io */
-} // namespace datatools_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED */
+} // namespace megamol::datatools_gl::io

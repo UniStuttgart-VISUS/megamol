@@ -5,26 +5,27 @@
  */
 #pragma once
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "mmcore/CoreInstance.h"
+#include <glowl/BufferObject.hpp>
+#include <glowl/FramebufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+
+#include "RuntimeConfig.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/light/CallLight.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd/light/CallLight.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 
 namespace megamol::protein_gl {
 
 class DeferredRenderingProvider {
 public:
-    DeferredRenderingProvider(void);
-    virtual ~DeferredRenderingProvider(void);
-    void setup(core::CoreInstance* coreInstance);
-    void draw(core_gl::view::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading = false);
+    DeferredRenderingProvider();
+    virtual ~DeferredRenderingProvider();
+    void setup(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
+    void draw(mmstd_gl::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading = false);
     void setFramebufferExtents(uint32_t width, uint32_t height);
-    void bindDeferredFramebufferToDraw(void);
-    void resetToPreviousFramebuffer(void);
-    std::vector<core::param::ParamSlot*> getUsedParamSlots(void);
+    void bindDeferredFramebufferToDraw();
+    void resetToPreviousFramebuffer();
+    std::vector<core::param::ParamSlot*> getUsedParamSlots();
 
     struct LightParams {
         float x, y, z, intensity;

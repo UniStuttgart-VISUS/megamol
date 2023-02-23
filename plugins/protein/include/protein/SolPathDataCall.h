@@ -4,18 +4,13 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/math/mathfunctions.h"
 
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Get data call for (unclustered) sol-path data
@@ -119,7 +114,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolPathDataCall";
     }
 
@@ -128,7 +123,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get solvent path-line data";
     }
 
@@ -137,7 +132,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return megamol::core::AbstractGetData3DCall::FunctionCount();
     }
 
@@ -153,17 +148,17 @@ public:
     }
 
     /** Ctor */
-    SolPathDataCall(void);
+    SolPathDataCall();
 
     /** Dtor. */
-    virtual ~SolPathDataCall(void);
+    ~SolPathDataCall() override;
 
     /**
      * Answer the number of pathlines
      *
      * @return The number of pathlines
      */
-    inline unsigned int Count(void) const {
+    inline unsigned int Count() const {
         return this->count;
     }
 
@@ -172,7 +167,7 @@ public:
      *
      * @return The maximum speed present
      */
-    inline float MaxSpeed(void) const {
+    inline float MaxSpeed() const {
         return this->maxSpeed;
     }
 
@@ -181,7 +176,7 @@ public:
      *
      * @return The maximum frame number used
      */
-    inline float MaxTime(void) const {
+    inline float MaxTime() const {
         return this->maxTime;
     }
 
@@ -190,7 +185,7 @@ public:
      *
      * @return The minimum speed present
      */
-    inline float MinSpeed(void) const {
+    inline float MinSpeed() const {
         return this->minSpeed;
     }
 
@@ -199,7 +194,7 @@ public:
      *
      * @return The minimum frame number used
      */
-    inline float MinTime(void) const {
+    inline float MinTime() const {
         return this->minTime;
     }
 
@@ -208,7 +203,7 @@ public:
      *
      * @return A pointer to the array of pathlines
      */
-    inline const Pathline* Pathlines(void) const {
+    inline const Pathline* Pathlines() const {
         return this->lines;
     }
 
@@ -255,7 +250,4 @@ private:
     float maxSpeed;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif /*  MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED */
+} // namespace megamol::protein

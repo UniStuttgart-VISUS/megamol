@@ -4,8 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef PLACE_PROBES_H_INCLUDED
-#define PLACE_PROBES_H_INCLUDED
+#pragma once
 
 #include "mesh/MeshCalls.h"
 #include "mmadios/CallADIOSData.h"
@@ -87,9 +86,10 @@ private:
     void vertexNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         mesh::MeshDataAccessCollection::VertexAttribute& normals,
         mesh::MeshDataAccessCollection::VertexAttribute& probe_ids);
-    void faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-        mesh::MeshDataAccessCollection::VertexAttribute& normals,
-        mesh::MeshDataAccessCollection::VertexAttribute& probe_ids, mesh::MeshDataAccessCollection::IndexData& indices);
+    void faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute const& vertices,
+        mesh::MeshDataAccessCollection::VertexAttribute const& normals,
+        mesh::MeshDataAccessCollection::VertexAttribute const& probe_ids,
+        mesh::MeshDataAccessCollection::IndexData const& indices);
     bool placeProbes();
     bool placeByCenterline(uint32_t lei, mesh::MeshDataAccessCollection::VertexAttribute& centerline);
     bool placeByCenterpoint();
@@ -120,5 +120,3 @@ private:
 
 } // namespace probe
 } // namespace megamol
-
-#endif //!PLACE_PROBES_H_INCLUDED

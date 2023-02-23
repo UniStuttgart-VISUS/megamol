@@ -5,16 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
-#define MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
 #pragma once
 
 
+#include "gui_utils.h"
 #include <string>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -37,9 +35,10 @@ public:
      * @param fixed_side                    Define which side of the splitter has fixed width/height. Set to zero for autodetection.
      * @param inout_range_left_top          The returned size of the respective side
      * @param inout_range_right_bottom      The returned size of the respective side
+     * @param window_cursor_pos             The upper left position of the parent window
      */
     bool Widget(const std::string& idstr, bool vertical, float length, FixedSplitterSide fixed_side,
-        float& inout_range_left_top, float& inout_range_right_bottom);
+        float& inout_range_left_top, float& inout_range_right_bottom, ImVec2 window_cursor_pos);
 
     float GetWidth() const;
 
@@ -51,7 +50,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_SPLITTERWIDGET_INCLUDED
+} // namespace megamol::gui

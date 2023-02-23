@@ -8,23 +8,27 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#ifdef PROFILING
-#include "mmcore/CoreInstance.h"
-#endif
 #include "mmcore/utility/log/Log.h"
+
+#ifdef MEGAMOL_USE_TRACY
+#include "Tracy.hpp"
+#endif
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
+#include "mmcore/Module.h"
+#endif
 
 using namespace megamol::core;
 
 /*
  * Call::Call
  */
-Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
+Call::Call() : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
 
 
 /*
  * Call::~Call
  */
-Call::~Call(void) {
+Call::~Call() {
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE
@@ -34,8 +38,7 @@ Call::~Call(void) {
         this->callee->ConnectCall(nullptr);
         this->callee = nullptr; // DO NOT DELETE
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
 }
 
@@ -46,32 +49,40 @@ Call::~Call(void) {
 bool Call::operator()(unsigned int func) {
     bool res = false;
     if (this->callee != nullptr) {
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
+        std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
+        output += "::";
+        output += f;
+#endif
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScoped;
+        ZoneName(output.c_str(), output.size());
+#endif
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {
-            std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
-            output += "::";
-            output += f;
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
-            // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
+            // let some service do it!
+            gl_helper->PushDebugGroup(1234, -1, output.c_str());
         }
 #endif
-#ifdef PROFILING
-        const auto frameID = this->callee->GetCoreInstance()->GetFrameID();
-        perf_man->start_timer(cpu_queries[func], frameID);
-        if (caps.OpenGLRequired())
-            perf_man->start_timer(gl_queries[func], frameID);
+#ifdef MEGAMOL_USE_PROFILING
+        perf_man->start_timer(cpu_queries[func]);
+        if (caps.OpenGLRequired()) {
+            perf_man->start_timer(gl_queries[func]);
+        }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
-#ifdef PROFILING
-        if (caps.OpenGLRequired())
+#ifdef MEGAMOL_USE_PROFILING
+        if (caps.OpenGLRequired()) {
             perf_man->stop_timer(gl_queries[func]);
+        }
         perf_man->stop_timer(cpu_queries[func]);
 #endif
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (caps.OpenGLRequired())
-            glPopDebugGroup();
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+        if (caps.OpenGLRequired()) {
+            gl_helper->PopDebugGroup();
+        }
 #endif
     }
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,

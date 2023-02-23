@@ -1,8 +1,8 @@
 #include "FBOCommFabric.h"
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 
 
 megamol::remote::MPICommFabric::MPICommFabric(int target_rank, int source_rank)
@@ -11,9 +11,9 @@ megamol::remote::MPICommFabric::MPICommFabric(int target_rank, int source_rank)
         , source_rank_{source_rank}
         , recv_count_{1} {
     // TODO this is wrong. mpiprovider gives you the correct comm
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_);
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 }
 
 
@@ -28,18 +28,18 @@ bool megamol::remote::MPICommFabric::Bind(std::string const& address) {
 
 
 bool megamol::remote::MPICommFabric::Send(std::vector<char> const& buf, send_type const type) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     // TODO this is wrong. mpiprovider gives you the correct comm
     auto status = MPI_Send((void*)buf.data(), buf.size(), MPI_CHAR, target_rank_, 0, MPI_COMM_WORLD);
     return status == MPI_SUCCESS;
 #else
     return false;
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 }
 
 
 bool megamol::remote::MPICommFabric::Recv(std::vector<char>& buf, recv_type const type) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     MPI_Status stat;
     buf.resize(recv_count_);
     // TODO this is wrong. mpiprovider gives you the correct comm
@@ -48,7 +48,7 @@ bool megamol::remote::MPICommFabric::Recv(std::vector<char>& buf, recv_type cons
     return status == MPI_SUCCESS;
 #else
     return false;
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 }
 
 
@@ -97,7 +97,9 @@ bool megamol::remote::ZMQCommFabric::Bind(std::string const& address) {
         bound_ = true;
         // this->socket_.setsockopt(ZMQ_CONFLATE, true);
         this->socket_.setsockopt(ZMQ_LINGER, 0);
-    } catch (zmq::error_t const& e) { printf("ZMQ ERROR: %s", e.what()); }
+    } catch (zmq::error_t const& e) {
+        printf("ZMQ ERROR: %s", e.what());
+    }
     return this->socket_.connected();
 }
 

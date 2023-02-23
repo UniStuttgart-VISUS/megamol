@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_COLOURHSVF_H_INCLUDED
-#define VISLIB_COLOURHSVF_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,8 +13,7 @@
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/math/mathfunctions.h"
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -30,7 +25,7 @@ public:
      * Ctor.
      * Sets all colour components to zero, resulting in black.
      */
-    ColourHSVf(void);
+    ColourHSVf();
 
     /**
      * Ctor
@@ -56,14 +51,14 @@ public:
     ColourHSVf(const ColourRGBAu8& src);
 
     /** Dtor. */
-    ~ColourHSVf(void);
+    ~ColourHSVf();
 
     /**
      * Answer the Hue component
      *
      * @return The Hue component
      */
-    inline float H(void) const {
+    inline float H() const {
         return this->comp[0];
     }
 
@@ -72,7 +67,7 @@ public:
      *
      * @return The Saturation component
      */
-    inline float S(void) const {
+    inline float S() const {
         return this->comp[1];
     }
 
@@ -81,7 +76,7 @@ public:
      *
      * @return The Value component
      */
-    inline float V(void) const {
+    inline float V() const {
         return this->comp[2];
     }
 
@@ -164,17 +159,15 @@ public:
     }
 
     /** Cast operator to rgb color */
-    operator ColourRGBAu8(void) const;
+    operator ColourRGBAu8() const;
 
 private:
     /** The colour components in HSV layout */
     float comp[3];
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_COLOURHSVF_H_INCLUDED */

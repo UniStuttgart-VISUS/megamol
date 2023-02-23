@@ -13,15 +13,11 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "protein_calls/MolecularDataCall.h"
-
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include <GL/glu.h>
 
 #include "TrajectorySmoothFilter.h"
 
@@ -34,7 +30,7 @@ using namespace megamol::protein_calls;
 /*
  * TrajectorySmoothFilter::TrajectorySmoothFilter
  */
-TrajectorySmoothFilter::TrajectorySmoothFilter(void)
+TrajectorySmoothFilter::TrajectorySmoothFilter()
         : core::Module()
         , molDataCallerSlot("getdata", "Connects the filter with molecule data storage")
         , dataOutSlot("dataout", "The slot providing the filtered data")
@@ -61,7 +57,7 @@ TrajectorySmoothFilter::TrajectorySmoothFilter(void)
 /*
  * TrajectorySmoothFilter::~TrajectorySmoothFilter
  */
-TrajectorySmoothFilter::~TrajectorySmoothFilter(void) {
+TrajectorySmoothFilter::~TrajectorySmoothFilter() {
     this->Release();
 }
 
@@ -69,7 +65,7 @@ TrajectorySmoothFilter::~TrajectorySmoothFilter(void) {
 /*
  * TrajectorySmoothFilter::create
  */
-bool TrajectorySmoothFilter::create(void) {
+bool TrajectorySmoothFilter::create() {
     return true;
 }
 
@@ -77,7 +73,7 @@ bool TrajectorySmoothFilter::create(void) {
 /*
  * TrajectorySmoothFilter::release
  */
-void TrajectorySmoothFilter::release(void) {}
+void TrajectorySmoothFilter::release() {}
 
 
 /*

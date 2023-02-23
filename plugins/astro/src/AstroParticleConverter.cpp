@@ -8,7 +8,7 @@
 #include "AstroParticleConverter.h"
 #include <glm/gtc/type_ptr.hpp>
 
-#include "simultaneous_sort.h"
+#include "simultaneous_sort/simultaneous_sort.h"
 
 using namespace megamol;
 using namespace megamol::astro;
@@ -18,7 +18,7 @@ using namespace megamol::geocalls;
 /*
  * AstroParticleConverter::AstroParticleConverter
  */
-AstroParticleConverter::AstroParticleConverter(void)
+AstroParticleConverter::AstroParticleConverter()
         : Module()
         , sphereDataSlot("sphereData", "Output slot for the resulting sphere data")
         , sphereSpecialSlot(
@@ -106,14 +106,14 @@ AstroParticleConverter::AstroParticleConverter(void)
 /*
  * AstroParticleConverter::~AstroParticleConverter
  */
-AstroParticleConverter::~AstroParticleConverter(void) {
+AstroParticleConverter::~AstroParticleConverter() {
     this->Release();
 }
 
 /*
  * AstroParticleConverter::create
  */
-bool AstroParticleConverter::create(void) {
+bool AstroParticleConverter::create() {
     // intentionally empty
     return true;
 }
@@ -121,7 +121,7 @@ bool AstroParticleConverter::create(void) {
 /*
  * AstroParticleConverter::release
  */
-void AstroParticleConverter::release(void) {
+void AstroParticleConverter::release() {
     // intentionally empty
 }
 

@@ -8,8 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
+#pragma once
 
 #include "cuda_error_check.h"
 #include "cuda_runtime.h"
@@ -41,7 +40,6 @@ public:
      * variable.
      */
     T GetAt(size_t idx) {
-        ASSERT(idx < this->count);
         T el;
         CudaSafeCall(cudaMemcpy(&el, this->pt_D + idx, sizeof(T), cudaMemcpyDeviceToHost));
         return el;
@@ -141,5 +139,3 @@ private:
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED

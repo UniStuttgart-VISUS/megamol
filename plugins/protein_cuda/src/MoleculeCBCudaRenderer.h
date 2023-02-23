@@ -4,21 +4,16 @@
  * Copyright (C) 2010 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MOLSURFREN_CONTOURBUILDUP_CUDA_H_INCLUDED
-#define MEGAMOL_MOLSURFREN_CONTOURBUILDUP_CUDA_H_INCLUDED
-#if (_MSC_VER > 1000)
 #pragma once
-#endif /* (_MSC_VER > 1000) */
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture2D.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd/renderer/CallRender3D.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include <memory>
 #include <vector>
 
@@ -34,7 +29,7 @@ namespace protein_cuda {
  * Computes and renders the solvent excluded (Connolly) surface
  * using the Contour-Buildup Algorithm by Totrov & Abagyan.
  */
-class MoleculeCBCudaRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class MoleculeCBCudaRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -103,7 +98,7 @@ protected:
     /**
      * Initialize CUDA
      */
-    bool initCuda(megamol::protein_calls::MolecularDataCall* mol, uint gridDim, core_gl::view::CallRender3DGL* cr3d);
+    bool initCuda(megamol::protein_calls::MolecularDataCall* mol, uint gridDim, mmstd_gl::CallRender3DGL* cr3d);
 
     /**
      * Write atom positions and radii to an array for processing in CUDA
@@ -152,7 +147,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -160,7 +155,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * CUDA version of contour buildup algorithm
@@ -278,5 +273,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif /* MEGAMOL_MOLSURFACERENDERERCONTOURBUILDUP_CUDA_H_INCLUDED */

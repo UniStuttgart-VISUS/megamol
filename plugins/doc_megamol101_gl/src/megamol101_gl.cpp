@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "ASCIISphereLoader.h"
 #include "CallSpheres.h"
@@ -13,12 +13,12 @@
 #include "SphereColoringModule.h"
 
 namespace megamol::megamol101_gl {
-class Megamol101GLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class Megamol101GLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(Megamol101GLPluginInstance)
 
 public:
     Megamol101GLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("megamol101_gl", "The megamol101 plugin."){};
+            : megamol::core::factories::AbstractPluginInstance("megamol101_gl", "The megamol101 plugin."){};
 
     ~Megamol101GLPluginInstance() override = default;
 

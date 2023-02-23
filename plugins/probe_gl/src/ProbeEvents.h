@@ -5,10 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef PROBE_EVENTS_H_INCLUDED
-#define PROBE_EVENTS_H_INCLUDED
+#pragma once
 
-#include "mmcore/EventCollection.h"
+#include "mmstd/event/EventCollection.h"
 
 namespace megamol {
 namespace probe_gl {
@@ -74,5 +73,3 @@ struct ToggleShowProbes : public core::EventCollection::Event<false> {
 
 } // namespace probe_gl
 } // namespace megamol
-
-#endif // !PROBE_EVENTS_H_INCLUDED

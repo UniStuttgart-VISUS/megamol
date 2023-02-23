@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_BITMAPPAINTER_H_INCLUDED
-#define VISLIB_BITMAPPAINTER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -25,8 +21,7 @@
 #include <climits>
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -46,12 +41,12 @@ public:
     BitmapPainter(BitmapImage* img = NULL);
 
     /** Dtor. */
-    ~BitmapPainter(void);
+    ~BitmapPainter();
 
     /**
      * Clears the image with the set colour
      */
-    void Clear(void);
+    void Clear();
 
     /**
      * Draws a straight line between two points. Both points will be set!
@@ -142,7 +137,7 @@ public:
      *
      * @return Reference to the image object pointer of the painter.
      */
-    inline BitmapImage*& Image(void) {
+    inline BitmapImage*& Image() {
         return this->img;
     }
 
@@ -151,7 +146,7 @@ public:
      *
      * @return The image object pointer that is used by the painter.
      */
-    inline const BitmapImage* Image(void) const {
+    inline const BitmapImage* Image() const {
         return this->img;
     }
 
@@ -364,7 +359,7 @@ private:
     /**
      * Clears all cached colour information
      */
-    VISLIB_FORCEINLINE void clearColourCache(void) {
+    VISLIB_FORCEINLINE void clearColourCache() {
         this->colSize = 0;
         ARY_SAFE_DELETE(this->colBits);
         ARY_SAFE_DELETE(this->colMask);
@@ -377,7 +372,7 @@ private:
     inline
 #endif /* _WIN32 */
         void
-        preDraw(void);
+        preDraw();
 
     /**
      * Tries to set one value of the colour cache
@@ -600,10 +595,8 @@ void BitmapPainter::FillPolygon(const math::AbstractPoint<int, 2, Sp>* points, S
 }
 
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_BITMAPPAINTER_H_INCLUDED */

@@ -8,6 +8,7 @@
 #include "SiffCSplineFitter.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/RawStorage.h"
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
@@ -22,7 +23,7 @@ namespace megamol::datatools {
 /*
  * SiffCSplineFitter::SiffCSplineFitter
  */
-SiffCSplineFitter::SiffCSplineFitter(void)
+SiffCSplineFitter::SiffCSplineFitter()
         : core::Module()
         , getDataSlot("getdata", "The slot exposing the loaded data")
         , inDataSlot("indata", "The slot for fetching siff data")
@@ -57,7 +58,7 @@ SiffCSplineFitter::SiffCSplineFitter(void)
 /*
  * SiffCSplineFitter::~SiffCSplineFitter
  */
-SiffCSplineFitter::~SiffCSplineFitter(void) {
+SiffCSplineFitter::~SiffCSplineFitter() {
     this->Release();
 }
 
@@ -65,7 +66,7 @@ SiffCSplineFitter::~SiffCSplineFitter(void) {
 /*
  * SiffCSplineFitter::create
  */
-bool SiffCSplineFitter::create(void) {
+bool SiffCSplineFitter::create() {
     // intentionally empty
     return true;
 }
@@ -74,7 +75,7 @@ bool SiffCSplineFitter::create(void) {
 /*
  * SiffCSplineFitter::release
  */
-void SiffCSplineFitter::release(void) {
+void SiffCSplineFitter::release() {
     this->curves.Clear();
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -124,7 +125,7 @@ bool SiffCSplineFitter::getExtentCallback(core::Call& caller) {
 /*
  * SiffCSplineFitter::assertData
  */
-void SiffCSplineFitter::assertData(void) {
+void SiffCSplineFitter::assertData() {
     using megamol::core::utility::log::Log;
 
     geocalls::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();
@@ -152,7 +153,7 @@ void SiffCSplineFitter::assertData(void) {
     if (mpdc->GetParticleListCount() < 1)
         return;
     if (mpdc->GetParticleListCount() != 1) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Spline fitter only supports single list data ATM");
+        Log::DefaultLog.WriteWarn("Spline fitter only supports single list data ATM");
     }
     unsigned int cnt = static_cast<unsigned int>(mpdc->AccessParticles(0).GetCount());
     if (cnt == 0)
@@ -162,13 +163,13 @@ void SiffCSplineFitter::assertData(void) {
     const unsigned char* cdata = static_cast<const unsigned char*>(mpdc->AccessParticles(0).GetColourData());
     unsigned int cstride = mpdc->AccessParticles(0).GetColourDataStride();
     if (mpdc->AccessParticles(0).GetColourDataType() != geocalls::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Spline fitter only supports colour data UINT8_RGB");
+        Log::DefaultLog.WriteWarn("Spline fitter only supports colour data UINT8_RGB");
         return; // without colour we cannot detect the frames!
     } else if (cstride < 3)
         cstride = 3;
     if (mpdc->AccessParticles(0).GetVertexDataType() !=
         geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Spline fitter only supports vertex data FLOAT_XYZR");
+        Log::DefaultLog.WriteError("Spline fitter only supports vertex data FLOAT_XYZR");
         return;
     } else if (vstride < 4 * sizeof(float))
         vstride = 4 * sizeof(float);
@@ -192,14 +193,14 @@ void SiffCSplineFitter::assertData(void) {
         }
     }
     if (frameSize == 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Frame detection failed");
+        Log::DefaultLog.WriteError("Frame detection failed");
         return;
     }
     unsigned int frameCnt = cnt / frameSize;
     if ((cnt % frameSize) != 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "IMPORTANT!!! FrameSize * FrameCount != FileSize");
+        Log::DefaultLog.WriteWarn("IMPORTANT!!! FrameSize * FrameCount != FileSize");
     }
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 50, "Found %u sites in %u frames\n", frameSize, frameCnt);
+    Log::DefaultLog.WriteInfo("Found %u sites in %u frames\n", frameSize, frameCnt);
 
     unsigned char colR, colG, colB;
     float rad;

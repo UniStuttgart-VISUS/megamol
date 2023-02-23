@@ -18,7 +18,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#include "simultaneous_sort.h"
+#include "simultaneous_sort/simultaneous_sort.h"
 
 #include "omp.h"
 
@@ -39,7 +39,7 @@ using namespace megamol;
 /*
  * datatools::ParticlesToDensity::create
  */
-bool datatools::ParticlesToDensity::create(void) {
+bool datatools::ParticlesToDensity::create() {
     return true;
 }
 
@@ -47,7 +47,7 @@ bool datatools::ParticlesToDensity::create(void) {
 /*
  * datatools::ParticlesToDensity::release
  */
-void datatools::ParticlesToDensity::release(void) {
+void datatools::ParticlesToDensity::release() {
     delete[] this->metadata.MinValues;
     delete[] this->metadata.MaxValues;
     delete[] this->metadata.SliceDists[0];
@@ -59,7 +59,7 @@ void datatools::ParticlesToDensity::release(void) {
 /*
  * datatools::ParticlesToDensity::ParticlesToDensity
  */
-datatools::ParticlesToDensity::ParticlesToDensity(void)
+datatools::ParticlesToDensity::ParticlesToDensity()
         : aggregatorSlot("aggregator", "algorithm for the aggregation")
         , xResSlot("sizex", "The size of the volume in numbers of voxels")
         , yResSlot("sizey", "The size of the volume in numbers of voxels")
@@ -158,7 +158,7 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
 /*
  * datatools::ParticlesToDensity::~ParticlesToDensity
  */
-datatools::ParticlesToDensity::~ParticlesToDensity(void) {
+datatools::ParticlesToDensity::~ParticlesToDensity() {
     this->Release();
 }
 

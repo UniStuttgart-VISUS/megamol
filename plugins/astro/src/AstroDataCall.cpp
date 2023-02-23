@@ -22,13 +22,13 @@ const unsigned int AstroDataCall::CallForGetExtent = 1;
 /*
  * AstroDataCall::AstroDataCall
  */
-AstroDataCall::AstroDataCall(void) {
+AstroDataCall::AstroDataCall() {
     // intentionally empty
 }
 
 /*
  * AstroDataCall::~AstroDataCall
  */
-AstroDataCall::~AstroDataCall(void) {
+AstroDataCall::~AstroDataCall() {
     // intentionally empty
 }

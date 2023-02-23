@@ -4,18 +4,15 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "glowl/glowl.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 #include "vislib/math/Cuboid.h"
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 
 #include "OpenGL_Context.h"
 
 
-namespace megamol {
-namespace moldyn_gl {
-namespace misc {
+namespace megamol::moldyn_gl::misc {
 
 class MDAOVolumeGenerator {
 
@@ -25,14 +22,14 @@ public:
 
     bool Init(frontend_resources::OpenGL_Context const& ogl_ctx);
 
-    void SetResolution(float resX, float resY, float resZ);
+    void SetResolution(float res_x, float res_y, float res_z);
 
     void ClearVolume();
-    void StartInsertion(const vislib::math::Cuboid<float>& obb, const glm::vec4& clipDat);
-    void InsertParticles(unsigned int count, float globalRadius, GLuint vertexArray);
+    void StartInsertion(const vislib::math::Cuboid<float>& obb, const glm::vec4& clip_dat);
+    void InsertParticles(unsigned int count, float global_radius, GLuint vertex_array);
     void EndInsertion();
 
-    void SetShaderSourceFactory(megamol::core_gl::utility::ShaderSourceFactory* factory);
+    void SetShaderSourceFactory(msf::ShaderFactoryOptionsOpenGL* so);
 
     GLuint GetVolumeTextureHandle();
     unsigned int GetDataVersion();
@@ -42,25 +39,24 @@ public:
     void RecreateMipmap();
 
 private:
-    GLuint fboHandle, volumeHandle;
-    vislib_gl::graphics::gl::GLSLGeometryShader volumeShader;
-    vislib_gl::graphics::gl::GLSLComputeShader mipmapShader;
-    megamol::core_gl::utility::ShaderSourceFactory* factory;
-    unsigned int dataVersion;
-    bool computeAvailable, clearAvailable;
+    msf::ShaderFactoryOptionsOpenGL* shader_options_;
 
-    unsigned char* clearBuffer;
+    GLuint fbo_handle_, volume_handle_;
+    std::unique_ptr<glowl::GLSLProgram> volume_prgm_;
+    std::unique_ptr<glowl::GLSLProgram> mipmap_prgm_;
+    unsigned int data_version_;
+    bool compute_available_, clear_available_;
 
-    glm::vec4 clipDat;
-    glm::vec3 boundsMin;
-    vislib::math::Dimension<float, 3> boundsSizeInverse;
-    vislib::math::Dimension<float, 3> volumeRes;
+    unsigned char* clear_buffer_;
+
+    glm::vec4 clip_dat_;
+    glm::vec3 bounds_min_;
+    vislib::math::Dimension<float, 3> bounds_size_inverse_;
+    vislib::math::Dimension<float, 3> volume_res_;
 
     // Previous OpenGL State
-    GLint viewport[4];
-    GLint prevFBO;
+    GLint viewport_[4];
+    GLint prev_fbo_;
 };
 
-} /* end namespace misc */
-} // namespace moldyn_gl
-} /* end namespace megamol */
+} // namespace megamol::moldyn_gl::misc

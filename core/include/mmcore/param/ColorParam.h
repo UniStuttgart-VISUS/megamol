@@ -1,22 +1,17 @@
-/*
- * ColorParam.h
- *
- * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_COLORPARAM_H_INCLUDED
-#define MEGAMOLCORE_COLORPARAM_H_INCLUDED
+#pragma once
+
+#include <array>
+#include <string>
 
 #include "AbstractParam.h"
 
-#include <array>
-
-
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /**
  * Class for 32bit RGBA color parameters with each channel between 0.0 and 1.0.
@@ -44,20 +39,12 @@ public:
      *
      * @param initVal The initial value
      */
-    ColorParam(const vislib::TString& initVal);
+    ColorParam(const std::string& initVal);
 
     /**
      * Dtor.
      */
-    virtual ~ColorParam(void) = default;
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    std::string Definition() const override;
+    ~ColorParam() override = default;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -75,7 +62,7 @@ public:
      *
      * @return The value of the parameter as string.
      */
-    std::string ValueString(void) const override;
+    std::string ValueString() const override;
 
     /**
      * Sets the value of the parameter and optionally sets the dirty flag
@@ -92,7 +79,7 @@ public:
      *
      * @return The value of the parameter
      */
-    inline const ColorType& Value(void) const {
+    inline const ColorType& Value() const {
         return this->val;
     }
 
@@ -130,7 +117,7 @@ public:
     /**
      * Returns a 32bit RGBA color.
      */
-    inline operator const ColorType(void) const {
+    inline operator const ColorType() const {
         return this->val;
     }
 
@@ -140,8 +127,4 @@ private:
 
 }; /* end class ColorParam */
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* end ifndef MEGAMOLCORE_COLORPARAM_H_INCLUDED */
+} // namespace megamol::core::param

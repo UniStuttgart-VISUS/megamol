@@ -18,7 +18,7 @@ using namespace megamol::protein_calls;
 /*
  * TunnelToBFactor::TunnelToBFactor
  */
-TunnelToBFactor::TunnelToBFactor(void)
+TunnelToBFactor::TunnelToBFactor()
         : Module()
         , dataOutSlot("dataOut", "Output slot for the output molecular data")
         , molInSlot("moleculeIn", "Input slot for the molecular data")
@@ -44,21 +44,21 @@ TunnelToBFactor::TunnelToBFactor(void)
 /*
  * TunnelToBFactor::~TunnelToBFactor
  */
-TunnelToBFactor::~TunnelToBFactor(void) {
+TunnelToBFactor::~TunnelToBFactor() {
     this->Release();
 }
 
 /*
  * TunnelToBFactor::create
  */
-bool TunnelToBFactor::create(void) {
+bool TunnelToBFactor::create() {
     return true;
 }
 
 /*
  * TunnelToBFactor::release
  */
-void TunnelToBFactor::release(void) {}
+void TunnelToBFactor::release() {}
 
 /*
  * TunnelToBFactor::getData

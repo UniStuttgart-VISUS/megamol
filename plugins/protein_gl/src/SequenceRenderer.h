@@ -6,11 +6,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
-#define MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#define USE_SIMPLE_FONT
 
@@ -18,10 +14,10 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Input.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmcore_gl/utility/SDFFont.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #ifdef USE_SIMPLE_FONT
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #else //  USE_SIMPLE_FONT
@@ -29,19 +25,18 @@
 #include "vislib_gl/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 #include "protein_calls/ResidueSelectionCall.h"
-#include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
+#include <glowl/GLSLProgram.hpp>
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
-class SequenceRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
+class SequenceRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SequenceRenderer";
     }
 
@@ -50,7 +45,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers sequence renderings.";
     }
 
@@ -59,15 +54,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    SequenceRenderer(void);
+    SequenceRenderer();
 
     /** dtor */
-    ~SequenceRenderer(void);
+    ~SequenceRenderer() override;
 
 protected:
     /**
@@ -75,12 +70,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Callback for mouse events (move, press, and release)
@@ -89,7 +84,7 @@ protected:
      * @param y The y coordinate of the mouse in world space
      * @param flags The mouse flags
      */
-    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+    bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) override;
 
     /**
      * Prepares the data for rendering.
@@ -102,21 +97,9 @@ protected:
     /**
      * TODO
      */
-    bool LoadTexture(vislib::StringA filename);
+    bool LoadTexture(const std::string filename);
 
 private:
-    /**
-     * Returns the single letter code for an amino acid given the three letter code.
-     *
-     * @param resName The name of the residue as three letter code.
-     * @return The single letter code for the amino acid.
-     */
-    char GetAminoAcidOneLetterCode(vislib::StringA resName);
-
-    /**********************************************************************
-     * 'render'-functions
-     **********************************************************************/
-
     /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
@@ -126,7 +109,11 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
+
+    bool GetExtentsSequence(mmstd_gl::CallRender2DGL& call);
+
+    bool GetExtentsUncertainty(mmstd_gl::CallRender2DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -134,7 +121,11 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
+
+    bool RenderSequence(mmstd_gl::CallRender2DGL& call);
+
+    bool RenderUncertainty(mmstd_gl::CallRender2DGL& call);
 
     /**********************************************************************
      * variables
@@ -172,55 +163,57 @@ private:
     // the height of a row
     float rowHeight;
 
-    // font rendering
-#ifdef USE_SIMPLE_FONT
-    vislib_gl::graphics::gl::SimpleFont theFont;
-#else
-    vislib_gl::graphics::gl::OutlineFont theFont;
-#endif
+    // font class
+    core::utility::SDFFont font_;
     // the array of amino acid 1-letter codes
-    vislib::Array<vislib::StringA> aminoAcidStrings;
+    std::vector<std::string> aminoAcidStrings;
     // the array of amino acid chain name and index
-    vislib::Array<vislib::Array<vislib::Pair<char, int>>> aminoAcidIndexStrings;
+    std::vector<std::vector<std::pair<char, int>>> aminoAcidIndexStrings;
     // the array of binding site names
-    vislib::Array<vislib::StringA> bindingSiteNames;
+    std::vector<std::string> bindingSiteNames;
     // the array of descriptons for the binding sites
-    vislib::Array<vislib::StringA> bindingSiteDescription;
+    std::vector<std::string> bindingSiteDescription;
 
     // the vertex buffer array for the tiles
-    vislib::Array<float> vertices;
+    std::vector<glm::vec2> vertices;
     // the vertex buffer array for the chain tiles
-    vislib::Array<float> chainVertices;
+    std::vector<glm::vec2> chainVertices;
     // the color buffer array for the chain tiles
-    vislib::Array<float> chainColors;
+    std::vector<glm::vec3> chainColors;
     // the vertex buffer array for the chain separator lines
-    vislib::Array<float> chainSeparatorVertices;
+    std::vector<glm::vec2> chainSeparatorVertices;
     // the vertex buffer array for the binding site tiles
-    vislib::Array<float> bsVertices;
+    std::vector<glm::vec2> bsVertices;
     // the index array for the binding site tiles
-    vislib::Array<unsigned int> bsIndices;
+    std::vector<unsigned int> bsIndices;
     // the color array for the binding site tiles
-    vislib::Array<vislib::math::Vector<float, 3>> bsColors;
+    std::vector<glm::vec3> bsColors;
     // the index of the residue
-    vislib::Array<unsigned int> resIndex;
+    std::vector<unsigned int> resIndex;
     // the secondary structure element type of the residue
-    vislib::Array<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
+    std::vector<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
     // color table
     std::vector<glm::vec3> colorTable;
 
-    vislib::Array<vislib::SmartPtr<vislib_gl::graphics::gl::OpenGLTexture2D>> markerTextures;
+    std::vector<std::shared_ptr<glowl::Texture2D>> marker_textures_;
+    std::unique_ptr<glowl::GLSLProgram> texture_shader_;
+    std::unique_ptr<glowl::GLSLProgram> passthrough_shader_;
+    std::unique_ptr<glowl::BufferObject> position_buffer_;
+    std::unique_ptr<glowl::BufferObject> color_buffer_;
+    GLuint pass_vao_;
+    GLuint tex_vao_;
+
+    core::view::Camera cam_;
+    glm::ivec2 screen_;
 
     // mouse hover
-    vislib::math::Vector<float, 2> mousePos;
+    glm::vec2 mousePos;
     int mousePosResIdx;
     bool leftMouseDown;
     bool initialClickSelection;
     // selection
-    vislib::Array<bool> selection;
+    std::vector<bool> selection;
     protein_calls::ResidueSelectionCall* resSelectionCall;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
+} // namespace megamol::protein_gl

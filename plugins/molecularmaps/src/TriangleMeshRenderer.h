@@ -3,15 +3,13 @@
  * Copyright (C) 2006-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_TRIANGLEMESHRENDERER_H_INCLUDED
-#define MMMOLMAPPLG_TRIANGLEMESHRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractLocalRenderer.h"
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
+
+#include "helper_includes/helper_math.h"
 
 namespace megamol {
 namespace molecularmaps {
@@ -32,12 +30,12 @@ public:
     /**
      * Invokes the rendering calls
      */
-    virtual bool Render(core::view::CallRender3DGL& call, bool lighting = true);
+    virtual bool Render(core_gl::view::CallRender3DGL& call, bool lighting = true);
 
     /**
      * Invokes the rendering calls using wireframe rendering
      */
-    virtual bool RenderWireFrame(core::view::CallRender3DGL& call, bool lighting = true);
+    virtual bool RenderWireFrame(core_gl::view::CallRender3DGL& call, bool lighting = true);
 
     /**
      * Update function for the local data to render
@@ -100,5 +98,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_TRIANGLEMESHRENDERER_H_INCLUDED */

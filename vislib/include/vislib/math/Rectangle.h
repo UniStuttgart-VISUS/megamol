@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_RECTANGLE_H_INCLUDED
-#define VISLIB_RECTANGLE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,8 +13,7 @@
 #include "vislib/math/AbstractRectangle.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -34,7 +29,7 @@ public:
     /**
      * Create an empty rectangle in the origin.
      */
-    inline Rectangle(void) {
+    inline Rectangle() {
         this->bounds[0] = this->bounds[1] = this->bounds[2] = this->bounds[3] = static_cast<T>(0);
     }
 
@@ -102,7 +97,7 @@ public:
     }
 
     /** Dtor. */
-    ~Rectangle(void);
+    ~Rectangle();
 
     /**
      * Assigment operator. This operator never creates an alias, even for
@@ -150,12 +145,10 @@ const Rectangle<T> Rectangle<T>::EMPTY(0, 0, 0, 0);
  * vislib::math::Rectangle<T>::~Rectangle
  */
 template<class T>
-Rectangle<T>::~Rectangle(void) {}
+Rectangle<T>::~Rectangle() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_RECTANGLE_H_INCLUDED */

@@ -13,8 +13,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module for loading quartz particle data from binary-fortran files
@@ -26,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzParticleFortLoader";
     }
 
@@ -35,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module for loading quartz particle data from binary-fortran files";
     }
 
@@ -44,15 +43,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleFortLoader(void);
+    ParticleFortLoader();
 
     /** Dtor */
-    virtual ~ParticleFortLoader(void);
+    ~ParticleFortLoader() override;
 
 protected:
     /**
@@ -60,7 +59,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Call callback to get the data
@@ -83,13 +82,13 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
      * Ensures the correct data is loaded
      */
-    void assertData(void);
+    void assertData();
 
     /** The data callee slot */
     core::CalleeSlot dataOutSlot;
@@ -131,5 +130,4 @@ private:
     core::param::ParamSlot bboxMaxSlot;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

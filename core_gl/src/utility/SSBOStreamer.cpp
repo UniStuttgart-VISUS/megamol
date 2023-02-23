@@ -8,6 +8,7 @@
 #include "mmcore_gl/utility/SSBOStreamer.h"
 #include "vislib/assert.h"
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 

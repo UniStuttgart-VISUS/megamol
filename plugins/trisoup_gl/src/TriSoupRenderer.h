@@ -6,35 +6,30 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED
-#define MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/memutils.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
  * Renderer for tri-mesh data
  */
-class TriSoupRenderer : public core_gl::view::Renderer3DModuleGL {
+class TriSoupRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TriSoupRenderer";
     }
 
@@ -43,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for tri-mesh data";
     }
 
@@ -52,15 +47,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TriSoupRenderer(void);
+    TriSoupRenderer();
 
     /** Dtor. */
-    virtual ~TriSoupRenderer(void);
+    ~TriSoupRenderer() override;
 
 protected:
     /**
@@ -68,7 +63,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -79,12 +74,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -93,7 +88,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** The slot to fetch the data */
@@ -125,7 +120,4 @@ private:
 };
 
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED */
+} // namespace megamol::trisoup_gl

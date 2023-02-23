@@ -13,7 +13,7 @@
 using namespace megamol;
 using namespace megamol::datatools;
 
-NullParticleWriter::NullParticleWriter(void)
+NullParticleWriter::NullParticleWriter()
         : core::AbstractDataWriter()
         , dataSlot("data", "The slot requesting the data to be written") {
 
@@ -21,23 +21,23 @@ NullParticleWriter::NullParticleWriter(void)
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
-NullParticleWriter::~NullParticleWriter(void) {
+NullParticleWriter::~NullParticleWriter() {
     this->Release();
 }
 
-bool NullParticleWriter::create(void) {
+bool NullParticleWriter::create() {
     return true;
 }
 
-void NullParticleWriter::release(void) {}
+void NullParticleWriter::release() {}
 
-bool NullParticleWriter::run(void) {
+bool NullParticleWriter::run() {
     using geocalls::MultiParticleDataCall;
     using megamol::core::utility::log::Log;
 
     MultiParticleDataCall* mpdc = this->dataSlot.CallAs<MultiParticleDataCall>();
     if (mpdc == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
+        Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
     }
 
@@ -46,7 +46,7 @@ bool NullParticleWriter::run(void) {
     if ((*mpdc)(1)) {
         frameCnt = mpdc->FrameCount();
         if (frameCnt == 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Data source counts zero frames. Abort.");
+            Log::DefaultLog.WriteError("Data source counts zero frames. Abort.");
             mpdc->Unlock();
             return false;
         }
@@ -61,14 +61,13 @@ bool NullParticleWriter::run(void) {
         do {
             mpdc->SetFrameID(i, true);
             if (!(*mpdc)(0)) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot get data frame %u. Abort.\n", i);
+                Log::DefaultLog.WriteError("Cannot get data frame %u. Abort.\n", i);
                 return false;
             }
 
             if (mpdc->FrameID() != i) {
                 if ((missCnt % 10) == 0) {
-                    Log::DefaultLog.WriteMsg(
-                        Log::LEVEL_WARN, "Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
+                    Log::DefaultLog.WriteWarn("Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
                 }
                 ++missCnt;
 
@@ -82,7 +81,7 @@ bool NullParticleWriter::run(void) {
         } while (mpdc->FrameID() != i);
     }
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "All frames touched");
+    Log::DefaultLog.WriteInfo("All frames touched");
 
     return true;
 }

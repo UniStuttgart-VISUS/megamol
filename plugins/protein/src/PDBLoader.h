@@ -5,31 +5,27 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_PDBLOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_PDBLOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MDDriverConnector.h"
 #include "Stride.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Vector.h"
 #include "vislib/sys/RunnableThread.h"
+#include <filesystem>
 #include <fstream>
 
 #ifdef WITH_CURL
 #include <curl/curl.h>
 #endif
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for PDB files
@@ -41,17 +37,17 @@ public:
     friend class MultiPDBLoader;
 
     /** Ctor */
-    PDBLoader(void);
+    PDBLoader();
 
     /** Dtor */
-    virtual ~PDBLoader(void);
+    ~PDBLoader() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PDBLoader";
     }
 
@@ -60,7 +56,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers protein data.";
     }
 
@@ -69,7 +65,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -80,7 +76,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Call callback to get the data
@@ -114,7 +110,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Creates a frame to be used in the frame cache. This method will be
@@ -122,7 +118,7 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual Frame* constructFrame(void) const;
+    Frame* constructFrame() const override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -133,7 +129,7 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(Frame* frame, unsigned int idx);
+    void loadFrame(Frame* frame, unsigned int idx) override;
 
 private:
     /**
@@ -145,7 +141,7 @@ private:
         Frame(megamol::core::view::AnimDataModule& owner);
 
         /** Dtor */
-        virtual ~Frame(void);
+        ~Frame() override;
 
         /**
          * Encode a given int to a certain number of bits
@@ -514,13 +510,13 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!
@@ -552,14 +548,14 @@ private:
      *
      * @param filename The path to the file to load.
      */
-    void loadFile(const vislib::TString& filename);
+    void loadFile(const std::filesystem::path& filename);
 
     /**
      * Loads a file containing information about the cap(s).
      *
      * @param filename The path to the file to load.
      */
-    void loadFileCap(const vislib::TString& filename);
+    void loadFileCap(const std::filesystem::path& filename);
 
     /**
      * Parse one atom entry.
@@ -758,11 +754,8 @@ private:
     vislib::Array<int> atomVisibility;
 
     /** Storage of the pdb filename */
-    vislib::TString pdbfilename;
+    std::filesystem::path pdbfilename;
 };
 
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif // MMPROTEINPLUGIN_PDBLOADER_H_INCLUDED
+} // namespace megamol::protein

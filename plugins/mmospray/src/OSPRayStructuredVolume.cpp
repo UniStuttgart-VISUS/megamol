@@ -13,13 +13,13 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmstd/renderer/CallGetTransferFunction.h"
 
 
 using namespace megamol::ospray;
 
 
-OSPRayStructuredVolume::OSPRayStructuredVolume(void)
+OSPRayStructuredVolume::OSPRayStructuredVolume()
         : AbstractOSPRayStructure()
         , getDataSlot("getdata", "Connects to the data source")
         , getTFSlot("gettransferfunction", "Connects to a color transfer function module")

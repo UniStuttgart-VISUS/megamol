@@ -5,31 +5,28 @@
  * All rights reserved.
  */
 
-#ifndef SIMPLE_RENDER_TARGET_H_INCLUDED
-#define SIMPLE_RENDER_TARGET_H_INCLUDED
+#pragma once
 
+#include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/view/RendererModule.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd/renderer/RendererModule.h"
+#include "mmstd_gl/ModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 
-#include "glowl/FramebufferObject.hpp"
-#include "mmcore_gl/ModuleGL.h"
-
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing_gl {
 
 /**
  * TODO
  */
-class SimpleRenderTarget : public core::view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL> {
+class SimpleRenderTarget : public core::view::RendererModule<mmstd_gl::CallRender3DGL, mmstd_gl::ModuleGL> {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SimpleRenderTarget";
     }
 
@@ -38,8 +35,8 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
-        return "Binds a FBO with color, normal and depth render targets.";
+    static const char* Description() {
+        return "Binds a FBO with color and normal render targets and a depth buffer.";
     }
 
     /**
@@ -47,7 +44,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         /*TODO*/
         return true;
     }
@@ -56,7 +53,7 @@ public:
     SimpleRenderTarget();
 
     /** Dtor. */
-    ~SimpleRenderTarget();
+    ~SimpleRenderTarget() override;
 
 protected:
     /**
@@ -64,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -80,7 +77,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -89,7 +86,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      *
@@ -104,7 +101,7 @@ protected:
     /**
      *
      */
-    bool getDepthRenderTarget(core::Call& caller);
+    bool getDepthBuffer(core::Call& caller);
 
     /**
      *
@@ -137,7 +134,7 @@ private:
 
     core::CalleeSlot m_color_render_target;
     core::CalleeSlot m_normal_render_target;
-    core::CalleeSlot m_depth_render_target;
+    core::CalleeSlot m_depth_buffer;
 
     /** Slot for accessing the camera that is propagated to the render chain from this module */
     core::CalleeSlot m_camera;
@@ -146,7 +143,4 @@ private:
     core::CalleeSlot m_framebuffer_slot;
 };
 
-} // namespace compositing
-} // namespace megamol
-
-#endif
+} // namespace megamol::compositing_gl

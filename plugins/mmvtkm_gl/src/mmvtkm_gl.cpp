@@ -4,31 +4,29 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
-#include "mmvtkm_gl/mmvtkmMeshRenderTasks.h"
+#include "mmvtkm_gl/mmvtkmStreamlineRenderer.h"
 //#include "mmvtkm_gl/mmvtkmRenderer.h"
 
 
 namespace megamol::mmvtkm_gl {
-class MmvtkmGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MmvtkmGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MmvtkmGLPluginInstance)
 
 public:
     MmvtkmGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "vtkm_gl", "Plugin to read and render vtkm data."){};
+            : megamol::core::factories::AbstractPluginInstance("vtkm_gl", "Plugin to read and render vtkm data."){};
 
-    virtual ~MmvtkmGLPluginInstance() override = default;
+    ~MmvtkmGLPluginInstance() override = default;
 
     // Registers modules and calls
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm_gl::mmvtkmMeshRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm_gl::mmvtkmStreamlineRenderer>();
         // this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm_gl::mmvtkmDataRenderer>();
-
 
         // register calls
     }

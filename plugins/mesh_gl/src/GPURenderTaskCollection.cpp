@@ -1,7 +1,54 @@
 #include "mesh_gl/GPURenderTaskCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
+
+namespace rendering {
+
+void processGPURenderTasks(
+    std::shared_ptr<GPURenderTaskCollection> const& rt_collection, glm::mat4 const& view_mx, glm::mat4 const& proj_mx) {
+    auto const& per_frame_buffers = rt_collection->getPerFrameBuffers();
+
+    for (auto const& buffer : per_frame_buffers) {
+        uint32_t binding_point = std::get<1>(buffer);
+        if (binding_point != 0) {
+            std::get<0>(buffer)->bind(binding_point);
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Binding point 0 reserved for render task data buffer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+        }
+    }
+
+    // loop through "registered" render batches
+    for (auto const& render_task : rt_collection->getRenderTasks()) {
+        // Set GL states (otherwise bounding box or view cube rendering state is used)
+        render_task->set_states();
+
+        render_task->shader_program->use();
+
+        // TODO introduce per frame "global" data buffer to store information like camera matrices?
+        render_task->shader_program->setUniform("view_mx", view_mx);
+        render_task->shader_program->setUniform("proj_mx", proj_mx);
+
+        render_task->per_draw_data->bind(0);
+
+        render_task->draw_commands->bind();
+        render_task->mesh->bindVertexArray();
+
+        if (render_task->mesh->getPrimitiveType() == GL_PATCHES) {
+            glPatchParameteri(GL_PATCH_VERTICES, 4);
+            //TODO add generic patch vertex count to render tasks....
+        }
+
+        glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(), render_task->mesh->getIndexType(),
+            (GLvoid*)0, render_task->draw_cnt, 0);
+
+        // Reset previously set GLStates
+        render_task->reset_states();
+    }
+}
+
+} // namespace rendering
 
 void GPURenderTaskCollection::copyGPURenderTask(
     std::string const& identifier, RenderTaskMetaData render_task_meta_data) {
@@ -71,7 +118,7 @@ void GPURenderTaskCollection::deleteRenderTask(std::string const& identifier) {
                 }
 
             } catch (glowl::BufferObjectException const& e) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Error during GPU render task deletion: %s\n", e.what());
             }
         }
@@ -130,5 +177,4 @@ void GPURenderTaskCollection::copyGPURenderTask(std::vector<GPURenderTask>& tgt_
     std::unordered_multimap<std::string, RenderTaskMetaData>& tgt_render_tas_meta_data, std::string const& identifier,
     RenderTaskMetaData const& src_render_task) {}
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

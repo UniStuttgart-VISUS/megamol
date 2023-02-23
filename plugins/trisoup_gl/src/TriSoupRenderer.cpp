@@ -12,8 +12,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/light/PointLight.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd/light/PointLight.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "trisoup/trisoupVolumetricDataCall.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
@@ -37,8 +37,8 @@ using namespace megamol::core;
 /*
  * TriSoupRenderer::TriSoupRenderer
  */
-TriSoupRenderer::TriSoupRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+TriSoupRenderer::TriSoupRenderer()
+        : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getData", "The slot to fetch the tri-mesh data")
         , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
         , getLightsSlot("lights", "Lights are retrieved over this slot.")
@@ -94,7 +94,7 @@ TriSoupRenderer::TriSoupRenderer(void)
 /*
  * TriSoupRenderer::~TriSoupRenderer
  */
-TriSoupRenderer::~TriSoupRenderer(void) {
+TriSoupRenderer::~TriSoupRenderer() {
     this->Release();
 }
 
@@ -102,7 +102,7 @@ TriSoupRenderer::~TriSoupRenderer(void) {
 /*
  * TriSoupRenderer::create
  */
-bool TriSoupRenderer::create(void) {
+bool TriSoupRenderer::create() {
     // intentionally empty
     return true;
 }
@@ -111,7 +111,7 @@ bool TriSoupRenderer::create(void) {
 /*
  * TriSoupRenderer::GetExtents
  */
-bool TriSoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool TriSoupRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     CallTriMeshDataGL* ctmd = this->getDataSlot.CallAs<CallTriMeshDataGL>();
     if (ctmd == NULL)
@@ -131,7 +131,7 @@ bool TriSoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * TriSoupRenderer::release
  */
-void TriSoupRenderer::release(void) {
+void TriSoupRenderer::release() {
     // intentionally empty
 }
 
@@ -139,7 +139,7 @@ void TriSoupRenderer::release(void) {
 /*
  * TriSoupRenderer::Render
  */
-bool TriSoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool TriSoupRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     CallTriMeshDataGL* ctmd = this->getDataSlot.CallAs<CallTriMeshDataGL>();
     if (ctmd == NULL)
         return false;

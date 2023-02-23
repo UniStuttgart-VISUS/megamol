@@ -72,7 +72,7 @@ struct PointCloud {
 /*
  * MSMSCavityFinder::MSMSCavityFinder
  */
-MSMSCavityFinder::MSMSCavityFinder(void)
+MSMSCavityFinder::MSMSCavityFinder()
         : Module()
         , innerMeshInSlot("innerDataIn", "Receives the inner input mesh")
         , outerMeshInSlot("outerDataIn", "Receives the outer input mesh")
@@ -109,21 +109,21 @@ MSMSCavityFinder::MSMSCavityFinder(void)
 /*
  * MSMSCavityFinder::~MSMSCavityFinder
  */
-MSMSCavityFinder::~MSMSCavityFinder(void) {
+MSMSCavityFinder::~MSMSCavityFinder() {
     this->Release();
 }
 
 /*
  * MSMSCavityFinder::create
  */
-bool MSMSCavityFinder::create(void) {
+bool MSMSCavityFinder::create() {
     return true;
 }
 
 /*
  * MSMSCavityFinder::release
  */
-void MSMSCavityFinder::release(void) {}
+void MSMSCavityFinder::release() {}
 
 /*
  * MSMSCavityFinder::getData
@@ -201,7 +201,7 @@ bool MSMSCavityFinder::getData(Call& call) {
         }
 
         typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>,
-            PointCloud<float>, 3>
+            PointCloud<float>, 3, std::size_t>
             my_kd_tree_t;
 
         my_kd_tree_t searchIndex(3, pointCloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));

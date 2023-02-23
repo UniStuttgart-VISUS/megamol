@@ -22,7 +22,7 @@ namespace megamol::geocalls {
 class VolumetricMetadataStore : public VolumetricMetadata_t {
 
 public:
-    VolumetricMetadataStore(void) = default;
+    VolumetricMetadataStore() = default;
 
     VolumetricMetadataStore(const VolumetricMetadataStore& rhs);
 
@@ -37,7 +37,7 @@ public:
     VolumetricMetadataStore& operator=(const VolumetricMetadata_t& rhs);
 
 private:
-    void rewrire(void);
+    void rewrire();
 
     std::vector<double> maxValues;
     std::vector<double> minValues;

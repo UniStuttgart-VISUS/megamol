@@ -8,11 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED
-#define MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Cuboid.h"
@@ -26,8 +22,7 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 
 typedef unsigned int uint;
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class VTKImageData {
 
@@ -303,7 +298,7 @@ public:
         const DataArray* GetDataArray(unsigned int idx) const {
             using namespace megamol::core::utility::log;
             if (idx >= this->dataArrays.Count()) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "CellData: Requested idx out of bound, returning NULL.");
+                Log::DefaultLog.WriteError("CellData: Requested idx out of bound, returning NULL.");
                 return NULL;
             } else {
                 return this->dataArrays[idx];
@@ -332,8 +327,7 @@ public:
 
             // If the id is not in use: return null
             if (!isUsed) {
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "CellData: Requested id '%s' not in use, returning NULL.", id.PeekBuffer());
+                Log::DefaultLog.WriteError("CellData: Requested id '%s' not in use, returning NULL.", id.PeekBuffer());
                 return NULL;
             } else { // else: return the data array
                 return this->dataArrays[idx];
@@ -502,7 +496,7 @@ public:
             using namespace megamol::core::utility::log;
 
             if (idx >= this->dataArrays.Count()) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "PointData: Requested idx out of bound, returning NULL.");
+                Log::DefaultLog.WriteError("PointData: Requested idx out of bound, returning NULL.");
                 return NULL;
             } else {
                 return this->dataArrays[idx];
@@ -558,8 +552,7 @@ public:
 
             // If the id is not in use: return null
             if (!isUsed) {
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "PointData: Requested id '%s' not in use, returning NULL.", id.PeekBuffer());
+                Log::DefaultLog.WriteError("PointData: Requested id '%s' not in use, returning NULL.", id.PeekBuffer());
                 return NULL;
             } else { // else: return the data array
                 return this->dataArrays[idx];
@@ -1059,9 +1052,8 @@ public:
     void SetPieceExtent(unsigned int pieceIdx, vislib::math::Cuboid<unsigned int> extent) {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "VTKImageData: Could not set extent of piece #%u (number of pieces is %u).", pieceIdx,
-                this->pieces.Count());
+            Log::DefaultLog.WriteError("VTKImageData: Could not set extent of piece #%u (number of pieces is %u).",
+                pieceIdx, this->pieces.Count());
             return;
         }
         this->pieces[pieceIdx].SetExtent(extent);
@@ -1118,7 +1110,7 @@ public:
     const DataArray* PeekPointData(vislib::StringA id, unsigned int pieceIdx) const {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "VTKImageData: Piece index out of bounds, returning NULL.");
+            Log::DefaultLog.WriteError("VTKImageData: Piece index out of bounds, returning NULL.");
         }
         return this->pieces[pieceIdx].PeekPointData(id);
     }
@@ -1134,7 +1126,7 @@ public:
     const DataArray* PeekPointData(unsigned int arrayIdx, unsigned int pieceIdx) const {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "VTKImageData: Piece index out of bounds, returning NULL.");
+            Log::DefaultLog.WriteError("VTKImageData: Piece index out of bounds, returning NULL.");
         }
         return this->pieces[pieceIdx].PeekPointData(arrayIdx);
     }
@@ -1150,7 +1142,7 @@ public:
     const DataArray* PeekCellData(vislib::StringA id, unsigned int pieceIdx) const {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "VTKImageData: Piece index out of bounds, returning NULL.");
+            Log::DefaultLog.WriteError("VTKImageData: Piece index out of bounds, returning NULL.");
         }
         return this->pieces[pieceIdx].PeekCellData(id);
     }
@@ -1166,7 +1158,7 @@ public:
     const DataArray* PeekCellData(unsigned int arrayIdx, unsigned int pieceIdx) const {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "VTKImageData: Piece index out of bounds, returning NULL.");
+            Log::DefaultLog.WriteError("VTKImageData: Piece index out of bounds, returning NULL.");
         }
         return this->pieces[pieceIdx].PeekCellData(arrayIdx);
     }
@@ -1292,7 +1284,4 @@ private:
     vislib::Array<Piece> pieces; ///> The array of pieces of this data set
 };
 
-} // namespace protein_calls
-} // namespace megamol
-
-#endif // MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED
+} // namespace megamol::protein_calls

@@ -5,20 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_IO_MMGDDWRITER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_MMGDDWRITER_H_INCLUDED
 #pragma once
 
 #include "datatools/GraphDataCall.h"
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/sys/File.h"
 
 
-namespace megamol {
-namespace datatools {
-namespace io {
+namespace megamol::datatools::io {
 
 
 /**
@@ -26,37 +22,30 @@ namespace io {
  */
 class MMGDDWriter : public core::AbstractDataWriter {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MMGDDWriter";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "MegaMol GraphData Dump file writer";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
-    static bool SupportQuickstart(void) {
-        return false;
-    }
 
-    MMGDDWriter(void);
-    virtual ~MMGDDWriter(void);
+    MMGDDWriter();
+    ~MMGDDWriter() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
 
-    virtual bool run(void);
+    bool run() override;
 
-    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     core::param::ParamSlot filenameSlot;
     core::CallerSlot dataSlot;
 };
 
-} /* end namespace io */
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_MMPLDWRITER_H_INCLUDED */
+} // namespace megamol::datatools::io

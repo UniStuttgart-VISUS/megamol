@@ -14,15 +14,14 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/forceinline.h"
 
-#include "mmcore/view/CallClipPlane.h"
 #include "mmospray/CallOSPRayAPIObject.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "ospray/ospray_cpp.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 
-OSPRayPKDGeometry::OSPRayPKDGeometry(void)
+OSPRayPKDGeometry::OSPRayPKDGeometry()
         : getDataSlot("getdata", "Connects to the data source")
         , deployStructureSlot("deployStructureSlot", "Connects to an OSPRayAPIStructure")
         , colorTypeSlot("colorType", "Set the type of encoded color") {
@@ -202,5 +201,4 @@ bool OSPRayPKDGeometry::getDirtyCallback(core::Call& call) {
 }
 
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

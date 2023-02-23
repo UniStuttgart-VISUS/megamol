@@ -7,9 +7,9 @@
  */
 
 #include "MolecularNeighborhood.h"
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/math/Point.h"
 
 #include "protein/GridNeighbourFinder.h"
@@ -25,7 +25,7 @@ using namespace megamol::protein_calls;
 /*
  * MolecularNeighborhood::MolecularNeighborhood
  */
-MolecularNeighborhood::MolecularNeighborhood(void)
+MolecularNeighborhood::MolecularNeighborhood()
         : Module()
         , getDataSlot("getData", "Calls molecular data")
         , dataOutSlot("dataOut", "Provides the molecular data with additional neighborhood information")
@@ -52,21 +52,21 @@ MolecularNeighborhood::MolecularNeighborhood(void)
 /*
  * MolecularNeighborhood::~MolecularNeighborhood
  */
-MolecularNeighborhood::~MolecularNeighborhood(void) {
+MolecularNeighborhood::~MolecularNeighborhood() {
     this->Release();
 }
 
 /*
  * MolecularNeighborhood::create
  */
-bool MolecularNeighborhood::create(void) {
+bool MolecularNeighborhood::create() {
     return true;
 }
 
 /*
  * MolecularNeighborhood::release
  */
-void MolecularNeighborhood::release(void) {}
+void MolecularNeighborhood::release() {}
 
 /*
  * MolecularNeighborhood::getData
@@ -94,8 +94,7 @@ bool MolecularNeighborhood::getData(core::Call& call) {
         lastDataHash = inCall->DataHash();
         this->neighRadiusParam.ResetDirty();
         std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "Neighborhood search took %f seconds.",
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Neighborhood search took %f seconds.",
             static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) / 1000.0f);
 
         if (lastHashSent != outCall->DataHash() + 5) {

@@ -20,7 +20,7 @@ using namespace megamol;
 /*
  * datatools::ParticleNeighborhood::ParticleNeighborhood
  */
-datatools::ParticleNeighborhood::ParticleNeighborhood(void)
+datatools::ParticleNeighborhood::ParticleNeighborhood()
         : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
         , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
         , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
@@ -76,14 +76,14 @@ datatools::ParticleNeighborhood::ParticleNeighborhood(void)
 /*
  * datatools::ParticleNeighborhood::~ParticleNeighborhood
  */
-datatools::ParticleNeighborhood::~ParticleNeighborhood(void) {
+datatools::ParticleNeighborhood::~ParticleNeighborhood() {
     this->Release();
 }
 
 /*
  * datatools::ParticleNeighborhood::create
  */
-bool datatools::ParticleNeighborhood::create(void) {
+bool datatools::ParticleNeighborhood::create() {
     return true;
 }
 
@@ -91,7 +91,7 @@ bool datatools::ParticleNeighborhood::create(void) {
 /*
  * datatools::ParticleNeighborhood::release
  */
-void datatools::ParticleNeighborhood::release(void) {}
+void datatools::ParticleNeighborhood::release() {}
 
 bool isListOK(megamol::core::AbstractGetData3DCall* c, unsigned int i) {
     using geocalls::MultiParticleDataCall;

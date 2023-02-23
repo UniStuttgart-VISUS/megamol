@@ -3,11 +3,7 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_VORONOICHANNELCALCULATOR_H_INCLUDED
-#define MMMOLMAPPLG_VORONOICHANNELCALCULATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractLocalRenderer.h"
 #include "AtomGrid.h"
@@ -19,6 +15,7 @@
 #include "vislib/math/Vector.h"
 
 #include <Eigen/Dense>
+#include <mutex>
 
 namespace megamol {
 namespace molecularmaps {
@@ -39,7 +36,7 @@ public:
     /**
      * Invokes the rendering calls.
      */
-    virtual bool Render(core::view::CallRender3DGL& call, bool lighting = true);
+    virtual bool Render(core_gl::view::CallRender3DGL& call, bool lighting = true);
 
     /**
      * Update function for the local data to render.
@@ -151,5 +148,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_VORONOICHANNELCALCULATOR_H_INCLUDED */

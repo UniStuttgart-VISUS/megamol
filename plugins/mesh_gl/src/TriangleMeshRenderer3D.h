@@ -8,8 +8,7 @@
 
 #include "mesh/MeshDataCall.h"
 
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
-#include "mesh_gl/GPUMeshCollection.h"
+#include "mesh_gl/BaseRenderTaskRenderer.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -26,45 +25,18 @@
 #include <type_traits>
 #include <vector>
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
+
 /**
  * Module for uploading a 3D triangle mesh to the GPU.
  *
  * @author Alexander Straub
  */
-class TriangleMeshRenderer3D : public AbstractGPURenderTaskDataSource {
+class TriangleMeshRenderer3D : public BaseRenderTaskRenderer {
     static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
     static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
 
 public:
-    /**
-     * Answer the name of this module.
-     *
-     * @return The name of this module.
-     */
-    static inline const char* ClassName() {
-        return "TriangleMeshRenderer3D";
-    }
-
-    /**
-     * Answer a human readable description of this module.
-     *
-     * @return A human readable description of this module.
-     */
-    static inline const char* Description() {
-        return "Upload 3D data to the GPU for use with the mesh plugin";
-    }
-
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static inline bool IsAvailable() {
-        return true;
-    }
-
     /**
      * Global unique ID that can e.g. be used for hash calculation.
      *
@@ -82,34 +54,53 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TriangleMeshRenderer3D();
+    ~TriangleMeshRenderer3D() override;
 
-protected:
     /**
-     * Implementation of 'Create'.
+     * Answer the name of this module.
      *
-     * @return 'true' on success, 'false' otherwise.
+     * @return The name of this module.
      */
-    virtual bool create() override;
-
+    static const char* ClassName() {
+        return "TriangleMeshRenderer3D";
+    }
     /**
-     * Implementation of 'Release'.
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
      */
-    virtual void release() override;
+    static const char* Description() {
+        return "Upload 3D data to the GPU for use with the mesh plugin";
+    }
 
     /**
      * Request resources to ask for OpenGL state
      */
-    virtual std::vector<std::string> requested_lifetime_resources() override;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::OpenGL_Context>();
+    }
+
+protected:
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+
+    void createMaterialCollection() override;
+
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
 private:
     /** Get input data and extent from called modules */
     bool get_input_data();
     bool get_input_extent();
-
-    /** Callbacks for uploading the mesh to the GPU */
-    virtual bool getDataCallback(core::Call& call) override;
-    virtual bool getMetaDataCallback(core::Call& call) override;
 
     /** Input slot for the triangle mesh */
     SIZE_T triangle_mesh_hash;
@@ -125,9 +116,6 @@ private:
 
     /** Input slot for a clip plane */
     core::CallerSlot clip_plane_slot;
-
-    /** Version of RHS gpu tasks */
-    SIZE_T rhs_gpu_tasks_version;
 
     /** Parameter slot for choosing data sets to visualize */
     core::param::ParamSlot data_set;
@@ -182,5 +170,4 @@ private:
 
     } render_data;
 };
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

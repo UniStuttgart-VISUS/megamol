@@ -6,12 +6,11 @@
  */
 #pragma once
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 #include <cstdint>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Call transports multiple index lists, e.g. to subselect groups/clusters within data transported by a parallel MultiParticleListDataCall.
@@ -46,14 +45,14 @@ public:
     };
 
     /** Factory metadata */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MultiIndexListDataCall";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transports multiple index lists, e.g. to subselect groups/clusters within data transported by a "
                "parallel MultiParticleListDataCall.";
     }
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 3;
     }
     static const char* FunctionName(unsigned int idx) {
@@ -71,7 +70,7 @@ public:
     /** ctor */
     MultiIndexListDataCall();
     /** dtor */
-    virtual ~MultiIndexListDataCall();
+    ~MultiIndexListDataCall() override;
 
     /** Array of index lists */
     inline index_list_t const* Lists() const {
@@ -114,5 +113,4 @@ private:
 
 typedef core::factories::CallAutoDescription<MultiIndexListDataCall> MultiIndexListDataCallDescription;
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

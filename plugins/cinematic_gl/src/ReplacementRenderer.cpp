@@ -19,8 +19,8 @@ using namespace megamol::cinematic_gl;
 using namespace vislib;
 
 
-ReplacementRenderer::ReplacementRenderer(void)
-        : megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>()
+ReplacementRenderer::ReplacementRenderer()
+        : megamol::core::view::RendererModule<mmstd_gl::CallRender3DGL, mmstd_gl::ModuleGL>()
         , alphaParam("alpha", "The alpha value of the replacement rendering.")
         , replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer.")
         , toggleReplacementParam("toggleReplacement", "Toggle replacement rendering.")
@@ -45,19 +45,19 @@ ReplacementRenderer::ReplacementRenderer(void)
 }
 
 
-ReplacementRenderer::~ReplacementRenderer(void) {
+ReplacementRenderer::~ReplacementRenderer() {
 
     this->Release();
 }
 
 
-void ReplacementRenderer::release(void) {}
+void ReplacementRenderer::release() {}
 
 
-bool ReplacementRenderer::create(void) {
+bool ReplacementRenderer::create() {
 
     // Initialise render utils
-    if (!this->utils.Initialise(this->GetCoreInstance())) {
+    if (!this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[REPLACEMENT RENDERER] [create] Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
@@ -68,9 +68,9 @@ bool ReplacementRenderer::create(void) {
 }
 
 
-bool ReplacementRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool ReplacementRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
-    auto cr3d_out = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (cr3d_out != nullptr) {
         *cr3d_out = call;
         if ((*cr3d_out)(view::AbstractCallRender::FnGetExtents)) {
@@ -89,7 +89,7 @@ bool ReplacementRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& cal
 }
 
 
-bool ReplacementRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool ReplacementRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     if (this->replacementRenderingParam.IsDirty()) {
         this->replacementRenderingParam.ResetDirty();
@@ -150,7 +150,7 @@ bool ReplacementRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {
 
-        auto cr3d_out = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+        auto cr3d_out = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
             return (*cr3d_out)(core::view::AbstractCallRender::FnRender);

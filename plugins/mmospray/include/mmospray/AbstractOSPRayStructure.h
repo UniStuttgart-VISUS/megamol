@@ -10,25 +10,24 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/flags/FlagCalls.h"
 #include "mmospray/CallOSPRayStructure.h"
+#include "mmstd/flags/FlagCalls.h"
 
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class AbstractOSPRayStructure : public megamol::core::Module {
 protected:
     /** Dtor. */
-    virtual ~AbstractOSPRayStructure();
+    ~AbstractOSPRayStructure() override;
 
     /** Ctor. */
     AbstractOSPRayStructure();
 
-    virtual bool create() {
+    bool create() override {
         return true;
     }
-    virtual void release() {
+    void release() override {
         this->Release();
     }
     virtual bool readData(megamol::core::Call& call) {
@@ -69,5 +68,4 @@ protected:
 };
 
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

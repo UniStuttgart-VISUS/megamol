@@ -7,8 +7,7 @@
 // $Id$
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
+#pragma once
 
 #include "mmcore/utility/log/Log.h"
 #include <GL/glu.h>
@@ -30,8 +29,7 @@ inline bool checkForGLError(const char* file, const int line) {
     GLenum err;
     err = glGetError();
     if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "%s(%d) glError: %s", file, line, gluErrorString(err));
+        megamol::core::utility::log::Log::DefaultLog.WriteError("%s(%d) glError: %s", file, line, gluErrorString(err));
         return false;
     }
 #endif
@@ -50,13 +48,9 @@ inline bool checkForGLError(const char* file, const int line) {
 inline bool glSafeCall(GLenum err, const char* file, const int line) {
 #ifdef OGL_ERROR_CHECK
     if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "%s(%d) glError: %s", file, line, gluErrorString(err));
+        megamol::core::utility::log::Log::DefaultLog.WriteError("%s(%d) glError: %s", file, line, gluErrorString(err));
         return true;
     }
 #endif
     return false;
 }
-
-
-#endif // MMPROTEINCUDAPLUGIN_OGL_ERROR_CHECK_H_INCLUDED

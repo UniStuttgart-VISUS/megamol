@@ -21,8 +21,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/CallRender3D.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/StringConverter.h"
@@ -30,7 +30,6 @@
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <GL/glu.h>
 #include <ctime>
 #include <cuda_gl_interop.h>
@@ -43,7 +42,6 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 
@@ -315,171 +313,54 @@ bool VolumeMeshRenderer::create(void) {
         return false;
     }*/
 
-    ShaderSource vertSrc;
-    ShaderSource geomSrc;
-    ShaderSource fragSrc;
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-
-    // Load normal shader
-    if (!ssf->MakeShaderSource("volumemesh::normalVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for normal shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("volumemesh::normalGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for normal shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("volumemesh::normalFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for normal shader");
-        return false;
-    }
     try {
-        if (!this->normalShader.Compile(
-                vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-        this->normalShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES);
-        this->normalShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
-        this->normalShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 6);
-        if (!this->normalShader.Link()) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create normal shader: %s\n", e.GetMsgA());
-        return false;
-    }
+        this->normalShader =
+            core::utility::make_glowl_shader("normalShader", shader_options, "protein_cuda/volumemesh/normal.vert.glsl",
+                "protein_cuda/volumemesh/normal.geom.glsl", "protein_cuda/volumemesh/normal.frag.glsl");
+        glProgramParameteriEXT(normalShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES);
+        glProgramParameteriEXT(normalShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
+        glProgramParameteriEXT(normalShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 6);
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(normalShader->getHandle());
 
-    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source for per pixel lighting shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for per pixel lighting shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->lightShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create per pixel lighting shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->lightShader = core::utility::make_glowl_shader("lightShader", shader_options,
+            "protein_cuda/protein_cuda/std_perpixellight.vert.glsl",
+            "protein_cuda/protein_cuda/std_perpixellight.frag.glsl");
 
-    if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for halo generation shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for halo generation shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->haloGenerateShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create halo generation shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->haloGenerateShader = core::utility::make_glowl_shader("haloGenerateShader", shader_options,
+            "protein_cuda/protein_cuda/halo_Generate.vert.glsl", "protein_cuda/protein_cuda/halo_Generate.frag.glsl");
 
-    // Try to load shader for gaussian filter (horizontal)
-    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source: gaussian filter (horizontal)", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::halo::fragmentHoriz", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source: gaussian filter (horizontal)", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->haloGaussianHoriz.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
 
-    // Try to load shader for gaussian filter (vertical)
-    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source: gaussian filter (vertical)", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::halo::fragmentVert", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source: gaussian filter (vertical)", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->haloGaussianVert.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->haloGaussianHoriz = core::utility::make_glowl_shader("haloGaussianHoriz", shader_options,
+            "protein_cuda/proteinDeferred/gaussian.vert.glsl", "protein_cuda/protein_cuda/halo_Horiz.frag.glsl");
 
-    // Try to load shader for substract filter
-    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source: halo substract", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::halo::SubstractFragment", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source: halo substract", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->haloDifferenceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->haloGaussianVert = core::utility::make_glowl_shader("haloGaussianVert", shader_options,
+            "protein_cuda/proteinDeferred/gaussian.vert.glsl", "protein_cuda/protein_cuda/halo_Vert.frag.glsl");
 
-    // Try to load shader for grow filter
-    if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load vertex shader source: halo grow filter", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::halo::growFragment", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source: halo grow filter", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->haloGrowShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+        this->haloDifferenceShader = core::utility::make_glowl_shader("haloDifferenceShader", shader_options,
+            "protein_cuda/proteinDeferred/gaussian.vert.glsl", "protein_cuda/protein_cuda/halo_Substract.frag.glsl");
+
+        this->haloGrowShader = core::utility::make_glowl_shader("haloGrowShader", shader_options,
+            "protein_cuda/proteinDeferred/gaussian.vert.glsl", "protein_cuda/protein_cuda/halo_grow.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("VolumeMeshRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
     // Create OpenGL interoperable CUDA device.
     //cudaError_t cuerr = cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
     //if( cuerr != cudaError::cudaSuccess ) {
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: cudaGLSetGLDevice: %s\n", this->ClassName(), cudaGetErrorString( cuerr));
+    //    Log::DefaultLog.WriteError( "%s: cudaGLSetGLDevice: %s\n", this->ClassName(), cudaGetErrorString( cuerr));
     //    return false;
     //}
 
     // log thrust version
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION,
-        THRUST_SUBMINOR_VERSION);
+    Log::DefaultLog.WriteInfo(
+        "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION, THRUST_SUBMINOR_VERSION);
 
     // Allocate CUDA memory for labeling.
     CUDA_VERIFY(cudaMalloc(&modified, sizeof(bool)));
@@ -524,14 +405,14 @@ void VolumeMeshRenderer::release(void) {
         if (segmentsRemoved)
             CUDA_VERIFY(cudaFree(segmentsRemoved));
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to release CUDA resources: %s\n", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA());
     }
 }
 
 /*
  * ProteinRenderer::GetExtents
  */
-bool VolumeMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool VolumeMeshRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (!mol) {
         return false;
@@ -550,7 +431,7 @@ bool VolumeMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * VolumeMeshRenderer::Render
  */
-bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool VolumeMeshRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     using megamol::core::utility::log::Log;
 
     if (setCUDAGLDevice) {
@@ -804,7 +685,7 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
             scale *= vislib::math::Vector<float, 3>(
                 1.0f / this->volumeSize.x, 1.0f / this->volumeSize.y, 1.0f / this->volumeSize.z);
 
-            //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Scale: %f %f %f\n", scale.X(), scale.Y(), scale.Z());
+            //Log::DefaultLog.WriteInfo( "Scale: %f %f %f\n", scale.X(), scale.Y(), scale.Z());
             // Compute AO volume and update mesh.
             this->aoShader.setVolumeSize(
                 static_cast<unsigned int>(mol->AccessBoundingBoxes().ObjectSpaceBBox().Width() / 10.0f),
@@ -819,7 +700,7 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         }
         lastTime = time;
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "UpdateMesh failed: %s, %i \n", e.GetMsgA(), e.GetLine());
+        Log::DefaultLog.WriteError("UpdateMesh failed: %s, %i \n", e.GetMsgA(), e.GetLine());
         return false;
     }
     // -------- END create mesh -----
@@ -867,7 +748,7 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         vislib::math::Vector<float, 3>(1.0f / this->volumeSize.x, 1.0f / this->volumeSize.y, 1.0f / this->volumeSize.z);
     glScalef(tmpDim.X(), tmpDim.Y(), tmpDim.Z());
 
-    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Scale: %f\n", scale);
+    //Log::DefaultLog.WriteInfo( "Scale: %f\n", scale);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -1072,7 +953,7 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    this->lightShader.Enable();
+    this->lightShader->use();
     switch (polygonMode) {
     case POINT:
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
@@ -1086,15 +967,15 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         break;
     }
     glDrawArrays(GL_TRIANGLES, 0, this->vertexCount);
-    this->lightShader.Disable();
+    glUseProgram(0);
 
     // Render normals, if requested.
     if (this->showNormals) {
         glLineWidth(1.0f);
-        this->normalShader.Enable();
-        glUniform1fARB(this->normalShader.ParameterLocation("normalsLength"), 0.25f);
+        this->normalShader->use();
+        glUniform1fARB(this->normalShader->getUniformLocation("normalsLength"), 0.25f);
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-        this->normalShader.Disable();
+        glUseProgram(0);
     }
 
     // Render centroids, if requested.
@@ -1167,11 +1048,11 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
 
-        this->haloGenerateShader.Enable();
-        glUniform4fv(this->haloGenerateShader.ParameterLocation("haloColor"), 1, haloColor.PeekComponents());
+        this->haloGenerateShader->use();
+        glUniform4fv(this->haloGenerateShader->getUniformLocation("haloColor"), 1, haloColor.PeekComponents());
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDrawArrays(GL_TRIANGLES, 0, this->vertexCount);
-        this->haloGenerateShader.Disable();
+        glUseProgram(0);
         this->haloFBO.Disable();
 
 
@@ -1181,12 +1062,13 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->haloFBO.GetColourTextureID());
 
-        this->haloGrowShader.Enable();
-        glUniform1i(this->haloGrowShader.ParameterLocation("sourceTex"), 0);
-        glUniform2f(this->haloGaussianHoriz.ParameterLocation("screenResInv"), 1.0f / this->width, 1.0f / this->height);
+        this->haloGrowShader->use();
+        glUniform1i(this->haloGrowShader->getUniformLocation("sourceTex"), 0);
+        glUniform2f(
+            this->haloGaussianHoriz->getUniformLocation("screenResInv"), 1.0f / this->width, 1.0f / this->height);
 
         glRecti(-1, -1, 1, 1); // Draw screen quad
-        this->haloGrowShader.Disable();
+        glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D, 0);
         this->haloBlurFBO2.Disable();
 
@@ -1196,12 +1078,13 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->haloBlurFBO2.GetColourTextureID());
 
-        this->haloGaussianHoriz.Enable();
-        glUniform1i(this->haloGaussianHoriz.ParameterLocation("sourceTex"), 0);
-        glUniform2f(this->haloGaussianHoriz.ParameterLocation("screenResInv"), 1.0f / this->width, 1.0f / this->height);
+        this->haloGaussianHoriz->use();
+        glUniform1i(this->haloGaussianHoriz->getUniformLocation("sourceTex"), 0);
+        glUniform2f(
+            this->haloGaussianHoriz->getUniformLocation("screenResInv"), 1.0f / this->width, 1.0f / this->height);
 
         glRecti(-1, -1, 1, 1); // Draw screen quad
-        this->haloGaussianHoriz.Disable();
+        glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D, 0);
         this->haloBlurFBO.Disable();
 
@@ -1212,12 +1095,13 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->haloBlurFBO.GetColourTextureID());
 
-        this->haloGaussianVert.Enable();
-        glUniform1i(this->haloGaussianVert.ParameterLocation("sourceTex"), 0);
-        glUniform2f(this->haloGaussianVert.ParameterLocation("screenResInv"), 1.0f / this->width, 1.0f / this->height);
+        this->haloGaussianVert->use();
+        glUniform1i(this->haloGaussianVert->getUniformLocation("sourceTex"), 0);
+        glUniform2f(
+            this->haloGaussianVert->getUniformLocation("screenResInv"), 1.0f / this->width, 1.0f / this->height);
 
         glRecti(-1, -1, 1, 1); // Draw screen quad
-        this->haloGaussianVert.Disable();
+        glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D, 0);
         this->haloBlurFBO2.Disable();
 
@@ -1226,11 +1110,11 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, this->haloBlurFBO2.GetColourTextureID());
 
-        this->haloDifferenceShader.Enable();
-        glUniform1i(this->haloDifferenceShader.ParameterLocation("originalTex"), 0);
-        glUniform1i(this->haloDifferenceShader.ParameterLocation("blurredTex"), 1);
+        this->haloDifferenceShader->use();
+        glUniform1i(this->haloDifferenceShader->getUniformLocation("originalTex"), 0);
+        glUniform1i(this->haloDifferenceShader->getUniformLocation("blurredTex"), 1);
         glRecti(-1, -1, 1, 1); // Draw screen quad
-        this->haloDifferenceShader.Disable();
+        glUseProgram(0);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -1796,7 +1680,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                         int test = smf->GetDataCount() - 1;
                         if (tmpFeatureListIdx[i] == this->featureListIdx[j]) {
                             Log::DefaultLog.WriteError(
-                                1, "%s, SplitMerge split partner list corrupted!", this->ClassName());
+                                "%s, SplitMerge split partner list corrupted!", this->ClassName());
                         } else {
                             this->transitionList.Add(
                                 new SplitMergeCall::SplitMergeTransition(tmpFeatureListIdx[i], 0, centroidAreasHost[i],
@@ -1867,8 +1751,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                 // Add transition for all merge partners
                 for (unsigned int mpIdx = 0; mpIdx < (*partners).Count(); mpIdx++) {
                     if (tmpFeatureListIdx[i] == (*partners)[mpIdx]) {
-                        Log::DefaultLog.WriteError(
-                            1, "%s, SplitMerge merge partner list corrupted!", this->ClassName());
+                        Log::DefaultLog.WriteError("%s, SplitMerge merge partner list corrupted!", this->ClassName());
                         continue;
                     }
                     // Add transition
@@ -2491,7 +2374,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             //printf( "Time to compute center line for feature %3i (%5i tria):      %.5f\n\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         }
         INT64 t1 = perf.Difference();
-        Log::DefaultLog.WriteInfo(1, "Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength,
+        Log::DefaultLog.WriteInfo("Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength,
             (vislib::sys::PerformanceCounter::ToMillis(t1) + time) / 1000.0);
     }
 #endif

@@ -12,7 +12,7 @@ using namespace megamol;
 using namespace megamol::cinematic;
 
 
-CallKeyframeKeeper::CallKeyframeKeeper(void)
+CallKeyframeKeeper::CallKeyframeKeeper()
         : core::AbstractGetDataCall()
         , cameraState(nullptr)
         , interpolCamPos(nullptr)
@@ -29,7 +29,7 @@ CallKeyframeKeeper::CallKeyframeKeeper(void)
         , fps(24) {}
 
 
-CallKeyframeKeeper::~CallKeyframeKeeper(void) {
+CallKeyframeKeeper::~CallKeyframeKeeper() {
 
     this->cameraState.reset();
     this->keyframes.reset();

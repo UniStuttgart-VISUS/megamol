@@ -20,7 +20,7 @@ using namespace megamol::mmvtkm_gl;
 /**
  * mmvtkmDataRenderer::mmvtmDataRenderer
  */
-mmvtkmDataRenderer::mmvtkmDataRenderer(void)
+mmvtkmDataRenderer::mmvtkmDataRenderer()
         : Renderer3DModuleGL()
         , vtkmDataCallerSlot_("getData", "Connects the vtkm renderer with a vtkm data source")
         , psColorTables_("colorTable", "Colortables specify the color range of the data")
@@ -60,7 +60,7 @@ bool mmvtkmDataRenderer::setLocalUpdate(core::param::ParamSlot& slot) {
 /**
  * mmvtkmDataRenderer::~mmvtkmDataRenderer
  */
-mmvtkmDataRenderer::~mmvtkmDataRenderer(void) {
+mmvtkmDataRenderer::~mmvtkmDataRenderer() {
     this->Release();
 }
 
@@ -84,7 +84,7 @@ void mmvtkmDataRenderer::release() {
 /**
  * mmvtkmDataRenderer::Render
  */
-bool mmvtkmDataRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool mmvtkmDataRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     mmvtkm::mmvtkmDataCall* rhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkm::mmvtkmDataCall>();
 
     // if (rhsVtkmDc == nullptr) {
@@ -184,14 +184,14 @@ bool mmvtkmDataRenderer::Render(core_gl::view::CallRender3DGL& call) {
 /**
  * mmvtkmDataRenderer::GetExtents
  */
-bool mmvtkmDataRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool mmvtkmDataRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     mmvtkm::mmvtkmDataCall* rhsVtkmDc = this->vtkmDataCallerSlot_.CallAs<mmvtkm::mmvtkmDataCall>();
     if (rhsVtkmDc == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError("In %s at line %d. rhsVtkmDc is nullptr.", __FILE__, __LINE__);
         return false;
     }
 
-    megamol::core_gl::view::CallRender3DGL* cr = &call;
+    mmstd_gl::CallRender3DGL* cr = &call;
     if (cr == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError(
             "In %s at line %d. CallRender3D_2 is nullptr.", __FILE__, __LINE__);

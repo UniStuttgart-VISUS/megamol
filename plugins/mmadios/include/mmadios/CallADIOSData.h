@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "adios2/common/ADIOSTypes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/ConvertingIterator.h"
@@ -17,9 +18,13 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
+struct adios2Params {
+    std::string name;
+    adios2::Params params;
+    bool isAttribute = false;
+};
 
 class abstractContainer {
 public:
@@ -80,10 +85,13 @@ protected:
                                      std::is_same_v<std::string, value_type>),
         R>>
     getAs() {
-        core::utility::ConvertingIterator<R, value_type> _begin(&*dataVec.begin());
-        core::utility::ConvertingIterator<R, value_type> _end(&*dataVec.end());
-        std::vector<R> new_vec(_begin, _end);
-        return new_vec;
+        if (dataVec.size() > 0) {
+            core::utility::ConvertingIterator<R, value_type> _begin(&*dataVec.begin());
+            core::utility::ConvertingIterator<R, value_type> _end((&*dataVec.begin()) + dataVec.size());
+            return std::vector<R>(_begin, _end);
+        } else {
+            return std::vector<R>();
+        }
     }
 
 private:
@@ -450,7 +458,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallADIOSData";
     }
 
@@ -459,7 +467,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for ADIOS data";
     }
 
@@ -468,7 +476,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static uint32_t FunctionCount(void) {
+    static uint32_t FunctionCount() {
         return 2;
     }
 
@@ -494,7 +502,7 @@ public:
     CallADIOSData();
 
     /** Dtor. */
-    virtual ~CallADIOSData(void);
+    ~CallADIOSData() override;
 
     /**
      * Assignment operator
@@ -512,6 +520,8 @@ public:
     bool inquireVar(const std::string& varname);
     std::vector<std::string> getVarsToInquire() const;
     std::vector<std::string> getAvailableVars() const;
+    void setAllVars(std::map<std::string, std::map<std::string, std::string>> vars);
+    std::map<std::string, std::string> getVarProperties(std::string var) const;
     void setAvailableVars(const std::vector<std::string>& avars);
 
     bool inquireAttr(const std::string& attrname);
@@ -540,6 +550,13 @@ public:
         return this->frameIDtoLoad;
     }
 
+    void setLoadedFrameID(size_t fid) {
+        this->loadedFrameID = fid;
+    }
+    size_t getLoadedFrameID() const {
+        return this->loadedFrameID;
+    }
+
     void setData(std::shared_ptr<adiosDataMap> _dta);
     std::shared_ptr<abstractContainer> getData(std::string _str) const;
 
@@ -551,8 +568,10 @@ private:
     float time;
     size_t frameCount;
     size_t frameIDtoLoad;
+    size_t loadedFrameID;
     std::vector<std::string> inqVars;
     std::vector<std::string> availableVars;
+    std::map<std::string, std::map<std::string, std::string>> allVars;
     std::vector<std::string> inqAttributes;
     std::vector<std::string> availableAttributes;
 
@@ -561,5 +580,4 @@ private:
 
 typedef core::factories::CallAutoDescription<CallADIOSData> CallADIOSDataDescription;
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

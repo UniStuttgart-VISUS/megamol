@@ -15,7 +15,7 @@ using namespace megamol::moldyn::io;
 /*
  * MMSPDHeader::Field::Field
  */
-MMSPDHeader::Field::Field(void) : name(), type(TYPE_DOUBLE) {
+MMSPDHeader::Field::Field() : name(), type(TYPE_DOUBLE) {
     // intentionally empty
 }
 
@@ -23,7 +23,7 @@ MMSPDHeader::Field::Field(void) : name(), type(TYPE_DOUBLE) {
 /*
  * MMSPDHeader::Field::~Field
  */
-MMSPDHeader::Field::~Field(void) {
+MMSPDHeader::Field::~Field() {
     // intentionally empty
 }
 
@@ -41,7 +41,7 @@ bool MMSPDHeader::Field::operator==(const MMSPDHeader::Field& rhs) const {
 /*
  * MMSPDHeader::ConstField::ConstField
  */
-MMSPDHeader::ConstField::ConstField(void) : Field() {
+MMSPDHeader::ConstField::ConstField() : Field() {
     this->data.valDouble = 0.0;
 }
 
@@ -49,7 +49,7 @@ MMSPDHeader::ConstField::ConstField(void) : Field() {
 /*
  * MMSPDHeader::ConstField::~ConstField
  */
-MMSPDHeader::ConstField::~ConstField(void) {
+MMSPDHeader::ConstField::~ConstField() {
     // intentionally empty
 }
 
@@ -70,7 +70,7 @@ bool MMSPDHeader::ConstField::operator==(const MMSPDHeader::ConstField& rhs) con
 /*
  * MMSPDHeader::TypeDefinition::TypeDefinition
  */
-MMSPDHeader::TypeDefinition::TypeDefinition(void) {
+MMSPDHeader::TypeDefinition::TypeDefinition() {
     // intentionally empty
 }
 
@@ -78,7 +78,7 @@ MMSPDHeader::TypeDefinition::TypeDefinition(void) {
 /*
  * MMSPDHeader::TypeDefinition::~TypeDefinition
  */
-MMSPDHeader::TypeDefinition::~TypeDefinition(void) {
+MMSPDHeader::TypeDefinition::~TypeDefinition() {
     // intentionally empty
 }
 
@@ -97,7 +97,7 @@ bool MMSPDHeader::TypeDefinition::operator==(const MMSPDHeader::TypeDefinition& 
 /*
  * MMSPDHeader::MMSPDHeader
  */
-MMSPDHeader::MMSPDHeader(void)
+MMSPDHeader::MMSPDHeader()
         : hasIDs(false)
         , bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0)
         , timeCount(1)
@@ -110,6 +110,6 @@ MMSPDHeader::MMSPDHeader(void)
 /*
  * MMSPDHeader::~MMSPDHeader
  */
-MMSPDHeader::~MMSPDHeader(void) {
+MMSPDHeader::~MMSPDHeader() {
     // intentionally empty
 }

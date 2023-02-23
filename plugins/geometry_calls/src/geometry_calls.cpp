@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "geometry_calls/BezierCurvesListDataCall.h"
 #include "geometry_calls/CalloutImageCall.h"
@@ -17,12 +17,12 @@
 #include "geometry_calls/VolumetricDataCall.h"
 
 namespace megamol::geocalls {
-class GeometryCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class GeometryCallsPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(GeometryCallsPluginInstance)
 
 public:
     GeometryCallsPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("geometry_calls", "The geometry_calls plugin."){};
+            : megamol::core::factories::AbstractPluginInstance("geometry_calls", "The geometry_calls plugin."){};
 
     ~GeometryCallsPluginInstance() override = default;
 

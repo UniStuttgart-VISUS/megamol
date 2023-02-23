@@ -15,6 +15,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
 #include "protein_calls/ProteinColor.h"
+#include "protein_calls/ProteinHelpers.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
@@ -32,7 +33,7 @@ using namespace megamol::protein_gl;
 /*
  * MSMSMeshLoader::MSMSMeshLoader
  */
-MSMSMeshLoader::MSMSMeshLoader(void)
+MSMSMeshLoader::MSMSMeshLoader()
         : core::Module()
         , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
         , datahash(0)
@@ -50,6 +51,8 @@ MSMSMeshLoader::MSMSMeshLoader(void)
         , minGradColorParam("color::minGradColor", "Color for min value for gradient coloring")
         , midGradColorParam("color::midGradColor", "Color for mid value for gradient coloring")
         , maxGradColorParam("color::maxGradColor", "Color for max value for gradient coloring")
+        , last_incoming_hash_(0)
+        , reload_colors(true)
         , prevTime(-1) {
     // the data out slot
     this->getDataSlot.SetCallback(CallTriMeshDataGL::ClassName(), "GetData", &MSMSMeshLoader::getDataCallback);
@@ -128,7 +131,7 @@ MSMSMeshLoader::MSMSMeshLoader(void)
 /*
  * MSMSMeshLoader::~MSMSMeshLoader
  */
-MSMSMeshLoader::~MSMSMeshLoader(void) {
+MSMSMeshLoader::~MSMSMeshLoader() {
     this->Release();
 }
 
@@ -136,7 +139,7 @@ MSMSMeshLoader::~MSMSMeshLoader(void) {
 /*
  * MSMSMeshLoader::create
  */
-bool MSMSMeshLoader::create(void) {
+bool MSMSMeshLoader::create() {
     // intentionally empty
     return true;
 }
@@ -145,7 +148,7 @@ bool MSMSMeshLoader::create(void) {
 /*
  * MSMSMeshLoader::release
  */
-void MSMSMeshLoader::release(void) {
+void MSMSMeshLoader::release() {
     // TODO clear data
 }
 
@@ -178,6 +181,8 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 
     // try to call molecular data and compute colors
     MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
+    glm::vec3 minCol, midCol, maxCol;
+    bool twoColors = false;
     if (mol) {
         // get pointer to BindingSiteCall
         BindingSiteCall* bs = this->bsDataSlot.CallAs<BindingSiteCall>();
@@ -188,14 +193,22 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
         mol->SetCalltime(float(ctmd->FrameID()));
         // set frame ID
         mol->SetFrameID(ctmd->FrameID());
+        auto minColText = minGradColorParam.Param<param::ColorParam>()->Value();
+        auto midColText = midGradColorParam.Param<param::ColorParam>()->Value();
+        auto maxColText = maxGradColorParam.Param<param::ColorParam>()->Value();
+        minCol = glm::make_vec3(minColText.data());
+        midCol = glm::make_vec3(midColText.data());
+        maxCol = glm::make_vec3(maxColText.data());
+
         // try to call data
         if ((*mol)(MolecularDataCall::CallForGetData)) {
             // recompute color table, if necessary
             if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() ||
                 this->colorWeightParam.IsDirty() || this->minGradColorParam.IsDirty() ||
                 this->midGradColorParam.IsDirty() || this->maxGradColorParam.IsDirty() ||
-                this->prevTime != int(ctmd->FrameID())) {
+                this->prevTime != int(ctmd->FrameID()) || reload_colors) {
 
+                reload_colors = false;
                 ProteinColor::ColoringMode currentColoringMode0 = static_cast<ProteinColor::ColoringMode>(
                     this->coloringModeParam0.Param<param::EnumParam>()->Value());
                 ProteinColor::ColoringMode currentColoringMode1 = static_cast<ProteinColor::ColoringMode>(
@@ -208,17 +221,21 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
                     glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
 
-                protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode0, atomColorTable,
+                auto leftres = protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode0, atomColorTable,
                     this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, pa, true);
 
-                protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode1, atomColorTable2,
+                auto rightres = protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode1, atomColorTable2,
                     this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, pa, true);
+
+                this->lowval = std::min(leftres.first, rightres.first);
+                this->highval = std::max(leftres.second, rightres.second);
 
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
                 float* normal = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
                 unsigned char* color = new unsigned char[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
                 unsigned int* atomIndex = new unsigned int[this->obj[ctmd->FrameID()]->GetVertexCount()];
+                float* values = new float[this->obj[ctmd->FrameID()]->GetVertexCount()];
 
                 // calculate centroid
                 float* centroid = new float[3];
@@ -236,6 +253,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
 
                 // calculate max distance
                 float max_dist = std::numeric_limits<float>::min();
+                float min_dist = std::numeric_limits<float>::max();
                 float dist, steps;
                 unsigned int anz_cols = 15;
                 for (unsigned int i = 0; i < this->obj[ctmd->FrameID()]->GetVertexCount(); i++) {
@@ -310,17 +328,25 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                 auto atCnt = this->obj[ctmd->FrameID()]->GetVertexAttribCount();
                 bool found = false;
                 if (atCnt != 0) {
-                    for (attIdx = 0; attIdx < atCnt; attIdx++) {
-                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(attIdx) ==
+                    for (this->idAttIdx = 0; this->idAttIdx < atCnt; this->idAttIdx++) {
+                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(this->idAttIdx) ==
                             CallTriMeshDataGL::Mesh::DataType::DT_UINT32) {
                             found = true;
                             break;
                         }
                     }
                 }
-                // add an attribute or set the existing one
-                if (atCnt == 0 || !found) {
-                    this->attIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
+
+                // search for the correct attrib index for the value
+                found = false;
+                if (atCnt != 0) {
+                    for (this->valueAttIdx = 0; this->valueAttIdx < atCnt; this->valueAttIdx++) {
+                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(this->valueAttIdx) ==
+                            CallTriMeshDataGL::Mesh::DataType::DT_FLOAT) {
+                            found = true;
+                            break;
+                        }
+                    }
                 }
 
                 // weighting factors
@@ -347,7 +373,26 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     color[i * 3 + 0] = 0;
                     color[i * 3 + 1] = 0;
                     color[i * 3 + 2] = 0;
-                    atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(attIdx)[i];
+                    atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(this->idAttIdx)[i];
+
+                    ProteinColor::ColoringMode colmode;
+                    if (weight1 > weight0) { // take weight1
+                        colmode = currentColoringMode1;
+                    } else { // take weight0
+                        colmode = currentColoringMode0;
+                    }
+
+                    if (colmode == ProteinColor::ColoringMode::BFACTOR) {
+                        values[i] = mol->AtomBFactors()[atomIndex[i]];
+                    } else if (colmode == ProteinColor::ColoringMode::CHARGE) {
+                        values[i] = mol->AtomCharges()[atomIndex[i]];
+                    } else if (colmode == ProteinColor::ColoringMode::OCCUPANCY) {
+                        values[i] = mol->AtomOccupancies()[atomIndex[i]];
+                    } else if (colmode == ProteinColor::ColoringMode::HYDROPHOBICITY) {
+                        auto resIdx = mol->AtomResidueIndices()[atomIndex[i]];
+                        auto typeIdx = mol->Residues()[resIdx]->Type();
+                        values[i] = GetHydrophibicityByResName(mol->ResidueTypeNames()[typeIdx].PeekBuffer());
+                    }
 
                     // create hightmap colours or read per atom colours
                     if (currentColoringMode0 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR ||
@@ -361,6 +406,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                         lower_bound = float(bin) * steps;
                         upper_bound = float(bin + 1) * steps;
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
+                        values[i] = dist;
                         dist /= max_dist;
 
                         if (currentColoringMode0 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR) {
@@ -396,6 +442,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                         lower_bound = float(bin) * steps;
                         upper_bound = float(bin + 1) * steps;
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
+                        values[i] = dist;
                         dist /= max_dist;
 
                         if (currentColoringMode1 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR) {
@@ -410,6 +457,11 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                             col[0] = dist_uc;
                             col[1] = dist_uc;
                             col[2] = dist_uc;
+                            maxCol = glm::vec3(1.0f, 1.0f, 1.0f);
+                            minCol = glm::vec3(0.0f, 0.0f, 0.0f);
+                            twoColors = true;
+                            this->lowval = 0.0f; // TODO or min_dist?
+                            this->highval = max_dist;
                         }
                         color[i * 3 + 0] += static_cast<unsigned char>(weight1 * col[0]);
                         color[i * 3 + 1] += static_cast<unsigned char>(weight1 * col[1]);
@@ -425,6 +477,7 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
                     this->obj[ctmd->FrameID()]->GetVertexCount(), vertex, normal, color, NULL, true);
                 // setVertexData clears all attributes, so we have to add a new one
                 this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
+                this->obj[ctmd->FrameID()]->AddVertexAttribPointer(values);
                 this->datahash++;
 
                 this->coloringModeParam0.ResetDirty();
@@ -440,6 +493,11 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
     if (this->obj[ctmd->FrameID()]->GetVertexCount() > 0) {
         ctmd->SetDataHash(this->datahash);
         ctmd->SetObjects(1, this->obj[ctmd->FrameID()]);
+        /*if (!twoColors) {
+            ctmd->SetColorBounds(this->lowval, this->highval, minCol, midCol, maxCol);
+        } else {
+            ctmd->SetColorBounds(this->lowval, this->highval, minCol, maxCol);
+        }*/
         ctmd->SetUnlocker(NULL);
         this->prevTime = int(ctmd->FrameID());
         return true;
@@ -466,6 +524,7 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
     }
 
     ctmd->SetDataHash(this->datahash);
+    bool refresh = false;
     if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
         MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
         if (mol) {
@@ -473,12 +532,17 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
             if ((*mol)(MolecularDataCall::CallForGetExtent)) {
                 frameCnt = mol->FrameCount();
                 this->bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+                if (last_incoming_hash_ != mol->DataHash()) {
+                    last_incoming_hash_ = mol->DataHash();
+                    refresh = true;
+                }
             }
         }
     }
     ctmd->SetExtent(frameCnt, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(),
         this->bbox.Top(), this->bbox.Front());
-    if (this->obj.Count() != frameCnt) {
+    if (this->obj.Count() != frameCnt || refresh) {
+        reload_colors = true;
         for (unsigned int i = 0; i < this->obj.Count(); i++) {
             delete this->obj[i];
             this->obj[i] = NULL;
@@ -693,8 +757,8 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         auto atCnt = this->obj[frameID]->GetVertexAttribCount();
         bool found = false;
         if (atCnt != 0) {
-            for (attIdx = 0; attIdx < atCnt; attIdx++) {
-                if (this->obj[frameID]->GetVertexAttribDataType(attIdx) ==
+            for (this->idAttIdx = 0; this->idAttIdx < atCnt; this->idAttIdx++) {
+                if (this->obj[frameID]->GetVertexAttribDataType(this->idAttIdx) ==
                     CallTriMeshDataGL::Mesh::DataType::DT_UINT32) {
                     found = true;
                     break;
@@ -705,9 +769,10 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
         if (atCnt == 0 || !found) {
             this->obj[frameID]->AddVertexAttribPointer(atomIndex);
         } else {
-            this->obj[frameID]->SetVertexAttribData(atomIndex, attIdx);
+            this->obj[frameID]->SetVertexAttribData(atomIndex, this->idAttIdx);
         }
 
+        // TODO reconstruct the values for the value attribute
 
         return true;
     }

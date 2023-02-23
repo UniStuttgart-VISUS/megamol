@@ -19,8 +19,7 @@
 #include <memory>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 /**
  * Module for simplifying a mesh.
  *
@@ -52,7 +51,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static inline bool IsAvailable() {
-#ifdef WITH_CGAL
+#ifdef MEGAMOL_USE_CGAL
         return true;
 #else
         return false;
@@ -68,7 +67,7 @@ public:
         return 472520021uLL;
     }
 
-#ifdef WITH_CGAL
+#ifdef MEGAMOL_USE_CGAL
     /**
      * Initialises a new instance.
      */
@@ -77,7 +76,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~SimplifyMesh();
+    ~SimplifyMesh() override;
 #endif
 
 protected:
@@ -86,15 +85,15 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
 private:
-#ifdef WITH_CGAL
+#ifdef MEGAMOL_USE_CGAL
     /** Callbacks for performing the computation and exposing data */
     bool getMeshDataCallback(core::Call& call);
     bool getMeshMetaDataCallback(core::Call& call);
@@ -131,5 +130,4 @@ private:
     } output;
 #endif
 };
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

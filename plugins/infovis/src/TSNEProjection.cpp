@@ -11,7 +11,7 @@
 using namespace megamol;
 using namespace megamol::infovis;
 
-TSNEProjection::TSNEProjection(void)
+TSNEProjection::TSNEProjection()
         : megamol::core::Module()
         , dataOutSlot("dataOut", "Ouput")
         , dataInSlot("dataIn", "Input")
@@ -50,15 +50,15 @@ TSNEProjection::TSNEProjection(void)
     this->MakeSlotAvailable(&thetaSlot);
 }
 
-TSNEProjection::~TSNEProjection(void) {
+TSNEProjection::~TSNEProjection() {
     this->Release();
 }
 
-bool TSNEProjection::create(void) {
+bool TSNEProjection::create() {
     return true;
 }
 
-void TSNEProjection::release(void) {}
+void TSNEProjection::release() {}
 
 bool TSNEProjection::getDataCallback(core::Call& c) {
     try {

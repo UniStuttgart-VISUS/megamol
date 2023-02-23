@@ -2,13 +2,12 @@
 
 #include <memory>
 #include <vector>
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
 #endif
 #include "zmq.hpp"
 
-namespace megamol {
-namespace remote {
+namespace megamol::remote {
 
 enum send_type : unsigned int { ST_UNDEF = 0, BCAST, SCATTER, SEND, ISEND };
 
@@ -21,8 +20,8 @@ public:
     virtual bool Bind(std::string const& address) = 0;
     virtual bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) = 0;
     virtual bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) = 0;
-    virtual bool Disconnect(void) = 0;
-    virtual ~AbstractCommFabric(void) = default;
+    virtual bool Disconnect() = 0;
+    virtual ~AbstractCommFabric() = default;
 };
 
 
@@ -37,7 +36,7 @@ public:
     bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
     bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
     bool Disconnect() override;
-    virtual ~MPICommFabric(void);
+    ~MPICommFabric() override;
 
 private:
     int my_rank_;
@@ -63,8 +62,8 @@ public:
     bool Bind(std::string const& address) override;
     bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
     bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
-    bool Disconnect(void) override;
-    virtual ~ZMQCommFabric(void);
+    bool Disconnect() override;
+    ~ZMQCommFabric() override;
 
 private:
     zmq::context_t ctx_;
@@ -103,14 +102,13 @@ public:
 
     bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
 
-    bool Disconnect(void) override;
+    bool Disconnect() override;
 
-    virtual ~FBOCommFabric(void) = default;
+    ~FBOCommFabric() override = default;
 
 protected:
 private:
     std::unique_ptr<AbstractCommFabric> pimpl_;
 };
 
-} // end namespace remote
-} // end namespace megamol
+} // namespace megamol::remote

@@ -525,7 +525,7 @@ bool SecStructFlattener::getExtent(core::Call& call) {
         }
 
         if (cAlphaIndices.size() != oIndices.size()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Malformed molecule (different number of c alpha and primary oxygen atoms)\n");
         }
 

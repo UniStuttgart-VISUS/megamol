@@ -14,25 +14,16 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 STLWriter::STLWriter()
-        : mesh_lhs_slot("mesh_lhs_slot", "Separated surface meshes representing pores and throats.")
-        , mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh of the fluid phase.")
+        : mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh.")
         , filename("filename", "Name for the output STL file.")
         , filetype("filetype", "Type of the output STL file (binary vs. ASCII).")
-        , save("save", "Save to STL file.")
-        , triggered(false) {
+        , save("save", "Save to STL file.") {
 
     // Connect input slot
     this->mesh_rhs_slot.SetCompatibleCall<mesh::TriangleMeshCall::triangle_mesh_description>();
     this->MakeSlotAvailable(&this->mesh_rhs_slot);
-
-    // Connect output slots
-    this->mesh_lhs_slot.SetCallback(mesh::TriangleMeshCall::ClassName(), "get_data", &STLWriter::getMeshDataCallback);
-    this->mesh_lhs_slot.SetCallback(
-        mesh::TriangleMeshCall::ClassName(), "get_extent", &STLWriter::getMeshMetaDataCallback);
-    this->MakeSlotAvailable(&this->mesh_lhs_slot);
 
     // Initialize parameter slots
     this->filename << new core::param::FilePathParam("mesh.stl", core::param::FilePathParam::Flag_File_ToBeCreated);
@@ -58,69 +49,32 @@ bool STLWriter::create() {
 
 void STLWriter::release() {}
 
-bool STLWriter::getMeshDataCallback(core::Call& _call) {
-    assert(dynamic_cast<mesh::TriangleMeshCall*>(&_call) != nullptr);
+bool STLWriter::setButtonPressed(core::param::ParamSlot& slot) {
+    slot.ResetDirty();
 
-    auto& call = static_cast<mesh::TriangleMeshCall&>(_call);
-
-    // Check input connection and get data
+    // Check connection
     auto tmc_ptr = this->mesh_rhs_slot.CallAs<mesh::TriangleMeshCall>();
 
-    if (tmc_ptr != nullptr) {
-        auto& tmc = *tmc_ptr;
-
-        if (tmc(0)) {
-            call.set_vertices(tmc.get_vertices());
-            call.set_normals(tmc.get_normals());
-            call.set_indices(tmc.get_indices());
-
-            call.SetDataHash(tmc.DataHash());
-
-            if (this->triggered) {
-                this->triggered = false;
-
-                return write(this->filename.Param<core::param::FilePathParam>()->Value().string(),
-                    *tmc.get_vertices().get(), *tmc.get_normals().get(), *tmc.get_indices().get());
-            }
-
-            return true;
-        }
-    }
-
-    if (this->triggered) {
+    if (tmc_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to get data. Is it connected? [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[STLWriter] No input connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
-        this->triggered = false;
-    }
-
-    return false;
-}
-
-bool STLWriter::getMeshMetaDataCallback(core::Call& _call) {
-    assert(dynamic_cast<mesh::TriangleMeshCall*>(&_call) != nullptr);
-
-    auto& call = static_cast<mesh::TriangleMeshCall&>(_call);
-
-    // Get input extent
-    auto tmc_ptr = this->mesh_rhs_slot.CallAs<mesh::TriangleMeshCall>();
-
-    if (tmc_ptr == nullptr || !(*tmc_ptr)(1)) {
         return false;
     }
 
-    call.set_dimension(tmc_ptr->get_dimension());
-    call.set_bounding_box(tmc_ptr->get_bounding_box());
+    // Get data
+    auto& tmc = *tmc_ptr;
 
-    return true;
-}
+    if (!tmc(0)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[STLWriter] Unable to get data. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
-bool STLWriter::setButtonPressed(core::param::ParamSlot& slot) {
-    this->triggered = true;
+        return false;
+    }
 
-    slot.ResetDirty();
-
-    return true;
+    // Write data
+    return write(this->filename.Param<core::param::FilePathParam>()->Value().string(), *tmc.get_vertices().get(),
+        *tmc.get_normals().get(), *tmc.get_indices().get());
 }
 
 bool STLWriter::write(const std::string& filename, const std::vector<float>& vertices,
@@ -132,8 +86,8 @@ bool STLWriter::write(const std::string& filename, const std::vector<float>& ver
 
         if (!ofs.good()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to open output STL file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-                __LINE__);
+                "[STLWriter] Unable to open output STL file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
+                __FUNCTION__, __LINE__);
 
             return false;
         }
@@ -274,7 +228,7 @@ bool STLWriter::write(const std::string& filename, const std::vector<float>& ver
         ofs.close();
     } catch (const std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to write STL file '%s': %s. [%s, %s, line %d]\n", filename.c_str(), e.what(), __FILE__,
+            "[STLWriter] Unable to write STL file '%s': %s. [%s, %s, line %d]\n", filename.c_str(), e.what(), __FILE__,
             __FUNCTION__, __LINE__);
 
         return false;
@@ -284,5 +238,4 @@ bool STLWriter::write(const std::string& filename, const std::vector<float>& ver
 
     return true;
 }
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

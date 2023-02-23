@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
-#define MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
 #pragma once
 
 
@@ -14,13 +12,12 @@
 #include "vislib/math/Ternary.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterGroupAnimationWidget.h"
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 #include "widgets/gl/ParameterGroupViewCubeWidget.h"
 #endif
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -59,7 +56,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     HoverToolTip tooltip;
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     ParameterGroupViewCubeWidget cube_widget_group;
 #endif
     ParameterGroupAnimationWidget animation_group;
@@ -68,7 +65,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
+} // namespace megamol::gui

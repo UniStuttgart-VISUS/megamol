@@ -5,17 +5,13 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED
-#define MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Stride.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "protein/GridNeighbourFinder.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
@@ -23,8 +19,7 @@
 #include "vislib/math/Vector.h"
 #include <fstream>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 
 /**
@@ -35,17 +30,17 @@ namespace protein {
 class SolventHydroBondGenerator : public megamol::core::/*view::AnimData*/ Module {
 public:
     /** Ctor */
-    SolventHydroBondGenerator(void);
+    SolventHydroBondGenerator();
 
     /** Dtor */
-    virtual ~SolventHydroBondGenerator(void);
+    ~SolventHydroBondGenerator() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolventHydroBondGenerator";
     }
 
@@ -54,7 +49,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Special molecule data preprocessing stepts (from PDB data).";
     }
 
@@ -63,7 +58,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -74,7 +69,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Call callback to get the data
@@ -121,7 +116,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -142,12 +137,12 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock() override {
             this->mol->Unlock();
         }
 
@@ -212,7 +207,4 @@ private:
 };
 
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif // MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED
+} // namespace megamol::protein

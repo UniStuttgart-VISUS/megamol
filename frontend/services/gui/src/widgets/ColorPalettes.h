@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_COLORMAPS_INCLUDED
-#define MEGAMOL_GUI_COLORMAPS_INCLUDED
 #pragma once
 
 
@@ -727,5 +725,3 @@ const float Set3Map[12][3] = {
     {0.8, 0.92156862745098034, 0.77254901960784317},
     {1.0, 0.92941176470588238, 0.43529411764705883},
 };
-
-#endif // MEGAMOL_GUI_COLORMAPS_INCLUDED

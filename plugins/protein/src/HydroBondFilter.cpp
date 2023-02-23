@@ -68,14 +68,14 @@ HydroBondFilter::HydroBondFilter()
 /*
  * HydroBondFilter::~HydroBondFilter
  */
-HydroBondFilter::~HydroBondFilter(void) {
+HydroBondFilter::~HydroBondFilter() {
     this->Release();
 }
 
 /*
  * HydroBondFilter::create
  */
-bool HydroBondFilter::create(void) {
+bool HydroBondFilter::create() {
     return true;
 }
 
@@ -314,7 +314,7 @@ void HydroBondFilter::filterHBonds(MolecularDataCall& mdc) {
             copied += 2;
         }
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "%u hydrogen bonds out of %u survived the filtering.\n", copyCount, mdc.HydrogenBondCount());
 
     for (unsigned int i = 0; i < static_cast<unsigned int>(this->hydrogenBondsFiltered.size()); i++) {
@@ -328,4 +328,4 @@ void HydroBondFilter::filterHBonds(MolecularDataCall& mdc) {
 /*
  * HydroBondFilter::release
  */
-void HydroBondFilter::release(void) {}
+void HydroBondFilter::release() {}

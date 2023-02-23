@@ -3,17 +3,12 @@
  * Copyright (C) 2006-2019 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_PROTEIN_CALLS_TUNNELRESIDUEDATACALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALLS_TUNNELRESIDUEDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include <vector>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class TunnelResidueDataCall : public core::AbstractGetData3DCall {
 public:
@@ -21,7 +16,7 @@ public:
     struct Tunnel {
     public:
         /** Ctor. */
-        Tunnel(void) : tunnelLength(0.0f) {
+        Tunnel() : tunnelLength(0.0f) {
             // intentionally empty
         }
         /** array storing the voronoi vertex locations of the tunnel represented */
@@ -48,7 +43,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TunnelResidueDataCall";
     }
 
@@ -57,7 +52,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting tunnel data alongside with redidue indices beside it";
     }
 
@@ -66,7 +61,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -82,17 +77,17 @@ public:
     }
 
     /** Ctor. */
-    TunnelResidueDataCall(void);
+    TunnelResidueDataCall();
 
     /** Dtor. */
-    virtual ~TunnelResidueDataCall(void);
+    ~TunnelResidueDataCall() override;
 
     /**
      * Returns the number of tunnels stored in this call
      *
      * @return The number of tunnels.
      */
-    int getTunnelNumber(void) const {
+    int getTunnelNumber() const {
         return this->numTunnels;
     }
 
@@ -110,7 +105,7 @@ public:
      *
      * @param return The tunnel descriptions
      */
-    const Tunnel* getTunnelDescriptions(void) const {
+    const Tunnel* getTunnelDescriptions() const {
         return this->tunnels;
     }
 
@@ -134,7 +129,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<TunnelResidueDataCall> TunnelResidueDataCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
-
-#endif
+} // namespace megamol::protein_calls

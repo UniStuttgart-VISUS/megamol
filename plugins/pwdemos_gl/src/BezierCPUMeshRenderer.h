@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Mesh-based renderer for bézier curve tubes
@@ -24,7 +23,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BezierCPUMeshRenderer";
     }
 
@@ -33,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for bézier curve";
     }
 
@@ -42,15 +41,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    BezierCPUMeshRenderer(void);
+    BezierCPUMeshRenderer();
 
     /** Dtor. */
-    virtual ~BezierCPUMeshRenderer(void);
+    ~BezierCPUMeshRenderer() override;
 
 protected:
     /**
@@ -60,14 +59,14 @@ protected:
      *
      * @return The return value of the function
      */
-    virtual bool render(core_gl::view::CallRender3DGL& call);
+    bool render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Informs the class if the shader is required
      *
      * @return True if the shader is required
      */
-    virtual bool shader_required(void) const {
+    bool shader_required() const override {
         return false;
     }
 
@@ -76,12 +75,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Powerfull brute force tube rendering with many parameters */
@@ -108,5 +107,4 @@ private:
     size_t dataHash;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

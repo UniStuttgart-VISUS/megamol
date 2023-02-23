@@ -6,8 +6,6 @@
  */
 /// Implementation see mmcore/utility/Picking.cpp and mmcore_gl/utility/Picking_gl.cpp
 
-#ifndef MEGAMOL_GUI_PICKING_INCLUDED
-#define MEGAMOL_GUI_PICKING_INCLUDED
 #pragma once
 
 
@@ -28,9 +26,7 @@ class GLSLProgram;
     { false, -1, FLT_MAX }
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 enum InteractionType {
     MOVE_ALONG_AXIS_SCREEN,
@@ -116,7 +112,7 @@ private:
     ManipVector_t pending_manipulations;
     bool enabled;
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     int prev_fbo = 0;
     std::shared_ptr<glowl::FramebufferObject> fbo = nullptr;
     std::shared_ptr<glowl::GLSLProgram> shader = nullptr;
@@ -134,8 +130,4 @@ private:
     }
 };
 
-} // namespace utility
-} // namespace core
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_PICKING_INCLUDED
+} // namespace megamol::core::utility

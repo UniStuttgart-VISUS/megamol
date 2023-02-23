@@ -10,10 +10,9 @@
 #include <array>
 
 #include <glm/gtc/type_ptr.hpp>
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 #include "datatools/table/TableDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -21,9 +20,9 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
@@ -96,13 +95,13 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     dataSlot_.SetCompatibleCall<table::TableDataCallDescription>();
     MakeSlotAvailable(&dataSlot_);
 
-    tfSlot_.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    tfSlot_.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     MakeSlotAvailable(&tfSlot_);
 
-    readFlagsSlot_.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    readFlagsSlot_.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     MakeSlotAvailable(&readFlagsSlot_);
 
-    writeFlagsSlot_.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
+    writeFlagsSlot_.SetCompatibleCall<mmstd_gl::FlagCallWrite_GLDescription>();
     MakeSlotAvailable(&writeFlagsSlot_);
 
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
@@ -189,12 +188,13 @@ ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
 }
 
 bool ParallelCoordinatesRenderer2D::create() {
-    if (!font_.Initialise(GetCoreInstance())) {
+    if (!font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     font_.SetBatchDrawMode(true);
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         filterProgram_ =
@@ -249,7 +249,7 @@ bool ParallelCoordinatesRenderer2D::create() {
 
 void ParallelCoordinatesRenderer2D::release() {}
 
-bool ParallelCoordinatesRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::GetExtents(mmstd_gl::CallRender2DGL& call) {
     if (!assertData(call)) {
         return false;
     }
@@ -259,7 +259,7 @@ bool ParallelCoordinatesRenderer2D::GetExtents(core_gl::view::CallRender2DGL& ca
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
     // This check must be first. GetExtent does the same check and we need to be sure, that the outside world has seen
     // an extent before we continue. Otherwise, i.e. the view has not initialized the camera.
     if (!assertData(call)) {
@@ -306,11 +306,11 @@ bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) 
     if (needFlagsUpdate_) {
         needFlagsUpdate_ = false;
 
-        auto readFlagsCall = readFlagsSlot_.CallAs<core_gl::FlagCallRead_GL>();
-        auto writeFlagsCall = writeFlagsSlot_.CallAs<core_gl::FlagCallWrite_GL>();
+        auto readFlagsCall = readFlagsSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
+        auto writeFlagsCall = writeFlagsSlot_.CallAs<mmstd_gl::FlagCallWrite_GL>();
         if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
             writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
-            (*writeFlagsCall)(core_gl::FlagCallWrite_GL::CallGetData);
+            (*writeFlagsCall)(mmstd_gl::FlagCallWrite_GL::CallGetData);
         }
     }
 
@@ -490,22 +490,22 @@ bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
     return false;
 }
 
-bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& call) {
+bool ParallelCoordinatesRenderer2D::assertData(mmstd_gl::CallRender2DGL& call) {
     auto floatTableCall = dataSlot_.CallAs<megamol::datatools::table::TableDataCall>();
     if (floatTableCall == nullptr) {
         return false;
     }
-    auto tfCall = tfSlot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto tfCall = tfSlot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (tfCall == nullptr) {
         Log::DefaultLog.WriteError("ParallelCoordinatesRenderer2D requires a transfer function!");
         return false;
     }
-    auto readFlagsCall = readFlagsSlot_.CallAs<core_gl::FlagCallRead_GL>();
+    auto readFlagsCall = readFlagsSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
         Log::DefaultLog.WriteError("ParallelCoordinatesRenderer2D requires a read flag storage!");
         return false;
     }
-    auto writeFlagsCall = writeFlagsSlot_.CallAs<core_gl::FlagCallWrite_GL>();
+    auto writeFlagsCall = writeFlagsSlot_.CallAs<mmstd_gl::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
         Log::DefaultLog.WriteError("ParallelCoordinatesRenderer2D requires a write flag storage!");
         return false;
@@ -521,7 +521,7 @@ bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& ca
 
     (*tfCall)(0);
 
-    (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
+    (*readFlagsCall)(mmstd_gl::FlagCallRead_GL::CallGetData);
 
     if (dataChanged) {
         dimensionCount_ = floatTableCall->GetColumnsCount();
@@ -673,7 +673,7 @@ bool ParallelCoordinatesRenderer2D::useProgramAndBindCommon(std::unique_ptr<glow
     program->use();
 
     dataBuffer_->bind(0);
-    auto readFlagsCall = readFlagsSlot_.CallAs<core_gl::FlagCallRead_GL>();
+    auto readFlagsCall = readFlagsSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
     readFlagsCall->getData()->validateFlagCount(static_cast<int32_t>(itemCount_));
     readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 1);
     dimensionRangesBuffer_->bind(2);
@@ -728,7 +728,7 @@ void ParallelCoordinatesRenderer2D::doStroking(glm::vec2 start, glm::vec2 end) {
 
 void ParallelCoordinatesRenderer2D::drawItemLines(
     uint32_t testMask, uint32_t passMask, bool useTf, glm::vec4 const& color) {
-    auto tfCall = tfSlot_.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+    auto tfCall = tfSlot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     const bool triangleMode = triangleModeParam_.Param<core::param::BoolParam>()->Value();
 
     int colorDimension = -1;
@@ -821,7 +821,7 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
-    auto tfCall = tfSlot_.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+    auto tfCall = tfSlot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
 
     useProgramAndBindCommon(drawItemsDensityProgram_);
     glActiveTexture(GL_TEXTURE1);

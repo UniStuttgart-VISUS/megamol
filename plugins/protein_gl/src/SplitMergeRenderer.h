@@ -6,32 +6,26 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_SPLITMERGERENDERER_H_INCLUDED
-#define MEGAMOLCORE_SPLITMERGERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/SplitMergeCall.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
-class SplitMergeRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
+class SplitMergeRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SplitMergeRenderer";
     }
 
@@ -40,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "renders entities with a metric property and how this "
                "property is propagated between entities";
     }
@@ -50,15 +44,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    SplitMergeRenderer(void);
+    SplitMergeRenderer();
 
     /** dtor */
-    ~SplitMergeRenderer(void);
+    ~SplitMergeRenderer() override;
 
 protected:
     /**
@@ -66,12 +60,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Callback for mouse events (move, press, and release)
@@ -80,7 +74,7 @@ protected:
      * @param y The y coordinate of the mouse in world space
      * @param flags The mouse flags
      */
-    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+    bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) override;
 
 private:
     /**********************************************************************
@@ -101,7 +95,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -109,7 +103,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**********************************************************************
      * variables
@@ -184,7 +178,4 @@ private:
     };
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOLCORE_SPLITMERGERENDERER_H_INCLUDED
+} // namespace megamol::protein_gl

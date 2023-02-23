@@ -5,20 +5,35 @@
  * All rights reserved.
  */
 
-#ifndef GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED
-#define GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED
+#pragma once
 
+#include <functional>
 #include <memory>
 #include <set>
 #include <vector>
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/Mesh.hpp"
+#include <glowl/BufferObject.hpp>
+#include <glowl/Mesh.hpp>
 
 #include "GPUMaterialCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
+
+class GPURenderTaskCollection;
+
+namespace rendering {
+/**
+ * Utility function for processing gpu render task, i.e.
+ * for rendering geometry with modern (OpenGL 4.3+) features.
+ * Objects for rendering are supplied in batches. Each  render batch can contain
+ * many objects that use the same shader program and also share the same geometry
+ * or at least the same vertex format.
+ * Per render batch, a single call of glMultiDrawElementsIndirect is made. The data
+ * for the indirect draw call is stored and accessed via SSBOs.
+ */
+void processGPURenderTasks(
+    std::shared_ptr<GPURenderTaskCollection> const& rt_collection, glm::mat4 const& view_mx, glm::mat4 const& proj_mx);
+} // namespace rendering
 
 class GPURenderTaskCollection {
 public:
@@ -294,7 +309,4 @@ inline void GPURenderTaskCollection::updatePerFrameDataBuffer(
     }
 }
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED
+} // namespace megamol::mesh_gl

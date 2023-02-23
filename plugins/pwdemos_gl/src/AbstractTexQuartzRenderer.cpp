@@ -8,19 +8,18 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <vector>
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * AbstractTexQuartzRenderer::AbstractTexQuartzRenderer
  */
-AbstractTexQuartzRenderer::AbstractTexQuartzRenderer(void) : AbstractQuartzRenderer(), typeTexture(0) {}
+AbstractTexQuartzRenderer::AbstractTexQuartzRenderer() : AbstractQuartzRenderer(), typeTexture(0) {}
 
 
 /*
  * AbstractTexQuartzRenderer::~AbstractTexQuartzRenderer
  */
-AbstractTexQuartzRenderer::~AbstractTexQuartzRenderer(void) {}
+AbstractTexQuartzRenderer::~AbstractTexQuartzRenderer() {}
 
 
 /*
@@ -88,10 +87,9 @@ void AbstractTexQuartzRenderer::assertTypeTexture(CrystalDataCall& types) {
 /*
  * AbstractTexQuartzRenderer::releaseTypeTexture
  */
-void AbstractTexQuartzRenderer::releaseTypeTexture(void) {
+void AbstractTexQuartzRenderer::releaseTypeTexture() {
     ::glDeleteTextures(1, &this->typeTexture);
     this->typeTexture = 0;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

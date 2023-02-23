@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H
-#define MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H
+#pragma once
 
 #include <memory>
 
@@ -13,7 +12,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 namespace megamol::megamol101_gl {
 
@@ -21,7 +20,7 @@ namespace megamol::megamol101_gl {
  * Renders incoming spheres to the screen, either using GL_POINTS or more
  * sophisticated shaders.
  */
-class SimplestSphereRenderer : public core_gl::view::Renderer3DModuleGL {
+class SimplestSphereRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -94,7 +93,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -104,7 +103,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call) override;
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /** The input data slot. */
     core::CallerSlot sphereDataSlot;
@@ -132,5 +131,3 @@ private:
 };
 
 } // namespace megamol::megamol101_gl
-
-#endif // MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H

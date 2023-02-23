@@ -1,0 +1,47 @@
+name: Docker Images
+
+on:
+  push:
+    branches: [ master ]
+    paths: [ '.ci/docker/**' ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  docker:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - dockerfile_dir: ubuntu
+            image_name: megamol_ci_ubuntu
+          - dockerfile_dir: fedora
+            image_name: megamol_ci_fedora
+    name: Docker-Build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Docker login
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.config.image_name }}
+      - name: Docker build/push
+        uses: docker/build-push-action@v3
+        with:
+          context: .ci/docker/${{ matrix.config.dockerfile_dir }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

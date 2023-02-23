@@ -20,17 +20,15 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <cstdlib>
 #include <cuda_gl_interop.h>
 
@@ -161,55 +159,30 @@ bool StreamlineRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
-    ShaderSource geomSrc;
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    // Load the shader source for the tube shader
-    if (!ssf->MakeShaderSource("streamlines::tube::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("streamlines::tube::geometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for tube shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("streamlines::tube::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
-        return false;
-    }
-    this->tubeShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    if (!this->tubeShader.Link()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to link the streamtube shader");
-        return false;
-    }
+    try {
+        this->tubeShader =
+            core::utility::make_glowl_shader("tubeShader", shader_options, "protein_cuda/streamlines/tube.vert.glsl",
+                "protein_cuda/streamlines/tube.geom.glsl", "protein_cuda/streamlines/tube.frag.glsl");
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(tubeShader->getHandle());
 
-    // Load the shader source for the illuminated streamlines
-    if (!ssf->MakeShaderSource("streamlines::illuminated::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for illuminated streamlines");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("streamlines::illuminated::geometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for illuminated streamlines");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("streamlines::illuminated::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for illuminated streamlines");
-        return false;
-    }
-    this->illumShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+        this->illumShader = core::utility::make_glowl_shader("illumShader", shader_options,
+            "protein_cuda/streamlines/illuminated.vert.glsl", "protein_cuda/streamlines/illuminated.geom.glsl",
+            "protein_cuda/streamlines/illuminated.frag.glsl");
+        glProgramParameteriEXT(illumShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
+        glProgramParameteriEXT(illumShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
+        glProgramParameteriEXT(illumShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(illumShader->getHandle());
 
-    this->illumShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
-    this->illumShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
-    this->illumShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    if (!this->illumShader.Link()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to link the illuminated streamlines shader");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("StreamlineRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -221,15 +194,15 @@ bool StreamlineRenderer::create(void) {
  * StreamlineRenderer::release
  */
 void StreamlineRenderer::release(void) {
-    this->tubeShader.Release();
-    this->illumShader.Release();
+    this->tubeShader.reset();
+    this->illumShader.reset();
 }
 
 
 /*
  * StreamlineRenderer::GetExtents
  */
-bool StreamlineRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool StreamlineRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     // Extent of volume data
 
     protein_calls::VTIDataCall* vtiCall = this->fieldDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
@@ -256,7 +229,7 @@ bool StreamlineRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * StreamlineRenderer::Render
  */
-bool StreamlineRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool StreamlineRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     // Update parameters
     this->updateParams();
@@ -330,14 +303,14 @@ bool StreamlineRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glColor3f(0.0f, 1.0f, 1.0f);
 
     if (this->renderMode == TUBES) {
-        this->tubeShader.Enable();
-        glUniform1fARB(this->tubeShader.ParameterLocation("streamTubeThicknessScl"), this->streamtubesThickness);
-        glUniform1fARB(this->tubeShader.ParameterLocation("minColTexValue"), this->minCol); // TODO Parameter?
-        glUniform1fARB(this->tubeShader.ParameterLocation("maxColTexValue"), this->maxCol); // TODO Paremeter?
+        this->tubeShader->use();
+        glUniform1fARB(this->tubeShader->getUniformLocation("streamTubeThicknessScl"), this->streamtubesThickness);
+        glUniform1fARB(this->tubeShader->getUniformLocation("minColTexValue"), this->minCol); // TODO Parameter?
+        glUniform1fARB(this->tubeShader->getUniformLocation("maxColTexValue"), this->maxCol); // TODO Paremeter?
         if (!this->strLines.RenderLineStripWithColor()) {
             return false;
         }
-        this->tubeShader.Disable();
+        glUseProgram(0);
     } else if (this->renderMode == LINES) {
         glColor3f(StreamlineRenderer::uniformColor.GetX(), StreamlineRenderer::uniformColor.GetY(),
             StreamlineRenderer::uniformColor.GetZ());
@@ -345,11 +318,11 @@ bool StreamlineRenderer::Render(core_gl::view::CallRender3DGL& call) {
             return false;
         }
     } else if (this->renderMode == ILLUMINATED_LINES) {
-        this->illumShader.Enable();
+        this->illumShader->use();
         if (!this->strLines.RenderLineStripWithColor()) {
             return false;
         }
-        this->illumShader.Disable();
+        glUseProgram(0);
     }
 
     glPopMatrix();

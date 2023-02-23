@@ -7,7 +7,6 @@
 
 #include "MMPLDDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -222,7 +221,7 @@ void MMPLDDataSource::Frame::SetData(
 /*
  * MMPLDDataSource::MMPLDDataSource
  */
-MMPLDDataSource::MMPLDDataSource(void)
+MMPLDDataSource::MMPLDDataSource()
         : AnimDataModule()
         , filename("filename", "The path to the MMPLD file to load.")
         , limitMemorySlot("limitMemory", "Limits the memory cache size")
@@ -269,7 +268,7 @@ MMPLDDataSource::MMPLDDataSource(void)
 /*
  * MMPLDDataSource::~MMPLDDataSource
  */
-MMPLDDataSource::~MMPLDDataSource(void) {
+MMPLDDataSource::~MMPLDDataSource() {
     this->Release();
 }
 
@@ -277,7 +276,7 @@ MMPLDDataSource::~MMPLDDataSource(void) {
 /*
  * MMPLDDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* MMPLDDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* MMPLDDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<MMPLDDataSource*>(this));
     return f;
 }
@@ -286,7 +285,7 @@ core::view::AnimDataModule::Frame* MMPLDDataSource::constructFrame(void) const {
 /*
  * MMPLDDataSource::create
  */
-bool MMPLDDataSource::create(void) {
+bool MMPLDDataSource::create() {
     return true;
 }
 
@@ -305,12 +304,12 @@ void MMPLDDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int idx) 
     }
     //printf("Requesting frame %u of %u frames\n", idx, this->FrameCount());
     //printf("Requesting frame %u of %u frames\n", idx, this->FrameCount());
-    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Requesting frame %u of %u frames\n", idx, this->FrameCount());
+    //Log::DefaultLog.WriteInfo( "Requesting frame %u of %u frames\n", idx, this->FrameCount());
     ASSERT(idx < this->FrameCount());
     this->file->Seek(this->frameIdx[idx]);
     if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx], this->fileVersion)) {
         // failed
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMPLD file\n", idx);
+        Log::DefaultLog.WriteError("Unable to read frame %d from MMPLD file\n", idx);
     }
 }
 
@@ -318,7 +317,7 @@ void MMPLDDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int idx) 
 /*
  * MMPLDDataSource::release
  */
-void MMPLDDataSource::release(void) {
+void MMPLDDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;
@@ -350,7 +349,7 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMPLD-File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open MMPLD-File \"%s\".",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -361,7 +360,7 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
 
 #define _ERROR_OUT(MSG)                                    \
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG);       \
+    Log::DefaultLog.WriteError(MSG);                       \
     SAFE_DELETE(this->file);                               \
     this->setFrameCount(1);                                \
     this->initFrameCache(1);                               \
@@ -420,12 +419,12 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
 
     this->setFrameCount(frmCnt);

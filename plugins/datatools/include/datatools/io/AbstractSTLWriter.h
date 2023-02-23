@@ -4,15 +4,13 @@
  * Copyright (C) 2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "mmcore/factories/CallDescription.h"
 
@@ -40,9 +38,7 @@
 
 #include "AbstractSTLWriter.aux"
 
-namespace megamol {
-namespace datatools {
-namespace io {
+namespace megamol::datatools::io {
 /// <summary>
 /// Abstract writer for STL files.
 ///
@@ -151,14 +147,14 @@ public:
     /// <summary>
     /// Destructor
     /// </summary>
-    ~AbstractSTLWriter() {}
+    ~AbstractSTLWriter() override {}
 
 protected:
     /// <summary>
     /// Create the module
     /// </summary>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool create() = 0;
+    bool create() override = 0;
 
     /// <summary>
     /// Copy information from the incoming to the outgoing call
@@ -194,7 +190,7 @@ protected:
     /// <summary>
     /// Release the module
     /// </summary>
-    virtual void release() = 0;
+    void release() override = 0;
 
     /// <summary>
     /// Callback function for requesting information
@@ -550,8 +546,4 @@ private:
     /// Increment for file name suffix
     std::size_t increment;
 };
-} // namespace io
-} // namespace datatools
-} // namespace megamol
-
-#endif // !MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED
+} // namespace megamol::datatools::io

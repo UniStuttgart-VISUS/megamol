@@ -20,7 +20,7 @@ using namespace megamol;
 /*
  * datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume
  */
-datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume(void)
+datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume()
         : AbstractParticleManipulator("outData", "indata")
         , operatorSlot("operator", "what to do with the reference value")
         , valueSlot("ref", "the value for the operator")
@@ -66,7 +66,7 @@ datatools::ParticleVisibilityFromVolume::ParticleVisibilityFromVolume(void)
 /*
  * datatools::ParticleVisibilityFromVolume::~ParticleVisibilityFromVolume
  */
-datatools::ParticleVisibilityFromVolume::~ParticleVisibilityFromVolume(void) {
+datatools::ParticleVisibilityFromVolume::~ParticleVisibilityFromVolume() {
     this->Release();
 }
 

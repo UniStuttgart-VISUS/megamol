@@ -1,29 +1,24 @@
-/*
- * Module.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_MODULE_H_INCLUDED
-#define MEGAMOLCORE_MODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractNamedObjectContainer.h"
 #include <string>
 #include <vector>
 
 #include "FrontendResource.h"
 #include "FrontendResourcesMap.h"
+#include "GlobalValueStore.h"
+#include "ResourceRequest.h"
+#include "mmcore/AbstractNamedObjectContainer.h"
 
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /** forward declaration */
-class CoreInstance;
 class AbstractSlot;
 namespace factories {
 class ModuleDescription;
@@ -34,8 +29,8 @@ class ModuleDescription;
  */
 class Module : public AbstractNamedObjectContainer {
 public:
-    virtual std::vector<std::string> requested_lifetime_resources() {
-        return {"GlobalValueStore"};
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        req.require<frontend_resources::GlobalValueStore>();
     }
 
     friend class ::megamol::core::factories::ModuleDescription;
@@ -71,30 +66,16 @@ public:
     }
 
     /**
-     * Answer whether or not this module supports being used in a
-     * quickstart. Overwrite if you don't want your module to be used in
-     * quickstarts.
-     *
-     * This default implementation returns 'true'
-     *
-     * @return Whether or not this module supports being used in a
-     *         quickstart.
-     */
-    static bool SupportQuickstart(void) {
-        return true;
-    }
-
-    /**
      * Ctor.
      *
      * Be aware of the fact that most of your initialisation code should
      * be placed in 'create' since the ctor cannot fail and important
      * members (such as 'instance') are set after the ctor returns.
      */
-    Module(void);
+    Module();
 
     /** Dtor. */
-    virtual ~Module(void);
+    ~Module() override;
 
     /**
      * Tries to create this module. Do not overwrite this method!
@@ -137,13 +118,13 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark(void);
+    void ClearCleanupMark() override;
 
     /**
      * Performs the cleanup operation by removing and deleteing of all
      * marked objects.
      */
-    virtual void PerformCleanup(void);
+    void PerformCleanup() override;
 
     inline void SetClassName(const char* name) {
         this->className = name;
@@ -157,43 +138,22 @@ public:
         return this->created;
     }
 
+    bool AnyParameterDirty() const;
+
+    void ResetAllDirtyFlags();
+
 protected:
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) = 0;
-
-    /**
-     * Check the configuration for a value for the parameter 'val'.
-     * It checks, in descending order of priority, for occurences
-     * of: [this.GetDemiRootName]-[name], *-[name], [name] and
-     * returns the respective value. If nothing is found,
-     * vislib::StringA::EMPTY is returned.
-     * Caution: This can only work after the module is properly
-     * inserted into the module graph, since otherwise the
-     * DemiRootName cannot be determined reliably
-     *
-     * @param name the name of the sought value
-     *
-     * @return the value or vislib::StringA::EMPTY
-     */
-    vislib::StringA getRelevantConfigValue(vislib::StringA name);
-
-    /**
-     * Gets the instance of the core owning this module.
-     *
-     * @return The instance of the core owning this module.
-     */
-    inline class ::megamol::core::CoreInstance* instance(void) const {
-        return this->GetCoreInstance();
-    }
+    virtual bool create() = 0;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) = 0;
+    virtual void release() = 0;
 
     /**
      * Makes the given slot for this module available.
@@ -236,7 +196,4 @@ std::vector<S*> Module::GetSlots() {
 }
 
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_MODULE_H_INCLUDED */
+} // namespace megamol::core

@@ -10,7 +10,7 @@
 
 namespace megamol::datatools_gl::misc {
 
-ParticleDensityOpacityModule::ParticleDensityOpacityModule(void)
+ParticleDensityOpacityModule::ParticleDensityOpacityModule()
         : Module()
         , putDataSlot("putdata", "Connects from the data consumer")
         , getDataSlot("getdata", "Connects to the data source")
@@ -93,18 +93,18 @@ ParticleDensityOpacityModule::ParticleDensityOpacityModule(void)
 }
 
 
-ParticleDensityOpacityModule::~ParticleDensityOpacityModule(void) {
+ParticleDensityOpacityModule::~ParticleDensityOpacityModule() {
     this->Release();
 }
 
 
-bool ParticleDensityOpacityModule::create(void) {
+bool ParticleDensityOpacityModule::create() {
     // intentionally empty
     return true;
 }
 
 
-void ParticleDensityOpacityModule::release(void) {
+void ParticleDensityOpacityModule::release() {
     // intentionally empty
 }
 

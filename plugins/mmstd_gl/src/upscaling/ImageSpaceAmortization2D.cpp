@@ -6,9 +6,12 @@
 
 #include "ImageSpaceAmortization2D.h"
 
+#include <numeric>
 #include <vector>
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -17,14 +20,40 @@ using megamol::core::utility::log::Log;
 
 ImageSpaceAmortization2D::ImageSpaceAmortization2D()
         : BaseAmortization2D()
+        , amortModeParam("AmortMode", "Amortization Mode")
         , amortLevelParam("AmortLevel", "Level of Amortization")
-        , skipInterpolationParam("SkipInterpolation", "Do not interpolate missing pixels.") {
+        , autoLevelParam("AutoLevel", "Automatic level selection.")
+        , targetFpsParam("TargetFPS", "Target FPS for automatic level selection.")
+        , skipInterpolationParam("debug::SkipInterpolation", "Do not interpolate missing pixels.")
+        , showQuadMarkerParam("debug::ShowQuadMarker", "Mark bottom left pixel of amortization quad.")
+        , resetParam("debug::Reset", "Reset all textures and buffers.")
+        , viewProjMx_(glm::mat4())
+        , lastViewProjMx_(glm::mat4()) {
+
+    amortModeParam << new core::param::EnumParam(MODE_2D);
+    amortModeParam.Param<core::param::EnumParam>()->SetTypePair(MODE_2D, "2D");
+    amortModeParam.Param<core::param::EnumParam>()->SetTypePair(MODE_HORIZONTAL, "Horizontal");
+    amortModeParam.Param<core::param::EnumParam>()->SetTypePair(MODE_VERTICAL, "Vertical");
+    MakeSlotAvailable(&amortModeParam);
 
     amortLevelParam << new core::param::IntParam(1, 1);
     MakeSlotAvailable(&amortLevelParam);
 
+    autoLevelParam << new core::param::BoolParam(false);
+    MakeSlotAvailable(&autoLevelParam);
+
+    targetFpsParam << new core::param::IntParam(15, 1);
+    MakeSlotAvailable(&targetFpsParam);
+
     skipInterpolationParam << new core::param::BoolParam(false);
     MakeSlotAvailable(&skipInterpolationParam);
+
+    showQuadMarkerParam << new core::param::BoolParam(false);
+    MakeSlotAvailable(&showQuadMarkerParam);
+
+    resetParam << new core::param::ButtonParam();
+    resetParam.SetUpdateCallback(&ImageSpaceAmortization2D::resetCallback);
+    MakeSlotAvailable(&resetParam);
 }
 
 ImageSpaceAmortization2D::~ImageSpaceAmortization2D() {
@@ -37,7 +66,7 @@ bool ImageSpaceAmortization2D::createImpl(const msf::ShaderFactoryOptionsOpenGL&
             "mmstd_gl/upscaling/image_space_amortization.vert.glsl",
             "mmstd_gl/upscaling/image_space_amortization.frag.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("ImageSpaceAmortization2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("ImageSpaceAmortization2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -81,19 +110,106 @@ void ImageSpaceAmortization2D::releaseImpl() {
     // nothing to do
 }
 
-bool ImageSpaceAmortization2D::renderImpl(
-    core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) {
+bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& nextRendererCall) {
 
     auto const& fbo = call.GetFramebuffer();
     auto const& cam = call.GetCamera();
     auto const& bg = call.BackgroundColor();
 
-    const int a = amortLevelParam.Param<core::param::IntParam>()->Value();
+    const auto m = static_cast<AmortMode>(amortModeParam.Param<core::param::EnumParam>()->Value());
+    int aParam = amortLevelParam.Param<core::param::IntParam>()->Value();
+
+    // auto-scaling algorithm params
+    constexpr int minFramesAfterLevelChange = 10;
+    constexpr int frameTimeBufferSize = 100;
+    constexpr float targetBiasPercentage = 0.05f;
+
+    const bool autoAmort = autoLevelParam.Param<core::param::BoolParam>()->Value();
+    if (autoAmort) {
+        amortLevelParam.Param<core::param::IntParam>()->SetGUIReadOnly(true);
+        const int targetFps = targetFpsParam.Param<core::param::IntParam>()->Value();
+        const float targetTimeMs = 1000.0f / static_cast<float>(targetFps);
+
+        auto now = std::chrono::steady_clock::now();
+        if (lastTime_.has_value()) {
+            const float frame_time =
+                std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(now - lastTime_.value()).count();
+            lastFrameTimes_.push_back(frame_time);
+
+            // TODO this is a bad operation for std::vector
+            while (lastFrameTimes_.size() > frameTimeBufferSize) {
+                lastFrameTimes_.erase(lastFrameTimes_.begin());
+            }
+
+            if (lastFrameTimes_.size() >= minFramesAfterLevelChange) {
+                auto avg_frame_time = std::reduce(lastFrameTimes_.begin(), lastFrameTimes_.end()) /
+                                      static_cast<float>(lastFrameTimes_.size());
+
+                if (lastFrameTimeAvg_.has_value()) {
+                    const auto a_was_inc = std::get<0>(lastFrameTimeAvg_.value());
+                    const auto lastT = std::get<1>(lastFrameTimeAvg_.value());
+                    if (a_was_inc) {
+                        frameTimePrediction_ = avg_frame_time / lastT;
+                    } else {
+                        frameTimePrediction_ = lastT / avg_frame_time;
+                    }
+                    lastFrameTimeAvg_ = std::nullopt;
+                    std::cout << frameTimePrediction_ << std::endl;
+                }
+                frameTimePrediction_ = std::clamp(frameTimePrediction_, 0.25f, 0.90f);
+
+                int a = aParam;
+                if (avg_frame_time > targetTimeMs) {
+                    float expected_frame_time = avg_frame_time * frameTimePrediction_;
+                    float biasedTargetTime = targetTimeMs;
+                    if (expected_frame_time < targetTimeMs) {
+                        biasedTargetTime = targetTimeMs + targetBiasPercentage * (avg_frame_time - expected_frame_time);
+                    }
+                    float dist_exp = std::abs(expected_frame_time - biasedTargetTime);
+                    float dist_cur = std::abs(avg_frame_time - biasedTargetTime);
+                    if (dist_exp < dist_cur) {
+                        a++;
+                    }
+                } else {
+                    auto expected_frame_time = avg_frame_time / frameTimePrediction_;
+                    float biasedTargetTime = targetTimeMs;
+                    if (expected_frame_time > targetTimeMs) {
+                        biasedTargetTime = targetTimeMs - targetBiasPercentage * (expected_frame_time - avg_frame_time);
+                    }
+                    auto dist_exp = std::abs(expected_frame_time - biasedTargetTime);
+                    auto dist_cur = std::abs(avg_frame_time - biasedTargetTime);
+                    if (dist_exp < dist_cur) {
+                        a--;
+                    }
+                }
+
+                // TODO do we want to add maximum convergence time constraint as user param here?
+
+                a = std::clamp(a, 1, 16);
+                if (a != aParam) {
+                    lastFrameTimeAvg_ = std::make_tuple(a > aParam, avg_frame_time);
+                    aParam = a;
+                    amortLevelParam.Param<core::param::IntParam>()->SetValue(aParam);
+                    lastFrameTimes_.clear();
+                }
+            }
+        }
+        lastTime_ = now;
+    } else {
+        amortLevelParam.Param<core::param::AbstractParam>()->SetGUIReadOnly(false);
+        lastTime_ = std::nullopt;
+        lastFrameTimes_.clear();
+    }
+
+    const glm::ivec2 a((m == MODE_VERTICAL) ? 1 : aParam, (m == MODE_HORIZONTAL) ? 1 : aParam);
     const int w = fbo->getWidth();
     const int h = fbo->getHeight();
 
     if (a != oldAmortLevel_ || w != oldWidth_ || h != oldHeight_) {
-        updateSize(a, w, h);
+        if (w != oldWidth_ || h != oldHeight_) {
+            updateTextureSize(w, h);
+        }
+        updateAmortSize(a, w, h);
         oldAmortLevel_ = a;
         oldWidth_ = w;
         oldHeight_ = h;
@@ -118,19 +234,16 @@ bool ImageSpaceAmortization2D::renderImpl(
     return true;
 }
 
-void ImageSpaceAmortization2D::updateSize(int a, int w, int h) {
+bool ImageSpaceAmortization2D::resetCallback(core::param::ParamSlot& slot) {
+    oldAmortLevel_ = glm::ivec2(-1);
+    oldWidth_ = -1;
+    oldHeight_ = -1;
+    return true;
+}
+
+void ImageSpaceAmortization2D::updateTextureSize(int w, int h) {
     viewProjMx_ = glm::mat4(1.0f);
     lastViewProjMx_ = glm::mat4(1.0f);
-    camOffsets_.resize(a * a);
-    for (int j = 0; j < a; j++) {
-        for (int i = 0; i < a; i++) {
-            const float x = static_cast<float>(2 * i - a + 1) / static_cast<float>(w);
-            const float y = static_cast<float>(2 * j - a + 1) / static_cast<float>(h);
-            camOffsets_[j * a + i] = glm::vec3(x, y, 0.0f);
-        }
-    }
-
-    lowResFBO_->resize((w + a - 1) / a, (h + a - 1) / a); // Integer division with round up.
 
     texLayout_.width = w;
     texLayout_.height = h;
@@ -143,10 +256,23 @@ void ImageSpaceAmortization2D::updateSize(int a, int w, int h) {
     const std::vector<float> posInit(2 * w * h, std::numeric_limits<float>::lowest()); // RG32F
     distTexRead_ = std::make_unique<glowl::Texture2D>("distTexRead", distTexLayout_, posInit.data());
     distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexWrite", distTexLayout_, posInit.data());
+}
+
+void ImageSpaceAmortization2D::updateAmortSize(glm::ivec2 a, int w, int h) {
+    camOffsets_.resize(a.x * a.y);
+    for (int j = 0; j < a.y; j++) {
+        for (int i = 0; i < a.x; i++) {
+            const float x = static_cast<float>(2 * i - a.x + 1) / static_cast<float>(w);
+            const float y = static_cast<float>(2 * j - a.y + 1) / static_cast<float>(h);
+            camOffsets_[j * a.x + i] = glm::vec3(x, y, 0.0f);
+        }
+    }
+
+    lowResFBO_->resize((w + a.x - 1) / a.x, (h + a.y - 1) / a.y); // Integer division with round up.
 
     samplingSequence_.clear();
 
-    const int nextPowerOfTwoExp = static_cast<int>(std::ceil(std::log2(a)));
+    const int nextPowerOfTwoExp = static_cast<int>(std::ceil(std::log2(std::max(a.x, a.y))));
     const int nextPowerOfTwoVal = static_cast<int>(std::pow(2, nextPowerOfTwoExp));
 
     std::array<std::array<int, 2>, 4> offsetPattern{{{0, 0}, {1, 1}, {0, 1}, {1, 0}}};
@@ -163,8 +289,8 @@ void ImageSpaceAmortization2D::updateSize(int a, int w, int h) {
             x += offsetPattern[levelIndex][0] * offsetLength[j];
             y += offsetPattern[levelIndex][1] * offsetLength[j];
         }
-        if (x < a && y < a) {
-            samplingSequence_.push_back(x + y * a);
+        if (x < a.x && y < a.y) {
+            samplingSequence_.push_back(x + y * a.x);
         }
     }
 
@@ -172,7 +298,7 @@ void ImageSpaceAmortization2D::updateSize(int a, int w, int h) {
     frameIdx_ = samplingSequence_[samplingSequencePosition_];
 }
 
-void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
+void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, int height, glm::ivec2 a) {
     auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
     auto pose = cam.get<core::view::Camera::Pose>();
 
@@ -183,11 +309,11 @@ void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, i
     float wOffs = 0.5f * frustumWidth * camOffsets_[frameIdx_].x;
     float hOffs = 0.5f * frustumHeight * camOffsets_[frameIdx_].y;
 
-    const int lowResWidth = (width + a - 1) / a;
-    const int lowResHeight = (height + a - 1) / a;
+    const int lowResWidth = (width + a.x - 1) / a.x;
+    const int lowResHeight = (height + a.y - 1) / a.y;
 
-    const float wAdj = static_cast<float>(lowResWidth * a) / static_cast<float>(width);
-    const float hAdj = static_cast<float>(lowResHeight * a) / static_cast<float>(height);
+    float wAdj = static_cast<float>(lowResWidth * a.x) / static_cast<float>(width);
+    float hAdj = static_cast<float>(lowResHeight * a.y) / static_cast<float>(height);
 
     wOffs += 0.5f * (wAdj - 1.0f) * frustumWidth;
     hOffs += 0.5f * (hAdj - 1.0f) * frustumHeight;
@@ -201,7 +327,7 @@ void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, i
 }
 
 void ImageSpaceAmortization2D::reconstruct(
-    std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a) {
+    std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, glm::ivec2 a) {
     int w = fbo->getWidth();
     int h = fbo->getHeight();
 
@@ -224,6 +350,8 @@ void ImageSpaceAmortization2D::reconstruct(
     shader_->setUniform("frustumHeight", intrinsics.frustrum_height.value());
     shader_->setUniform(
         "skipInterpolation", static_cast<int>(skipInterpolationParam.Param<core::param::BoolParam>()->Value()));
+    shader_->setUniform(
+        "showQuadMarker", static_cast<int>(showQuadMarkerParam.Param<core::param::BoolParam>()->Value()));
 
     glActiveTexture(GL_TEXTURE0);
     lowResFBO_->bindColorbuffer(0);
@@ -238,7 +366,7 @@ void ImageSpaceAmortization2D::reconstruct(
 
     glUseProgram(0);
 
-    samplingSequencePosition_ = (samplingSequencePosition_ + 1) % (a * a);
+    samplingSequencePosition_ = (samplingSequencePosition_ + 1) % samplingSequence_.size();
     frameIdx_ = samplingSequence_[samplingSequencePosition_];
     texRead_.swap(texWrite_);
     distTexRead_.swap(distTexWrite_);

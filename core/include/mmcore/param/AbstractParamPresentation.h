@@ -1,27 +1,21 @@
-/*
- * AbstractParamPresentation.h
- *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED
-
+#pragma once
 
 #include <map>
 #include <string>
 
-#include "mmcore/utility/JSONHelper.h"
-#include "mmcore/utility/log/Log.h"
+#include <nlohmann/json.hpp>
 
+#include "mmcore/utility/log/Log.h"
 
 #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates")
 
-
-namespace megamol {
-namespace core {
-namespace param {
+namespace megamol::core::param {
 
 class AbstractParamPresentation {
 public:
@@ -78,7 +72,7 @@ public:
      *
      * @return GUI visibility
      */
-    inline bool IsGUIVisible(void) const {
+    inline bool IsGUIVisible() const {
         return this->visible;
     }
 
@@ -96,7 +90,7 @@ public:
      *
      * @return GUI accessibility
      */
-    inline bool IsGUIReadOnly(void) const {
+    inline bool IsGUIReadOnly() const {
         return this->read_only;
     }
 
@@ -123,7 +117,7 @@ public:
      *
      * @return Parameter presentation.
      */
-    inline AbstractParamPresentation::Presentation GetGUIPresentation(void) const {
+    inline AbstractParamPresentation::Presentation GetGUIPresentation() const {
         return this->presentation;
     }
 
@@ -141,7 +135,7 @@ public:
      *
      * @return The presentation name map.
      */
-    const std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap(void) {
+    const std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap() const {
         return this->presentation_name_map;
     }
 
@@ -152,8 +146,8 @@ public:
      *
      * @return The human readable name of the given presentation.
      */
-    std::string GetPresentationName(AbstractParamPresentation::Presentation present) {
-        return this->presentation_name_map[present];
+    std::string GetPresentationName(AbstractParamPresentation::Presentation const present) const {
+        return this->presentation_name_map.at(present);
     }
 
     /**
@@ -171,10 +165,9 @@ public:
     bool StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname);
     bool StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
 
-protected:
-    AbstractParamPresentation(void);
+    AbstractParamPresentation();
 
-    virtual ~AbstractParamPresentation(void) = default;
+    virtual ~AbstractParamPresentation() = default;
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -199,7 +192,6 @@ private:
     std::map<Presentation, std::string> presentation_name_map;
 };
 
-
 inline AbstractParamPresentation::Presentation operator|(
     AbstractParamPresentation::Presentation a, AbstractParamPresentation::Presentation b) {
     return static_cast<AbstractParamPresentation::Presentation>(static_cast<int>(a) | static_cast<int>(b));
@@ -210,9 +202,4 @@ inline AbstractParamPresentation::Presentation operator&(
     return static_cast<AbstractParamPresentation::Presentation>(static_cast<int>(a) & static_cast<int>(b));
 }
 
-
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED */
+} // namespace megamol::core::param

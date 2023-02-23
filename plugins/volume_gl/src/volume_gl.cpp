@@ -4,20 +4,20 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "RaycastVolumeRenderer.h"
+#include "SurfaceLICRenderer.h"
 #include "VolumeSliceRenderer.h"
 
 namespace megamol::volume_gl {
-class VolumeGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class VolumeGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(VolumeGLPluginInstance)
 
 public:
     VolumeGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "volume_gl", "Provides modules for volume rendering"){};
+            : megamol::core::factories::AbstractPluginInstance("volume_gl", "Provides modules for volume rendering"){};
 
     ~VolumeGLPluginInstance() override = default;
 
@@ -27,6 +27,7 @@ public:
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::RaycastVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::VolumeSliceRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::SurfaceLICRenderer>();
 
         // register calls
     }

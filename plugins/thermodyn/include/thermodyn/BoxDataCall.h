@@ -3,12 +3,11 @@
 #include <string>
 #include <vector>
 
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace thermodyn {
+namespace megamol::thermodyn {
 
 class BoxDataCall : public core::AbstractGetData3DCall {
 public:
@@ -26,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BoxDataCall";
     }
 
@@ -35,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Transports boxes.";
     }
 
@@ -44,7 +43,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -74,5 +73,4 @@ private:
 /** Call Descriptor.  */
 typedef core::factories::CallAutoDescription<BoxDataCall> BoxDataCallDescription;
 
-} // end namespace thermodyn
-} // end namespace megamol
+} // namespace megamol::thermodyn

@@ -7,15 +7,14 @@
 
 #pragma once
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
 #else
 using MPI_Comm = int;
 #define MPI_COMM_NULL 0x04000000
 #endif
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct MPI_Context {
     MPI_Comm mpi_comm = MPI_COMM_NULL;
@@ -28,5 +27,4 @@ struct MPI_Context {
     };
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

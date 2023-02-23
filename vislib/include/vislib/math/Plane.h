@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_PLANE_H_INCLUDED
-#define VISLIB_PLANE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,8 +13,7 @@
 #include "vislib/math/AbstractPlane.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * Objects of this class represent a plane with cartesian coordinates.
@@ -32,7 +27,7 @@ public:
     /**
      * Ctor.
      */
-    inline Plane(void) {
+    inline Plane() {
         this->parameters[Super::IDX_A] = static_cast<T>(0);
         this->parameters[Super::IDX_B] = static_cast<T>(0);
         this->parameters[Super::IDX_C] = static_cast<T>(0);
@@ -107,7 +102,7 @@ public:
     }
 
     /** Dtor. */
-    ~Plane(void);
+    ~Plane();
 
     /**
      * Assignment.
@@ -158,12 +153,10 @@ Plane<T>::Plane(const AbstractPlane<Tp, Sp>& rhs) {
  * Plane<T>::~Plane
  */
 template<class T>
-Plane<T>::~Plane(void) {}
+Plane<T>::~Plane() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_PLANE_H_INCLUDED */

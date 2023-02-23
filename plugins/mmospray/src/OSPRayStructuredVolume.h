@@ -9,8 +9,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmospray/AbstractOSPRayStructure.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class OSPRayStructuredVolume : public AbstractOSPRayStructure {
 
@@ -20,7 +19,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OSPRayStructuredVolume";
     }
 
@@ -29,7 +28,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Creator for OSPRay structured volumes.";
     }
 
@@ -38,22 +37,22 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Dtor. */
-    virtual ~OSPRayStructuredVolume(void);
+    ~OSPRayStructuredVolume() override;
 
     /** Ctor. */
-    OSPRayStructuredVolume(void);
+    OSPRayStructuredVolume();
 
 protected:
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
 
-    virtual bool readData(core::Call& call);
-    virtual bool getExtends(core::Call& call);
+    bool readData(core::Call& call) override;
+    bool getExtends(core::Call& call) override;
 
     bool InterfaceIsDirty();
 
@@ -72,5 +71,4 @@ protected:
     megamol::core::param::ParamSlot IsoValue;
 };
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

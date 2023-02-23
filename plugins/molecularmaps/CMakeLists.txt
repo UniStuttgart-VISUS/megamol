@@ -5,14 +5,17 @@
 
 megamol_plugin(molecularmaps
   BUILD_DEFAULT OFF
-  DEPENDS_CUDA
+  DEPENDS_FEATURES
+    cuda
   DEPENDS_PLUGINS
+    mmstd
+    mmstd_gl
     protein_calls
     geometry_calls
-  DEPENDS_EXTERNALS
-    Eigen)
+    geometry_calls_gl)
 
 if (molecularmaps_PLUGIN_ENABLED)
+  find_package(Eigen3 CONFIG REQUIRED)
 
   if(NOT CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
     message(FATAL_ERROR "Molecularmaps currently only supports CUDA Version 11 or above. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Molecularmaps plugin or install a correct version of CUDA." )
@@ -20,8 +23,6 @@ if (molecularmaps_PLUGIN_ENABLED)
 
   set(CMAKE_CUDA_ARCHITECTURES 52)
   set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
-
-  get_filename_component(cuda_compiler_directory "${CMAKE_CUDA_COMPILER}" DIRECTORY)
 
   file(GLOB_RECURSE cuda_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cu")
   file(GLOB_RECURSE cuda_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cuh")
@@ -35,7 +36,7 @@ if (molecularmaps_PLUGIN_ENABLED)
   set_target_properties(molecularmaps PROPERTIES CUDA_STANDARD 17)
 
   target_include_directories(molecularmaps PUBLIC "src/helper_includes")
-  target_link_libraries(molecularmaps PRIVATE vislib glad)
+  target_link_libraries(molecularmaps PRIVATE vislib Eigen3::Eigen)
 
   if(NOT MSVC)
     get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)

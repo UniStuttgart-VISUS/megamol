@@ -14,7 +14,7 @@ megamol::mesh::UIElement::UIElement()
 
 megamol::mesh::UIElement::~UIElement() {}
 
-bool megamol::mesh::UIElement::create(void) {
+bool megamol::mesh::UIElement::create() {
     return true;
 }
 

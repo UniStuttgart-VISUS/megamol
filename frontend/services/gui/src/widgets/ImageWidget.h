@@ -5,18 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
-#define MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
 #pragma once
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 #include "mmcore_gl/utility/RenderUtils.h"
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
 #include "widgets/HoverToolTip.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 template<typename T>
 struct CPUTexture2D {
@@ -34,7 +31,7 @@ public:
     ImageWidget();
     ~ImageWidget() = default;
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 
     bool IsLoaded() {
         if (this->tex_ptr == nullptr)
@@ -89,7 +86,7 @@ private:
 
     HoverToolTip tooltip;
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     std::shared_ptr<glowl::Texture2D> tex_ptr = nullptr;
     std::shared_ptr<glowl::Texture2D> toggle_tex_ptr = nullptr;
 #else
@@ -99,7 +96,7 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 
     bool isToggleLoaded() {
         if (this->toggle_tex_ptr == nullptr)
@@ -131,7 +128,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
+} // namespace megamol::gui

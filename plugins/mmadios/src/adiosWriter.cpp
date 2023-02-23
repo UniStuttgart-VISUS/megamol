@@ -1,5 +1,5 @@
 #include "adiosWriter.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
+#include "cluster/mpi/MpiCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -9,10 +9,9 @@
 #include "vislib/sys/SystemInformation.h"
 #include <chrono>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
-adiosWriter::adiosWriter(void)
+adiosWriter::adiosWriter()
         : core::AbstractDataWriter()
         , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
         , filename("filename", "The path to the ADIOS-based file to load.")
@@ -43,7 +42,7 @@ adiosWriter::adiosWriter(void)
     this->MakeSlotAvailable(&this->callRequestMpi);
 }
 
-adiosWriter::~adiosWriter(void) {
+adiosWriter::~adiosWriter() {
 
     if (writer) {
         writer.Close();
@@ -55,8 +54,8 @@ adiosWriter::~adiosWriter(void) {
 /*
  * adiosWriter::create
  */
-bool adiosWriter::create(void) {
-#ifdef WITH_MPI
+bool adiosWriter::create() {
+#ifdef MEGAMOL_USE_MPI
     MpiInitialized = this->initMPI();
     try {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Initializing with MPI");
@@ -79,7 +78,7 @@ bool adiosWriter::create(void) {
         io->SetEngine("BP3");
 
     } catch (std::invalid_argument& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosWriter] Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -88,7 +87,7 @@ bool adiosWriter::create(void) {
 #endif
         megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
     } catch (std::ios_base::failure& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosWriter] IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -97,7 +96,7 @@ bool adiosWriter::create(void) {
 #endif
         megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
     } catch (std::exception& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosWriter] Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -112,7 +111,7 @@ bool adiosWriter::create(void) {
 /*
  * adiosWriter::release
  */
-void adiosWriter::release(void) { /* empty */
+void adiosWriter::release() { /* empty */
 }
 
 /*
@@ -127,7 +126,7 @@ bool adiosWriter::getCapabilities(core::DataWriterCtrlCall& call) {
  */
 bool adiosWriter::initMPI() {
     bool retval = false;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (this->mpi_comm_ == MPI_COMM_NULL) {
         VLTRACE(vislib::Trace::LEVEL_INFO, "[adiosWriter] Need to initialize MPI\n");
         auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
@@ -169,7 +168,7 @@ bool adiosWriter::initMPI() {
 
     /* Determine success of the whole operation. */
     retval = (this->mpi_comm_ != MPI_COMM_NULL);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
     return retval;
 }
 
@@ -231,7 +230,7 @@ bool adiosWriter::run() {
 
                     localDim = shape;
                     globalDim = localDim;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
                     offsets.resize(shape.size());
                     // offsets
                     auto mpierror =
@@ -366,7 +365,7 @@ bool adiosWriter::run() {
                 "[adiosWriter] Time spent for writing frame: %d ms", duration);
 
         } catch (std::invalid_argument& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosWriter] Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -375,7 +374,7 @@ bool adiosWriter::run() {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::ios_base::failure& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosWriter] IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -384,7 +383,7 @@ bool adiosWriter::run() {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::exception& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosWriter] Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -399,7 +398,7 @@ bool adiosWriter::run() {
 }
 
 
-vislib::StringA adiosWriter::getCommandLine(void) {
+vislib::StringA adiosWriter::getCommandLine() {
     vislib::StringA retval;
 
 #ifdef _WIN32
@@ -425,5 +424,4 @@ vislib::StringA adiosWriter::getCommandLine(void) {
     return retval;
 }
 
-} // namespace adios
-} // namespace megamol
+} // namespace megamol::adios

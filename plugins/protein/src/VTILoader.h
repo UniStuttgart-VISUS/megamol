@@ -8,16 +8,12 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTILOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_VTILOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/VTKImageData.h"
 #include "vislib/Map.h"
@@ -35,8 +31,7 @@ typedef vislib::math::Cuboid<float> Cubef;
 
 typedef unsigned int uint;
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Class to load the *.vti data format used in the Visualization Toolkit.
@@ -53,17 +48,17 @@ namespace protein {
 class VTILoader : public megamol::core::view::AnimDataModule {
 public:
     /** Ctor */
-    VTILoader(void);
+    VTILoader();
 
     /** Dtor */
-    virtual ~VTILoader(void);
+    ~VTILoader() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VTILoader";
     }
 
@@ -72,7 +67,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Loader module for *.vti file format used by the Visualization \
                 Toolkit.";
     }
@@ -82,7 +77,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -92,12 +87,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void);
+    void release() override;
 
     /**
      * Call callback to get the data
@@ -148,7 +143,7 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual Frame* constructFrame(void) const;
+    Frame* constructFrame() const override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -159,7 +154,7 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(Frame* frame, unsigned int idx);
+    void loadFrame(Frame* frame, unsigned int idx) override;
 
 private:
     /**
@@ -171,7 +166,7 @@ private:
         Frame(megamol::core::view::AnimDataModule& owner);
 
         /** Dtor */
-        virtual ~Frame(void);
+        ~Frame() override;
 
         /**
          * Answers a const pointer to the frame's data.
@@ -431,13 +426,13 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!
@@ -513,7 +508,4 @@ private:
 };
 
 
-} // end namespace protein
-} // end namespace megamol
-
-#endif // MMPROTEINPLUGIN_VTILOADER_H_INCLUDED
+} // namespace megamol::protein

@@ -3,11 +3,7 @@
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
-#ifndef VISLIB_THREAD_H_INCLUDED
-#define VISLIB_THREAD_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -21,8 +17,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Implements a platform independent interface for system threads.
@@ -45,7 +40,7 @@ public:
      *
      * @eturn The ID of the calling thread.
      */
-    static inline DWORD CurrentID(void) {
+    static inline DWORD CurrentID() {
 #ifdef _WIN32
         return ::GetCurrentThreadId();
 #else  /* _WIN32 */
@@ -81,7 +76,7 @@ public:
      * @throws SystemException If the operation could not be completed
      *                         successfully (Linux only).
      */
-    static void Reschedule(void);
+    static void Reschedule();
     // Implementation note: Cannot be named Yield() because of macro with
     // the same name in Windows API.
 
@@ -103,7 +98,7 @@ public:
     explicit Thread(Runnable::Function runnableFunc);
 
     /** Dtor. */
-    virtual ~Thread(void);
+    virtual ~Thread();
 
     /**
      * Answer the exit code of the thread.
@@ -112,7 +107,7 @@ public:
      *
      * @throws SystemException If the exit code could not be determined.
      */
-    DWORD GetExitCode(void) const;
+    DWORD GetExitCode() const;
 
     /**
      * Answer a pointer to the Runnable executed by this thread. If the
@@ -121,7 +116,7 @@ public:
      *
      * @return A pointer to the Runnable or NULL, if a function is used.
      */
-    inline const Runnable* GetRunnable(void) const {
+    inline const Runnable* GetRunnable() const {
         return this->runnable;
     }
 
@@ -130,7 +125,7 @@ public:
      *
      * @return true, if the thread is currently running, false otherwise.
      */
-    bool IsRunning(void) const;
+    bool IsRunning() const;
 
     /**
      * Waits for the thread to finish. If the thread was not started, the
@@ -143,7 +138,7 @@ public:
      *
      * @throws SystemException If waiting for the thread failed.
      */
-    void Join(void);
+    void Join();
 
     /**
      * Start the thread.
@@ -311,10 +306,8 @@ private:
     ThreadFuncParam threadFuncParam;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_THREAD_H_INCLUDED */

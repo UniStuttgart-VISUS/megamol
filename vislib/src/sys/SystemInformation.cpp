@@ -48,7 +48,7 @@ DWORD vislib::sys::SystemInformation::AllocationGranularity(void) {
 /*
  * vislib::sys::SystemInformation::AvailableMemorySize
  */
-UINT64 vislib::sys::SystemInformation::AvailableMemorySize(void) {
+UINT64 vislib::sys::SystemInformation::AvailableMemorySize() {
 #ifdef _WIN32
     /*
      * It's necessary to call the ex version to get information on machines
@@ -161,7 +161,7 @@ void vislib::sys::SystemInformation::ComputerName(vislib::StringW& outName) {
 /*
  * vislib::sys::SystemInformation::PageSize
  */
-DWORD vislib::sys::SystemInformation::PageSize(void) {
+DWORD vislib::sys::SystemInformation::PageSize() {
 #ifdef _WIN32
     SYSTEM_INFO si;
     ::GetSystemInfo(&si);
@@ -183,7 +183,7 @@ DWORD vislib::sys::SystemInformation::PageSize(void) {
 /*
  * vislib::sys::SystemInformation::PhysicalMemorySize
  */
-UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
+UINT64 vislib::sys::SystemInformation::PhysicalMemorySize() {
 #ifdef _WIN32
     /*
      * It's necessary to call the ex version to get information on machines
@@ -232,7 +232,7 @@ UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
 /*
  * vislib::sys::SystemInformation::ProcessorCount
  */
-unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
+unsigned int vislib::sys::SystemInformation::ProcessorCount() {
 #ifdef _WIN32
     SYSTEM_INFO si;
     ::GetSystemInfo(&si);
@@ -283,7 +283,7 @@ unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
 /*
  * vislib::sys::SystemInformation::SelfSystemType
  */
-vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SelfSystemType(void) {
+vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SelfSystemType() {
 #ifdef _WIN32
     return OSTYPE_WINDOWS;
 #else
@@ -295,7 +295,7 @@ vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SelfSyste
 /*
  * vislib::sys::SystemInformation::SelfWordSize
  */
-unsigned int vislib::sys::SystemInformation::SelfWordSize(void) {
+unsigned int vislib::sys::SystemInformation::SelfWordSize() {
 #ifdef _WIN32
 #ifdef _WIN64
     return 64;
@@ -316,7 +316,7 @@ unsigned int vislib::sys::SystemInformation::SelfWordSize(void) {
 /*
  * vislib::sys::SystemInformation::SystemType
  */
-vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemType(void) {
+vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemType() {
     /* I'm currently very sure that the system type can be determined by the application type */
 #ifdef _WIN32
     return OSTYPE_WINDOWS;
@@ -387,7 +387,7 @@ void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor, DWORD& outMi
 /*
  * vislib::sys::SystemInformation::SystemWordSize
  */
-unsigned int vislib::sys::SystemInformation::SystemWordSize(void) {
+unsigned int vislib::sys::SystemInformation::SystemWordSize() {
 #ifdef _WIN32
     DynamicFunctionPointer<void(WINAPI*)(SYSTEM_INFO*)> gnsi("kernel32", "GetNativeSystemInfo");
     SYSTEM_INFO info;
@@ -566,7 +566,7 @@ BOOL CALLBACK vislib::sys::SystemInformation::findPrimaryMonitorProc(
 /*
  * vislib::sys::SystemInformation::SystemInformation
  */
-vislib::sys::SystemInformation::SystemInformation(void) {
+vislib::sys::SystemInformation::SystemInformation() {
     throw vislib::UnsupportedOperationException("SystemInformation ctor", __FILE__, __LINE__);
 }
 
@@ -582,6 +582,6 @@ vislib::sys::SystemInformation::SystemInformation(const vislib::sys::SystemInfor
 /*
  * vislib::sys::SystemInformation::~SystemInformation
  */
-vislib::sys::SystemInformation::~SystemInformation(void) {
+vislib::sys::SystemInformation::~SystemInformation() {
     throw vislib::UnsupportedOperationException("SystemInformation dtor", __FILE__, __LINE__);
 }

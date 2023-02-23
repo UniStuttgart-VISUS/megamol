@@ -7,19 +7,21 @@ pr:
 
 variables:
   defaultConfig: >-
-    -DBUILD_PLUGIN_ASTRO=ON
-    -DBUILD_PLUGIN_ASTRO_GL=ON
-    -DBUILD_PLUGIN_IMAGE_GL=ON
-    -DBUILD_PLUGIN_MEGAMOL101_GL=ON
-    -DBUILD_PLUGIN_MMADIOS=ON
-    -DBUILD_PLUGIN_MMVTKM=ON
-    -DBUILD_PLUGIN_MMVTKM_GL=ON
-    -DBUILD_PLUGIN_REMOTE=OFF
+    -DMEGAMOL_WARNING_LEVEL="Off"
+    -DMEGAMOL_PLUGIN_MEGAMOL101_GL=ON
+    -DMEGAMOL_USE_CGAL=ON
+    -DMEGAMOL_USE_PROFILING=ON
+    -DMEGAMOL_USE_VTKM=ON
   nonGlConfig: >-
-    -DENABLE_GL=OFF
+    -DMEGAMOL_WARNING_LEVEL="Off"
+    -DMEGAMOL_USE_OPENGL=OFF
 
 jobs:
 - job: Windows
+  variables:
+    VCPKG_DEFAULT_BINARY_CACHE: '$(Agent.BuildDirectory)\vcpkg_cache\archives'
+    X_VCPKG_REGISTRIES_CACHE: '$(Agent.BuildDirectory)\vcpkg_cache\registries'
+
   strategy:
     matrix:
       'VS2019 Release':
@@ -43,62 +45,80 @@ jobs:
     - VisualStudio_16.0
 
   steps:
-  - template: .ci/check-pr-labels-step.yml
+  - template: .ci/check-pr-labels-step-pwsh.yml
+  - powershell: |
+      New-Item -ItemType "directory" -Path "$Env:VCPKG_DEFAULT_BINARY_CACHE" -Force
+      New-Item -ItemType "directory" -Path "$Env:X_VCPKG_REGISTRIES_CACHE" -Force
+    displayName: 'Setup vcpkg cache directories'
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs)'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs) -DMEGAMOL_DOWNLOAD_VCPKG_CACHE=ON'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
       cmakeArgs: '--build . --config $(configuration)'
 
 - job: Linux
+  variables:
+    VCPKG_DEFAULT_BINARY_CACHE: '$(Agent.BuildDirectory)/vcpkg_cache/archives'
+    X_VCPKG_REGISTRIES_CACHE: '$(Agent.BuildDirectory)/vcpkg_cache/registries'
+
   strategy:
     matrix:
       ## Temporarily disabled until more CI machines are available!
-      #'GCC9 / Make / Release':
-      #  cCompiler: gcc-9
-      #  cxxCompiler: g++-9
+      #'GCC11 / Make / Release':
+      #  dockerImage: megamol_ci_ubuntu
+      #  cCompiler: gcc-11
+      #  cxxCompiler: g++-11
       #  configuration: Release
       #  generator: 'Unix Makefiles'
       #  cmakeExtraArgs: '$(defaultConfig)'
-      'GCC9 / Make / Debug':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
+      'GCC11 / Make / Debug':
+        dockerImage: megamol_ci_ubuntu
+        cCompiler: gcc-11
+        cxxCompiler: g++-11
         configuration: Debug
         generator: 'Unix Makefiles'
         cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily disabled until more CI machines are available!
-      #'GCC9 / Ninja / Release':
-      #  cCompiler: gcc-9
-      #  cxxCompiler: g++-9
+      #'GCC11 / Ninja / Release':
+      #  dockerImage: megamol_ci_ubuntu
+      #  cCompiler: gcc-11
+      #  cxxCompiler: g++-11
       #  configuration: Release
       #  generator: 'Ninja'
       #  cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily changed to Ninja instead of Make until more CI machines are available!
-      'Clang10 / Ninja / Release':
-        cCompiler: clang-10
-        cxxCompiler: clang++-10
+      'Clang14 / Ninja / Release':
+        dockerImage: megamol_ci_ubuntu
+        cCompiler: clang-14
+        cxxCompiler: clang++-14
         configuration: Release
         generator: 'Ninja'
         cmakeExtraArgs: '$(defaultConfig)'
-      'GCC9 / Make / Release (nonGL)':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
+      'GCC11 / Ninja / Release (nonGL)':
+        dockerImage: megamol_ci_ubuntu
+        cCompiler: gcc-11
+        cxxCompiler: g++-11
         configuration: Release
-        generator: 'Unix Makefiles'
+        generator: 'Ninja'
         cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
-    name: 'default'
+    name: 'hardware'
     demands:
     - Agent.OS -equals Linux
-    - cmake
-    - megamol_build_enabled
+    - docker
+
+  container: ghcr.io/unistuttgart-visus/$(dockerImage):master
 
   steps:
-  - template: .ci/check-pr-labels-step.yml
+  - template: .ci/check-pr-labels-step-bash.yml
+  - bash: |
+      mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+      mkdir -p $X_VCPKG_REGISTRIES_CACHE
+    displayName: 'Setup vcpkg cache directories'
   - bash: echo "##vso[task.setvariable variable=numberOfCpuCores]$(nproc)"
     displayName: 'Bash get number of CPU cores'
   - task: CMake@1

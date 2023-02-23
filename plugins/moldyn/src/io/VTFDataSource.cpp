@@ -6,7 +6,6 @@
  */
 
 #include "io/VTFDataSource.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
@@ -78,7 +77,7 @@ io::VTFDataSource::Frame::~Frame() {
 /*
  * io::VTFDataSource::Frame::Clear
  */
-void io::VTFDataSource::Frame::Clear(void) {
+void io::VTFDataSource::Frame::Clear() {
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         this->pos[i].EnforceSize(0);
         this->col[i].EnforceSize(0);
@@ -206,7 +205,7 @@ void io::VTFDataSource::Frame::UpdatePartColor(
 /*
  * io::VTFDataSource::Frame::SizeOf
  */
-SIZE_T io::VTFDataSource::Frame::SizeOf(void) const {
+SIZE_T io::VTFDataSource::Frame::SizeOf() const {
     SIZE_T size = 0;
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         size += this->pos[i].GetSize();
@@ -312,7 +311,7 @@ vislib::Array<int>& io::VTFDataSource::Frame::particleGridCell(unsigned int N1, 
 /*
  * io::VTFDataSource::VTFDataSource
  */
-io::VTFDataSource::VTFDataSource(void)
+io::VTFDataSource::VTFDataSource()
         : view::AnimDataModule()
         , filename("filename", "The path to the trisoup file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -341,7 +340,7 @@ io::VTFDataSource::VTFDataSource(void)
 /*
  * io::VTFDataSource::~VTFDataSource
  */
-io::VTFDataSource::~VTFDataSource(void) {
+io::VTFDataSource::~VTFDataSource() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -349,7 +348,7 @@ io::VTFDataSource::~VTFDataSource(void) {
 /*
  * io::VTFDataSource::constructFrame
  */
-view::AnimDataModule::Frame* io::VTFDataSource::constructFrame(void) const {
+view::AnimDataModule::Frame* io::VTFDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<io::VTFDataSource*>(this));
     f->SetTypeCount((unsigned int)this->types.Count());
     return f;
@@ -358,7 +357,7 @@ view::AnimDataModule::Frame* io::VTFDataSource::constructFrame(void) const {
 /*
  * io::VTFDataSource::create
  */
-bool io::VTFDataSource::create(void) {
+bool io::VTFDataSource::create() {
     return true;
 }
 
@@ -442,7 +441,7 @@ void io::VTFDataSource::preprocessFrame(Frame& frame) {
 /*
  * io::VTFDataSource::release
  */
-void io::VTFDataSource::release(void) {
+void io::VTFDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;
@@ -477,8 +476,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to open VTF-File \"%s\": %s",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open VTF-File \"%s\": %s",
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
             static_cast<const char*>(err));
 
@@ -491,7 +489,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
 
     if (!this->parseHeaderAndFrameIndices(
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to read VTF-Header from file \"%s\". Wrong format?",
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
 
@@ -520,12 +518,12 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
 
     this->initFrameCache(cacheSize);

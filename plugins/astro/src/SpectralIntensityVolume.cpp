@@ -15,7 +15,7 @@
 
 #include "omp.h"
 
-#include "simultaneous_sort.h"
+#include "simultaneous_sort/simultaneous_sort.h"
 
 megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
         : volume_in_slot_("volumeIn", "Input of volume containing optical depth")
@@ -158,7 +158,7 @@ bool megamol::astro::SpectralIntensityVolume::create() {
 }
 
 
-void megamol::astro::SpectralIntensityVolume::release(void) {
+void megamol::astro::SpectralIntensityVolume::release() {
     delete[] this->metadata.MinValues;
     delete[] this->metadata.MaxValues;
     delete[] this->metadata.SliceDists[0];

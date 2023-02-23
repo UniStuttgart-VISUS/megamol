@@ -9,16 +9,17 @@ include(CMakeDependentOption)
 #
 # Parameters:
 #   PLUGIN_NAME:       name of the plugin, should match the plugin directory name.
+#   ALWAYS_BUILD:      always build the plugin without showing a CMake option (should only be used by mmstd plugins)
 #   DIR:               full path to the plugin directory, defaults to CMAKE_CURRENT_SOURCE_DIR if not set
 #   BUILD_DEFAULT:     ON/OFF if the plugin should be build with the default configuration
+#   DEPENDS_FEATURES:  list of features which are required by this plugin
 #   DEPENDS_PLUGINS:   list of plugins which are required by this plugin
-#   DEPENDS_EXTERNALS: list of externals which are required by this plugin
-
+#
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
-  set(optionArgs ALWAYS_BUILD DEPENDS_CUDA DEPENDS_GL)
+  set(optionArgs ALWAYS_BUILD)
   set(oneValueArgs DIR BUILD_DEFAULT)
-  set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
+  set(multiValueArgs DEPENDS_FEATURES DEPENDS_PLUGINS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Validate plugin name
@@ -32,26 +33,23 @@ function(megamol_plugin PLUGIN_NAME)
   # Check feature requirements
   set(REQUIREMENTS_AVAILABLE TRUE)
 
-  # Check Cuda
-  if (MMPLUGIN_ARGS_DEPENDS_CUDA)
-    if (NOT ENABLE_CUDA)
-      set(REQUIREMENTS_AVAILABLE FALSE)
-    else ()
-      enable_language(CUDA)
-    endif ()
-  endif ()
+  foreach (required_feature ${MMPLUGIN_ARGS_DEPENDS_FEATURES})
+    string(TOUPPER ${required_feature} required_feature_upper)
+    string(REPLACE "-" "_" required_feature_upper "${required_feature_upper}")
 
-  # Check GL
-  if (MMPLUGIN_ARGS_DEPENDS_GL)
-    if (NOT ENABLE_GL)
+    if (NOT DEFINED MEGAMOL_USE_${required_feature_upper})
+      message(FATAL_ERROR "Plugin `${PLUGIN_NAME}` requested unknown feature: ${required_feature}")
+    endif ()
+
+    if (NOT MEGAMOL_USE_${required_feature_upper})
       set(REQUIREMENTS_AVAILABLE FALSE)
     endif ()
-  endif ()
+  endforeach ()
 
   # Enable plugin build option, show only if requirements are available and not always build
-  cmake_dependent_option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" "${MMPLUGIN_ARGS_BUILD_DEFAULT}" "REQUIREMENTS_AVAILABLE;NOT MMPLUGIN_ARGS_ALWAYS_BUILD" OFF)
+  cmake_dependent_option(MEGAMOL_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" "${MMPLUGIN_ARGS_BUILD_DEFAULT}" "REQUIREMENTS_AVAILABLE;NOT MMPLUGIN_ARGS_ALWAYS_BUILD" OFF)
 
-  if ((BUILD_PLUGIN_${PLUGIN_NAME_UPPER} OR MMPLUGIN_ARGS_ALWAYS_BUILD) AND REQUIREMENTS_AVAILABLE)
+  if ((MEGAMOL_PLUGIN_${PLUGIN_NAME_UPPER} OR MMPLUGIN_ARGS_ALWAYS_BUILD) AND REQUIREMENTS_AVAILABLE)
 
     # Set plugin enabled flag
     set(${PLUGIN_NAME}_PLUGIN_ENABLED ON PARENT_SCOPE)
@@ -99,31 +97,33 @@ function(megamol_plugin PLUGIN_NAME)
       endif ()
     endforeach ()
 
-    # Externals
-    foreach (external ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
-      if (NOT "${external}" IN_LIST reserved_link_keywords)
-        require_external(${external})
-      endif ()
-    endforeach ()
-
     # Link
     target_link_libraries(${PLUGIN_NAME}
       PUBLIC OpenMP::OpenMP_CXX
       PRIVATE core)
-    if (ENABLE_GL)
+    if (MEGAMOL_USE_OPENGL)
       target_link_libraries(${PLUGIN_NAME} PRIVATE core_gl)
     endif ()
     target_link_libraries(${PLUGIN_NAME}
-      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
-      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS})
 
     # Install shaders
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/shaders")
-      install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/shaders/ DESTINATION "share/shaders")
+      if (MEGAMOL_SKIP_SHADER_INSTALL)
+        list(APPEND plugins_src_shader_paths "${MMPLUGIN_ARGS_DIR}/shaders")
+        set(plugins_src_shader_paths ${plugins_src_shader_paths} CACHE INTERNAL "")
+      else ()
+        install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/shaders/ DESTINATION "share/shaders")
+      endif ()
     endif ()
     # Install resources
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/resources")
-      install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/resources/ DESTINATION "share/resources")
+      if (MEGAMOL_SKIP_RESOURCE_INSTALL)
+        list(APPEND plugins_src_resource_paths "${MMPLUGIN_ARGS_DIR}/resources")
+        set(plugins_src_resource_paths ${plugins_src_resource_paths} CACHE INTERNAL "")
+      else ()
+        install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/resources/ DESTINATION "share/resources")
+      endif ()
     endif ()
 
     # Grouping in Visual Studio
@@ -150,6 +150,12 @@ endfunction()
 # Instead, for now, define an extra 'plugins' target. This target will contain all plugin objects. Frontends can just
 # link 'core' and 'plugins' targets and have not to deal with individual plugins.
 add_library(plugins INTERFACE)
+
+# Plugin shader/resource settings
+option(MEGAMOL_SKIP_SHADER_INSTALL "Skip shader installation and use shader paths from source directory." OFF)
+option(MEGAMOL_SKIP_RESOURCE_INSTALL "Skip resource installation and use resource paths from source directory." OFF)
+set(plugins_src_shader_paths "" CACHE INTERNAL "")
+set(plugins_src_resource_paths "" CACHE INTERNAL "")
 
 # Global list of required plugins
 set(required_plugins_list "" CACHE INTERNAL "")

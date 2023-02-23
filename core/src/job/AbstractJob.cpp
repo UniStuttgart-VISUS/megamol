@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * job::AbstractJob::AbstractJob
  */
-job::AbstractJob::AbstractJob(void) {
+job::AbstractJob::AbstractJob() {
     // intentionally empty
 }
 
@@ -24,38 +24,22 @@ job::AbstractJob::AbstractJob(void) {
 /*
  * job::AbstractJob::~AbstractJob
  */
-job::AbstractJob::~AbstractJob(void) {
+job::AbstractJob::~AbstractJob() {
     // intentionally empty
-}
-
-
-/*
- * job::AbstractJob::IsParamRelevant
- */
-bool job::AbstractJob::IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const {
-    const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
-    if (ano == NULL)
-        return false;
-    if (param.IsNull())
-        return false;
-
-    vislib::SingleLinkedList<const AbstractNamedObject*> searched;
-    return ano->IsParamRelevant(searched, param);
 }
 
 
 /*
  * job::AbstractJob::signalStart
  */
-void job::AbstractJob::signalStart(void) {
+void job::AbstractJob::signalStart() {
     vislib::StringA name("unknown");
     AbstractNamedObject* ano = dynamic_cast<AbstractNamedObject*>(this);
     if (ano != NULL) {
         name = ano->Name();
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, "Job \"%s\" started ...\n", name.PeekBuffer());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Job \"%s\" started ...\n", name.PeekBuffer());
 }
 
 
@@ -69,7 +53,7 @@ void job::AbstractJob::signalEnd(bool wasTerminated) {
         name = ano->Name();
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "Job \"%s\" %s\n", name.PeekBuffer(), wasTerminated ? "terminated" : "finished");
 
     // Informing the core about job termination is not required because the

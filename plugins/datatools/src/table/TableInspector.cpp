@@ -1,8 +1,8 @@
 #include "TableInspector.h"
 
+#include "FrameStatistics.h"
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::datatools;
@@ -11,7 +11,7 @@ using namespace megamol;
 /*
  * megamol::datatools::TableInspector::TableInspector
  */
-TableInspector::TableInspector(void)
+TableInspector::TableInspector()
         : Module()
         , slotTableOut("floattableout", "Provides the table.")
         , slotTableIn("floattablein", "Ingests the table.") {
@@ -32,7 +32,7 @@ TableInspector::TableInspector(void)
 /*
  * megamol::datatools::TableInspector::~TableInspector
  */
-TableInspector::~TableInspector(void) {
+TableInspector::~TableInspector() {
     this->Release();
 }
 
@@ -40,7 +40,7 @@ TableInspector::~TableInspector(void) {
 /*
  * megamol::datatools::TableInspector::create
  */
-bool TableInspector::create(void) {
+bool TableInspector::create() {
     return true;
 }
 
@@ -98,7 +98,7 @@ bool TableInspector::getTableHash(core::Call& call) {
 /*
  * megamol::datatools::TableInspector::release
  */
-void TableInspector::release(void) {}
+void TableInspector::release() {}
 
 
 /*
@@ -110,9 +110,10 @@ void TableInspector::drawTable(table::TableDataCall* t_in) {
     if (!valid_imgui_scope)
         return;
 
-    if (this->GetCoreInstance()->GetFrameID() == lastDrawnFrame)
+    auto current_frame = frontend_resources.get<frontend_resources::FrameStatistics>().rendered_frames_count;
+    if (current_frame == lastDrawnFrame)
         return;
-    lastDrawnFrame = this->GetCoreInstance()->GetFrameID();
+    lastDrawnFrame = current_frame;
 
     std::string table_name = "##table";
     table_name += this->Name();

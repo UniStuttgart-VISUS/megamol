@@ -17,7 +17,7 @@ using namespace megamol;
 using namespace megamol::datatools;
 
 
-io::MMGDDDataSource::MMGDDDataSource(void)
+io::MMGDDDataSource::MMGDDDataSource()
         : core::view::AnimDataModule()
         , filename("filename", "The path to the MMPLD file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -37,16 +37,16 @@ io::MMGDDDataSource::MMGDDDataSource(void)
     this->initFrameCache(1);
 }
 
-io::MMGDDDataSource::~MMGDDDataSource(void) {
+io::MMGDDDataSource::~MMGDDDataSource() {
     Release();
 }
 
-core::view::AnimDataModule::Frame* io::MMGDDDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* io::MMGDDDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<io::MMGDDDataSource*>(this));
     return f;
 }
 
-bool io::MMGDDDataSource::create(void) {
+bool io::MMGDDDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -65,11 +65,11 @@ void io::MMGDDDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, un
     file->Seek(frameIdx[idx]);
     if (!f->LoadFrame(file, idx, frameIdx[idx + 1] - frameIdx[idx])) {
         // failed
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMGDD file\n", idx);
+        Log::DefaultLog.WriteError("Unable to read frame %d from MMGDD file\n", idx);
     }
 }
 
-void io::MMGDDDataSource::release(void) {
+void io::MMGDDDataSource::release() {
     this->resetFrameCache();
     if (file != nullptr) {
         vislib::sys::File* f = file;
@@ -94,7 +94,7 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     assert(filename.Param<core::param::FilePathParam>() != nullptr);
     if (!file->Open(filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMGDD-File \"%s\".",
+        Log::DefaultLog.WriteError("Unable to open MMGDD-File \"%s\".",
             filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         SAFE_DELETE(file);
         this->setFrameCount(1);
@@ -102,11 +102,11 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG)                              \
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
-    SAFE_DELETE(this->file);                         \
-    this->setFrameCount(1);                          \
-    this->initFrameCache(1);                         \
+#define _ERROR_OUT(MSG)              \
+    Log::DefaultLog.WriteError(MSG); \
+    SAFE_DELETE(this->file);         \
+    this->setFrameCount(1);          \
+    this->initFrameCache(1);         \
     return true;
 #define _ASSERT_READFILE(BUFFER, BUFFERSIZE)                        \
     if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \

@@ -11,12 +11,12 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/light/AmbientLight.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/HDRILight.h"
-#include "mmcore/view/light/PointLight.h"
-#include "mmcore/view/light/QuadLight.h"
-#include "mmcore/view/light/SpotLight.h"
+#include "mmstd/light/AmbientLight.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/HDRILight.h"
+#include "mmstd/light/PointLight.h"
+#include "mmstd/light/QuadLight.h"
+#include "mmstd/light/SpotLight.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/SystemInformation.h"
 #include <algorithm>
@@ -24,8 +24,7 @@
 #include <iostream>
 #include <stdio.h>
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 void ospErrorCallback(OSPError err, const char* details) {
     megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
@@ -35,7 +34,7 @@ void ospStatusCallback(const char* msg) {
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("OSPRay Device Status: %s", msg);
 };
 
-AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
+AbstractOSPRayRenderer::AbstractOSPRayRenderer()
         : core::view::Renderer3DModule()
         , _lightSlot("lights", "Lights are retrieved over this slot. If no light is connected")
         , _accumulateSlot("accumulate", "Activates the accumulation buffer")
@@ -225,7 +224,9 @@ void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
 
             return ret_tex;
 
-        } catch (std::runtime_error e) { std::cerr << e.what() << std::endl; }
+        } catch (std::runtime_error e) {
+            std::cerr << e.what() << std::endl;
+        }
     } else {
         std::cerr << "File type not supported. Only PPM file format allowed." << std::endl;
     }
@@ -447,7 +448,7 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(megamol::core::view::Camera& mmca
     // TODO: ospSet1f(_camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
 }
 
-void AbstractOSPRayRenderer::clearOSPRayStuff(void) {
+void AbstractOSPRayRenderer::clearOSPRayStuff() {
     _lightArray.clear();
     // OSP objects
     _framebuffer.reset();
@@ -468,7 +469,7 @@ void AbstractOSPRayRenderer::clearOSPRayStuff(void) {
     _materials.clear();
 }
 
-AbstractOSPRayRenderer::~AbstractOSPRayRenderer(void) {}
+AbstractOSPRayRenderer::~AbstractOSPRayRenderer() {}
 
 // helper function to write the rendered image as PPM file
 void AbstractOSPRayRenderer::writePPM(std::string fileName, const std::array<int, 2>& size, const uint32_t* pixel) {
@@ -853,22 +854,34 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
             } break;
             case geometryTypeEnum::MESH: {
                 auto& container = std::get<meshStructure>(element.structure);
-                if (container.mesh == NULL) {
+                if (container.mesh == nullptr) {
                     core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRay:generateRepresentations] Representation MESH active but no data provided.");
                     // returnValue = false;
                     break;
                 }
                 {
-                    std::vector<mesh::ImageDataAccessCollection::Image> tex_vec;
-                    if (container.mesh_textures != nullptr) {
-                        assert(container.mesh->accessMeshes().size() == container.mesh_textures->accessImages().size());
-                        tex_vec = container.mesh_textures->accessImages();
-                    }
-                    _numCreateGeo = container.mesh->accessMeshes().size();
+                    std::shared_ptr<mesh::ImageDataAccessCollection> mesh_texture_collection(nullptr);
+                    std::shared_ptr<mesh::MeshDataAccessCollection> mesh_collection(nullptr);
 
+                    _numCreateGeo = 0;
+
+
+                    mesh_collection = container.mesh;
+                    mesh_texture_collection = container.mesh_textures;
+
+                    std::vector<mesh::ImageDataAccessCollection::Image> tex_vec;
+                    if (mesh_texture_collection != nullptr) {
+                        assert(
+                            mesh_collection->accessMeshes().size() == mesh_texture_collection->accessImages().size());
+                        tex_vec = mesh_texture_collection->accessImages();
+                    }
+
+                    _numCreateGeo += mesh_collection->accessMeshes().size();
+
+                    // inner loop over meshes per collection
                     uint32_t mesh_index = 0;
-                    for (auto& mesh : container.mesh->accessMeshes()) {
+                    for (auto const& mesh : mesh_collection->accessMeshes()) {
 
                         _baseStructures[entry.first].emplace_back(ospNewGeometry("mesh"), structureTypeEnum::GEOMETRY);
 
@@ -1017,12 +1030,19 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                     break;
                 }
                 if (container.mesh != nullptr) {
-                    this->_numCreateGeo = container.mesh->accessMeshes().size();
-                    for (auto& mesh : container.mesh->accessMeshes()) {
+
+                    std::shared_ptr<mesh::MeshDataAccessCollection> mesh_collection(nullptr);
+
+                    _numCreateGeo = 0;
+
+
+                    mesh_collection = container.mesh;
+
+                    this->_numCreateGeo += mesh_collection->accessMeshes().size();
+                    for (auto& mesh : mesh_collection->accessMeshes()) {
 
                         _baseStructures[entry.first].emplace_back(
                             ::ospray::cpp::Geometry("curve"), structureTypeEnum::GEOMETRY);
-
 
                         for (auto& attrib : mesh.second.attributes) {
 
@@ -1077,6 +1097,7 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                             std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
 
                     } // end for geometry
+
                 } else {
                     _baseStructures[entry.first].emplace_back(
                         ::ospray::cpp::Geometry("curve"), structureTypeEnum::GEOMETRY);
@@ -1330,5 +1351,4 @@ void AbstractOSPRayRenderer::createInstances() {
         _instances[entry.first].commit();
     }
 }
-} // end namespace ospray
-} // end namespace megamol
+} // namespace megamol::ospray

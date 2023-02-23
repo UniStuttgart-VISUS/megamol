@@ -10,7 +10,7 @@
 #include "geometry_calls/BezierCurvesListDataCall.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/light/PointLight.h"
+#include "mmstd/light/PointLight.h"
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
@@ -20,13 +20,12 @@
 
 #include <glm/ext.hpp>
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * BezierCPUMeshRenderer::BezierCPUMeshRenderer
  */
-BezierCPUMeshRenderer::BezierCPUMeshRenderer(void)
+BezierCPUMeshRenderer::BezierCPUMeshRenderer()
         : AbstractBezierRenderer()
         , lightsSlot("lights", "Lights are retrieved over this slot.")
         , curveSectionsSlot("curveSections", "Linear sections approximating the curve")
@@ -55,7 +54,7 @@ BezierCPUMeshRenderer::BezierCPUMeshRenderer(void)
 /*
  * BezierCPUMeshRenderer::~BezierCPUMeshRenderer
  */
-BezierCPUMeshRenderer::~BezierCPUMeshRenderer(void) {
+BezierCPUMeshRenderer::~BezierCPUMeshRenderer() {
     this->Release();
 }
 
@@ -63,7 +62,7 @@ BezierCPUMeshRenderer::~BezierCPUMeshRenderer(void) {
 /*
  * BezierCPUMeshRenderer::render
  */
-bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call) {
+bool BezierCPUMeshRenderer::render(mmstd_gl::CallRender3DGL& call) {
     using geocalls::BezierCurvesListDataCall;
     BezierCurvesListDataCall* data = this->getDataSlot.CallAs<BezierCurvesListDataCall>();
     if (data == nullptr)
@@ -72,7 +71,6 @@ bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call)
     if (!(*data)(1))
         return false;
 
-    ::glDisable(GL_TEXTURE);
     ::glEnable(GL_DEPTH_TEST);
     ::glEnable(GL_COLOR_MATERIAL);
     ::glCullFace(GL_BACK);
@@ -246,7 +244,7 @@ bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call)
 /*
  * BezierCPUMeshRenderer::create
  */
-bool BezierCPUMeshRenderer::create(void) {
+bool BezierCPUMeshRenderer::create() {
     if (!AbstractBezierRenderer::create())
         return false;
 
@@ -259,7 +257,7 @@ bool BezierCPUMeshRenderer::create(void) {
 /*
  * BezierCPUMeshRenderer::release
  */
-void BezierCPUMeshRenderer::release(void) {
+void BezierCPUMeshRenderer::release() {
     ::glDeleteLists(this->geo, 1);
     this->geo = 0;
 }
@@ -398,5 +396,4 @@ void BezierCPUMeshRenderer::drawTube(float const* p1, float const* r1, unsigned 
     }
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

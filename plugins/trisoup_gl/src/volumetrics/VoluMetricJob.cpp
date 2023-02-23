@@ -30,7 +30,7 @@ using namespace megamol::trisoup_gl::volumetrics;
 /*
  * VoluMetricJob::VoluMetricJob
  */
-VoluMetricJob::VoluMetricJob(void)
+VoluMetricJob::VoluMetricJob()
         : core::job::AbstractThreadedJob()
         , core::Module()
         , getDataSlot("getData", "Slot that connects to a MultiParticleDataCall to fetch the particles in the scene")
@@ -104,7 +104,7 @@ VoluMetricJob::VoluMetricJob(void)
 /*
  * VoluMetricJob::~VoluMetricJob
  */
-VoluMetricJob::~VoluMetricJob(void) {
+VoluMetricJob::~VoluMetricJob() {
     this->Release();
 }
 
@@ -112,7 +112,7 @@ VoluMetricJob::~VoluMetricJob(void) {
 /*
  * VoluMetricJob::create
  */
-bool VoluMetricJob::create(void) {
+bool VoluMetricJob::create() {
 
     // Intentionally empty
 
@@ -123,7 +123,7 @@ bool VoluMetricJob::create(void) {
 /*
  * VoluMetricJob::release
  */
-void VoluMetricJob::release(void) {
+void VoluMetricJob::release() {
 
     // TODO: Implement
 }
@@ -1041,7 +1041,7 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber, vislib::Array<uns
     }
 }
 
-void VoluMetricJob::copyVolumesToBackBuffer(void) {
+void VoluMetricJob::copyVolumesToBackBuffer() {
     SIZE_T prevCount = this->debugVolumes.Count();
 
     if (prevCount < SubJobDataList.Count()) {

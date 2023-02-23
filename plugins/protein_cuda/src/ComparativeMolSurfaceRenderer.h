@@ -8,11 +8,11 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 // Toggle the use of procedural volume fields for debugging purposes
 //#define USE_PROCEDURAL_DATA
@@ -20,8 +20,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd/renderer/CallRender3D.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Cuboid.h"
@@ -38,12 +38,11 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "quicksurf/CUDAQuickSurf.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
 
-class ComparativeMolSurfaceRenderer : public core_gl::view::Renderer3DModuleGL {
+class ComparativeMolSurfaceRenderer : public mmstd_gl::Renderer3DModuleGL {
 
 public:
     /// Render modes for the surfaces
@@ -174,7 +173,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The get extent callback for vbo data.
@@ -221,7 +220,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * TODO
@@ -679,16 +678,16 @@ private:
     core::view::Camera cameraInfo;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplSurfaceShader;
+    std::unique_ptr<glowl::GLSLProgram> pplSurfaceShader;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplSurfaceShaderVertexFlag;
+    std::unique_ptr<glowl::GLSLProgram> pplSurfaceShaderVertexFlag;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplSurfaceShaderUncertainty;
+    std::unique_ptr<glowl::GLSLProgram> pplSurfaceShaderUncertainty;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplMappedSurfaceShader;
+    std::unique_ptr<glowl::GLSLProgram> pplMappedSurfaceShader;
 
     /// The textures holding surface attributes (e.g. surface potential)
     GLuint surfAttribTex1, surfAttribTex2;
@@ -750,5 +749,3 @@ private:
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED

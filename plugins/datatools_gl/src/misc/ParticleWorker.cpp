@@ -5,21 +5,18 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "misc/ParticleWorker.h"
+#include "ParticleWorker.h"
+
+#include <cfloat>
+#include <climits>
+
 #include "OpenGL_Context.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
-#include "vislib/StringTokeniser.h"
-#include <cfloat>
-#include <climits>
-
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "mmcore/CoreInstance.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "vislib/StringTokeniser.h"
 
 using namespace megamol::core;
 using namespace megamol::datatools_gl::misc;
@@ -28,7 +25,7 @@ using namespace megamol::datatools_gl::misc;
 /*
  * ParticleWorker::ParticleWorker
  */
-ParticleWorker::ParticleWorker(void)
+ParticleWorker::ParticleWorker()
         : inParticlesDataSlot("inPartData", "Input for particle data")
         , outParticlesDataSlot("outPartData", "Output of particle data")
         , glClusterInfos(0)
@@ -48,7 +45,7 @@ ParticleWorker::ParticleWorker(void)
 /*
  * ParticleWorker::~ParticleWorker
  */
-ParticleWorker::~ParticleWorker(void) {
+ParticleWorker::~ParticleWorker() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -56,36 +53,25 @@ ParticleWorker::~ParticleWorker(void) {
 /*
  * ParticleWorker::create
  */
-bool ParticleWorker::create(void) {
+bool ParticleWorker::create() {
 
     using namespace megamol::core::utility::log;
-    using namespace vislib_gl::graphics::gl;
 
     ASSERT(IsAvailable());
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.isVersionGEQ(4, 3) ||
-        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
+    if (!ogl_ctx.isVersionGEQ(4, 3))
         return false;
 
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    if (!this->GetCoreInstance())
-        return false;
-
-    ShaderSource compSrc;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource("::particleWorkerCompute::work_on_clusters", compSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load compute shader source for work_on_clusters shader", this->ClassName());
-        return false;
-    }
     try {
-        if (!this->shaderOnClusterComputation.Compile(compSrc.Code(), compSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create work_on_clusters shader: %s\n", this->ClassName(), e.GetMsgA());
+        this->shaderOnClusterComputation = core::utility::make_glowl_shader(
+            "shaderOnClusterComputation", shader_options, "datatools_gl/particleWorker_work_on_clusters.comp.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("ParticleWorker: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -96,10 +82,10 @@ bool ParticleWorker::create(void) {
 /*
  * ParticleWorker::release
  */
-void ParticleWorker::release(void) {
+void ParticleWorker::release() {
     glDeleteBuffersARB(static_cast<GLsizei>(glVB.Count()), glVB.PeekElements());
     glDeleteVertexArrays(static_cast<GLsizei>(glVAO.Count()), glVAO.PeekElements());
-    this->shaderOnClusterComputation.Release();
+    this->shaderOnClusterComputation.reset();
 }
 
 /*
@@ -255,17 +241,17 @@ bool ParticleWorker::getDataCallback(Call& call) {
             glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
 
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            shaderOnClusterComputation.Enable();
-            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
-            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("pos_stride"),
+            shaderOnClusterComputation->use();
+            glUniform1ui(this->shaderOnClusterComputation->getUniformLocation("count"), clusterInfos->numClusters);
+            glUniform1ui(this->shaderOnClusterComputation->getUniformLocation("pos_stride"),
                 partsOut.GetVertexDataStride() / sizeof(float));
-            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("col_stride"),
+            glUniform1ui(this->shaderOnClusterComputation->getUniformLocation("col_stride"),
                 partsOut.GetColourDataStride() / sizeof(float));
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glCB[0]);
-            shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
-            shaderOnClusterComputation.Disable();
+            glDispatchCompute((clusterInfos->numClusters / 1024) + 1, 1, 1);
+            glUseProgram(0);
 
             glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
             glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
@@ -292,17 +278,17 @@ bool ParticleWorker::getDataCallback(Call& call) {
             glBufferDataARB(GL_ARRAY_BUFFER, clusterInfos->sizeofPlainData, clusterInfos->plainData, GL_DYNAMIC_DRAW);
 
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            shaderOnClusterComputation.Enable();
-            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("count"), clusterInfos->numClusters);
-            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("pos_stride"),
+            shaderOnClusterComputation->use();
+            glUniform1ui(this->shaderOnClusterComputation->getUniformLocation("count"), clusterInfos->numClusters);
+            glUniform1ui(this->shaderOnClusterComputation->getUniformLocation("pos_stride"),
                 partsOut.GetVertexDataStride() / sizeof(float));
-            glUniform1ui(this->shaderOnClusterComputation.ParameterLocation("col_stride"),
+            glUniform1ui(this->shaderOnClusterComputation->getUniformLocation("col_stride"),
                 partsOut.GetVertexDataStride() / sizeof(float));
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, glClusterInfos);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, glVB[0]);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, glVB[0]);
-            shaderOnClusterComputation.Dispatch((clusterInfos->numClusters / 1024) + 1, 1, 1);
-            shaderOnClusterComputation.Disable();
+            glDispatchCompute((clusterInfos->numClusters / 1024) + 1, 1, 1);
+            glUseProgram(0);
 
             glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
             glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);

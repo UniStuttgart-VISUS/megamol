@@ -6,16 +6,17 @@
 
 #pragma once
 
+#include <glowl/Texture2D.hpp>
+
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "glowl/Texture2D.hpp"
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 
-class PNGDataSource : public core::Module {
+class PNGDataSource : public mmstd_gl::ModuleGL {
 public:
     static const char* ClassName() {
         return "PNGDataSource";
@@ -28,11 +29,11 @@ public:
     }
 
     PNGDataSource();
-    virtual ~PNGDataSource();
+    ~PNGDataSource() override;
 
 protected:
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
 
 private:
     bool getDataCallback(core::Call& caller);

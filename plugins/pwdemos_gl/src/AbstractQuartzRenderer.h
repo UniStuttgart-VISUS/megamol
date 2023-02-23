@@ -9,11 +9,10 @@
 
 #include "AbstractQuartzModule.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * AbstractQuartzRenderer
@@ -23,18 +22,18 @@ public:
     /**
      * Ctor
      */
-    AbstractQuartzRenderer(void);
+    AbstractQuartzRenderer();
 
     /**
      * Dtor
      */
-    virtual ~AbstractQuartzRenderer(void);
+    ~AbstractQuartzRenderer() override;
 
 protected:
     /**
      * Updates the grain colour if necessary
      */
-    void assertGrainColour(void);
+    void assertGrainColour();
 
     /**
      * Answer the clipping plane from the connected module
@@ -42,7 +41,7 @@ protected:
      * @return The clipping plane from the connected module or NULL if no
      *         data could be received
      */
-    core::view::CallClipPlane* getClipPlaneData(void);
+    core::view::CallClipPlane* getClipPlaneData();
 
     /** Slot connecting to the clipping plane provider */
     core::CallerSlot clipPlaneSlot;
@@ -63,5 +62,4 @@ protected:
     core::param::ParamSlot correctPBCSlot;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

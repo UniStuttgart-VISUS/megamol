@@ -1,5 +1,10 @@
-#ifndef MEGAMOLCORE_LUAINTERPRETER_H_INCLUDED
-#define MEGAMOLCORE_LUAINTERPRETER_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include <fstream>
 #include <functional>
@@ -9,9 +14,9 @@
 #include <string>
 #include <vector>
 
-#include "mmcore/utility/log/Log.h"
+#include <lua.hpp>
 
-#include "lua.hpp"
+#include "mmcore/utility/log/Log.h"
 
 //#define ATTACH_LUA_DEBUGGER
 //#ifdef ATTACH_LUA_DEBUGGER
@@ -38,8 +43,7 @@
 //    }
 //}
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 template<class C>
 using luaCallbackFunc = int (C::*)(lua_State* L);
@@ -87,13 +91,13 @@ public:
 
     LuaInterpreter& operator=(LuaInterpreter&& rhs) = delete;
 
-    ~LuaInterpreter(void);
+    ~LuaInterpreter();
 
     /**
      * Load an environment from a file. The environment is a table
      * of the form "env = { alias = function, libraryname = { ... }, ...}"
      * that should be used to sandbox scripts that are run afterwards.
-     * 
+     *
      * @return the environment name
      */
     bool LoadEnviromentFile(const std::string& fileName, std::string& envName);
@@ -315,13 +319,13 @@ template <class T> megamol::core::LuaInterpreter<T>::LuaInterpreter(T* t, std::s
     RegisterCallback<LuaInterpreter, &LuaInterpreter::logInfo>(MMC_LUA_MMDEBUGPRINT, "(...)\n\tLog to MegaMol console with LOGINFO level.");
     RegisterCallback<LuaInterpreter, &LuaInterpreter::help>(MMC_LUA_MMHELP, "()\n\tShow this help.");
 
-    RegisterConstant("LOGINFO", megamol::core::utility::log::Log::LEVEL_INFO);
-    RegisterConstant("LOGWARNING", megamol::core::utility::log::Log::LEVEL_WARN);
-    RegisterConstant("LOGERROR", megamol::core::utility::log::Log::LEVEL_ERROR);
+    RegisterConstant("LOGINFO", static_cast<uint32_t>(megamol::core::utility::log::Log::log_level::info));
+    RegisterConstant("LOGWARNING", static_cast<uint32_t>(megamol::core::utility::log::Log::log_level::warn));
+    RegisterConstant("LOGERROR", static_cast<uint32_t>(megamol::core::utility::log::Log::log_level::error));
 }
 
 
-template <class T> megamol::core::LuaInterpreter<T>::~LuaInterpreter(void) {
+template <class T> megamol::core::LuaInterpreter<T>::~LuaInterpreter() {
     if (L != nullptr) {
         lua_close(L);
     }
@@ -372,12 +376,32 @@ bool megamol::core::LuaInterpreter<T>::RunString(
             L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions
         int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
         if (ret != LUA_OK) {
-            const char* err = lua_tostring(
-                L, -1); // get error from top of stack...
-                        // megamol::core::utility::log::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
-            result = std::string(err);
-            lua_pop(L, 1); // and remove it.
-            return false;
+            auto dumpstack = [&]{
+                auto height = lua_gettop(L);
+                for (auto i = 0; i < height; ++i) {
+                    if (lua_type(L, i) == LUA_TSTRING) {
+                        const auto err = lua_tostring(L, i);
+                        result += err + std::string("\n");
+                    } else {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected type on stack after Lua error: %u", lua_type(L,i));
+                    }
+                }
+                lua_pop(L, height); // remove all stuff on the stack
+            };
+
+            switch(ret) {
+                case LUA_ERRRUN:
+                    result = "Lua runtime error. Check for uninitialized variables and such.\n";
+                    dumpstack();
+                    return false;
+                case LUA_ERRMEM:
+                    result = "Lua memory error.";
+                    return false;
+                case LUA_ERRSYNTAX:
+                    result = "Lua syntax error.\n";
+                    dumpstack();
+                    return false;
+            }
         } else {
             bool good = true;
             // as a result, we still expect a string, if anything
@@ -534,14 +558,14 @@ template <class T> int megamol::core::LuaInterpreter<T>::log(lua_State* L) {
             break;
         }
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<unsigned int>(level), "%s", out.str().c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<megamol::core::utility::log::Log::log_level>(level), "%s", out.str().c_str());
     return 0;
 }
 
 
 template <class T> int megamol::core::LuaInterpreter<T>::logInfo(lua_State* L) {
     USES_CHECK_LUA;
-    lua_pushinteger(L, megamol::core::utility::log::Log::LEVEL_INFO);
+    lua_pushinteger(L, static_cast<uint32_t>(megamol::core::utility::log::Log::log_level::info));
     lua_insert(L, 1); // prepend info level to arguments
     lua_getglobal(L, "mmLog");
     lua_insert(L, 1);                                 // prepend mmLog function to all arguments
@@ -562,7 +586,4 @@ template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     return 1;
 }
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* end ifndef MEGAMOLCORE_LUAINTERPRETER_H_INCLUDED */
+} // namespace megamol::core

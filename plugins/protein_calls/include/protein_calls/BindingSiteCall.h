@@ -7,11 +7,7 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -19,9 +15,9 @@
 #include "vislib/Pair.h"
 #include "vislib/String.h"
 #include "vislib/math/Vector.h"
+#include <glm/glm.hpp>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Class for binding site calls and data interfaces.
@@ -34,7 +30,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BindingSiteCall";
     }
 
@@ -43,7 +39,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get binding sites.";
     }
 
@@ -55,7 +51,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -79,11 +75,11 @@ public:
      *
      * @return The binding site count.
      */
-    inline unsigned int GetBindingSiteCount(void) const {
+    inline unsigned int GetBindingSiteCount() const {
         if (!this->bindingSites)
             return 0;
         else
-            return static_cast<unsigned int>(this->bindingSites->Count());
+            return static_cast<unsigned int>(this->bindingSites->size());
     }
 
     /**
@@ -92,10 +88,10 @@ public:
      * @param i The index of the residue.
      * @return Pointer to the array of residue indices.
      */
-    inline vislib::Array<vislib::Pair<char, unsigned int>>* GetBindingSite(unsigned int i) const {
+    inline std::vector<std::pair<char, unsigned int>>* GetBindingSite(unsigned int i) const {
         if (!this->bindingSites)
             return 0;
-        else if (this->bindingSites->Count() <= i)
+        else if (this->bindingSites->size() <= i)
             return 0;
         else
             //return &(*this->bindingSites)[i];
@@ -107,7 +103,7 @@ public:
      *
      * @param bsPtr The pointer.
      */
-    inline void SetBindingSite(vislib::Array<vislib::Array<vislib::Pair<char, unsigned int>>>* bsPtr) {
+    inline void SetBindingSite(std::vector<std::vector<std::pair<char, unsigned int>>>* bsPtr) {
         this->bindingSites = bsPtr;
     }
 
@@ -117,10 +113,10 @@ public:
      * @param i The index of the residue.
      * @return Pointer to the array of residue names.
      */
-    inline vislib::Array<vislib::StringA>* GetBindingSiteResNames(unsigned int i) const {
+    inline std::vector<std::string>* GetBindingSiteResNames(unsigned int i) const {
         if (!this->bindingSiteResNames)
             return 0;
-        else if (this->bindingSiteResNames->Count() <= i)
+        else if (this->bindingSiteResNames->size() <= i)
             return 0;
         else
             //return &(*this->bindingSites)[i];
@@ -132,7 +128,7 @@ public:
      *
      * @param rnPtr The pointer.
      */
-    inline void SetBindingSiteResNames(vislib::Array<vislib::Array<vislib::StringA>>* rnPtr) {
+    inline void SetBindingSiteResNames(std::vector<std::vector<std::string>>* rnPtr) {
         this->bindingSiteResNames = rnPtr;
     }
 
@@ -142,10 +138,10 @@ public:
      * @param i The index of the residue.
      * @return Pointer to the array of residue names.
      */
-    inline vislib::StringA GetBindingSiteName(unsigned int i) const {
+    inline std::string GetBindingSiteName(unsigned int i) const {
         if (!this->bindingSiteNames)
             return "";
-        else if (this->bindingSiteNames->Count() <= i)
+        else if (this->bindingSiteNames->size() <= i)
             return "";
         else
             return (this->bindingSiteNames->operator[](i));
@@ -156,7 +152,7 @@ public:
      *
      * @param nPtr The pointer.
      */
-    inline void SetBindingSiteNames(vislib::Array<vislib::StringA>* nPtr) {
+    inline void SetBindingSiteNames(std::vector<std::string>* nPtr) {
         this->bindingSiteNames = nPtr;
     }
 
@@ -166,10 +162,10 @@ public:
      * @param i The index of the residue.
      * @return Pointer to the array of binding site descriptions.
      */
-    inline vislib::StringA GetBindingSiteDescription(unsigned int i) const {
+    inline std::string GetBindingSiteDescription(unsigned int i) const {
         if (!this->bindingSiteDescriptions)
             return "";
-        else if (this->bindingSiteDescriptions->Count() <= i)
+        else if (this->bindingSiteDescriptions->size() <= i)
             return "";
         else
             return (this->bindingSiteDescriptions->operator[](i));
@@ -180,7 +176,7 @@ public:
      *
      * @param nPtr The pointer.
      */
-    inline void SetBindingSiteDescriptions(vislib::Array<vislib::StringA>* nPtr) {
+    inline void SetBindingSiteDescriptions(std::vector<std::string>* nPtr) {
         this->bindingSiteDescriptions = nPtr;
     }
 
@@ -190,11 +186,11 @@ public:
      * @param i The index of the residue.
      * @return Pointer to the array of binding site descriptions.
      */
-    inline vislib::math::Vector<float, 3> GetBindingSiteColor(unsigned int i) const {
+    inline glm::vec3 GetBindingSiteColor(unsigned int i) const {
         if (!this->bindingSiteColors)
-            return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
-        else if (this->bindingSiteColors->Count() <= i)
-            return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
+            return glm::vec3(0.5f, 0.5f, 0.5f);
+        else if (this->bindingSiteColors->size() <= i)
+            return glm::vec3(0.5f, 0.5f, 0.5f);
         else
             return (this->bindingSiteColors->operator[](i));
     }
@@ -204,7 +200,7 @@ public:
      *
      * @param nPtr The pointer.
      */
-    inline void SetBindingSiteColors(vislib::Array<vislib::math::Vector<float, 3>>* nPtr) {
+    inline void SetBindingSiteColors(std::vector<glm::vec3>* nPtr) {
         this->bindingSiteColors = nPtr;
     }
 
@@ -222,28 +218,28 @@ public:
         this->isGxType = isGX;
     }
 
-    inline bool isEnzymeMode(void) const {
+    inline bool isEnzymeMode() const {
         return this->enzymeCase;
     }
 
-    inline bool isOfGxType(void) const {
+    inline bool isOfGxType() const {
         return this->isGxType;
     }
 
-    BindingSiteCall(void);
-    virtual ~BindingSiteCall(void);
+    BindingSiteCall();
+    ~BindingSiteCall() override;
 
 private:
     /** Pointer to binding site array */
-    vislib::Array<vislib::Array<vislib::Pair<char, unsigned int>>>* bindingSites;
+    std::vector<std::vector<std::pair<char, unsigned int>>>* bindingSites;
     /** Pointer to binding site residue name array */
-    vislib::Array<vislib::Array<vislib::StringA>>* bindingSiteResNames;
+    std::vector<std::vector<std::string>>* bindingSiteResNames;
     /** The binding site name */
-    vislib::Array<vislib::StringA>* bindingSiteNames;
+    std::vector<std::string>* bindingSiteNames;
     /** The binding site name */
-    vislib::Array<vislib::StringA>* bindingSiteDescriptions;
+    std::vector<std::string>* bindingSiteDescriptions;
     // color table
-    vislib::Array<vislib::math::Vector<float, 3>>* bindingSiteColors;
+    std::vector<glm::vec3>* bindingSiteColors;
     /** are we in the special enzyme case? */
     bool enzymeCase;
     /** is the current enzyme type the gx type? */
@@ -253,7 +249,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<BindingSiteCall> BindingSiteCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED */
+} // namespace megamol::protein_calls

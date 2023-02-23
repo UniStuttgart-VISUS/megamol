@@ -4,11 +4,7 @@
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_GLFUNCTIONS_H_INCLUDED
-#define VISLIB_GLFUNCTIONS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,9 +13,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 /**
  * Draws a cuboid using GL_LINES and immediate mode
@@ -59,7 +53,7 @@ bool EnableVSync(bool enable = true);
  *
  * @return true if the operation completed successfully, false otherwise.
  */
-inline bool DisableVSync(void) {
+inline bool DisableVSync() {
     // Note: not ordered correctly because we would need a forward
     //       declaration
     return EnableVSync(false);
@@ -72,7 +66,7 @@ inline bool DisableVSync(void) {
  *
  * @return The open gl version number.
  */
-const vislib::VersionNumber& GLVersion(void);
+const vislib::VersionNumber& GLVersion();
 
 /**
  * Answer whether VSync is enabled or not. This method can only be used
@@ -87,11 +81,8 @@ const vislib::VersionNumber& GLVersion(void);
  */
 bool IsVSyncEnabled(bool* error = NULL);
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} // namespace vislib_gl
+} // namespace vislib_gl::graphics::gl
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_GLFUNCTIONS_H_INCLUDED */

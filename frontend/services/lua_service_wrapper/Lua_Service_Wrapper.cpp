@@ -1,26 +1,20 @@
-/*
- * Lua_Service_Wrapper.cpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-// TODO: we need this #define because inclusion of LuaHostService.h leads to windows header inclusion errors.
-// this stems from linking ZMQ via CMake now being PUBLIC in the core lib. i dont know how to solve this "the right way".
-#define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
-
-#include "LuaRemoteConnectionsBroker.h"
 
 #include "CommandRegistry.h"
 #include "FrameStatistics.h"
 #include "GUIState.h"
 #include "GlobalValueStore.h"
+#include "LuaRemoteConnectionsBroker.h"
 #include "RuntimeConfig.h"
 #include "Screenshots.h"
 #include "WindowManipulation.h"
 #include "vislib/UTF8Encoder.h"
-
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "GUIRegisterWindow.h"
@@ -57,8 +51,7 @@ struct RecursionGuard {
 } // namespace
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 Lua_Service_Wrapper::Lua_Service_Wrapper() {
     // init members to default states
@@ -77,10 +70,9 @@ bool Lua_Service_Wrapper::init(void* configPtr) {
 }
 
 #define luaAPI (*m_config.lua_api_ptr)
-#define m_network_host \
-    reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(m_network_host_pimpl.get())
 
 bool Lua_Service_Wrapper::init(const Config& config) {
+    using megamol::core::utility::log::Log;
     if (!config.lua_api_ptr) {
         log("failed initialization because LuaAPI is nullptr");
         return false;
@@ -116,32 +108,29 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
         frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name
 #endif
     }; //= {"ZMQ_Context"};
 
     *open_version_notification = false;
 
-    m_network_host_pimpl =
-        std::unique_ptr<void, std::function<void(void*)>>(new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
-            [](void* ptr) { delete reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(ptr); });
-
-    bool host_ok = m_network_host->spawn_connection_broker(m_config.host_address, m_config.retry_socket_port);
-
-    if (host_ok) {
+    try {
+        m_network_host = std::make_unique<megamol::frontend::LuaRemoteConnectionsBroker>(
+            m_config.host_address, m_config.retry_socket_port);
         log("initialized successfully");
-    } else {
-        log("failed to start lua host");
+    } catch (std::exception const& ex) {
+        Log::DefaultLog.WriteError("Failed to start lua host: %s", ex.what());
+        return false;
     }
 
-    return host_ok;
+    return true;
 }
 
 void Lua_Service_Wrapper::close() {
     m_config = {}; // default to nullptr
 
-    m_network_host->close();
+    m_network_host.reset();
 }
 
 std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
@@ -181,6 +170,12 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
         return;
 
 void Lua_Service_Wrapper::updateProvidedResources() {
+    // during the previous frame module parameters of the graph may have changed.
+    // submit the queued parameter changes to graph subscribers before other services do their thing
+    auto& graph = const_cast<megamol::core::MegaMolGraph&>(
+        m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
+    graph.Broadcast_graph_subscribers_parameter_changes();
+
     recursion_guard;
     // we want lua to be the first thing executed in main loop
     // so we do all the lua work here
@@ -191,14 +186,14 @@ void Lua_Service_Wrapper::updateProvidedResources() {
     bool need_to_shutdown = false; // e.g. mmQuit should set this to true
 
     // fetch Lua requests from ZMQ queue, execute, and give back result
-    if (!m_network_host->request_queue.empty()) {
-        auto lua_requests = std::move(m_network_host->get_request_queue());
+    if (m_network_host != nullptr && !m_network_host->RequestQueueEmpty()) {
+        auto lua_requests = std::move(m_network_host->GetRequestQueue());
         std::string result;
         while (!lua_requests.empty()) {
             auto& request = lua_requests.front();
 
             luaAPI.RunString(request.request, result);
-            request.answer_promise.get().set_value(result);
+            request.answer_promise.set_value(result);
 
             lua_requests.pop();
             result.clear();
@@ -288,6 +283,13 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             auto& frame_statistics =
                 m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
             return DoubleResult{frame_statistics.last_rendered_frame_time_milliseconds};
+        }});
+
+    callbacks.add<DoubleResult>("mmLastRenderedFramesCount",
+        "()\n\tReturns the number of rendered frames up until to the last frame.", {[&]() -> DoubleResult {
+            auto& frame_statistics =
+                m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
+            return DoubleResult{static_cast<double>(frame_statistics.rendered_frames_count)};
         }});
 
 
@@ -497,6 +499,15 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             return VoidResult{};
         }});
 
+    callbacks.add<VoidResult, std::string, std::string>("mmRenameModule",
+        "(string oldName, string newName)\n\tRenames the module called <oldname> to <newname>.",
+        {[&](std::string oldName, std::string newName) -> VoidResult {
+            if (!graph.RenameModule(oldName, newName)) {
+                return Error{"graph could not rename module: " + oldName + " to " + newName};
+            }
+            return VoidResult{};
+        }});
+
     callbacks.add<VoidResult, std::string, std::string, std::string>("mmCreateCall",
         "(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> "
         "and CalleeSlot <to>.",
@@ -543,7 +554,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 answer << ps->Name() << "\1";
                 answer << ps->Description() << "\1";
                 auto par = ps->Parameter();
-                if (par.IsNull()) {
+                if (par == nullptr) {
                     return Error{
                         "ParamSlot does not seem to hold a parameter: " + std::string(ps->FullName().PeekBuffer())};
                 }
@@ -579,12 +590,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string>("mmSetParamValue",
         "(string name, string value)\n\tSet the value of a parameter slot.",
         {[&](std::string paramName, std::string paramValue) -> VoidResult {
-            auto* param = graph.FindParameter(paramName);
-            if (param == nullptr) {
-                return Error{"graph could not find parameter: " + paramName};
-            }
-
-            if (!param->ParseValue(paramValue.c_str())) {
+            if (!graph.SetParameter(paramName, paramValue.c_str())) {
                 return Error{"parameter could not be set to value: " + paramName + " : " + paramValue};
             }
 
@@ -672,7 +678,37 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
 
         return StringResult{answer.str().c_str()};
     }});
-#ifdef PROFILING
+
+    callbacks.add<VoidResult, std::string>("mmSetGraphEntryPoint",
+        "(string moduleName)\n\tSet active graph entry point to one specific module.",
+        {[&](std::string moduleName) -> VoidResult {
+            auto res = graph.SetGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not set graph entry point " + moduleName};
+            }
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult, std::string>("mmRemoveGraphEntryPoint",
+        "(string moduleName)\n\tRemove active graph entry point from one specific module.",
+        {[&](std::string moduleName) -> VoidResult {
+            auto res = graph.RemoveGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not remove graph entry point " + moduleName};
+            }
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult>(
+        "mmRemoveAllGraphEntryPoints", "\n\tRemove any and all active graph entry points.", {[&]() -> VoidResult {
+            for (auto& m : graph.ListModules()) {
+                if (m.isGraphEntryPoint) {
+                    graph.RemoveGraphEntryPoint(m.modulePtr->FullName().PeekBuffer());
+                }
+            }
+            return VoidResult{};
+        }});
+
+
+#ifdef MEGAMOL_USE_PROFILING
     callbacks.add<StringResult, std::string>("mmListModuleTimers",
         "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
@@ -875,5 +911,4 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
 }
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

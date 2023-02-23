@@ -8,8 +8,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include "mmcore/cluster/SyncDataSourcesCall.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
+#include "cluster/SyncDataSourcesCall.h"
+#include "cluster/mpi/MpiCall.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/sys/SystemInformation.h"
@@ -24,7 +24,7 @@ megamol::remote::RendernodeView::RendernodeView()
         , port_slot_("port", "Sets to port to listen to.")
         , recv_comm_(std::make_unique<ZMQCommFabric>(zmq::socket_type::pull))
         , run_threads(false)
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         , comm_(MPI_COMM_NULL)
 #else
         , comm_(0x04000000)
@@ -149,7 +149,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 
 
 void megamol::remote::RendernodeView::Render(double time, double instanceTime) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     static bool first_frame = true;
 
     this->initMPI();
@@ -378,7 +378,7 @@ bool megamol::remote::RendernodeView::init_threads() {
 bool megamol::remote::RendernodeView::initMPI() {
     bool retval = false;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (this->comm_ == MPI_COMM_NULL) {
         auto const c = this->request_mpi_slot_.CallAs<core::cluster::mpi::MpiCall>();
         if (c != nullptr) {
@@ -409,7 +409,7 @@ bool megamol::remote::RendernodeView::initMPI() {
 
     /* Determine success of the whole operation. */
     retval = (this->comm_ != MPI_COMM_NULL);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     // TODO: Register data types as necessary
 

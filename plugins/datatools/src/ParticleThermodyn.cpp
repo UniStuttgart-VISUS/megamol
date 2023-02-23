@@ -27,7 +27,7 @@ using namespace megamol;
 /*
  * datatools::ParticleThermodyn::ParticleThermodyn
  */
-datatools::ParticleThermodyn::ParticleThermodyn(void)
+datatools::ParticleThermodyn::ParticleThermodyn()
         : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
         , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
         , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
@@ -135,14 +135,14 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 /*
  * datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance
  */
-datatools::ParticleThermodyn::~ParticleThermodyn(void) {
+datatools::ParticleThermodyn::~ParticleThermodyn() {
     this->Release();
 }
 
 /*
  * datatools::ParticleThermodyn::create
  */
-bool datatools::ParticleThermodyn::create(void) {
+bool datatools::ParticleThermodyn::create() {
     return true;
 }
 
@@ -180,7 +180,7 @@ bool isDirOK(megamol::datatools::ParticleThermodyn::metricsEnum metric, geocalls
 /*
  * datatools::ParticleThermodyn::release
  */
-void datatools::ParticleThermodyn::release(void) {}
+void datatools::ParticleThermodyn::release() {}
 
 
 bool datatools::ParticleThermodyn::assertData(
@@ -507,8 +507,10 @@ bool datatools::ParticleThermodyn::assertData(
                         metricMax[threadIdx] = magnitude;
 #pragma omp atomic
                     ++counter;
+                    // TODO: we might need a critical section from here...
                     if ((counter % progressDivider) == 0)
                         cpb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(counter / progressDivider));
+                    // ... to here, but the race condition is not completely clear yet.
                 }
             } // end #pragma omp parallel num_threads(num_thr)
             for (auto i = 0; i < num_thr; ++i) {

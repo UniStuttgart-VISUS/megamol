@@ -3,14 +3,12 @@
  * Copyright (c) 2016, MegaMol Dev Team
  * All rights reserved.
  */
-#ifndef MEGAMOL_DATATOOLS_MMFTDATAWRITER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_MMFTDATAWRITER_H_INCLUDED
 #pragma once
 
 #include "datatools/table/TableDataCall.h"
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 
 namespace megamol::datatools::table {
 
@@ -44,15 +42,6 @@ public:
      */
     static bool IsAvailable() {
         return true;
-    }
-
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart() {
-        return false;
     }
 
     /** Ctor. */
@@ -99,5 +88,3 @@ private:
 };
 
 } // namespace megamol::datatools::table
-
-#endif // MEGAMOL_DATATOOLS_MMFTDATAWRITER_H_INCLUDED

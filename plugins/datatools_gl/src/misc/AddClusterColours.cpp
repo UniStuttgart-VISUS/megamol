@@ -8,7 +8,7 @@
 #include "AddClusterColours.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -30,7 +30,7 @@ AddClusterColours::Unlocker::Unlocker(geocalls::MultiParticleDataCall::Unlocker*
 /*
  * AddClusterColours::Unlocker::~Unlocker
  */
-AddClusterColours::Unlocker::~Unlocker(void) {
+AddClusterColours::Unlocker::~Unlocker() {
     this->Unlock();
 }
 
@@ -38,7 +38,7 @@ AddClusterColours::Unlocker::~Unlocker(void) {
 /*
  * AddClusterColours::Unlocker::Unlock
  */
-void AddClusterColours::Unlocker::Unlock(void) {
+void AddClusterColours::Unlocker::Unlock() {
     if (this->inner != NULL) {
         this->inner->Unlock();
         SAFE_DELETE(this->inner);
@@ -52,7 +52,7 @@ void AddClusterColours::Unlocker::Unlock(void) {
 /*
  * AddClusterColours::AddClusterColours
  */
-AddClusterColours::AddClusterColours(void)
+AddClusterColours::AddClusterColours()
         : Module()
         , putDataSlot("putdata", "Connects from the data consumer")
         , getDataSlot("getdata", "Connects to the data source")
@@ -69,7 +69,7 @@ AddClusterColours::AddClusterColours(void)
     this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->getTFSlot.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->rebuildButtonSlot << new core::param::ButtonParam();
@@ -80,7 +80,7 @@ AddClusterColours::AddClusterColours(void)
 /*
  * AddClusterColours::~AddClusterColours
  */
-AddClusterColours::~AddClusterColours(void) {
+AddClusterColours::~AddClusterColours() {
     this->Release();
 }
 
@@ -88,7 +88,7 @@ AddClusterColours::~AddClusterColours(void) {
 /*
  * AddClusterColours::create
  */
-bool AddClusterColours::create(void) {
+bool AddClusterColours::create() {
     return true;
 }
 
@@ -96,7 +96,7 @@ bool AddClusterColours::create(void) {
 /*
  * AddClusterColours::release
  */
-void AddClusterColours::release(void) {
+void AddClusterColours::release() {
     // intentionally empty ATM
 }
 
@@ -150,8 +150,8 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
 
                 vislib::RawStorage texDat;
 
-                core_gl::view::CallGetTransferFunctionGL* cgtf =
-                    this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+                mmstd_gl::CallGetTransferFunctionGL* cgtf =
+                    this->getTFSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
                 if ((cgtf != NULL) && ((*cgtf)(0))) {
                     ::glGetError();
                     ::glEnable(GL_TEXTURE_1D);

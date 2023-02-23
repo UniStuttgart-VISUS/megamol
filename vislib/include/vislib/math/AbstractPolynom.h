@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTPOLYNOM_H_INCLUDED
-#define VISLIB_ABSTRACTPOLYNOM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/math/AbstractPolynomImpl.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -40,7 +35,7 @@ template<class T, unsigned int D, class S>
 class AbstractPolynom : public AbstractPolynomImpl<T, D, S, AbstractPolynom> {
 public:
     /** Dtor. */
-    ~AbstractPolynom(void);
+    ~AbstractPolynom();
 
     /**
      * Finds the roots of the polynom. If roots only touch the x-axis they
@@ -105,7 +100,7 @@ protected:
     typedef AbstractPolynomImpl<T, D, S, vislib::math::AbstractPolynom> Super;
 
     /** Ctor. */
-    inline AbstractPolynom(void) : Super() {}
+    inline AbstractPolynom() : Super() {}
 
 private:
     /* Allow instances created by the implementation class. */
@@ -118,7 +113,7 @@ private:
  * AbstractPolynom<T, D, S>::~AbstractPolynom
  */
 template<class T, unsigned int D, class S>
-AbstractPolynom<T, D, S>::~AbstractPolynom(void) {
+AbstractPolynom<T, D, S>::~AbstractPolynom() {
     // intentionally empty
 }
 
@@ -130,7 +125,7 @@ template<class T, class S>
 class AbstractPolynom<T, 1, S> : public AbstractPolynomImpl<T, 1, S, AbstractPolynom> {
 public:
     /** Dtor. */
-    ~AbstractPolynom(void);
+    ~AbstractPolynom();
 
     /**
      * Finds the roots of the polynom. If roots only touch the x-axis they
@@ -201,7 +196,7 @@ protected:
     typedef AbstractPolynomImpl<T, 1, S, vislib::math::AbstractPolynom> Super;
 
     /** Ctor. */
-    inline AbstractPolynom(void) : Super() {}
+    inline AbstractPolynom() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -213,7 +208,7 @@ protected:
  * AbstractPolynom<T, 1, S>::~AbstractPolynom
  */
 template<class T, class S>
-AbstractPolynom<T, 1, S>::~AbstractPolynom(void) {
+AbstractPolynom<T, 1, S>::~AbstractPolynom() {
     // intentionally empty
 }
 
@@ -225,7 +220,7 @@ template<class T, class S>
 class AbstractPolynom<T, 2, S> : public AbstractPolynomImpl<T, 2, S, AbstractPolynom> {
 public:
     /** Dtor. */
-    ~AbstractPolynom(void);
+    ~AbstractPolynom();
 
     /**
      * Finds the roots of the polynom. If roots only touch the x-axis they
@@ -296,7 +291,7 @@ protected:
     typedef AbstractPolynomImpl<T, 2, S, vislib::math::AbstractPolynom> Super;
 
     /** Ctor. */
-    inline AbstractPolynom(void) : Super() {}
+    inline AbstractPolynom() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -308,7 +303,7 @@ protected:
  * AbstractPolynom<T, 2, S>::~AbstractPolynom
  */
 template<class T, class S>
-AbstractPolynom<T, 2, S>::~AbstractPolynom(void) {
+AbstractPolynom<T, 2, S>::~AbstractPolynom() {
     // intentionally empty
 }
 
@@ -320,7 +315,7 @@ template<class T, class S>
 class AbstractPolynom<T, 3, S> : public AbstractPolynomImpl<T, 3, S, AbstractPolynom> {
 public:
     /** Dtor. */
-    ~AbstractPolynom(void);
+    ~AbstractPolynom();
 
     /**
      * Finds the roots of the polynom. If roots only touch the x-axis they
@@ -399,7 +394,7 @@ protected:
     typedef AbstractPolynomImpl<T, 3, S, vislib::math::AbstractPolynom> Super;
 
     /** Ctor. */
-    inline AbstractPolynom(void) : Super() {}
+    inline AbstractPolynom() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -411,7 +406,7 @@ protected:
  * AbstractPolynom<T, 3, S>::~AbstractPolynom
  */
 template<class T, class S>
-AbstractPolynom<T, 3, S>::~AbstractPolynom(void) {
+AbstractPolynom<T, 3, S>::~AbstractPolynom() {
     // intentionally empty
 }
 
@@ -423,7 +418,7 @@ template<class T, class S>
 class AbstractPolynom<T, 4, S> : public AbstractPolynomImpl<T, 4, S, AbstractPolynom> {
 public:
     /** Dtor. */
-    ~AbstractPolynom(void);
+    ~AbstractPolynom();
 
     /**
      * Finds the roots of the polynom. If roots only touch the x-axis they
@@ -509,7 +504,7 @@ protected:
     typedef AbstractPolynomImpl<T, 4, S, vislib::math::AbstractPolynom> Super;
 
     /** Ctor. */
-    inline AbstractPolynom(void) : Super() {}
+    inline AbstractPolynom() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -521,15 +516,13 @@ protected:
  * AbstractPolynom<T, 4, S>::~AbstractPolynom
  */
 template<class T, class S>
-AbstractPolynom<T, 4, S>::~AbstractPolynom(void) {
+AbstractPolynom<T, 4, S>::~AbstractPolynom() {
     // intentionally empty
 }
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTPOLYNOM_H_INCLUDED */

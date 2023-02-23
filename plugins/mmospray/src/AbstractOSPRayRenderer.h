@@ -7,17 +7,16 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/light/CallLight.h"
 #include "mmospray/CallOSPRayStructure.h"
+#include "mmstd/light/CallLight.h"
+#include "mmstd/renderer/CallRender3D.h"
+#include "mmstd/renderer/Renderer3DModule.h"
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
 #include <map>
 #include <stdint.h>
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 template<typename tPair>
 struct second_t {
@@ -95,10 +94,10 @@ struct baseStructureData {
 class AbstractOSPRayRenderer : public core::view::Renderer3DModule {
 protected:
     // Ctor
-    AbstractOSPRayRenderer(void);
+    AbstractOSPRayRenderer();
 
     // Dtor
-    ~AbstractOSPRayRenderer(void);
+    ~AbstractOSPRayRenderer() override;
 
     /**
      * initializes OSPRay
@@ -217,5 +216,4 @@ protected:
     core::view::Camera::ProjectionType _currentProjectionType = core::view::Camera::ProjectionType::PERSPECTIVE;
 };
 
-} // end namespace ospray
-} // end namespace megamol
+} // namespace megamol::ospray

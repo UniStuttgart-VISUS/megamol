@@ -29,5 +29,4 @@ public:
 private:
     std::string host_;
     std::unique_ptr<zmq::context_t> context_;
-    std::unique_ptr<zmq::socket_t> pre_socket_;
 };

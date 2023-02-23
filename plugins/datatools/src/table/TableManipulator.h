@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEMANIPULATOR_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEMANIPULATOR_H_INCLUDED
+#pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -18,9 +17,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /*
  * Module to manipulate table (copy) via a LUA script.
@@ -31,32 +28,32 @@ public:
     static std::string defaultScript;
 
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return ModuleName.c_str();
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "manipulate table (copy) via a LUA script";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    TableManipulator(void);
+    TableManipulator();
 
     /** Dtor */
-    virtual ~TableManipulator(void);
+    ~TableManipulator() override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 protected:
     /** Lua Interface */
@@ -132,8 +129,4 @@ private:
 
 }; /* end class TableManipulator */
 
-} /* end namespace table */
-} // namespace datatools
-} // namespace megamol
-
-#endif /* end ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEMANIPULATOR_H_INCLUDED */
+} // namespace megamol::datatools::table

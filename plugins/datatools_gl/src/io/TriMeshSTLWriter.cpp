@@ -6,13 +6,11 @@
  */
 
 #include "TriMeshSTLWriter.h"
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include <stdexcept>
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 TriMeshSTLWriter::TriMeshSTLWriter() : AbstractSTLWriter(geocalls_gl::CallTriMeshDataGL::ClassName()) {}
 
 TriMeshSTLWriter::~TriMeshSTLWriter() {}
@@ -162,6 +160,4 @@ bool TriMeshSTLWriter::write_data(core::AbstractGetData3DCall& callee) {
 }
 
 void TriMeshSTLWriter::release() {}
-} // namespace io
-} // namespace datatools_gl
-} // namespace megamol
+} // namespace megamol::datatools_gl::io

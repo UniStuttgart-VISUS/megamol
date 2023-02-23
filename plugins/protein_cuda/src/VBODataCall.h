@@ -8,15 +8,11 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmstd/renderer/CallRender3D.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
@@ -364,5 +360,3 @@ typedef core::factories::CallAutoDescription<VBODataCall> VBODataCallDescription
 
 } // end namespace protein_cuda
 } // end namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED

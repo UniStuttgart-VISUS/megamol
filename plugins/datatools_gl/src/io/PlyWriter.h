@@ -4,19 +4,15 @@
  * Copyright (C) 2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_IO_PLYWRITER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_PLYWRITER_H_INCLUDED
 #pragma once
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/sys/FastFile.h"
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 
 class PlyWriter : public core::AbstractDataWriter {
 public:
@@ -25,7 +21,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PlyWriter";
     }
 
@@ -34,7 +30,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Polygon file format (.ply) file writer";
     }
 
@@ -43,24 +39,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
     /** Ctor. */
-    PlyWriter(void);
+    PlyWriter();
 
     /** Dtor. */
-    virtual ~PlyWriter(void);
+    ~PlyWriter() override;
 
 protected:
     /**
@@ -68,19 +55,19 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The main function
      *
      * @return True on success
      */
-    virtual bool run(void);
+    bool run() override;
 
     /**
      * Function querying the writers capabilities
@@ -89,7 +76,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     /** The file name of the file to be written */
@@ -102,8 +89,4 @@ private:
     core::CallerSlot meshDataSlot;
 };
 
-} /* end namespace io */
-} // namespace datatools_gl
-} /* end namespace megamol */
-
-#endif // !MEGAMOL_DATATOOLS_IO_PLYWRITER_H_INCLUDED
+} // namespace megamol::datatools_gl::io

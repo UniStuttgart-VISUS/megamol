@@ -5,18 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNCTIONQUERY_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTIONQUERY_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "vislib/RawStorage.h"
 
 
-namespace megamol {
-namespace datatools_gl {
+namespace megamol::datatools_gl {
 
 
 /**
@@ -25,24 +20,24 @@ namespace datatools_gl {
 class TransferFunctionQuery {
 public:
     /** Ctor. */
-    TransferFunctionQuery(void);
+    TransferFunctionQuery();
 
     /** Dtor. */
-    ~TransferFunctionQuery(void);
+    ~TransferFunctionQuery();
 
     /**
      * Answer the slot for the transfer function call
      *
      * @return The slot for the transfer function
      */
-    inline core::CallerSlot* GetSlot(void) {
+    inline core::CallerSlot* GetSlot() {
         return &this->getTFSlot;
     }
 
     /**
      * Clears the transfer function data
      */
-    inline void Clear(void) {
+    inline void Clear() {
         this->texDat.EnforceSize(0);
         this->texDatSize = 0;
     }
@@ -66,7 +61,4 @@ private:
     unsigned int texDatSize;
 };
 
-} // namespace datatools_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TRANSFERFUNCTIONQUERY_H_INCLUDED */
+} // namespace megamol::datatools_gl

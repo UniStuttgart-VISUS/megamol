@@ -4,35 +4,33 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_PROTEIN_SOLPATHRENDERER_H_INCLUDED
-#define MEGAMOL_PROTEIN_SOLPATHRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /**
  * Renderer for solvent path raw data
  */
-class SolPathRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class SolPathRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolPathRenderer";
     }
 
@@ -41,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for solvent path raw data.";
     }
 
@@ -50,15 +48,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    SolPathRenderer(void);
+    SolPathRenderer();
 
     /** dtor */
-    virtual ~SolPathRenderer(void);
+    ~SolPathRenderer() override;
 
 protected:
     /**
@@ -66,7 +64,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -77,12 +75,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -91,20 +89,17 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** The slot to get the data */
     core::CallerSlot getdataslot;
 
     /** The shader for shading the path lines */
-    vislib_gl::graphics::gl::GLSLShader pathlineShader;
+    std::unique_ptr<glowl::GLSLProgram> pathlineShader;
 
     /** The shader for shading the dots */
-    vislib_gl::graphics::gl::GLSLShader dotsShader;
+    std::unique_ptr<glowl::GLSLProgram> dotsShader;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
-
-#endif /*  MEGAMOL_PROTEIN_SOLPATHRENDERER_H_INCLUDED */
+} // namespace megamol::protein_gl

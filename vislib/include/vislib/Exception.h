@@ -5,11 +5,7 @@
  * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_EXCEPTION_H_INCLUDED
-#define VISLIB_EXCEPTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -69,7 +65,7 @@ public:
     Exception(const Exception& rhs);
 
     /** Dtor. */
-    virtual ~Exception(void);
+    virtual ~Exception();
 
     /**
      * Answer the file the exception was thrown in. The onwnership of the
@@ -77,7 +73,7 @@ public:
      *
      * @return The file the exception was thrown in.
      */
-    inline const char* GetFile(void) const {
+    inline const char* GetFile() const {
         return this->file;
     }
 
@@ -86,7 +82,7 @@ public:
      *
      * @return The line the exception was thrown in.
      */
-    inline int GetLine(void) const {
+    inline int GetLine() const {
         return this->line;
     }
 
@@ -97,7 +93,7 @@ public:
      *
      * @return The exception message.
      */
-    inline const TCHAR* GetMsg(void) const {
+    inline const TCHAR* GetMsg() const {
 #if defined(UNICODE) || defined(_UNICODE)
         return reinterpret_cast<const TCHAR*>(this->GetMsgW());
 #else  /* defined(UNICODE) || defined(_UNICODE) */
@@ -112,7 +108,7 @@ public:
      *
      * @return The exception message.
      */
-    virtual const char* GetMsgA(void) const;
+    virtual const char* GetMsgA() const;
 
     /**
      * Answer the file the exception description text. The pointer returned
@@ -121,7 +117,7 @@ public:
      *
      * @return The exception message.
      */
-    virtual const wchar_t* GetMsgW(void) const;
+    virtual const wchar_t* GetMsgW() const;
 
     /**
      * Assignment operator.
@@ -191,4 +187,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_EXCEPTION_H_INCLUDED */
