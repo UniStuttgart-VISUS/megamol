@@ -54,11 +54,10 @@ public:
         return true;
     }
 
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = Renderer3DModuleGL::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::MegaMolGraph_Req_Name);
-        resources.emplace_back(frontend_resources::AnimationEditorData_Req_Name);
-        return resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Renderer3DModuleGL::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
+        req.require<frontend_resources::AnimationEditorData>();
     }
 
     /**
