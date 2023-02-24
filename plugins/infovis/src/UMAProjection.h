@@ -1,5 +1,10 @@
-#ifndef MEGAMOL_UMAP_MODULE_H_INCLUDED
-#define MEGAMOL_UMAP_MODULE_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -8,41 +13,40 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 using namespace megamol::core;
 
 class UMAProjection : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "UMAProjection";
     }
 
     /** Return module class description */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Uniform Manifold Approximation and Projection (UMAP), i.e., "
                "a fairly flexible non-linear dimension reduction algorithm";
     }
 
     /** Module is always available */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /** Constructor */
-    UMAProjection(void);
+    UMAProjection();
 
     /** Destructor */
-    virtual ~UMAProjection(void);
+    ~UMAProjection() override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Data callback */
@@ -89,8 +93,4 @@ private:
     std::vector<float> data;
 };
 
-} // namespace infovis
-} // namespace megamol
-
-
-#endif
+} // namespace megamol::infovis

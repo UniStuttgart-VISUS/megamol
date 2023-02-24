@@ -1,4 +1,14 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "UMAProjection.h"
+
+#include <sstream>
+
+#include <umappp/Umap.hpp>
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -6,15 +16,12 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include <sstream>
-#include <umappp/Umap.hpp>
-
 using namespace megamol;
 using namespace megamol::infovis;
 
 using Umap = umappp::Umap<double>;
 
-UMAProjection::UMAProjection(void)
+UMAProjection::UMAProjection()
         : megamol::core::Module()
         , dataOutSlot("dataOut", "Ouput")
         , dataInSlot("dataIn", "Input")
@@ -126,15 +133,15 @@ UMAProjection::UMAProjection(void)
     this->MakeSlotAvailable(&nNeighborsSlot);
 }
 
-UMAProjection::~UMAProjection(void) {
+UMAProjection::~UMAProjection() {
     this->Release();
 }
 
-bool UMAProjection::create(void) {
+bool UMAProjection::create() {
     return true;
 }
 
-void UMAProjection::release(void) {}
+void UMAProjection::release() {}
 
 bool UMAProjection::getDataCallback(core::Call& c) {
     try {
@@ -262,8 +269,7 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     umap.set_negative_sample_rate(negativeSampleRate);
     umap.set_num_neighbors(nNeighbors);
     auto status = umap.run(dimCount, obsCount, inputData.data(), nDims, embeddingData.data(), 0);
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-        _T("Epoch %d of %d; a: %lf b: %lf, obs: %d\n"),
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("Epoch %d of %d; a: %lf b: %lf, obs: %d\n"),
         status.epoch(), status.num_epochs(), status.rparams.a, status.rparams.b, status.nobs());
 
     // Search extreme values.
