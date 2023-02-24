@@ -264,7 +264,7 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     auto status = umap.run(dimCount, obsCount, inputData.data(), nDims, embeddingData.data(), 0);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         _T("Epoch %d of %d; a: %lf b: %lf, obs: %d\n"),
-        status.epoch(), status.num_epochs(), status.a, status.b, status.nobs());
+        status.epoch(), status.num_epochs(), status.rparams.a, status.rparams.b, status.nobs());
 
     // Search extreme values.
     std::vector<double> minimas(nDims, 0.0);

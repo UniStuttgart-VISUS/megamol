@@ -1,0 +1,12 @@
+vcpkg_from_github(
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO LTLA/umappp
+    REF e086d6811b300878902d02ce164a7721902bfef3
+    SHA512 d062c2ee5123bc0ff3fb2daf241dc25e7f8950886cb14792dfb1d6976f95ef1d3cac97c4753f244103a00303e2890362daae65fe4c19895491be7331dc255bb2
+    HEAD_REF master
+)
+
+file(COPY "${SOURCE_PATH}/include/umappp" DESTINATION "${CURRENT_PACKAGES_DIR}/include/ltla")
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/ltla_umapppConfig.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/ltla_umappp")
+
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")

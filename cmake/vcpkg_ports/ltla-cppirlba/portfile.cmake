@@ -1,0 +1,12 @@
+vcpkg_from_github(
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO LTLA/CppIrlba
+    REF 0afbe46f7f37f67a4797c9025696d19dcdf13f29
+    SHA512 04f39c75ece30e19bf15ff526dc8fc1242961a4f443636d2003370f33a128b0b08d1fe309529e14876160ebfd0a52e98b1635152538011d00bf78669e2503fb3
+    HEAD_REF master
+)
+
+file(COPY "${SOURCE_PATH}/include/irlba" DESTINATION "${CURRENT_PACKAGES_DIR}/include/ltla")
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/ltla_cppirlbaConfig.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/ltla_cppirlba")
+
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")

@@ -1,0 +1,12 @@
+{
+  "name": "ltla-umappp",
+  "version-date": "2022-10-31",
+  "description": "UMAP C++ implementation",
+  "homepage": "https://github.com/LTLA/umappp",
+  "license": "BSD-2-Clause",
+  "dependencies": [
+    "ltla-aarand",
+    "ltla-cppirlba",
+    "ltla-knncolle"
+  ]
+}

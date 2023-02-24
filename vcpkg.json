@@ -30,6 +30,7 @@
     "implot",
     "libigl",
     "libpng",
+    "ltla-umappp",
     "lua",
     "mmpld-io",
     "nanoflann",

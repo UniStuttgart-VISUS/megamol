@@ -12,12 +12,14 @@ megamol_plugin(infovis
 if (infovis_PLUGIN_ENABLED)
   find_package(Eigen3 CONFIG REQUIRED)
   find_package(bhtsne CONFIG REQUIRED)
+  find_package(ltla_umappp CONFIG REQUIRED)
   find_path(DELAUNATOR_CPP_INCLUDE_DIRS "delaunator.hpp")
 
   target_link_libraries(infovis
     PRIVATE
       Eigen3::Eigen
-      bhtsne::bhtsne)
+      bhtsne::bhtsne
+      ltla::umappp)
   target_include_directories(infovis
     PRIVATE
       ${DELAUNATOR_CPP_INCLUDE_DIRS})
