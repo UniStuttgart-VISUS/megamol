@@ -3,10 +3,13 @@
 #include "OpenGL_Context.h"
 
 #include "imageseries/graph/GraphData2DCall.h"
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
+
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 #include <glowl/glowl.h>
 
@@ -17,23 +20,29 @@ namespace megamol::ImageSeries::GL {
 ImageSeriesRenderer::ImageSeriesRenderer()
         : getDataCaller("requestImageSeries", "Requests image data from a series.")
         , getGraphCaller("requestGraph", "Requests graph data to render on top of the image series.")
+        , getTransferFunctionCaller("requestTransferFunction", "Transfer function for mapping values to color.")
         , displayModeParam("Display Mode", "Controls how the image should be presented.")
         , renderGraphParam("Render Graph", "Render the input graph if there is one.")
         , baseRadiusParam("Node radius", "Radius of the nodes.")
         , edgeWidthParam("Edge width", "Width of the edges.")
+        , image_hash(-9837)
         , graph_hash(-7345) {
+
     getDataCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getDataCaller);
 
     getGraphCaller.SetCompatibleCall<typename ImageSeries::GraphData2DCall::CallDescription>();
     MakeSlotAvailable(&getGraphCaller);
 
-    auto* displayMode = new core::param::EnumParam(static_cast<int>(ImageDisplay2D::Mode::Auto));
-    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Auto), "Automatic");
-    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Color), "Color");
-    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Grayscale), "Grayscale");
-    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Labels), "Labels");
-    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::TimeDifference), "Time Difference");
+    getTransferFunctionCaller.SetCompatibleCall<megamol::mmstd_gl::CallGetTransferFunctionGLDescription>();
+    MakeSlotAvailable(&getTransferFunctionCaller);
+
+    auto* displayMode = new core::param::EnumParam(static_cast<int>(ImageDisplay2D::Mode::Color));
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::Color), "Image color");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::TFByte), "Transfer function (byte)");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::TFWord), "Transfer function (word)");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::CatByte), "Category lookup (byte)");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::CatWord), "Category lookup (word)");
 
     displayModeParam << displayMode;
     displayModeParam.SetUpdateCallback(&ImageSeriesRenderer::displayModeChangedCallback);
@@ -122,24 +131,30 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     }
 
     if (currentImage && currentImage->isValid()) {
-        const auto& image = *currentImage->getImageData();
+        auto input_image_hash = metadata.getHash();
 
-        display->updateTexture(image);
+        if (input_image_hash != image_hash) {
+            image_hash = input_image_hash;
+            display->updateTexture(*currentImage->getImageData());
 
-        if (auto* getData = getGraphCaller.CallAs<ImageSeries::GraphData2DCall>()) {
-            if ((*getData)(ImageSeries::GraphData2DCall::CallGetData)) {
-                auto input_hash = util::combineHash<util::Hash>(
-                    getData->DataHash(), util::computeHash(baseRadiusParam.Param<core::param::FloatParam>()->Value(),
-                                             edgeWidthParam.Param<core::param::FloatParam>()->Value()));
+            if (auto* getData = getGraphCaller.CallAs<ImageSeries::GraphData2DCall>()) {
+                if ((*getData)(ImageSeries::GraphData2DCall::CallGetData)) {
+                    auto input_graph_hash = util::combineHash<util::Hash>(getData->DataHash(),
+                        util::computeHash(baseRadiusParam.Param<core::param::FloatParam>()->Value(),
+                            edgeWidthParam.Param<core::param::FloatParam>()->Value()));
 
-                if (input_hash != graph_hash) {
-                    graph_hash = input_hash;
-                    display->updateGraph(*getData->GetOutput().graph->getData(),
-                        baseRadiusParam.Param<core::param::FloatParam>()->Value(),
-                        edgeWidthParam.Param<core::param::FloatParam>()->Value());
+                    if (input_graph_hash != graph_hash) {
+                        graph_hash = input_graph_hash;
+                        display->updateGraph(*getData->GetOutput().graph->getData(),
+                            baseRadiusParam.Param<core::param::FloatParam>()->Value(),
+                            edgeWidthParam.Param<core::param::FloatParam>()->Value());
+                    }
                 }
             }
         }
+
+        const auto tfInfo = getTransferFunction(display->getValueRange());
+        display->updateTransferFunction(std::get<0>(tfInfo), {std::get<1>(tfInfo), std::get<2>(tfInfo)});
     }
 
     return display->render(call, renderGraphParam.Param<core::param::BoolParam>()->Value());
@@ -152,5 +167,21 @@ bool ImageSeriesRenderer::displayModeChangedCallback(core::param::ParamSlot& par
     return true;
 }
 
+std::tuple<unsigned int, float, float> ImageSeriesRenderer::getTransferFunction(
+    const std::array<float, 2>& valueRange) {
+
+    mmstd_gl::CallGetTransferFunctionGL* ct =
+        this->getTransferFunctionCaller.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
+
+    if (ct != nullptr) {
+        ct->SetRange(valueRange);
+
+        if ((*ct)()) {
+            return std::make_tuple(ct->OpenGLTexture(), ct->Range()[0], ct->Range()[1]);
+        }
+    }
+
+    return std::make_tuple(0u, 0.0f, 1.0f);
+}
 
 } // namespace megamol::ImageSeries::GL

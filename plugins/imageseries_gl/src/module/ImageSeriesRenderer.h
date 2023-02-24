@@ -14,6 +14,7 @@
 #include "vislib/math/Rectangle.h"
 
 #include <memory>
+#include <tuple>
 
 namespace megamol::ImageSeries::GL {
 
@@ -90,13 +91,18 @@ protected:
      */
     bool displayModeChangedCallback(core::param::ParamSlot& param);
 
+    /**
+     * Update the transfer function and get texture information.
+     */
+    std::tuple<unsigned int, float, float> getTransferFunction(const std::array<float, 2>& valueRange);
+
 private:
     std::unique_ptr<ImageDisplay2D> display;
     std::shared_ptr<const AsyncImageData2D<>> currentImage;
 
     core::CallerSlot getDataCaller;
-
     core::CallerSlot getGraphCaller;
+    core::CallerSlot getTransferFunctionCaller;
 
     core::param::ParamSlot displayModeParam;
     core::param::ParamSlot renderGraphParam;
@@ -105,7 +111,7 @@ private:
 
     ImageSeries2DCall::Output metadata;
 
-    SIZE_T graph_hash;
+    SIZE_T image_hash, graph_hash;
 
     bool initialReadAhead = false;
     float lastReadAhead = 0.f;

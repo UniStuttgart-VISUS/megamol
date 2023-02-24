@@ -7,9 +7,12 @@
 
 #include "glowl/VertexLayout.hpp"
 
+#include <array>
+#include <limits>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 
 namespace megamol::ImageSeries::GL {
 
@@ -129,6 +132,21 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
 
     if (packAlignment) {
         glPixelStorei(GL_UNPACK_ALIGNMENT, packAlignment);
+    }
+
+    // Set value range depending on values in the image
+    const auto size = static_cast<std::size_t>(width) * height;
+
+    switch (image.GetChannelType()) {
+    case vislib::graphics::BitmapImage::CHANNELTYPE_BYTE:
+        valueRange = calcValueRange(image.PeekDataAs<std::uint8_t>(), size);
+        break;
+    case vislib::graphics::BitmapImage::CHANNELTYPE_WORD:
+        valueRange = calcValueRange(image.PeekDataAs<std::uint16_t>(), size);
+        break;
+    case vislib::graphics::BitmapImage::CHANNELTYPE_FLOAT:
+        valueRange = calcValueRange(image.PeekDataAs<float>(), size);
+        break;
     }
 
     return true;
@@ -255,7 +273,31 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, c
         edge_mesh = nullptr;
     }
 
+    // Set value range depending on values in the graph
+    auto min = std::numeric_limits<graph::GraphData2D::Label>::max();
+    auto max = std::numeric_limits<graph::GraphData2D::Label>::min();
+
+    for (const auto& node_info : nodes) {
+        const auto& node = node_info.second;
+
+        min = std::min(min, node.getLabel());
+        max = std::max(max, node.getLabel());
+    }
+
+    valueRange = {static_cast<float>(min), static_cast<float>(max)};
+
     return true;
+}
+
+bool ImageDisplay2D::updateTransferFunction(unsigned int texture, const std::array<float, 2>& valueRange) {
+    transferFunction = texture;
+    usedValueRange = valueRange;
+
+    return true;
+}
+
+const std::array<float, 2>& ImageDisplay2D::getValueRange() const {
+    return valueRange;
 }
 
 glm::vec2 ImageDisplay2D::getImageSize() const {
@@ -280,14 +322,6 @@ ImageDisplay2D::Mode ImageDisplay2D::getDisplayMode() const {
     return mode;
 }
 
-ImageDisplay2D::Mode ImageDisplay2D::getEffectiveDisplayMode() const {
-    if (mode == Mode::Auto) {
-        return texture && texture->getFormat() == GL_RED ? Mode::Grayscale : Mode::Color;
-    } else {
-        return mode;
-    }
-}
-
 bool ImageDisplay2D::renderImpl(
     std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix, const bool render_graph) {
     if (!framebuffer || !shader || !texture || !mesh) {
@@ -304,13 +338,22 @@ bool ImageDisplay2D::renderImpl(
     glActiveTexture(GL_TEXTURE0);
     texture->bindTexture();
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_1D, transferFunction);
+
     shader->use();
     shader->setUniform("matrix", glm::scale(matrix, glm::vec3(width, height, 1.f)));
     shader->setUniform("image", 0);
-    shader->setUniform("displayMode", static_cast<GLint>(getEffectiveDisplayMode()));
+    shader->setUniform("tfTexture", 1);
+    shader->setUniform("tfRange", usedValueRange[0], usedValueRange[1]);
+    shader->setUniform("displayMode", static_cast<GLint>(getDisplayMode()));
 
     mesh->draw();
 
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_1D, 0);
+
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     GLboolean revert_blend;

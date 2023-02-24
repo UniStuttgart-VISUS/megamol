@@ -315,14 +315,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             }
         }
 
-        // (?) Remove sinks whose single parent is not a node with one incoming and one outgoing edge,
-        //     as this probably indicates an irrelevant sink
-        if (input.fixes & Input::fixes_t::unimportant_sinks) {
-            invalid |= node.getEdgeCountIn() == 1 && node.getEdgeCountOut() == 0 &&
-                       !(nodeGraph->getNode(*node.getParentNodes().begin()).getEdgeCountIn() == 1 &&
-                           nodeGraph->getNode(*node.getParentNodes().begin()).getEdgeCountOut() == 1);
-        }
-
         node.valid = !invalid;
     }
 

@@ -95,7 +95,6 @@ private:
     core::param::ParamSlot isolatedParam;
     core::param::ParamSlot falseSourcesParam;
     core::param::ParamSlot falseSinksParam;
-    core::param::ParamSlot unimportantSinksParam;
     core::param::ParamSlot resolveDiamondsParam;
     core::param::ParamSlot combineTrivialParam;
     core::param::ParamSlot combineTinyParam;

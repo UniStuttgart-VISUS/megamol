@@ -14,6 +14,7 @@
 #include "glowl/Mesh.hpp"
 #include "glowl/Texture2D.hpp"
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -27,11 +28,11 @@ namespace megamol::ImageSeries::GL {
 class ImageDisplay2D {
 public:
     enum class Mode {
-        Auto = 0,
-        Color = 1,
-        Grayscale = 2,
-        Labels = 3,
-        TimeDifference = 4,
+        Color = 0,
+        TFByte = 1,
+        TFWord = 2,
+        CatByte = 3,
+        CatWord = 4,
     };
 
     ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFactoryOptions);
@@ -39,6 +40,9 @@ public:
 
     bool updateTexture(const vislib::graphics::BitmapImage& image);
     bool updateGraph(const ImageSeries::graph::GraphData2D& graph, float baseRadius, float edgeWidth);
+    bool updateTransferFunction(unsigned int texture, const std::array<float, 2>& valueRange);
+
+    const std::array<float, 2>& getValueRange() const;
 
     glm::vec2 getImageSize() const;
 
@@ -49,10 +53,26 @@ public:
     Mode getDisplayMode() const;
 
 private:
-    Mode getEffectiveDisplayMode() const;
-
     bool renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix, bool render_graph);
     static bool textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2);
+
+    template<typename T>
+    std::array<float, 2> calcValueRange(const T* arr, std::size_t size) const {
+        constexpr auto minPossible = std::numeric_limits<T>::lowest();
+        constexpr auto maxPossible = std::numeric_limits<T>::max();
+
+        auto min = maxPossible;
+        auto max = minPossible;
+
+        for (std::size_t i = 0; i < size; ++i) {
+            if (arr[i] != minPossible && arr[i] != maxPossible) {
+                min = std::min(min, arr[i]);
+                max = std::max(max, arr[i]);
+            }
+        }
+
+        return std::array<float, 2>{static_cast<float>(min), static_cast<float>(max)};
+    };
 
     std::shared_ptr<glowl::GLSLProgram> shader, edge_shader, node_shader;
     std::unique_ptr<glowl::Texture2D> texture;
@@ -68,7 +88,10 @@ private:
     GLuint node_radius_buffer, node_type_buffer, edge_weight_buffer;
     GLint width, height;
 
-    Mode mode = Mode::Auto;
+    unsigned int transferFunction;
+    std::array<float, 2> valueRange, usedValueRange;
+
+    Mode mode = Mode::Color;
 };
 
 } // namespace megamol::ImageSeries::GL

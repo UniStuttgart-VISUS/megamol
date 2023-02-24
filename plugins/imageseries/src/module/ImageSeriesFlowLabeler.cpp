@@ -28,7 +28,6 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         , isolatedParam("Remove isolated nodes", "Remove isolated nodes, which result from noise.")
         , falseSourcesParam("Remove unexpected sources", "Remove false sources, which result from noise, as well as connected nodes.")
         , falseSinksParam("Remove false sinks", "Remove false sinks, where neighbors have a higher time value.")
-        , unimportantSinksParam("Remove unimportant sinks", "Remove unimportant sinks.")
         , resolveDiamondsParam("Resolve diamond patterns", "Resolve diamond patterns, as these usually result from small local velocities.")
         , combineTrivialParam("Combine trivial nodes", "Combine 1-to-1 connected nodes, as these do not provide any valuable information.")
         , combineTinyParam("Combine small areas", "Combine small areas, as these usually result from small local velocities.")
@@ -93,10 +92,6 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     falseSinksParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&falseSinksParam);
 
-    unimportantSinksParam << new core::param::BoolParam(true);
-    unimportantSinksParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
-    MakeSlotAvailable(&unimportantSinksParam);
-
     combineTinyParam << new core::param::BoolParam(false);
     combineTinyParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&combineTinyParam);
@@ -152,7 +147,6 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
                     (isolatedParam.Param<bool_pt>()->Value() ? fixes_t::isolated : fixes_t::nope) |
                     (falseSourcesParam.Param<bool_pt>()->Value() ? fixes_t::false_sources : fixes_t::nope) |
                     (falseSinksParam.Param<bool_pt>()->Value() ? fixes_t::false_sinks : fixes_t::nope) |
-                    (unimportantSinksParam.Param<bool_pt>()->Value() ? fixes_t::unimportant_sinks : fixes_t::nope) |
                     (resolveDiamondsParam.Param<bool_pt>()->Value() ? fixes_t::resolve_diamonds : fixes_t::nope) |
                     (combineTrivialParam.Param<bool_pt>()->Value() ? fixes_t::combine_trivial : fixes_t::nope) |
                     (combineTinyParam.Param<bool_pt>()->Value() ? fixes_t::combine_tiny : fixes_t::nope);

@@ -70,7 +70,6 @@ public:
             isolated = 1,
             false_sources = 2,
             false_sinks = 4,
-            unimportant_sinks = 8,
             resolve_diamonds = 16,
             combine_trivial = 32,
             combine_tiny = 64
