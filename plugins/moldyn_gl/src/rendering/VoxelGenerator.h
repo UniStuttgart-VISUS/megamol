@@ -115,8 +115,6 @@ private:
 
     misc::MDAOVolumeGenerator* vol_gen_;
 
-    void getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col);
-
     GLuint vertex_array_;
 
     GLuint vbo_;
