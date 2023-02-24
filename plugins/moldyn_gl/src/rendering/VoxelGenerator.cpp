@@ -45,29 +45,28 @@ VoxelGenerator::VoxelGenerator(void)
 }
 
 VoxelGenerator::~VoxelGenerator(void) {
-    this->Release();
-}
 
-bool VoxelGenerator::create(void) {
-    this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(true);
-    glGenVertexArrays(1, &vertex_array_);
-    glGenBuffers(1, &vbo_);
-
-    return initVolumeGenerator();
+    this->release();
 }
 
 void VoxelGenerator::release(void) {
-
+    this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(false);
     glDeleteVertexArrays(1, &vertex_array_);
     glDeleteBuffers(1, &vbo_);
-
-    //TODO reset resources
-    this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(false);
 
     if (this->vol_gen_ != nullptr) {
         delete this->vol_gen_;
         this->vol_gen_ = nullptr;
     }
+}
+
+bool VoxelGenerator::create(void) {
+
+    this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(true);
+    glGenVertexArrays(1, &vertex_array_);
+    glGenBuffers(1, &vbo_);
+
+    return initVolumeGenerator();
 }
 
 bool VoxelGenerator::getExtentCallback(core::Call& call) {
@@ -111,41 +110,9 @@ bool VoxelGenerator::getMetadataCallback(core::Call& call) {
 
     if (volume_call != nullptr) {
         // set metadata
-        metadata.MemLoc = MemoryLocation::VRAM;
-
-
         int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
-        metadata.Resolution[0] = vol_size; // TODO volsize is not resolution?
-                                           //metadata.Resolution[1] = vol_size;
-                                           //metadata.Resolution[2] = vol_size;
-
-
-        // TODO set metadata correctly
-        metadata.Components = 3; //? // is_vector ? 3 : 1;
-        metadata.GridType = GridType_t::CARTESIAN;
-        //metadata.Resolution[0] = xRes; // TODO set parameters in UI?
-        //metadata.Resolution[1] = yRes;
-        //metadata.Resolution[2] = zRes;
-        metadata.ScalarType = ScalarType_t::FLOATING_POINT;
-        metadata.ScalarLength = sizeof(float);
-        //TODO metadata.MinValues and metadata.MaxValues
-        auto bbox = particle_call->AccessBoundingBoxes().ObjectSpaceBBox();
-        metadata.Extents[0] = bbox.Width();
-        metadata.Extents[1] = bbox.Height();
-        metadata.Extents[2] = bbox.Depth();
-        metadata.NumberOfFrames = 1;
-        metadata.SliceDists[0] = new float[1];
-        metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
-        metadata.SliceDists[1] = new float[1];
-        metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
-        metadata.SliceDists[2] = new float[1];
-        metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
-        metadata.Origin[0] = bbox.Left();
-        metadata.Origin[1] = bbox.Bottom();
-        metadata.Origin[2] = bbox.Back();
-        metadata.IsUniform[0] = true;
-        metadata.IsUniform[1] = true;
-        metadata.IsUniform[2] = true;
+        metadata.Resolution[0] = vol_size; // TODO?
+        metadata.MemLoc = MemoryLocation::VRAM;
 
         volume_call->SetMetadata(&metadata);
     }
@@ -163,9 +130,9 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
     if (volume_call != nullptr) {
 
         // get frame id
-        auto frameID = volume_call != nullptr ? volume_call->FrameID() : 0;
+        auto frameID = volume_call->FrameID();
 
-        do {
+        do { 
             particle_call->SetFrameID(frameID, true);
             if (!(*particle_call)(VolumetricDataCall::IDX_GET_EXTENTS)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("VoxelGenerator: Unable to get extents.");
@@ -175,18 +142,14 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("VoxelGenerator: Unable to get data.");
                 return false;
             }
-        } while (particle_call->FrameID() != frameID);
+        } while (particle_call->FrameID() != frameID); // TODO is do while necessary?
 
         // TODO time, datahash, dirty (ParticleToDensity.cpp)
         if (!this->generateVoxels(particle_call, volume_call))
             return false;
-        auto time = particle_call->FrameID();
-
 
         // set volume call data
-        volume_call->SetFrameID(time);
-        //volume_call->SetData(vol[0].data());
-        //volume_call->SetDataHash(this->datahash); // TODO
+        volume_call->SetFrameID(particle_call->FrameID());
         volume_call->SetData(texture_handle);
     }
 
@@ -215,24 +178,11 @@ bool VoxelGenerator::initVolumeGenerator() {
 
 bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, VolumetricDataCall* volume_call) {
 
-    // reset resources?
-    //      glDeleteVertexArrays
-
-    // render Ambient occlusion
-    //      glBindVertexArray()
-    //      glDrawArrays()
-
-    // rebuild working data
-    //
-
-    
-
     // make sure volume generator is initialized
     if (this->vol_gen_ == nullptr) {
         initVolumeGenerator();
     }
     
-    glm::vec4 cur_clip_dat_ = glm::vec4(0.0);     //TODO
     vislib::math::Cuboid<float> cur_clip_box_ = volume_call->AccessBoundingBoxes().ClipBox();
 
     // Fill volume texture
@@ -250,7 +200,7 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, Volume
         vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
         vol_gen_->ClearVolume();
         vol_gen_->StartInsertion(
-            cur_clip_box_, glm::vec4(cur_clip_dat_[0], cur_clip_dat_[1], cur_clip_dat_[2], cur_clip_dat_[3]));
+            cur_clip_box_, glm::vec4(0.0));
 
         // Insert particle data
         unsigned int particleListCount = particle_call->GetParticleListCount(); 
@@ -264,33 +214,20 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, Volume
                 global_radius = particles.GetGlobalRadius();
 
 
-            // TODO one vertex array for each i?
-            // 
-            glBindVertexArray(vertex_array_);
-            
+            // vao with particle data
+            glBindVertexArray(vertex_array_); // TODO different vaos and vbos for different particle lists?
             fillVAO(particles, vbo_, particles.GetVertexData(), true); // shpererenderer enableBuffersData()
             glBindVertexArray(0);
 
-            //disable buffer data:
-            GLuint vert_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inPosition");
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDisableVertexAttribArray(vert_attrib_loc);
-
-            //// TODO enableShaderData
-            //glBindVertexArray(vertex_array_);
-            //glDrawArrays(GL_POINTS, 0, particles.GetCount());
-            //glBindVertexArray(0);
-            //// TODO disableShaderData
-
             vol_gen_->InsertParticles(
-                static_cast<unsigned int>(particles.GetCount()), global_radius, vertex_array_); // TODO, 3: handle for vertex array, SphereRenderer: this->gpu_data_[i].vertex_array
+                static_cast<unsigned int>(particles.GetCount()), global_radius, vertex_array_);
         }
 
         vol_gen_->EndInsertion();
         vol_gen_->RecreateMipmap();
     }
 
-    // texture handle
+    // set texture handle
     texture_handle = vol_gen_->GetVolumeTextureHandle();
 
     return true;
@@ -300,38 +237,20 @@ bool VoxelGenerator::dummyCallback(core::Call& call) {
     return true;
 }
 
-//TODO use?
-void VoxelGenerator::getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col) {
-    // TODO if call get_clip_plane_slot_
-    // else:
-    out_clip_dat[0] = out_clip_dat[1] = out_clip_dat[2] = out_clip_dat[3] = 0.0f;
-    out_clip_col[0] = out_clip_col[1] = out_clip_col[2] = 0.75f;
-    out_clip_col[3] = 1.0f;
-}
-
-
-// TODO resetResources gpu_data_.clear()
-// TODO rebuildWorkingData
-
 bool VoxelGenerator::fillVAO(const MultiParticleDataCall::Particles& parts, GLuint vert_buf, const void* vert_ptr, bool create_buffer_data) {
 
     GLuint vert_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inPosition");
-    //GLuint col_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inColor");
-    //GLuint col_idx_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inColIdx");
 
-    //const void* color_ptr = col_ptr;
     const void* vertex_ptr = vert_ptr;
     if (create_buffer_data) {
-        //color_ptr = nullptr;
         vertex_ptr = nullptr;
     }
 
     unsigned int part_count = static_cast<unsigned int>(parts.GetCount());
 
-    // TODO color?
-
     // radius and position
     glBindBuffer(GL_ARRAY_BUFFER, vert_buf); //VBO
+
     switch (parts.GetVertexDataType()) {
     case MultiParticleDataCall::Particles::VERTDATA_NONE:
         break;
@@ -374,6 +293,7 @@ bool VoxelGenerator::fillVAO(const MultiParticleDataCall::Particles& parts, GLui
     default:
         break;
     }
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     return true;

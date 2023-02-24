@@ -86,7 +86,7 @@ SphereRenderer::SphereRenderer(void)
         , state_invalid_(0)
         , amb_cone_constants_()
         , trigger_rebuild_g_buffer_(false)
-        , vol_size_(256)
+        , vol_size_(0)
         , vol_size_changed_(false)
 // , timer()
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
@@ -257,22 +257,6 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
         cr->AccessBoundingBoxes().Clear();
     }
     this->cur_clip_box_ = cr->AccessBoundingBoxes().ClipBox();
-
-    // TODO
-    // Voxel generator
-    VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
-    if (c_voxel != nullptr) {
-        // checkout megamol\plugins\mmospray\src\OSPRayStructuredVolume.cpp     //c_voxel->SetFrameID(0,true); //do while...
-        c_voxel->SetFrameID(
-            static_cast<unsigned int>(cr->Time()), this->force_time_slot_.Param<param::BoolParam>()->Value());
-        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("SphereRenderer: could not get all extents (VolumetricDataCall)");
-        }
-        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "SphereRenderer: could not get metadata (VolumetricDataCall)");
-        }
-    }
 
     return true;
 }
@@ -2437,7 +2421,6 @@ void SphereRenderer::rebuildWorkingData(
         this->amb_cone_constants_[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
         this->amb_cone_constants_[1] = ceil(std::log2(static_cast<float>(vol_size_))) - 1.0f;
 
-        // TODO
         updateVolumeData(call.Time());
     }
 }
