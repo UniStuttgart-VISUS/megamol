@@ -11,7 +11,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayLuminousMaterial::OSPRayLuminousMaterial(void)
+OSPRayLuminousMaterial::OSPRayLuminousMaterial()
         : AbstractOSPRayMaterial()
         ,
         // LUMINOUS
@@ -27,7 +27,7 @@ OSPRayLuminousMaterial::OSPRayLuminousMaterial(void)
     this->MakeSlotAvailable(&this->lumTransparency);
 }
 
-OSPRayLuminousMaterial::~OSPRayLuminousMaterial(void) {
+OSPRayLuminousMaterial::~OSPRayLuminousMaterial() {
     this->Release();
 }
 

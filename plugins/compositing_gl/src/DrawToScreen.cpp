@@ -65,6 +65,12 @@ void megamol::compositing_gl::DrawToScreen::release() {
 }
 
 bool megamol::compositing_gl::DrawToScreen::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
+    if (chainedCall != nullptr) {
+        *chainedCall = call;
+        bool retVal = (*chainedCall)(core::view::AbstractCallRender::FnGetExtents);
+        call = *chainedCall;
+    }
     return true;
 }
 

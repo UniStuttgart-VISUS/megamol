@@ -23,7 +23,7 @@ namespace megamol::datatools {
 /*
  * SiffCSplineFitter::SiffCSplineFitter
  */
-SiffCSplineFitter::SiffCSplineFitter(void)
+SiffCSplineFitter::SiffCSplineFitter()
         : core::Module()
         , getDataSlot("getdata", "The slot exposing the loaded data")
         , inDataSlot("indata", "The slot for fetching siff data")
@@ -58,7 +58,7 @@ SiffCSplineFitter::SiffCSplineFitter(void)
 /*
  * SiffCSplineFitter::~SiffCSplineFitter
  */
-SiffCSplineFitter::~SiffCSplineFitter(void) {
+SiffCSplineFitter::~SiffCSplineFitter() {
     this->Release();
 }
 
@@ -66,7 +66,7 @@ SiffCSplineFitter::~SiffCSplineFitter(void) {
 /*
  * SiffCSplineFitter::create
  */
-bool SiffCSplineFitter::create(void) {
+bool SiffCSplineFitter::create() {
     // intentionally empty
     return true;
 }
@@ -75,7 +75,7 @@ bool SiffCSplineFitter::create(void) {
 /*
  * SiffCSplineFitter::release
  */
-void SiffCSplineFitter::release(void) {
+void SiffCSplineFitter::release() {
     this->curves.Clear();
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -125,7 +125,7 @@ bool SiffCSplineFitter::getExtentCallback(core::Call& caller) {
 /*
  * SiffCSplineFitter::assertData
  */
-void SiffCSplineFitter::assertData(void) {
+void SiffCSplineFitter::assertData() {
     using megamol::core::utility::log::Log;
 
     geocalls::MultiParticleDataCall* mpdc = this->inDataSlot.CallAs<geocalls::MultiParticleDataCall>();

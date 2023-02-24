@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_DATAGRIDDER_H_INCLUDED
-#define MEGAMOLCORE_DATAGRIDDER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -23,8 +19,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 
 
 /**
@@ -37,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DataGridder";
     }
 
@@ -46,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "A data storage module gridding flat particle data";
     }
 
@@ -55,24 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
     /** Ctor. */
-    DataGridder(void);
+    DataGridder();
 
     /** Dtor. */
-    virtual ~DataGridder(void);
+    ~DataGridder() override;
 
 protected:
     /**
@@ -80,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -154,7 +140,4 @@ private:
     SIZE_T outhash;
 };
 
-} /* end namespace moldyn */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_DATAGRIDDER_H_INCLUDED */
+} // namespace megamol::moldyn

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_FRAMEBUFFEROBJECT_H_INCLUDED
-#define VISLIB_FRAMEBUFFEROBJECT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -20,9 +16,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 
 /**
@@ -73,7 +67,7 @@ public:
      *
      * @return The extensions that are requiered for framebuffer objects.
      */
-    static const char* RequiredExtensions(void);
+    static const char* RequiredExtensions();
 
     /**
      * Answer the maximum number of colour attachments the current hardware
@@ -84,13 +78,13 @@ public:
      * @throws OpenGLException If the number of attachments cannot be
      *                         retrieved.
      */
-    UINT GetMaxColourAttachments(void);
+    UINT GetMaxColourAttachments();
 
     /** Ctor. */
-    FramebufferObject(void);
+    FramebufferObject();
 
     /** Dtor. */
-    ~FramebufferObject(void);
+    ~FramebufferObject();
 
     /**
      * Bind the texture that is used as render target for the colours.
@@ -128,7 +122,7 @@ public:
      *                               texture attachment for the depth
      *                               buffer.
      */
-    GLenum BindDepthTexture(void);
+    GLenum BindDepthTexture();
 
     /**
      * Create a framebuffer object with the specified dimension having the
@@ -218,7 +212,7 @@ public:
      * @throw IllegalStateException if the depth attachment is not a
      *        texture attachment.
      */
-    inline GLuint DepthTextureID(void) const {
+    inline GLuint DepthTextureID() const {
         return this->GetDepthTextureID();
     }
 
@@ -245,7 +239,7 @@ public:
      *
      * @return GL_NO_ERROR in case of success, an error code otherwise.
      */
-    GLenum Disable(void) throw();
+    GLenum Disable() throw();
 
     /**
      * Draw the 'colourAttachment'th colour attachment as screen-filling
@@ -347,7 +341,7 @@ public:
      *
      * @return The number of colour attachments.
      */
-    inline UINT GetCntColourAttachments(void) const {
+    inline UINT GetCntColourAttachments() const {
         return this->cntColourAttachments;
     }
 
@@ -412,14 +406,14 @@ public:
      *
      * @throw IllegalStateException If no depth texture is attached.
      */
-    GLuint GetDepthTextureID(void) const;
+    GLuint GetDepthTextureID() const;
 
     /**
      * Answer the height of the FBO.
      *
      * @return The height.
      */
-    inline UINT GetHeight(void) const {
+    inline UINT GetHeight() const {
         return static_cast<UINT>(this->height);
     }
 
@@ -433,7 +427,7 @@ public:
      *
      * @return The OpenGL resource ID of the frame buffer object.
      */
-    inline GLuint GetID(void) const {
+    inline GLuint GetID() const {
         return this->idFb;
     }
 
@@ -442,7 +436,7 @@ public:
      *
      * @return The width.
      */
-    inline UINT GetWidth(void) const {
+    inline UINT GetWidth() const {
         return static_cast<UINT>(this->width);
     }
 
@@ -455,7 +449,7 @@ public:
      * @throws OpenGLException If the information could not be retrieved
      *                         from the state machine.
      */
-    bool IsEnabled(void);
+    bool IsEnabled();
 
     /**
      * Answer whether this object has successfully created a valid
@@ -463,7 +457,7 @@ public:
      *
      * @return true, if the FBO is valid and can be used, false otherwise.
      */
-    bool IsValid(void) const throw();
+    bool IsValid() const throw();
 
     /**
      * Release all resources allocated for the framebuffer object. The FBO
@@ -472,7 +466,7 @@ public:
      *
      * @throws OpenGLException If the resources could not be deleted.
      */
-    void Release(void);
+    void Release();
 
     std::optional<AttachmentState> GetColorAttachmentState(const UINT colorAttachment = 0) const {
         if (colorAttachment >= this->cntColourAttachments)
@@ -564,7 +558,7 @@ private:
      * @throws OpenGLException If checking the framebuffer status failed,
      *                         e. g. because no valid FBO is bound.
      */
-    bool isComplete(void) const;
+    bool isComplete() const;
 
     /**
      * Read the pixel data as pixels with format 'format' and elements of
@@ -585,7 +579,7 @@ private:
      *
      * @throws OpenGLException If the state information cannot be retrieved.
      */
-    void saveState(void);
+    void saveState();
 
     /**
      * Forbidden assignment operator.
@@ -635,11 +629,8 @@ private:
     GLsizei width;
 };
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} // namespace vislib_gl
+} // namespace vislib_gl::graphics::gl
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_FRAMEBUFFEROBJECT_H_INCLUDED */

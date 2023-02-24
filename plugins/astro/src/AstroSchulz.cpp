@@ -19,7 +19,7 @@
 /*
  * megamol::astro::AstroSchulz::AstroSchulz
  */
-megamol::astro::AstroSchulz::AstroSchulz(void)
+megamol::astro::AstroSchulz::AstroSchulz()
         : Module()
         , frameID((std::numeric_limits<unsigned int>::max)())
         , hashInput(0)
@@ -76,7 +76,7 @@ megamol::astro::AstroSchulz::AstroSchulz(void)
 /*
  * megamol::astro::AstroSchulz::~AstroSchulz
  */
-megamol::astro::AstroSchulz::~AstroSchulz(void) {
+megamol::astro::AstroSchulz::~AstroSchulz() {
     // TODO: This is toxic!
     this->Release();
 }
@@ -85,7 +85,7 @@ megamol::astro::AstroSchulz::~AstroSchulz(void) {
 /*
  * megamol::astro::AstroSchulz::create
  */
-bool megamol::astro::AstroSchulz::create(void) {
+bool megamol::astro::AstroSchulz::create() {
     return true;
 }
 
@@ -93,7 +93,7 @@ bool megamol::astro::AstroSchulz::create(void) {
 /*
  * megamol::astro::AstroSchulz::release
  */
-void megamol::astro::AstroSchulz::release(void) {}
+void megamol::astro::AstroSchulz::release() {}
 
 
 /*

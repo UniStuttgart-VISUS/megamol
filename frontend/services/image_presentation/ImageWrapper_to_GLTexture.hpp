@@ -11,8 +11,7 @@
 
 #include "ImageWrapper.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 // RAII manager for on-the-fly gl texture handle
 struct gl_texture {
@@ -41,5 +40,4 @@ private:
     void clear();
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

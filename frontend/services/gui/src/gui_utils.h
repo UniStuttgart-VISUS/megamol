@@ -6,8 +6,6 @@
  */
 
 
-#ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
-#define MEGAMOL_GUI_GUIUTILS_INCLUDED
 #pragma once
 
 
@@ -90,8 +88,7 @@
 #endif // MEGAMOL_USE_OPENGL
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /********** Additional Global ImGui Operators ****************************/
@@ -461,27 +458,6 @@ public:
         }
         return header_open;
     }
-
-    /*
-     * Convert given string to lower case.
-     */
-    static void StringToLowerCase(std::string& str) {
-
-        for (auto& c : str) {
-            c = static_cast<char>(std::tolower(c));
-        }
-    }
-
-    /*
-     * Convert given string to upper case.
-     */
-    static void StringToUpperCase(std::string& str) {
-
-        for (auto& c : str) {
-            c = static_cast<char>(std::toupper(c));
-        }
-    }
-
 
     static ImGuiKey GlfwKeyToImGuiKey(megamol::frontend_resources::Key key) {
         switch (key) {
@@ -924,7 +900,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GUIUTILS_INCLUDED
+} // namespace megamol::gui

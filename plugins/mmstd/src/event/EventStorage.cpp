@@ -19,11 +19,11 @@ megamol::core::EventStorage::~EventStorage() {
     this->Release();
 }
 
-bool megamol::core::EventStorage::create(void) {
+bool megamol::core::EventStorage::create() {
     return true;
 }
 
-void megamol::core::EventStorage::release(void) {}
+void megamol::core::EventStorage::release() {}
 
 bool megamol::core::EventStorage::dataCallback(core::Call& caller) {
     auto ec = dynamic_cast<CallEvent*>(&caller);

@@ -17,8 +17,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 
 using namespace megamol::core;
 
@@ -33,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PTSBrickStatsDataSource";
     }
 
@@ -42,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for brick statistics files.";
     }
 
@@ -51,15 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    BrickStatsDataSource(void);
+    BrickStatsDataSource();
 
     /** Dtor. */
-    virtual ~BrickStatsDataSource(void);
+    ~BrickStatsDataSource() override;
 
 protected:
     /**
@@ -67,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Callback receiving the update of the file name parameter.
@@ -125,5 +124,4 @@ private:
     vislib::Array<BrickStatsCall::BrickInfo> info;
 };
 
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn

@@ -36,13 +36,13 @@ vislib::sys::SystemException::SystemException(const SystemException& rhs) : Exce
 /*
  * vislib::sys::SystemException::~SystemException
  */
-vislib::sys::SystemException::~SystemException(void) {}
+vislib::sys::SystemException::~SystemException() {}
 
 
 /*
  * vislib::sys::SystemException::GetMsgA
  */
-const char* vislib::sys::SystemException::GetMsgA(void) const {
+const char* vislib::sys::SystemException::GetMsgA() const {
     return static_cast<const char*>(this->sysMsg);
 }
 
@@ -50,7 +50,7 @@ const char* vislib::sys::SystemException::GetMsgA(void) const {
 /*
  * vislib::sys::SystemException::GetMsgW
  */
-const wchar_t* vislib::sys::SystemException::GetMsgW(void) const {
+const wchar_t* vislib::sys::SystemException::GetMsgW() const {
     return static_cast<const wchar_t*>(this->sysMsg);
 }
 

@@ -16,8 +16,7 @@
 #include <nanoflann.hpp>
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -41,25 +40,25 @@ public:
     enum phaseEnum { FLUID = 0, GAS = 1 };
 
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleThermodyn";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes an intensity from some properties of a particle (compared to its surroundings).";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleThermodyn(void);
+    ParticleThermodyn();
 
     /** Dtor */
-    virtual ~ParticleThermodyn(void);
+    ~ParticleThermodyn() override;
 
     /**
      * Called when the data is requested by this module
@@ -81,10 +80,10 @@ public:
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 private:
     bool assertData(geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC);
@@ -138,5 +137,4 @@ private:
     megamol::core::CallerSlot inDataSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

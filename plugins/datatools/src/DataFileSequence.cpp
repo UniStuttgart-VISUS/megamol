@@ -23,7 +23,7 @@ using namespace megamol;
 /*
  * moldyn::DataFileSequence::DataFileSequence
  */
-datatools::DataFileSequence::DataFileSequence(void)
+datatools::DataFileSequence::DataFileSequence()
         : core::Module()
         , fileNameTemplateSlot("fileNameTemplate", "The file name template"
                                                    " example: D:\\data\\Kohler\\nial\\nialout50_*5{0..599+2}*.crist "
@@ -82,7 +82,7 @@ datatools::DataFileSequence::DataFileSequence(void)
 /*
  * moldyn::DataFileSequence::~DataFileSequence
  */
-datatools::DataFileSequence::~DataFileSequence(void) {
+datatools::DataFileSequence::~DataFileSequence() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -90,7 +90,7 @@ datatools::DataFileSequence::~DataFileSequence(void) {
 /*
  * moldyn::DataFileSequence::create
  */
-bool datatools::DataFileSequence::create(void) {
+bool datatools::DataFileSequence::create() {
     auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
     for (auto cd : pluginsRes.all_call_descriptions) {
         if (IsCallDescriptionCompatible(cd)) {
@@ -108,7 +108,7 @@ bool datatools::DataFileSequence::create(void) {
 /*
  * moldyn::DataFileSequence::release
  */
-void datatools::DataFileSequence::release(void) {}
+void datatools::DataFileSequence::release() {}
 
 
 /*
@@ -267,7 +267,7 @@ bool datatools::DataFileSequence::checkConnections(core::Call* outCall) {
 /*
  * moldyn::DataFileSequence::checkParameters
  */
-void datatools::DataFileSequence::checkParameters(void) {
+void datatools::DataFileSequence::checkParameters() {
     if (this->fileNumberMinSlot.IsDirty()) {
         this->fileNumberMinSlot.ResetDirty();
         this->fileNumMin = static_cast<unsigned int>(
@@ -484,7 +484,7 @@ bool datatools::DataFileSequence::onFileNameSlotNameChanged(core::param::ParamSl
 /*
  * moldyn::DataFileSequence::findFileNameSlot
  */
-core::param::ParamSlot* datatools::DataFileSequence::findFileNameSlot(void) {
+core::param::ParamSlot* datatools::DataFileSequence::findFileNameSlot() {
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if (P != NULL) {
         AbstractNamedObjectContainer::ptr_type anoc =
@@ -509,7 +509,7 @@ core::param::ParamSlot* datatools::DataFileSequence::findFileNameSlot(void) {
 /*
  * moldyn::DataFileSequence::assertData
  */
-void datatools::DataFileSequence::assertData(void) {
+void datatools::DataFileSequence::assertData() {
     using megamol::core::utility::log::Log;
     if (!this->needDataUpdate)
         return;

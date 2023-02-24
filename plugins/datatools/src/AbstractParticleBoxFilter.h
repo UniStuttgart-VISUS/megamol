@@ -9,32 +9,31 @@
 #include "vislib/StringTokeniser.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 template<class T>
 class AbstractParticleBoxFilter : public AbstractManipulator<T> {
 public:
     /** Return module class name */
-    static constexpr const char* ClassName(void) {
+    static constexpr const char* ClassName() {
         return "ParticleBoxFilter";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Applies a box filter on a set of particles";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    AbstractParticleBoxFilter(void);
+    AbstractParticleBoxFilter();
 
     /** Dtor */
-    virtual ~AbstractParticleBoxFilter(void);
+    ~AbstractParticleBoxFilter() override;
 
 protected:
     /**
@@ -223,5 +222,4 @@ bool AbstractParticleBoxFilter<T>::manipulateData(T& outData, T& inData) {
     return true;
 }
 
-} // end namespace datatools
-} // end namespace megamol
+} // namespace megamol::datatools

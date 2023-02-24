@@ -28,19 +28,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef THE_GRAPHICS_CAMERA_MANIPULATOR_BASE_H_INCLUDED
-#define THE_GRAPHICS_CAMERA_MANIPULATOR_BASE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * Base class for camera manipulators.
@@ -61,7 +55,7 @@ public:
      * @return The camera the manipulator is working on. It is valid for
      *         the method to return nullptr.
      */
-    inline camera_type* camera(void) {
+    inline camera_type* camera() {
         return this->cam;
     }
 
@@ -71,7 +65,7 @@ public:
      * @return The camera the manipulator is working on. It is valid for
      *         the method to return nullptr.
      */
-    inline const camera_type* camera(void) const {
+    inline const camera_type* camera() const {
         return this->cam;
     }
 
@@ -97,7 +91,7 @@ public:
      *
      * @return true if the manipulator is enabled; false otherwise.
      */
-    inline bool enabled(void) const {
+    inline bool enabled() const {
         return (this->isEnabled && (this->cam != nullptr));
     }
 
@@ -112,7 +106,7 @@ public:
      * @return true if the manipulator is modifying the camera,
      *         false otherwie.
      */
-    inline bool manipulating(void) const {
+    inline bool manipulating() const {
         return this->isManipulating;
     }
 
@@ -120,7 +114,7 @@ public:
      * Resets the target of the manipulation, effectively disabling the
      * manipulator.
      */
-    inline void reset_target(void) {
+    inline void reset_target() {
         this->cam = nullptr;
     }
 
@@ -143,14 +137,14 @@ protected:
     /**
      * Sets the manipulation flag to true.
      */
-    inline void begin_manipulation(void) {
+    inline void begin_manipulation() {
         this->isManipulating = true;
     }
 
     /**
      * Sets the manipulation flag to false.
      */
-    inline void end_manipulation(void) {
+    inline void end_manipulation() {
         this->isManipulating = false;
     }
 
@@ -168,11 +162,8 @@ private:
     bool isManipulating;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::thecam
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* THE_GRAPHICS_CAMERA_MANIPULATOR_BASE_H_INCLUDED */

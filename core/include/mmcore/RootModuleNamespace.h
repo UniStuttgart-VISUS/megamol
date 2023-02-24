@@ -61,7 +61,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~RootModuleNamespace();
+    ~RootModuleNamespace() override;
 
     /**
      * Answer the full namespace path for 'path' seen relative to 'base'.
@@ -90,14 +90,14 @@ public:
      *
      * @return The reader-writer lock to lock the module graph
      */
-    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock();
+    vislib::sys::AbstractReaderWriterLock& ModuleGraphLock() override;
 
     /**
      * Answer the reader-writer lock to lock the module graph
      *
      * @return The reader-writer lock to lock the module graph
      */
-    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock() const;
+    vislib::sys::AbstractReaderWriterLock& ModuleGraphLock() const override;
 
 protected:
 private:

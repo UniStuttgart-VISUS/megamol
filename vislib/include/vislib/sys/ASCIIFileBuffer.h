@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ASCIIFILEBUFFER_H_INCLUDED
-#define VISLIB_ASCIIFILEBUFFER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -23,8 +19,7 @@
 #include "vislib/sys/MemmappedFile.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -54,7 +49,7 @@ public:
         LineBuffer(const LineBuffer& src);
 
         /** Dtor */
-        ~LineBuffer(void);
+        ~LineBuffer();
 
         /**
          * Answer the number of word in this line. This value is zero if
@@ -63,7 +58,7 @@ public:
          *
          * @return The number of words in this line
          */
-        inline SIZE_T Count(void) const {
+        inline SIZE_T Count() const {
             return this->cnt;
         }
 
@@ -74,7 +69,7 @@ public:
          *
          * @return The pointer to the string of the line
          */
-        inline const char* Pointer(void) const {
+        inline const char* Pointer() const {
             if (this->cnt > 0) {
                 throw vislib::IllegalStateException("ASCIIFileBuffer was parsed for words. "
                                                     "Requesting lines is thus illegal",
@@ -127,7 +122,7 @@ public:
          *
          * @return The pointer to the string of the line
          */
-        operator const char*(void) const {
+        operator const char*() const {
             if (this->cnt > 0) {
                 throw vislib::IllegalStateException("ASCIIFileBuffer was parsed for words. "
                                                     "Requesting lines is thus illegal",
@@ -200,17 +195,17 @@ public:
     ASCIIFileBuffer(ParsingElement elements = PARSING_LINES);
 
     /** Dtor. */
-    ~ASCIIFileBuffer(void);
+    ~ASCIIFileBuffer();
 
     /** Clears the buffer */
-    void Clear(void);
+    void Clear();
 
     /**
      * Answer the number of lines stored in the buffer
      *
      * @return The number of lines stored in the buffer
      */
-    inline SIZE_T Count(void) const {
+    inline SIZE_T Count() const {
         return this->lines.Count();
     }
 
@@ -220,7 +215,7 @@ public:
      *
      * @return The default parsing element
      */
-    inline ParsingElement GetParsingElements(void) const {
+    inline ParsingElement GetParsingElements() const {
         return this->defElements;
     }
 
@@ -356,10 +351,8 @@ private:
     ParsingElement defElements;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ASCIIFILEBUFFER_H_INCLUDED */

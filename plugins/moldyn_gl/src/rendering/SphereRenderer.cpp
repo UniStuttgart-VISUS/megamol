@@ -32,7 +32,7 @@ const GLuint ssbo_flags_binding_point = 2;
 const GLuint ssbo_vertex_binding_point = 3;
 const GLuint ssbo_color_binding_point = 4;
 
-SphereRenderer::SphereRenderer(void)
+SphereRenderer::SphereRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getdata", "Connects to the data source")
         , get_tf_slot_("gettransferfunction", "The slot for the transfer function module")
@@ -219,7 +219,7 @@ SphereRenderer::SphereRenderer(void)
 }
 
 
-SphereRenderer::~SphereRenderer(void) {
+SphereRenderer::~SphereRenderer() {
     this->Release();
 }
 
@@ -264,7 +264,7 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 }
 
 
-bool SphereRenderer::create(void) {
+bool SphereRenderer::create() {
 
     ASSERT(IsAvailable());
 
@@ -359,7 +359,7 @@ bool SphereRenderer::create(void) {
 }
 
 
-void SphereRenderer::release(void) {
+void SphereRenderer::release() {
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
@@ -367,7 +367,7 @@ void SphereRenderer::release(void) {
 }
 
 
-bool SphereRenderer::resetResources(void) {
+bool SphereRenderer::resetResources() {
 
     this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
     this->soft_select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
@@ -2066,7 +2066,7 @@ bool SphereRenderer::enableShaderData(
 }
 
 
-bool SphereRenderer::disableShaderData(void) {
+bool SphereRenderer::disableShaderData() {
 
     return this->disableTransferFunctionTexture();
 }
@@ -2088,7 +2088,7 @@ bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLPr
 }
 
 
-bool SphereRenderer::disableTransferFunctionTexture(void) {
+bool SphereRenderer::disableTransferFunctionTexture() {
 
     mmstd_gl::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (cgtf != nullptr) {

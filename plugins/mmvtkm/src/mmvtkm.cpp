@@ -21,7 +21,7 @@ public:
     MmvtkmPluginInstance()
             : megamol::core::factories::AbstractPluginInstance("vtkm", "Plugin to read and render vtkm data."){};
 
-    virtual ~MmvtkmPluginInstance() override = default;
+    ~MmvtkmPluginInstance() override = default;
 
     // Registers modules and calls
     void registerClasses() override {

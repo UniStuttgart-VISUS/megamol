@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 #pragma once
 
 
@@ -20,8 +18,7 @@
 #include "cinematic_gl/CinematicUtils.h"
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 /**
  * Timeline rendering.
@@ -33,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TimeLineRenderer";
     }
 
@@ -42,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renders the timeline of keyframes";
     }
 
@@ -51,15 +48,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TimeLineRenderer(void);
+    TimeLineRenderer();
 
     /** Dtor. */
-    virtual ~TimeLineRenderer(void);
+    ~TimeLineRenderer() override;
 
 protected:
     /**
@@ -67,12 +64,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -83,7 +80,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The render callback.
@@ -92,18 +89,18 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender2DGL& call);
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The mouse button pressed/released callback.
      */
-    virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
+    bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
         megamol::core::view::Modifiers mods) override;
 
     /**
      * The mouse movement callback.
      */
-    virtual bool OnMouseMove(double x, double y) override;
+    bool OnMouseMove(double x, double y) override;
 
 private:
     /**********************************************************************
@@ -153,7 +150,7 @@ private:
      * functions
      **********************************************************************/
 
-    bool recalcAxesData(void);
+    bool recalcAxesData();
 
     void pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color);
 
@@ -172,7 +169,4 @@ private:
     megamol::core::param::ParamSlot resetPanScaleParam;
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
+} // namespace megamol::cinematic_gl

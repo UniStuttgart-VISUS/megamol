@@ -27,7 +27,7 @@ using namespace megamol;
 /*
  * datatools::ParticleThermodyn::ParticleThermodyn
  */
-datatools::ParticleThermodyn::ParticleThermodyn(void)
+datatools::ParticleThermodyn::ParticleThermodyn()
         : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
         , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
         , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
@@ -136,14 +136,14 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 /*
  * datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance
  */
-datatools::ParticleThermodyn::~ParticleThermodyn(void) {
+datatools::ParticleThermodyn::~ParticleThermodyn() {
     this->Release();
 }
 
 /*
  * datatools::ParticleThermodyn::create
  */
-bool datatools::ParticleThermodyn::create(void) {
+bool datatools::ParticleThermodyn::create() {
     return true;
 }
 
@@ -182,7 +182,7 @@ bool isDirOK(megamol::datatools::ParticleThermodyn::metricsEnum metric, geocalls
 /*
  * datatools::ParticleThermodyn::release
  */
-void datatools::ParticleThermodyn::release(void) {}
+void datatools::ParticleThermodyn::release() {}
 
 
 bool datatools::ParticleThermodyn::assertData(

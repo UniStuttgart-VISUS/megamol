@@ -36,13 +36,13 @@ public:
     ParamSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~ParamSlot();
+    ~ParamSlot() override;
 
     /**
      * Makes this slot available. After this method was called the
      * settings of the slot can no longer be changed.
      */
-    virtual void MakeAvailable();
+    void MakeAvailable() override;
 
     /**
      * Sets an update callback method, which is called whenever the dirty
@@ -105,17 +105,6 @@ public:
     }
 
     /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const override;
-
-    /**
      * Queue a notification that the parameter value has changed, to notify
      * those that have a registered listener. This method is public to allow
      * pushing parameter changes that cannot use the dirty flag to avoid feedback
@@ -134,7 +123,7 @@ protected:
      *
      * @return 'true' if the slot has already been made available.
      */
-    virtual bool isSlotAvailable() const;
+    bool isSlotAvailable() const override;
 
 private:
     /**
@@ -181,7 +170,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackImpl() {
+        ~CallbackImpl() override {
             this->func = NULL; // DO NOT DELETE
         }
 
@@ -194,7 +183,7 @@ private:
          * @return 'true' if the dirty flag should be resetted, 'false' if
          *         the dirty flag should remain set.
          */
-        virtual bool Update(Module* owner, ParamSlot& slot) {
+        bool Update(Module* owner, ParamSlot& slot) override {
             return update(owner, slot);
         }
 
@@ -222,7 +211,7 @@ private:
      * Sets the dirty flag and triggers the update callback if the dirty
      * flag was not set before.
      */
-    virtual void update();
+    void update() override;
 
     /** The update callback object */
     Callback* callback;

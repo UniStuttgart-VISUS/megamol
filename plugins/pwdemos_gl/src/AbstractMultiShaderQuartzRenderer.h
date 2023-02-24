@@ -38,7 +38,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~AbstractMultiShaderQuartzRenderer();
+    ~AbstractMultiShaderQuartzRenderer() override;
 
 protected:
     /**
@@ -47,7 +47,7 @@ protected:
      * @return The crystalite data from the connected module or NULL if no
      *         data could be received
      */
-    virtual CrystalDataCall* getCrystaliteData();
+    CrystalDataCall* getCrystaliteData() override;
 
     /**
      * Releases all shader objects

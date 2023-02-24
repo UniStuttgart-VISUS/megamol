@@ -6,11 +6,7 @@
  * Copyright 2019 MegaMol Dev Team
  */
 
-#ifndef VISLIB_MUTEX_H_INCLUDED
-#define VISLIB_MUTEX_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,8 +18,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * A platform independent mutex wrapper.
@@ -41,10 +36,10 @@ public:
     /**
      * Create a new mutex, which is initially not locked.
      */
-    Mutex(void) = default;
+    Mutex() = default;
 
     /** Dtor. */
-    virtual ~Mutex(void) = default;
+    ~Mutex() override = default;
 
     /**
      * Acquire a lock on the mutex for the calling thread. The method blocks
@@ -52,7 +47,7 @@ public:
      *
      * @throws std::system_error when errors occur including OS errors
      */
-    void Lock(void) override;
+    void Lock() override;
 
     /**
      * Try to acquire a lock on the mutex for the calling thread. If the
@@ -69,7 +64,7 @@ public:
     /**
      * Release the mutex.
      */
-    void Unlock(void) override;
+    void Unlock() override;
 
 private:
     /**
@@ -100,10 +95,8 @@ private:
 typedef Lockable<Mutex> MutexLockable;
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MUTEX_H_INCLUDED */

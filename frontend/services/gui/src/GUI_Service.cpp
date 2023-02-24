@@ -26,8 +26,7 @@
 #include "mmcore/utility/log/Log.h"
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 
 bool GUI_Service::init(void* configPtr) {
@@ -532,5 +531,4 @@ void GUI_Service::resource_register_notification(
     }
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

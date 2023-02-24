@@ -12,8 +12,6 @@ if (BUILD_CORE)
   find_package(nlohmann_json CONFIG REQUIRED)
   find_package(PNG REQUIRED)
   find_package(ZLIB REQUIRED)
-  find_package(ZeroMQ REQUIRED)
-  find_package(cppzmq REQUIRED)
   find_package(glm REQUIRED)
   find_package(TBB CONFIG REQUIRED)
   find_package(Lua REQUIRED)
@@ -42,8 +40,6 @@ if (BUILD_CORE)
       nlohmann_json::nlohmann_json
       ${LUA_LIBRARIES}
       frontend_resources
-      libzmq
-      cppzmq
       OpenMP::OpenMP_CXX
       TBB::tbb
     PRIVATE
@@ -65,6 +61,13 @@ if (BUILD_CORE)
   if (MPI_C_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif ()
+
+  # Tracy
+  if (MEGAMOL_USE_TRACY)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC TRACY_ENABLE)
+    find_package(Tracy CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Tracy::TracyClient)
+  endif()
 
   # Install resources
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")

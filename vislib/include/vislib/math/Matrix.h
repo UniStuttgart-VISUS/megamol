@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MATRIX_H_INCLUDED
-#define VISLIB_MATRIX_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/math/AbstractMatrix.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -33,7 +28,7 @@ public:
     /**
      * Create the identity matrix.
      */
-    inline Matrix(void) : Super() {
+    inline Matrix() : Super() {
         this->SetIdentity();
     }
 
@@ -75,7 +70,7 @@ public:
     }
 
     /** Dtor. */
-    ~Matrix(void);
+    ~Matrix();
 
     /**
      * Assignment operator.
@@ -137,7 +132,7 @@ Matrix<T, D, L>::Matrix(const T& value) : Super() {
  * vislib::math::Matrix<T, D, L>::~Matrix
  */
 template<class T, unsigned int D, MatrixLayout L>
-Matrix<T, D, L>::~Matrix(void) {
+Matrix<T, D, L>::~Matrix() {
     // intentionally empty
 }
 
@@ -154,7 +149,7 @@ public:
     /**
      * Create the identity matrix.
      */
-    inline Matrix(void) : Super() {
+    inline Matrix() : Super() {
         this->SetIdentity();
     }
 
@@ -236,7 +231,7 @@ public:
     }
 
     /** Dtor. */
-    ~Matrix(void);
+    ~Matrix();
 
     /**
      * Assignment operator.
@@ -311,7 +306,7 @@ Matrix<T, 3, L>::Matrix(const T& value) : Super() {
  * vislib::math::Matrix<T, 3, L>::~Matrix
  */
 template<class T, MatrixLayout L>
-Matrix<T, 3, L>::~Matrix(void) {
+Matrix<T, 3, L>::~Matrix() {
     // intentionally empty
 }
 
@@ -328,7 +323,7 @@ public:
     /**
      * Create the identity matrix.
      */
-    inline Matrix(void) : Super() {
+    inline Matrix() : Super() {
         this->SetIdentity();
     }
 
@@ -425,7 +420,7 @@ public:
     }
 
     /** Dtor. */
-    ~Matrix(void);
+    ~Matrix();
 
     /**
      * Assignment operator.
@@ -500,15 +495,13 @@ Matrix<T, 4, L>::Matrix(const T& value) : Super() {
  * vislib::math::Matrix<T, 4, L>::~Matrix
  */
 template<class T, MatrixLayout L>
-Matrix<T, 4, L>::~Matrix(void) {
+Matrix<T, 4, L>::~Matrix() {
     // intentionally empty
 }
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MATRIX_H_INCLUDED */

@@ -464,7 +464,7 @@ bool vislib::sys::ReadTextFile(
 /*
  * vislib::sys::GetTicksOfDay
  */
-unsigned int vislib::sys::GetTicksOfDay(void) {
+unsigned int vislib::sys::GetTicksOfDay() {
 #ifdef _WIN32
     SYSTEMTIME systemTime;
     ::GetLocalTime(&systemTime);

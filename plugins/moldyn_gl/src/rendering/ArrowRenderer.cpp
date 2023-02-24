@@ -22,7 +22,7 @@ using namespace megamol::geocalls;
 using namespace megamol::moldyn_gl::rendering;
 
 
-ArrowRenderer::ArrowRenderer(void)
+ArrowRenderer::ArrowRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getdata", "Connects to the data source")
         , get_tf_slot_("gettransferfunction", "Connects to the transfer function module")
@@ -57,13 +57,13 @@ ArrowRenderer::ArrowRenderer(void)
 }
 
 
-ArrowRenderer::~ArrowRenderer(void) {
+ArrowRenderer::~ArrowRenderer() {
 
     this->Release();
 }
 
 
-bool ArrowRenderer::create(void) {
+bool ArrowRenderer::create() {
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
@@ -124,7 +124,7 @@ bool ArrowRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 }
 
 
-void ArrowRenderer::release(void) {
+void ArrowRenderer::release() {
     glDeleteTextures(1, &this->grey_tf_);
 
 #ifdef MEGAMOL_USE_PROFILING

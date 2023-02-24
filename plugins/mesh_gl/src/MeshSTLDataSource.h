@@ -10,8 +10,7 @@
 
 #include "datatools_gl/io/STLDataSource.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class MeshSTLDataSource : public datatools_gl::io::STLDataSource {
 public:
@@ -47,7 +46,7 @@ public:
     /// <summary>
     /// Destructor
     /// </summary>
-    ~MeshSTLDataSource();
+    ~MeshSTLDataSource() override;
 
 protected:
     /// <summary>
@@ -55,18 +54,17 @@ protected:
     /// </summary>
     /// <param name="caller">Call for this request</param>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool get_extent_callback(core::Call& caller) override;
+    bool get_extent_callback(core::Call& caller) override;
 
     /// <summary>
     /// Callback function for requesting data
     /// </summary>
     /// <param name="caller">Call for this request</param>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool get_mesh_data_callback(core::Call& caller) override;
+    bool get_mesh_data_callback(core::Call& caller) override;
 
     /// Output
     core::CalleeSlot ngmesh_output_slot;
 };
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

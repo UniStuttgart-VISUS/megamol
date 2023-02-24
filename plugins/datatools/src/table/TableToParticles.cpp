@@ -26,7 +26,7 @@ using namespace megamol;
 /*
  * TableToParticles::TableToParticles
  */
-TableToParticles::TableToParticles(void)
+TableToParticles::TableToParticles()
         : Module()
         , slotCallMultiPart("multidata", "Provides the data as MultiParticle call.")
         , slotCallTable("floattable", "float table input call")
@@ -165,7 +165,7 @@ TableToParticles::TableToParticles(void)
 /*
  * TableToParticles::~TableToParticles
  */
-TableToParticles::~TableToParticles(void) {
+TableToParticles::~TableToParticles() {
     this->Release();
 }
 
@@ -173,7 +173,7 @@ TableToParticles::~TableToParticles(void) {
 /*
  * megamol::pcl::PclDataSource::create
  */
-bool TableToParticles::create(void) {
+bool TableToParticles::create() {
     bool retval = true;
     return true;
 }
@@ -787,4 +787,4 @@ bool TableToParticles::getMultiparticleExtent(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void TableToParticles::release(void) {}
+void TableToParticles::release() {}

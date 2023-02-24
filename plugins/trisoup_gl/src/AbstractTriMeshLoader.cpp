@@ -17,7 +17,7 @@ using namespace megamol::trisoup_gl;
 /*
  * AbstractTriMeshLoader::AbstractTriMeshLoader
  */
-AbstractTriMeshLoader::AbstractTriMeshLoader(void)
+AbstractTriMeshLoader::AbstractTriMeshLoader()
         : AbstractTriMeshDataSource()
         , filenameSlot("filename", "The path to the file to load") {
 
@@ -29,7 +29,7 @@ AbstractTriMeshLoader::AbstractTriMeshLoader(void)
 /*
  * AbstractTriMeshLoader::~AbstractTriMeshLoader
  */
-AbstractTriMeshLoader::~AbstractTriMeshLoader(void) {
+AbstractTriMeshLoader::~AbstractTriMeshLoader() {
     this->Release();
     ASSERT(this->objs.IsEmpty());
     ASSERT(this->mats.IsEmpty());
@@ -39,7 +39,7 @@ AbstractTriMeshLoader::~AbstractTriMeshLoader(void) {
 /*
  * AbstractTriMeshLoader::assertData
  */
-void AbstractTriMeshLoader::assertData(void) {
+void AbstractTriMeshLoader::assertData() {
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
         this->objs.Clear();

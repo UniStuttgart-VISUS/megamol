@@ -34,7 +34,7 @@ const unsigned int IsoSurface::tets[6][4] = {
 /*
  * IsoSurface::IsoSurface
  */
-IsoSurface::IsoSurface(void)
+IsoSurface::IsoSurface()
         : inDataSlot("inData", "The slot for requesting input data")
         , outDataSlot("outData", "Gets the data")
         , attributeSlot("attr", "The attribute to show")
@@ -64,7 +64,7 @@ IsoSurface::IsoSurface(void)
 /*
  * IsoSurface::~IsoSurface
  */
-IsoSurface::~IsoSurface(void) {
+IsoSurface::~IsoSurface() {
     this->Release();
 }
 
@@ -72,7 +72,7 @@ IsoSurface::~IsoSurface(void) {
 /*
  * IsoSurface::create
  */
-bool IsoSurface::create(void) {
+bool IsoSurface::create() {
     // intentionally empty
     return true;
 }
@@ -81,7 +81,7 @@ bool IsoSurface::create(void) {
 /*
  * IsoSurface::release
  */
-void IsoSurface::release(void) {
+void IsoSurface::release() {
     this->index.EnforceSize(0);
     this->vertex.EnforceSize(0);
     this->normal.EnforceSize(0);

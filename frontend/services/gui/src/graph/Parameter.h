@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
-#define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 #pragma once
 
 
@@ -20,8 +18,7 @@
 #include <variant>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 // Forward declarations
@@ -449,7 +446,4 @@ void Parameter::SetStorage(T store) {
 }
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
+} // namespace megamol::gui

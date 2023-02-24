@@ -15,8 +15,7 @@
 
 using namespace megamol::geocalls;
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 ADIOSFlexVolume::ADIOSFlexVolume()
         : core::Module()
@@ -288,5 +287,4 @@ bool ADIOSFlexVolume::onTryGetData(core::Call& call) {
     return true;
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

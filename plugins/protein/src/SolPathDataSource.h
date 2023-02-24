@@ -4,11 +4,7 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_PROTEIN_SOLPATHDATASOURCE_H_INCLUDED
-#define MEGAMOL_PROTEIN_SOLPATHDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -19,8 +15,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for solvent path data
@@ -32,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolPathDataSource";
     }
 
@@ -41,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for solvent path data.";
     }
 
@@ -50,15 +45,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    SolPathDataSource(void);
+    SolPathDataSource();
 
     /** dtor */
-    virtual ~SolPathDataSource(void);
+    ~SolPathDataSource() override;
 
 protected:
     /**
@@ -66,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -106,7 +101,7 @@ private:
      *
      * @return 'true' if any parameter slot is dirty.
      */
-    inline bool anyParamslotDirty(void) const {
+    inline bool anyParamslotDirty() const {
         return this->filenameslot.IsDirty() || this->smoothSlot.IsDirty() || this->smoothValueSlot.IsDirty() ||
                this->smoothExpSlot.IsDirty() || this->speedOfSmoothedSlot.IsDirty() ||
                this->clusterOfSmoothedSlot.IsDirty();
@@ -125,12 +120,12 @@ private:
     /**
      * Clears all data
      */
-    void clear(void);
+    void clear();
 
     /**
      * Loads the data file
      */
-    void loadData(void);
+    void loadData();
 
     /** The slot publishing the data */
     megamol::core::CalleeSlot getdataslot;
@@ -175,7 +170,4 @@ private:
     vislib::Array<SolPathDataCall::Pathline> pathlines;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif /*  MEGAMOL_PROTEIN_SOLPATHDATASOURCE_H_INCLUDED */
+} // namespace megamol::protein

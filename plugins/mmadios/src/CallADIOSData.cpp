@@ -9,8 +9,7 @@
 #include "mmcore/utility/log/Log.h"
 #include <algorithm>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 CallADIOSData::CallADIOSData() : dataHash(0), time(0), frameCount(0), dataptr(nullptr) {}
 
@@ -140,5 +139,4 @@ bool CallADIOSData::isInAttributes(std::string attr) {
            this->availableAttributes.end();
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

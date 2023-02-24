@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MATHFUNCTIONS_H_INCLUDED
-#define VISLIB_MATHFUNCTIONS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -23,8 +19,7 @@
 #include <limits>
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * Answer the absolute of 'n'.
@@ -389,10 +384,8 @@ int ComparePairsSecond(const Pair<T1, T2>& lhs, const Pair<T1, T2>& rhs) {
 }
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MATHFUNCTIONS_H_INCLUDED */

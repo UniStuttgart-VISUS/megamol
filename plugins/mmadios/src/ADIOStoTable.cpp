@@ -8,8 +8,7 @@
 #include "mmadios/CallADIOSData.h"
 
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 
 ADIOStoTable::ADIOStoTable() : Module(), _getDataSlot("getData", ""), _deployTableSlot("deployTable", "") {
@@ -151,5 +150,4 @@ bool ADIOStoTable::getMetaData(core::Call& call) {
     return true;
 }
 
-} // namespace adios
-} // namespace megamol
+} // namespace megamol::adios

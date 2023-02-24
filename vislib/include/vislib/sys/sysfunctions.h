@@ -4,11 +4,7 @@
  * Copyright (C) 2006-2011 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SYSFUNCTIONS_H_INCLUDED
-#define VISLIB_SYSFUNCTIONS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -32,8 +28,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Possible text file formats
@@ -352,7 +347,7 @@ bool ReadTextFile(StringW& outStr, File& file, TextFileFormat format = TEXTFF_UN
  *
  * @return milliseconds since midnight.
  */
-unsigned int GetTicksOfDay(void);
+unsigned int GetTicksOfDay();
 
 #ifdef _WIN32
 /**
@@ -582,10 +577,8 @@ bool WriteTextFile(File& file, const StringA& text, TextFileFormat format = TEXT
 bool WriteTextFile(File& file, const StringW& text, TextFileFormat format = TEXTFF_UNICODE,
     TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC);
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SYSFUNCTIONS_H_INCLUDED */

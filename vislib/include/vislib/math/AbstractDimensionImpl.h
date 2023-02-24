@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTDIMENSIONIMPL_H_INCLUDED
-#define VISLIB_ABSTRACTDIMENSIONIMPL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -20,8 +16,7 @@
 #include <memory.h>
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -46,14 +41,14 @@ class AbstractDimensionImpl {
 
 public:
     /** Dtor. */
-    ~AbstractDimensionImpl(void);
+    ~AbstractDimensionImpl();
 
     /**
      * Access the internal dimension data directly.
      *
      * @return A pointer to the dimension data.
      */
-    inline const T* PeekDimension(void) const {
+    inline const T* PeekDimension() const {
         return this->dimension;
     }
 
@@ -62,7 +57,7 @@ public:
      *
      * @return A pointer to the dimension data.
      */
-    inline T* PeekDimension(void) {
+    inline T* PeekDimension() {
         return this->dimension;
     }
 
@@ -167,7 +162,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractDimensionImpl(void) {}
+    inline AbstractDimensionImpl() {}
 
     /** The extents wrapped by this class. */
     S dimension;
@@ -178,7 +173,7 @@ protected:
  * vislib::math::AbstractDimensionImpl<T, D, S, C>::~AbstractDimensionImpl
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-AbstractDimensionImpl<T, D, S, C>::~AbstractDimensionImpl(void) {}
+AbstractDimensionImpl<T, D, S, C>::~AbstractDimensionImpl() {}
 
 
 /*
@@ -295,10 +290,8 @@ const T& AbstractDimensionImpl<T, D, S, C>::operator[](const int i) const {
     }
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTDIMENSIONIMPL_H_INCLUDED */

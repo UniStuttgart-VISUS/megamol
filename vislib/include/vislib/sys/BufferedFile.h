@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_BUFFERED_FILE_H_INCLUDED
-#define VISLIB_BUFFERED_FILE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,8 +13,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Instances of this class repsesent a file based on vislib::sys::File but
@@ -33,7 +28,7 @@ public:
      *
      * @return size in bytes used when creating new buffers
      */
-    inline static File::FileSize GetDefaultBufferSize(void) {
+    inline static File::FileSize GetDefaultBufferSize() {
         return BufferedFile::defaultBufferSize;
     }
 
@@ -47,15 +42,15 @@ public:
     }
 
     /** Ctor. */
-    BufferedFile(void);
+    BufferedFile();
 
     /**
      * Dtor. If the file is still open, it is closed.
      */
-    virtual ~BufferedFile(void);
+    ~BufferedFile() override;
 
     /** Close the file, if open. */
-    virtual void Close(void);
+    void Close() override;
 
     /**
      * behaves like File::Flush
@@ -63,7 +58,7 @@ public:
      * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
      *                    could not be flushed to disk.
      */
-    virtual void Flush(void);
+    void Flush() override;
 
     /**
      * Answer the size of the current buffer in bytes.
@@ -71,39 +66,39 @@ public:
      *
      * @return number of bytes of current buffer
      */
-    inline File::FileSize GetBufferSize(void) const {
+    inline File::FileSize GetBufferSize() const {
         return this->bufferSize;
     }
 
     /**
      * behaves like File::GetSize
      */
-    virtual File::FileSize GetSize(void) const;
+    File::FileSize GetSize() const override;
 
     /**
      * behaves like File::Open
      */
-    virtual bool Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode);
+    bool Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+        const File::CreationMode creationMode) override;
 
     /**
      * behaves like File::Open
      */
-    virtual bool Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode);
+    bool Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+        const File::CreationMode creationMode) override;
 
     /**
      * behaves like File::Read
      * Performs an implicite flush if the buffer is not in read mode.
      * Ensures that the buffer is in read mode.
      */
-    virtual File::FileSize Read(void* outBuf, const File::FileSize bufSize);
+    File::FileSize Read(void* outBuf, const File::FileSize bufSize) override;
 
     /**
      * behaves like File::Seek
      * Performs an implicite flush if the buffer is in write mode.
      */
-    virtual File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from = File::BEGIN);
+    File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from = File::BEGIN) override;
 
     /**
      * Sets the size of the current buffer.
@@ -118,7 +113,7 @@ public:
     /**
      * behaves like File::Tell
      */
-    virtual File::FileSize Tell(void) const;
+    File::FileSize Tell() const override;
 
     /**
      * behaves like File::Write
@@ -128,7 +123,7 @@ public:
      * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
      *                    could not be flushed to disk.
      */
-    virtual File::FileSize Write(const void* buf, const File::FileSize bufSize);
+    File::FileSize Write(const void* buf, const File::FileSize bufSize) override;
 
 private:
     /** the default buffer size when creating new buffers */
@@ -192,10 +187,8 @@ private:
     File::FileSize validBufferSize;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_BUFFERED_FILE_H_INCLUDED */

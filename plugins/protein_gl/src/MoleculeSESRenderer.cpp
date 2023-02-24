@@ -44,7 +44,7 @@ using namespace megamol::core::utility::log;
 /*
  * MoleculeSESRenderer::MoleculeSESRenderer
  */
-MoleculeSESRenderer::MoleculeSESRenderer(void)
+MoleculeSESRenderer::MoleculeSESRenderer()
         : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the protein SES rendering with protein data storage")
         , getLightsSlot("getLights", "Connects the protein SES rendering with light sources")
@@ -187,7 +187,7 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
 /*
  * MoleculeSESRenderer::~MoleculeSESRenderer
  */
-MoleculeSESRenderer::~MoleculeSESRenderer(void) {
+MoleculeSESRenderer::~MoleculeSESRenderer() {
     // delete singularity texture
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);
@@ -199,13 +199,13 @@ MoleculeSESRenderer::~MoleculeSESRenderer(void) {
 /*
  * protein::MoleculeSESRenderer::release
  */
-void MoleculeSESRenderer::release(void) {}
+void MoleculeSESRenderer::release() {}
 
 
 /*
  * MoleculeSESRenderer::create
  */
-bool MoleculeSESRenderer::create(void) {
+bool MoleculeSESRenderer::create() {
 
     // glEnable( GL_NORMALIZE);
     glEnable(GL_DEPTH_TEST);
@@ -1509,7 +1509,7 @@ void MoleculeSESRenderer::CreateSingularityTexture(unsigned int idxRS) {
 /*
  * MoleculeSESRenderer::deinitialise
  */
-void MoleculeSESRenderer::deinitialise(void) {
+void MoleculeSESRenderer::deinitialise() {
     // delete singularity texture
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);

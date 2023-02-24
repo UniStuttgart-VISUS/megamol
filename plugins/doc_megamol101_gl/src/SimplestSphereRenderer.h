@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H
-#define MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H
+#pragma once
 
 #include <memory>
 
@@ -132,5 +131,3 @@ private:
 };
 
 } // namespace megamol::megamol101_gl
-
-#endif // MEGAMOL_MEGAMOL101_SIMPLESTSPHERERENDERER_H

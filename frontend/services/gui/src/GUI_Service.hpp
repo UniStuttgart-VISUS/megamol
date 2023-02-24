@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_SERVICE_HPP_INCLUDED
-#define MEGAMOL_GUI_SERVICE_HPP_INCLUDED
 #pragma once
 
 
@@ -20,8 +18,7 @@
 #include "mmcore/MegaMolGraph.h"
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 
 class GUIManager;
@@ -95,8 +92,8 @@ private:
     megamol::frontend_resources::common_types::lua_func_type* m_exec_lua;
 
     std::string resource_request_gui_state(bool as_lua);
-    bool resource_request_gui_visibility(void);
-    float resource_request_gui_scale(void);
+    bool resource_request_gui_visibility();
+    float resource_request_gui_scale();
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);
@@ -107,7 +104,4 @@ private:
     void resource_register_notification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 };
 
-} // namespace frontend
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_SERVICE_HPP_INCLUDED
+} // namespace megamol::frontend

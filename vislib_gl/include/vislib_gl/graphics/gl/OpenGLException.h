@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_OPENGLEXCEPTION_H_INCLUDED
-#define VISLIB_OPENGLEXCEPTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,9 +15,7 @@
 #include "vislib/Exception.h"
 
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 
 /**
@@ -55,14 +49,14 @@ public:
     OpenGLException(const OpenGLException& rhs);
 
     /** Dtor. */
-    virtual ~OpenGLException(void);
+    ~OpenGLException() override;
 
     /**
      * Answer the OpenGL error code.
      *
      * @return The error code.
      */
-    inline GLenum GetErrorCode(void) const {
+    inline GLenum GetErrorCode() const {
         return this->errorCode;
     }
 
@@ -80,11 +74,8 @@ private:
     GLenum errorCode;
 };
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} // namespace vislib_gl
+} // namespace vislib_gl::graphics::gl
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_OPENGLEXCEPTION_H_INCLUDED */

@@ -14,8 +14,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ADIOSFlexConvert : public core::Module {
 
@@ -51,12 +50,12 @@ public:
     ADIOSFlexConvert();
 
     /** Dtor. */
-    virtual ~ADIOSFlexConvert();
+    ~ADIOSFlexConvert() override;
 
-    bool create();
+    bool create() override;
 
 protected:
-    void release();
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -112,5 +111,4 @@ private:
     bool _trigger_recalc = false;
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

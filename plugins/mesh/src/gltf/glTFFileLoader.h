@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef GLTF_FILE_LOADER_H_INCLUDED
-#define GLTF_FILE_LOADER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -15,8 +14,7 @@
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class GlTFFileLoader : public AbstractMeshDataSource {
 public:
@@ -25,7 +23,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "GlTFFileLoader";
     }
 
@@ -34,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for simply loading a glTF file from disk";
     }
 
@@ -43,18 +41,18 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     GlTFFileLoader();
-    ~GlTFFileLoader();
+    ~GlTFFileLoader() override;
 
 protected:
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -67,9 +65,9 @@ protected:
 
     bool getGltfMetaDataCallback(core::Call& caller);
 
-    bool getMeshDataCallback(core::Call& caller);
+    bool getMeshDataCallback(core::Call& caller) override;
 
-    bool getMeshMetaDataCallback(core::Call& caller);
+    bool getMeshMetaDataCallback(core::Call& caller) override;
 
     bool disconnectGltfCallback(core::Call& caller);
 
@@ -87,8 +85,4 @@ private:
     megamol::core::CalleeSlot m_gltf_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
-
-
-#endif // !GLTF_FILE_LOADER_H_INCLUDED
+} // namespace megamol::mesh

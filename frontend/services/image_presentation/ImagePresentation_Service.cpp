@@ -41,8 +41,7 @@ static void log_warning(std::string const& text) {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
 }
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 ImagePresentation_Service::ImagePresentation_Service() {
     // init members to default states
@@ -524,5 +523,4 @@ void ImagePresentation_Service::fill_lua_callbacks() {
 }
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

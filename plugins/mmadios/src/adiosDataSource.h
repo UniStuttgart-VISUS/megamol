@@ -13,8 +13,7 @@
 #include <mpi.h>
 #endif
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class adiosDataSource : public core::Module {
 public:
@@ -23,7 +22,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "adiosDataSource";
     }
 
@@ -32,7 +31,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for ADIOS-based IO.";
     }
 
@@ -41,20 +40,20 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    adiosDataSource(void);
+    adiosDataSource();
 
     /** Dtor. */
-    virtual ~adiosDataSource(void);
+    ~adiosDataSource() override;
 
-    bool create(void);
+    bool create() override;
 
 protected:
-    void release(void);
+    void release() override;
 
     /**
      * Loads inquired data.
@@ -85,7 +84,7 @@ private:
     bool MpiInitialized = false;
 #endif
 
-    vislib::StringA getCommandLine(void);
+    vislib::StringA getCommandLine();
     bool filenameChanged(core::param::ParamSlot& slot);
 
     template<typename T, typename C>
@@ -149,5 +148,4 @@ void adiosDataSource::inquireRead(
     }
     dataMap[var.name] = std::move(container);
 }
-} /* end namespace adios */
-} /* end namespace megamol */
+} // namespace megamol::adios

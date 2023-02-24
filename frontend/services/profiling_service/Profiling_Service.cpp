@@ -9,8 +9,7 @@
 #include "LuaCallbacksCollection.h"
 #include "ModuleGraphSubscription.h"
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 bool Profiling_Service::init(void* configPtr) {
 #ifdef MEGAMOL_USE_PROFILING
@@ -270,5 +269,4 @@ void Profiling_Service::fill_lua_callbacks() {
     register_callbacks(callbacks);
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

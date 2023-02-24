@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
 #pragma once
 
 
@@ -19,8 +17,7 @@
 #include "cinematic_gl/KeyframeManipulators.h"
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 /**
  * Tracking shot rendering.
@@ -32,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TrackingShotRenderer";
     }
 
@@ -41,7 +38,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renders the tracking shot and passes the render call to another renderer.";
     }
 
@@ -50,24 +47,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
     /** Ctor. */
-    TrackingShotRenderer(void);
+    TrackingShotRenderer();
 
     /** Dtor. */
-    virtual ~TrackingShotRenderer(void);
+    ~TrackingShotRenderer() override;
 
 protected:
     /**
@@ -75,12 +63,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -91,7 +79,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -100,18 +88,18 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The mouse button pressed/released callback.
      */
-    virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
-        megamol::core::view::Modifiers mods) final override;
+    bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
+        megamol::core::view::Modifiers mods) final;
 
     /**
      * The mouse movement callback.
      */
-    virtual bool OnMouseMove(double x, double y) final override;
+    bool OnMouseMove(double x, double y) final;
 
 private:
     /**********************************************************************
@@ -144,7 +132,4 @@ private:
     core::param::ParamSlot toggleHelpTextParam;
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
+} // namespace megamol::cinematic_gl

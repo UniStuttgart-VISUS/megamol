@@ -4,11 +4,7 @@
  * Copyright (C) 2015 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED
-#define MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "geometry_calls/ParticleRelistCall.h"
@@ -17,26 +13,25 @@
 #include <cstdint>
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class MultiParticleRelister : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MultiParticleRelister";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Reorganizes MultiParticle Lists";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     MultiParticleRelister();
-    virtual ~MultiParticleRelister();
+    ~MultiParticleRelister() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     void copyData(const geocalls::SimpleSphericalParticles& inData, const geocalls::ParticleRelistCall& relist);
@@ -57,7 +52,4 @@ private:
     std::vector<std::vector<uint8_t>> data;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED */
+} // namespace megamol::datatools

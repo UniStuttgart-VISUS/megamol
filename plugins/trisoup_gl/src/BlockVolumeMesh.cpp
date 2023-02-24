@@ -17,7 +17,7 @@ using namespace megamol::trisoup_gl;
 /*
  * BlockVolumeMesh::BlockVolumeMesh
  */
-BlockVolumeMesh::BlockVolumeMesh(void)
+BlockVolumeMesh::BlockVolumeMesh()
         : AbstractTriMeshDataSource()
         , inDataSlot("indata", "Slot fetching binary volume data")
         , inDataHash(0) {
@@ -30,7 +30,7 @@ BlockVolumeMesh::BlockVolumeMesh(void)
 /*
  * BlockVolumeMesh::~BlockVolumeMesh
  */
-BlockVolumeMesh::~BlockVolumeMesh(void) {
+BlockVolumeMesh::~BlockVolumeMesh() {
     this->Release();
     ASSERT(this->objs.IsEmpty());
     ASSERT(this->mats.IsEmpty());
@@ -40,7 +40,7 @@ BlockVolumeMesh::~BlockVolumeMesh(void) {
 /*
  * BlockVolumeMesh::assertData
  */
-void BlockVolumeMesh::assertData(void) {
+void BlockVolumeMesh::assertData() {
 
     trisoup::CallBinaryVolumeData* cbvd = this->inDataSlot.CallAs<trisoup::CallBinaryVolumeData>();
     if (cbvd == NULL)

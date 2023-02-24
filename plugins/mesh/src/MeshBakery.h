@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MESH_BAKERY_H_INCLUDED
-#define MESH_BAKERY_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -15,8 +14,7 @@
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 
 class MeshBakery : public AbstractMeshDataSource {
@@ -26,7 +24,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MeshBakery";
     }
 
@@ -35,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "...";
     }
 
@@ -44,12 +42,12 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     MeshBakery();
-    ~MeshBakery();
+    ~MeshBakery() override;
 
 protected:
     /**
@@ -57,16 +55,16 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
-    virtual bool getMeshDataCallback(core::Call& caller);
+    bool getMeshDataCallback(core::Call& caller) override;
 
-    virtual bool getMeshMetaDataCallback(core::Call& caller);
+    bool getMeshMetaDataCallback(core::Call& caller) override;
 
 private:
     void createTriangleGeometry();
@@ -87,7 +85,4 @@ private:
     megamol::core::param::ParamSlot m_geometry_type;
 };
 
-} // namespace mesh
-} // namespace megamol
-
-#endif // !MESH_BAKERY_H_INCLUDED
+} // namespace megamol::mesh

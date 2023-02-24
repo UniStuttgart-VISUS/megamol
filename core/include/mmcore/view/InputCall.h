@@ -101,7 +101,7 @@ public:
     InputCall() = default;
 
     /** Dtor. */
-    virtual ~InputCall() = default;
+    ~InputCall() override = default;
 
 
     /**

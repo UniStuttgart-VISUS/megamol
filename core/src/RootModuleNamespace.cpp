@@ -35,7 +35,7 @@ using namespace megamol::core;
 /*
  * RootModuleNamespace::RootModuleNamespace
  */
-RootModuleNamespace::RootModuleNamespace(void) : ModuleNamespace(""), lock() {
+RootModuleNamespace::RootModuleNamespace() : ModuleNamespace(""), lock() {
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("RootModuleNamespace Lock address: %x\n", std::addressof(this->lock));
     // intentionally empty ATM
 }
@@ -44,7 +44,7 @@ RootModuleNamespace::RootModuleNamespace(void) : ModuleNamespace(""), lock() {
 /*
  * RootModuleNamespace::~RootModuleNamespace
  */
-RootModuleNamespace::~RootModuleNamespace(void) {
+RootModuleNamespace::~RootModuleNamespace() {
     // intentionally empty ATM
 }
 
@@ -112,7 +112,7 @@ ModuleNamespace::ptr_type RootModuleNamespace::FindNamespace(
 /*
  * RootModuleNamespace::ModuleGraphLock
  */
-vislib::sys::AbstractReaderWriterLock& RootModuleNamespace::ModuleGraphLock(void) {
+vislib::sys::AbstractReaderWriterLock& RootModuleNamespace::ModuleGraphLock() {
     return this->lock;
 }
 
@@ -120,6 +120,6 @@ vislib::sys::AbstractReaderWriterLock& RootModuleNamespace::ModuleGraphLock(void
 /*
  * RootModuleNamespace::ModuleGraphLock
  */
-vislib::sys::AbstractReaderWriterLock& RootModuleNamespace::ModuleGraphLock(void) const {
+vislib::sys::AbstractReaderWriterLock& RootModuleNamespace::ModuleGraphLock() const {
     return this->lock;
 }

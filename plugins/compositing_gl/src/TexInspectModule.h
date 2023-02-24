@@ -10,6 +10,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
+#include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/special/TextureInspector.h"
 
 namespace megamol::compositing_gl {
@@ -17,7 +18,7 @@ namespace megamol::compositing_gl {
 /**
  * Class implementing the texture inspector
  */
-class TexInspectModule : public core::Module {
+class TexInspectModule : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -54,7 +55,7 @@ public:
     /**
      * Dtor
      */
-    ~TexInspectModule();
+    ~TexInspectModule() override;
 
 protected:
     /**
@@ -62,7 +63,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Sets the extents (animation and bounding box) into the call object
@@ -85,7 +86,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
 private:
     mmstd_gl::special::TextureInspector tex_inspector_;

@@ -9,7 +9,7 @@
 
 namespace megamol::geocalls {
 
-ParticleRelistCall::ParticleRelistCall(void)
+ParticleRelistCall::ParticleRelistCall()
         : AbstractGetData3DCall()
         , tarListCount(0)
         , srcPartCount(0)
@@ -17,7 +17,7 @@ ParticleRelistCall::ParticleRelistCall(void)
     // intentionally empty
 }
 
-ParticleRelistCall::~ParticleRelistCall(void) {
+ParticleRelistCall::~ParticleRelistCall() {
     tarListCount = 0;
     srcPartCount = 0;
     srcParticleTarLists = nullptr; // we don't own the memory, so we don't delete

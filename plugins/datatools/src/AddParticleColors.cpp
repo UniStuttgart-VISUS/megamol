@@ -3,7 +3,7 @@
 #include "mmstd/renderer/CallGetTransferFunction.h"
 
 
-megamol::datatools::AddParticleColors::AddParticleColors(void)
+megamol::datatools::AddParticleColors::AddParticleColors()
         : AbstractParticleManipulator("outData", "indata")
         , _tf_slot("inTF", "") {
     _tf_slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
@@ -11,7 +11,7 @@ megamol::datatools::AddParticleColors::AddParticleColors(void)
 }
 
 
-megamol::datatools::AddParticleColors::~AddParticleColors(void) {
+megamol::datatools::AddParticleColors::~AddParticleColors() {
     this->Release();
 }
 

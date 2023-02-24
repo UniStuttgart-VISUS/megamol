@@ -149,7 +149,7 @@ bool vislib_gl::graphics::gl::EnableVSync(bool enable) {
 /*
  * vislib_gl::graphics::gl::GLVersion
  */
-const vislib::VersionNumber& vislib_gl::graphics::gl::GLVersion(void) {
+const vislib::VersionNumber& vislib_gl::graphics::gl::GLVersion() {
     static vislib::VersionNumber number(0, 0, 0);
     if (number.GetMajorVersionNumber() == 0) {
         // fetch version string

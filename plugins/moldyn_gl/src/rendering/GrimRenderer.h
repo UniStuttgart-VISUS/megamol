@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED
-#define MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED
+#pragma once
 
 #include "moldyn/ParticleGridDataCall.h"
 
@@ -42,9 +41,7 @@
 #include <glm/glm.hpp>
 
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::moldyn_gl::rendering {
 
 
 /**
@@ -57,7 +54,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "GrimRenderer";
     }
 
@@ -66,7 +63,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer of gridded imposters.";
     }
 
@@ -75,15 +72,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    GrimRenderer(void);
+    GrimRenderer();
 
     /** Dtor. */
-    virtual ~GrimRenderer(void);
+    ~GrimRenderer() override;
 
 protected:
     /**
@@ -91,7 +88,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -102,12 +99,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -116,7 +113,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /**
@@ -168,12 +165,12 @@ private:
         /**
          * Ctor
          */
-        CellInfo(void);
+        CellInfo();
 
         /**
          * Dtor
          */
-        ~CellInfo(void);
+        ~CellInfo();
 
         /**
          * Test for equality
@@ -293,8 +290,4 @@ private:
     SIZE_T inhash_;
 };
 
-} /* end namespace rendering */
-} // namespace moldyn_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED */
+} // namespace megamol::moldyn_gl::rendering

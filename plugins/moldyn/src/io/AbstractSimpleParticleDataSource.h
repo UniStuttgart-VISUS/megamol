@@ -23,10 +23,10 @@ class AbstractSimpleParticleDataSource : public core::Module {
 public:
 protected:
     /** Ctor. */
-    AbstractSimpleParticleDataSource(void);
+    AbstractSimpleParticleDataSource();
 
     /** Dtor. */
-    virtual ~AbstractSimpleParticleDataSource(void);
+    ~AbstractSimpleParticleDataSource() override;
 
     /**
      * Gets the data from the source.

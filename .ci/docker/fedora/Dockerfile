@@ -11,8 +11,10 @@ RUN dnf -y update && dnf -y install \
   ninja-build \
   git \
   clang \
-#vcpkg
+# vcpkg
   curl zip unzip tar \
+# ci checks:
+  clang-tools-extra \
 # openssl
   perl-core \
 # glfw

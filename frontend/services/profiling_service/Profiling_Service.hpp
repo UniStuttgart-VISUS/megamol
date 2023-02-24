@@ -13,8 +13,7 @@
 #include "FrameStatistics.h"
 #include "PerformanceManager.h"
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 class Profiling_Service final : public AbstractFrontendService {
 public:
@@ -57,5 +56,4 @@ private:
     frontend_resources::ProfilingLoggingStatus profiling_logging;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

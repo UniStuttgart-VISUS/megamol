@@ -232,9 +232,9 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::frontend_re
             std::sort(this->modules_stock.begin(), this->modules_stock.end(),
                 [](Module::StockModule& mod1, Module::StockModule& mod2) {
                     std::string a_str(mod1.class_name);
-                    megamol::gui::gui_utils::StringToUpperCase(a_str);
+                    core::utility::string::ToUpperAscii(a_str);
                     std::string b_str(mod2.class_name);
-                    megamol::gui::gui_utils::StringToUpperCase(b_str);
+                    core::utility::string::ToUpperAscii(b_str);
                     return (a_str < b_str);
                 });
         }

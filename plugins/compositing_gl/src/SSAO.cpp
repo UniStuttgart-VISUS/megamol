@@ -50,7 +50,7 @@
  * @megamol::compositing_gl::SSAO::SSAO
  */
 megamol::compositing_gl::SSAO::SSAO()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , version_(0)
         , output_tex_slot_("OutputTexture", "Gives access to resulting output texture")
         , normals_tex_slot_("NormalTexture", "Connects the normals render target texture")

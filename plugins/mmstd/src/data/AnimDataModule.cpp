@@ -19,7 +19,7 @@ using namespace megamol::core;
 /*
  * view::AnimDataModule::AnimDataModule
  */
-view::AnimDataModule::AnimDataModule(void)
+view::AnimDataModule::AnimDataModule()
         : Module()
         , frameCnt(0)
         , loader(loaderFunction)
@@ -34,7 +34,7 @@ view::AnimDataModule::AnimDataModule(void)
 /*
  * view::AnimDataModule::~AnimDataModule
  */
-view::AnimDataModule::~AnimDataModule(void) {
+view::AnimDataModule::~AnimDataModule() {
     this->Release();
 
     Frame** frames = this->frameCache;
@@ -190,7 +190,7 @@ view::AnimDataModule::Frame* view::AnimDataModule::requestLockedFrame(unsigned i
 /*
  * view::AnimDataModule::resetFrameCache
  */
-void view::AnimDataModule::resetFrameCache(void) {
+void view::AnimDataModule::resetFrameCache() {
     Frame** frames = this->frameCache;
     //    this->frameCache = NULL;
     this->isRunning.store(false);

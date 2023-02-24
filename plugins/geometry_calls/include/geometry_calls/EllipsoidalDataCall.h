@@ -29,7 +29,7 @@ public:
     /**
      * Ctor
      */
-    EllipsoidalParticles(void);
+    EllipsoidalParticles();
 
     /**
      * Copy ctor
@@ -41,14 +41,14 @@ public:
     /**
      * Dtor
      */
-    ~EllipsoidalParticles(void);
+    ~EllipsoidalParticles();
 
     /**
      * Answer the quaternion data pointer
      *
      * @return The quaternion data pointer
      */
-    inline const float* GetQuatData(void) const {
+    inline const float* GetQuatData() const {
         return this->quatPtr;
     }
 
@@ -58,7 +58,7 @@ public:
      *
      * @return The quaternion data stride
      */
-    inline unsigned int GetQuatDataStride(void) const {
+    inline unsigned int GetQuatDataStride() const {
         return this->quatStride;
     }
 
@@ -68,7 +68,7 @@ public:
      *
      * @return The radii data pointer
      */
-    inline const float* GetRadiiData(void) const {
+    inline const float* GetRadiiData() const {
         return this->radPtr;
     }
 
@@ -78,7 +78,7 @@ public:
      *
      * @return The radii data stride
      */
-    inline unsigned int GetRadiiDataStride(void) const {
+    inline unsigned int GetRadiiDataStride() const {
         return this->radStride;
     }
 
@@ -171,15 +171,15 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "EllipsoidalParticleDataCall";
     }
 
     /** Ctor. */
-    EllipsoidalParticleDataCall(void);
+    EllipsoidalParticleDataCall();
 
     /** Dtor. */
-    virtual ~EllipsoidalParticleDataCall(void);
+    ~EllipsoidalParticleDataCall() override;
 
     /**
      * Assignment operator.

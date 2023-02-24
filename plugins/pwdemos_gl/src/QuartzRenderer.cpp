@@ -23,13 +23,12 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * QuartzRenderer::QuartzRenderer
  */
-QuartzRenderer::QuartzRenderer(void)
+QuartzRenderer::QuartzRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , AbstractMultiShaderQuartzRenderer()
         , showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
@@ -53,7 +52,7 @@ QuartzRenderer::QuartzRenderer(void)
 /*
  * QuartzRenderer::~QuartzRenderer
  */
-QuartzRenderer::~QuartzRenderer(void) {
+QuartzRenderer::~QuartzRenderer() {
     this->Release();
     ASSERT(this->shaders.empty());
 }
@@ -449,7 +448,7 @@ bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 /*
  * QuartzRenderer::create
  */
-bool QuartzRenderer::create(void) {
+bool QuartzRenderer::create() {
     using megamol::core::utility::log::Log;
 
     auto const shader_options =
@@ -494,7 +493,7 @@ bool QuartzRenderer::create(void) {
 /*
  * QuartzRenderer::release
  */
-void QuartzRenderer::release(void) {
+void QuartzRenderer::release() {
     this->releaseShaders();
     this->errShader.reset();
 
@@ -565,5 +564,4 @@ std::shared_ptr<glowl::GLSLProgram> QuartzRenderer::makeShader(const CrystalData
     return s;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

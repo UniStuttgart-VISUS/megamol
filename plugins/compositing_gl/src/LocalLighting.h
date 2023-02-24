@@ -12,12 +12,11 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_gl/renderer/CallRender3DGL.h"
-#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 
-class LocalLighting : public core::Module {
+class LocalLighting : public mmstd_gl::ModuleGL {
 public:
     struct LightParams {
         float x, y, z, intensity;
@@ -51,7 +50,7 @@ public:
     }
 
     LocalLighting();
-    ~LocalLighting();
+    ~LocalLighting() override;
 
 protected:
     /**
@@ -59,12 +58,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO

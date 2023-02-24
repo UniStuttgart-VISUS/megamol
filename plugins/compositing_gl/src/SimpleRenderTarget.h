@@ -14,8 +14,7 @@
 #include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 /**
  * TODO
@@ -27,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SimpleRenderTarget";
     }
 
@@ -36,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Binds a FBO with color and normal render targets and a depth buffer.";
     }
 
@@ -45,7 +44,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         /*TODO*/
         return true;
     }
@@ -54,7 +53,7 @@ public:
     SimpleRenderTarget();
 
     /** Dtor. */
-    ~SimpleRenderTarget();
+    ~SimpleRenderTarget() override;
 
 protected:
     /**
@@ -62,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -78,7 +77,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -87,7 +86,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      *
@@ -144,5 +143,4 @@ private:
     core::CalleeSlot m_framebuffer_slot;
 };
 
-} // namespace compositing_gl
-} // namespace megamol
+} // namespace megamol::compositing_gl

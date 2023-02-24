@@ -104,7 +104,7 @@ ReducedSurface::ReducedSurface(unsigned int molId, MolecularDataCall* mol, float
 /*
  * ReducedSurface::~ReducedSurface
  */
-ReducedSurface::~ReducedSurface(void) {
+ReducedSurface::~ReducedSurface() {
     // set molecular data interface to NULL
     this->molecule = NULL;
 }

@@ -23,7 +23,7 @@ using namespace megamol::moldyn::io;
 /*
  * SIFFDataSource::SIFFDataSource
  */
-SIFFDataSource::SIFFDataSource(void)
+SIFFDataSource::SIFFDataSource()
         : core::Module()
         , filenameSlot("filename", "The path to the trisoup file to load.")
         , radSlot("radius", "The radius used when loading a version 1.1 file")
@@ -50,7 +50,7 @@ SIFFDataSource::SIFFDataSource(void)
 /*
  * SIFFDataSource::~SIFFDataSource
  */
-SIFFDataSource::~SIFFDataSource(void) {
+SIFFDataSource::~SIFFDataSource() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -58,7 +58,7 @@ SIFFDataSource::~SIFFDataSource(void) {
 /*
  * SIFFDataSource::create
  */
-bool SIFFDataSource::create(void) {
+bool SIFFDataSource::create() {
     if (!this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
         this->filenameChanged(this->filenameSlot);
     }
@@ -69,7 +69,7 @@ bool SIFFDataSource::create(void) {
 /*
  * SIFFDataSource::release
  */
-void SIFFDataSource::release(void) {
+void SIFFDataSource::release() {
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->data.EnforceSize(0);
 }

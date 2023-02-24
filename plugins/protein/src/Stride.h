@@ -4,11 +4,7 @@
  * Copyright (C) 2009 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_STRIDE_H_INCLUDED
-#define MEGAMOL_STRIDE_H_INCLUDED
-#if (_MSC_VER > 1000)
 #pragma once
-#endif /* (_MSC_VER > 1000) */
 
 #define _USE_MATH_DEFINES
 
@@ -24,8 +20,7 @@
 #include <string.h>
 #include <vector>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 #define Eps 0.000001
 #define Minimum(x, y) ((x) < (y) ? x : y)
@@ -278,7 +273,7 @@ public:
     } PATTERN;
 
     Stride(megamol::protein_calls::MolecularDataCall* mol);
-    virtual ~Stride(void);
+    virtual ~Stride();
 
     bool WriteToInterface(megamol::protein_calls::MolecularDataCall* mol);
 
@@ -390,7 +385,4 @@ private:
     bool Successful;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_STRIDE_H_INCLUDED */
+} // namespace megamol::protein

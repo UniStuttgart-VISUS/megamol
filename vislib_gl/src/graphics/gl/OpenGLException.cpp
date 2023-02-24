@@ -45,7 +45,7 @@ vislib_gl::graphics::gl::OpenGLException::OpenGLException(const OpenGLException&
 /*
  * vislib_gl::graphics::gl::OpenGLException::~OpenGLException
  */
-vislib_gl::graphics::gl::OpenGLException::~OpenGLException(void) {}
+vislib_gl::graphics::gl::OpenGLException::~OpenGLException() {}
 
 
 /*

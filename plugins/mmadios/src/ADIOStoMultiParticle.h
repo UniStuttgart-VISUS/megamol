@@ -13,8 +13,7 @@
 #include "mmcore/Module.h"
 #include <variant>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ADIOStoMultiParticle : public core::Module {
 
@@ -24,7 +23,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ADIOStoMultiParticle";
     }
 
@@ -33,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts ADIOS-based IO into MegaMols MultiParticleDataCall.";
     }
 
@@ -42,20 +41,20 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ADIOStoMultiParticle(void);
+    ADIOStoMultiParticle();
 
     /** Dtor. */
-    virtual ~ADIOStoMultiParticle(void);
+    ~ADIOStoMultiParticle() override;
 
-    bool create(void);
+    bool create() override;
 
 protected:
-    void release(void);
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -94,5 +93,4 @@ private:
     std::vector<uint64_t> plist_count;
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

@@ -28,15 +28,6 @@ public:
     virtual ~AbstractJob();
 
     /**
-     * Answers whether the given parameter is relevant for this job.
-     *
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    virtual bool IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const;
-
-    /**
      * Answers whether or not this job is still running.
      *
      * @return 'true' if this job is still running, 'false' if it has

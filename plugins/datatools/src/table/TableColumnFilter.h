@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNFILTER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNFILTER_H_INCLUDED
+#pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -17,9 +16,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /*
  * Module to filter columns from a table.
@@ -29,32 +26,32 @@ public:
     static std::string ModuleName;
 
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return ModuleName.c_str();
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Filters columns from a table";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    TableColumnFilter(void);
+    TableColumnFilter();
 
     /** Dtor */
-    virtual ~TableColumnFilter(void);
+    ~TableColumnFilter() override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Data callback */
@@ -84,8 +81,4 @@ private:
     std::vector<float> data;
 }; /* end class TableColumnFilter */
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* end ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNFILTER_H_INCLUDED */
+} // namespace megamol::datatools::table

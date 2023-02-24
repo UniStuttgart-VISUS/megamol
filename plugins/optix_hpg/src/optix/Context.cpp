@@ -35,7 +35,7 @@ megamol::optix_hpg::Context::Context(frontend_resources::CUDA_Context const& ctx
     _module_options.maxRegisterCount = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT;
 #ifdef DEBUG
     _module_options.optLevel = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
-    _module_options.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_LINEINFO;
+    _module_options.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_MODERATE;
 #else
     _module_options.optLevel = OPTIX_COMPILE_OPTIMIZATION_LEVEL_3;
     _module_options.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_NONE;

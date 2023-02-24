@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_STRINGCONVERTER_H_INCLUDED
-#define VISLIB_STRINGCONVERTER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -105,7 +101,7 @@ public:
     StringConverter(const SrcChar* str);
 
     /** Dtor. */
-    ~StringConverter(void);
+    ~StringConverter();
 
     /**
      * Answer the converted string. This operator is used as a trick
@@ -115,7 +111,7 @@ public:
      * @return The converted string. The object remains owner of the
      *         memory designated by the return value.
      */
-    inline operator const DstChar*(void) const {
+    inline operator const DstChar*() const {
         return this->buffer;
     }
 
@@ -163,7 +159,7 @@ StringConverter<S, T, B>::StringConverter(const SrcChar* str) : buffer(NULL) {
  * StringConverter<S, T, B>::~StringConverter
  */
 template<class S, class T, VL_INT32 B>
-StringConverter<S, T, B>::~StringConverter(void) {
+StringConverter<S, T, B>::~StringConverter() {
     if (this->buffer != this->staticBuffer) {
         ARY_SAFE_DELETE(this->buffer);
     }
@@ -185,4 +181,3 @@ StringConverter<S, T, B>& StringConverter<S, T, B>::operator=(const StringConver
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_STRINGCONVERTER_H_INCLUDED */

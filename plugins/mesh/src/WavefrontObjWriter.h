@@ -17,8 +17,7 @@
 
 #include "obj_io.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class WavefrontObjWriter : public core::AbstractDataWriter {
 public:
@@ -49,7 +48,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "WavefrontObjWriter";
     }
 
@@ -58,7 +57,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for simply loading a wavefront obj file from disk";
     }
 
@@ -67,12 +66,12 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     WavefrontObjWriter();
-    ~WavefrontObjWriter();
+    ~WavefrontObjWriter() override;
 
 protected:
     /**
@@ -80,14 +79,14 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
-    virtual bool run();
+    bool run() override;
 
     /**
      * Function querying the writers capabilities
@@ -96,7 +95,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     void WriteMesh(const std::string&, const ObjMesh&);
@@ -114,5 +113,4 @@ private:
     core::CallerSlot _rhs_mesh_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

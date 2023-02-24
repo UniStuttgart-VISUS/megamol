@@ -4,8 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef PROBE_GL_CALLS_H_INCLUDED
-#define PROBE_GL_CALLS_H_INCLUDED
+#pragma once
 
 #include "mmstd/generic/CallGeneric.h"
 
@@ -34,6 +33,3 @@ typedef megamol::core::factories::CallAutoDescription<CallProbeInteraction> Call
 
 } // namespace probe_gl
 } // namespace megamol
-
-
-#endif // !PROBE_GL_CALLS_H_INCLUDED

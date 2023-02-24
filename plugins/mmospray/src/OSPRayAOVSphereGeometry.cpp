@@ -23,7 +23,7 @@ typedef float (*floatFromArrayFunc)(const megamol::geocalls::MultiParticleDataCa
 typedef unsigned char (*byteFromArrayFunc)(const megamol::geocalls::MultiParticleDataCall::Particles& p, size_t index);
 
 
-OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry(void)
+OSPRayAOVSphereGeometry::OSPRayAOVSphereGeometry()
         : samplingRateSlot("samplingrate", "Set the samplingrate for the ao volume")
         , aoThresholdSlot(
               "aoThreshold", "Set the threshold for the ao vol sampling above which a sample is assumed to occlude")

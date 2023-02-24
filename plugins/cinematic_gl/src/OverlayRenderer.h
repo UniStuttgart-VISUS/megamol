@@ -5,12 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED
 #pragma once
 
 
-#include "ModuleGraphSubscription.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd/view/AbstractView.h"
@@ -22,8 +20,7 @@
 #include <iomanip>
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 
 /** ************************************************************************
@@ -32,10 +29,9 @@ namespace cinematic_gl {
 class OverlayRenderer : public megamol::core::view::RendererModule<mmstd_gl::CallRender3DGL, mmstd_gl::ModuleGL>,
                         megamol::core_gl::utility::RenderUtils {
 public:
-    virtual std::vector<std::string> requested_lifetime_resources() {
-        auto resources = ModuleGL::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::MegaMolGraph_Req_Name);
-        return resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        ModuleGL::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
     }
 
     /**
@@ -69,7 +65,7 @@ public:
     OverlayRenderer();
 
     /** Dtor. */
-    virtual ~OverlayRenderer();
+    ~OverlayRenderer() override;
 
 protected:
     /**
@@ -77,12 +73,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -93,7 +89,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -102,7 +98,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     struct Rectangle {
@@ -203,7 +199,4 @@ private:
 };
 
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED */
+} // namespace megamol::cinematic_gl

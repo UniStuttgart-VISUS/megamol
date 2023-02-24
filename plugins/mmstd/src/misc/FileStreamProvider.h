@@ -12,8 +12,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Provides a stream.
@@ -50,15 +49,6 @@ public:
     }
 
     /**
-     * Disallow usage in quickstarts.
-     *
-     * @return false
-     */
-    static bool SupportQuickstart() {
-        return false;
-    }
-
-    /**
      * Constructor
      */
     FileStreamProvider();
@@ -69,7 +59,7 @@ protected:
      *
      * @return Stream
      */
-    virtual std::iostream& GetStream() override;
+    std::iostream& GetStream() override;
 
 private:
     /** File path parameter */
@@ -82,5 +72,4 @@ private:
     std::fstream stream;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

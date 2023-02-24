@@ -5,11 +5,7 @@
  * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). All rights reserved.
  */
 
-#ifndef VISLIB_IPADDRESS_H_INCLUDED
-#define VISLIB_IPADDRESS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -28,8 +24,7 @@
 #include "vislib/String.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /**
  * Represents an IPv4 address.
@@ -128,7 +123,7 @@ public:
     inline IPAddress(const IPAddress& rhs) : address(rhs.address){};
 
     /** Dtor. */
-    ~IPAddress(void);
+    ~IPAddress();
 
     /**
      * Get the prefix of length 'prefixLength' bits of the address. The rest
@@ -160,14 +155,14 @@ public:
      *
      * @return The string representation of the IP address.
      */
-    StringA ToStringA(void) const;
+    StringA ToStringA() const;
 
     /**
      * Convert the IP address into dotted string format.
      *
      * @return The string representation of the IP address.
      */
-    inline StringW ToStringW(void) const {
+    inline StringW ToStringW() const {
         return StringW(this->ToStringA());
     }
 
@@ -218,7 +213,7 @@ public:
      *
      * @return The in_addr that is represented by this object.
      */
-    inline operator struct in_addr(void) const {
+    inline operator struct in_addr() const {
         return this->address;
     }
 
@@ -228,7 +223,7 @@ public:
      *
      * @return The in_addr that is represented by this object.
      */
-    inline operator struct in_addr &(void) {
+    inline operator struct in_addr &() {
         return this->address;
     }
 
@@ -239,7 +234,7 @@ public:
      * @return Pointer to the internal in6_addr that is represented by this
      *         object.
      */
-    inline operator const struct in_addr *(void) const {
+    inline operator const struct in_addr *() const {
         return &this->address;
     }
 
@@ -250,7 +245,7 @@ public:
      * @return Pointer to the internal in_addr that is represented by this
      *         object.
      */
-    inline operator struct in_addr *(void) {
+    inline operator struct in_addr *() {
         return &this->address;
     }
 
@@ -281,10 +276,8 @@ private:
     struct in_addr address;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_IPADDRESS_H_INCLUDED */

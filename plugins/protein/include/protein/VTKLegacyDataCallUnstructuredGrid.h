@@ -8,11 +8,7 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
-#define MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/data/AbstractGetData3DCall.h"
@@ -21,8 +17,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class VTKLegacyDataCallUnstructuredGrid : public core::AbstractGetData3DCall {
 
@@ -34,17 +29,17 @@ public:
     static const unsigned int CallForGetExtent;
 
     /** Ctor. */
-    VTKLegacyDataCallUnstructuredGrid(void);
+    VTKLegacyDataCallUnstructuredGrid();
 
     /** Dtor. */
-    virtual ~VTKLegacyDataCallUnstructuredGrid(void);
+    ~VTKLegacyDataCallUnstructuredGrid() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VTKLegacyDataCallUnstructuredGrid";
     }
 
@@ -53,7 +48,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for VTK unstructured grid data.";
     }
 
@@ -62,7 +57,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return core::AbstractGetData3DCall::FunctionCount();
     }
 
@@ -81,7 +76,7 @@ public:
      *
      * @return the call time
      */
-    float GetCalltime(void) const {
+    float GetCalltime() const {
         return this->calltime;
     }
 
@@ -290,7 +285,4 @@ private:
 typedef core::factories::CallAutoDescription<VTKLegacyDataCallUnstructuredGrid>
     VTKLegacyDataCallUnstructuredGridDescription;
 
-} // end namespace protein
-} // end namespace megamol
-
-#endif // MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
+} // namespace megamol::protein

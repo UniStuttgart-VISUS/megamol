@@ -1,22 +1,16 @@
-#ifndef MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED
-#define MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "trisoup/volumetrics/JobStructures.h"
 #include "trisoup/volumetrics/TagVolume.h"
 #include "vislib/math/ShallowShallowTriangle.h"
 #include "vislib/sys/ThreadPool.h"
 
-namespace megamol {
-namespace trisoup_gl {
-namespace volumetrics {
+namespace megamol::trisoup_gl::volumetrics {
 
 class TetraVoxelizer : public vislib::sys::Runnable {
 public:
-    TetraVoxelizer(void);
-    ~TetraVoxelizer(void);
+    TetraVoxelizer();
+    ~TetraVoxelizer() override;
 
     trisoup::volumetrics::VoxelizerFloat GetOffset(trisoup::volumetrics::VoxelizerFloat fValue1,
         trisoup::volumetrics::VoxelizerFloat fValue2, trisoup::volumetrics::VoxelizerFloat fValueDesired);
@@ -52,7 +46,7 @@ public:
      *
      * @return 0 on success, positive on abort, negative on error.
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
     /**
      * Asks the thread to terminate after the calculation of the current
@@ -60,7 +54,7 @@ public:
      *
      * @return Always 'true'
      */
-    virtual bool Terminate(void);
+    bool Terminate() override;
 
     /**
      * Test for equality. Actually this checks for equality of the
@@ -90,8 +84,4 @@ private:
     vislib::SingleLinkedList<vislib::math::Point<unsigned int, 4>> cellFIFO;
 };
 
-} /* end namespace volumetrics */
-} // namespace trisoup_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED */
+} // namespace megamol::trisoup_gl::volumetrics

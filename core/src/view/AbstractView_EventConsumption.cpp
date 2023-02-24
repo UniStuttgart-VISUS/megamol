@@ -13,9 +13,7 @@
 
 #include <chrono>
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 using namespace megamol::frontend_resources;
 
@@ -186,6 +184,4 @@ bool view_rendering_execution(void* module_ptr, std::vector<megamol::frontend::F
     return true;
 }
 
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

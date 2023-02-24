@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SYSTEMMESSAGE_H_INCLUDED
-#define VISLIB_SYSTEMMESSAGE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * This class wraps the human readable string of a system error code. It
@@ -44,7 +39,7 @@ public:
     SystemMessage(const SystemMessage& rhs);
 
     /** Dtor. */
-    ~SystemMessage(void);
+    ~SystemMessage();
 
     /**
      * Assignment operator.
@@ -67,7 +62,7 @@ public:
      *
      * @return The human readable error message.
      */
-    operator const char*(void) const;
+    operator const char*() const;
 
     /**
      * Cast to wchar_t string.
@@ -81,7 +76,7 @@ public:
      *
      * @return The human readable error message.
      */
-    operator const wchar_t*(void) const;
+    operator const wchar_t*() const;
 
     /**
      * Answer the system dependent error code associated with this
@@ -89,7 +84,7 @@ public:
      *
      * @return The system error code.
      */
-    inline DWORD GetErrorCode(void) const {
+    inline DWORD GetErrorCode() const {
         return this->errorCode;
     }
 
@@ -104,10 +99,8 @@ private:
     mutable void* msg;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SYSTEMMESSAGE_H_INCLUDED */

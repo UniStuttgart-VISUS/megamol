@@ -7,8 +7,7 @@
 #include "implot.h"
 #include "mmcore/MultiPerformanceHistory.h"
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 class ProfilingUtils {
 public:
     enum class MetricType { MINMAXAVG = 0, SUM = 1 };
@@ -94,5 +93,4 @@ public:
         }
     }
 };
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui

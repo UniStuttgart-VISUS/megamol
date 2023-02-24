@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MULTISZ_H_INCLUDED
-#define VISLIB_MULTISZ_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -123,7 +119,7 @@ public:
     MultiSz(const MultiSz& rhs);
 
     /** Dtor. */
-    ~MultiSz(void);
+    ~MultiSz();
 
     /**
      * Append 'str' at the end of the MultiSz.
@@ -173,7 +169,7 @@ public:
     /**
      * Clear all elements in the MultiSz.
      */
-    inline void Clear(void) {
+    inline void Clear() {
         ARY_SAFE_DELETE(this->data);
         ASSERT(this->data == NULL);
     }
@@ -183,7 +179,7 @@ public:
      *
      * @return The number of strings in the MultiSz.
      */
-    inline SIZE_T Count(void) const {
+    inline SIZE_T Count() const {
         return MultiSz::Count(this->data);
     }
 
@@ -243,7 +239,7 @@ public:
      *
      * @return true if the set is empty, false otherwise.
      */
-    inline bool IsEmpty(void) const {
+    inline bool IsEmpty() const {
         return (this->data == NULL);
     }
 
@@ -253,7 +249,7 @@ public:
      * @return The number of characters that are required to store the
      *         MultiSz.
      */
-    inline SIZE_T Length(void) const {
+    inline SIZE_T Length() const {
         return MultiSz::Length(this->data);
     }
 
@@ -277,7 +273,7 @@ public:
      *
      * @return The raw data pointer.
      */
-    inline const Char* PeekBuffer(void) const {
+    inline const Char* PeekBuffer() const {
         return this->data;
     }
 
@@ -472,7 +468,7 @@ MultiSz<T>::MultiSz(const MultiSz& rhs) : data(NULL) {
  * vislib::MultiSz<T>::~MultiSz
  */
 template<class T>
-MultiSz<T>::~MultiSz(void) {
+MultiSz<T>::~MultiSz() {
     this->Clear();
 }
 
@@ -718,4 +714,3 @@ typedef MultiSz<TCharTraits> TMultiSz;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MULTISZ_H_INCLUDED */

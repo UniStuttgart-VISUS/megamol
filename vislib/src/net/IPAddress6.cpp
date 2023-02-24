@@ -98,7 +98,7 @@ const vislib::net::IPAddress6& vislib::net::IPAddress6::UNSPECIFIED = vislib::ne
 /*
  * vislib::net::IPAddress6::IPAddress6
  */
-vislib::net::IPAddress6::IPAddress6(void) {
+vislib::net::IPAddress6::IPAddress6() {
     *this = ::in6addr_loopback;
 }
 
@@ -165,7 +165,7 @@ vislib::net::IPAddress6::IPAddress6(const IPAddress6& rhs) {
 /*
  * vislib::net::IPAddress6::~IPAddress6
  */
-vislib::net::IPAddress6::~IPAddress6(void) {}
+vislib::net::IPAddress6::~IPAddress6() {}
 
 
 /*
@@ -217,7 +217,7 @@ void vislib::net::IPAddress6::MapV4Address(const struct in_addr& address) {
 /*
  * vislib::net::IPAddress6::ToStringA
  */
-vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
+vislib::StringA vislib::net::IPAddress6::ToStringA() const {
     struct sockaddr_in6 addr; // Dummy socket address used for lookup.
     char buffer[NI_MAXHOST];  // Receives the stringised address.
     int err = 0;              // OS operation return value.
@@ -247,7 +247,7 @@ vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
 /*
  * vislib::net::IPAddress6::UnmapV4Address
  */
-vislib::net::IPAddress vislib::net::IPAddress6::UnmapV4Address(void) const {
+vislib::net::IPAddress vislib::net::IPAddress6::UnmapV4Address() const {
     if (this->IsV4Mapped()) {
         return IPAddress(*reinterpret_cast<const in_addr*>(this->address.s6_addr + 12));
     } else {
@@ -305,7 +305,7 @@ bool vislib::net::IPAddress6::operator==(const struct in6_addr& rhs) const {
 /*
  * vislib::net::IPAddress6::IPAddress
  */
-vislib::net::IPAddress6::operator vislib::net::IPAddress(void) const {
+vislib::net::IPAddress6::operator vislib::net::IPAddress() const {
     if (this->IsV4Compatible()) {
         return IPAddress(*reinterpret_cast<const in_addr*>(this->address.s6_addr + 12));
     } else {

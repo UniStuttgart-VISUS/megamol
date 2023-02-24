@@ -50,13 +50,13 @@ public:
     /**
      * Add the lightsource of this module to a given collection
      */
-    void addLight(LightCollection& light_collection);
+    void addLight(LightCollection& light_collection) override;
 
     /** Ctor. */
     TriDirectionalLighting();
 
     /** Dtor. */
-    virtual ~TriDirectionalLighting();
+    ~TriDirectionalLighting() override;
 
 private:
     core::param::ParamSlot m_key_direction;
@@ -64,8 +64,8 @@ private:
     core::param::ParamSlot m_back_direction;
     core::param::ParamSlot m_in_view_space;
 
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    bool InterfaceIsDirty() override;
+    void readParams() override;
 };
 
 } // namespace megamol::core::view::light

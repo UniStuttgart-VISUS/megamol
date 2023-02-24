@@ -6,8 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 TriangleMeshCall::TriangleMeshCall() : dimension(dimension_t::INVALID) {}
 
 TriangleMeshCall::dimension_t TriangleMeshCall::get_dimension() const {
@@ -57,5 +56,4 @@ std::shared_ptr<std::vector<unsigned int>> TriangleMeshCall::get_indices() const
 void TriangleMeshCall::set_indices(std::shared_ptr<std::vector<unsigned int>> indices) {
     this->indices = indices;
 }
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

@@ -12,8 +12,7 @@
 #include <filesystem>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct ScreenshotImageData {
     struct Pixel {
@@ -105,5 +104,4 @@ public:
 };
 
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

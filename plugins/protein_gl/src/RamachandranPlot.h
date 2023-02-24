@@ -53,7 +53,7 @@ public:
     RamachandranPlot();
 
     /** Dtor. */
-    virtual ~RamachandranPlot() override;
+    ~RamachandranPlot() override;
 
 protected:
     /**
@@ -121,7 +121,7 @@ private:
     /**
      * Computes the polygon positions of each available amino acid.
      */
-    void computePolygonPositions(void);
+    void computePolygonPositions();
 
     /**
      *  Tells whether a given point lies inside a given polygon

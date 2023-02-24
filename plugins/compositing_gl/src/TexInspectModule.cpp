@@ -12,7 +12,7 @@ using namespace megamol::compositing_gl;
 
 
 TexInspectModule::TexInspectModule()
-        : megamol::core::Module()
+        : mmstd_gl::ModuleGL()
         , tex_inspector_()
         , get_data_slot_("getData", "Slot to fetch data")
         , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture") {

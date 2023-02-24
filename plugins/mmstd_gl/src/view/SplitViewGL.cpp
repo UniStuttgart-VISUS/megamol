@@ -97,7 +97,7 @@ view::SplitViewGL::SplitViewGL()
     MakeSlotAvailable(&_inputToBothSlot);
 }
 
-view::SplitViewGL::~SplitViewGL(void) {
+view::SplitViewGL::~SplitViewGL() {
     Release();
 }
 

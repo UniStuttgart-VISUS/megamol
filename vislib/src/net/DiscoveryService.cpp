@@ -24,7 +24,7 @@
 /*
  * vislib::net::cluster::DiscoveryService::PeerNode::PeerNode
  */
-vislib::net::cluster::DiscoveryService::PeerNode::PeerNode(void) : cntResponseChances(1), discoverySource(NULL) {}
+vislib::net::cluster::DiscoveryService::PeerNode::PeerNode() : cntResponseChances(1), discoverySource(NULL) {}
 
 
 /*
@@ -67,7 +67,7 @@ vislib::net::cluster::DiscoveryService::PeerNode& vislib::net::cluster::Discover
 /*
  * vislib::net::cluster::DiscoveryService::PeerNode::DecrementResponseChances
  */
-bool vislib::net::cluster::DiscoveryService::PeerNode::decrementResponseChances(void) {
+bool vislib::net::cluster::DiscoveryService::PeerNode::decrementResponseChances() {
     if (this->cntResponseChances > 0) {
         this->cntResponseChances--;
         VLTRACE(Trace::LEVEL_VL_VERBOSE,
@@ -87,7 +87,7 @@ bool vislib::net::cluster::DiscoveryService::PeerNode::decrementResponseChances(
 /*
  * vislib::net::cluster::DiscoveryService::PeerNode::Invalidate
  */
-void vislib::net::cluster::DiscoveryService::PeerNode::invalidate(void) {
+void vislib::net::cluster::DiscoveryService::PeerNode::invalidate() {
     struct sockaddr invalidAddr;
     reinterpret_cast<int&>(invalidAddr) = 0;
     // Note: The invalid address can either be IPv4 or IPv6 as the
@@ -101,7 +101,7 @@ void vislib::net::cluster::DiscoveryService::PeerNode::invalidate(void) {
 /*
  * vislib::net::cluster::DiscoveryService::PeerNode::IsValid
  */
-bool vislib::net::cluster::DiscoveryService::PeerNode::isValid(void) const {
+bool vislib::net::cluster::DiscoveryService::PeerNode::isValid() const {
     return !this->responseAddress.GetIPAddress6().IsUnspecified();
 }
 
@@ -117,7 +117,7 @@ bool vislib::net::cluster::DiscoveryService::PeerNode::isValid(void) const {
 /*
  * vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig
  */
-vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
+vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig() {
     // TODO: This is not good
     NetworkInformation::Adapter adapter = NetworkInformation::GetAdapter(0);
 
@@ -230,7 +230,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(const D
 /*
  * vislib::net::cluster::DiscoveryService::DiscoveryConfig::~DiscoveryConfig
  */
-vislib::net::cluster::DiscoveryService::DiscoveryConfig::~DiscoveryConfig(void) {}
+vislib::net::cluster::DiscoveryService::DiscoveryConfig::~DiscoveryConfig() {}
 
 
 /*
@@ -301,13 +301,13 @@ const UINT32 vislib::net::cluster::DiscoveryService::FLAG_SHARE_SOCKETS = 0x2;
 /*
  * vislib::net::cluster::DiscoveryService::DiscoveryService
  */
-vislib::net::cluster::DiscoveryService::DiscoveryService(void) : configs(0), peerNodes(0) {}
+vislib::net::cluster::DiscoveryService::DiscoveryService() : configs(0), peerNodes(0) {}
 
 
 /*
  * vislib::net::cluster::DiscoveryService::~DiscoveryService
  */
-vislib::net::cluster::DiscoveryService::~DiscoveryService(void) {
+vislib::net::cluster::DiscoveryService::~DiscoveryService() {
     try {
         this->Stop();
         VLTRACE(Trace::LEVEL_VL_WARN, "DiscoveryService was stopped in dtor. "
@@ -376,7 +376,7 @@ vislib::net::IPAddress6 vislib::net::cluster::DiscoveryService::GetDiscoveryAddr
 /*
  * vislib::net::cluster::DiscoveryService::GetState
  */
-vislib::net::cluster::DiscoveryService::State vislib::net::cluster::DiscoveryService::GetState(void) const {
+vislib::net::cluster::DiscoveryService::State vislib::net::cluster::DiscoveryService::GetState() const {
     State retval = STATE_STOPPED;
     SIZE_T cntConfigs = this->configs.Count();
 
@@ -401,7 +401,7 @@ vislib::net::cluster::DiscoveryService::State vislib::net::cluster::DiscoverySer
 /*
  * vislib::net::cluster::DiscoveryService::IsRunning
  */
-bool vislib::net::cluster::DiscoveryService::IsRunning(void) const {
+bool vislib::net::cluster::DiscoveryService::IsRunning() const {
     State state = this->GetState();
 
     return ((state == STATE_RUNNING) || ((state == STATE_RECEIVER_RUNNING) && this->IsObserver()));
@@ -621,13 +621,13 @@ vislib::net::IPEndPoint vislib::net::cluster::DiscoveryService::operator[](const
 /*
  * vislib::net::cluster::DiscoveryService::Receiver::Receiver
  */
-vislib::net::cluster::DiscoveryService::Receiver::Receiver(void) : isRunning(1) {}
+vislib::net::cluster::DiscoveryService::Receiver::Receiver() : isRunning(1) {}
 
 
 /*
  * vislib::net::cluster::DiscoveryService::Receiver::~Receiver
  */
-vislib::net::cluster::DiscoveryService::Receiver::~Receiver(void) {}
+vislib::net::cluster::DiscoveryService::Receiver::~Receiver() {}
 
 
 /*
@@ -809,7 +809,7 @@ DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void* dcfg) {
 /*
  * vislib::net::cluster::DiscoveryService::Receiver::Terminate
  */
-bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
+bool vislib::net::cluster::DiscoveryService::Receiver::Terminate() {
     vislib::sys::Interlocked::Exchange(&this->isRunning, 0);
 
     try {
@@ -844,7 +844,7 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
 /*
  * vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx
  */
-vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx(void)
+vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx()
         : Super(IPEndPoint(), IPAddress::ANY, DEFAULT_PORT)
         , cds(NULL) {}
 
@@ -871,7 +871,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx(con
 /*
  * vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::~DiscoveryConfigEx
  */
-vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::~DiscoveryConfigEx(void) {
+vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::~DiscoveryConfigEx() {
     try {
         this->socketSend.Shutdown();
     } catch (...) {}
@@ -1021,13 +1021,13 @@ bool vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::operator==(const
 /*
  * vislib::net::cluster::DiscoveryService::Sender::Sender
  */
-vislib::net::cluster::DiscoveryService::Sender::Sender(void) : isRunning(1) {}
+vislib::net::cluster::DiscoveryService::Sender::Sender() : isRunning(1) {}
 
 
 /*
  * vislib::net::cluster::DiscoveryService::Sender::~Sender
  */
-vislib::net::cluster::DiscoveryService::Sender::~Sender(void) {}
+vislib::net::cluster::DiscoveryService::Sender::~Sender() {}
 
 
 /*
@@ -1199,7 +1199,7 @@ DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void* cds) {
 /*
  * vislib::net::cluster::DiscoveryService::Sender::Terminate
  */
-bool vislib::net::cluster::DiscoveryService::Sender::Terminate(void) {
+bool vislib::net::cluster::DiscoveryService::Sender::Terminate() {
     vislib::sys::Interlocked::Exchange(&this->isRunning, 0);
     return true;
 }
@@ -1314,7 +1314,7 @@ INT_PTR vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(const IPEn
 /*
  * vislib::net::cluster::DiscoveryService::prepareRequest
  */
-void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
+void vislib::net::cluster::DiscoveryService::prepareRequest() {
     this->peerNodesCritSect.Lock();
 
     for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {

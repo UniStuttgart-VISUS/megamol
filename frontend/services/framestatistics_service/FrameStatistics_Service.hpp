@@ -14,8 +14,7 @@
 #include <array>
 #include <chrono>
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 class FrameStatistics_Service final : public AbstractFrontendService {
 public:
@@ -26,7 +25,7 @@ public:
     }
 
     FrameStatistics_Service();
-    ~FrameStatistics_Service();
+    ~FrameStatistics_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;
@@ -79,5 +78,4 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

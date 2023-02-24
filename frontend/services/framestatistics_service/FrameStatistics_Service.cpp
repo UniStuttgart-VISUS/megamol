@@ -28,8 +28,7 @@ static void log(std::string text) {
     log(text.c_str());
 }
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 FrameStatistics_Service::FrameStatistics_Service() {}
 
@@ -129,5 +128,4 @@ void FrameStatistics_Service::fill_lua_callbacks() {
     register_callbacks(callbacks);
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

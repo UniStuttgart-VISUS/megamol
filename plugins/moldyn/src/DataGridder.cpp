@@ -23,7 +23,7 @@ using namespace megamol::moldyn;
 /*
  * DataGridder::DataGridder
  */
-DataGridder::DataGridder(void)
+DataGridder::DataGridder()
         : Module()
         , inDataSlot("indata", "Slot to fetch flat data")
         , outDataSlot("outdata", "Slot to publicate gridded data")
@@ -68,7 +68,7 @@ DataGridder::DataGridder(void)
 /*
  * DataGridder::~DataGridder
  */
-DataGridder::~DataGridder(void) {
+DataGridder::~DataGridder() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -76,7 +76,7 @@ DataGridder::~DataGridder(void) {
 /*
  * DataGridder::create
  */
-bool DataGridder::create(void) {
+bool DataGridder::create() {
     this->types.Clear();
     this->grid.Clear();
     this->vertData.Clear();
@@ -89,7 +89,7 @@ bool DataGridder::create(void) {
 /*
  * DataGridder::release
  */
-void DataGridder::release(void) {
+void DataGridder::release() {
     this->types.Clear();
     this->grid.Clear();
     this->vertData.Clear();

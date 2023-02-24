@@ -7,10 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace core {
-namespace utility {
-namespace graphics {
+namespace megamol::core::utility::graphics {
 
 class ScreenShotComments {
 public:
@@ -36,16 +33,9 @@ public:
      */
     static std::string GetProjectFromPNG(std::filesystem::path filename);
 
-    static bool EndsWith(const std::string& filename, const std::string& suffix);
-
-    static bool EndsWithCaseInsensitive(const std::string& filename, const std::string& suffix);
-
 private:
     comments_storage_map the_comments;
     png_comments the_vector;
 };
 
-} // namespace graphics
-} // namespace utility
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::utility::graphics

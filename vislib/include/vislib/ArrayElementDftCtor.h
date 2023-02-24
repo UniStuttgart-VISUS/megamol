@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ARRAYELEMENTDFTCTOR_H_INCLUDED
-#define VISLIB_ARRAYELEMENTDFTCTOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -49,13 +45,13 @@ public:
     }
 
     /** Dtor. */
-    ~ArrayElementDftCtor(void);
+    ~ArrayElementDftCtor();
 
 private:
     /**
      * Disallow instances.
      */
-    ArrayElementDftCtor(void);
+    ArrayElementDftCtor();
 };
 
 
@@ -63,7 +59,7 @@ private:
  * ArrayElementDftCtor<T>::~ArrayElementDftCtor
  */
 template<class T>
-ArrayElementDftCtor<T>::~ArrayElementDftCtor(void) {
+ArrayElementDftCtor<T>::~ArrayElementDftCtor() {
     // Nothing to do.
 }
 
@@ -72,7 +68,7 @@ ArrayElementDftCtor<T>::~ArrayElementDftCtor(void) {
  * ArrayElementDftCtor<T>::ArrayElementDftCtor
  */
 template<class T>
-ArrayElementDftCtor<T>::ArrayElementDftCtor(void) {
+ArrayElementDftCtor<T>::ArrayElementDftCtor() {
     // Nothing to do.
 }
 
@@ -81,4 +77,3 @@ ArrayElementDftCtor<T>::ArrayElementDftCtor(void) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ARRAYELEMENTDFTCTOR_H_INCLUDED */

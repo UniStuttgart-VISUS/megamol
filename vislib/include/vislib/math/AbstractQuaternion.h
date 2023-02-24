@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTQUATERNION_H_INCLUDED
-#define VISLIB_ABSTRACTQUATERNION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -25,8 +21,7 @@
 #define M_PI 3.14159265358979323846
 #endif /* !M_PI */
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -47,7 +42,7 @@ class AbstractQuaternion {
 
 public:
     /** Dtor. */
-    ~AbstractQuaternion(void);
+    ~AbstractQuaternion();
 
     /**
      * Answer the angle and the axis of the rotation that is
@@ -62,14 +57,14 @@ public:
     /**
      * Conjugate the quaternion.
      */
-    void Conjugate(void);
+    void Conjugate();
 
     /**
      * Answer the i-component (= x-component) of the quaternion.
      *
      * @return The i-component.
      */
-    inline const T& GetI(void) const {
+    inline const T& GetI() const {
         return this->components[IDX_X];
     }
 
@@ -78,7 +73,7 @@ public:
      *
      * @return The j-component.
      */
-    inline const T& GetJ(void) const {
+    inline const T& GetJ() const {
         return this->components[IDX_Y];
     }
 
@@ -87,7 +82,7 @@ public:
      *
      * @return The k-component.
      */
-    inline const T& GetK(void) const {
+    inline const T& GetK() const {
         return this->components[IDX_Z];
     }
 
@@ -96,7 +91,7 @@ public:
      *
      * @return The r-component.
      */
-    inline const T& GetR(void) const {
+    inline const T& GetR() const {
         return this->components[IDX_W];
     }
 
@@ -105,7 +100,7 @@ public:
      *
      * @return The w-component.
      */
-    inline const T& GetW(void) const {
+    inline const T& GetW() const {
         return this->components[IDX_W];
     }
 
@@ -114,7 +109,7 @@ public:
      *
      * @return The x-component.
      */
-    inline const T& GetX(void) const {
+    inline const T& GetX() const {
         return this->components[IDX_X];
     }
 
@@ -123,7 +118,7 @@ public:
      *
      * @return The y-component.
      */
-    inline const T& GetY(void) const {
+    inline const T& GetY() const {
         return this->components[IDX_Y];
     }
 
@@ -132,7 +127,7 @@ public:
      *
      * @return The z-component.
      */
-    inline const T& GetZ(void) const {
+    inline const T& GetZ() const {
         return this->components[IDX_Z];
     }
 
@@ -141,7 +136,7 @@ public:
      *
      * @return The i-component.
      */
-    inline const T& I(void) const {
+    inline const T& I() const {
         return this->components[IDX_X];
     }
 
@@ -150,7 +145,7 @@ public:
      *
      * @return The j-component.
      */
-    inline const T& J(void) const {
+    inline const T& J() const {
         return this->components[IDX_Y];
     }
 
@@ -159,7 +154,7 @@ public:
      *
      * @return The k-component.
      */
-    inline const T& K(void) const {
+    inline const T& K() const {
         return this->components[IDX_Z];
     }
 
@@ -186,7 +181,7 @@ public:
      *
      * @return The inverse of the quaternion.
      */
-    inline AbstractQuaternion<T, T[4]> Inverse(void) const {
+    inline AbstractQuaternion<T, T[4]> Inverse() const {
         AbstractQuaternion<T, T[4]> retval(this->X(), this->Y(), this->Z(), this->W());
         retval.Invert();
         return retval;
@@ -195,7 +190,7 @@ public:
     /**
      * Invert the quaternion.
      */
-    void Invert(void);
+    void Invert();
 
     /**
      * Answer whether the quaternion is pure imaginary.
@@ -204,7 +199,7 @@ public:
      *
      * @return true If the real part is zero, false otherwise.
      */
-    inline bool IsPure(void) const {
+    inline bool IsPure() const {
         return IsEqual<T>(this->components[IDX_W], static_cast<T>(0));
     }
 
@@ -213,7 +208,7 @@ public:
      *
      * @return The norm of the quaternion.
      */
-    inline T Norm(void) const {
+    inline T Norm() const {
         return Sqrt(Sqr(this->components[IDX_X]) + Sqr(this->components[IDX_Y]) + Sqr(this->components[IDX_Z]) +
                     Sqr(this->components[IDX_W]));
     }
@@ -223,14 +218,14 @@ public:
      *
      * @return The norm BEFORE the normalisation.
      */
-    T Normalise(void);
+    T Normalise();
 
     /**
      * Answer a normalised copy of the quaternion.
      *
      * @return A normalised copy of the quaternion.
      */
-    inline AbstractQuaternion<T, T[4]> Normalised(void) const {
+    inline AbstractQuaternion<T, T[4]> Normalised() const {
         AbstractQuaternion<T, T[4]> retval(this->X(), this->Y(), this->Z(), this->W());
         retval.Normalise();
         return retval;
@@ -241,7 +236,7 @@ public:
      *
      * @return A pointer to the actual components.
      */
-    inline const T* PeekComponents(void) const {
+    inline const T* PeekComponents() const {
         return this->components;
     }
 
@@ -250,7 +245,7 @@ public:
      *
      * @return A pointer to the actual components.
      */
-    inline T* PeekComponents(void) {
+    inline T* PeekComponents() {
         return this->components;
     }
 
@@ -259,7 +254,7 @@ public:
      *
      * @return The r-component.
      */
-    inline const T& R(void) const {
+    inline const T& R() const {
         return this->components[IDX_W];
     }
 
@@ -395,14 +390,14 @@ public:
     /**
      * Make this quaternion the square of itself.
      */
-    void Square(void);
+    void Square();
 
     /**
      * Answer the w-component of the quaternion.
      *
      * @return The w-component.
      */
-    inline const T& W(void) const {
+    inline const T& W() const {
         return this->components[IDX_W];
     }
 
@@ -411,7 +406,7 @@ public:
      *
      * @return The x-component.
      */
-    inline const T& X(void) const {
+    inline const T& X() const {
         return components[IDX_X];
     }
 
@@ -420,7 +415,7 @@ public:
      *
      * @return The y-component.
      */
-    inline const T& Y(void) const {
+    inline const T& Y() const {
         return this->components[IDX_Y];
     }
 
@@ -429,7 +424,7 @@ public:
      *
      * @return The z-component.
      */
-    inline const T& Z(void) const {
+    inline const T& Z() const {
         return this->components[IDX_Z];
     }
 
@@ -544,7 +539,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractQuaternion(void) {}
+    inline AbstractQuaternion() {}
 
     /**
      * Create a new quaternion.
@@ -576,7 +571,7 @@ protected:
  * vislib::math::AbstractQuaternion<T, S>::~AbstractQuaternion
  */
 template<class T, class S>
-AbstractQuaternion<T, S>::~AbstractQuaternion(void) {}
+AbstractQuaternion<T, S>::~AbstractQuaternion() {}
 
 
 /*
@@ -609,7 +604,7 @@ void AbstractQuaternion<T, S>::AngleAndAxis(T& outAngle, Vector<T, 3>& outAxis) 
  * vislib::math::AbstractQuaternion<T, S>::Conjugate
  */
 template<class T, class S>
-void AbstractQuaternion<T, S>::Conjugate(void) {
+void AbstractQuaternion<T, S>::Conjugate() {
     this->components[IDX_X] *= static_cast<T>(-1);
     this->components[IDX_Y] *= static_cast<T>(-1);
     this->components[IDX_Z] *= static_cast<T>(-1);
@@ -620,7 +615,7 @@ void AbstractQuaternion<T, S>::Conjugate(void) {
  * vislib::math::AbstractQuaternion<T, S>::Invert
  */
 template<class T, class S>
-void AbstractQuaternion<T, S>::Invert(void) {
+void AbstractQuaternion<T, S>::Invert() {
     T norm = this->Norm();
 
     if (!IsEqual<T>(norm, static_cast<T>(0))) {
@@ -640,7 +635,7 @@ void AbstractQuaternion<T, S>::Invert(void) {
  * vislib::math::AbstractQuaternion<T, S>::Normalise
  */
 template<class T, class S>
-T AbstractQuaternion<T, S>::Normalise(void) {
+T AbstractQuaternion<T, S>::Normalise() {
     T norm = this->Norm();
 
     if (!IsEqual<T>(norm, static_cast<T>(0))) {
@@ -813,7 +808,7 @@ void AbstractQuaternion<T, S>::Slerp(
  * vislib::math::AbstractQuaternion<T, S>::Square
  */
 template<class T, class S>
-void AbstractQuaternion<T, S>::Square(void) {
+void AbstractQuaternion<T, S>::Square() {
     T tmp = 2 * this->components[IDX_W];
     this->components[IDX_W] =
         Sqr(this->components[IDX_W]) -
@@ -936,10 +931,8 @@ const UINT_PTR AbstractQuaternion<T, S>::IDX_Y = 1;
 template<class T, class S>
 const UINT_PTR AbstractQuaternion<T, S>::IDX_Z = 2;
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTQUATERNION_H_INCLUDED */

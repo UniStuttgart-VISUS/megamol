@@ -14,7 +14,7 @@ using namespace megamol::trisoup;
 /*
  * CallBinaryVolumeData::CallBinaryVolumeData
  */
-CallBinaryVolumeData::CallBinaryVolumeData(void)
+CallBinaryVolumeData::CallBinaryVolumeData()
         : core::AbstractGetData3DCall()
         , sizeX(0)
         , sizeY(0)
@@ -30,7 +30,7 @@ CallBinaryVolumeData::CallBinaryVolumeData(void)
 /*
  * CallBinaryVolumeData::~CallBinaryVolumeData
  */
-CallBinaryVolumeData::~CallBinaryVolumeData(void) {
+CallBinaryVolumeData::~CallBinaryVolumeData() {
     this->volume = NULL; // DO NOT DELETE
 }
 

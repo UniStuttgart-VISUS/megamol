@@ -19,7 +19,7 @@ using namespace megamol::ospray;
 /*
 ospray::OSPRayRenderer::OSPRaySphereRenderer
 */
-OSPRayRenderer::OSPRayRenderer(void)
+OSPRayRenderer::OSPRayRenderer()
         : AbstractOSPRayRenderer()
         , _cam()
         , _getStructureSlot("getStructure", "Connects to an OSPRay structure")
@@ -47,7 +47,7 @@ OSPRayRenderer::OSPRayRenderer(void)
 /*
 ospray::OSPRayRenderer::~OSPRaySphereRenderer
 */
-OSPRayRenderer::~OSPRayRenderer(void) {
+OSPRayRenderer::~OSPRayRenderer() {
     this->Release();
 }
 

@@ -30,7 +30,7 @@ const vislib::math::Ternary vislib::math::Ternary::TRI_FALSE(-1);
 /*
  * vislib::math::Ternary::Ternary
  */
-vislib::math::Ternary::Ternary(void) : value(TRI_UNKNOWN) {
+vislib::math::Ternary::Ternary() : value(TRI_UNKNOWN) {
     // Intentionally empty
 }
 
@@ -62,7 +62,7 @@ vislib::math::Ternary::Ternary(bool value) : value(0) {
 /*
  * vislib::math::Ternary::~Ternary
  */
-vislib::math::Ternary::~Ternary(void) {
+vislib::math::Ternary::~Ternary() {
     // Intentionally empty
 }
 
@@ -107,7 +107,7 @@ bool vislib::math::Ternary::Parse(const vislib::StringW& str) {
 /*
  * vislib::math::Ternary::ToStringA
  */
-vislib::StringA vislib::math::Ternary::ToStringA(void) const {
+vislib::StringA vislib::math::Ternary::ToStringA() const {
     switch (this->value) {
     case 1:
         return "true";
@@ -125,7 +125,7 @@ vislib::StringA vislib::math::Ternary::ToStringA(void) const {
 /*
  * vislib::math::Ternary::ToStringW
  */
-vislib::StringW vislib::math::Ternary::ToStringW(void) const {
+vislib::StringW vislib::math::Ternary::ToStringW() const {
     switch (this->value) {
     case 1:
         return L"true";
@@ -194,7 +194,7 @@ bool vislib::math::Ternary::operator==(bool rhs) const {
 /*
  * vislib::math::Ternary::operator!
  */
-vislib::math::Ternary vislib::math::Ternary::operator!(void) const {
+vislib::math::Ternary vislib::math::Ternary::operator!() const {
     return Ternary(-this->value);
 }
 
@@ -202,7 +202,7 @@ vislib::math::Ternary vislib::math::Ternary::operator!(void) const {
 /*
  * vislib::math::Ternary::operator!
  */
-vislib::math::Ternary vislib::math::Ternary::operator-(void) const {
+vislib::math::Ternary vislib::math::Ternary::operator-() const {
     return Ternary(-this->value);
 }
 
@@ -210,7 +210,7 @@ vislib::math::Ternary vislib::math::Ternary::operator-(void) const {
 /*
  * vislib::math::Ternary::operator~
  */
-vislib::math::Ternary vislib::math::Ternary::operator~(void) const {
+vislib::math::Ternary vislib::math::Ternary::operator~() const {
     return Ternary(this->value != 1);
 }
 
@@ -264,7 +264,7 @@ vislib::math::Ternary& vislib::math::Ternary::operator|=(const vislib::math::Ter
 /*
  * vislib::math::Ternary::operator int
  */
-vislib::math::Ternary::operator int(void) const {
+vislib::math::Ternary::operator int() const {
     return this->value;
 }
 

@@ -15,13 +15,12 @@
 
 #include <glm/ext.hpp>
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * CrystalRenderer::CrystalRenderer
  */
-CrystalRenderer::CrystalRenderer(void)
+CrystalRenderer::CrystalRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , dataInSlot("datain", "slot to get the data")
         , lightsSlot("lights", "Lights are retrieved over this slot.")
@@ -41,7 +40,7 @@ CrystalRenderer::CrystalRenderer(void)
 /*
  * CrystalRenderer::~CrystalRenderer
  */
-CrystalRenderer::~CrystalRenderer(void) {
+CrystalRenderer::~CrystalRenderer() {
     this->Release();
 }
 
@@ -202,7 +201,7 @@ bool CrystalRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 /*
  * CrystalRenderer::create
  */
-bool CrystalRenderer::create(void) {
+bool CrystalRenderer::create() {
     // intentionally empty
     return true;
 }
@@ -211,9 +210,8 @@ bool CrystalRenderer::create(void) {
 /*
  * CrystalRenderer::release
  */
-void CrystalRenderer::release(void) {
+void CrystalRenderer::release() {
     // intentionally empty
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

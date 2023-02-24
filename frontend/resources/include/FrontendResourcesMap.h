@@ -15,8 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct FrontendResourcesMap {
     FrontendResourcesMap() = default;
@@ -62,5 +61,4 @@ private:
     std::map<std::size_t, frontend::FrontendResource> resources;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

@@ -5,18 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_COLOURPARSER_H_INCLUDED
-#define MEGAMOLCORE_COLOURPARSER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/String.h"
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /**
  * Utility class for converting colour data to and from strings
@@ -239,8 +233,4 @@ private:
 };
 
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_COLOURPARSER_H_INCLUDED */
+} // namespace megamol::core::utility

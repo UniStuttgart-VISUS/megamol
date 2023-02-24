@@ -20,7 +20,7 @@
 /*
  * vislib::SHA1HashProvider::SHA1HashProvider
  */
-vislib::SHA1HashProvider::SHA1HashProvider(void) {
+vislib::SHA1HashProvider::SHA1HashProvider() {
     this->Initialise();
 }
 
@@ -28,7 +28,7 @@ vislib::SHA1HashProvider::SHA1HashProvider(void) {
 /*
  * vislib::SHA1HashProvider::~SHA1HashProvider
  */
-vislib::SHA1HashProvider::~SHA1HashProvider(void) {
+vislib::SHA1HashProvider::~SHA1HashProvider() {
     ::SecureZeroMemory(&this->context, sizeof(SHA1Context));
 }
 
@@ -36,7 +36,7 @@ vislib::SHA1HashProvider::~SHA1HashProvider(void) {
 /*
  * vislib::SHA1HashProvider::Initialise
  */
-void vislib::SHA1HashProvider::Initialise(void) {
+void vislib::SHA1HashProvider::Initialise() {
     this->context.Length_Low = 0;
     this->context.Length_High = 0;
     this->context.Message_Block_Index = 0;

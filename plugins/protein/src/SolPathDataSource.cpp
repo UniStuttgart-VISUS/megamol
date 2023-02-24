@@ -29,7 +29,7 @@ using namespace megamol::protein;
 /*
  * SolPathDataSource::SolPathDataSource
  */
-SolPathDataSource::SolPathDataSource(void)
+SolPathDataSource::SolPathDataSource()
         : core::Module()
         , getdataslot("getdata", "Publishes the data for other modules")
         , filenameslot("filename", "The path of the solpath file to load")
@@ -67,7 +67,7 @@ SolPathDataSource::SolPathDataSource(void)
 /*
  * SolPathDataSource::~SolPathDataSource
  */
-SolPathDataSource::~SolPathDataSource(void) {
+SolPathDataSource::~SolPathDataSource() {
     this->Release();
     this->clear();
 }
@@ -76,7 +76,7 @@ SolPathDataSource::~SolPathDataSource(void) {
 /*
  * SolPathDataSource::create
  */
-bool SolPathDataSource::create(void) {
+bool SolPathDataSource::create() {
     if (this->anyParamslotDirty()) {
         this->loadData();
     }
@@ -87,7 +87,7 @@ bool SolPathDataSource::create(void) {
 /*
  * SolPathDataSource::release
  */
-void SolPathDataSource::release(void) {
+void SolPathDataSource::release() {
     this->clear();
 }
 
@@ -132,7 +132,7 @@ bool SolPathDataSource::getExtent(megamol::core::Call& call) {
 /*
  * SolPathDataSource::clear
  */
-void SolPathDataSource::clear(void) {
+void SolPathDataSource::clear() {
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->minTime = 0.0f;
     this->maxTime = 0.0f;
@@ -146,7 +146,7 @@ void SolPathDataSource::clear(void) {
 /*
  * SolPathDataSource::loadData
  */
-void SolPathDataSource::loadData(void) {
+void SolPathDataSource::loadData() {
     using megamol::core::utility::log::Log;
     using vislib::sys::File;
     vislib::sys::MemmappedFile file;

@@ -182,8 +182,7 @@ bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(
     return write_png_to_file(image, filename);
 }
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 Screenshot_Service::Screenshot_Service() {}
 
@@ -271,5 +270,4 @@ void Screenshot_Service::preGraphRender() {}
 void Screenshot_Service::postGraphRender() {}
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

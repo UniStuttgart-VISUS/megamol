@@ -10,7 +10,7 @@ using namespace megamol::protein_calls;
 const unsigned int BindingSiteCall::CallForGetData = 0;
 
 
-BindingSiteCall::BindingSiteCall(void)
+BindingSiteCall::BindingSiteCall()
         : megamol::core::Call()
         , bindingSites(NULL)
         , bindingSiteResNames(NULL)
@@ -21,7 +21,7 @@ BindingSiteCall::BindingSiteCall(void)
         , isGxType(true) {}
 
 
-BindingSiteCall::~BindingSiteCall(void) {
+BindingSiteCall::~BindingSiteCall() {
     this->bindingSites = NULL;
     this->bindingSiteResNames = NULL;
     this->bindingSiteNames = NULL;

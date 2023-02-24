@@ -13,7 +13,7 @@
 using namespace megamol;
 using namespace megamol::datatools;
 
-NullParticleWriter::NullParticleWriter(void)
+NullParticleWriter::NullParticleWriter()
         : core::AbstractDataWriter()
         , dataSlot("data", "The slot requesting the data to be written") {
 
@@ -21,17 +21,17 @@ NullParticleWriter::NullParticleWriter(void)
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
-NullParticleWriter::~NullParticleWriter(void) {
+NullParticleWriter::~NullParticleWriter() {
     this->Release();
 }
 
-bool NullParticleWriter::create(void) {
+bool NullParticleWriter::create() {
     return true;
 }
 
-void NullParticleWriter::release(void) {}
+void NullParticleWriter::release() {}
 
-bool NullParticleWriter::run(void) {
+bool NullParticleWriter::run() {
     using geocalls::MultiParticleDataCall;
     using megamol::core::utility::log::Log;
 

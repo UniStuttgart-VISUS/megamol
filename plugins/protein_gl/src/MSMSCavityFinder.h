@@ -3,11 +3,7 @@
  * Copyright (C) 2006-2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMPROTEINPLUGIN_MSMSCAVITYFINDER_H_INCLUDED
-#define MMPROTEINPLUGIN_MSMSCAVITYFINDER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "protein_calls/ProteinHelpers.h"
 
@@ -23,8 +19,7 @@
 #include "protein_calls/TunnelResidueDataCall.h"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 class MSMSCavityFinder : public core::Module {
 public:
@@ -33,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MSMSCavityFinder";
     }
 
@@ -42,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module that finds cavities based on the input of two MSMS meshes (using the 3V method).";
     }
 
@@ -51,15 +46,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    MSMSCavityFinder(void);
+    MSMSCavityFinder();
 
     /** Dtor. */
-    virtual ~MSMSCavityFinder(void);
+    ~MSMSCavityFinder() override;
 
 protected:
     /**
@@ -67,12 +62,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call for get data.
@@ -111,7 +106,4 @@ private:
     vislib::Array<megamol::geocalls_gl::CallTriMeshDataGL::Mesh> cavitySubmeshes;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
-
-#endif
+} // namespace megamol::protein_gl

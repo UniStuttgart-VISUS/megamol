@@ -14,7 +14,7 @@ using namespace megamol;
 /*
  * datatools::MPIParticleCollector::MPIParticleCollector
  */
-datatools::MPIParticleCollector::MPIParticleCollector(void)
+datatools::MPIParticleCollector::MPIParticleCollector()
         : AbstractParticleManipulator("outData", "indata")
         , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.") {
 
@@ -26,7 +26,7 @@ datatools::MPIParticleCollector::MPIParticleCollector(void)
 /*
  * datatools::MPIParticleCollector::~MPIParticleCollector
  */
-datatools::MPIParticleCollector::~MPIParticleCollector(void) {
+datatools::MPIParticleCollector::~MPIParticleCollector() {
     this->Release();
 }
 
