@@ -61,6 +61,16 @@ bool Profiling_Service::init(void* configPtr) {
     return true;
 }
 
+void Profiling_Service::log_graph_event(
+    std::string const& parent, std::string const& name, std::string const& comment) {
+    if (this->include_graph_events) {
+        const auto frames_rendered = static_cast<int64_t>(
+            _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
+        log_file << frames_rendered - 1 << ";" << parent << ";" << name << ";" << comment << ";0;;GraphEvent;"
+                 << std::endl;
+    }
+}
+
 void Profiling_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     _requestedResourcesReferences = resources;
 
@@ -80,14 +90,7 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
         }
         the_call->perf_man = &_perf_man;
 
-        if (include_graph_events) {
-            const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
-                                                                  .getResource<frontend_resources::FrameStatistics>()
-                                                                  .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << call_inst.callPtr->ClassName()
-                     << ";" << call_inst.callPtr->GetDescriptiveText() << ";AddCall;0;;GraphEvent;"
-                     << std::endl;
-        }
+        log_graph_event(call_inst.callPtr->ClassName(), call_inst.callPtr->GetDescriptiveText(), "AddCall");
 
         return true;
     };
@@ -99,60 +102,39 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
             _perf_man.remove_timers(the_call->gl_queries);
         }
 
-        if (include_graph_events) {
-            const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
-                                                                  .getResource<frontend_resources::FrameStatistics>()
-                                                                  .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << call_inst.callPtr->GetDescriptiveText() << ";;DeleteCall;0;;GraphEvent;"
-                     << std::endl;
-        }
+        log_graph_event("", call_inst.callPtr->GetDescriptiveText(), "DeleteCall");
 
         return true;
     };
 
     profiling_manager_subscription.AddModule = [&](core::ModuleInstance_t const& mod_inst) {
-        if (include_graph_events) {
-            const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
-                                                                  .getResource<frontend_resources::FrameStatistics>()
-                                                                  .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << mod_inst.modulePtr->ClassName()
-                     << ";" << mod_inst.modulePtr->FullName() << ";AddModule;0;;GraphEvent;" << std::endl;
-        }
+
+        log_graph_event(mod_inst.modulePtr->ClassName(), mod_inst.modulePtr->FullName().PeekBuffer(), "AddModule");
+
         return true;
     };
 
     profiling_manager_subscription.DeleteModule = [&](core::ModuleInstance_t const& mod_inst) {
-        if (include_graph_events) {
-            const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
-                                                                  .getResource<frontend_resources::FrameStatistics>()
-                                                                  .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";;" << mod_inst.modulePtr->FullName() << ";DeleteModule;0;;GraphEvent;"
-                     << std::endl;
-        }
+
+        log_graph_event("", mod_inst.modulePtr->FullName().PeekBuffer(), "DeleteModule");
+
         return true;
     };
 
     profiling_manager_subscription.RenameModule = [&](std::string const& old_name, std::string const& new_name,
                                                       core::ModuleInstance_t const& mod_inst) {
-        if (include_graph_events) {
-            const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
-                                                                  .getResource<frontend_resources::FrameStatistics>()
-                                                                  .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << old_name << "->" << new_name << ";;RenameModule;0;;GraphEvent;"
-                     << std::endl;
-        }
+
+        log_graph_event(old_name + "->" + new_name, "", "RenameModule");
+
         return true;
     };
 
     profiling_manager_subscription.ParameterChanged = [&](core::param::ParamSlot* const& param,
                                                           std::string const& new_value) {
-        if (include_graph_events) {
-            const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
-                                                                  .getResource<frontend_resources::FrameStatistics>()
-                                                                  .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << param->Parent()->FullName() << ";" << param->Name()
-                     << ";'ParamValueChanged=" << new_value << "';0;;GraphEvent;" << std::endl;
-        }
+
+        log_graph_event(param->Parent()->FullName().PeekBuffer(), param->Name().PeekBuffer(),
+            "'ParamValueChanged=" + new_value + "'");
+
         return true;
     };
 

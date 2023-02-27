@@ -45,6 +45,7 @@ public:
 
 private:
     void fill_lua_callbacks();
+    void log_graph_event(std::string const& parent, std::string const& name, std::string const& comment);
 
     std::vector<FrontendResource> _providedResourceReferences;
     std::vector<std::string> _requestedResourcesNames;
