@@ -91,7 +91,6 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
         the_call->perf_man = &_perf_man;
 
         log_graph_event(call_inst.callPtr->ClassName(), call_inst.callPtr->GetDescriptiveText(), "AddCall");
-
         return true;
     };
 
@@ -103,21 +102,18 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
         }
 
         log_graph_event("", call_inst.callPtr->GetDescriptiveText(), "DeleteCall");
-
         return true;
     };
 
     profiling_manager_subscription.AddModule = [&](core::ModuleInstance_t const& mod_inst) {
 
         log_graph_event(mod_inst.modulePtr->ClassName(), mod_inst.modulePtr->FullName().PeekBuffer(), "AddModule");
-
         return true;
     };
 
     profiling_manager_subscription.DeleteModule = [&](core::ModuleInstance_t const& mod_inst) {
 
         log_graph_event("", mod_inst.modulePtr->FullName().PeekBuffer(), "DeleteModule");
-
         return true;
     };
 
@@ -125,7 +121,6 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
                                                       core::ModuleInstance_t const& mod_inst) {
 
         log_graph_event(old_name + "->" + new_name, "", "RenameModule");
-
         return true;
     };
 
@@ -134,9 +129,19 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
 
         log_graph_event(param->Parent()->FullName().PeekBuffer(), param->Name().PeekBuffer(),
             "'ParamValueChanged=" + new_value + "'");
-
         return true;
     };
+
+    profiling_manager_subscription.DisableEntryPoint = [&](core::ModuleInstance_t const& module_instance) {
+        log_graph_event(module_instance.modulePtr->FullName().PeekBuffer(), "", "DisableEntryPoint");
+        return true;
+    };
+
+    profiling_manager_subscription.EnableEntryPoint = [&](core::ModuleInstance_t const& module_instance) {
+        log_graph_event(module_instance.modulePtr->FullName().PeekBuffer(), "", "EnableEntryPoint");
+        return true;
+    };
+
 
     megamolgraph_subscription.subscribe(profiling_manager_subscription);
 #endif
