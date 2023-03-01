@@ -10,12 +10,13 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 
-class PNGDataSource : public core::Module {
+class PNGDataSource : public mmstd_gl::ModuleGL {
 public:
     static const char* ClassName() {
         return "PNGDataSource";
