@@ -111,7 +111,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             const auto x = currentIndex % width;
             const auto y = currentIndex / width;
 
-            // TODO: face-connected vs. kernel (now: kernel)
             for (auto j = ((y > 0) ? -1 : 0); j <= ((y < height - 1) ? 1 : 0); ++j) {
                 for (auto i = ((x > 0) ? -1 : 0); i <= ((x < width - 1) ? 1 : 0); ++i) {
                     const auto neighborIndex = (y + j) * width + (x + i);
@@ -450,6 +449,40 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         }
     }
 
+    // Get landmark times
+    auto startTime = std::numeric_limits<int>::max();
+    auto breakthroughTime = std::numeric_limits<int>::max();
+    auto endTime = 0;
+
+    for (const auto& node_info : nodeGraph->getNodes()) {
+        const auto& node = node_info.second;
+
+        startTime = std::min(startTime, static_cast<int>(node.getFrameIndex()));
+        endTime = std::max(endTime, static_cast<int>(node.getFrameIndex()));
+
+        int outflowRef = 0;
+        switch (input.inflowArea) {
+        case Input::inflow_t::left:
+            outflowRef = node.boundingBox.x2 - input.timeMap->getMetadata().width;
+            break;
+        case Input::inflow_t::bottom:
+            outflowRef = node.boundingBox.y2 - input.timeMap->getMetadata().height;
+            break;
+        case Input::inflow_t::right:
+            outflowRef = node.boundingBox.x1;
+            break;
+        case Input::inflow_t::top:
+            outflowRef = node.boundingBox.y1;
+            break;
+        }
+
+        if (std::abs(outflowRef) <= input.inflowMargin) {
+            breakthroughTime = std::min(breakthroughTime, static_cast<int>(node.getFrameIndex()));
+        }
+    }
+
+    breakthroughTime = std::clamp(breakthroughTime, startTime, endTime);
+
     // Export to Lua file
     graph::util::LuaExportMeta luaExportMeta;
     luaExportMeta.path = input.timeMap->getMetadata().filename;
@@ -457,6 +490,9 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     luaExportMeta.maxRange = 1.0f;
     luaExportMeta.imgW = input.timeMap->getMetadata().width;
     luaExportMeta.imgH = input.timeMap->getMetadata().height;
+    luaExportMeta.startTime = startTime;
+    luaExportMeta.breakthroughTime = breakthroughTime;
+    luaExportMeta.endTime = endTime;
 
     graph::util::exportToLua(*nodeGraph, "temp/CurrentGraph.lua", luaExportMeta);
 

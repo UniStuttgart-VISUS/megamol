@@ -20,10 +20,11 @@ bool exportToLua(const GraphData2D& graph, const std::string& outfileName, LuaEx
     file << "graphData.imgDir = [[" << meta.path << "]]\n";
     file << "graphData.minRange = " << meta.minRange << "\n";
     file << "graphData.maxRange = " << meta.maxRange << "\n";
-    if (meta.imgW > 0 && meta.imgH > 0) {
-        file << "graphData.imgW = " << meta.imgW << "\n";
-        file << "graphData.imgH = " << meta.imgH << "\n";
-    }
+    file << "graphData.imgW = " << meta.imgW << "\n";
+    file << "graphData.imgH = " << meta.imgH << "\n";
+    file << "graphData.start = " << meta.startTime << "\n";
+    file << "graphData.breakthrough = " << meta.breakthroughTime << "\n";
+    file << "graphData.end = " << meta.endTime << "\n";
 
     file << "graphData.Nodes = {\n";
     std::size_t i = 0;

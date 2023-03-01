@@ -31,7 +31,7 @@ ImageSeriesTimestampFilter::ImageSeriesTimestampFilter()
         &ImageSeriesTimestampFilter::getMetaDataCallback);
     MakeSlotAvailable(&getDataCallee);
 
-    denoiseIterations << new core::param::IntParam(2, 0);
+    denoiseIterations << new core::param::IntParam(10, 0);
     denoiseIterations.SetUpdateCallback(&ImageSeriesTimestampFilter::filterParametersChangedCallback);
     MakeSlotAvailable(&denoiseIterations);
 
