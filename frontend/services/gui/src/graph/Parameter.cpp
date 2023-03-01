@@ -513,13 +513,9 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     std::shared_ptr<megamol::core::param::AbstractParam> in_param_ptr, megamol::gui::Parameter& out_param,
     bool set_default_val, bool set_dirty) {
 
-    // we use a const ptr here to avoid triggering a feedback loop with the graph subscribers mechanism
-    // when looking into the parameters GuiPresentation(), which normally notifies the graph about param changes upon GuiPresentation()
-    // access except when 'GuiPresentation() const' is accessed
-    auto const& in_param_ptr_const = in_param_ptr;
-    out_param.SetGUIVisible(in_param_ptr_const->IsGUIVisible());
-    out_param.SetGUIReadOnly(in_param_ptr_const->IsGUIReadOnly());
-    out_param.SetGUIPresentation(in_param_ptr_const->GetGUIPresentation());
+    out_param.SetGUIVisible(in_param_ptr->IsGUIVisible());
+    out_param.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
+    out_param.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
 
     /// XXX Prioritizing currently changed value from GUI
     /// Do not read param value from core param if gui param has already updated value

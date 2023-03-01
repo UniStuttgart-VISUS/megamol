@@ -104,17 +104,6 @@ public:
         this->callback = new CallbackImpl<C>(NULL, func);
     }
 
-    /**
-     * Queue a notification that the parameter value has changed, to notify
-     * those that have a registered listener. This method is public to allow
-     * pushing parameter changes that cannot use the dirty flag to avoid feedback
-     * loops.
-     *
-     * @param force Enforce notification, otherwise the notification will only be triggered if the value has
-     * changed.
-     */
-    void QueueUpdateNotification(bool force = false);
-
 protected:
     /**
      * Answers whether this slot has already been made available. If this

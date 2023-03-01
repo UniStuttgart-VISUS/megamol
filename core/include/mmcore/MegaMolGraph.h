@@ -149,6 +149,13 @@ private:
         module_param_changes_queue.push_back(slot);
         return true;
     };
+
+    std::vector<core::param::AbstractParamSlot*> module_param_presentation_changes_queue;
+    core::param::AbstractParam::ParamChangeCallback param_presentation_change_callback =
+        [&](core::param::AbstractParamSlot* slot) {
+            module_param_presentation_changes_queue.push_back(slot);
+            return true;
+        };
 };
 
 } // namespace megamol::core

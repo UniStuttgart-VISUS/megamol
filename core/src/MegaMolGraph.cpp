@@ -256,9 +256,32 @@ bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes(
                 return false;
             }
         }
+        for (auto changed_param_ptr : module_param_presentation_changes_queue) {
+            if (!changed_param_ptr) {
+                log_error("AbstractParamSlot* of a changed module parameter turned out nullptr. can not propagate "
+                          "changed param value to graph subscribers.");
+                return false;
+            }
+
+            param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(changed_param_ptr);
+
+            if (!param_slot_ptr) {
+                log_error("Parameter at ParamSlot* is Null. Can not propagate changed param value.");
+                return false;
+            }
+
+            auto param_name = std::string{param_slot_ptr->FullName().PeekBuffer()};
+
+            if (!subscriber.ParameterPresentationChanged(param_slot_ptr)) {
+                log_error("graph subscriber " + subscriber.Name() +
+                          " failed to process parameter presentation change: " + param_name);
+                return false;
+            }
+        }
     }
 
     module_param_changes_queue.clear();
+    module_param_presentation_changes_queue.clear();
 
     return true;
 }
@@ -486,6 +509,7 @@ void megamol::core::MegaMolGraph::Clear() {
     module_list_.clear();
     graph_entry_points.clear();
     module_param_changes_queue.clear();
+    module_param_presentation_changes_queue.clear();
 }
 
 /*
@@ -602,7 +626,8 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
     std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
     for (auto& param_ptr : param_ptrs) {
         assert(param_ptr != nullptr);
-        param_ptr->Parameter()->setChangeCallback(this->param_change_callback);
+        param_ptr->Parameter()->SetParamChangeCallback(this->param_change_callback);
+        param_ptr->Parameter()->SetPresentationChangeCallback(this->param_presentation_change_callback);
     }
 
     if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.AddParameters(param_ptrs); });
