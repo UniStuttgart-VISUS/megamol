@@ -43,7 +43,7 @@ vec4 getColor(vec4 color) {
         return color;
     case 1:
     case 3:
-        value *= 255.0f;
+        value *= pow(2.0, 8.0) - 1;
 
         if (value < 2.0) {
             return vec4(0.0, 0.0, 0.0, 1.0);
@@ -52,7 +52,7 @@ vec4 getColor(vec4 color) {
         break;
     case 2:
     case 4:
-        value *= 65535.0f;
+        value *= pow(2.0, 16.0) - 1;
 
         if (value < 1.0) {
             return vec4(0.0, 0.0, 0.0, 1.0);

@@ -84,6 +84,9 @@ private:
 
     core::CallerSlot getInputCaller;
 
+    core::param::ParamSlot denoiseIterations;
+    core::param::ParamSlot denoiseNeighborThreshold;
+
     std::unique_ptr<filter::AsyncFilterRunner<>> filterRunner;
 
     util::LRUCache<typename AsyncImageData2D<>::Hash, AsyncImageData2D<>> imageCache;

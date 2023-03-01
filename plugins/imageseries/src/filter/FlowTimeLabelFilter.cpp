@@ -174,7 +174,14 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     if (next_label > LabelMaximum) {
-        throw std::runtime_error("Too many labels.");
+        core::utility::log::Log::DefaultLog.WriteError("[FlowTimeLabelFilter]: Too many labels! Consider denoising the input images.");
+
+        // return black image and empty graph
+        auto output = std::make_shared<Output>();
+        output->image =
+            std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
+        output->graph = std::make_shared<graph::GraphData2D>();
+        return output;
     }
 
     auto printNode = [&nodeGraph](graph::GraphData2D::NodeID id) {

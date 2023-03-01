@@ -1,10 +1,7 @@
 #include "ImageSeriesTimestampFilter.h"
 #include "imageseries/ImageSeries2DCall.h"
 
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/StringParam.h"
 
 #include "../filter/ImageSamplingFilter.h"
 #include "../filter/IndexGenerationFilter.h"
@@ -20,6 +17,8 @@ namespace megamol::ImageSeries {
 ImageSeriesTimestampFilter::ImageSeriesTimestampFilter()
         : getDataCallee("getData", "Returns data from the image series for the requested timestamp.")
         , getInputCaller("requestInputImageSeries", "Requests image data from a series.")
+        , denoiseIterations("Denoise iterations", "Number of iterations for denoising.")
+        , denoiseNeighborThreshold("Denoise threshold", "Number of equal neighbors required to not count as noise.")
         , imageCache([](const AsyncImageData2D<>& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
@@ -31,6 +30,14 @@ ImageSeriesTimestampFilter::ImageSeriesTimestampFilter()
         ImageSeries2DCall::FunctionName(ImageSeries2DCall::CallGetMetaData),
         &ImageSeriesTimestampFilter::getMetaDataCallback);
     MakeSlotAvailable(&getDataCallee);
+
+    denoiseIterations << new core::param::IntParam(2, 0);
+    denoiseIterations.SetUpdateCallback(&ImageSeriesTimestampFilter::filterParametersChangedCallback);
+    MakeSlotAvailable(&denoiseIterations);
+
+    denoiseNeighborThreshold << new core::param::IntParam(100, 10);
+    denoiseNeighborThreshold.SetUpdateCallback(&ImageSeriesTimestampFilter::filterParametersChangedCallback);
+    MakeSlotAvailable(&denoiseNeighborThreshold);
 
     // Set default image cache size to 512 MB
     imageCache.setMaximumSize(512 * 1024 * 1024);
@@ -66,7 +73,11 @@ bool ImageSeriesTimestampFilter::getDataCallback(core::Call& caller) {
                     params.indexMap = indexMap;
                 }
 
-                return filterRunner->run<filter::ImageSamplingFilter>(params.indexMap);
+                filter::ImageSamplingFilter::Input paramsSampling;
+                paramsSampling.indexMap = params.indexMap;
+                paramsSampling.iterations = denoiseIterations.Param<core::param::IntParam>()->Value();
+                paramsSampling.neighborThreshold = denoiseNeighborThreshold.Param<core::param::IntParam>()->Value();
+                return filterRunner->run<filter::ImageSamplingFilter>(paramsSampling);
             });
             call->SetOutput(output);
             return true;

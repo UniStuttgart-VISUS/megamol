@@ -13,10 +13,11 @@ public:
 
     struct Input {
         AsyncImagePtr indexMap;
+        std::size_t iterations;
+        std::size_t neighborThreshold;
     };
 
     ImageSamplingFilter(Input input);
-    ImageSamplingFilter(AsyncImagePtr indexMap);
     ImagePtr operator()();
 
     ImageMetadata getMetadata() const;
