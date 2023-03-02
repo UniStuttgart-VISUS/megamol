@@ -25,7 +25,7 @@ bool Profiling_Service::init(void* configPtr) {
             log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
         }
         // header
-        log_file << "frame;parent;name;comment;frame_index;api;type;time (ms)" << std::endl;
+        log_file << "frame;parent;name;comment;frame_index;api;start (ms);end (ms);duration (ms)" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
             if (!profiling_logging.active) {
                 return;
@@ -34,7 +34,7 @@ bool Profiling_Service::init(void* configPtr) {
             if (frame > 0) {
                 auto& _frame_stats =
                     _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
-                log_file << (frame - 1) << ";MegaMol;FrameTime;;0;CPU;Duration;"
+                log_file << (frame - 1) << ";MegaMol;FrameTime;;0;CPU;;;"
                          << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
             }
             for (auto& e : fi.entries) {
@@ -42,14 +42,16 @@ bool Profiling_Service::init(void* configPtr) {
                 auto name = conf.name;
                 auto parent = _perf_man.lookup_parent(e.handle);
                 auto comment = conf.comment;
-                std::string time_string;
-                const auto dur = std::chrono::duration<double, std::milli>(e.timestamp.time_since_epoch());
-                time_string = std::to_string(dur.count());
+
+                const auto the_start = std::chrono::duration<double, std::milli>(e.start.time_since_epoch()).count();
+                const auto the_end = std::chrono::duration<double, std::milli>(e.end.time_since_epoch()).count();
+                const auto the_duration =
+                    std::chrono::duration<double, std::milli>(e.duration.time_since_epoch()).count();
 
                 log_file << frame << ";" << parent << ";" << name << ";" << comment << ";" << e.frame_index << ";"
                          << megamol::frontend_resources::PerformanceManager::query_api_string(e.api) << ";"
-                         << megamol::frontend_resources::PerformanceManager::entry_type_string(e.type) << ";"
-                         << time_string << std::endl;
+                         << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
+                         << std::to_string(the_duration) << std::endl;
             }
         });
     }
@@ -66,7 +68,7 @@ void Profiling_Service::log_graph_event(
     if (this->include_graph_events) {
         const auto frames_rendered = static_cast<int64_t>(
             _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
-        log_file << frames_rendered - 1 << ";" << parent << ";" << name << ";" << comment << ";0;;GraphEvent;"
+        log_file << frames_rendered - 1 << ";" << parent << ";" << name << ";" << comment << ";0;GraphEvent;;;"
                  << std::endl;
     }
 }

@@ -273,18 +273,13 @@ void PerformanceManager::endFrame() {
             e.frame_index = region;
             e.api = tconf.api;
 
-            e.type = entry_type::START;
-            e.timestamp = timer->get_start(region);
-            this_frame.entries.push_back(e);
-
-            e.type = entry_type::END;
-            e.timestamp = timer->get_end(region);
-            this_frame.entries.push_back(e);
-
-            e.type = entry_type::DURATION;
-            e.timestamp = time_point{timer->get_end(region) - timer->get_start(region)};
+            e.start = timer->get_start(region);
+            e.end = timer->get_end(region);
+            e.duration = time_point{timer->get_end(region) - timer->get_start(region)};
             this_frame.entries.push_back(e);
         }
+        std::sort(this_frame.entries.begin(), this_frame.entries.end(),
+            [](timer_entry& a, timer_entry& b) { return a.start < b.start; });
     }
 
     for (auto& subscriber : subscribers) {

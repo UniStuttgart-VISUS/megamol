@@ -53,19 +53,6 @@ public:
         }
     }
 
-    enum class entry_type { START, END, DURATION };
-
-    static constexpr const char* entry_type_string(entry_type type) {
-        switch (type) {
-        case entry_type::START:
-            return "Start";
-        case entry_type::END:
-            return "End";
-        case entry_type::DURATION:
-            return "Duration";
-        }
-    }
-
     enum class parent_type { CALL, MODULE };
 
     static constexpr const char* parent_type_string(parent_type parent) {
@@ -92,13 +79,12 @@ public:
     struct timer_entry {
         // the user cannot fiddle with timers directly, this class needs to be asked
         handle_type handle = 0;
-        entry_type type = entry_type::START;
         query_api api = query_api::CPU;
         // local index inside one frame (if this region is touched multiple times per frame)
         uint32_t frame_index = 0;
         // user payload, used to track call indices, for example
         user_index_type user_index = 0;
-        time_point timestamp;
+        time_point start, end, duration;
     };
 
     struct frame_info {

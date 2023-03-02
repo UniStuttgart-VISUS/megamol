@@ -1445,20 +1445,18 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
     const frontend_resources::PerformanceManager::frame_info& fi) {
     auto frame = fi.frame;
     for (auto& e : fi.entries) {
-        if (e.type == frontend_resources::PerformanceManager::entry_type::DURATION) {
-            auto p = perf_manager->lookup_parent_pointer(e.handle);
-            auto t = perf_manager->lookup_parent_type(e.handle);
-            if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
-                auto c = static_cast<megamol::core::Call*>(p);
-                // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
-                if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
-                    call_to_call[p].lock()->AppendPerformanceData(frame, e);
-                }
-            } else {
-                // Module
-                if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
-                    module_to_module[p].lock()->AppendPerformanceData(frame, e);
-                }
+        auto p = perf_manager->lookup_parent_pointer(e.handle);
+        auto t = perf_manager->lookup_parent_type(e.handle);
+        if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
+            auto c = static_cast<megamol::core::Call*>(p);
+            // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
+            if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
+                call_to_call[p].lock()->AppendPerformanceData(frame, e);
+            }
+        } else {
+            // Module
+            if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
+                module_to_module[p].lock()->AppendPerformanceData(frame, e);
             }
         }
     }
