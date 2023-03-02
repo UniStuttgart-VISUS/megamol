@@ -136,7 +136,10 @@
       "description": "Use Boost.Stacktrace",
       "dependencies": [
         "boost-stacktrace",
-        "libbacktrace"
+        {
+          "name": "libbacktrace",
+          "platform": "!windows"
+        }
       ]
     },
     "use-tracy": {
