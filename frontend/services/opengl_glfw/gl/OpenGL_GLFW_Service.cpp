@@ -13,7 +13,7 @@
 #include <chrono>
 #include <vector>
 
-#ifdef MEGAMOL_USE_BOOST_STACKTRACE
+#ifdef MEGAMOL_USE_STACKTRACE
 #include <boost/stacktrace.hpp>
 #endif
 
@@ -275,12 +275,12 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
     output << "[" << sourceText << " " << severityText << "] (" << typeText << " " << id << " ["
            << get_message_id_name(id) << "]) " << message << std::endl
            << "stack trace:" << std::endl;
+#ifdef MEGAMOL_USE_STACKTRACE
+    output << boost::stacktrace::stacktrace() << std::endl;
+#else
 #ifdef _WIN32
     output << GetStack() << std::endl;
     OutputDebugStringA(output.str().c_str());
-#else
-#ifdef MEGAMOL_USE_BOOST_STACKTRACE
-    output << boost::stacktrace::stacktrace() << std::endl;
 #else
     output << "(disabled)" << std::endl;
 #endif

@@ -132,6 +132,13 @@
     "use-profiling": {
       "description": "Use Profiling"
     },
+    "use-stacktrace": {
+      "description": "Use Boost.Stacktrace",
+      "dependencies": [
+        "boost-stacktrace",
+        "libbacktrace"
+      ]
+    },
     "use-tracy": {
       "description": "Use Tracy",
       "dependencies": [

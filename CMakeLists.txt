@@ -37,6 +37,7 @@ megamol_feature_option(MPI "Enable MPI support" OFF)
 megamol_feature_option(OPENGL "Enable OpenGL support" ON)
 megamol_feature_option(OSPRAY "Enable OSPRay support" OFF)
 megamol_feature_option(PROFILING "Enable profiling support" OFF)
+megamol_feature_option(STACKTRACE "Enable Boost.Stacktrace support" OFF)
 megamol_feature_option(TRACY "Enable tracy support" OFF)
 megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 # dependent options

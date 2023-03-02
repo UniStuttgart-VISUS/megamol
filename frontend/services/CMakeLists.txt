@@ -142,29 +142,15 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PUBLIC mwk-mint-interop::mwk-mint-interop)
   endif()
 
-  # Linux Stacktrace
-  # Use Boost stacktrace if installed (is fully optional).
-  # sudo apt install libboost-stacktrace-dev
-  #
-  # Enable backtrace backend, addr2line is unusable slow and has no line numbers, unfortunately this only works for gcc out the box.
-  # Clang would require backtrace.h from an installed gcc version, see
-  # https://www.boost.org/doc/libs/1_77_0/doc/html/stacktrace/configuration_and_build.html#ftn.stacktrace.configuration_and_build.f3
-  if (UNIX AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    find_package(Boost 1.71.0
-      COMPONENTS
-        stacktrace_basic
-        stacktrace_backtrace
-        stacktrace_addr2line
-        stacktrace_noop)
-    if (Boost_FOUND)
-      target_link_libraries(${PROJECT_NAME} PUBLIC
-        ${Boost_STACKTRACE_BASIC_LIBRARY}
-        ${Boost_STACKTRACE_BACKTRACE_LIBRARY}
-        ${Boost_STACKTRACE_ADDR2LINE_LIBRARY}
-        ${Boost_STACKTRACE_NOOP_LIBRARY})
-      target_compile_definitions(${PROJECT_NAME} PRIVATE
-        MEGAMOL_USE_BOOST_STACKTRACE
-        BOOST_STACKTRACE_USE_BACKTRACE)
+  # Boost.Stacktrace
+  if (MEGAMOL_USE_STACKTRACE)
+    if (WIN32)
+      find_package(Boost REQUIRED COMPONENTS stacktrace_windbg)
+      target_link_libraries(${PROJECT_NAME} PUBLIC Boost::stacktrace_windbg)
+    else ()
+      find_package(Boost REQUIRED COMPONENTS stacktrace_backtrace)
+      target_link_libraries(${PROJECT_NAME} PRIVATE Boost::stacktrace_backtrace backtrace)
+      target_compile_definitions(${PROJECT_NAME} PRIVATE BOOST_STACKTRACE_USE_BACKTRACE)
     endif ()
   endif ()
 
