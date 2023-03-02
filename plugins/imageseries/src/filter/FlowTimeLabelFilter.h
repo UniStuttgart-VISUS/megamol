@@ -72,7 +72,8 @@ public:
             false_sinks = 4,
             resolve_diamonds = 16,
             combine_trivial = 32,
-            combine_tiny = 64
+            combine_tiny = 64,
+            remove_trivial = 128
         } fixes;
     };
 
@@ -92,6 +93,7 @@ private:
     bool combineSmallNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, float tiny_area_threshold) const;
     void combineTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
     bool resolveDiamonds(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
+    void removeTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
 };
 
 } // namespace megamol::ImageSeries::filter

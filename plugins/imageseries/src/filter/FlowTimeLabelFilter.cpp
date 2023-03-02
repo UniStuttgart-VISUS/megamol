@@ -422,20 +422,24 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     // Iteratively improve graph
-    if (input.fixes & Input::fixes_t::combine_trivial) {
+    if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
         combineTrivialNodes(*nodeGraph, next_label);
     }
 
     if (input.fixes & Input::fixes_t::resolve_diamonds) {
-        if (input.fixes & Input::fixes_t::combine_trivial) {
+        if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
             combineTrivialNodes(*nodeGraph, next_label);
         }
 
         while (resolveDiamonds(*nodeGraph, next_label)) {
-            if (input.fixes & Input::fixes_t::combine_trivial) {
+            if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
                 combineTrivialNodes(*nodeGraph, next_label);
             }
         }
+    }
+
+    if (input.fixes & Input::fixes_t::remove_trivial) {
+        removeTrivialNodes(*nodeGraph, next_label);
     }
 
     // Update pixels to match the resulting simplified graph
@@ -842,6 +846,28 @@ bool FlowTimeLabelFilter::resolveDiamonds(
     nodeGraph.finalizeLazyRemoval();
 
     return has_changes;
+}
+
+void FlowTimeLabelFilter::removeTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const {
+    // Simplify graph by combining subsequent nodes of 1-to-1 connections
+    for (const auto& node_info : nodeGraph.getNodes()) {
+        const auto nodeID = node_info.first;
+        const auto& node = node_info.second;
+
+        if (!node.isRemoved() && node.getEdgeCountIn() == 1 && node.getEdgeCountOut() == 1) {
+            const auto oldNode = nodeGraph.removeNode(nodeID, true);
+
+            const auto parentID = *oldNode.getParentNodes().begin();
+            const auto childID = *oldNode.getChildNodes().begin();
+
+            graph::GraphData2D::Edge edge(parentID, childID);
+            edge.weight = nodeGraph.getEdge(parentID, nodeID).weight + nodeGraph.getEdge(nodeID, childID).weight;
+
+            nodeGraph.addEdge(edge);
+        }
+    }
+
+    nodeGraph.finalizeLazyRemoval();
 }
 
 } // namespace megamol::ImageSeries::filter

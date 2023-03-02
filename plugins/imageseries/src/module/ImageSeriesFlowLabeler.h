@@ -98,6 +98,7 @@ private:
     core::param::ParamSlot resolveDiamondsParam;
     core::param::ParamSlot combineTrivialParam;
     core::param::ParamSlot combineTinyParam;
+    core::param::ParamSlot removeTrivialParam;
 
     util::LRUCache<typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash,
         AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>
