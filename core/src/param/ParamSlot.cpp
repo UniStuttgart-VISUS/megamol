@@ -53,26 +53,11 @@ bool param::ParamSlot::isSlotAvailable() const {
 }
 
 /*
- * param:::ParamSlot::QueueUpdateNotification
- */
-void param::ParamSlot::QueueUpdateNotification(bool force) {
-    if (this->Param<AbstractParam>()->ConsumeHasChanged() || force) {
-        Module* m = dynamic_cast<Module*>(this->Parent().get());
-        // TODO what to with this after core instance is removed?
-        //if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
-        //    m->GetCoreInstance()->ParameterValueUpdate(*this);
-        //}
-    }
-}
-
-/*
  * param::ParamSlot::update
  */
 void param::ParamSlot::update() {
     bool oldDirty = this->IsDirty();
     AbstractParamSlot::update();
-
-    QueueUpdateNotification(true);
 
     if (oldDirty != this->IsDirty()) {
         if ((this->callback != NULL) &&

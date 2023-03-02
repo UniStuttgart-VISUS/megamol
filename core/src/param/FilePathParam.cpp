@@ -74,7 +74,7 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
             }
             if (error_flags == 0) {
                 this->value = new_value;
-                this->indicateChange();
+                this->indicateParamChange();
                 if (setDirty)
                     this->setDirty();
             }

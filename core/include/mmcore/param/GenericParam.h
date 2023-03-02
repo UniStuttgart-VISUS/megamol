@@ -76,7 +76,7 @@ public:
         }
         if (this->val != v) {
             this->val = v;
-            this->indicateChange();
+            this->indicateParamChange();
             if (setDirty) {
                 this->setDirty();
             }
