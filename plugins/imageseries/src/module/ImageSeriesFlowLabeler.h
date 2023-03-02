@@ -99,6 +99,7 @@ private:
     core::param::ParamSlot combineTrivialParam;
     core::param::ParamSlot combineTinyParam;
     core::param::ParamSlot removeTrivialParam;
+    core::param::ParamSlot keepBreakthroughNodesParam;
 
     util::LRUCache<typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash,
         AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>

@@ -32,6 +32,7 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         , combineTrivialParam("Combine trivial nodes", "Combine 1-to-1 connected nodes, as these do not provide any valuable information.")
         , combineTinyParam("Combine small areas", "Combine small areas, as these usually result from small local velocities.")
         , removeTrivialParam("Remove trivial nodes", "Remove 1-to-1 connected nodes, as these do not provide any valuable information.")
+        , keepBreakthroughNodesParam("Keep breakthrough nodes", "Keep breakthrough nodes, although they would be removed using other fixes.")
         , imageCache([](const AsyncImageData2D<filter::FlowTimeLabelFilter::Output>& imageData) {
             return imageData.getByteSize();
         }) {
@@ -109,6 +110,10 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     resolveDiamondsParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&resolveDiamondsParam);
 
+    keepBreakthroughNodesParam << new core::param::BoolParam(true);
+    keepBreakthroughNodesParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&keepBreakthroughNodesParam);
+
     // Set default image cache size to 512 MB
     imageCache.setMaximumSize(512 * 1024 * 1024);
 }
@@ -155,7 +160,8 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
                     (resolveDiamondsParam.Param<bool_pt>()->Value() ? fixes_t::resolve_diamonds : fixes_t::nope) |
                     (combineTrivialParam.Param<bool_pt>()->Value() ? fixes_t::combine_trivial : fixes_t::nope) |
                     (combineTinyParam.Param<bool_pt>()->Value() ? fixes_t::combine_tiny : fixes_t::nope) |
-                    (removeTrivialParam.Param<bool_pt>()->Value() ? fixes_t::remove_trivial : fixes_t::nope);
+                    (removeTrivialParam.Param<bool_pt>()->Value() ? fixes_t::remove_trivial : fixes_t::nope) |
+                    (keepBreakthroughNodesParam.Param<bool_pt>()->Value() ? fixes_t::keep_breakthrough_nodes : fixes_t::nope);
 
                 auto output = imageCache.findOrCreate(
                     timeMap.getHash(), [=](typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash) {

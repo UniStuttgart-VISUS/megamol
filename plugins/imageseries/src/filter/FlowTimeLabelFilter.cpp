@@ -421,38 +421,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         }
     }
 
-    // Iteratively improve graph
-    if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
-        combineTrivialNodes(*nodeGraph, next_label);
-    }
-
-    if (input.fixes & Input::fixes_t::resolve_diamonds) {
-        if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
-            combineTrivialNodes(*nodeGraph, next_label);
-        }
-
-        while (resolveDiamonds(*nodeGraph, next_label)) {
-            if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
-                combineTrivialNodes(*nodeGraph, next_label);
-            }
-        }
-    }
-
-    if (input.fixes & Input::fixes_t::remove_trivial) {
-        removeTrivialNodes(*nodeGraph, next_label);
-    }
-
-    // Update pixels to match the resulting simplified graph
-    if (input.outputImage == Input::image_t::simplified) {
-        for (const auto& node_info : nodeGraph->getNodes()) {
-            const auto& node = node_info.second;
-
-            for (const auto& pixel : node.pixels) {
-                dataOut[pixel] = node.getLabel();
-            }
-        }
-    }
-
     // Get landmark times
     auto startTime = std::numeric_limits<int>::max();
     auto breakthroughTime = std::numeric_limits<int>::max();
@@ -486,6 +454,40 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     breakthroughTime = std::clamp(breakthroughTime, startTime, endTime);
+
+    const auto keepBreakthroughTime = (input.fixes & Input::fixes_t::keep_breakthrough_nodes) ? breakthroughTime : -1;
+
+    // Iteratively improve graph
+    if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
+        combineTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
+    }
+
+    if (input.fixes & Input::fixes_t::resolve_diamonds) {
+        if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
+            combineTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
+        }
+
+        while (resolveDiamonds(*nodeGraph, next_label, breakthroughTime)) {
+            if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
+                combineTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
+            }
+        }
+    }
+
+    if (input.fixes & Input::fixes_t::remove_trivial) {
+        removeTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
+    }
+
+    // Update pixels to match the resulting simplified graph
+    if (input.outputImage == Input::image_t::simplified) {
+        for (const auto& node_info : nodeGraph->getNodes()) {
+            const auto& node = node_info.second;
+
+            for (const auto& pixel : node.pixels) {
+                dataOut[pixel] = node.getLabel();
+            }
+        }
+    }
 
     // Export to Lua file
     graph::util::LuaExportMeta luaExportMeta;
@@ -690,13 +692,16 @@ bool FlowTimeLabelFilter::combineSmallNodes(
     return has_changes;
 }
 
-void FlowTimeLabelFilter::combineTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const {
+void FlowTimeLabelFilter::combineTrivialNodes(
+    graph::GraphData2D& nodeGraph, Label& nextLabel, const int breakthroughTime) const {
     // Simplify graph by combining subsequent nodes of 1-to-1 connections
     for (const auto& node_info : nodeGraph.getNodes()) {
         const auto nodeID = node_info.first;
         const auto& node = node_info.second;
 
-        if (!node.isRemoved() && node.getEdgeCountIn() == 1 && node.getEdgeCountOut() == 1) {
+        if (!node.isRemoved() && node.getEdgeCountIn() == 1 && node.getEdgeCountOut() == 1 &&
+            node.getFrameIndex() != breakthroughTime) {
+
             std::list<graph::GraphData2D::NodeID> nodeIDsToCombine;
             nodeIDsToCombine.insert(nodeIDsToCombine.begin(), nodeID);
 
@@ -704,7 +709,9 @@ void FlowTimeLabelFilter::combineTrivialNodes(graph::GraphData2D& nodeGraph, Lab
             auto parentID = *node.getParentNodes().begin();
             do {
                 const auto& parent = nodeGraph.getNode(parentID);
-                if (!parent.isRemoved() && parent.getEdgeCountIn() == 1 && parent.getEdgeCountOut() == 1) {
+                if (!parent.isRemoved() && parent.getEdgeCountIn() == 1 && parent.getEdgeCountOut() == 1 &&
+                    parent.getFrameIndex() != breakthroughTime) {
+
                     nodeIDsToCombine.insert(nodeIDsToCombine.begin(), parentID);
                     parentID = *parent.getParentNodes().begin();
                 } else {
@@ -715,7 +722,9 @@ void FlowTimeLabelFilter::combineTrivialNodes(graph::GraphData2D& nodeGraph, Lab
             auto childID = *node.getChildNodes().begin();
             do {
                 const auto& child = nodeGraph.getNode(childID);
-                if (!child.isRemoved() && child.getEdgeCountIn() == 1 && child.getEdgeCountOut() == 1) {
+                if (!child.isRemoved() && child.getEdgeCountIn() == 1 && child.getEdgeCountOut() == 1 &&
+                    child.getFrameIndex() != breakthroughTime) {
+
                     nodeIDsToCombine.insert(nodeIDsToCombine.end(), childID);
                     childID = *child.getChildNodes().begin();
                 } else {
@@ -758,7 +767,7 @@ void FlowTimeLabelFilter::combineTrivialNodes(graph::GraphData2D& nodeGraph, Lab
 }
 
 bool FlowTimeLabelFilter::resolveDiamonds(
-    graph::GraphData2D& nodeGraph, Label& nextLabel) const {
+    graph::GraphData2D& nodeGraph, Label& nextLabel, const int breakthroughTime) const {
 
     bool has_changes = false;
 
@@ -808,7 +817,9 @@ bool FlowTimeLabelFilter::resolveDiamonds(
                 if (target.getParentNodes().find(originChild) != target.getParentNodes().end()) {
                     const auto& otherNode = nodeGraph.getNode(originChild);
 
-                    if (!otherNode.isRemoved() && otherNode.getEdgeCountIn() == 1 && otherNode.getEdgeCountOut() == 1) {
+                    if (!otherNode.isRemoved() && otherNode.getEdgeCountIn() == 1 && otherNode.getEdgeCountOut() == 1 &&
+                        otherNode.getFrameIndex() != breakthroughTime) {
+
                         nodeIDsToCombine.push_back(originChild);
                     }
                 }
@@ -848,13 +859,16 @@ bool FlowTimeLabelFilter::resolveDiamonds(
     return has_changes;
 }
 
-void FlowTimeLabelFilter::removeTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const {
+void FlowTimeLabelFilter::removeTrivialNodes(
+    graph::GraphData2D& nodeGraph, Label& nextLabel, const int breakthroughTime) const {
     // Simplify graph by combining subsequent nodes of 1-to-1 connections
     for (const auto& node_info : nodeGraph.getNodes()) {
         const auto nodeID = node_info.first;
         const auto& node = node_info.second;
 
-        if (!node.isRemoved() && node.getEdgeCountIn() == 1 && node.getEdgeCountOut() == 1) {
+        if (!node.isRemoved() && node.getEdgeCountIn() == 1 && node.getEdgeCountOut() == 1 &&
+            node.getFrameIndex() != breakthroughTime) {
+
             const auto oldNode = nodeGraph.removeNode(nodeID, true);
 
             const auto parentID = *oldNode.getParentNodes().begin();

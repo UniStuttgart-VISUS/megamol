@@ -70,6 +70,7 @@ public:
             isolated = 1,
             false_sources = 2,
             false_sinks = 4,
+            keep_breakthrough_nodes = 8,
             resolve_diamonds = 16,
             combine_trivial = 32,
             combine_tiny = 64,
@@ -91,9 +92,9 @@ private:
         const std::vector<graph::GraphData2D::NodeID>& nodesToCombine, graph::GraphData2D::NodeID newNodeID) const;
 
     bool combineSmallNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, float tiny_area_threshold) const;
-    void combineTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
-    bool resolveDiamonds(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
-    void removeTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
+    void combineTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
+    bool resolveDiamonds(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
+    void removeTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
 };
 
 } // namespace megamol::ImageSeries::filter
