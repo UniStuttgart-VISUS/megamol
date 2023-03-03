@@ -12,6 +12,7 @@
     "bhtsne",
     "blend2d",
     "chemfiles",
+    "cmakerc",
     "cppzmq",
     "curl",
     "cxxopts",
