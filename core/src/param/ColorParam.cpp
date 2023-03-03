@@ -50,7 +50,7 @@ std::string ColorParam::ValueString() const {
 void ColorParam::SetValue(const ColorType& v, bool setDirty) {
     if (v != this->val) {
         this->val = v;
-        this->indicateChange();
+        this->indicateParamChange();
         if (setDirty)
             this->setDirty();
     }

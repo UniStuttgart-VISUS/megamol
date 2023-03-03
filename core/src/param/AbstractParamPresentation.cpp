@@ -77,90 +77,91 @@ AbstractParamPresentation::AbstractParamPresentation()
 }
 
 
-bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::ParamType param_type) {
-    if (!this->initialised) {
-        this->initialised = true;
-
-        this->SetGUIVisible(visible);
-        this->SetGUIReadOnly(read_only);
-
-        // Initialize presentations depending on parameter type
-        switch (param_type) {
-        case (ParamType::BOOL): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Checkbox;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::BUTTON): {
-            this->compatible = Presentation::Basic | Presentation::String;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::COLOR): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Color;
-            this->SetGUIPresentation(Presentation::Color);
-        } break;
-        case (ParamType::ENUM): {
-            this->compatible = Presentation::Basic | Presentation::String;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::FILEPATH): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::FilePath;
-            this->SetGUIPresentation(Presentation::FilePath);
-        } break;
-        case (ParamType::FLEXENUM): {
-            this->compatible = Presentation::Basic | Presentation::String;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::FLOAT): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Knob | Presentation::Slider |
-                               Presentation::Drag;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::INT): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Slider | Presentation::Drag;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::STRING): {
-            this->compatible = Presentation::Basic | Presentation::String;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::TERNARY): {
-            this->compatible = Presentation::Basic | Presentation::String;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::TRANSFERFUNCTION): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::TransferFunction;
-            this->SetGUIPresentation(Presentation::TransferFunction);
-        } break;
-        case (ParamType::VECTOR2F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Slider | Presentation::Drag;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::VECTOR3F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Direction |
-                               Presentation::Slider | Presentation::Drag;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::VECTOR4F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Color |
-                               Presentation::Rotation | Presentation::Slider | Presentation::Drag;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::GROUP_ANIMATION): {
-            this->compatible = Presentation::Basic | Presentation::Group_Animation;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        case (ParamType::GROUP_3D_CUBE): {
-            this->compatible = Presentation::Basic | Presentation::Group_3D_Cube;
-            this->SetGUIPresentation(Presentation::Basic);
-        } break;
-        default:
-            break;
-        }
-        return true;
+void AbstractParamPresentation::InitPresentation(AbstractParamPresentation::ParamType param_type) {
+    if (this->initialised) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "Parameter presentation should only be initilised once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+        return;
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Parameter presentation should only be initilised once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    return false;
+
+    this->initialised = true;
+
+    this->SetGUIVisible(visible);
+    this->SetGUIReadOnly(read_only);
+
+    // Initialize presentations depending on parameter type
+    switch (param_type) {
+    case (ParamType::BOOL): {
+        this->compatible = Presentation::Basic | Presentation::String | Presentation::Checkbox;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::BUTTON): {
+        this->compatible = Presentation::Basic | Presentation::String;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::COLOR): {
+        this->compatible = Presentation::Basic | Presentation::String | Presentation::Color;
+        this->SetGUIPresentation(Presentation::Color);
+    } break;
+    case (ParamType::ENUM): {
+        this->compatible = Presentation::Basic | Presentation::String;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::FILEPATH): {
+        this->compatible = Presentation::Basic | Presentation::String | Presentation::FilePath;
+        this->SetGUIPresentation(Presentation::FilePath);
+    } break;
+    case (ParamType::FLEXENUM): {
+        this->compatible = Presentation::Basic | Presentation::String;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::FLOAT): {
+        this->compatible =
+            Presentation::Basic | Presentation::String | Presentation::Knob | Presentation::Slider | Presentation::Drag;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::INT): {
+        this->compatible = Presentation::Basic | Presentation::String | Presentation::Slider | Presentation::Drag;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::STRING): {
+        this->compatible = Presentation::Basic | Presentation::String;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::TERNARY): {
+        this->compatible = Presentation::Basic | Presentation::String;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::TRANSFERFUNCTION): {
+        this->compatible = Presentation::Basic | Presentation::String | Presentation::TransferFunction;
+        this->SetGUIPresentation(Presentation::TransferFunction);
+    } break;
+    case (ParamType::VECTOR2F): {
+        this->compatible = Presentation::Basic | Presentation::String | Presentation::Slider | Presentation::Drag;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::VECTOR3F): {
+        this->compatible = Presentation::Basic | Presentation::String | Presentation::Direction | Presentation::Slider |
+                           Presentation::Drag;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::VECTOR4F): {
+        this->compatible = Presentation::Basic | Presentation::String | Presentation::Color | Presentation::Rotation |
+                           Presentation::Slider | Presentation::Drag;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::GROUP_ANIMATION): {
+        this->compatible = Presentation::Basic | Presentation::Group_Animation;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::GROUP_3D_CUBE): {
+        this->compatible = Presentation::Basic | Presentation::Group_3D_Cube;
+        this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    default:
+        break;
+    }
 }
 
 
