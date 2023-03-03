@@ -144,6 +144,7 @@ if(BUILD_FRONTEND_SERVICES)
 
   # Boost.Stacktrace
   if (MEGAMOL_USE_STACKTRACE)
+    set(Boost_NO_WARN_NEW_VERSIONS 1)
     if (WIN32)
       find_package(Boost REQUIRED COMPONENTS stacktrace_windbg)
       target_link_libraries(${PROJECT_NAME} PUBLIC Boost::stacktrace_windbg)
