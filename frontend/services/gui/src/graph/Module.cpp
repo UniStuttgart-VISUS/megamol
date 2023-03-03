@@ -360,7 +360,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 if (!this->gui_selected &&
                     (active || this->found_uid(state.interact.modules_selected_uids, this->uid))) {
                     if (!this->found_uid(state.interact.modules_selected_uids, this->uid)) {
-                        if (ImGui::IsKeyPressed(ImGuiKey_ModShift)) {
+                        if (ImGui::IsKeyPressed(ImGuiMod_Shift)) {
                             // Multiple Selection
                             this->add_uid(state.interact.modules_selected_uids, this->uid);
                         } else {
@@ -378,8 +378,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 // Deselection
                 else if (this->gui_selected &&
                          ((mouse_clicked_anywhere && (state.interact.module_hovered_uid == GUI_INVALID_ID) &&
-                              !ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
-                             (active && ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
+                              !ImGui::IsKeyPressed(ImGuiMod_Shift)) ||
+                             (active && ImGui::IsKeyPressed(ImGuiMod_Shift)) ||
                              (!this->found_uid(state.interact.modules_selected_uids, this->uid)))) {
                     this->gui_selected = false;
                     this->erase_uid(state.interact.modules_selected_uids, this->uid);
