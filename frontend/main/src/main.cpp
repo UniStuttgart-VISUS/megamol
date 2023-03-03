@@ -25,7 +25,7 @@
 #include "VR_Service.hpp"
 
 #ifdef MEGAMOL_USE_TRACY
-#include "Tracy.hpp"
+#include "tracy/Tracy.hpp"
 #endif
 
 using megamol::core::utility::log::Log;
