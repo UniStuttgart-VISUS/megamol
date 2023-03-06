@@ -77,7 +77,7 @@ EnumParam* EnumParam::SetTypePair(int value, const char* name) {
 void EnumParam::SetValue(int v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
-        this->indicateChange();
+        this->indicateParamChange();
         if (setDirty)
             this->setDirty();
     }

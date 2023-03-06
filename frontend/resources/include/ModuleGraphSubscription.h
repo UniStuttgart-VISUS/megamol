@@ -75,6 +75,8 @@ public:
     std::function<bool(ParamSlotPtr const& /*param*/, std::string const& /*new_value*/)> ParameterChanged =
         [](auto const&, auto const&) { return true; };
 
+    std::function<bool(ParamSlotPtr const& /*param*/)> ParameterPresentationChanged = [](auto const&) { return true; };
+
     /**
      * Informs about renaming of a module.
      * The module has already been renamed successfully when the callback is executed.
