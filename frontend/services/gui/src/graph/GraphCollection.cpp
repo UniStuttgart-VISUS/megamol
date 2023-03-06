@@ -1453,8 +1453,8 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
             if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
                 call_to_call[p].lock()->AppendPerformanceData(frame, e);
             }
-        } else {
-            // Module
+        } else if (t == frontend_resources::PerformanceManager::parent_type::USER_REGION) {
+            // Region in a Module
             if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
                 module_to_module[p].lock()->AppendPerformanceData(frame, e);
             }
