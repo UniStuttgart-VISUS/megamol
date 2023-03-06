@@ -40,7 +40,7 @@ bool TernaryParam::ParseValue(std::string const& v) {
 void TernaryParam::SetValue(vislib::math::Ternary v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
-        this->indicateChange();
+        this->indicateParamChange();
         if (setDirty)
             this->setDirty();
     }
