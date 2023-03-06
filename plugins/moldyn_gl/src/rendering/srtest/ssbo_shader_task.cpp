@@ -95,6 +95,7 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::upload(data_package_t cons
     case upload_mode::BUFFER_ARRAY: {
         bufArray = &package.bufArray;
         pl_data_ = package.pl_data;
+        break;
     }
     case upload_mode::POS_COL_SEP:
     case upload_mode::VEC3_SEP:
