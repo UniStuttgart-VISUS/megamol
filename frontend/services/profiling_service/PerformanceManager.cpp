@@ -10,6 +10,13 @@
 
 namespace megamol::frontend_resources {
 
+PerformanceManager::PerformanceManager() {
+#ifdef MEGAMOL_USE_OPENGL
+    whole_frame_gl = add_timer("FrameTimeGL", query_api::OPENGL);
+#endif
+    whole_frame_cpu = add_timer("FrameTime", query_api::CPU);
+}
+
 bool PerformanceManager::Itimer::start(frame_type frame) {
     auto new_frame = false;
     if (frame != start_frame) {
@@ -111,7 +118,7 @@ PerformanceManager::handle_vector PerformanceManager::add_timers(
     handle_vector ret;
     timer_config conf;
     conf.parent_pointer = m;
-    conf.parent_type = parent_type::MODULE;
+    conf.parent_type = parent_type::USER_REGION;
     for (const auto& btc : timer_list) {
         conf.api = btc.api;
         conf.name = btc.name;
@@ -151,6 +158,22 @@ PerformanceManager::handle_vector PerformanceManager::add_timers(megamol::core::
     return ret;
 }
 
+PerformanceManager::handle_type PerformanceManager::add_timer(std::string name, query_api api) {
+    handle_type ret;
+    timer_config conf;
+    conf.parent_type = parent_type::BUILTIN;
+    conf.api = api;
+    conf.name = name;
+    conf.user_index = 0;
+    switch (api) {
+    case query_api::CPU:
+        return add_timer(std::make_unique<cpu_timer>(conf));
+    case query_api::OPENGL:
+        return add_timer(std::make_unique<gl_timer>(conf));
+    }
+    return 0;
+}
+
 void PerformanceManager::remove_timers(handle_vector handles) {
     for (auto handle : handles) {
         timers.erase(handle);
@@ -164,10 +187,12 @@ std::string PerformanceManager::parent_name(const timer_config& conf) {
         const auto c = static_cast<megamol::core::Call*>(conf.parent_pointer);
         return c->GetDescriptiveText();
     }
-    case parent_type::MODULE: {
+    case parent_type::USER_REGION: {
         const auto m = static_cast<megamol::core::Module*>(conf.parent_pointer);
         return m->Name().PeekBuffer();
     }
+    case parent_type::BUILTIN:
+        return "BuiltIn";
     default:
         return "";
     }
@@ -239,13 +264,25 @@ PerformanceManager::handle_type PerformanceManager::add_timer(std::unique_ptr<It
     return my_handle;
 }
 
+void PerformanceManager::startFrame(frame_type frame) {
+    current_frame = frame;
+    gl_timer::last_query = 0;
+    start_timer(whole_frame_cpu);
+#ifdef MEGAMOL_USE_OPENGL
+    start_timer(whole_frame_gl);
+#endif
+}
+
 void PerformanceManager::endFrame() {
 #ifdef MEGAMOL_USE_OPENGL
+    stop_timer(whole_frame_gl);
+
     int done = (gl_timer::last_query == 0);
     while (!done) {
         glGetQueryObjectiv(gl_timer::last_query, GL_QUERY_RESULT_AVAILABLE, &done);
     }
 #endif
+    stop_timer(whole_frame_cpu);
 
     frame_info this_frame;
     this_frame.frame = current_frame;
@@ -268,6 +305,7 @@ void PerformanceManager::endFrame() {
         timer_entry e;
         e.handle = timer->get_handle();
         e.user_index = tconf.user_index;
+        e.parent_type = tconf.parent_type;
 
         for (uint32_t region = 0; region < timer->get_region_count(); ++region) {
             e.frame_index = region;
@@ -278,9 +316,9 @@ void PerformanceManager::endFrame() {
             e.duration = time_point{timer->get_end(region) - timer->get_start(region)};
             this_frame.entries.push_back(e);
         }
-        std::sort(this_frame.entries.begin(), this_frame.entries.end(),
-            [](timer_entry& a, timer_entry& b) { return a.start < b.start; });
     }
+    std::sort(this_frame.entries.begin(), this_frame.entries.end(),
+        [](timer_entry& a, timer_entry& b) { return a.start < b.start; });
 
     for (auto& subscriber : subscribers) {
         subscriber(this_frame);

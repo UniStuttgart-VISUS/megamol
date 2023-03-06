@@ -32,7 +32,8 @@ static std::string PerformanceManager_Req_Name = "PerformanceManager";
 
 class PerformanceManager {
 public:
-    PerformanceManager() = default;
+    PerformanceManager();
+
     ~PerformanceManager() = default;
 
     using handle_type = uint32_t;
@@ -53,14 +54,16 @@ public:
         }
     }
 
-    enum class parent_type { CALL, MODULE };
+    enum class parent_type { CALL, USER_REGION, BUILTIN };
 
     static constexpr const char* parent_type_string(parent_type parent) {
         switch (parent) {
         case parent_type::CALL:
             return "Call";
-        case parent_type::MODULE:
-            return "Module";
+        case parent_type::USER_REGION:
+            return "UserRegion";
+        case parent_type::BUILTIN:
+            return "BuiltIn";
         }
     }
 
@@ -84,6 +87,7 @@ public:
         uint32_t frame_index = 0;
         // user payload, used to track call indices, for example
         user_index_type user_index = 0;
+        parent_type parent_type = parent_type::BUILTIN;
         time_point start, end, duration;
     };
 
@@ -180,6 +184,9 @@ public:
     // names derived from callbacks
     handle_vector add_timers(megamol::core::Call* c, query_api api);
 
+    // explicit name
+    handle_type add_timer(std::string name, query_api api);
+
     void remove_timers(handle_vector handles);
 
     // hint: this is not for free, so don't call this all the time
@@ -215,10 +222,7 @@ private:
 
     handle_type add_timer(std::unique_ptr<Itimer> t);
 
-    void startFrame(frame_type frame) {
-        current_frame = frame;
-        gl_timer::last_query = 0;
-    }
+    void startFrame(frame_type frame);
 
     void endFrame();
 
@@ -227,6 +231,11 @@ private:
     std::unordered_map<handle_type, std::unique_ptr<Itimer>> timers;
     frame_type current_frame = 0;
     std::vector<update_callback> subscribers;
+
+#ifdef MEGAMOL_USE_OPENGL
+    handle_type whole_frame_gl;
+    handle_type whole_frame_cpu;
+#endif
 };
 
 } // namespace megamol::frontend_resources

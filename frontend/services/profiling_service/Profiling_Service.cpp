@@ -25,7 +25,7 @@ bool Profiling_Service::init(void* configPtr) {
             log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
         }
         // header
-        log_file << "frame;parent;name;comment;frame_index;api;start (ms);end (ms);duration (ms)" << std::endl;
+        log_file << "frame;type;parent;name;comment;frame_index;api;start (ms);end (ms);duration (ms)" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
             if (!profiling_logging.active) {
                 return;
@@ -34,7 +34,7 @@ bool Profiling_Service::init(void* configPtr) {
             if (frame > 0) {
                 auto& _frame_stats =
                     _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
-                log_file << (frame - 1) << ";MegaMol;FrameTime;;0;CPU;;;"
+                log_file << (frame - 1) << ";MegaMol;MegaMol;FrameTime;;0;CPU;;;"
                          << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
             }
             for (auto& e : fi.entries) {
@@ -48,7 +48,8 @@ bool Profiling_Service::init(void* configPtr) {
                 const auto the_duration =
                     std::chrono::duration<double, std::milli>(e.duration.time_since_epoch()).count();
 
-                log_file << frame << ";" << parent << ";" << name << ";" << comment << ";" << e.frame_index << ";"
+                log_file << frame << ";" << frontend_resources::PerformanceManager::parent_type_string(e.parent_type)
+                         << ";" << parent << ";" << name << ";" << comment << ";" << e.frame_index << ";"
                          << megamol::frontend_resources::PerformanceManager::query_api_string(e.api) << ";"
                          << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
                          << std::to_string(the_duration) << std::endl;
@@ -68,7 +69,7 @@ void Profiling_Service::log_graph_event(
     if (this->include_graph_events) {
         const auto frames_rendered = static_cast<int64_t>(
             _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
-        log_file << frames_rendered - 1 << ";" << parent << ";" << name << ";" << comment << ";0;GraphEvent;;;"
+        log_file << frames_rendered - 1 << ";Graph;" << parent << ";" << name << ";" << comment << ";0;GraphEvent;;;"
                  << std::endl;
     }
 }
