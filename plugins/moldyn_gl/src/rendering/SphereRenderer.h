@@ -435,7 +435,7 @@ private:
     /**
      * Reset the state of all conditional parameters.
      */
-    void resetConditionalParamters();
+    void resetConditionalParameters();
 
     /**
      * Render spheres in different render modes.

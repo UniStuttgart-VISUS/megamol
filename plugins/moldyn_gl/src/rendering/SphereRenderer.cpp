@@ -447,7 +447,7 @@ bool SphereRenderer::resetOpenGLResources() {
 }
 
 
-void SphereRenderer::resetConditionalParamters() {
+void SphereRenderer::resetConditionalParameters() {
 
     this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
     this->soft_select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
@@ -474,7 +474,7 @@ void SphereRenderer::resetConditionalParamters() {
 
 bool SphereRenderer::createResources() {
 
-    this->resetConditionalParamters();
+    this->resetConditionalParameters();
     this->resetOpenGLResources();
 
     this->state_invalid_ = true;
