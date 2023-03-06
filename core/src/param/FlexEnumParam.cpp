@@ -32,8 +32,8 @@ void megamol::core::param::FlexEnumParam::ClearValues() {
     this->SetHash(this->GetHash() + 1);
     this->values.clear();
 
-    this->indicateChange();
-    indicatePresentationChange();
+    this->indicateParamChange();
+    this->indicatePresentationChange();
 }
 
 
@@ -64,9 +64,9 @@ FlexEnumParam* FlexEnumParam::AddValue(const std::string& name) {
     if (iter == this->values.end()) {
         this->SetHash(this->GetHash() + 1);
         this->values.insert(name);
-
-        this->indicateChange();
-        indicatePresentationChange();
+        
+        this->indicateParamChange();
+        this->indicatePresentationChange();
     }
     return this;
 }
