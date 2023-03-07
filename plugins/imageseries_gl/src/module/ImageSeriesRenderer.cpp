@@ -6,6 +6,7 @@
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -25,6 +26,7 @@ ImageSeriesRenderer::ImageSeriesRenderer()
         , renderGraphParam("Render Graph", "Render the input graph if there is one.")
         , baseRadiusParam("Node radius", "Radius of the nodes.")
         , edgeWidthParam("Edge width", "Width of the edges.")
+        , outputPathParam("Image output path", "If set, write resulting images to the selected directory.")
         , image_hash(-9837)
         , graph_hash(-7345) {
 
@@ -56,6 +58,9 @@ ImageSeriesRenderer::ImageSeriesRenderer()
 
     edgeWidthParam << new core::param::FloatParam(2.0);
     MakeSlotAvailable(&edgeWidthParam);
+
+    outputPathParam << new core::param::FilePathParam("", core::param::FilePathParam::Flag_Directory_ToBeCreated);
+    MakeSlotAvailable(&outputPathParam);
 }
 
 ImageSeriesRenderer::~ImageSeriesRenderer() {
@@ -136,19 +141,19 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         if (input_image_hash != image_hash) {
             image_hash = input_image_hash;
             display->updateTexture(*currentImage->getImageData());
+        }
 
-            if (auto* getData = getGraphCaller.CallAs<ImageSeries::GraphData2DCall>()) {
-                if ((*getData)(ImageSeries::GraphData2DCall::CallGetData)) {
-                    auto input_graph_hash = util::combineHash<util::Hash>(getData->DataHash(),
-                        util::computeHash(baseRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            edgeWidthParam.Param<core::param::FloatParam>()->Value()));
+        if (auto* getData = getGraphCaller.CallAs<ImageSeries::GraphData2DCall>()) {
+            if ((*getData)(ImageSeries::GraphData2DCall::CallGetData)) {
+                auto input_graph_hash = util::combineHash<util::Hash>(
+                    getData->DataHash(), util::computeHash(baseRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                             edgeWidthParam.Param<core::param::FloatParam>()->Value()));
 
-                    if (input_graph_hash != graph_hash) {
-                        graph_hash = input_graph_hash;
-                        display->updateGraph(*getData->GetOutput().graph->getData(),
-                            baseRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            edgeWidthParam.Param<core::param::FloatParam>()->Value());
-                    }
+                if (input_graph_hash != graph_hash) {
+                    graph_hash = input_graph_hash;
+                    display->updateGraph(*getData->GetOutput().graph->getData(),
+                        baseRadiusParam.Param<core::param::FloatParam>()->Value(),
+                        edgeWidthParam.Param<core::param::FloatParam>()->Value());
                 }
             }
         }
@@ -156,6 +161,8 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         const auto tfInfo = getTransferFunction(display->getValueRange());
         display->updateTransferFunction(std::get<0>(tfInfo), {std::get<1>(tfInfo), std::get<2>(tfInfo)});
     }
+
+    display->setFilePath(outputPathParam.Param<core::param::FilePathParam>()->Value());
 
     return display->render(call, renderGraphParam.Param<core::param::BoolParam>()->Value());
 }

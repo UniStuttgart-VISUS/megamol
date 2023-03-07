@@ -15,6 +15,7 @@
 #include "glowl/Texture2D.hpp"
 
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -52,8 +53,13 @@ public:
     void setDisplayMode(Mode mode);
     Mode getDisplayMode() const;
 
+    void setFilePath(const std::filesystem::path& path);
+
 private:
+    enum class render_t { none = 0, image = 1, graph = 2, all = 3 };
+
     bool renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix, bool render_graph);
+    void renderImplImpl(const glm::mat4& matrix, render_t selection);
     static bool textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2);
 
     template<typename T>
@@ -92,6 +98,9 @@ private:
     std::array<float, 2> valueRange, usedValueRange;
 
     Mode mode = Mode::Color;
+
+    std::filesystem::path basePath;
+    bool hasUpdate = false;
 };
 
 } // namespace megamol::ImageSeries::GL

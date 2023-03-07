@@ -109,6 +109,8 @@ private:
     core::param::ParamSlot baseRadiusParam;
     core::param::ParamSlot edgeWidthParam;
 
+    core::param::ParamSlot outputPathParam;
+
     ImageSeries2DCall::Output metadata;
 
     SIZE_T image_hash, graph_hash;

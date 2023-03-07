@@ -5,9 +5,13 @@
 #include "mmstd_gl/renderer/CallRender2DGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
+#include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/PngBitmapCodec.h"
+
 #include "glowl/VertexLayout.hpp"
 
 #include <array>
+#include <filesystem>
 #include <limits>
 #include <numeric>
 #include <sstream>
@@ -66,6 +70,8 @@ ImageDisplay2D::~ImageDisplay2D() {
 }
 
 bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
+    hasUpdate = true;
+
     width = image.Width();
     height = image.Height();
 
@@ -152,7 +158,10 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
     return true;
 }
 
-bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, const float baseRadius, const float edgeWidth) {
+bool ImageDisplay2D::updateGraph(
+    const ImageSeries::graph::GraphData2D& graph, const float baseRadius, const float edgeWidth) {
+    hasUpdate = true;
+
     const auto& nodes = graph.getNodes();
     const auto& edges = graph.getEdges();
 
@@ -322,46 +331,105 @@ ImageDisplay2D::Mode ImageDisplay2D::getDisplayMode() const {
     return mode;
 }
 
+void ImageDisplay2D::setFilePath(const std::filesystem::path& path) {
+    basePath = path;
+}
+
 bool ImageDisplay2D::renderImpl(
     std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix, const bool render_graph) {
     if (!framebuffer || !shader || !texture || !mesh) {
         return false;
     }
 
-    framebuffer->bindToDraw();
+    if (hasUpdate && !basePath.empty()) {
+        glowl::FramebufferObject fbo(width, height);
+        fbo.createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
 
+        auto image = std::make_shared<vislib::graphics::BitmapImage>(
+            width, height, 4, vislib::graphics::BitmapImage::ChannelType::CHANNELTYPE_FLOAT);
+        image->LabelChannelsRGBA();
+
+        sg::graphics::PngBitmapCodec png_codec;
+
+        auto renderAndSave = [&](const std::filesystem::path& path, const render_t selection) {
+            fbo.bind();
+
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            glm::mat4 matrix(1.0f);
+            matrix = glm::scale(matrix, glm::vec3(2.0 / width, -2.0 / height, 1.0));
+            matrix = glm::translate(matrix, glm::vec3(-width / 2.0, -height / 2.0, 0.0));
+
+            renderImplImpl(matrix, selection);
+
+            fbo.bindToRead(0);
+            glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, image->PeekData());
+
+            png_codec.Image() = image.get();
+            png_codec.Save(path.string().c_str());
+
+            core::utility::log::Log::DefaultLog.WriteInfo("Saved image to %s.", path.string().c_str());
+        };
+
+        std::array<float, 4> viewPort{}, clearColor{};
+        glGetFloatv(GL_VIEWPORT, viewPort.data());
+        glGetFloatv(GL_COLOR_CLEAR_VALUE, clearColor.data());
+
+        glViewport(0, 0, width, height);
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+
+        renderAndSave(basePath / "image_0_image.png", render_t::image);
+        renderAndSave(basePath / "image_1_graph.png", render_t::graph);
+        renderAndSave(basePath / "image_2_combined.png", render_t::all);
+
+        glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+        glViewport(viewPort[0], viewPort[1], viewPort[2], viewPort[3]);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+        hasUpdate = false;
+    }
+
+    framebuffer->bind();
+    renderImplImpl(matrix, render_graph ? render_t::all : render_t::image);
+
+    return true;
+}
+
+void ImageDisplay2D::renderImplImpl(const glm::mat4& matrix, const render_t selection) {
     GLboolean revert_depth_test;
     glGetBooleanv(GL_DEPTH_TEST, &revert_depth_test);
     glDisable(GL_DEPTH_TEST);
 
-    // (1) Render image
-    glActiveTexture(GL_TEXTURE0);
-    texture->bindTexture();
+    if (selection == render_t::image || selection == render_t::all) {
+        // (1) Render image
+        glActiveTexture(GL_TEXTURE0);
+        texture->bindTexture();
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_1D, transferFunction);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, transferFunction);
 
-    shader->use();
-    shader->setUniform("matrix", glm::scale(matrix, glm::vec3(width, height, 1.f)));
-    shader->setUniform("image", 0);
-    shader->setUniform("tfTexture", 1);
-    shader->setUniform("tfRange", usedValueRange[0], usedValueRange[1]);
-    shader->setUniform("displayMode", static_cast<GLint>(getDisplayMode()));
+        shader->use();
+        shader->setUniform("matrix", glm::scale(matrix, glm::vec3(width, height, 1.f)));
+        shader->setUniform("image", 0);
+        shader->setUniform("tfTexture", 1);
+        shader->setUniform("tfRange", usedValueRange[0], usedValueRange[1]);
+        shader->setUniform("displayMode", static_cast<GLint>(getDisplayMode()));
 
-    mesh->draw();
+        mesh->draw();
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_1D, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, 0);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 
     GLboolean revert_blend;
     glGetBooleanv(GL_BLEND, &revert_blend);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (render_graph) {
+    if (selection == render_t::graph || selection == render_t::all) {
         // (2) Render edges
         if (edge_mesh) {
             edge_shader->use();
@@ -392,8 +460,6 @@ bool ImageDisplay2D::renderImpl(
     if (!revert_blend) {
         glDisable(GL_BLEND);
     }
-
-    return true;
 }
 
 bool ImageDisplay2D::textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2) {
