@@ -142,8 +142,10 @@ bool megamol::gui::ImageWidget::Button(const std::string& tooltip_text, ImVec2 s
     auto bg = style.Colors[ImGuiCol_Button];
     auto fg = style.Colors[ImGuiCol_Text];
 
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     bool retval =
         ImGui::ImageButton("#image", this->getImTextureID(), size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), bg, fg);
+    ImGui::PopStyleVar();
     if (!tooltip_text.empty()) {
         this->tooltip.ToolTip(tooltip_text, ImGui::GetItemID(), 0.5f, 5.0f);
     }
@@ -174,10 +176,12 @@ bool megamol::gui::ImageWidget::ToggleButton(
         button_tooltip_text = toggle_tooltip_text;
         im_texture_id = this->getToggleImTextureID();
     }
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     if (ImGui::ImageButton("#image", im_texture_id, size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), bg, fg)) {
         toggle = !toggle;
         retval = true;
     }
+    ImGui::PopStyleVar();
     if (!button_tooltip_text.empty()) {
         this->tooltip.ToolTip(button_tooltip_text, ImGui::GetItemID(), 0.5f, 5.0f);
     }

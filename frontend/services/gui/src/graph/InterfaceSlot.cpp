@@ -284,7 +284,8 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
             // Button
             ImGui::SetCursorScreenPos(actual_position - ImVec2(radius, radius));
             ImGui::SetItemAllowOverlap();
-            ImGui::InvisibleButton(button_label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+            ImGui::InvisibleButton(
+                button_label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f), ImGuiButtonFlags_NoSetKeyOwner);
             ImGui::SetItemAllowOverlap();
             if (ImGui::IsItemActivated()) {
                 state.interact.button_active_uid = this->uid;
