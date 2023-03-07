@@ -18,10 +18,10 @@ const unsigned int megamol::protein_calls::VariantMatchDataCall::CallForGetData 
 /*
  * VariantMatchDataCall::VariantMatchDataCall
  */
-VariantMatchDataCall::VariantMatchDataCall(void) : Call(), variantCnt(0), labels(NULL), match(NULL) {}
+VariantMatchDataCall::VariantMatchDataCall() : Call(), variantCnt(0), labels(NULL), match(NULL) {}
 
 
 /*
  * VariantMatchDataCall::~VariantMatchDataCall
  */
-VariantMatchDataCall::~VariantMatchDataCall(void) {}
+VariantMatchDataCall::~VariantMatchDataCall() {}

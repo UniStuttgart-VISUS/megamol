@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MATRIX4_H_INCLUDED
-#define VISLIB_MATRIX4_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/math/Matrix.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -33,7 +28,7 @@ public:
      * Create the identity matrix.
      */
     VLDEPRECATED
-    inline Matrix4(void) : Super() {}
+    inline Matrix4() : Super() {}
 
     /**
      * Create a matrix using the specified components.
@@ -109,7 +104,7 @@ public:
     }
 
     /** Dtor. */
-    ~Matrix4(void);
+    ~Matrix4();
 
     /**
      * Assignment operator.
@@ -190,12 +185,10 @@ Matrix4<T, L>::Matrix4(const T& m11, const T& m12, const T& m13, const T& m14, c
  * vislib::math::Matrix4<T, L>::~Matrix4
  */
 template<class T, MatrixLayout L>
-Matrix4<T, L>::~Matrix4(void) {}
+Matrix4<T, L>::~Matrix4() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MATRIX4_H_INCLUDED */

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SHALLOWPOINT_H_INCLUDED
-#define VISLIB_SHALLOWPOINT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/math/AbstractPoint.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * TODO: Documentation
@@ -52,7 +47,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowPoint(void);
+    ~ShallowPoint();
 
     /**
      * Replace the coordinate pointer with a new memory location.
@@ -107,7 +102,7 @@ private:
      * Forbidden ctor. A default ctor would be inherently unsafe for
      * shallow Points.
      */
-    inline ShallowPoint(void) {}
+    inline ShallowPoint() {}
 };
 
 
@@ -115,12 +110,10 @@ private:
  * ShallowPoint<T, D>::~ShallowPoint
  */
 template<class T, unsigned int D>
-ShallowPoint<T, D>::~ShallowPoint(void) {}
+ShallowPoint<T, D>::~ShallowPoint() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SHALLOWPOINT_H_INCLUDED */

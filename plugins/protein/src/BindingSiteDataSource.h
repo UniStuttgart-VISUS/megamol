@@ -13,8 +13,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class BindingSiteDataSource : public megamol::core::Module {
 public:
@@ -23,7 +22,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BindingSiteDataSource";
     }
 
@@ -32,7 +31,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers binding site information for biomolecules.";
     }
 
@@ -41,15 +40,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    BindingSiteDataSource(void);
+    BindingSiteDataSource();
 
     /** dtor */
-    ~BindingSiteDataSource(void);
+    ~BindingSiteDataSource() override;
 
 protected:
     /**
@@ -57,12 +56,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call callback to get the data
@@ -85,23 +84,6 @@ private:
      * TODO
      */
     std::string ExtractBindingSiteDescripton(std::string bsName, std::vector<std::string> remarkArray);
-
-    static inline bool strStartsWith(const std::string& str, const std::string& prefix) {
-        return str.rfind(prefix, 0) == 0;
-    }
-
-    static inline bool strEndsWith(const std::string& str, const std::string& suffix) {
-        return str.rfind(suffix) == std::llabs(str.size() - suffix.size());
-    }
-
-    static inline void strTrimSpaces(std::string& str) {
-        // ltrim
-        str.erase(
-            str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char ch) { return !std::isspace(ch); }));
-        // rtrim
-        str.erase(std::find_if(str.rbegin(), str.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(),
-            str.end());
-    }
 
     /** The data callee slot */
     core::CalleeSlot dataOutSlot_;
@@ -132,5 +114,4 @@ private:
     std::vector<glm::vec3> bindingSiteColors_;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein

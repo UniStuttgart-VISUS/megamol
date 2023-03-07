@@ -58,7 +58,7 @@ VisIttDataSource::Frame::~Frame() {
 /*
  * VisIttDataSource::VisIttDataSource
  */
-VisIttDataSource::VisIttDataSource(void)
+VisIttDataSource::VisIttDataSource()
         : core::view::AnimDataModule()
         , filename("filename", "The path to the trisoup file to load.")
         , radius("radius", "The radius to be assumed for the particles")
@@ -129,7 +129,7 @@ VisIttDataSource::VisIttDataSource(void)
 /*
  * VisIttDataSource::~VisIttDataSource
  */
-VisIttDataSource::~VisIttDataSource(void) {
+VisIttDataSource::~VisIttDataSource() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -137,7 +137,7 @@ VisIttDataSource::~VisIttDataSource(void) {
 /*
  * VisIttDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* VisIttDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* VisIttDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<VisIttDataSource*>(this));
     return f;
 }
@@ -146,7 +146,7 @@ core::view::AnimDataModule::Frame* VisIttDataSource::constructFrame(void) const 
 /*
  * VisIttDataSource::create
  */
-bool VisIttDataSource::create(void) {
+bool VisIttDataSource::create() {
     return true;
 }
 
@@ -317,7 +317,7 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
 /*
  * VisIttDataSource::release
  */
-void VisIttDataSource::release(void) {
+void VisIttDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;
@@ -334,7 +334,7 @@ void VisIttDataSource::release(void) {
 /*
  * VisIttDataSource::buildFrameTable
  */
-void VisIttDataSource::buildFrameTable(void) {
+void VisIttDataSource::buildFrameTable() {
     ASSERT(this->file != NULL);
 
     const unsigned int bufSize = 1024 * 1024;
@@ -666,7 +666,7 @@ bool VisIttDataSource::getExtentCallback(core::Call& caller) {
 /*
  * VisIttDataSource::findFilterColumn
  */
-void VisIttDataSource::findFilterColumn(void) {
+void VisIttDataSource::findFilterColumn() {
 
     this->filterIndex = UINT_MAX;
     vislib::StringA filtCol(this->filterColumn.Param<core::param::StringParam>()->Value().c_str());
@@ -701,7 +701,7 @@ void VisIttDataSource::findFilterColumn(void) {
 /*
  * VisIttDataSource::findIdColumn
  */
-void VisIttDataSource::findIdColumn(void) {
+void VisIttDataSource::findIdColumn() {
     this->idIndex = UINT_MAX;
     for (SIZE_T i = 0; i < this->header.Count(); i++) {
         vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
@@ -716,7 +716,7 @@ void VisIttDataSource::findIdColumn(void) {
 /*
  * VisIttDataSource::findTypeColumn
  */
-void VisIttDataSource::findTypeColumn(void) {
+void VisIttDataSource::findTypeColumn() {
     this->typeIndex = UINT_MAX;
     vislib::StringA typeCol(this->splitTypesNameSlots.Param<core::param::StringParam>()->Value().c_str());
     for (SIZE_T i = 0; i < this->header.Count(); i++) {

@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_RAWSTORAGE_H_INCLUDED
-#define VISLIB_RAWSTORAGE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -46,7 +42,7 @@ public:
     RawStorage(const RawStorage& rhs);
 
     /** Dtor. */
-    ~RawStorage(void);
+    ~RawStorage();
 
     /**
      * Append 'cntData' bytes of data beginning at 'data' to the end of the
@@ -79,7 +75,7 @@ public:
      * @return The raw memory block.
      */
     template<class T>
-    inline T* As(void) {
+    inline T* As() {
         return reinterpret_cast<T*>(this->data);
     }
 
@@ -90,7 +86,7 @@ public:
      * @return The raw memory block.
      */
     template<class T>
-    inline const T* As(void) const {
+    inline const T* As() const {
         return reinterpret_cast<const T*>(this->data);
     }
 
@@ -183,7 +179,7 @@ public:
      *
      * @return The size of the memory block in bytes.
      */
-    inline SIZE_T GetSize(void) const {
+    inline SIZE_T GetSize() const {
         return this->size;
     }
 
@@ -193,7 +189,7 @@ public:
      *
      * @return true, if no memory has been allocated, false otherwise.
      */
-    inline bool IsEmpty(void) const {
+    inline bool IsEmpty() const {
         return (this->size == 0);
     }
 
@@ -212,7 +208,7 @@ public:
     /**
      * Sets the whole allocated memory to zero.
      */
-    void ZeroAll(void);
+    void ZeroAll();
 
     /**
      * Assignment operation. This will deep copy the whole dynamic memory.
@@ -253,7 +249,7 @@ public:
      *
      * @return A pointer to the memory.
      */
-    inline operator void*(void) {
+    inline operator void*() {
         return this->data;
     }
 
@@ -263,7 +259,7 @@ public:
      *
      * @return A pointer to the memory.
      */
-    inline operator const void*(void) const {
+    inline operator const void*() const {
         return this->data;
     }
 
@@ -280,4 +276,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_RAWSTORAGE_H_INCLUDED */

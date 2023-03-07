@@ -57,7 +57,7 @@ ButtonParam::ButtonParam(const core::view::Key& key) : AbstractParam(), keycode(
 /*
  * ButtonParam::~ButtonParam
  */
-ButtonParam::~ButtonParam(void) {
+ButtonParam::~ButtonParam() {
 
     // intentionally empty
 }

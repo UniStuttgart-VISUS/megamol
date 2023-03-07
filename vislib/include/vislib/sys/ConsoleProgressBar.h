@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_CONSOLEPROGRESSBAR_H_INCLUDED
-#define VISLIB_CONSOLEPROGRESSBAR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,8 +13,7 @@
 #include "vislib/String.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -53,17 +48,17 @@ public:
     typedef unsigned int Size;
 
     /** ctor. */
-    ConsoleProgressBar(void);
+    ConsoleProgressBar();
 
     /** dtor */
-    ~ConsoleProgressBar(void);
+    ~ConsoleProgressBar();
 
     /**
      * Answer whether the progress bar is running.
      *
      * @return 'true' if the progress bar is running.
      */
-    inline bool IsRunning(void) const {
+    inline bool IsRunning() const {
         return this->running;
     }
 
@@ -99,11 +94,11 @@ public:
     /**
      * Stops the progress bar.
      */
-    void Stop(void);
+    void Stop();
 
 private:
     /** updates the view of the progress bar */
-    void update(void);
+    void update();
 
     /**
      * prints a duration.
@@ -132,10 +127,8 @@ private:
     vislib::StringA title;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_CONSOLEPROGRESSBAR_H_INCLUDED */

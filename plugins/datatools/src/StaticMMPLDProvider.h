@@ -9,8 +9,7 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/mathtypes.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class StaticMMPLDProvider : public core::Module {
 public:
@@ -19,7 +18,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "StaticMMPLDProvider";
     }
 
@@ -28,7 +27,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Reads a set of static MMPLDs";
     }
 
@@ -37,15 +36,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    StaticMMPLDProvider(void);
+    StaticMMPLDProvider();
 
     /** Dtor. */
-    virtual ~StaticMMPLDProvider(void);
+    ~StaticMMPLDProvider() override;
 
 protected:
     bool create() override;
@@ -91,5 +90,4 @@ private:
     size_t hash = 0;
 }; // end class StaticMMPLDProvider
 
-} // end namespace datatools
-} // end namespace megamol
+} // namespace megamol::datatools

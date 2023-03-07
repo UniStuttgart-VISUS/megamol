@@ -21,7 +21,7 @@ public:
     AbstractGetData3DCall();
 
     /** Dtor. */
-    virtual ~AbstractGetData3DCall();
+    ~AbstractGetData3DCall() override;
 
     /**
      * Answers the bounding box of the data set

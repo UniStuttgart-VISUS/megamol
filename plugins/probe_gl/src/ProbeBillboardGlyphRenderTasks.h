@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED
-#define PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED
+#pragma once
 
 #include <typeindex>
 
@@ -227,6 +226,3 @@ inline ProbeBillboardGlyphRenderTasks::TexturedGlyphData ProbeBillboardGlyphRend
 
 } // namespace probe_gl
 } // namespace megamol
-
-
-#endif // !PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED

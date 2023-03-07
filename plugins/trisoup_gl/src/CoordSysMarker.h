@@ -5,18 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_COORDSYSMARKER_H_INCLUDED
-#define MMTRISOUPPLG_COORDSYSMARKER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractTriMeshDataSource.h"
 #include "vislib/String.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -29,7 +24,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CoordSysMarker";
     }
 
@@ -38,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source class for a simple coordinate system marker object";
     }
 
@@ -47,24 +42,21 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    CoordSysMarker(void);
+    CoordSysMarker();
 
     /** Dtor */
-    virtual ~CoordSysMarker(void);
+    ~CoordSysMarker() override;
 
 protected:
     /** Ensures that the data is loaded */
-    virtual void assertData(void);
+    void assertData() override;
 
 private:
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
-
-#endif /* MMTRISOUPPLG_COORDSYSMARKER_H_INCLUDED */
+} // namespace megamol::trisoup_gl

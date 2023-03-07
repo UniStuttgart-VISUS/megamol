@@ -20,14 +20,13 @@
 #include <cmath>
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
  * ParticleFortLoader::ParticleFortLoader
  */
-ParticleFortLoader::ParticleFortLoader(void)
+ParticleFortLoader::ParticleFortLoader()
         : core::Module()
         , dataOutSlot("dataout", "The slot providing the loaded data")
         , positionFileNameSlot("positionFile", "The path to the position file")
@@ -69,7 +68,7 @@ ParticleFortLoader::ParticleFortLoader(void)
 /*
  * ParticleFortLoader::~ParticleFortLoader
  */
-ParticleFortLoader::~ParticleFortLoader(void) {
+ParticleFortLoader::~ParticleFortLoader() {
     this->Release();
 }
 
@@ -77,7 +76,7 @@ ParticleFortLoader::~ParticleFortLoader(void) {
 /*
  * ParticleFortLoader::create
  */
-bool ParticleFortLoader::create(void) {
+bool ParticleFortLoader::create() {
     // intentionally empty
     return true;
 }
@@ -138,7 +137,7 @@ bool ParticleFortLoader::getExtent(core::Call& c) {
 /*
  * ParticleFortLoader::release
  */
-void ParticleFortLoader::release(void) {
+void ParticleFortLoader::release() {
     if (this->partDatas != NULL) {
         for (unsigned int i = 0; i < this->typeCnt; i++) {
             delete[] this->partDatas[i];
@@ -155,7 +154,7 @@ void ParticleFortLoader::release(void) {
 /*
  * ParticleFortLoader::assertData
  */
-void ParticleFortLoader::assertData(void) {
+void ParticleFortLoader::assertData() {
     using megamol::core::utility::log::Log;
 
     if (this->positionFileNameSlot.IsDirty() || this->attributeFileNameSlot.IsDirty()) {
@@ -389,5 +388,4 @@ void ParticleFortLoader::assertData(void) {
     }
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

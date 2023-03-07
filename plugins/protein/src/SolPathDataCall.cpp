@@ -12,7 +12,7 @@ using namespace megamol::protein;
 /*
  * SolPathDataCall::SolPathDataCall
  */
-SolPathDataCall::SolPathDataCall(void)
+SolPathDataCall::SolPathDataCall()
         : core::AbstractGetData3DCall()
         , count(0)
         , lines(NULL)
@@ -27,7 +27,7 @@ SolPathDataCall::SolPathDataCall(void)
 /*
  * SolPathDataCall::~SolPathDataCall
  */
-SolPathDataCall::~SolPathDataCall(void) {
+SolPathDataCall::~SolPathDataCall() {
     this->Unlock(); // just for paranoia reasons
     this->count = 0;
     this->lines = NULL; // DO NOT DELETE!

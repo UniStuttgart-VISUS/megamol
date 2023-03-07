@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_HASHALGORITHM_H_INCLUDED
-#define VISLIB_HASHALGORITHM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -34,10 +30,10 @@ class HashAlgorithm {
 
 public:
     /** Ctor. */
-    HashAlgorithm(void);
+    HashAlgorithm();
 
     /** Dtor. */
-    virtual ~HashAlgorithm(void);
+    virtual ~HashAlgorithm();
 
     /**
      * Computes the hash of 'input'. This is a convenience method that
@@ -108,7 +104,7 @@ public:
      *
      * @return The size of the hash in bytes.
      */
-    SIZE_T GetHashSize(void) const;
+    SIZE_T GetHashSize() const;
 
     /**
      * Answer the hash value until now.
@@ -133,7 +129,7 @@ public:
      * If the hash has already been initialised, this method erases all
      * previous data and reinitialises it.
      */
-    virtual void Initialise(void) = 0;
+    virtual void Initialise() = 0;
 
     /**
      * Update the hash with a new block of 'cntInput' bytes.
@@ -169,14 +165,14 @@ public:
      *
      * @return The hash as string.
      */
-    virtual StringA ToStringA(void) const;
+    virtual StringA ToStringA() const;
 
     /**
      * Answer a hexadecimal string representation of the hash.
      *
      * @return The hash as string.
      */
-    virtual StringW ToStringW(void) const;
+    virtual StringW ToStringW() const;
 
 protected:
     /**
@@ -201,4 +197,3 @@ protected:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_HASHALGORITHM_H_INCLUDED */

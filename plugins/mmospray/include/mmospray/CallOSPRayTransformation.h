@@ -11,8 +11,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include <array>
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 struct OSPRayTransformationContainer {
 
@@ -30,7 +29,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallOSPRayTransformation";
     }
 
@@ -39,7 +38,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for an OSPRay transformation";
     }
 
@@ -48,7 +47,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -69,10 +68,10 @@ public:
     }
 
     /** Ctor. */
-    CallOSPRayTransformation(void);
+    CallOSPRayTransformation();
 
     /** Dtor. */
-    virtual ~CallOSPRayTransformation(void);
+    ~CallOSPRayTransformation() override;
 
     void setTransformationContainer(std::shared_ptr<OSPRayTransformationContainer> tc);
     std::shared_ptr<OSPRayTransformationContainer> getTransformationParameter();
@@ -96,5 +95,4 @@ private:
 typedef core::factories::CallAutoDescription<CallOSPRayTransformation> CallOSPRayTransformationDescription;
 
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

@@ -50,7 +50,7 @@ public:
     }
 
     VolumeSliceRenderer();
-    virtual ~VolumeSliceRenderer();
+    ~VolumeSliceRenderer() override;
 
 protected:
     /**
@@ -58,12 +58,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -74,7 +74,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -83,7 +83,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call) override;
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** The call for data */

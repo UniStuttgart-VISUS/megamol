@@ -31,7 +31,7 @@ using megamol::core::utility::log::Log;
 /*
  * SequenceRenderer::SequenceRenderer (CTOR)
  */
-SequenceRenderer::SequenceRenderer(void)
+SequenceRenderer::SequenceRenderer()
         : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the sequence diagram rendering with data storage.")
         , bindingSiteCallerSlot("getBindingSites", "Connects the sequence diagram rendering with binding site storage.")
@@ -95,7 +95,7 @@ SequenceRenderer::SequenceRenderer(void)
 /*
  * SequenceRenderer::~SequenceRenderer (DTOR)
  */
-SequenceRenderer::~SequenceRenderer(void) {
+SequenceRenderer::~SequenceRenderer() {
     this->Release();
 }
 

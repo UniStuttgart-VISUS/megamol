@@ -7,11 +7,7 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -21,8 +17,7 @@
 #include "vislib/math/Vector.h"
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Class for binding site calls and data interfaces.
@@ -35,7 +30,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BindingSiteCall";
     }
 
@@ -44,7 +39,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get binding sites.";
     }
 
@@ -56,7 +51,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -80,7 +75,7 @@ public:
      *
      * @return The binding site count.
      */
-    inline unsigned int GetBindingSiteCount(void) const {
+    inline unsigned int GetBindingSiteCount() const {
         if (!this->bindingSites)
             return 0;
         else
@@ -223,16 +218,16 @@ public:
         this->isGxType = isGX;
     }
 
-    inline bool isEnzymeMode(void) const {
+    inline bool isEnzymeMode() const {
         return this->enzymeCase;
     }
 
-    inline bool isOfGxType(void) const {
+    inline bool isOfGxType() const {
         return this->isGxType;
     }
 
-    BindingSiteCall(void);
-    virtual ~BindingSiteCall(void);
+    BindingSiteCall();
+    ~BindingSiteCall() override;
 
 private:
     /** Pointer to binding site array */
@@ -254,7 +249,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<BindingSiteCall> BindingSiteCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED */
+} // namespace megamol::protein_calls

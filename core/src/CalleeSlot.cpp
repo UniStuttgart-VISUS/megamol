@@ -27,7 +27,7 @@ CalleeSlot::CalleeSlot(const vislib::StringA& name, const vislib::StringA& desc)
 /*
  * CalleeSlot::~CalleeSlot
  */
-CalleeSlot::~CalleeSlot(void) {
+CalleeSlot::~CalleeSlot() {
     for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
         delete this->callbacks[i];
     }
@@ -86,7 +86,7 @@ bool CalleeSlot::InCall(unsigned int func, Call& call) {
 /*
  * CalleeSlot::ClearCleanupMark
  */
-void CalleeSlot::ClearCleanupMark(void) {
+void CalleeSlot::ClearCleanupMark() {
     if (!this->CleanupMark())
         return;
 
@@ -94,53 +94,4 @@ void CalleeSlot::ClearCleanupMark(void) {
     if (this->Parent() != NULL) {
         this->Parent()->ClearCleanupMark();
     }
-}
-
-
-/*
- * CalleeSlot::IsParamRelevant
- */
-bool CalleeSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const std::shared_ptr<param::AbstractParam>& param) const {
-    if (searched.Contains(this)) {
-        return false;
-    } else {
-        searched.Add(this);
-    }
-
-    vislib::sys::AutoLock lock(this->ModuleGraphLock());
-
-    const_ptr_type ano = this->RootModule();
-    AbstractNamedObjectContainer::const_ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(ano);
-    if (!anoc) {
-        return false;
-    }
-
-    vislib::SingleLinkedList<AbstractNamedObjectContainer::const_ptr_type> heap;
-    const CallerSlot* cs;
-    heap.Append(anoc);
-    while (!heap.IsEmpty()) {
-        anoc = heap.First();
-        heap.RemoveFirst();
-
-        AbstractNamedObjectContainer::child_list_type::const_iterator iter, end;
-        iter = anoc->ChildList_Begin();
-        end = anoc->ChildList_End();
-        for (; iter != end; ++iter) {
-            ano = *iter;
-            anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
-            if (anoc != NULL) {
-                heap.Append(anoc);
-                continue;
-            }
-            cs = dynamic_cast<const CallerSlot*>(ano.get());
-            if ((cs != NULL) && cs->IsConnectedTo(this) && (ano->Parent() != NULL)) {
-                if (ano->Parent()->IsParamRelevant(searched, param)) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
 }

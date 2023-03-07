@@ -28,7 +28,7 @@ std::string TableColumnScaler::ModuleName = std::string("TableColumnScaler");
 /*
  * TableColumnSelector::TableColumnSelector
  */
-TableColumnScaler::TableColumnScaler(void)
+TableColumnScaler::TableColumnScaler()
         : core::Module()
         , dataInSlot("dataIn", "Input")
         , dataOutSlot("dataOut", "Output")
@@ -56,7 +56,7 @@ TableColumnScaler::TableColumnScaler(void)
 /*
  * TableColumnSelector::~TableColumnSelector
  */
-TableColumnScaler::~TableColumnScaler(void) {
+TableColumnScaler::~TableColumnScaler() {
     this->Release();
 }
 
@@ -64,7 +64,7 @@ TableColumnScaler::~TableColumnScaler(void) {
 /*
  * TableColumnSelector::create
  */
-bool TableColumnScaler::create(void) {
+bool TableColumnScaler::create() {
     return true;
 }
 
@@ -72,7 +72,7 @@ bool TableColumnScaler::create(void) {
 /*
  * TableColumnSelector::release
  */
-void TableColumnScaler::release(void) {}
+void TableColumnScaler::release() {}
 
 
 /*

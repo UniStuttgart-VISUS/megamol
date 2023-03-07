@@ -22,7 +22,7 @@ using namespace megamol::mmvtkm;
 /*
  * mmvtkmFileLoader::mmvtkmFileLoader
  */
-mmvtkmFileLoader::mmvtkmFileLoader(void)
+mmvtkmFileLoader::mmvtkmFileLoader()
         : core::Module()
         , getDataCalleeSlot_("getdata", "Slot to request data from this data source.")
         , filename_("filename", "The path to the vtkm file to load.")
@@ -47,7 +47,7 @@ mmvtkmFileLoader::mmvtkmFileLoader(void)
 /*
  * mmvtkmFileLoader::~mmvtkmFileLoader
  */
-mmvtkmFileLoader::~mmvtkmFileLoader(void) {
+mmvtkmFileLoader::~mmvtkmFileLoader() {
     this->Release();
 }
 
@@ -55,7 +55,7 @@ mmvtkmFileLoader::~mmvtkmFileLoader(void) {
 /*
  * mmvtkmFileLoader::create
  */
-bool mmvtkmFileLoader::create(void) {
+bool mmvtkmFileLoader::create() {
     return true;
 }
 
@@ -63,7 +63,7 @@ bool mmvtkmFileLoader::create(void) {
 /*
  * mmvtkmFileLoader::release
  */
-void mmvtkmFileLoader::release(void) {}
+void mmvtkmFileLoader::release() {}
 
 
 /*

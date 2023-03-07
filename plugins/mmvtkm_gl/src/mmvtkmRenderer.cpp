@@ -20,7 +20,7 @@ using namespace megamol::mmvtkm_gl;
 /**
  * mmvtkmDataRenderer::mmvtmDataRenderer
  */
-mmvtkmDataRenderer::mmvtkmDataRenderer(void)
+mmvtkmDataRenderer::mmvtkmDataRenderer()
         : Renderer3DModuleGL()
         , vtkmDataCallerSlot_("getData", "Connects the vtkm renderer with a vtkm data source")
         , psColorTables_("colorTable", "Colortables specify the color range of the data")
@@ -60,7 +60,7 @@ bool mmvtkmDataRenderer::setLocalUpdate(core::param::ParamSlot& slot) {
 /**
  * mmvtkmDataRenderer::~mmvtkmDataRenderer
  */
-mmvtkmDataRenderer::~mmvtkmDataRenderer(void) {
+mmvtkmDataRenderer::~mmvtkmDataRenderer() {
     this->Release();
 }
 

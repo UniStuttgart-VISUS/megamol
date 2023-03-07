@@ -11,8 +11,7 @@
 #include "FrontendResource.h"
 #include <vector>
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 class AbstractFrontendService {
 private:
@@ -69,5 +68,4 @@ public:
 };
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

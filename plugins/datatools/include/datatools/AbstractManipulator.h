@@ -12,8 +12,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Abstract class data manipulators for calls with getData/getExtent interface
@@ -30,14 +29,14 @@ public:
     AbstractManipulator(const char* outSlotName, const char* inSlotName);
 
     /** Dtor */
-    virtual ~AbstractManipulator(void);
+    ~AbstractManipulator() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
     /**
      * Manipulates the particle data
@@ -187,5 +186,4 @@ bool AbstractManipulator<C>::getExtentCallback(megamol::core::Call& c) {
 }
 
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

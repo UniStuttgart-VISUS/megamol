@@ -12,8 +12,7 @@
 #include "vislib/math/Point.h"
 #include "vislib/math/mathfunctions.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Class holding a flat area buffer
@@ -44,17 +43,17 @@ public:
     static void Initialize(ArxelBuffer& buffer, int& state, const InitValues& ctxt);
 
     /** Ctor */
-    ArxelBuffer(void);
+    ArxelBuffer();
 
     /** Dtor */
-    ~ArxelBuffer(void);
+    ~ArxelBuffer();
 
     /**
      * Answer the buffer data
      *
      * @return The buffer data
      */
-    inline ArxelType* Data(void) {
+    inline ArxelType* Data() {
         return this->data;
     }
 
@@ -63,7 +62,7 @@ public:
      *
      * @return The buffer data
      */
-    inline const ArxelType* Data(void) const {
+    inline const ArxelType* Data() const {
         return this->data;
     }
 
@@ -72,7 +71,7 @@ public:
      *
      * @return The height of the buffer
      */
-    inline unsigned int Height(void) const {
+    inline unsigned int Height() const {
         return this->height;
     }
 
@@ -81,7 +80,7 @@ public:
      *
      * @return The width of the buffer
      */
-    inline unsigned int Width(void) const {
+    inline unsigned int Width() const {
         return this->width;
     }
 
@@ -262,5 +261,4 @@ private:
     ArxelType borderYVal;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

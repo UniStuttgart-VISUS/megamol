@@ -19,8 +19,7 @@
 #include "vislib/graphics/BmpBitmapCodec.h"
 #endif /* DEBUG_BMP */
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 static const char rightmostPoint[16] = {-1, 1, 2, 2, 3, -1, 3, 3, 0, 1, -1, 2, 0, 1, 0, -1};
 static const char rightmostEdge[16] = {-1, 1, 2, 2, 4, -1, 4, 4, 8, 1, -1, 2, 8, 1, 8, -1};
@@ -32,7 +31,7 @@ static const char leftmostEdge[16] = {-1, 1, 2, 1, 4, -1, 2, 1, 8, 8, -1, 8, 4, 
 /*
  * PoreNetSliceProcessor::PoreNetSliceProcessor
  */
-PoreNetSliceProcessor::PoreNetSliceProcessor(void) : vislib::sys::Runnable(), inputBuffers(NULL), outputBuffers(NULL) {
+PoreNetSliceProcessor::PoreNetSliceProcessor() : vislib::sys::Runnable(), inputBuffers(NULL), outputBuffers(NULL) {
     // TODO: Implement
     dirOffset[0].Set(0, -1);
     dirOffset[1].Set(1, 0);
@@ -54,7 +53,7 @@ PoreNetSliceProcessor::PoreNetSliceProcessor(void) : vislib::sys::Runnable(), in
 /*
  * PoreNetSliceProcessor::~PoreNetSliceProcessor
  */
-PoreNetSliceProcessor::~PoreNetSliceProcessor(void) {
+PoreNetSliceProcessor::~PoreNetSliceProcessor() {
     // TODO: Implement
 }
 
@@ -100,7 +99,7 @@ DWORD PoreNetSliceProcessor::Run(void* userData) {
 /*
  * PoreNetSliceProcessor::Terminate
  */
-bool PoreNetSliceProcessor::Terminate(void) {
+bool PoreNetSliceProcessor::Terminate() {
     if (this->inputBuffers != NULL)
         this->inputBuffers->AbortClose();
     if (this->outputBuffers != NULL)
@@ -600,5 +599,4 @@ void PoreNetSliceProcessor::workOnBuffer(ArxelBuffer& buffer, LoopBuffer& outBuf
 #endif /* DEBUG_BMP */
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

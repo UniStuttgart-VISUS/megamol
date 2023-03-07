@@ -13,8 +13,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 /**
  * Writer for triangle mesh to STL file.
  *
@@ -66,7 +65,7 @@ public:
     /**
      * Destructor
      */
-    ~STLWriter();
+    ~STLWriter() override;
 
 protected:
     /**
@@ -74,12 +73,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
     /** Callback to register button pressed */
     bool setButtonPressed(core::param::ParamSlot&);
@@ -96,5 +95,4 @@ protected:
     core::param::ParamSlot filetype;
     core::param::ParamSlot save;
 };
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

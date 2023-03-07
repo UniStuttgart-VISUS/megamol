@@ -20,7 +20,7 @@ using namespace megamol::protein_gl;
 /*
  * SolPathRenderer::SolPathRenderer
  */
-SolPathRenderer::SolPathRenderer(void)
+SolPathRenderer::SolPathRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , getdataslot("getdata", "Fetches data")
         , pathlineShader() {
@@ -33,7 +33,7 @@ SolPathRenderer::SolPathRenderer(void)
 /*
  * SolPathRenderer::~SolPathRenderer
  */
-SolPathRenderer::~SolPathRenderer(void) {
+SolPathRenderer::~SolPathRenderer() {
     this->Release();
 }
 
@@ -41,7 +41,7 @@ SolPathRenderer::~SolPathRenderer(void) {
 /*
  * SolPathRenderer::create
  */
-bool SolPathRenderer::create(void) {
+bool SolPathRenderer::create() {
     using megamol::core::utility::log::Log;
 
     auto const shader_options =
@@ -85,7 +85,7 @@ bool SolPathRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 /*
  * SolPathRenderer::release
  */
-void SolPathRenderer::release(void) {}
+void SolPathRenderer::release() {}
 
 
 /*

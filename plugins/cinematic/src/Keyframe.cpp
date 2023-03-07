@@ -11,7 +11,7 @@
 using namespace megamol::cinematic;
 
 
-Keyframe::Keyframe(void) : anim_time(0.0f), sim_time(0.0f), camera_state() {
+Keyframe::Keyframe() : anim_time(0.0f), sim_time(0.0f), camera_state() {
 
     // Default intrinsics
     auto intrinsics = core::view::Camera::PerspectiveParameters();
@@ -30,7 +30,7 @@ Keyframe::Keyframe(float anim_time, float sim_time, core::view::Camera cam_state
         , camera_state(cam_state) {}
 
 
-Keyframe::~Keyframe(void) {}
+Keyframe::~Keyframe() {}
 
 
 bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {

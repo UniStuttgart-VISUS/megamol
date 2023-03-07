@@ -5,11 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_SIMPLEMOLECULERENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_SIMPLEMOLECULERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -25,8 +21,7 @@
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /*
  * Simple Molecular Renderer class
@@ -51,7 +46,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SimpleMoleculeRenderer";
     }
 
@@ -60,7 +55,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers molecule renderings.";
     }
 
@@ -69,15 +64,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    SimpleMoleculeRenderer(void);
+    SimpleMoleculeRenderer();
 
     /** Dtor. */
-    virtual ~SimpleMoleculeRenderer(void);
+    ~SimpleMoleculeRenderer() override;
 
 protected:
     /**
@@ -85,12 +80,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**********************************************************************
@@ -106,7 +101,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -114,7 +109,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Render the molecular data using lines and points.
@@ -306,7 +301,4 @@ private:
 };
 
 
-} // namespace protein_gl
-} // namespace megamol
-
-#endif // MMPROTEINPLUGIN_SIMPLEMOLECULERENDERER_H_INCLUDED
+} // namespace megamol::protein_gl

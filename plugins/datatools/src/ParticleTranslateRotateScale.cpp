@@ -22,7 +22,7 @@ using namespace megamol;
 /*
  * datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale
  */
-datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
+datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale()
         : AbstractParticleManipulator("outData", "indata")
         , translateSlot("translation", "Translates the particles in x, y, z direction")
         , quaternionSlot("quaternion", "Rotates the particles around x, y, z axes")
@@ -44,7 +44,7 @@ datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
 /*
  * datatools::ParticleTranslateRotateScale::~ParticleTranslateRotateScale
  */
-datatools::ParticleTranslateRotateScale::~ParticleTranslateRotateScale(void) {
+datatools::ParticleTranslateRotateScale::~ParticleTranslateRotateScale() {
     this->Release();
 }
 

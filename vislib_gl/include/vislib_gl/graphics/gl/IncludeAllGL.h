@@ -1,8 +1,4 @@
-#ifndef INCLUDEALLGL_H_INCLUDED
-#define INCLUDEALLGL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -21,9 +17,7 @@
 
 //#include <atomic>
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 inline void LoadAllGL() {
     //static std::atomic<bool> alreadyLoaded(false);
@@ -42,9 +36,4 @@ inline void LoadAllGL() {
     }
 }
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} // namespace vislib_gl
-
-
-#endif /* INCLUDEALLGL_H_INCLUDED */
+} // namespace vislib_gl::graphics::gl

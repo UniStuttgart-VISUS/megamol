@@ -30,8 +30,7 @@ static void log_warning(std::string const& text) {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
 }
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 void FrontendServiceCollection::sortServices() {
     std::sort(m_services.begin(), m_services.end(),
@@ -156,5 +155,4 @@ bool FrontendServiceCollection::shouldShutdown() const {
     return shutdown;
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

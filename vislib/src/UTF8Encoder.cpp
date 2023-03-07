@@ -18,7 +18,7 @@
 /*
  * vislib::UTF8Encoder::UTF8Encoder
  */
-vislib::UTF8Encoder::UTF8Encoder(void) {
+vislib::UTF8Encoder::UTF8Encoder() {
     throw UnsupportedOperationException("vislib::UTF8Encoder::Ctor", __FILE__, __LINE__);
 }
 
@@ -26,7 +26,7 @@ vislib::UTF8Encoder::UTF8Encoder(void) {
 /*
  * vislib::UTF8Encoder::~UTF8Encoder
  */
-vislib::UTF8Encoder::~UTF8Encoder(void) {}
+vislib::UTF8Encoder::~UTF8Encoder() {}
 
 
 /*

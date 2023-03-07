@@ -12,7 +12,7 @@
 /*
  * megamol::astro::VolumetricGlobalMinMax::VolumetricGlobalMinMax
  */
-megamol::astro::VolumetricGlobalMinMax::VolumetricGlobalMinMax(void)
+megamol::astro::VolumetricGlobalMinMax::VolumetricGlobalMinMax()
         : Module()
         , hash(0)
         , slotVolumetricDataIn("volumetricDataIn", "Input slot for volumetric data")
@@ -45,21 +45,21 @@ megamol::astro::VolumetricGlobalMinMax::VolumetricGlobalMinMax(void)
 /*
  * megamol::astro::VolumetricGlobalMinMax::~VolumetricGlobalMinMax
  */
-megamol::astro::VolumetricGlobalMinMax::~VolumetricGlobalMinMax(void) {
+megamol::astro::VolumetricGlobalMinMax::~VolumetricGlobalMinMax() {
     this->Release();
 }
 
 /*
  * megamol::astro::VolumetricGlobalMinMax::create
  */
-bool megamol::astro::VolumetricGlobalMinMax::create(void) {
+bool megamol::astro::VolumetricGlobalMinMax::create() {
     return true;
 }
 
 /*
  * megamol::astro::VolumetricGlobalMinMax::release
  */
-void megamol::astro::VolumetricGlobalMinMax::release(void) {}
+void megamol::astro::VolumetricGlobalMinMax::release() {}
 
 bool megamol::astro::VolumetricGlobalMinMax::onGetData(megamol::core::Call& call) {
     return pipeVolumetricDataCall(call, geocalls::VolumetricDataCall::IDX_GET_DATA);

@@ -14,7 +14,7 @@
 /*
  * vislib::sys::Interlocked::~Interlocked
  */
-vislib::sys::Interlocked::~Interlocked(void) {
+vislib::sys::Interlocked::~Interlocked() {
     // Should never be called.
     ASSERT(false);
 }
@@ -23,6 +23,6 @@ vislib::sys::Interlocked::~Interlocked(void) {
 /*
  * vislib::sys::Interlocked::Interlocked
  */
-vislib::sys::Interlocked::Interlocked(void) {
+vislib::sys::Interlocked::Interlocked() {
     throw UnsupportedOperationException("Interlocked", __FILE__, __LINE__);
 }

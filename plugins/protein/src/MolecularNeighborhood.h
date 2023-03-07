@@ -5,8 +5,7 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINPLUGIN_MOLECULARNEIGHBORHOOD_H_INCLUDED
-#define MMPROTEINPLUGIN_MOLECULARNEIGHBORHOOD_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -15,8 +14,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include <vector>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class MolecularNeighborhood : public megamol::core::Module {
 public:
@@ -25,7 +23,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MolecularNeighborhood";
     }
 
@@ -34,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes the local neighborhood for each atom of the ingoing call";
     }
 
@@ -43,15 +41,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    MolecularNeighborhood(void);
+    MolecularNeighborhood();
 
     /** Dtor. */
-    virtual ~MolecularNeighborhood(void);
+    ~MolecularNeighborhood() override;
 
 protected:
     /**
@@ -59,12 +57,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call for get data.
@@ -109,7 +107,4 @@ private:
     /** Pointers to the raw neighborhood data (only relevant to be sent to the outgoing call */
     std::vector<const unsigned int*> dataPointers;
 };
-} /* namespace protein */
-} /* namespace megamol */
-
-#endif // MMPROTEINPLUGIN_MOLECULARNEIGHBORHOOD_H_INCLUDED
+} // namespace megamol::protein

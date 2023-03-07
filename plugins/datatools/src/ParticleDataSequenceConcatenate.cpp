@@ -25,12 +25,12 @@ ParticleDataSequenceConcatenate::~ParticleDataSequenceConcatenate() {
     this->Release();
 }
 
-bool ParticleDataSequenceConcatenate::create(void) {
+bool ParticleDataSequenceConcatenate::create() {
     // intentionally empty
     return true;
 }
 
-void ParticleDataSequenceConcatenate::release(void) {
+void ParticleDataSequenceConcatenate::release() {
     // intentionally empty
 }
 

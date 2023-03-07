@@ -197,7 +197,7 @@ OutlineFont::OutlineFont(const OutlineFont& src, float size, OutlineFont::Render
 /*
  * OutlineFont::~OutlineFont
  */
-OutlineFont::~OutlineFont(void) {
+OutlineFont::~OutlineFont() {
     this->Deinitialise();
 }
 
@@ -443,7 +443,7 @@ float OutlineFont::LineWidth(float size, const wchar_t* txt) const {
 /*
  * OutlineFont::initialise
  */
-bool OutlineFont::initialise(void) {
+bool OutlineFont::initialise() {
     // intentionally empty
     return true;
 }
@@ -452,7 +452,7 @@ bool OutlineFont::initialise(void) {
 /*
  * OutlineFont::deinitialise
  */
-void OutlineFont::deinitialise(void) {
+void OutlineFont::deinitialise() {
     // intentionally empty
 }
 

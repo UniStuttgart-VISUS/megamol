@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_DIRECTORYENTRY_H_INCLUDED
-#define VISLIB_DIRECTORYENTRY_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/String.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -33,7 +28,7 @@ public:
     enum EntryType { DIRECTORY, FILE };
 
     /** Ctor. */
-    DirectoryEntry(void);
+    DirectoryEntry();
 
     /**
      * Ctor.
@@ -51,7 +46,7 @@ public:
     DirectoryEntry(const DirectoryEntry& src);
 
     /** Dtor. */
-    ~DirectoryEntry(void);
+    ~DirectoryEntry();
 
     /**
      * Assignment operator
@@ -83,8 +78,8 @@ public:
  * DirectoryEntry<T>::DirectoryEntry
  */
 template<class T>
-DirectoryEntry<T>::DirectoryEntry(void) : Path()
-                                        , Type(DirectoryEntry::FILE) {
+DirectoryEntry<T>::DirectoryEntry() : Path()
+                                    , Type(DirectoryEntry::FILE) {
     // intentionally empty
 }
 
@@ -113,7 +108,7 @@ DirectoryEntry<T>::DirectoryEntry(const DirectoryEntry& src) : Path(src.Path)
  * DirectoryEntry<T>::~DirectoryEntry
  */
 template<class T>
-DirectoryEntry<T>::~DirectoryEntry(void) {
+DirectoryEntry<T>::~DirectoryEntry() {
     // intentionally empty
 }
 
@@ -147,10 +142,8 @@ typedef DirectoryEntry<CharTraitsW> DirectoryEntryW;
 /** Template instantiation for TCHAR DirectoryEntrys. */
 typedef DirectoryEntry<TCharTraits> TDirectoryEntry;
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_DIRECTORYENTRY_H_INCLUDED */

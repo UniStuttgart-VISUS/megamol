@@ -19,7 +19,7 @@ void megamol::core::view::light::SpotLight::addLight(LightCollection& light_coll
 /*
  * megamol::core::view::light::SpotLight::SpotLight
  */
-SpotLight::SpotLight(void)
+SpotLight::SpotLight()
         : AbstractLight()
         , position("Position", "")
         , direction("Direction", "")
@@ -45,7 +45,7 @@ SpotLight::SpotLight(void)
 /*
  * megamol::core::view::light::SpotLight::~SpotLight
  */
-SpotLight::~SpotLight(void) {
+SpotLight::~SpotLight() {
     this->Release();
 }
 

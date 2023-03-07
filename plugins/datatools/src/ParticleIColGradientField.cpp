@@ -22,7 +22,7 @@ using namespace megamol;
 /*
  * datatools::ParticleIColGradientField::ParticleIColGradientField
  */
-datatools::ParticleIColGradientField::ParticleIColGradientField(void)
+datatools::ParticleIColGradientField::ParticleIColGradientField()
         : AbstractParticleManipulator("outData", "indata")
         , radiusSlot("radius", "The neighbourhood radius size")
         , datahash(0)
@@ -37,7 +37,7 @@ datatools::ParticleIColGradientField::ParticleIColGradientField(void)
 /*
  * datatools::ParticleIColGradientField::~ParticleIColGradientField
  */
-datatools::ParticleIColGradientField::~ParticleIColGradientField(void) {
+datatools::ParticleIColGradientField::~ParticleIColGradientField() {
     this->Release();
 }
 

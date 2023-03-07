@@ -5,19 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLERELAXATIONMODULE_H_INCLUDED
-#define MEGAMOLCORE_PARTICLERELAXATIONMODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/RawStorage.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -25,25 +20,25 @@ namespace datatools {
 class ParticleRelaxationModule : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleRelaxationModule";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module relaxing particles to minimize overlapps";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleRelaxationModule(void);
+    ParticleRelaxationModule();
 
     /** Dtor */
-    virtual ~ParticleRelaxationModule(void);
+    ~ParticleRelaxationModule() override;
 
 protected:
     /**
@@ -54,7 +49,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
     /**
      * Manipulates the particle data
@@ -64,7 +59,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /** The hash id of the data stored */
@@ -86,7 +81,4 @@ private:
     vislib::math::Cuboid<float> cbox;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_PARTICLERELAXATIONMODULE_H_INCLUDED */
+} // namespace megamol::datatools

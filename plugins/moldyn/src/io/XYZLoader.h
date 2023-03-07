@@ -4,8 +4,6 @@
  * Copyright (C) 2015 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_STDMOLDYN_XYZLOADER_H_INCLUDED
-#define MEGAMOL_STDMOLDYN_XYZLOADER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -14,9 +12,7 @@
 #include "vislib/math/Cuboid.h"
 #include <vector>
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 /**
  * Data loader of the simple xyz file format:
@@ -34,39 +30,39 @@ namespace io {
  */
 class XYZLoader : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "XYZDataSource";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for the simple xyz file format";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
     static float FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize);
     static const char* FilenameExtensions() {
         return ".XYZ";
     }
-    static const char* FilenameSlotName(void) {
+    static const char* FilenameSlotName() {
         return "filename";
     }
-    static const char* FileTypeName(void) {
+    static const char* FileTypeName() {
         return "XYZ";
     }
 
     XYZLoader();
-    virtual ~XYZLoader();
+    ~XYZLoader() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
 
 private:
     bool getDataCallback(core::Call& caller);
     bool getExtentCallback(core::Call& caller);
 
-    void clear(void);
-    void assertData(void);
+    void clear();
+    void assertData();
 
     core::CalleeSlot getDataSlot;
 
@@ -82,8 +78,4 @@ private:
     std::vector<std::vector<float>> poss;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_STDMOLDYN_XYZLOADER_H_INCLUDED */
+} // namespace megamol::moldyn::io

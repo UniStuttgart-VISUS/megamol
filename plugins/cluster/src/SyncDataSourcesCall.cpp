@@ -8,14 +8,10 @@
 #include "cluster/SyncDataSourcesCall.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 
 SyncDataSourcesCall::SyncDataSourcesCall() : fnameDirty(false) {}
 
 SyncDataSourcesCall::~SyncDataSourcesCall() {}
-} // namespace cluster
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::cluster

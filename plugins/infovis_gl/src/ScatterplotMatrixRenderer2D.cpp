@@ -1156,7 +1156,11 @@ void ScatterplotMatrixRenderer2D::validateTriangulation() {
 
         // Copy vertices to vertex buffer.
         for (size_t vertexIndex = 0; vertexIndex < values.size(); vertexIndex++) {
-            TriangulationVertex vertex = {coords[vertexIndex * 2], coords[vertexIndex * 2 + 1], values[vertexIndex]};
+            TriangulationVertex vertex = {
+                static_cast<float>(coords[vertexIndex * 2]),
+                static_cast<float>(coords[vertexIndex * 2 + 1]),
+                static_cast<float>(values[vertexIndex]),
+            };
             vertices.push_back(vertex);
         }
 

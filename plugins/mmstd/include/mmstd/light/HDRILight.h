@@ -49,21 +49,21 @@ public:
     /**
      * Add the lightsource of this module to a given collection
      */
-    void addLight(LightCollection& light_collection);
+    void addLight(LightCollection& light_collection) override;
 
     /** Ctor. */
     HDRILight();
 
     /** Dtor. */
-    virtual ~HDRILight();
+    ~HDRILight() override;
 
 private:
     core::param::ParamSlot up;
     core::param::ParamSlot direction;
     core::param::ParamSlot evnfile;
 
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    bool InterfaceIsDirty() override;
+    void readParams() override;
 };
 
 } // namespace megamol::core::view::light

@@ -24,7 +24,7 @@ using namespace megamol::protein_calls;
 /*
  * SolventCounter::SolventCounter
  */
-SolventCounter::SolventCounter(void)
+SolventCounter::SolventCounter()
         : core::Module()
         , getDataSlot("getdata", "The slot publishing the loaded data")
         , molDataSlot("moldata", "The slot requesting molecular data")
@@ -53,7 +53,7 @@ SolventCounter::SolventCounter(void)
 /*
  * SolventCounter::~SolventCounter
  */
-SolventCounter::~SolventCounter(void) {
+SolventCounter::~SolventCounter() {
     this->Release();
 }
 
@@ -61,7 +61,7 @@ SolventCounter::~SolventCounter(void) {
 /*
  * SolventCounter::create
  */
-bool SolventCounter::create(void) {
+bool SolventCounter::create() {
     // intentionally empty
     return true;
 }
@@ -70,7 +70,7 @@ bool SolventCounter::create(void) {
 /*
  * SolventCounter::release
  */
-void SolventCounter::release(void) {
+void SolventCounter::release() {
     // TODO clear data
 }
 

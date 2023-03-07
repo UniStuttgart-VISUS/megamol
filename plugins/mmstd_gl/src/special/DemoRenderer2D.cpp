@@ -39,7 +39,7 @@ special::DemoRenderer2D::~DemoRenderer2D() {
 /*
  * view::special::DemoRenderer2D::create
  */
-bool special::DemoRenderer2D::create(void) {
+bool special::DemoRenderer2D::create() {
     // intentionally empty
     return true;
 }
@@ -107,7 +107,7 @@ bool special::DemoRenderer2D::Render(CallRender2DGL& call) {
 /*
  * view::special::DemoRenderer2D::release
  */
-void special::DemoRenderer2D::release(void) {
+void special::DemoRenderer2D::release() {
     // intentionally empty
 }
 

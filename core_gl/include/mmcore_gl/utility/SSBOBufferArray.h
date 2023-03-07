@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SSBOBUFFERARRAY_H_INCLUDED
-#define MEGAMOLCORE_SSBOBUFFERARRAY_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -23,9 +19,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /// A class that helps you chunk and upload a huge buffer to multiple
 /// 'static' SSBOs - meaning they will not change very often. You can align multiple streamers
@@ -99,16 +93,16 @@ public:
         }
     }
 
-    GLuint GetNumChunks(void) const {
+    GLuint GetNumChunks() const {
         return numChunks;
     }
 
-    GLuint GetMaxNumItemsPerChunk(void) const {
+    GLuint GetMaxNumItemsPerChunk() const {
         return numItemsPerChunk;
     }
 
     /// @returns how much stuff you need to upload to the GPU (in bytes)
-    GLuint GetUsedBufferSize(void) const {
+    GLuint GetUsedBufferSize() const {
         return numItemsPerChunk * dstStride;
     }
 
@@ -128,8 +122,4 @@ private:
     GLint64 maxSSBOSize = 0;
 };
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_SSBOBUFFERARRAY_H_INCLUDED */
+} // namespace megamol::core::utility

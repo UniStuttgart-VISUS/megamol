@@ -27,7 +27,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~AbstractThreadedJob();
+    ~AbstractThreadedJob() override;
 
     /**
      * Answers whether or not this job is still running.
@@ -35,14 +35,14 @@ public:
      * @return 'true' if this job is still running, 'false' if it has
      *         finished.
      */
-    virtual bool IsRunning() const;
+    bool IsRunning() const override;
 
     /**
      * Starts the job thread.
      *
      * @return true if the job has been successfully started.
      */
-    virtual bool Start();
+    bool Start() override;
 
     /**
      * Terminates the job thread.
@@ -50,7 +50,7 @@ public:
      * @return true to acknowledge that the job will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate();
+    bool Terminate() override;
 
 protected:
     /**

@@ -18,7 +18,7 @@ using namespace megamol::core;
 /*
  * cluster::ClusterControllerClient::ClusterControllerClient
  */
-cluster::ClusterControllerClient::ClusterControllerClient(void)
+cluster::ClusterControllerClient::ClusterControllerClient()
         : AbstractSlot::Listener()
         , vislib::Listenable<ClusterControllerClient>()
         , registerSlot("register", "The slot to register the client at the controller")
@@ -33,7 +33,7 @@ cluster::ClusterControllerClient::ClusterControllerClient(void)
 /*
  * cluster::ClusterControllerClient::~ClusterControllerClient
  */
-cluster::ClusterControllerClient::~ClusterControllerClient(void) {}
+cluster::ClusterControllerClient::~ClusterControllerClient() {}
 
 
 /*
@@ -94,7 +94,7 @@ void cluster::ClusterControllerClient::OnDisconnect(AbstractSlot& slot) {
 /*
  * cluster::ClusterControllerClient::onClusterAvailable
  */
-void cluster::ClusterControllerClient::onClusterAvailable(void) {
+void cluster::ClusterControllerClient::onClusterAvailable() {
     ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
         Listener* l = dynamic_cast<Listener*>(iter.Next());
@@ -108,7 +108,7 @@ void cluster::ClusterControllerClient::onClusterAvailable(void) {
 /*
  * cluster::ClusterControllerClient::onClusterUnavailable
  */
-void cluster::ClusterControllerClient::onClusterUnavailable(void) {
+void cluster::ClusterControllerClient::onClusterUnavailable() {
     ListenerIterator iter = this->GetListeners();
     while (iter.HasNext()) {
         Listener* l = dynamic_cast<Listener*>(iter.Next());

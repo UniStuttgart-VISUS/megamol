@@ -11,8 +11,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Call transporting gridded quartz crystal particle data
@@ -25,7 +24,7 @@ public:
     class List {
     public:
         /** Ctor */
-        List(void) : cnt(0), data(NULL), type(0) {
+        List() : cnt(0), data(NULL), type(0) {
             // intentionally empty
         }
 
@@ -39,7 +38,7 @@ public:
         }
 
         /** Dtor */
-        ~List(void) {
+        ~List() {
             this->cnt = 0;
             this->data = NULL; // DO NOT DELETE
         }
@@ -49,7 +48,7 @@ public:
          *
          * @return The number of particles in this list
          */
-        inline unsigned int Count(void) const {
+        inline unsigned int Count() const {
             return this->cnt;
         }
 
@@ -59,7 +58,7 @@ public:
          *
          * @return The pointer to the particle data
          */
-        inline const float* Data(void) const {
+        inline const float* Data() const {
             return this->data;
         }
 
@@ -68,7 +67,7 @@ public:
          *
          * @return The crystalite type index of the particles
          */
-        inline unsigned int Type(void) const {
+        inline unsigned int Type() const {
             return this->type;
         }
 
@@ -127,7 +126,7 @@ public:
     class Cell {
     public:
         /** Ctor */
-        Cell(void)
+        Cell()
                 : bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
                 , cbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
                 , cnt(0)
@@ -145,7 +144,7 @@ public:
         }
 
         /** Dtor */
-        ~Cell(void) {
+        ~Cell() {
             this->cnt = 0;
             this->lists = NULL; // DO NOT DELETE
         }
@@ -155,7 +154,7 @@ public:
          *
          * @return The bounding box of the cell
          */
-        inline const vislib::math::Cuboid<float>& BoundingBox(void) const {
+        inline const vislib::math::Cuboid<float>& BoundingBox() const {
             return this->bbox;
         }
 
@@ -164,7 +163,7 @@ public:
          *
          * @return The clipping box of the cell
          */
-        inline const vislib::math::Cuboid<float>& ClipBox(void) const {
+        inline const vislib::math::Cuboid<float>& ClipBox() const {
             return this->cbox;
         }
 
@@ -173,7 +172,7 @@ public:
          *
          * @return The number of lists in this cell
          */
-        inline unsigned int Count(void) const {
+        inline unsigned int Count() const {
             return this->cnt;
         }
 
@@ -182,7 +181,7 @@ public:
          *
          * @return The lists in this cell
          */
-        inline const List* Lists(void) const {
+        inline const List* Lists() const {
             return this->lists;
         }
 
@@ -273,7 +272,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzParticleGridDataCall";
     }
 
@@ -282,7 +281,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting gridded quartz crystal particle data";
     }
 
@@ -291,7 +290,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -307,17 +306,17 @@ public:
     }
 
     /** Ctor */
-    ParticleGridDataCall(void);
+    ParticleGridDataCall();
 
     /** Dtor. */
-    virtual ~ParticleGridDataCall(void);
+    ~ParticleGridDataCall() override;
 
     /**
      * Answer the cells
      *
      * @return The cells
      */
-    inline const Cell* Cells(void) const {
+    inline const Cell* Cells() const {
         return this->cells;
     }
 
@@ -341,7 +340,7 @@ public:
      *
      * @return The number of grid cells
      */
-    inline unsigned int Size(void) const {
+    inline unsigned int Size() const {
         return this->sx * this->sy * this->sz;
     }
 
@@ -350,7 +349,7 @@ public:
      *
      * @return The number of grid cells in x direction
      */
-    inline unsigned int SizeX(void) const {
+    inline unsigned int SizeX() const {
         return this->sx;
     }
 
@@ -359,7 +358,7 @@ public:
      *
      * @return The number of grid cells in y direction
      */
-    inline unsigned int SizeY(void) const {
+    inline unsigned int SizeY() const {
         return this->sy;
     }
 
@@ -368,7 +367,7 @@ public:
      *
      * @return The number of grid cells in z direction
      */
-    inline unsigned int SizeZ(void) const {
+    inline unsigned int SizeZ() const {
         return this->sz;
     }
 
@@ -380,5 +379,4 @@ private:
     unsigned int sx, sy, sz;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

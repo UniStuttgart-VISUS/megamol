@@ -100,7 +100,7 @@ vislib::sys::Event::Event(const wchar_t* name, const bool isManualReset, const b
 /*
  * vislib::sys::Event::~Event
  */
-vislib::sys::Event::~Event(void) {
+vislib::sys::Event::~Event() {
 #ifdef _WIN32
     ::CloseHandle(this->handle);
 
@@ -114,7 +114,7 @@ vislib::sys::Event::~Event(void) {
 /*
  * vislib::sys::Event::Reset
  */
-void vislib::sys::Event::Reset(void) {
+void vislib::sys::Event::Reset() {
 #ifdef _WIN32
     if (!::ResetEvent(this->handle)) {
         throw SystemException(__FILE__, __LINE__);
@@ -133,7 +133,7 @@ void vislib::sys::Event::Reset(void) {
 /*
  * vislib::sys::Event::Set
  */
-void vislib::sys::Event::Set(void) {
+void vislib::sys::Event::Set() {
 #ifdef _WIN32
     if (!::SetEvent(this->handle)) {
         throw SystemException(__FILE__, __LINE__);

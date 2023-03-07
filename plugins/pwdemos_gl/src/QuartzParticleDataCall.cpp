@@ -7,8 +7,7 @@
 #include "QuartzParticleDataCall.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
@@ -26,12 +25,7 @@ const unsigned int ParticleDataCall::CallForGetExtent = 1;
 /*
  * ParticleDataCall::ParticleDataCall
  */
-ParticleDataCall::ParticleDataCall(void)
-        : core::AbstractGetData3DCall()
-        , grpCnt(0)
-        , types(NULL)
-        , cnt(NULL)
-        , part(NULL) {
+ParticleDataCall::ParticleDataCall() : core::AbstractGetData3DCall(), grpCnt(0), types(NULL), cnt(NULL), part(NULL) {
     // intentionally empty
 }
 
@@ -39,12 +33,11 @@ ParticleDataCall::ParticleDataCall(void)
 /*
  * ParticleDataCall::~ParticleDataCall
  */
-ParticleDataCall::~ParticleDataCall(void) {
+ParticleDataCall::~ParticleDataCall() {
     this->grpCnt = 0;
     this->types = NULL; // DO NOT DELETE
     this->cnt = NULL;   // DO NOT DELETE
     this->part = NULL;  // DO NOT DELETE
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

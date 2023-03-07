@@ -20,8 +20,7 @@
 
 #include <list>
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 class ImagePresentation_Service final : public AbstractFrontendService {
 public:
@@ -51,7 +50,7 @@ public:
     }
 
     ImagePresentation_Service();
-    ~ImagePresentation_Service();
+    ~ImagePresentation_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;
@@ -137,5 +136,4 @@ private:
     std::function<bool(std::string const&, std::string const&)> m_entrypointToPNG_trigger;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

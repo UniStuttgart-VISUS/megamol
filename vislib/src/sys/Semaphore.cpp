@@ -129,7 +129,7 @@ vislib::sys::Semaphore::Semaphore(const wchar_t* name, long initialCount, long m
 /*
  * vislib::sys::Semaphore::~Semaphore(void)
  */
-vislib::sys::Semaphore::~Semaphore(void) {
+vislib::sys::Semaphore::~Semaphore() {
 #ifdef _WIN32
     ::CloseHandle(this->handle);
 
@@ -152,7 +152,7 @@ vislib::sys::Semaphore::~Semaphore(void) {
 /*
  * vislib::sys::Semaphore::Lock
  */
-void vislib::sys::Semaphore::Lock(void) {
+void vislib::sys::Semaphore::Lock() {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, INFINITE)) {
 
@@ -182,7 +182,7 @@ void vislib::sys::Semaphore::Lock(void) {
 /*
  * vislib::sys::Semaphore::TryLock
  */
-bool vislib::sys::Semaphore::TryLock(void) {
+bool vislib::sys::Semaphore::TryLock() {
 #ifdef _WIN32
     return this->TryLock(0);
 
@@ -244,7 +244,7 @@ bool vislib::sys::Semaphore::TryLock(const DWORD timeout) {
 /*
  * vislib::sys::Semaphore::Unlock
  */
-void vislib::sys::Semaphore::Unlock(void) {
+void vislib::sys::Semaphore::Unlock() {
 #ifdef _WIN32
     if (::ReleaseSemaphore(this->handle, 1, NULL) != TRUE) {
         throw SystemException(__FILE__, __LINE__);

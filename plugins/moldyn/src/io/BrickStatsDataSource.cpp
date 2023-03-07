@@ -23,7 +23,7 @@ using namespace megamol::moldyn;
 /*
  * moldyn::BrickStatsDataSource::BrickStatsDataSource
  */
-BrickStatsDataSource::BrickStatsDataSource(void)
+BrickStatsDataSource::BrickStatsDataSource()
         : Module()
         , filename("filename", "The path to the stat file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -54,7 +54,7 @@ BrickStatsDataSource::BrickStatsDataSource(void)
 /*
  * moldyn::MMPLDDataSource::~MMPLDDataSource
  */
-BrickStatsDataSource::~BrickStatsDataSource(void) {
+BrickStatsDataSource::~BrickStatsDataSource() {
     this->Release();
 }
 
@@ -62,7 +62,7 @@ BrickStatsDataSource::~BrickStatsDataSource(void) {
 /*
  * moldyn::MMPLDDataSource::create
  */
-bool BrickStatsDataSource::create(void) {
+bool BrickStatsDataSource::create() {
     using megamol::core::utility::log::Log;
     if (BrickStatsCall::GetTypeSize() != sizeof(BrickStatsCall::BrickStatsType)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -76,7 +76,7 @@ bool BrickStatsDataSource::create(void) {
 /*
  * moldyn::MMPLDDataSource::release
  */
-void BrickStatsDataSource::release(void) {
+void BrickStatsDataSource::release() {
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;
         this->file = NULL;

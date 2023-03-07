@@ -48,21 +48,21 @@ public:
     /**
      * Add the lightsource of this module to a given collection
      */
-    void addLight(LightCollection& light_collection);
+    void addLight(LightCollection& light_collection) override;
 
     /** Ctor. */
     QuadLight();
 
     /** Dtor. */
-    virtual ~QuadLight();
+    ~QuadLight() override;
 
 private:
     core::param::ParamSlot position;
     core::param::ParamSlot edgeOne;
     core::param::ParamSlot edgeTwo;
 
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    bool InterfaceIsDirty() override;
+    void readParams() override;
 };
 
 } // namespace megamol::core::view::light

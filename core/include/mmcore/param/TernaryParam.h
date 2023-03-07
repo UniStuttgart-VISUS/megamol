@@ -26,7 +26,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~TernaryParam();
+    ~TernaryParam() override;
 
     /**
      * Tries to parse the given string as value for this parameter and

@@ -49,6 +49,8 @@ public:
      */
     virtual bool IsAvailable() const;
 
+    virtual void requested_lifetime_resources(frontend_resources::ResourceRequest& req) const = 0;
+
     /**
      * Answers whether this description is describing the class of
      * 'module'.
@@ -59,13 +61,6 @@ public:
      *         'false' otherwise.
      */
     virtual bool IsDescribing(const Module* module) const = 0;
-
-    /**
-     * Answer whether or not this module can be used in a quickstart
-     *
-     * @return 'true' if the module can be used in a quickstart
-     */
-    virtual bool IsVisibleForQuickstart() const = 0;
 
     /**
      * Creates a new module object from this description.

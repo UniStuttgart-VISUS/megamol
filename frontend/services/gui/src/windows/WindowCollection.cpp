@@ -35,6 +35,14 @@ WindowCollection::WindowCollection() : windows() {
         [&](std::shared_ptr<AbstractWindow> const& a, std::shared_ptr<AbstractWindow> const& b) {
             return (a->Config().hotkey.key > b->Config().hotkey.key);
         });
+
+    // retrieve resource requests of each window class
+    for (auto const& win : windows) {
+        auto res = win->requested_lifetime_resources();
+        requested_resources.insert(requested_resources.end(), res.begin(), res.end());
+    }
+    requested_resources.erase(
+        std::unique(requested_resources.begin(), requested_resources.end()), requested_resources.end());
 }
 
 
@@ -218,6 +226,14 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
         }
     }
     return false;
+}
+
+
+void megamol::gui::WindowCollection::setRequestedResources(
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
+    for (auto& win : windows) {
+        win->setRequestedResources(resources);
+    }
 }
 
 

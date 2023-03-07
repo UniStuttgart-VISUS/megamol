@@ -17,8 +17,9 @@ find_package(Git REQUIRED)
 
 FetchContent_Declare(vcpkg-download
   GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
-  GIT_TAG 2022.10.19 # Update default-registry baseline in vcpkg-configuration.json when changing!
-  GIT_SHALLOW TRUE)
+  GIT_TAG 2023.02.24 # Update default-registry baseline in vcpkg-configuration.json when changing!
+  GIT_SHALLOW TRUE
+  SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/vcpkg)
 FetchContent_GetProperties(vcpkg-download)
 if (NOT vcpkg-download_POPULATED)
   message(STATUS "Fetch vcpkg ...")
@@ -36,11 +37,12 @@ megamol_feature_option(MPI "Enable MPI support" OFF)
 megamol_feature_option(OPENGL "Enable OpenGL support" ON)
 megamol_feature_option(OSPRAY "Enable OSPRay support" OFF)
 megamol_feature_option(PROFILING "Enable profiling support" OFF)
+megamol_feature_option(TRACY "Enable tracy support" OFF)
 megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 # dependent options
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
-megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
+megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
 
 include(cmake/megamol_vcpkg_empty_port.cmake)
 
@@ -49,7 +51,7 @@ set(VCPKG_OVERLAY_PORTS "${mm_empty_ports_dir}${CMAKE_CURRENT_LIST_DIR}/cmake/vc
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_triplets") # We are using triplets with VCPKG_DISABLE_COMPILER_TRACKING set (on Windows).
 set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
 set(VCPKG_INSTALL_OPTIONS "--clean-after-build" "--no-print-usage") # Build dirs get quite large and are usually only needed for debugging new ports.
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
 set(ENV{VCPKG_FORCE_DOWNLOADED_BINARIES} ON) # Vcpkg should always download tools (i.e. CMake) to have consistent versions over all systems.
 option(MEGAMOL_DOWNLOAD_VCPKG_CACHE "Download prebuilt dependency binaries if available" OFF)
@@ -88,9 +90,6 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "default install p
 include(GNUInstallDirs)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
-# Dependencies
-add_subdirectory(externals/glad)
-
 # MegaMol config
 include(megamol_config)
 
@@ -117,19 +116,19 @@ if (MEGAMOL_USE_OPENGL)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core_gl)
 endif ()
 
-# MegaMol.exe
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/main)
-
-# Remoteconsole
-add_subdirectory(remoteconsole)
-
 # Plugins
 add_subdirectory(plugins)
 if (MEGAMOL_USE_OPENGL)
   target_link_libraries(plugins INTERFACE core_gl)
   target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
 endif ()
+
+# MegaMol.exe
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/main)
 target_link_libraries(megamol PRIVATE plugins)
+
+# Remoteconsole
+add_subdirectory(remoteconsole)
 
 # Utils
 add_subdirectory(utils)

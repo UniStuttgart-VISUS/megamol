@@ -8,11 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
-#define MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
 #include "mmcore/CalleeSlot.h"
@@ -25,8 +21,7 @@
 
 typedef unsigned int uint;
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /// Filter module that computes a smoothed version of a given trajectory by
 /// calculating the average.
@@ -40,7 +35,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TrajectorySmoothFilter";
     }
 
@@ -49,7 +44,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Calculates a smoothed version of a given trajectory.";
     }
 
@@ -58,15 +53,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TrajectorySmoothFilter(void);
+    TrajectorySmoothFilter();
 
     /** Dtor. */
-    virtual ~TrajectorySmoothFilter(void);
+    ~TrajectorySmoothFilter() override;
 
 protected:
     /**
@@ -74,12 +69,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call callback to get the data
@@ -118,12 +113,12 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock() override {
             this->mol->Unlock();
         }
 
@@ -154,7 +149,4 @@ private:
 };
 
 
-} // end namespace protein
-} // end namespace megamol
-
-#endif // MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
+} // namespace megamol::protein

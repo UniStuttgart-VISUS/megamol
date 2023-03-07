@@ -15,8 +15,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 FileStreamProvider::FileStreamProvider()
         : filePath("file_path", "Output file path")
@@ -48,5 +47,4 @@ std::iostream& FileStreamProvider::GetStream() {
     return this->stream;
 }
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

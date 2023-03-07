@@ -6,13 +6,11 @@
  */
 
 
-#ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
-#define MEGAMOL_GUI_GUIUTILS_INCLUDED
 #pragma once
 
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+//#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS // TODO implot currently requires deprecated functions, can be enabled when implot is updated.
 #define IMGUI_DISABLE_OBSOLETE_KEYIO
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -90,8 +88,7 @@
 #endif // MEGAMOL_USE_OPENGL
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /********** Additional Global ImGui Operators ****************************/
@@ -460,27 +457,6 @@ public:
         }
         return header_open;
     }
-
-    /*
-     * Convert given string to lower case.
-     */
-    static void StringToLowerCase(std::string& str) {
-
-        for (auto& c : str) {
-            c = static_cast<char>(std::tolower(c));
-        }
-    }
-
-    /*
-     * Convert given string to upper case.
-     */
-    static void StringToUpperCase(std::string& str) {
-
-        for (auto& c : str) {
-            c = static_cast<char>(std::toupper(c));
-        }
-    }
-
 
     static ImGuiKey GlfwKeyToImGuiKey(megamol::frontend_resources::Key key) {
         switch (key) {
@@ -923,7 +899,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GUIUTILS_INCLUDED
+} // namespace megamol::gui

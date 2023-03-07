@@ -6,8 +6,7 @@
  */
 
 
-#ifndef PROBE_COLLECTION_H_INCLUDED
-#define PROBE_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <random>
@@ -217,5 +216,3 @@ private:
 
 } // namespace probe
 } // namespace megamol
-
-#endif // !PROBE_COLLECTION_H_INCLUDED

@@ -14,7 +14,7 @@ namespace megamol::geocalls {
 /*
  * EllipsoidalParticles
  */
-EllipsoidalParticles::EllipsoidalParticles(void)
+EllipsoidalParticles::EllipsoidalParticles()
         : SimpleSphericalParticles()
         , quatPtr(NULL)
         , quatStride(0)
@@ -35,7 +35,7 @@ EllipsoidalParticles::EllipsoidalParticles(const EllipsoidalParticles& src) {
 /*
  * ~EllipsoidalParticles
  */
-EllipsoidalParticles::~EllipsoidalParticles(void) {
+EllipsoidalParticles::~EllipsoidalParticles() {
     this->quatPtr = NULL; // DO NOT DELETE
     this->radPtr = NULL;  // DO NOT DELETE
 }
@@ -70,7 +70,7 @@ const unsigned int EllipsoidalParticleDataCall::CallForGetExtents = 1;
 /*
  * EllipsoidalParticleDataCall
  */
-EllipsoidalParticleDataCall::EllipsoidalParticleDataCall(void) : AbstractParticleDataCall<EllipsoidalParticles>() {
+EllipsoidalParticleDataCall::EllipsoidalParticleDataCall() : AbstractParticleDataCall<EllipsoidalParticles>() {
     // Intentionally empty
 }
 
@@ -78,7 +78,7 @@ EllipsoidalParticleDataCall::EllipsoidalParticleDataCall(void) : AbstractParticl
 /*
  * ~EllipsoidalParticleDataCall
  */
-EllipsoidalParticleDataCall::~EllipsoidalParticleDataCall(void) {
+EllipsoidalParticleDataCall::~EllipsoidalParticleDataCall() {
     // Intentionally empty
 }
 

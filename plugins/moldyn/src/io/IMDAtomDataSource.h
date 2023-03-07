@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_IMDATOMDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_IMDATOMDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -22,9 +18,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -42,7 +36,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IMDAtomData";
     }
 
@@ -51,7 +45,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for IMD atom files.";
     }
 
@@ -60,7 +54,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -88,7 +82,7 @@ public:
      *
      * @return The file name slot name
      */
-    static const char* FilenameSlotName(void) {
+    static const char* FilenameSlotName() {
         return "filename";
     }
 
@@ -97,15 +91,15 @@ public:
      *
      * @return The file type name
      */
-    static const char* FileTypeName(void) {
+    static const char* FileTypeName() {
         return "IMD Atom";
     }
 
     /** Ctor. */
-    IMDAtomDataSource(void);
+    IMDAtomDataSource();
 
     /** Dtor. */
-    virtual ~IMDAtomDataSource(void);
+    ~IMDAtomDataSource() override;
 
 protected:
     /**
@@ -113,12 +107,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -156,12 +150,12 @@ private:
     /**
      * Removes all data
      */
-    void clear(void);
+    void clear();
 
     /**
      * Ensures that the data file is loaded into memory, if possible
      */
-    void assertData(void);
+    void assertData();
 
     /**
      * Reads the header of the imd file.
@@ -297,8 +291,4 @@ private:
     vislib::Array<unsigned int> typeData;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_IMDATOMDATASOURCE_H_INCLUDED */
+} // namespace megamol::moldyn::io

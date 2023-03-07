@@ -14,7 +14,7 @@ using namespace megamol::core::view;
 using namespace megamol::core::param;
 
 
-view::TransferFunction::TransferFunction(void) : Module(), AbstractTransferFunction() {
+view::TransferFunction::TransferFunction() : Module(), AbstractTransferFunction() {
 
     CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunction::requestTF);

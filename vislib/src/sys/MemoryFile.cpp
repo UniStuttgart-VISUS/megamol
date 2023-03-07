@@ -13,13 +13,13 @@ using namespace vislib::sys;
 /*
  * MemoryFile::MemoryFile
  */
-MemoryFile::MemoryFile(void) : File(), accessMode(READ_ONLY), buffer(NULL), bufferLen(0), pos(0), storage(NULL) {}
+MemoryFile::MemoryFile() : File(), accessMode(READ_ONLY), buffer(NULL), bufferLen(0), pos(0), storage(NULL) {}
 
 
 /*
  * MemoryFile::~MemoryFile
  */
-MemoryFile::~MemoryFile(void) {
+MemoryFile::~MemoryFile() {
     this->Close();
 }
 
@@ -27,7 +27,7 @@ MemoryFile::~MemoryFile(void) {
 /*
  * MemoryFile::Close
  */
-void MemoryFile::Close(void) {
+void MemoryFile::Close() {
     this->accessMode = READ_ONLY;
     this->buffer = NULL; // DO NOT DELETE
     this->bufferLen = 0;
@@ -39,7 +39,7 @@ void MemoryFile::Close(void) {
 /*
  * MemoryFile::Flush
  */
-void MemoryFile::Flush(void) {
+void MemoryFile::Flush() {
     // Intentionally empty as memory files have no additional buffering
 }
 
@@ -47,7 +47,7 @@ void MemoryFile::Flush(void) {
 /*
  * MemoryFile::GetSize
  */
-File::FileSize MemoryFile::GetSize(void) const {
+File::FileSize MemoryFile::GetSize() const {
     return (this->storage != NULL) ? static_cast<File::FileSize>(this->storage->GetSize())
                                    : ((this->buffer != NULL) ? this->bufferLen : 0);
 }
@@ -56,7 +56,7 @@ File::FileSize MemoryFile::GetSize(void) const {
 /*
  * MemoryFile::IsOpen
  */
-bool MemoryFile::IsOpen(void) const {
+bool MemoryFile::IsOpen() const {
     return (this->storage != NULL) || (this->buffer != NULL);
 }
 
@@ -184,7 +184,7 @@ File::FileSize MemoryFile::Seek(const File::FileOffset offset, const File::SeekS
 /*
  * MemoryFile::Tell
  */
-File::FileSize MemoryFile::Tell(void) const {
+File::FileSize MemoryFile::Tell() const {
     return this->pos;
 }
 

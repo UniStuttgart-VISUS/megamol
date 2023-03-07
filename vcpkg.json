@@ -12,6 +12,7 @@
     "bhtsne",
     "blend2d",
     "chemfiles",
+    "cmakerc",
     "cppzmq",
     "curl",
     "cxxopts",
@@ -25,6 +26,7 @@
         "docking-experimental"
       ]
     },
+    "imgui-software-renderer",
     "imguizmoquat",
     "implot",
     "libigl",
@@ -88,6 +90,7 @@
     "use-opengl": {
       "description": "Use OpenGL",
       "dependencies": [
+        "glad",
         {
           "name": "glowl",
           "features": [
@@ -110,6 +113,9 @@
         "megamol-shader-factory"
       ]
     },
+    "use-opengl-debuggroups": {
+      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
+    },
     "use-ospray": {
       "description": "Use OSPRay",
       "dependencies": [
@@ -123,11 +129,19 @@
         }
       ]
     },
-    "use-opengl-debuggroups": {
-      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
-    },
     "use-profiling": {
       "description": "Use Profiling"
+    },
+    "use-tracy": {
+      "description": "Use Tracy",
+      "dependencies": [
+        {
+          "name": "tracy",
+          "features": [
+            "gui-tools"
+          ]
+        }
+      ]
     },
     "use-vr-interop": {
       "description": "Use VR Interop",

@@ -11,8 +11,7 @@
 
 #include <vector>
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 // provides abstraction to call AbstractFrontendService methods on a collection of services at once
 class FrontendServiceCollection {
@@ -57,5 +56,4 @@ private:
     std::vector<FrontendResource> m_serviceResources;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

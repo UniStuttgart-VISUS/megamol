@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Class for manually stepping through a series of data files
@@ -27,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DataFileSequenceStepper";
     }
 
@@ -36,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Small utility module adding user controls to step though a sequence of data files.";
     }
 
@@ -45,28 +44,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
-    }
-
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
     }
 
     /*
      * DataFileSequenceStepper
      */
-    DataFileSequenceStepper(void);
+    DataFileSequenceStepper();
 
     /*
      * ~DataFileSequenceStepper
      */
-    virtual ~DataFileSequenceStepper(void);
+    ~DataFileSequenceStepper() override;
 
 private:
     /**
@@ -74,14 +64,14 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Searches for the filename slot in the module graph
      *
      * @return The found filename slot or NULL if the slot was not found.
      */
-    core::param::ParamSlot* findFilenameSlot(void);
+    core::param::ParamSlot* findFilenameSlot();
 
     /**
      * Gets the filename value
@@ -124,7 +114,7 @@ private:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Sets the filename value
@@ -152,5 +142,4 @@ private:
     core::param::ParamSlot prevFileSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

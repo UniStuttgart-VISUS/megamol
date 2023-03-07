@@ -10,7 +10,7 @@
 using megamol::core::utility::log::Log;
 
 megamol::compositing_gl::TextureCombine::TextureCombine()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , m_version(0)
         , m_output_texture(nullptr)
         , m_mode("Mode", "Sets texture combination mode, e.g. add, multiply...")

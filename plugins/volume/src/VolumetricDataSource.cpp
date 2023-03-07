@@ -33,7 +33,7 @@
 /*
  * megamol::volume::VolumetricDataSource::VolumetricDataSource
  */
-megamol::volume::VolumetricDataSource::VolumetricDataSource(void)
+megamol::volume::VolumetricDataSource::VolumetricDataSource()
         : Base()
         , dataHash(-234895)
         , fileInfo(nullptr)
@@ -105,7 +105,7 @@ megamol::volume::VolumetricDataSource::VolumetricDataSource(void)
 /*
  * megamol::volume::VolumetricDataSource::~VolumetricDataSource
  */
-megamol::volume::VolumetricDataSource::~VolumetricDataSource(void) {
+megamol::volume::VolumetricDataSource::~VolumetricDataSource() {
     this->Release();
     ASSERT(this->fileInfo == nullptr);
 }
@@ -114,7 +114,7 @@ megamol::volume::VolumetricDataSource::~VolumetricDataSource(void) {
 /*
  * megamol::volume::VolumetricDataSource::calcFrameSize
  */
-size_t megamol::volume::VolumetricDataSource::calcFrameSize(void) const {
+size_t megamol::volume::VolumetricDataSource::calcFrameSize() const {
     ASSERT(this->fileInfo != nullptr);
     return ::datRaw_getBufferSize(this->fileInfo, this->getOutputDataFormat());
 }
@@ -123,7 +123,7 @@ size_t megamol::volume::VolumetricDataSource::calcFrameSize(void) const {
 /*
  * megamol::volume::VolumetricDataSource::create
  */
-bool megamol::volume::VolumetricDataSource::create(void) {
+bool megamol::volume::VolumetricDataSource::create() {
     if (!this->paramFileName.Param<core::param::FilePathParam>()->Value().empty()) {
         this->onFileNameChanged(this->paramFileName);
     }
@@ -134,7 +134,7 @@ bool megamol::volume::VolumetricDataSource::create(void) {
 /*
  * megamol::volume::VolumetricDataSource::getOutputDataFormat
  */
-DatRawDataFormat megamol::volume::VolumetricDataSource::getOutputDataFormat(void) const {
+DatRawDataFormat megamol::volume::VolumetricDataSource::getOutputDataFormat() const {
     using geocalls::VolumetricDataCall;
     using megamol::core::utility::log::Log;
 
@@ -1001,7 +1001,7 @@ bool megamol::volume::VolumetricDataSource::onStopAsync(core::Call& call) {
 /*
  * megamol::volume::VolumetricDataSource::release
  */
-void megamol::volume::VolumetricDataSource::release(void) {
+void megamol::volume::VolumetricDataSource::release() {
     using megamol::core::utility::log::Log;
 
     try {
@@ -1028,7 +1028,7 @@ void megamol::volume::VolumetricDataSource::release(void) {
 /*
  * megamol::volume::VolumetricDataSource::resumeAsyncLoad
  */
-bool megamol::volume::VolumetricDataSource::resumeAsyncLoad(void) {
+bool megamol::volume::VolumetricDataSource::resumeAsyncLoad() {
     using megamol::core::utility::log::Log;
     Log::DefaultLog.WriteInfo(_T("Resuming volume loader thread..."));
     int expected[] = {LOADER_STATUS_PAUSING, LOADER_STATUS_PAUSED};
@@ -1041,7 +1041,7 @@ bool megamol::volume::VolumetricDataSource::resumeAsyncLoad(void) {
 /*
  * megamol::volume::VolumetricDataSource::startAsyncLoad
  */
-bool megamol::volume::VolumetricDataSource::startAsyncLoad(void) {
+bool megamol::volume::VolumetricDataSource::startAsyncLoad() {
     using megamol::core::utility::log::Log;
     try {
         Log::DefaultLog.WriteInfo(_T("Starting volume loader thread..."));
@@ -1107,7 +1107,7 @@ bool megamol::volume::VolumetricDataSource::suspendAsyncLoad(const bool isWait) 
 /*
  * megamol::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker
  */
-megamol::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker(void) {
+megamol::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker() {
     this->Unlock();
 }
 
@@ -1115,7 +1115,7 @@ megamol::volume::VolumetricDataSource::BufferSlotUnlocker::~BufferSlotUnlocker(v
 /*
  * megamol::volume::VolumetricDataSource::BufferSlotUnlocker::Unlock
  */
-void megamol::volume::VolumetricDataSource::BufferSlotUnlocker::Unlock(void) {
+void megamol::volume::VolumetricDataSource::BufferSlotUnlocker::Unlock() {
     for (size_t i = 0; i < this->buffers.Count(); ++i) {
         ASSERT(this->buffers[i]->status == BUFFER_STATUS_USED);
         this->buffers[i]->status.store(BUFFER_STATUS_READY);

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLELISTMERGEMODULE_H_INCLUDED
-#define MEGAMOLCORE_PARTICLELISTMERGEMODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "datatools_gl/TransferFunctionQuery.h"
@@ -30,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleListMergeModule";
     }
 
@@ -39,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module to merge all lists from the MultiParticleDataCall into a single list";
     }
 
@@ -48,24 +44,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
     /** Ctor. */
-    ParticleListMergeModule(void);
+    ParticleListMergeModule();
 
     /** Dtor. */
-    virtual ~ParticleListMergeModule(void);
+    ~ParticleListMergeModule() override;
 
 protected:
     /**
@@ -78,7 +65,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /**
@@ -104,5 +91,3 @@ private:
     vislib::RawStorage data;
 };
 } // namespace megamol::datatools_gl::misc
-
-#endif /* MEGAMOLCORE_PARTICLELISTMERGEMODULE_H_INCLUDED */

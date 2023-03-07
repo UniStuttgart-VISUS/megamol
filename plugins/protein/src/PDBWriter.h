@@ -8,11 +8,7 @@
 //      Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_PDBWRITER_H_INCLUDED
-#define MMPROTEINPLUGIN_PDBWRITER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -20,8 +16,7 @@
 #include "mmstd/renderer/TimeControl.h"
 #include "protein_calls/MolecularDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class PDBWriter : public core::job::AbstractJob, public core::Module {
 
@@ -31,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PDBWriter";
     }
 
@@ -40,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Job writing arbitrary trajectories to a series of PDB or PQR\
                 files.";
     }
@@ -50,17 +45,8 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
-    }
-
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
     }
 
     /**
@@ -71,7 +57,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~PDBWriter();
+    ~PDBWriter() override;
 
     /**
      * Answers whether or not this job is still running.
@@ -79,14 +65,14 @@ public:
      * @return 'true' if this job is still running, 'false' if it has
      *         finished.
      */
-    virtual bool IsRunning(void) const;
+    bool IsRunning() const override;
 
     /**
      * Starts the job thread.
      *
      * @return true if the job has been successfully started.
      */
-    virtual bool Start(void);
+    bool Start() override;
 
     /**
      * Terminates the job thread.
@@ -94,7 +80,7 @@ public:
      * @return true to acknowledge that the job will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void);
+    bool Terminate() override;
 
 protected:
     /**
@@ -102,12 +88,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -182,7 +168,4 @@ private:
     bool useModelRecord;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif /* MMPROTEINPLUGIN_PDBWRITER_H_INCLUDED */
+} // namespace megamol::protein

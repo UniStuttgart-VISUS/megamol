@@ -171,7 +171,7 @@ public:
     unsigned int GetTextureWidth(GLuint texture_id) const;
     unsigned int GetTextureHeight(GLuint texture_id) const;
 
-    inline void DeleteAllTextures(void) {
+    inline void DeleteAllTextures() {
         this->textures.clear();
     }
 

@@ -35,7 +35,7 @@ vislib::graphics::BitmapImage::Conversion<ST>::Conversion(ST* source, unsigned i
  * vislib::graphics::BitmapImage::Conversion<ST>::~Conversion
  */
 template<class ST>
-vislib::graphics::BitmapImage::Conversion<ST>::~Conversion(void) {
+vislib::graphics::BitmapImage::Conversion<ST>::~Conversion() {
     this->source = NULL; // DO NOT DELETE
 }
 
@@ -95,7 +95,7 @@ void vislib::graphics::BitmapImage::Conversion<ST>::AddSourceChannel(unsigned in
  * vislib::graphics::BitmapImage::Conversion<ST>::FinalizeInitialization
  */
 template<class ST>
-void vislib::graphics::BitmapImage::Conversion<ST>::FinalizeInitialization(void) {
+void vislib::graphics::BitmapImage::Conversion<ST>::FinalizeInitialization() {
     bool gray = (this->func[SC_GRAY] != NULL);
     bool rgb = (this->func[SC_RED] != NULL) && (this->func[SC_GREEN] != NULL) && (this->func[SC_BLUE] != NULL);
     bool cmyk = (this->func[SC_CMYK_CYAN] != NULL) && (this->func[SC_CMYK_MAGENTA] != NULL) &&
@@ -438,7 +438,7 @@ vislib::graphics::BitmapImage::Extension::Extension(vislib::graphics::BitmapImag
 /*
  * vislib::graphics::BitmapImage::Extension::~Extension
  */
-vislib::graphics::BitmapImage::Extension::~Extension(void) {
+vislib::graphics::BitmapImage::Extension::~Extension() {
     // intentionally empty
 }
 
@@ -512,7 +512,7 @@ const vislib::graphics::BitmapImage vislib::graphics::BitmapImage::TemplateFloat
 /*
  * vislib::graphics::BitmapImage::BitmapImage
  */
-vislib::graphics::BitmapImage::BitmapImage(void)
+vislib::graphics::BitmapImage::BitmapImage()
         : data(NULL)
         , chanType(CHANNELTYPE_BYTE)
         , exts()
@@ -650,7 +650,7 @@ vislib::graphics::BitmapImage::BitmapImage(vislib::graphics::BitmapImage::Channe
 /*
  * vislib::graphics::BitmapImage::~BitmapImage
  */
-vislib::graphics::BitmapImage::~BitmapImage(void) {
+vislib::graphics::BitmapImage::~BitmapImage() {
     ARY_SAFE_DELETE(this->data);
     this->height = 0; // set for paranoia reasons
     this->exts.Clear();
@@ -1015,7 +1015,7 @@ void vislib::graphics::BitmapImage::ExtractFrom(const vislib::graphics::BitmapIm
 /*
  * vislib::graphics::BitmapImage::FlipVertical
  */
-void vislib::graphics::BitmapImage::FlipVertical(void) {
+void vislib::graphics::BitmapImage::FlipVertical() {
     unsigned int lineSize = this->width * this->BytesPerPixel();
     unsigned int hh = this->height / 2;
     unsigned int mh = this->height - 1;
@@ -1047,7 +1047,7 @@ bool vislib::graphics::BitmapImage::HasChannel(ChannelLabel label) const {
 /*
  * vislib::graphics::BitmapImage::Invert
  */
-void vislib::graphics::BitmapImage::Invert(void) {
+void vislib::graphics::BitmapImage::Invert() {
     switch (this->chanType) {
     case CHANNELTYPE_BYTE:
         this->invert<unsigned char>(255u, UINT_MAX);

@@ -27,7 +27,7 @@ View3D::View3D() : BaseView(AbstractView::ViewDimension::VIEW_3D) {
 /*
  * View3D::~View3D
  */
-View3D::~View3D(void) {
+View3D::~View3D() {
     this->Release();
 }
 

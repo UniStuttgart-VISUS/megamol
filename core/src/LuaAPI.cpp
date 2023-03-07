@@ -88,7 +88,7 @@ megamol::core::LuaAPI::~LuaAPI() {
 bool megamol::core::LuaAPI::StateOk() { return true; }
 
 
-std::string megamol::core::LuaAPI::GetScriptPath(void) { return this->currentScriptPath; }
+std::string megamol::core::LuaAPI::GetScriptPath() { return this->currentScriptPath; }
 
 void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) { this->currentScriptPath = scriptPath; }
 

@@ -14,8 +14,7 @@
 #endif
 
 
-namespace sg {
-namespace graphics {
+namespace sg::graphics {
 
 /**
  * Bitmap codec for jpeg images using the IJG libjpeg
@@ -24,10 +23,10 @@ namespace graphics {
 class JpegBitmapCodec : public vislib::graphics::AbstractBitmapCodec {
 public:
     /** Ctor */
-    JpegBitmapCodec(void);
+    JpegBitmapCodec();
 
     /** Dtor */
-    virtual ~JpegBitmapCodec(void);
+    ~JpegBitmapCodec() override;
 
     /**
      * Autodetects if an image can be loaded by this codec by checking
@@ -42,7 +41,7 @@ public:
      *         1 if the file can be loaded by this codec (loading might
      *           still fail however, e.g. if file data is corrupt).
      */
-    virtual int AutoDetect(const void* mem, SIZE_T size) const;
+    int AutoDetect(const void* mem, SIZE_T size) const override;
 
     /**
      * Answers whether this codec can autodetect if an image is supported
@@ -50,7 +49,7 @@ public:
      *
      * @return 'true' if the codec can autodetect image compatibility.
      */
-    virtual bool CanAutoDetect(void) const;
+    bool CanAutoDetect() const override;
 
     /**
      * Answer the compression quality setting, that will be used when
@@ -58,7 +57,7 @@ public:
      *
      * @return The compression quality setting [0..100]
      */
-    inline unsigned int CompressionQuality(void) const {
+    inline unsigned int CompressionQuality() const {
         return this->quality;
     }
 
@@ -71,7 +70,7 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    virtual const char* FileNameExtsA(void) const;
+    const char* FileNameExtsA() const override;
 
     /**
      * Answer the file name extensions usually used for image files of
@@ -82,21 +81,21 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    virtual const wchar_t* FileNameExtsW(void) const;
+    const wchar_t* FileNameExtsW() const override;
 
     /**
      * Answer the human-readable name of the codec.
      *
      * @return The human-readable name of the codec.
      */
-    virtual const char* NameA(void) const;
+    const char* NameA() const override;
 
     /**
      * Answer the human-readable name of the codec.
      *
      * @return The human-readable name of the codec.
      */
-    virtual const wchar_t* NameW(void) const;
+    const wchar_t* NameW() const override;
 
     /**
      * Analysis the set image and automatically evaluates the optimal
@@ -106,7 +105,7 @@ public:
      *    images! It might by a good idea to use the method on smaller
      *    sub-images.
      */
-    void OptimizeCompressionQuality(void);
+    void OptimizeCompressionQuality();
 
     /**
      * Sets the compression quality. Values will be clamped to [0..100].
@@ -127,14 +126,14 @@ protected:
      *
      * @return true on success, false on failure
      */
-    virtual bool loadFromMemory(const void* mem, SIZE_T size);
+    bool loadFromMemory(const void* mem, SIZE_T size) override;
 
     /**
      * Answer whether or not 'loadFromMemory' has been implement.
      *
      * @return true
      */
-    virtual bool loadFromMemoryImplemented(void) const;
+    bool loadFromMemoryImplemented() const override;
 
     /**
      * Saves the image to a block of memory
@@ -143,7 +142,7 @@ protected:
      *
      * @return true on success, false on failure
      */
-    virtual bool saveToMemory(vislib::RawStorage& mem) const;
+    bool saveToMemory(vislib::RawStorage& mem) const override;
 
     /**
      * Answer whether or not 'saveToMemory' has been implement.
@@ -153,11 +152,11 @@ protected:
      *
      * @return true if 'saveToMemory' has been implemented
      */
-    virtual bool saveToMemoryImplemented(void) const;
+    bool saveToMemoryImplemented() const override;
 
-    virtual bool saveToStream(vislib::sys::File& stream) const;
+    bool saveToStream(vislib::sys::File& stream) const override;
 
-    virtual bool saveToStreamImplemented(void) const;
+    bool saveToStreamImplemented() const override;
 
 private:
     /** The compression quality setting [0..100] */
@@ -170,5 +169,4 @@ private:
 };
 
 
-} /* end namespace graphics */
-} /* end namespace sg */
+} // namespace sg::graphics

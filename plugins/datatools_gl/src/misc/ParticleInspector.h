@@ -1,14 +1,13 @@
 #pragma once
 
+#include "FrameStatistics.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
 
-namespace megamol {
-namespace datatools_gl {
-namespace misc {
+namespace megamol::datatools_gl::misc {
 
 /**
  * This module shows a table for debugging MultiParticleDataCall.
@@ -16,10 +15,9 @@ namespace misc {
 class ParticleInspector : public megamol::core::Module {
 
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = Module::requested_lifetime_resources();
-        resources.emplace_back("FrameStatistics");
-        return resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
     }
 
     /**
@@ -27,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "ParticleInspector";
     }
 
@@ -36,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Direct inspection of particle values, data is passed through.";
     }
 
@@ -45,19 +43,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    ParticleInspector(void);
+    ParticleInspector();
 
     /**
      * Finalises an instance.
      */
-    virtual ~ParticleInspector(void);
+    ~ParticleInspector() override;
 
 protected:
     /**
@@ -65,7 +63,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     bool getParticleData(core::Call& call);
 
@@ -74,7 +72,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     void drawTable(geocalls::MultiParticleDataCall* c);
@@ -88,6 +86,4 @@ private:
     uint32_t lastDrawnFrame = std::numeric_limits<uint32_t>::max();
 };
 
-} /* end namespace misc */
-} // namespace datatools_gl
-} /* end namespace megamol */
+} // namespace megamol::datatools_gl::misc

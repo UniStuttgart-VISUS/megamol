@@ -45,7 +45,7 @@ ReducedSurfaceSimplified::ReducedSurfaceSimplified(MolecularDataCall* prot, floa
 /*
  * ReducedSurfaceSimplified::~ReducedSurfaceSimplified
  */
-ReducedSurfaceSimplified::~ReducedSurfaceSimplified(void) {
+ReducedSurfaceSimplified::~ReducedSurfaceSimplified() {
     unsigned int cnt;
     // delete all simplified chains
     for (cnt = 0; cnt < this->simpleChain.size(); ++cnt)

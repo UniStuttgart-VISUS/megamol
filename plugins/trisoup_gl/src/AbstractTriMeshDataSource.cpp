@@ -16,7 +16,7 @@ using namespace megamol::trisoup_gl;
 /*
  * AbstractTriMeshDataSource::AbstractTriMeshDataSource
  */
-AbstractTriMeshDataSource::AbstractTriMeshDataSource(void)
+AbstractTriMeshDataSource::AbstractTriMeshDataSource()
         : core::Module()
         , objs()
         , mats()
@@ -42,7 +42,7 @@ AbstractTriMeshDataSource::AbstractTriMeshDataSource(void)
 /*
  * AbstractTriMeshDataSource::~AbstractTriMeshDataSource
  */
-AbstractTriMeshDataSource::~AbstractTriMeshDataSource(void) {
+AbstractTriMeshDataSource::~AbstractTriMeshDataSource() {
     this->Release();
     ASSERT(this->objs.IsEmpty());
     ASSERT(this->mats.IsEmpty());
@@ -52,7 +52,7 @@ AbstractTriMeshDataSource::~AbstractTriMeshDataSource(void) {
 /*
  * AbstractTriMeshDataSource::create
  */
-bool AbstractTriMeshDataSource::create(void) {
+bool AbstractTriMeshDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -61,7 +61,7 @@ bool AbstractTriMeshDataSource::create(void) {
 /*
  * AbstractTriMeshDataSource::release
  */
-void AbstractTriMeshDataSource::release(void) {
+void AbstractTriMeshDataSource::release() {
     this->objs.Clear();
     this->mats.Clear();
 }

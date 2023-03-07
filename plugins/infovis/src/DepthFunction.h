@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_DEPTHFUNCTION_INCLUDED
-#define MEGAMOL_DEPTHFUNCTION_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -9,25 +8,24 @@
 
 #include <Eigen/Core>
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 using namespace megamol::core;
 
 class DepthFunction : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "DepthFunction";
     }
 
     /** Return module class description */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Non-parametric depth functions (order statistics) for multivariate analysis";
     }
 
     /** Module is always available */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
@@ -39,17 +37,17 @@ public:
     Eigen::VectorXd simplicalDepth(Eigen::MatrixXd dataMatrix, int samplesCount, unsigned int seed);
 
     /** Constructor */
-    DepthFunction(void);
+    DepthFunction();
 
     /** Destructor */
-    virtual ~DepthFunction(void);
+    ~DepthFunction() override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Data callback */
@@ -107,7 +105,4 @@ private:
     Eigen::MatrixXd inDataMat;
 };
 
-} // namespace infovis
-} // namespace megamol
-
-#endif
+} // namespace megamol::infovis

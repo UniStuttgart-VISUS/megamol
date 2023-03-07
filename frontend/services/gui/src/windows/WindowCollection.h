@@ -5,12 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
-#define MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
 #pragma once
 
 
 #include "AbstractWindow.h"
+#include "FrontendResource.h"
 #include "imgui.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
@@ -20,8 +19,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 /** ************************************************************************
  * This class hold the GUI windows and controls the placement and appearance
@@ -66,10 +64,18 @@ public:
 
     bool DeleteWindow(size_t hash_id);
 
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
+
 private:
     // VARIABLES ------------------------------------------------------
 
     std::vector<std::shared_ptr<AbstractWindow>> windows;
+
+    std::vector<std::string> requested_resources;
 
     // FUNCTIONS ------------------------------------------------------
 
@@ -77,7 +83,4 @@ private:
         ImGuiID initial_module_uid = GUI_INVALID_ID);
 };
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
+} // namespace megamol::gui

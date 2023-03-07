@@ -10,7 +10,7 @@ using namespace megamol;
 /*
  * megamol::moldyn_gl::misc::ParticleInspector::ParticleInspector
  */
-ParticleInspector::ParticleInspector(void)
+ParticleInspector::ParticleInspector()
         : Module()
         , slotParticlesOut("particlesout", "Provides the particles.")
         , slotParticlesIn("particlesin", "Ingests the particles.") {
@@ -33,7 +33,7 @@ ParticleInspector::ParticleInspector(void)
 /*
  * megamol::moldyn_gl::misc::ParticleInspector::~ParticleInspector
  */
-ParticleInspector::~ParticleInspector(void) {
+ParticleInspector::~ParticleInspector() {
     this->Release();
 }
 
@@ -41,7 +41,7 @@ ParticleInspector::~ParticleInspector(void) {
 /*
  * megamol::moldyn_gl::misc::ParticleInspector::create
  */
-bool ParticleInspector::create(void) {
+bool ParticleInspector::create() {
     return true;
 }
 
@@ -97,7 +97,7 @@ bool ParticleInspector::getParticleExtents(core::Call& call) {
 /*
  * megamol::moldyn_gl::misc::ParticleInspector::release
  */
-void ParticleInspector::release(void) {}
+void ParticleInspector::release() {}
 
 
 /*

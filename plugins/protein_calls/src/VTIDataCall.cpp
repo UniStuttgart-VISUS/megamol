@@ -19,11 +19,11 @@ const unsigned int VTIDataCall::CallForGetExtent = 1;
 /*
  * VTIDataCall::VTIDataCall
  */
-VTIDataCall::VTIDataCall(void) : core::AbstractGetData3DCall(), calltime(0.0) {
+VTIDataCall::VTIDataCall() : core::AbstractGetData3DCall(), calltime(0.0) {
     // intentionally empty
 }
 
 /*
  * VTIDataCall::~VTIDataCall
  */
-VTIDataCall::~VTIDataCall(void) {}
+VTIDataCall::~VTIDataCall() {}

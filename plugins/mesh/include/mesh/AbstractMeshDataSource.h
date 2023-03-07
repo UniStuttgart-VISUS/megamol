@@ -6,8 +6,7 @@
  * All rights reserved.
  */
 
-#ifndef ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
-#define ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
+#pragma once
 
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
@@ -15,13 +14,12 @@
 #include "mmcore/Module.h"
 
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class AbstractMeshDataSource : public core::Module {
 public:
     AbstractMeshDataSource();
-    virtual ~AbstractMeshDataSource();
+    ~AbstractMeshDataSource() override;
 
 protected:
     /**
@@ -29,7 +27,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Gets the data from the source.
@@ -52,7 +50,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
     /**
      * Clears all mesh access entries made by this module from the used material collection.
@@ -73,8 +71,4 @@ protected:
     megamol::core::CalleeSlot m_mesh_lhs_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
-
-
-#endif // !ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
+} // namespace megamol::mesh

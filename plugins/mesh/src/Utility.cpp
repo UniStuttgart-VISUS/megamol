@@ -1,8 +1,6 @@
 #include "mesh/Utility.h"
 
-namespace megamol {
-namespace mesh {
-namespace utility {
+namespace megamol::mesh::utility {
 
 std::tuple<VertexPositions, VertexNormals, QuadIndices> tessellateFace(
     glm::vec3 v00, glm::vec3 v10, glm::vec3 v11, glm::vec3 v01, unsigned int u_subdivs, unsigned int v_subdivs) {
@@ -44,6 +42,4 @@ std::tuple<VertexPositions, VertexNormals, QuadIndices> tessellateFace(
         std::move(vertex_positions), std::move(vertex_normals), std::move(quad_indices));
 }
 
-} // namespace utility
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh::utility

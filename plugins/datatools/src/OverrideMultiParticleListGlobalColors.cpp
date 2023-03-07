@@ -11,10 +11,10 @@
 using namespace megamol;
 
 
-datatools::OverrideMultiParticleListGlobalColors::OverrideMultiParticleListGlobalColors(void)
+datatools::OverrideMultiParticleListGlobalColors::OverrideMultiParticleListGlobalColors()
         : AbstractParticleManipulator("outData", "indata") {}
 
-datatools::OverrideMultiParticleListGlobalColors::~OverrideMultiParticleListGlobalColors(void) {
+datatools::OverrideMultiParticleListGlobalColors::~OverrideMultiParticleListGlobalColors() {
     this->Release();
 }
 

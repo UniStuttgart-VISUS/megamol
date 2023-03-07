@@ -101,7 +101,7 @@ static const unsigned char PADDING[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /*
  * vislib::MD5HashProvider::MD5HashProvider
  */
-vislib::MD5HashProvider::MD5HashProvider(void) : HashAlgorithm() {
+vislib::MD5HashProvider::MD5HashProvider() : HashAlgorithm() {
     this->Initialise();
 }
 
@@ -109,7 +109,7 @@ vislib::MD5HashProvider::MD5HashProvider(void) : HashAlgorithm() {
 /*
  * vislib::MD5HashProvider::~MD5HashProvider
  */
-vislib::MD5HashProvider::~MD5HashProvider(void) {
+vislib::MD5HashProvider::~MD5HashProvider() {
     ::SecureZeroMemory(&this->context, sizeof(MD5_CTX));
 }
 
@@ -117,7 +117,7 @@ vislib::MD5HashProvider::~MD5HashProvider(void) {
 /*
  * vislib::MD5HashProvider::Initialise
  */
-void vislib::MD5HashProvider::Initialise(void) {
+void vislib::MD5HashProvider::Initialise() {
     this->context.count[0] = context.count[1] = 0;
 
     /* Load magic initialization constants. */

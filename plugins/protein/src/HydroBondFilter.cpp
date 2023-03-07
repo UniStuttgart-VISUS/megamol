@@ -68,14 +68,14 @@ HydroBondFilter::HydroBondFilter()
 /*
  * HydroBondFilter::~HydroBondFilter
  */
-HydroBondFilter::~HydroBondFilter(void) {
+HydroBondFilter::~HydroBondFilter() {
     this->Release();
 }
 
 /*
  * HydroBondFilter::create
  */
-bool HydroBondFilter::create(void) {
+bool HydroBondFilter::create() {
     return true;
 }
 
@@ -328,4 +328,4 @@ void HydroBondFilter::filterHBonds(MolecularDataCall& mdc) {
 /*
  * HydroBondFilter::release
  */
-void HydroBondFilter::release(void) {}
+void HydroBondFilter::release() {}

@@ -13,8 +13,7 @@
 #include "mpi.h"
 #endif /* MEGAMOL_USE_MPI */
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module merging object-space distributed MultiparticleDataCalls over MPI.
@@ -25,17 +24,17 @@ namespace datatools {
 class MPIParticleCollector : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MPIParticleCollector";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "merges object-space distributed MultiparticleDataCalls over MPI";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
 #ifdef MEGAMOL_USE_MPI
         return true;
 #else
@@ -44,10 +43,10 @@ public:
     }
 
     /** Ctor */
-    MPIParticleCollector(void);
+    MPIParticleCollector();
 
     /** Dtor */
-    virtual ~MPIParticleCollector(void);
+    ~MPIParticleCollector() override;
 
 protected:
     /**
@@ -60,7 +59,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
     bool initMPI();
 
 private:
@@ -79,5 +78,4 @@ private:
     std::vector<uint8_t> allVertexData, allColorData;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

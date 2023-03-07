@@ -40,7 +40,7 @@ using namespace megamol::core::utility::log;
 /*
  * VTILoader::VTILoader
  */
-VTILoader::VTILoader(void)
+VTILoader::VTILoader()
         : AnimDataModule()
         , dataOutSlot("dataOut", "The slot providing the loaded data")
         , filenameSlot("vtiPath", "The path to the VTI data file to be loaded")
@@ -80,7 +80,7 @@ VTILoader::VTILoader(void)
 /*
  * VTILoader::~VTILoader
  */
-VTILoader::~VTILoader(void) {
+VTILoader::~VTILoader() {
     this->Release();
 }
 
@@ -88,7 +88,7 @@ VTILoader::~VTILoader(void) {
 /*
  * VTILoader::create
  */
-bool VTILoader::create(void) {
+bool VTILoader::create() {
     return true;
 }
 
@@ -96,7 +96,7 @@ bool VTILoader::create(void) {
 /*
  * VTILoader::release
  */
-void VTILoader::release(void) {
+void VTILoader::release() {
     // TODO What to do here?
 }
 
@@ -581,7 +581,7 @@ void VTILoader::readDataBinary2Float(char* buffIn, float* buffOut, // TODO Other
 /*
  * VTILoader::constructFrame
  */
-view::AnimDataModule::Frame* VTILoader::constructFrame(void) const {
+view::AnimDataModule::Frame* VTILoader::constructFrame() const {
     Frame* f = new Frame(*const_cast<VTILoader*>(this));
     //    f->SetNumberOfPieces(this->nPieces);
     return f;
@@ -911,7 +911,7 @@ VTILoader::Frame::Frame(megamol::core::view::AnimDataModule& owner) : view::Anim
 /*
  * VTILoader::Frame::~Frame
  */
-VTILoader::Frame::~Frame(void) {
+VTILoader::Frame::~Frame() {
     // Release all data arrays of all pieces
     this->data.Release();
 }

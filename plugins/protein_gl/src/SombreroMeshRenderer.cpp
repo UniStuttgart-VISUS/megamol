@@ -41,7 +41,7 @@ using namespace megamol::core;
 /*
  * SombreroMeshRenderer::SombreroMeshRenderer
  */
-SombreroMeshRenderer::SombreroMeshRenderer(void)
+SombreroMeshRenderer::SombreroMeshRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getData", "The slot to fetch the tri-mesh data")
         , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
@@ -129,7 +129,7 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
 /*
  * SombreroMeshRenderer::~SombreroMeshRenderer
  */
-SombreroMeshRenderer::~SombreroMeshRenderer(void) {
+SombreroMeshRenderer::~SombreroMeshRenderer() {
     this->Release();
 }
 
@@ -137,7 +137,7 @@ SombreroMeshRenderer::~SombreroMeshRenderer(void) {
 /*
  * SombreroMeshRenderer::create
  */
-bool SombreroMeshRenderer::create(void) {
+bool SombreroMeshRenderer::create() {
     // intentionally empty
     return true;
 }
@@ -169,7 +169,7 @@ bool SombreroMeshRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 /*
  * SombreroMeshRenderer::release
  */
-void SombreroMeshRenderer::release(void) {
+void SombreroMeshRenderer::release() {
     // intentionally empty
 }
 

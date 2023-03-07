@@ -115,7 +115,7 @@ vislib::net::IPAddress::IPAddress(const unsigned long address, const bool isHost
 /*
  * vislib::net::IPAddress::~IPAddress
  */
-vislib::net::IPAddress::~IPAddress(void) {}
+vislib::net::IPAddress::~IPAddress() {}
 
 
 /*
@@ -155,7 +155,7 @@ bool vislib::net::IPAddress::Lookup(const char* hostname) {
 /*
  * vislib::net::IPAddress::ToStringA
  */
-vislib::StringA vislib::net::IPAddress::ToStringA(void) const {
+vislib::StringA vislib::net::IPAddress::ToStringA() const {
     StringA retval(::inet_ntoa(this->address));
     return retval;
 }

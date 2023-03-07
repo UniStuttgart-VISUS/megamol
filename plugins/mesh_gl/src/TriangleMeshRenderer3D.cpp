@@ -32,8 +32,7 @@
 
 using megamol::core::utility::log::Log;
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 TriangleMeshRenderer3D::TriangleMeshRenderer3D()
         : triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input")
@@ -289,12 +288,6 @@ void TriangleMeshRenderer3D::updateRenderTaskCollection(mmstd_gl::CallRender3DGL
     this->shader_changed = false;
 }
 
-std::vector<std::string> TriangleMeshRenderer3D::requested_lifetime_resources() {
-    std::vector<std::string> resources = Module::requested_lifetime_resources();
-    resources.emplace_back("OpenGL_Context");
-    return resources;
-}
-
 bool TriangleMeshRenderer3D::get_input_data() {
     auto tmc_ptr = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();
     auto mdc_ptr = this->mesh_data_slot.CallAs<mesh::MeshDataCall>();
@@ -435,5 +428,4 @@ bool TriangleMeshRenderer3D::get_input_extent() {
     return true;
 }
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

@@ -8,18 +8,17 @@
 #include "mmospray/CallOSPRayTransformation.h"
 #include "vislib/IllegalParamException.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 // ################################
 // ###### CallOSPRayTransformation ######
 // ################################
 
-CallOSPRayTransformation::CallOSPRayTransformation(void) : _isDirty(false) {
+CallOSPRayTransformation::CallOSPRayTransformation() : _isDirty(false) {
     // intentionally empty
 }
 
-CallOSPRayTransformation::~CallOSPRayTransformation(void) {
+CallOSPRayTransformation::~CallOSPRayTransformation() {
     //
 }
 
@@ -52,5 +51,4 @@ void CallOSPRayTransformation::setDirty() {
     this->_isDirty = true;
 }
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

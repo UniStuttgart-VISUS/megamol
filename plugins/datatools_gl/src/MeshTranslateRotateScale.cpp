@@ -16,7 +16,7 @@ namespace megamol::datatools_gl {
 /*
  * MeshTranslateRotateScale::MeshTranslateRotateScale
  */
-MeshTranslateRotateScale::MeshTranslateRotateScale(void)
+MeshTranslateRotateScale::MeshTranslateRotateScale()
         : datatools::AbstractMeshManipulator("outData", "indata")
         , translateSlot("translation", "Translates the particles in x, y, z direction")
         , quaternionSlot("quaternion", "Rotates the particles around x, y, z axes")
@@ -37,7 +37,7 @@ MeshTranslateRotateScale::MeshTranslateRotateScale(void)
 /*
  * MeshTranslateRotateScale::~MeshTranslateRotateScale
  */
-MeshTranslateRotateScale::~MeshTranslateRotateScale(void) {
+MeshTranslateRotateScale::~MeshTranslateRotateScale() {
     this->Release();
     delete[] finalData;
     delete[] mesh;

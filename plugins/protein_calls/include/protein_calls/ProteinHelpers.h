@@ -1,8 +1,4 @@
-#ifndef MMPROTEINPLUGIN_PROTEINHELPERS_H_INCLUDED
-#define MMPROTEINPLUGIN_PROTEINHELPERS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "glm/glm.hpp"
 #include "protein_calls/BindingSiteCall.h"
@@ -11,8 +7,7 @@
 #include <algorithm>
 #include <string>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Computes and returns the approximate positions of the binding site of a molecule.
@@ -416,7 +411,7 @@ inline AminoAcidCategory GetAminoAcidPropertiesByResName(std::string resName) {
  *
  * @return vec2 where x stores the min value and y the max value
  */
-inline glm::vec2 GetHydrophobicityBoundsMonera(void) {
+inline glm::vec2 GetHydrophobicityBoundsMonera() {
     return glm::vec2(-100.0, 100.0);
 }
 
@@ -425,7 +420,7 @@ inline glm::vec2 GetHydrophobicityBoundsMonera(void) {
  *
  * @return vec2 where x stores the min value and y the max value
  */
-inline glm::vec2 GetHydrophobicityBoundsKyte(void) {
+inline glm::vec2 GetHydrophobicityBoundsKyte() {
     return glm::vec2(-4.5, 4.5);
 }
 
@@ -434,7 +429,7 @@ inline glm::vec2 GetHydrophobicityBoundsKyte(void) {
  *
  * @return vec2 where x stores the min value and y the max value
  */
-inline glm::vec2 GetHydrophobicityBounds(void) {
+inline glm::vec2 GetHydrophobicityBounds() {
     return GetHydrophobicityBoundsKyte();
 }
 
@@ -448,7 +443,4 @@ inline float GetHydrophibicityByResName(std::string resName) {
     return GetHydrophobicityByResNameKyte(resName);
 }
 
-} // namespace protein_calls
-} /* end namespace megamol */
-
-#endif
+} // namespace megamol::protein_calls

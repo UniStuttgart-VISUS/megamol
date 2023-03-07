@@ -7,18 +7,13 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALLS_RESIDUE_SELECTIONCALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALLS_RESIDUE_SELECTIONCALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/Array.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Base class for graph calls and data interfaces.
@@ -46,7 +41,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ResidueSelectionCall";
     }
 
@@ -55,7 +50,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get selection Residues";
     }
 
@@ -69,7 +64,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -90,7 +85,7 @@ public:
         return "";
     }
 
-    inline vislib::Array<Residue>* GetSelectionPointer(void) const {
+    inline vislib::Array<Residue>* GetSelectionPointer() const {
         return this->selection;
     }
 
@@ -98,8 +93,8 @@ public:
         this->selection = selection;
     }
 
-    ResidueSelectionCall(void);
-    virtual ~ResidueSelectionCall(void);
+    ResidueSelectionCall();
+    ~ResidueSelectionCall() override;
 
 private:
     vislib::Array<Residue>* selection;
@@ -108,7 +103,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<ResidueSelectionCall> ResidueSelectionCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_PROTEIN_CALLS_RESIDUE_SELECTIONCALL_H_INCLUDED */
+} // namespace megamol::protein_calls

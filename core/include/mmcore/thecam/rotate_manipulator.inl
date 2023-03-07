@@ -9,7 +9,7 @@ megamol::core::thecam::rotate_manipulator<T>::rotate_manipulator(const world_typ
  * megamol::core::thecam::rotate_manipulator<T>::~rotate_manipulator
  */
 template<class T>
-megamol::core::thecam::rotate_manipulator<T>::~rotate_manipulator(void) {}
+megamol::core::thecam::rotate_manipulator<T>::~rotate_manipulator() {}
 
 /*
  * megamol::core::thecam::rotate_manipulator<T>::pitch

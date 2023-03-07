@@ -35,8 +35,12 @@ using megamol::frontend_resources::MouseButtonAction;
  */
 class AbstractView : public AbstractViewInterface {
 
-
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::ScriptPaths>();
+    }
+
     /**
      * Interfaces class for hooking into view processes
      */
@@ -88,18 +92,9 @@ public:
      *
      * @return The default time
      */
-    virtual float DefaultTime(double instTime) const {
+    float DefaultTime(double instTime) const override {
         return this->_timeCtrl.Time(instTime);
     }
-
-    /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    virtual bool IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const;
 
     /**
      * Set the camera for this view externally
@@ -107,12 +102,12 @@ public:
      * @param camera A fully intialized camera to use for rendering the view
      * @param isMutable Tell the view whether it can modify, i.e. control, the camera or not
      */
-    virtual void SetCamera(Camera camera, bool isMutable = true);
+    void SetCamera(Camera camera, bool isMutable = true) override;
 
     /**
      * Return the current camera
      */
-    virtual Camera GetCamera() const;
+    Camera GetCamera() const override;
 
     /**
      * ...
@@ -131,7 +126,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) = 0;
+    void Resize(unsigned int width, unsigned int height) override = 0;
 
     /**
      * Registers a hook
@@ -208,12 +203,6 @@ public:
     bool OnResetView(param::ParamSlot& p);
 
 protected:
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto req = Module::requested_lifetime_resources();
-        req.push_back("LuaScriptPaths");
-        return req;
-    }
-
     /** Typedef alias */
     typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
 

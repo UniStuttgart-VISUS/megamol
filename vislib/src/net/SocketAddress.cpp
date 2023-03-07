@@ -82,7 +82,7 @@ vislib::net::SocketAddress::SocketAddress(const struct sockaddr_in& address) {
 /*
  * vislib::net::SocketAddress::SocketAddress
  */
-vislib::net::SocketAddress::SocketAddress(void) {
+vislib::net::SocketAddress::SocketAddress() {
     ASSERT(sizeof(this->genericAddress) == sizeof(this->inetAddress));
     ::memset(&this->genericAddress, 0, sizeof(this->genericAddress));
 }
@@ -111,7 +111,7 @@ vislib::net::SocketAddress::SocketAddress(const SocketAddress& address, const un
 /*
  * vislib::net::SocketAddress::~SocketAddress
  */
-vislib::net::SocketAddress::~SocketAddress(void) {}
+vislib::net::SocketAddress::~SocketAddress() {}
 
 
 /*
@@ -125,7 +125,7 @@ void vislib::net::SocketAddress::SetIPAddress(const IPAddress& ipAddress) {
 /*
  * vislib::net::SocketAddress::ToStringA
  */
-vislib::StringA vislib::net::SocketAddress::ToStringA(void) const {
+vislib::StringA vislib::net::SocketAddress::ToStringA() const {
     StringA retval;
     retval.Format("%s:%u", static_cast<const char*>(this->GetIPAddress().ToStringA()), this->GetPort());
     return retval;
@@ -135,7 +135,7 @@ vislib::StringA vislib::net::SocketAddress::ToStringA(void) const {
 /*
  * vislib::net::SocketAddress::ToStringW
  */
-vislib::StringW vislib::net::SocketAddress::ToStringW(void) const {
+vislib::StringW vislib::net::SocketAddress::ToStringW() const {
     StringW retval;
     // TODO: might fail on linux!!
     retval.Format(L"%s:%u", static_cast<const wchar_t*>(this->GetIPAddress().ToStringW()), this->GetPort());

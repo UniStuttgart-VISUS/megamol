@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * LinesDataCall::Lines::Lines
  */
-megamol::geocalls::LinesDataCall::Lines::Lines(void)
+megamol::geocalls::LinesDataCall::Lines::Lines()
         : colDT(CDT_NONE)
         , count(0)
         , globCol(192, 192, 192, 255)
@@ -32,7 +32,7 @@ megamol::geocalls::LinesDataCall::Lines::Lines(void)
 /*
  * LinesDataCall::Lines::~Lines
  */
-megamol::geocalls::LinesDataCall::Lines::~Lines(void) {
+megamol::geocalls::LinesDataCall::Lines::~Lines() {
     this->count = 0;            // Paranoia
     this->col.dataByte = NULL;  // DO NOT DELETE
     this->idx.dataByte = NULL;  // DO NOT DELETE
@@ -45,7 +45,7 @@ megamol::geocalls::LinesDataCall::Lines::~Lines(void) {
 /*
  * LinesDataCall::LinesDataCall
  */
-megamol::geocalls::LinesDataCall::LinesDataCall(void) : AbstractGetData3DCall(), count(0), lines(NULL), time(0.0f) {
+megamol::geocalls::LinesDataCall::LinesDataCall() : AbstractGetData3DCall(), count(0), lines(NULL), time(0.0f) {
     // Intentionally empty
 }
 
@@ -53,7 +53,7 @@ megamol::geocalls::LinesDataCall::LinesDataCall(void) : AbstractGetData3DCall(),
 /*
  * LinesDataCall::~LinesDataCall
  */
-megamol::geocalls::LinesDataCall::~LinesDataCall(void) {
+megamol::geocalls::LinesDataCall::~LinesDataCall() {
     this->Unlock();
     this->count = 0;
     this->lines = NULL;

@@ -10,6 +10,7 @@
 #include "gui_utils.h"
 #include "imgui_stdlib.h"
 #include "mmcore/utility/FileUtils.h"
+#include "mmcore/utility/String.h"
 #include "widgets/ButtonWidgets.h"
 
 
@@ -196,16 +197,16 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                     // Sort path and file names case insensitive alphabetically ascending
                     std::sort(paths.begin(), paths.end(), [&](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
-                        gui_utils::StringToUpperCase(a_str);
+                        core::utility::string::ToUpperAscii(a_str);
                         std::string b_str = b.first.filename().generic_u8string();
-                        gui_utils::StringToUpperCase(b_str);
+                        core::utility::string::ToUpperAscii(b_str);
                         return (a_str < b_str);
                     });
                     std::sort(files.begin(), files.end(), [&](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
-                        gui_utils::StringToUpperCase(a_str);
+                        core::utility::string::ToUpperAscii(a_str);
                         std::string b_str = b.first.filename().generic_u8string();
-                        gui_utils::StringToUpperCase(b_str);
+                        core::utility::string::ToUpperAscii(b_str);
                         return (a_str < b_str);
                     });
 
@@ -483,7 +484,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
             FilePathParam::Extensions_t tmp_exts;
             for (auto& ext : extensions) {
                 tmp_exts.emplace_back("." + ext);
-                gui_utils::StringToLowerCase(tmp_exts.back());
+                core::utility::string::ToLowerAscii(tmp_exts.back());
                 log_exts += "'" + tmp_exts.back() + "' ";
             }
             if ((mode == DIALOGMODE_SAVE) && tmp_filepath.extension().empty()) {

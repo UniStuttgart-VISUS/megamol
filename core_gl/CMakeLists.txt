@@ -10,7 +10,6 @@ if(BUILD_CORE)
   # Add externals.
   find_package(glowl CONFIG REQUIRED)
   find_package(msf CONFIG REQUIRED)
-  target_compile_definitions(msf::msf_static INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")

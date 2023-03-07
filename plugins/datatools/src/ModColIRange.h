@@ -12,26 +12,25 @@
 #include "vislib/math/Vector.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class ModColIRange : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ModIColRange";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Mapps IColRange values periodically into the specified range.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     ModColIRange();
-    virtual ~ModColIRange();
+    ~ModColIRange() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::param::ParamSlot rangeSlot;
@@ -43,5 +42,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

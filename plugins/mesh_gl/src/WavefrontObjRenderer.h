@@ -4,25 +4,23 @@
  * All rights reserved.
  */
 
-#ifndef WAVEFRONT_OBJ_RENDERER_H_INCLUDED
-#define WAVEFRONT_OBJ_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mesh_gl/BaseMeshRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class WavefrontObjRenderer : public BaseMeshRenderer {
 public:
     WavefrontObjRenderer();
-    ~WavefrontObjRenderer();
+    ~WavefrontObjRenderer() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "WavefrontObjRenderer";
     }
     /**
@@ -30,7 +28,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for wavefront obj files using shaders for forward rendering.";
     }
 
@@ -43,7 +41,4 @@ private:
     megamol::core::CallerSlot lights_slot_;
 };
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !WAVEFRONT_OBJ_RENDERER_H_INCLUDED
+} // namespace megamol::mesh_gl
