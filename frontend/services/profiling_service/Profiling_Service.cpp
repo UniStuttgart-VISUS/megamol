@@ -20,12 +20,20 @@ bool Profiling_Service::init(void* configPtr) {
     profiling_logging.active = conf->autostart_profiling;
     include_graph_events = conf->include_graph_events;
 
+    //const auto unit_name = "ns";
+    //using timer_ratio = std::nano;
+    //const auto unit_name = "us";
+    //using timer_ratio = std::micro;
+    const auto unit_name = "ms";
+    using timer_ratio = std::milli;
+
     if (conf != nullptr && !conf->log_file.empty()) {
         if (!log_file.is_open()) {
             log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
         }
         // header
-        log_file << "frame;type;parent;name;comment;frame_index;api;start (ms);end (ms);duration (ms)" << std::endl;
+        log_file << "frame;type;parent;name;comment;frame_index;api;start (" << unit_name << ");end (" << unit_name
+                 << ");duration (" << unit_name << ")" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
             if (!profiling_logging.active) {
                 return;
@@ -43,10 +51,10 @@ bool Profiling_Service::init(void* configPtr) {
                 auto parent = _perf_man.lookup_parent(e.handle);
                 auto comment = conf.comment;
 
-                const auto the_start = std::chrono::duration<double, std::milli>(e.start.time_since_epoch()).count();
-                const auto the_end = std::chrono::duration<double, std::milli>(e.end.time_since_epoch()).count();
+                const auto the_start = std::chrono::duration<double, timer_ratio>(e.start.time_since_epoch()).count();
+                const auto the_end = std::chrono::duration<double, timer_ratio>(e.end.time_since_epoch()).count();
                 const auto the_duration =
-                    std::chrono::duration<double, std::milli>(e.duration.time_since_epoch()).count();
+                    std::chrono::duration<double, timer_ratio>(e.duration.time_since_epoch()).count();
 
                 log_file << frame << ";" << frontend_resources::PerformanceManager::parent_type_string(e.parent_type)
                          << ";" << parent << ";" << name << ";" << comment << ";" << e.frame_index << ";"
