@@ -2,12 +2,35 @@
 set -e
 set -o pipefail
 
+# Command line parameter
+_fix=false
+_fast=false
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -f|--fix) _fix=true ;;
+    -s|--fast) _fast=true ;;
+    *) echo "Unknown parameter: $1"; exit 1 ;;
+  esac
+  shift
+done
+
 EXIT_CODE=0
 
-# Find all files, ignore .git dirs.
-file_list=$(find . -type d -name '.git' -prune -o -type f -print | sort)
+# Fast mode, only check changed files
+if [[ "$_fast" == true ]]; then
+  # Git diff including staged + untracked files
+  file_list=$(git diff --name-only HEAD ; git ls-files --exclude-standard --others .)
+else
+  # Find all files, ignore .git dirs.
+  file_list=$(find . -type d -name '.git' -prune -o -type f -print | sort)
+fi
 
 while read -r file; do
+  # Skip empty filename
+  if [[ -z "$file" ]]; then
+    continue
+  fi
+
   # ignore files ignored by git
   if git check-ignore -q "$file"; then
     continue
@@ -50,7 +73,7 @@ while read -r file; do
 
   # ClangFormat
   if [[ "$is_cpp" == true ]]; then
-    if [[ $1 == "fix" ]]; then
+    if [[ "$_fix" == true ]]; then
       clang-format-14 -i "$file"
     else
       # Workaround "set -e" and store exit code
@@ -69,7 +92,7 @@ while read -r file; do
   # Check if file is UTF-8 (or ASCII)
   encoding=$(file -b --mime-encoding "$file")
   if ! [[ $encoding == "us-ascii" || $encoding == "utf-8" ]]; then
-    if [[ $1 == "fix" ]]; then
+    if [[ "$_fix" == true ]]; then
       tmp_file=$(mktemp)
       iconv -f "$encoding" -t utf-8 -o "$tmp_file" "$file"
       mv -f "$tmp_file" "$file"
@@ -82,7 +105,7 @@ while read -r file; do
   # Check if file contains CRLF line endings
   fileinfo=$(file -k "$file")
   if [[ $fileinfo == *"CRLF"* ]]; then
-    if [[ $1 == "fix" ]]; then
+    if [[ "$_fix" == true ]]; then
       sed -i 's/\r$//' "$file"
     else
       EXIT_CODE=1
@@ -92,7 +115,7 @@ while read -r file; do
 
   # Check if file starts with BOM
   if [[ $fileinfo == *"BOM"* ]]; then
-    if [[ $1 == "fix" ]]; then
+    if [[ "$_fix" == true ]]; then
       sed -i '1s/^\xEF\xBB\xBF//' "$file"
     else
       EXIT_CODE=1
@@ -102,7 +125,7 @@ while read -r file; do
 
   # Check if file ends with newline
   if [[ -n "$(tail -c 1 "$file")" ]]; then
-    if [[ $1 == "fix" ]]; then
+    if [[ "$_fix" == true ]]; then
       sed -i -e '$a\' "$file"
     else
       EXIT_CODE=1
@@ -112,7 +135,7 @@ while read -r file; do
 
   # Check if file contains tabs
   if grep -qP "\t" "$file"; then
-    if [[ $1 == "fix" ]]; then
+    if [[ "$_fix" == true ]]; then
       tmp_file=$(mktemp)
       expand -t 4 "$file" > "$tmp_file"
       mv -f "$tmp_file" "$file"
