@@ -430,7 +430,12 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool resetResources();
+    bool resetOpenGLResources();
+
+    /**
+     * Reset the state of all conditional parameters.
+     */
+    void resetConditionalParameters();
 
     /**
      * Render spheres in different render modes.
