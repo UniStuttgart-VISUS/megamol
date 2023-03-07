@@ -90,6 +90,7 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.open_popup_screenshot = false;
     this->gui_state.open_popup_font = false;
     this->gui_state.menu_visible = true;
+    this->gui_state.show_imgui_metrics = false;
     this->gui_state.graph_fonts_reserved = 0;
     this->gui_state.shutdown_triggered = false;
     this->gui_state.screenshot_triggered = false;
@@ -1027,6 +1028,11 @@ void GUIManager::draw_menu() {
 
     // HELP -------------------------------------------------------------------
     if (ImGui::BeginMenu("Help")) {
+        if (ImGui::BeginMenu("Debug")) {
+            ImGui::MenuItem("Dear ImGui Metrics", nullptr, &this->gui_state.show_imgui_metrics);
+            ImGui::EndMenu();
+        }
+        ImGui::Separator();
         if (ImGui::MenuItem("About")) {
             this->gui_state.open_popup_about = true;
         }
@@ -1286,6 +1292,11 @@ void megamol::gui::GUIManager::draw_popups() {
             this->gui_state.open_popup_screenshot, {"png"},
             megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
+    }
+
+    // ImGui metrics
+    if (this->gui_state.show_imgui_metrics) {
+        ImGui::ShowMetricsWindow(&this->gui_state.show_imgui_metrics);
     }
 }
 

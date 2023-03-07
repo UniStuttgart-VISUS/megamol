@@ -361,6 +361,7 @@ private:
         bool open_popup_screenshot;                    // Flag for opening screenshot file pop-up
         bool open_popup_font;                          // Flag for opening font pop-up
         bool menu_visible;                             // Flag indicating menu state
+        bool show_imgui_metrics;                       // Flag indicating ImGui metrics window
         unsigned int graph_fonts_reserved;             // Number of fonts reserved for the configurator graph canvas
         bool shutdown_triggered;                       // Flag indicating user triggered shutdown
         bool screenshot_triggered;                     // Trigger and file name for screenshot
