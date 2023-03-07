@@ -7,6 +7,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FilePathParam.h"
 
 #include "../filter/FlowTimeLabelFilter.h"
 #include "imageseries/util/ImageUtils.h"
@@ -20,19 +21,35 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         : getDataCallee("getData", "Returns data from the image series.")
         , getGraphCallee("getGraph", "Returns the constructed graph from the image series.")
         , getTimeMapCaller("requestTimeMapImageSeries", "Requests timestamp data from an image series.")
-        , outputImageParam("Image output", "Select output image.")
+
         , inflowAreaParam("Inflow area", "Set border where inflow is expected.")
         , inflowMarginParam("Inflow margin", "Margin from the sides of the image for inflow detection.")
-        , minAreaParam("Minimum area", "Minimum area, used for combining small areas.")
         , velocityMethodParam("Velocity calculation", "Method used for calculating flow velocity.")
-        , isolatedParam("Remove isolated nodes", "Remove isolated nodes, which result from noise.")
-        , falseSourcesParam("Remove unexpected sources", "Remove false sources, which result from noise, as well as connected nodes.")
-        , falseSinksParam("Remove false sinks", "Remove false sinks, where neighbors have a higher time value.")
-        , resolveDiamondsParam("Resolve diamond patterns", "Resolve diamond patterns, as these usually result from small local velocities.")
-        , combineTrivialParam("Combine trivial nodes", "Combine 1-to-1 connected nodes, as these do not provide any valuable information.")
-        , combineTinyParam("Combine small areas", "Combine small areas, as these usually result from small local velocities.")
-        , removeTrivialParam("Remove trivial nodes", "Remove 1-to-1 connected nodes, as these do not provide any valuable information.")
-        , keepBreakthroughNodesParam("Keep breakthrough nodes", "Keep breakthrough nodes, although they would be removed using other fixes.")
+        , outputImageParam("Image output", "Select output image.")
+
+        , isolatedParam("fixes::Remove isolated nodes", "Remove isolated nodes, which result from noise.")
+        , falseSourcesParam("fixes::Remove unexpected sources",
+              "Remove false sources, which result from noise, as well as connected nodes.")
+        , falseSinksParam("fixes::Remove false sinks", "Remove false sinks, where neighbors have a higher time value.")
+
+        , combineTrivialParam("simplification::Combine trivial nodes",
+              "Combine 1-to-1 connected nodes, as these do not provide any valuable information.")
+        , removeTrivialParam("simplification::Remove trivial nodes",
+              "Remove 1-to-1 connected nodes, as these do not provide any valuable information.")
+        , resolveDiamondsParam("simplification::Resolve diamond patterns",
+              "Resolve diamond patterns, as these usually result from small local velocities.")
+        , combineTinyParam("simplification::Combine small areas",
+              "Combine small areas, as these usually result from small local velocities.")
+        , minAreaParam("simplification::Minimum area", "Minimum area, used for combining small areas.")
+        , keepBreakthroughNodesParam("simplification::Keep breakthrough nodes",
+              "Keep breakthrough nodes, although they would be removed using other fixes.")
+
+        , outputGraphsParam("output::Write graphs to file", "Option to write the (intermediate) graphs to file.")
+        , outputLabelImagesParam(
+              "output::Write label images to file", "Option to write the (intermediate) label images to file.")
+        , outputTimeImagesParam("output::Write time image to file", "Option to write the input time image to file.")
+        , outputPathParam("output::Path", "Path where files for above options are written.")
+
         , imageCache([](const AsyncImageData2D<filter::FlowTimeLabelFilter::Output>& imageData) {
             return imageData.getByteSize();
         }) {
@@ -51,13 +68,7 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         GraphData2DCall::FunctionName(GraphData2DCall::CallGetData), &ImageSeriesFlowLabeler::getDataCallback);
     MakeSlotAvailable(&getGraphCallee);
 
-    outputImageParam << new core::param::EnumParam(0);
-    outputImageParam.Param<core::param::EnumParam>()->SetTypePair(0, "After graph simplification");
-    outputImageParam.Param<core::param::EnumParam>()->SetTypePair(1, "Original with invalid labels");
-    outputImageParam.Param<core::param::EnumParam>()->SetTypePair(2, "Original labels");
-    outputImageParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
-    MakeSlotAvailable(&outputImageParam);
-
+    // General parameters
     inflowAreaParam << new core::param::EnumParam(0);
     inflowAreaParam.Param<core::param::EnumParam>()->SetTypePair(0, "left");
     inflowAreaParam.Param<core::param::EnumParam>()->SetTypePair(1, "bottom");
@@ -71,17 +82,20 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     inflowMarginParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&inflowMarginParam);
 
-    minAreaParam << new core::param::IntParam(10, 1, 1000);
-    minAreaParam.Parameter()->SetGUIPresentation(Presentation::Slider);
-    minAreaParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
-    MakeSlotAvailable(&minAreaParam);
-
     velocityMethodParam << new core::param::EnumParam(0);
     velocityMethodParam.Param<core::param::EnumParam>()->SetTypePair(0, "Centers of mass");
     velocityMethodParam.Param<core::param::EnumParam>()->SetTypePair(1, "Hausdorff distance");
     velocityMethodParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&velocityMethodParam);
 
+    outputImageParam << new core::param::EnumParam(0);
+    outputImageParam.Param<core::param::EnumParam>()->SetTypePair(0, "After graph simplification");
+    outputImageParam.Param<core::param::EnumParam>()->SetTypePair(1, "Original with invalid labels");
+    outputImageParam.Param<core::param::EnumParam>()->SetTypePair(2, "Original labels");
+    outputImageParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&outputImageParam);
+
+    // Parameters for fixes
     isolatedParam << new core::param::BoolParam(true);
     isolatedParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&isolatedParam);
@@ -94,10 +108,7 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     falseSinksParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&falseSinksParam);
 
-    combineTinyParam << new core::param::BoolParam(false);
-    combineTinyParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
-    MakeSlotAvailable(&combineTinyParam);
-
+    // Parameters for simplifications
     combineTrivialParam << new core::param::BoolParam(false);
     combineTrivialParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&combineTrivialParam);
@@ -110,9 +121,35 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     resolveDiamondsParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&resolveDiamondsParam);
 
+    combineTinyParam << new core::param::BoolParam(false);
+    combineTinyParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&combineTinyParam);
+
+    minAreaParam << new core::param::IntParam(10, 1, 1000);
+    minAreaParam.Parameter()->SetGUIPresentation(Presentation::Slider);
+    minAreaParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&minAreaParam);
+
     keepBreakthroughNodesParam << new core::param::BoolParam(true);
     keepBreakthroughNodesParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&keepBreakthroughNodesParam);
+
+    // Parameters for output
+    outputGraphsParam << new core::param::BoolParam(false);
+    outputGraphsParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&outputGraphsParam);
+
+    outputLabelImagesParam << new core::param::BoolParam(false);
+    outputLabelImagesParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&outputLabelImagesParam);
+
+    outputTimeImagesParam << new core::param::BoolParam(false);
+    outputTimeImagesParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&outputTimeImagesParam);
+
+    outputPathParam << new core::param::FilePathParam("", core::param::FilePathParam::Flag_Directory_ToBeCreated);
+    outputPathParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&outputPathParam);
 
     // Set default image cache size to 512 MB
     imageCache.setMaximumSize(512 * 1024 * 1024);
@@ -162,6 +199,11 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
                     (combineTinyParam.Param<bool_pt>()->Value() ? fixes_t::combine_tiny : fixes_t::nope) |
                     (removeTrivialParam.Param<bool_pt>()->Value() ? fixes_t::remove_trivial : fixes_t::nope) |
                     (keepBreakthroughNodesParam.Param<bool_pt>()->Value() ? fixes_t::keep_breakthrough_nodes : fixes_t::nope);
+
+                filterInput.outputGraphs = outputGraphsParam.Param<bool_pt>()->Value();
+                filterInput.outputLabelImages = outputLabelImagesParam.Param<bool_pt>()->Value();
+                filterInput.outputTimeImages = outputTimeImagesParam.Param<bool_pt>()->Value();
+                filterInput.outputPath = outputPathParam.Param<core::param::FilePathParam>()->Value();
 
                 auto output = imageCache.findOrCreate(
                     timeMap.getHash(), [=](typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash) {

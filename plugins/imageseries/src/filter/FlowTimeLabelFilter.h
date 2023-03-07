@@ -6,7 +6,10 @@
 #include "imageseries/graph/GraphData2DCall.h"
 #include "imageseries/util/ImageUtils.h"
 
+#include <filesystem>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace megamol::ImageSeries::filter {
 
@@ -51,7 +54,7 @@ public:
         // Timestamp map within which to search for connected blobs.
         AsyncImagePtr timeMap;
 
-        // Select output image
+        // Select output image for fluid-fluid and fluid-solid interface images
         enum class image_t : int { simplified, invalid, original } outputImage;
 
         // Inflow area
@@ -76,6 +79,12 @@ public:
             combine_tiny = 64,
             remove_trivial = 128
         } fixes;
+
+        // Output path for graphs and resulting label images
+        bool outputGraphs = false;
+        bool outputLabelImages = false;
+        bool outputTimeImages = false;
+        std::filesystem::path outputPath;
     };
 
     FlowTimeLabelFilter(Input input);

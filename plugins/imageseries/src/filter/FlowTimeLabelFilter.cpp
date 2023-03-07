@@ -11,6 +11,7 @@
 
 #include <array>
 #include <deque>
+#include <filesystem>
 #include <iostream>
 #include <limits>
 #include <list>
@@ -50,6 +51,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     Index width = result->Width();
     Index height = result->Height();
     Index size = width * height;
+
+    std::vector<Label> imageOrig, imageFixed, imageSimplified;
 
     // Create interface images
     const enum class interface_t : Timestamp {
@@ -196,6 +199,10 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             node.getEdgeCountOut());
     };
 
+    // Save image content for file dump
+    imageOrig.resize(size);
+    std::memcpy(imageOrig.data(), dataOut, size * sizeof(Label));
+
     // Calculate quantities for each flow front
     for (auto& node_info : nodeGraph->getNodes()) {
         auto& node = node_info.second;
@@ -259,6 +266,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             }
         }
     }
+
+    auto originalGraph = graph::GraphData2D(*nodeGraph);
 
     // Set nodes to be invalid if they meet specific criteria
     for (auto& node_info : nodeGraph->getNodes()) {
@@ -324,6 +333,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         node.valid = !invalid;
     }
 
+    auto fixedGraph = graph::GraphData2D(*nodeGraph);
+
     // Mark pixels of invalid nodes as invalid
     if (input.outputImage == Input::image_t::invalid || input.outputImage == Input::image_t::simplified) {
         for (const auto& node_info : nodeGraph->getNodes()) {
@@ -336,6 +347,10 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             }
         }
     }
+
+    // Save image content for file dump
+    imageFixed.resize(size);
+    std::memcpy(imageFixed.data(), dataOut, size * sizeof(Label));
 
     // Remove non-valid nodes
     for (const auto& node_info : nodeGraph->getNodes()) {
@@ -478,6 +493,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         removeTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
     }
 
+    auto simplifiedGraph = graph::GraphData2D(*nodeGraph);
+
     // Update pixels to match the resulting simplified graph
     if (input.outputImage == Input::image_t::simplified) {
         for (const auto& node_info : nodeGraph->getNodes()) {
@@ -489,44 +506,116 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         }
     }
 
-    // Export to Lua file
-    graph::util::LuaExportMeta luaExportMeta;
-    luaExportMeta.path = input.timeMap->getMetadata().filename;
-    luaExportMeta.minRange = 0.0f;
-    luaExportMeta.maxRange = 1.0f;
-    luaExportMeta.imgW = input.timeMap->getMetadata().width;
-    luaExportMeta.imgH = input.timeMap->getMetadata().height;
-    luaExportMeta.startTime = startTime;
-    luaExportMeta.breakthroughTime = breakthroughTime;
-    luaExportMeta.endTime = endTime;
+    // Save image content for file dump
+    imageSimplified.resize(size);
+    std::memcpy(imageSimplified.data(), dataOut, size * sizeof(Label));
 
-    graph::util::exportToLua(*nodeGraph, "temp/CurrentGraph.lua", luaExportMeta);
+    // Create output directory for file dumps
+    if (!input.outputPath.empty() && !std::filesystem::is_directory(input.outputPath)) {
+        std::filesystem::create_directories(input.outputPath);
+    }
 
-    // Output interface image to hard disk
-    if (interface_output != interface_t::none) {
-        std::stringstream value;
-        value << "_" << static_cast<Timestamp>(interface_output);
-
-        const std::string path = "T:\\temp\\adrian\\interface";
-
-        std::stringstream filenameFluid;
-        filenameFluid << path << "_fluid" << (interface_output == interface_t::full ? "" : value.str().c_str())
-                      << ".png";
-
-        std::stringstream filenameSolid;
-        filenameSolid << path << "_solid" << (interface_output == interface_t::full ? "" : value.str().c_str())
-                      << ".png";
-
-        std::stringstream filename;
-        filename << path << (interface_output == interface_t::full ? "" : value.str().c_str()) << ".png";
-
+    if (std::filesystem::is_directory(input.outputPath)) {
         sg::graphics::PngBitmapCodec png_codec;
-        png_codec.Image() = interfaceFluidImage.get();
-        png_codec.Save(filenameFluid.str().c_str());
-        png_codec.Image() = interfaceSolidImage.get();
-        png_codec.Save(filenameSolid.str().c_str());
-        png_codec.Image() = interfaceImage.get();
-        png_codec.Save(filename.str().c_str());
+
+        // Export to Lua file
+        if (input.outputGraphs) {
+            graph::util::LuaExportMeta luaExportMeta;
+            luaExportMeta.path = input.timeMap->getMetadata().filename;
+            luaExportMeta.minRange = 0.0f;
+            luaExportMeta.maxRange = 1.0f;
+            luaExportMeta.imgW = input.timeMap->getMetadata().width;
+            luaExportMeta.imgH = input.timeMap->getMetadata().height;
+            luaExportMeta.startTime = startTime;
+            luaExportMeta.breakthroughTime = breakthroughTime;
+            luaExportMeta.endTime = endTime;
+
+            graph::util::exportToLua(
+                originalGraph, (input.outputPath / "graph_0_original.lua").string(), luaExportMeta);
+            graph::util::exportToLua(fixedGraph, (input.outputPath / "graph_1_fixed.lua").string(), luaExportMeta);
+            graph::util::exportToLua(
+                simplifiedGraph, (input.outputPath / "graph_2_simplified.lua").string(), luaExportMeta);
+        }
+
+        // Output label images to hard disk
+        if (input.outputLabelImages) {
+            if (!imageOrig.empty()) {
+                auto image =
+                    std::make_shared<Image>(width, height, 1, Image::ChannelType::CHANNELTYPE_WORD, imageOrig.data());
+                image->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
+
+                png_codec.Image() = image.get();
+                png_codec.Save((input.outputPath / "label_0_original.png").string().c_str());
+            }
+
+            if (!imageFixed.empty()) {
+                auto image =
+                    std::make_shared<Image>(width, height, 1, Image::ChannelType::CHANNELTYPE_WORD, imageFixed.data());
+                image->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
+
+                png_codec.Image() = image.get();
+                png_codec.Save((input.outputPath / "label_1_fixed.png").string().c_str());
+            }
+
+            if (!imageSimplified.empty()) {
+                auto image = std::make_shared<Image>(
+                    width, height, 1, Image::ChannelType::CHANNELTYPE_WORD, imageSimplified.data());
+                image->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
+
+                png_codec.Image() = image.get();
+                png_codec.Save((input.outputPath / "label_2_simplified.png").string().c_str());
+            }
+        }
+
+        // Output time images to hard disk
+        if (input.outputTimeImages) {
+            const auto basePath = input.outputPath / "time";
+
+            auto filename(basePath);
+            filename += ".png";
+
+            auto timeImage = std::make_shared<Image>(*image);
+            timeImage->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
+
+            auto* timeOut = timeImage->PeekDataAs<Timestamp>();
+
+            for (std::size_t i = 0; i < size; ++i) {
+                timeOut[i] = (static_cast<float>(timeOut[i] - startTime) / (endTime - startTime)) *
+                             std::numeric_limits<Timestamp>::max();
+            }
+
+            png_codec.Image() = timeImage.get();
+            png_codec.Save(filename.c_str());
+        }
+
+        // Output interface image to hard disk
+        if (interface_output != interface_t::none) {
+            std::string value;
+            if (interface_output != interface_t::full) {
+                std::stringstream valueStream;
+                valueStream << "_" << static_cast<Timestamp>(interface_output);
+
+                value += valueStream.str();
+            }
+
+            const auto basePath = input.outputPath / "interface";
+
+            auto filenameFluid(basePath);
+            filenameFluid += std::string("_fluid") + value + ".png";
+
+            auto filenameSolid(basePath);
+            filenameSolid += std::string("_solid") + value + ".png";
+
+            auto filename(basePath);
+            filename += value + ".png";
+
+            png_codec.Image() = interfaceFluidImage.get();
+            png_codec.Save(filenameFluid.c_str());
+            png_codec.Image() = interfaceSolidImage.get();
+            png_codec.Save(filenameSolid.c_str());
+            png_codec.Image() = interfaceImage.get();
+            png_codec.Save(filename.c_str());
+        }
     }
 
     // Set output

@@ -70,7 +70,7 @@ public:
         Node(const Timestamp frameIndex, const Label label)
                 : id(GraphData2D::getNodeID(frameIndex, label))
                 , frameIndex(frameIndex)
-                , label(label){};
+                , label(label) {}
         Node(const Node& src)
                 : id(GraphData2D::getNodeID(src.frameIndex, src.label))
                 , frameIndex(src.frameIndex)
@@ -174,6 +174,10 @@ public:
 
     struct Edge {
         Edge(NodeID from, NodeID to, float weight = 0.0f) : from(from), to(to), weight(weight) {}
+        Edge(const Edge& src) = default;
+        Edge(Edge&& src) noexcept = default;
+        Edge& operator=(const Edge& rhs) = default;
+        Edge& operator=(Edge&& rhs) noexcept = default;
 
         inline bool operator==(const GraphData2D::Edge& other) {
             return this->from == other.from && this->to == other.to;

@@ -86,20 +86,26 @@ private:
 
     core::CallerSlot getTimeMapCaller;
 
-    core::param::ParamSlot outputImageParam;
     core::param::ParamSlot inflowAreaParam;
     core::param::ParamSlot inflowMarginParam;
-    core::param::ParamSlot minAreaParam;
     core::param::ParamSlot velocityMethodParam;
+    core::param::ParamSlot outputImageParam;
 
     core::param::ParamSlot isolatedParam;
     core::param::ParamSlot falseSourcesParam;
     core::param::ParamSlot falseSinksParam;
-    core::param::ParamSlot resolveDiamondsParam;
+
     core::param::ParamSlot combineTrivialParam;
-    core::param::ParamSlot combineTinyParam;
     core::param::ParamSlot removeTrivialParam;
+    core::param::ParamSlot resolveDiamondsParam;
+    core::param::ParamSlot combineTinyParam;
+    core::param::ParamSlot minAreaParam;
     core::param::ParamSlot keepBreakthroughNodesParam;
+
+    core::param::ParamSlot outputGraphsParam;
+    core::param::ParamSlot outputLabelImagesParam;
+    core::param::ParamSlot outputTimeImagesParam;
+    core::param::ParamSlot outputPathParam;
 
     util::LRUCache<typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash,
         AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>
