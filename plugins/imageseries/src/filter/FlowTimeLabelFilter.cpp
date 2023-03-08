@@ -8,6 +8,7 @@
 #include "vislib/graphics/PngBitmapCodec.h"
 
 #include "../util/GraphLuaExporter.h"
+#include "../util/GraphGDFExporter.h"
 
 #include <array>
 #include <deque>
@@ -333,8 +334,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         node.valid = !invalid;
     }
 
-    auto fixedGraph = graph::GraphData2D(*nodeGraph);
-
     // Mark pixels of invalid nodes as invalid
     if (input.outputImage == Input::image_t::invalid || input.outputImage == Input::image_t::simplified) {
         for (const auto& node_info : nodeGraph->getNodes()) {
@@ -362,6 +361,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     nodeGraph->finalizeLazyRemoval();
+
+    auto fixedGraph = graph::GraphData2D(*nodeGraph);
 
     // Compute velocities
     for (auto& node_info : nodeGraph->getNodes()) {
@@ -520,7 +521,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     if (std::filesystem::is_directory(input.outputPath)) {
         sg::graphics::PngBitmapCodec png_codec;
 
-        // Export to Lua file
+        // Export to Lua and GDF files
         if (input.outputGraphs) {
             graph::util::LuaExportMeta luaExportMeta;
             luaExportMeta.path = input.timeMap->getMetadata().filename;
@@ -537,6 +538,26 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             graph::util::exportToLua(fixedGraph, (input.outputPath / "graph_1_fixed.lua").string(), luaExportMeta);
             graph::util::exportToLua(
                 simplifiedGraph, (input.outputPath / "graph_2_simplified.lua").string(), luaExportMeta);
+
+            graph::util::GDFExportMeta gdfExportMeta;
+            gdfExportMeta.startTime = startTime;
+            gdfExportMeta.breakthroughTime = breakthroughTime;
+            gdfExportMeta.endTime = endTime;
+            gdfExportMeta.stopAtBreakthrough = false;
+
+            graph::util::exportToGDF(
+                originalGraph, (input.outputPath / "graph_0_original.gdf").string(), gdfExportMeta);
+            graph::util::exportToGDF(fixedGraph, (input.outputPath / "graph_1_fixed.gdf").string(), gdfExportMeta);
+            graph::util::exportToGDF(
+                simplifiedGraph, (input.outputPath / "graph_2_simplified.gdf").string(), gdfExportMeta);
+
+            gdfExportMeta.stopAtBreakthrough = true;
+
+            graph::util::exportToGDF(
+                originalGraph, (input.outputPath / "graph_0_original_bt.gdf").string(), gdfExportMeta);
+            graph::util::exportToGDF(fixedGraph, (input.outputPath / "graph_1_fixed_bt.gdf").string(), gdfExportMeta);
+            graph::util::exportToGDF(
+                simplifiedGraph, (input.outputPath / "graph_2_simplified_bt.gdf").string(), gdfExportMeta);
         }
 
         // Output label images to hard disk

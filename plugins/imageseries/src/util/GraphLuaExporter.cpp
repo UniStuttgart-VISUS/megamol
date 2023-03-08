@@ -26,10 +26,13 @@ bool exportToLua(const GraphData2D& graph, const std::string& outfileName, LuaEx
     file << "graphData.breakthrough = " << meta.breakthroughTime << "\n";
     file << "graphData.end = " << meta.endTime << "\n";
 
+    std::map<std::size_t, std::size_t> idToNum;
+
     file << "graphData.Nodes = {\n";
     std::size_t i = 0;
     for (const auto& node_info : graph.getNodes()) {
         auto& node = node_info.second;
+        idToNum[node.getID()] = i;
         file << "{" << node.getFrameIndex() << ", " << i++ << ", " << node.centerOfMass.x << ", " << node.centerOfMass.y
              << ", " << node.velocityMagnitude << ", " << 0 << ", " << int(node.area) << ", "
              << int(node.getEdgeCountIn()) << ", " << int(node.getEdgeCountOut()) << "},\n";
@@ -53,7 +56,7 @@ bool exportToLua(const GraphData2D& graph, const std::string& outfileName, LuaEx
 
     file << "graphData.Edges = {\n";
     for (auto& edge : graph.getEdges()) {
-        file << edge.from << ", " << edge.to << ",\n";
+        file << idToNum.at(edge.from) << ", " << idToNum.at(edge.to) << ",\n";
     }
     file << "}\n\n";
 
