@@ -149,7 +149,6 @@ bool megamol::gui::ImageWidget::Button(const std::string& tooltip_text, ImVec2 s
     if (!tooltip_text.empty()) {
         this->tooltip.ToolTip(tooltip_text, ImGui::GetItemID(), 0.5f, 5.0f);
     }
-    ImGui::PopStyleVar();
 
     return retval;
 }
@@ -186,7 +185,6 @@ bool megamol::gui::ImageWidget::ToggleButton(
     if (!button_tooltip_text.empty()) {
         this->tooltip.ToolTip(button_tooltip_text, ImGui::GetItemID(), 0.5f, 5.0f);
     }
-    ImGui::PopStyleVar();
 
     return retval;
 }
