@@ -7,28 +7,25 @@
 
 #include "OpenGL_GLFW_Service.hpp"
 
-#include "FrameStatistics.h"
-
 #include <array>
 #include <chrono>
+#include <functional>
+#include <iostream>
 #include <vector>
+
+#include "FrameStatistics.h"
+#include "ModuleGraphSubscription.h"
+#include "mmcore/utility/log/Log.h"
 
 #ifdef MEGAMOL_USE_STACKTRACE
 #include <boost/stacktrace.hpp>
 #endif
 
-#include "glad/gl.h"
+#include <glad/gl.h>
 #ifdef _WIN32
-// clang-format off
-#include <Windows.h>
-#include <DbgHelp.h>
-// clang-format on
-#pragma comment(lib, "dbghelp.lib")
-#undef min
-#undef max
-#include "glad/wgl.h"
+#include <glad/wgl.h>
 #else
-#include "glad/glx.h"
+#include <glad/glx.h>
 #endif
 
 #include <GLFW/glfw3.h>
@@ -39,13 +36,6 @@
 #include <GLFW/glfw3native.h>
 #endif
 #endif
-
-#include "ModuleGraphSubscription.h"
-
-#include <functional>
-#include <iostream>
-
-#include "mmcore/utility/log/Log.h"
 
 static const std::string service_name = "OpenGL_GLFW_Service: ";
 static void log(std::string const& text) {
@@ -116,46 +106,6 @@ static std::string get_message_id_name(GLuint id) {
 
     return std::to_string(id);
 }
-
-#ifdef _WIN32
-static std::string GetStack() {
-    unsigned int i;
-    void* stack[100];
-    unsigned short frames;
-    SYMBOL_INFO* symbol;
-    HANDLE process;
-    std::stringstream output;
-
-    process = GetCurrentProcess();
-
-    SymSetOptions(SYMOPT_LOAD_LINES);
-
-    SymInitialize(process, NULL, TRUE);
-
-    frames = CaptureStackBackTrace(0, 200, stack, NULL);
-    symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
-    symbol->MaxNameLen = 255;
-    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-
-    for (i = 0; i < frames; i++) {
-        SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol);
-        DWORD dwDisplacement;
-        IMAGEHLP_LINE64 line;
-
-        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-        if (!strstr(symbol->Name, "khr::getStack") && !strstr(symbol->Name, "khr::DebugCallback") &&
-            SymGetLineFromAddr64(process, (DWORD64)(stack[i]), &dwDisplacement, &line)) {
-
-            output << "function: " << symbol->Name << " - line: " << line.LineNumber << "\n";
-        }
-        if (0 == strcmp(symbol->Name, "main"))
-            break;
-    }
-
-    free(symbol);
-    return output.str();
-}
-#endif
 
 static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
     GLsizei length, const GLchar* message, const void* userParam) {
@@ -278,12 +228,7 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
 #ifdef MEGAMOL_USE_STACKTRACE
     output << boost::stacktrace::stacktrace() << std::endl;
 #else
-#ifdef _WIN32
-    output << GetStack() << std::endl;
-    OutputDebugStringA(output.str().c_str());
-#else
     output << "(disabled)" << std::endl;
-#endif
 #endif
 
     if (type == GL_DEBUG_TYPE_ERROR) {
