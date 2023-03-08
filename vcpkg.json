@@ -132,6 +132,16 @@
     "use-profiling": {
       "description": "Use Profiling"
     },
+    "use-stacktrace": {
+      "description": "Use Boost.Stacktrace",
+      "dependencies": [
+        "boost-stacktrace",
+        {
+          "name": "libbacktrace",
+          "platform": "!windows"
+        }
+      ]
+    },
     "use-tracy": {
       "description": "Use Tracy",
       "dependencies": [
