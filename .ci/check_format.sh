@@ -4,11 +4,13 @@ set -o pipefail
 
 # Command line parameter
 _fix=false
-_fast=false
+_uncommitted=false
+_branch=false
 while [[ $# -gt 0 ]]; do
   case $1 in
     -f|--fix) _fix=true ;;
-    -s|--fast) _fast=true ;;
+    -u|--uncommitted) _uncommitted=true ;;
+    -b|--branch) _branch=true ;;
     *) echo "Unknown parameter: $1"; exit 1 ;;
   esac
   shift
@@ -17,17 +19,20 @@ done
 EXIT_CODE=0
 
 # Fast mode, only check changed files
-if [[ "$_fast" == true ]]; then
+if [[ "$_uncommitted" == true ]]; then
   # Git diff including staged + untracked files
   file_list=$(git diff --name-only HEAD ; git ls-files --exclude-standard --others .)
+elif [[ "$_branch" == true ]]; then
+  # Git diff work dir to master
+  file_list=$(git diff --name-only master ; git ls-files --exclude-standard --others .)
 else
   # Find all files, ignore .git dirs.
   file_list=$(find . -type d -name '.git' -prune -o -type f -print | sort)
 fi
 
 while read -r file; do
-  # Skip empty filename
-  if [[ -z "$file" ]]; then
+  # Skip empty or deleted filename
+  if [[ ! -f "$file" ]]; then
     continue
   fi
 
@@ -38,7 +43,7 @@ while read -r file; do
 
   # only process file if mime type is text
   mime=$(file -b --mime-type "$file")
-  if ! [[ $mime == "text/"* ]]; then
+  if [[ $mime != "text/"* ]]; then
     continue
   fi
 
@@ -91,7 +96,7 @@ while read -r file; do
 
   # Check if file is UTF-8 (or ASCII)
   encoding=$(file -b --mime-encoding "$file")
-  if ! [[ $encoding == "us-ascii" || $encoding == "utf-8" ]]; then
+  if [[ $encoding != "us-ascii" && $encoding != "utf-8" ]]; then
     if [[ "$_fix" == true ]]; then
       tmp_file=$(mktemp)
       iconv -f "$encoding" -t utf-8 -o "$tmp_file" "$file"
