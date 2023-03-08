@@ -30,6 +30,7 @@ struct ProfilingLoggingStatus {
 
 static std::string PerformanceManager_Req_Name = "PerformanceManager";
 
+// this thing must only exist ONCE.
 class PerformanceManager {
 public:
     PerformanceManager();
@@ -89,6 +90,12 @@ public:
         user_index_type user_index = 0;
         parent_type parent_type = parent_type::BUILTIN;
         time_point start, end, duration;
+        int32_t global_index;
+    };
+
+    struct timer_region {
+        time_point start, end;
+        int32_t global_index = -1;
     };
 
     struct frame_info {
@@ -114,10 +121,13 @@ public:
             return regions.size();
         }
         [[nodiscard]] time_point get_start(uint32_t index) const {
-            return regions[index].first;
+            return regions[index].start;
         }
         [[nodiscard]] time_point get_end(uint32_t index) const {
-            return regions[index].second;
+            return regions[index].end;
+        }
+        [[nodiscard]] int32_t get_global_index(uint32_t index) const {
+            return regions[index].global_index;
         }
         [[nodiscard]] frame_type get_start_frame() const {
             return start_frame;
@@ -136,8 +146,8 @@ public:
         virtual void collect() = 0;
 
         timer_config conf;
-        time_point last_start;
-        std::vector<std::pair<time_point, time_point>> regions;
+        //time_point last_start;
+        std::vector<timer_region> regions;
         bool started = false;
         frame_type start_frame = std::numeric_limits<frame_type>::max();
         handle_type h = 0;
@@ -174,6 +184,7 @@ public:
         std::pair<uint32_t, uint32_t> assert_query(uint32_t index);
 
         std::vector<std::pair<uint32_t, uint32_t>> query_ids;
+        std::vector<int32_t> frame_indices;
         uint32_t query_index = 0;
         inline static uint32_t last_query = 0;
     };
@@ -230,6 +241,8 @@ private:
     std::vector<handle_type> handle_holes;
     std::unordered_map<handle_type, std::unique_ptr<Itimer>> timers;
     frame_type current_frame = 0;
+    // there can only be one PerformanceManager currently.
+    inline static int32_t current_global_index = 0;
     std::vector<update_callback> subscribers;
 
 #ifdef MEGAMOL_USE_OPENGL

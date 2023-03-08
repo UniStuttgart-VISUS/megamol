@@ -20,12 +20,12 @@ bool Profiling_Service::init(void* configPtr) {
     profiling_logging.active = conf->autostart_profiling;
     include_graph_events = conf->include_graph_events;
 
-    //const auto unit_name = "ns";
-    //using timer_ratio = std::nano;
+    const auto unit_name = "ns";
+    using timer_ratio = std::nano;
     //const auto unit_name = "us";
     //using timer_ratio = std::micro;
-    const auto unit_name = "ms";
-    using timer_ratio = std::milli;
+    //const auto unit_name = "ms";
+    //using timer_ratio = std::milli;
 
     if (conf != nullptr && !conf->log_file.empty()) {
         if (!log_file.is_open()) {

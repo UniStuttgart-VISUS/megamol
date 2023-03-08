@@ -45,14 +45,14 @@ void PerformanceManager::Itimer::end() {
 
 bool PerformanceManager::cpu_timer::start(frame_type frame) {
     const auto ret = Itimer::start(frame);
-    last_start = time_point::clock::now();
+    timer_region r{time_point::clock::now(), time_point(), current_global_index++};
+    regions.emplace_back(r);
     return ret;
 }
 
 void PerformanceManager::cpu_timer::end() {
     Itimer::end();
-    auto end = time_point::clock::now();
-    regions.emplace_back(std::make_pair(last_start, end));
+    regions.back().end = time_point::clock::now();
 }
 
 PerformanceManager::gl_timer::~gl_timer() {
@@ -70,6 +70,7 @@ bool PerformanceManager::gl_timer::start(frame_type frame) {
         query_index = 0;
     }
     last_query = assert_query(query_index).first;
+    frame_indices[query_index] = current_global_index++;
 #ifdef MEGAMOL_USE_OPENGL
     glQueryCounter(last_query, GL_TIMESTAMP);
 #endif
@@ -92,8 +93,9 @@ void PerformanceManager::gl_timer::collect() {
         const auto& [start, end] = query_ids[index];
         glGetQueryObjectui64v(start, GL_QUERY_RESULT, &start_time);
         glGetQueryObjectui64v(end, GL_QUERY_RESULT, &end_time);
-        regions.emplace_back(std::make_pair(
-            time_point{std::chrono::nanoseconds(start_time)}, time_point{std::chrono::nanoseconds(end_time)}));
+        timer_region r{time_point{std::chrono::nanoseconds(start_time)}, time_point{std::chrono::nanoseconds(end_time)},
+            frame_indices[index]};
+        regions.emplace_back(r);
     }
 #endif
 }
@@ -109,6 +111,7 @@ std::pair<uint32_t, uint32_t> PerformanceManager::gl_timer::assert_query(uint32_
         glGenQueries(2, ids.data());
 #endif
         query_ids.emplace_back(std::make_pair(ids[0], ids[1]));
+        frame_indices.resize(query_ids.size());
     }
     return query_ids[index];
 }
@@ -267,6 +270,7 @@ PerformanceManager::handle_type PerformanceManager::add_timer(std::unique_ptr<It
 void PerformanceManager::startFrame(frame_type frame) {
     current_frame = frame;
     gl_timer::last_query = 0;
+    current_global_index = 0;
     start_timer(whole_frame_cpu);
 #ifdef MEGAMOL_USE_OPENGL
     start_timer(whole_frame_gl);
@@ -311,6 +315,7 @@ void PerformanceManager::endFrame() {
             e.frame_index = region;
             e.api = tconf.api;
 
+            e.global_index = timer->get_global_index(region);
             e.start = timer->get_start(region);
             e.end = timer->get_end(region);
             e.duration = time_point{timer->get_end(region) - timer->get_start(region)};
@@ -318,7 +323,7 @@ void PerformanceManager::endFrame() {
         }
     }
     std::sort(this_frame.entries.begin(), this_frame.entries.end(),
-        [](timer_entry& a, timer_entry& b) { return a.start < b.start; });
+        [](timer_entry& a, timer_entry& b) { return a.global_index < b.global_index; });
 
     for (auto& subscriber : subscribers) {
         subscriber(this_frame);
