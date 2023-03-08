@@ -482,18 +482,12 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             combineTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
         }
 
-        while (resolveDiamonds(*nodeGraph, next_label, breakthroughTime)) {
+        while (resolveDiamonds(*nodeGraph, next_label, keepBreakthroughTime)) {
             if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::remove_trivial)) {
                 combineTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
             }
         }
     }
-
-    if (input.fixes & Input::fixes_t::remove_trivial) {
-        removeTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
-    }
-
-    auto simplifiedGraph = graph::GraphData2D(*nodeGraph);
 
     // Update pixels to match the resulting simplified graph
     if (input.outputImage == Input::image_t::simplified) {
@@ -505,6 +499,14 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             }
         }
     }
+
+    // Improve graph (but do this after updating the label image, as nodes are being removed
+    // without substitution, thus leading to the previous version of the image being reused)
+    if (input.fixes & Input::fixes_t::remove_trivial) {
+        removeTrivialNodes(*nodeGraph, next_label, keepBreakthroughTime);
+    }
+
+    auto simplifiedGraph = graph::GraphData2D(*nodeGraph);
 
     // Save image content for file dump
     imageSimplified.resize(size);

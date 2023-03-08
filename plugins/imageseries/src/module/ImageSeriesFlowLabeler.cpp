@@ -231,9 +231,9 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
 
             call->SetOutput(GraphData2DCall::Output{intermediate});
             call->SetDataHash(output->getHash());
-        }
 
-        return true;
+            return true;
+        }
     }
 
     return false;
