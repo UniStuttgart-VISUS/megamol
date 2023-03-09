@@ -23,7 +23,7 @@
 #endif
 
 #define SCALE 0.0001f
-//#define __SRTEST_CON_RAS__
+#define __SRTEST_CON_RAS__
 //#define __SRTEST_CAM_ALIGNED__
 
 megamol::moldyn_gl::rendering::SRTest::SRTest()
@@ -32,6 +32,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
         , method_slot_("method", "")
         , upload_mode_slot_("upload mode", "")
         , enforce_upload_slot_("enforce upload", "")
+        , use_con_ras_slot_("use_con_ras", "")
 /*
 , clip_thres_slot_("clip distance", "")*/
 {
@@ -73,6 +74,9 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
 
     enforce_upload_slot_ << new core::param::BoolParam(false);
     MakeSlotAvailable(&enforce_upload_slot_);
+
+    use_con_ras_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&use_con_ras_slot_);
 
     /*clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
     MakeSlotAvailable(&clip_thres_slot_);*/
@@ -434,6 +438,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     if (!(*in_call)(0))
         return false;
 
+    auto const use_con_ras = use_con_ras_slot_.Param<core::param::BoolParam>()->Value();
+
     bool new_data = false;
     if (in_data_hash_ != in_call->DataHash() || frame_id_ != in_call->FrameID() || upload_mode_slot_.IsDirty() /*||
         method_slot_.IsDirty()*/) {
@@ -500,8 +506,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
         old_cam_ = cam;
     }
 
-    #ifdef MEGAMOL_USE_CUDA
-    #if 1
+#ifdef MEGAMOL_USE_CUDA
+#if 1
     if (method == method_e::THRUST) {
         SphereRasterizer sr;
         SphereRasterizer::config_t sr_cfg;
@@ -543,8 +549,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
 
         return true;
     }
-    #endif
-    #endif
+#endif
+#endif
 
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
 #ifdef USE_NVPERF
@@ -565,9 +571,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
         pm.start_timer(timing_handles_[0]);
 #endif
-//#ifdef USE_NVPERF
-//        nvperf.PushRange("Upload");
-//#endif
+        //#ifdef USE_NVPERF
+        //        nvperf.PushRange("Upload");
+        //#endif
         if (method == method_e::COPY) {
             std::dynamic_pointer_cast<copy_rt>(rt)->upload(data_, pm, timing_handles_[2]);
         } else if (method == method_e::COPY_VERT) {
@@ -591,7 +597,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 #ifdef __SRTEST_CON_RAS__
-    glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
+    if (use_con_ras) {
+        glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
+    }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
     // glQueryCounter(queryID[1], GL_TIMESTAMP);
@@ -625,7 +633,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     glEnable(GL_CULL_FACE);
     glDisable(GL_PROGRAM_POINT_SIZE);
 #ifdef __SRTEST_CON_RAS__
-    glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
+    if (use_con_ras) {
+        glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
+    }
 #endif
 
     // glQueryCounter(queryID[2], GL_TIMESTAMP);
@@ -768,8 +778,10 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             data_.pl_data.use_global_color[pl_idx] = 0;
         } else {
             data_.pl_data.use_global_color[pl_idx] = 1;
-            data_.pl_data.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0] / 255,
-                parts.GetGlobalColour()[1] / 255, parts.GetGlobalColour()[2] / 255, parts.GetGlobalColour()[3] / 255);
+            /*data_.pl_data.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0] / 255,
+                parts.GetGlobalColour()[1] / 255, parts.GetGlobalColour()[2] / 255, parts.GetGlobalColour()[3] / 255);*/
+            data_.pl_data.global_color[pl_idx] = glm::vec4(1,
+                0, 0, 1);
         }
 
         if (parts.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
@@ -823,6 +835,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         auto const& cb_acc = parts.GetParticleStore().GetCBAcc();
         auto const& ca_acc = parts.GetParticleStore().GetCAAcc();
 
+        std::array<uint8_t, 4> default_col = {1, 0, 0, 1};
+
         for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
             /*auto const pos = scale_coord(x_acc->Get_f(p_idx), y_acc->Get_f(p_idx), z_acc->Get_f(p_idx));
             auto const rad = scale_rad(rad_acc->Get_f(p_idx));*/
@@ -850,8 +864,10 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
                     glm::vec4(cr_acc->Get_f(p_idx), cg_acc->Get_f(p_idx), cb_acc->Get_f(p_idx), ca_acc->Get_f(p_idx)));
                 colors.push_back(*reinterpret_cast<float*>(&col));
             } else if (mode == upload_mode::NO_SEP || mode == upload_mode::BUFFER_ARRAY) {
-                unsigned int col = glm::packUnorm4x8(
-                    glm::vec4(cr_acc->Get_f(p_idx), cg_acc->Get_f(p_idx), cb_acc->Get_f(p_idx), ca_acc->Get_f(p_idx)));
+                /*unsigned int col = glm::packUnorm4x8(
+                    glm::vec4(cr_acc->Get_f(p_idx), cg_acc->Get_f(p_idx), cb_acc->Get_f(p_idx), ca_acc->Get_f(p_idx)));*/
+                unsigned int col =
+                    glm::packUnorm4x8(glm::vec4(default_col[0], default_col[1], default_col[2], default_col[3]));
                 positions.push_back(*reinterpret_cast<float*>(&col));
             }
 

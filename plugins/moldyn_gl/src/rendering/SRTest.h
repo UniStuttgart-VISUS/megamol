@@ -265,10 +265,11 @@ public:
 
 class SRTest : public mmstd_gl::Renderer3DModuleGL {
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
-        return resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        /*std::vector<std::string> resources = */ModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::PerformanceManager>();
+        //resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+        //return resources;
     }
 
     /**
@@ -353,6 +354,8 @@ private:
     core::param::ParamSlot upload_mode_slot_;
 
     core::param::ParamSlot enforce_upload_slot_;
+
+    core::param::ParamSlot use_con_ras_slot_;
 
     // core::param::ParamSlot clip_thres_slot_;
 
