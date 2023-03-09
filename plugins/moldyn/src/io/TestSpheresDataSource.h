@@ -148,6 +148,12 @@ private:
     /** Number of spheres to be generated */
     core::param::ParamSlot numSpheresSlot;
 
+    core::param::ParamSlot radiusSlot;
+
+    float radius = 0.f;
+
+    uint64_t out_data_hash_ = 0;
+
 #ifdef MMCORE_TEST_DYN_PARAM_SLOTS
     param::ParamSlot p1;
     param::ParamSlot p2;
