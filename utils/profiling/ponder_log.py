@@ -1,5 +1,5 @@
 import pandas
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, cpu_count
 
 verbose = False
 
@@ -100,7 +100,7 @@ print(f"Analyzing frames {start_frame}-{end_frame}")
 #for curr_frame in range(start_frame, end_frame + 1):
 #    analyze_frame(curr_frame)
 
-Parallel(n_jobs=24)(delayed(analyze_frame)(i) for i in range(start_frame, end_frame + 1))
+Parallel(n_jobs=cpu_count())(delayed(analyze_frame)(i) for i in range(start_frame, end_frame + 1))
 
 
 
