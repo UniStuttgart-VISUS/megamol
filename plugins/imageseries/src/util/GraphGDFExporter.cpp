@@ -38,13 +38,14 @@ bool exportToGDF(const GraphData2D& graph, const std::string& outfileName, GDFEx
         }
     }
 
-    file << "edgedef>node1 VARCHAR,node2 VARCHAR\n";
+    file << "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN\n";
     for (auto& edge : graph.getEdges()) {
         if (!(meta.stopAtBreakthrough && (graph.getNode(edge.from).getFrameIndex() > meta.breakthroughTime ||
                 graph.getNode(edge.to).getFrameIndex() > meta.breakthroughTime))) {
 
             file << "s" << idToNum.at(edge.from) << ","
-                 << "s" << idToNum.at(edge.to) << "\n";
+                 << "s" << idToNum.at(edge.to) << ","
+                 << "true\n";
         }
     }
 

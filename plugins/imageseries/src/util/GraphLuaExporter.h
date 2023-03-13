@@ -20,6 +20,7 @@ struct LuaExportMeta {
     int endTime = 0;
 };
 
-bool exportToLua(const GraphData2D& graph, const std::string& outfileName, LuaExportMeta meta);
+bool exportToLua(const GraphData2D& graph, const std::string& outfileName, LuaExportMeta meta,
+    const std::vector<std::size_t>& velocityDistribution);
 
 } // namespace megamol::ImageSeries::graph::util

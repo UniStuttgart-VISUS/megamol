@@ -84,6 +84,19 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         }
     }
 
+    // Calculate global velocity distribution as a measure of pixels added per frame
+    std::map<Timestamp, double> pixelsPerFrame;
+
+    for (Index index = 0; index < size; ++index) {
+        if (dataIn[index] != 0 && dataIn[index] != std::numeric_limits<Timestamp>::max()) {
+            if (pixelsPerFrame.find(dataIn[index]) == pixelsPerFrame.end()) {
+                pixelsPerFrame[dataIn[index]] = 0.0;
+            }
+
+            pixelsPerFrame.at(dataIn[index]) += 1.0;
+        }
+    }
+
     // Assign unique labels to connected areas of same time
     auto nodeGraph = std::make_shared<graph::GraphData2D>();
     std::map<Timestamp, std::vector<graph::GraphData2D::NodeID>> nodesByTime;
@@ -365,30 +378,9 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     auto fixedGraph = graph::GraphData2D(*nodeGraph);
 
     // Compute velocities
-    for (auto& node_info : nodeGraph->getNodes()) {
-        auto& node = node_info.second;
-
-        node.velocity = glm::vec2{0, 0};
-
-        if (input.hausdorff) {
-            // TODO
-        } else {
-            for (const auto parentID : node.getParentNodes()) {
-                const auto& parent = nodeGraph->getNode(parentID);
-
-                node.velocity +=
-                    (node.centerOfMass - parent.centerOfMass) / static_cast<float>(node.getFrameIndex() - parent.getFrameIndex());
-            }
-            for (const auto childID : node.getChildNodes()) {
-                const auto& child = nodeGraph->getNode(childID);
-
-                node.velocity +=
-                    (node.centerOfMass - child.centerOfMass) / static_cast<float>(node.getFrameIndex() - child.getFrameIndex());
-            }
-        }
-
-        node.velocityMagnitude = glm::length(node.velocity);
-    }
+    computeVelocities(originalGraph);
+    computeVelocities(fixedGraph);
+    computeVelocities(*nodeGraph);
 
     // Combine tiny areas that result most likely from very small local velocities
     if (input.fixes & Input::fixes_t::combine_tiny) {
@@ -513,6 +505,50 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     imageSimplified.resize(size);
     std::memcpy(imageSimplified.data(), dataOut, size * sizeof(Label));
 
+    // Compute velocity distributions
+    auto getVelocities = [](const graph::GraphData2D& graph) {
+        std::map<Timestamp, double> weightedVelocity, weight;
+
+        for (const auto& node : graph.getNodes()) {
+            const auto time = node.second.getFrameIndex();
+
+            if (weightedVelocity.find(time) == weightedVelocity.end()) {
+                weightedVelocity[time] = 0.0;
+                weight[time] = 0.0;
+            }
+
+            weightedVelocity.at(time) += static_cast<double>(node.second.velocityMagnitude) * node.second.area;
+            weight.at(time) += node.second.area;
+        }
+
+        for (auto& velocity : weightedVelocity) {
+            velocity.second /= weight.at(velocity.first);
+        }
+
+        return weightedVelocity;
+    };
+
+    const auto numTimesteps = static_cast<std::size_t>(endTime) - startTime + 1;
+
+    const auto origVelocities = getVelocities(originalGraph);
+    const auto fixedVelocities = getVelocities(fixedGraph);
+
+    std::vector<std::size_t> inputDistribution(numTimesteps, 0uLL); // ground truth?
+    std::vector<std::size_t> origGraphDistribution(numTimesteps, 0uLL);
+    std::vector<std::size_t> fixedGraphDistribution(numTimesteps, 0uLL);
+
+    for (std::size_t t = startTime; t <= endTime; ++t) {
+        if (pixelsPerFrame.find(t) != pixelsPerFrame.end()) {
+            inputDistribution[t - startTime] = static_cast<std::size_t>(std::floor(pixelsPerFrame.at(t)));
+        }
+        if (origVelocities.find(t) != origVelocities.end()) {
+            origGraphDistribution[t - startTime] = static_cast<std::size_t>(std::floor(origVelocities.at(t)));
+        }
+        if (fixedVelocities.find(t) != fixedVelocities.end()) {
+            fixedGraphDistribution[t - startTime] = static_cast<std::size_t>(std::floor(fixedVelocities.at(t)));
+        }
+    }
+
     // Create output directory for file dumps
     if (!input.outputPath.empty() && !std::filesystem::is_directory(input.outputPath)) {
         std::filesystem::create_directories(input.outputPath);
@@ -534,10 +570,11 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             luaExportMeta.endTime = endTime;
 
             graph::util::exportToLua(
-                originalGraph, (input.outputPath / "graph_0_original.lua").string(), luaExportMeta);
-            graph::util::exportToLua(fixedGraph, (input.outputPath / "graph_1_fixed.lua").string(), luaExportMeta);
+                originalGraph, (input.outputPath / "graph_0_original.lua").string(), luaExportMeta, inputDistribution);
             graph::util::exportToLua(
-                simplifiedGraph, (input.outputPath / "graph_2_simplified.lua").string(), luaExportMeta);
+                fixedGraph, (input.outputPath / "graph_1_fixed.lua").string(), luaExportMeta, origGraphDistribution);
+            graph::util::exportToLua(simplifiedGraph, (input.outputPath / "graph_2_simplified.lua").string(),
+                luaExportMeta, fixedGraphDistribution);
 
             graph::util::GDFExportMeta gdfExportMeta;
             gdfExportMeta.startTime = startTime;
@@ -994,6 +1031,33 @@ void FlowTimeLabelFilter::removeTrivialNodes(
     }
 
     nodeGraph.finalizeLazyRemoval();
+}
+
+void FlowTimeLabelFilter::computeVelocities(graph::GraphData2D& nodeGraph) const {
+    for (auto& node_info : nodeGraph.getNodes()) {
+        auto& node = node_info.second;
+
+        node.velocity = glm::vec2{0, 0};
+
+        if (input.hausdorff) {
+            // TODO
+        } else {
+            for (const auto parentID : node.getParentNodes()) {
+                const auto& parent = nodeGraph.getNode(parentID);
+
+                node.velocity += (node.centerOfMass - parent.centerOfMass) /
+                                 static_cast<float>(node.getFrameIndex() - parent.getFrameIndex());
+            }
+            for (const auto childID : node.getChildNodes()) {
+                const auto& child = nodeGraph.getNode(childID);
+
+                node.velocity += (node.centerOfMass - child.centerOfMass) /
+                                 static_cast<float>(node.getFrameIndex() - child.getFrameIndex());
+            }
+        }
+
+        node.velocityMagnitude = glm::length(node.velocity);
+    }
 }
 
 } // namespace megamol::ImageSeries::filter

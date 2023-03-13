@@ -104,6 +104,8 @@ private:
     void combineTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
     bool resolveDiamonds(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
     void removeTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
+
+    void computeVelocities(graph::GraphData2D& nodeGraph) const;
 };
 
 } // namespace megamol::ImageSeries::filter
