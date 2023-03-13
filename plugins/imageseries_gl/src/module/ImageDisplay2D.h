@@ -34,6 +34,8 @@ public:
         TFWord = 2,
         CatByte = 3,
         CatWord = 4,
+        TFCatByte = 5,
+        TFCatWord = 6,
     };
 
     ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFactoryOptions);
@@ -41,7 +43,7 @@ public:
 
     bool updateTexture(const vislib::graphics::BitmapImage& image);
     bool updateGraph(const ImageSeries::graph::GraphData2D& graph, float baseRadius, float edgeWidth);
-    bool updateTransferFunction(unsigned int texture, const std::array<float, 2>& valueRange);
+    bool updateTransferFunction(unsigned int texture, const std::array<float, 2>& valueRange, unsigned int size);
 
     const std::array<float, 2>& getValueRange() const;
 
@@ -96,6 +98,7 @@ private:
 
     unsigned int transferFunction;
     std::array<float, 2> valueRange, usedValueRange;
+    unsigned int transferFunctionSize;
 
     Mode mode = Mode::Color;
 

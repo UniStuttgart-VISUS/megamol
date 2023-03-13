@@ -298,9 +298,12 @@ bool ImageDisplay2D::updateGraph(
     return true;
 }
 
-bool ImageDisplay2D::updateTransferFunction(unsigned int texture, const std::array<float, 2>& valueRange) {
+bool ImageDisplay2D::updateTransferFunction(
+    const unsigned int texture, const std::array<float, 2>& valueRange, const unsigned int size) {
+
     transferFunction = texture;
     usedValueRange = valueRange;
+    transferFunctionSize = size;
 
     return true;
 }
@@ -408,12 +411,17 @@ void ImageDisplay2D::renderImplImpl(const glm::mat4& matrix, const render_t sele
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_1D, transferFunction);
 
+        const auto max = (getDisplayMode() == Mode::TFCatByte || getDisplayMode() == Mode::TFCatWord)
+                             ? (usedValueRange[0] + transferFunctionSize - 1)
+                             : usedValueRange[1];
+
         shader->use();
         shader->setUniform("matrix", glm::scale(matrix, glm::vec3(width, height, 1.f)));
         shader->setUniform("image", 0);
         shader->setUniform("tfTexture", 1);
-        shader->setUniform("tfRange", usedValueRange[0], usedValueRange[1]);
+        shader->setUniform("tfRange", usedValueRange[0], max);
         shader->setUniform("displayMode", static_cast<GLint>(getDisplayMode()));
+        shader->setUniform("texSize", static_cast<GLint>(transferFunctionSize));
 
         mesh->draw();
 

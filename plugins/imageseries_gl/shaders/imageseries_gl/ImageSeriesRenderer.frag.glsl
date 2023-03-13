@@ -4,6 +4,7 @@
 
 uniform sampler2D image;
 uniform int displayMode;
+uniform int texSize;
 
 in vec2 texCoord;
 
@@ -43,6 +44,7 @@ vec4 getColor(vec4 color) {
         return color;
     case 1:
     case 3:
+    case 5:
         value *= pow(2.0, 8.0) - 1;
 
         if (value < 2.0) {
@@ -52,6 +54,7 @@ vec4 getColor(vec4 color) {
         break;
     case 2:
     case 4:
+    case 6:
         value *= pow(2.0, 16.0) - 1;
 
         if (value < 1.0) {
@@ -68,6 +71,9 @@ vec4 getColor(vec4 color) {
     case 3:
     case 4:
         return labelColor(value);
+    case 5:
+    case 6:
+        return tflookup((int(value - tfRange.x) % texSize) + tfRange.x);
     }
 }
 

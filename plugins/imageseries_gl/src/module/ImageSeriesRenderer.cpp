@@ -45,6 +45,8 @@ ImageSeriesRenderer::ImageSeriesRenderer()
     displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::TFWord), "Transfer function (word)");
     displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::CatByte), "Category lookup (byte)");
     displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::CatWord), "Category lookup (word)");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::TFCatByte), "TF category lookup (byte)");
+    displayMode->SetTypePair(static_cast<int>(ImageDisplay2D::Mode::TFCatWord), "TF category lookup (word)");
 
     displayModeParam << displayMode;
     displayModeParam.SetUpdateCallback(&ImageSeriesRenderer::displayModeChangedCallback);
@@ -159,7 +161,8 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         }
 
         const auto tfInfo = getTransferFunction(display->getValueRange());
-        display->updateTransferFunction(std::get<0>(tfInfo), {std::get<1>(tfInfo), std::get<2>(tfInfo)});
+        display->updateTransferFunction(
+            std::get<0>(tfInfo), {std::get<1>(tfInfo), std::get<2>(tfInfo)}, std::get<3>(tfInfo));
     }
 
     display->setFilePath(outputPathParam.Param<core::param::FilePathParam>()->Value());
@@ -174,7 +177,7 @@ bool ImageSeriesRenderer::displayModeChangedCallback(core::param::ParamSlot& par
     return true;
 }
 
-std::tuple<unsigned int, float, float> ImageSeriesRenderer::getTransferFunction(
+std::tuple<unsigned int, float, float, unsigned int> ImageSeriesRenderer::getTransferFunction(
     const std::array<float, 2>& valueRange) {
 
     mmstd_gl::CallGetTransferFunctionGL* ct =
@@ -184,11 +187,11 @@ std::tuple<unsigned int, float, float> ImageSeriesRenderer::getTransferFunction(
         ct->SetRange(valueRange);
 
         if ((*ct)()) {
-            return std::make_tuple(ct->OpenGLTexture(), ct->Range()[0], ct->Range()[1]);
+            return std::make_tuple(ct->OpenGLTexture(), ct->Range()[0], ct->Range()[1], ct->TextureSize());
         }
     }
 
-    return std::make_tuple(0u, 0.0f, 1.0f);
+    return std::make_tuple(0u, 0.0f, 1.0f, 0u);
 }
 
 } // namespace megamol::ImageSeries::GL

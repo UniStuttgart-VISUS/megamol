@@ -94,7 +94,7 @@ protected:
     /**
      * Update the transfer function and get texture information.
      */
-    std::tuple<unsigned int, float, float> getTransferFunction(const std::array<float, 2>& valueRange);
+    std::tuple<unsigned int, float, float, unsigned int> getTransferFunction(const std::array<float, 2>& valueRange);
 
 private:
     std::unique_ptr<ImageDisplay2D> display;
