@@ -370,10 +370,6 @@ void SphereRenderer::release() {
 
 
 bool SphereRenderer::resetOpenGLResources() {
-
-    this->flags_enabled_ = false;
-    this->flags_available_ = false;
-
     if (this->grey_tf_ != 0) {
         glDeleteTextures(1, &this->grey_tf_);
     }
@@ -510,7 +506,7 @@ bool SphereRenderer::createResources() {
 
     std::string flags_shader_snippet;
     if (this->flags_available_) {
-        shader_options_flags_->addDefinition("flags_available");
+        shader_options_flags_->addDefinition("FLAGS_AVAILABLE");
     }
 
     try {
@@ -977,6 +973,9 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     const SIZE_T hash = mpdc->DataHash();
     const unsigned int frame_id = mpdc->FrameID();
     this->state_invalid_ = ((hash != this->old_hash_) || (frame_id != this->old_frame_id_));
+
+    // Check for flag storage before render mode because info is needed for resource creation
+    isFlagStorageAvailable();
 
     // Checking for changed render mode
     auto current_render_mode = static_cast<RenderMode>(this->render_mode_param_.Param<param::EnumParam>()->Value());
