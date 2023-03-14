@@ -1,7 +1,7 @@
 #include "mmcore/utility/LongestEdgeCameraSamples.h"
 
 std::tuple<std::vector<glm::vec3>, std::vector<glm::vec3>> megamol::core::utility::longest_edge_camera_samples(
-    core::BoundingBoxes_2 const& bboxes, unsigned int num_samples) {
+    core::BoundingBoxes_2 const& bboxes, unsigned int num_samples, float dis_of_le) {
     auto const& obb = bboxes.BoundingBox();
     auto const center_vl = obb.CalcCenter();
     auto const center = glm::vec3(center_vl.GetX(), center_vl.GetY(), center_vl.GetZ());

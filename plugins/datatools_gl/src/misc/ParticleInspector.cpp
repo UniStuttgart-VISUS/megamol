@@ -64,7 +64,6 @@ bool ParticleInspector::getParticleData(core::Call& call) {
             drawTable(p_in);
         }
         p_in->SetUnlocker(nullptr, false);
-        p_in->Unlock();
     } else {
         return false;
     }
@@ -88,7 +87,6 @@ bool ParticleInspector::getParticleExtents(core::Call& call) {
             return false;
         *p_out = *p_in;
         p_in->SetUnlocker(nullptr, false);
-        p_in->Unlock();
     } else {
         return false;
     }
@@ -189,7 +187,10 @@ void ParticleInspector::drawTable(geocalls::MultiParticleDataCall* p_in) {
                     ImGuiListClipper clipper;
                     const auto& storage = list.GetParticleStore();
                     const int modified_count =
-                        static_cast<int>(std::min<UINT64>(list.GetCount(), std::numeric_limits<int>::max()));
+                        //static_cast<int>(std::min<UINT64>(list.GetCount(), std::numeric_limits<int>::max()));
+                        // see https://github.com/ocornut/imgui/issues/3962
+                        // we should virtualize in ten-million batches probably
+                        static_cast<int>(std::min<UINT64>(list.GetCount(), 16000000));
                     clipper.Begin(modified_count);
                     while (clipper.Step()) {
                         for (auto row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {

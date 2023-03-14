@@ -60,6 +60,14 @@ const vec3 cube_faces[3][4] = {
     }
 };
 
+const vec3 base_cube_verts[8] = {vec3(1.f, 1.f, 1.f), vec3(1.f, -1.f, 1.f), vec3(1.f, 1.f, -1.f), vec3(1.f, -1.f, -1.f),
+    vec3(-1.f, 1.f, 1.f), vec3(-1.f, 1.f, -1.f), vec3(-1.f, -1.f, 1.f), vec3(-1.f, -1.f, -1.f)};
+
+const uvec3 face_ind_front[3][2] = {
+    {uvec3(0, 1, 2), uvec3(1, 3, 2)}, {uvec3(4, 0, 5), uvec3(0, 2, 5)}, {uvec3(6, 1, 4), uvec3(1, 0, 4)}};
+const uvec3 face_ind_back[3][2] = {
+    {uvec3(7, 5, 6), uvec3(5, 4, 6)}, {uvec3(3, 7, 1), uvec3(7, 6, 1)}, {uvec3(2, 5, 3), uvec3(5, 7, 3)}};
+
 // the normals can be trivially indexed by face (see above)
 const vec3 cube_face_normals[3] = {
     vec3(1.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f), vec3(0.f, 0.f, 1.f)

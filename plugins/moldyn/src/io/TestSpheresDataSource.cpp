@@ -11,6 +11,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/ShallowVector.h"
@@ -27,6 +28,7 @@ TestSpheresDataSource::TestSpheresDataSource()
         , getDataSlot("getData", "Gets the data from the data source")
         , numSpheresSlot("numSpheres", "number of spheres to generate")
         , numFramesSlot("numFrames", "number of frames to generate")
+        , radiusSlot("radius", "if zero, randomize")
 #ifdef MMCORE_TEST_DYN_PARAM_SLOTS
         , p1("p1", "Test slot for dynamic parameter slots")
         , p2("p2", "Test slot for dynamic parameter slots")
@@ -44,6 +46,9 @@ TestSpheresDataSource::TestSpheresDataSource()
 
     numFramesSlot << new core::param::IntParam(100);
     this->MakeSlotAvailable(&numFramesSlot);
+
+    radiusSlot << new core::param::FloatParam(0.f, 0.f);
+    MakeSlotAvailable(&radiusSlot);
 
 #ifdef MMCORE_TEST_DYN_PARAM_SLOTS
     p1.SetParameter(new param::BoolParam(false));
@@ -198,12 +203,18 @@ bool TestSpheresDataSource::getDataCallback(core::Call& caller) {
     auto frameCount = this->numFramesSlot.Param<core::param::IntParam>()->Value();
     auto sphereCount = this->numSpheresSlot.Param<core::param::IntParam>()->Value();
 
-    if (this->numFramesSlot.IsDirty() || this->numSpheresSlot.IsDirty()) {
+    if (this->numFramesSlot.IsDirty() || this->numSpheresSlot.IsDirty() || radiusSlot.IsDirty()) {
         this->resetFrameCache();
         AnimDataModule::setFrameCount(frameCount);
         AnimDataModule::initFrameCache(frameCount);
+        radius = radiusSlot.Param<core::param::FloatParam>()->Value();
+        ++out_data_hash_;
         this->numFramesSlot.ResetDirty();
         this->numSpheresSlot.ResetDirty();
+        radiusSlot.ResetDirty();
+        core::utility::log::Log::DefaultLog.WriteInfo("[TestSpheres] Radius is %f", radius);
+        core::utility::log::Log::DefaultLog.WriteInfo("[TestSpheres] SphereCount is %d", sphereCount);
+
     }
 
     AnimDataModule::Frame* f = this->requestLockedFrame(mpdc->FrameID());
@@ -230,12 +241,18 @@ bool TestSpheresDataSource::getDataCallback(core::Call& caller) {
 #endif
 
     mpdc->SetFrameID(f->FrameNumber());
-    mpdc->SetDataHash(1);
+    mpdc->SetDataHash(out_data_hash_);
     mpdc->SetExtent(frameCount, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     mpdc->SetParticleListCount(1);
     mpdc->AccessParticles(0).SetCount(sphereCount);
-    mpdc->AccessParticles(0).SetVertexData(
-        geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, frm->data, sizeof(float) * 8);
+    if (radius == 0.0f) {
+        mpdc->AccessParticles(0).SetVertexData(
+            geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR, frm->data, sizeof(float) * 8);
+    } else {
+        mpdc->AccessParticles(0).SetVertexData(
+            geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, frm->data, sizeof(float) * 8);
+        mpdc->AccessParticles(0).SetGlobalRadius(radius);
+    }
     mpdc->AccessParticles(0).SetColourData(
         geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, frm->data + 4, sizeof(float) * 8);
     mpdc->SetUnlocker(NULL);
@@ -254,7 +271,7 @@ bool TestSpheresDataSource::getExtentCallback(core::Call& caller) {
 
     auto frameCount = this->numFramesSlot.Param<core::param::IntParam>()->Value();
 
-    mpdc->SetDataHash(1);
+    mpdc->SetDataHash(out_data_hash_);
     mpdc->SetExtent(frameCount, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
 
     return true;

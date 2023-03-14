@@ -53,6 +53,10 @@ protected:
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
+    bool anythingDirty();
+
+    void resetAllDirty();
+
     /** Activates overriding the selected values for all particle lists */
     core::param::ParamSlot overrideAllListSlot;
 
@@ -74,15 +78,11 @@ private:
     /** The new radius */
     core::param::ParamSlot radiusSlot;
 
-    bool anythingDirty();
-
-    void resetAllDirty();
-
-    SIZE_T myHash = std::numeric_limits<SIZE_T>::max();
-
     /** the new range */
     core::param::ParamSlot minIntSlot;
     core::param::ParamSlot maxIntSlot;
+
+    SIZE_T myHash = std::numeric_limits<SIZE_T>::max();
 };
 
 } // namespace megamol::datatools

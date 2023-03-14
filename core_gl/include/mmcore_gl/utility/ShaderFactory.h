@@ -39,7 +39,6 @@ program_ptr_t<Shared> make_glowl_shader_impl(
         if constexpr (Shared) {
             program = std::make_shared<glowl::GLSLProgram>(
                 glowl::GLSLProgram::ShaderSourceList{make_glowl_shader_source(paths, options, translator)...});
-
         } else {
             program = std::make_unique<glowl::GLSLProgram>(
                 glowl::GLSLProgram::ShaderSourceList{make_glowl_shader_source(paths, options, translator)...});
@@ -49,6 +48,8 @@ program_ptr_t<Shared> make_glowl_shader_impl(
     } catch (glowl::GLSLProgramException const& ex) {
         throw glowl::GLSLProgramException(
             "Error building shader program \"" + label + "\":\n" + translator.translateErrorLog(ex.what()));
+    } catch (std::runtime_error const& ex) {
+        throw glowl::GLSLProgramException("Error parsing shader program \"" + label + "\":\n" + ex.what());
     }
 }
 } // namespace

@@ -21,8 +21,8 @@ megamol::core::utility::cam_samples_func megamol::core::utility::GetCamScenesFun
 
 
 std::string megamol::core::utility::SampleCameraScenes(std::shared_ptr<megamol::core::view::AbstractViewInterface> view,
-    cam_samples_func cam_func, unsigned int num_samples) {
-    auto [cam_positions, cam_directions] = cam_func(view->GetBoundingBoxes(), num_samples);
+    cam_samples_func cam_func, unsigned int num_samples, float dis_of_le) {
+    auto [cam_positions, cam_directions] = cam_func(view->GetBoundingBoxes(), num_samples, dis_of_le);
 
     auto cam = view->GetCamera();
 

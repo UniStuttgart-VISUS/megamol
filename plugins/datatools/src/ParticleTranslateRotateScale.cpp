@@ -88,13 +88,21 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
     auto bboxCenterZ = inData.GetBoundingBoxes().ObjectSpaceBBox().CalcCenter().GetZ();
 
     auto trafo = glm::mat4(1.0);
-    trafo = glm::translate(trafo, glm::vec3(-bboxCenterX, -bboxCenterY, -bboxCenterZ));
-    trafo = glm::scale(trafo, glm::vec3(scaleX, scaleY, scaleZ));
+    auto centering = glm::translate(trafo, glm::vec3(-bboxCenterX, -bboxCenterY, -bboxCenterZ));
+    auto scaling = glm::scale(trafo, glm::vec3(scaleX, scaleY, scaleZ));
     auto& qs = quaternionSlot.Param<core::param::Vector4fParam>()->Value();
     auto glmq = glm::quat(qs.GetW(), qs.GetX(), qs.GetY(), qs.GetZ());
-    trafo = glm::toMat4(glmq) * trafo;
-    trafo = glm::translate(trafo, glm::vec3(bboxCenterX, bboxCenterY, bboxCenterZ));
-    trafo = glm::translate(trafo, glm::vec3(transX, transY, transZ));
+    auto rotation = glm::toMat4(glmq);
+    //trafo = glm::translate(trafo, glm::vec3(bboxCenterX, bboxCenterY, bboxCenterZ));
+    auto translation = glm::translate(trafo, glm::vec3(transX, transY, transZ));
+    trafo = translation * rotation * scaling * centering;
+
+    unsigned int plc = inData.GetParticleListCount();
+    outData.SetParticleListCount(plc);
+
+    outData = inData;                   // also transfers the unlocker to 'outData'
+    inData.SetUnlocker(nullptr, false); // keep original data locked
+                                        // original data will be unlocked through outData
 
     if (InterfaceIsDirty() || (hash != inData.DataHash()) || (inData.DataHash() == 0) ||
         (frameID != inData.FrameID())) {
@@ -103,14 +111,8 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
         frameID = inData.FrameID();
         InterfaceResetDirty();
 
-        unsigned int plc = inData.GetParticleListCount();
-        outData.SetParticleListCount(plc);
-
-        outData = inData;                   // also transfers the unlocker to 'outData'
-        inData.SetUnlocker(nullptr, false); // keep original data locked
-                                            // original data will be unlocked through outData
-
         finalData.resize(plc);
+        finalLocalBBox.resize(plc);
         for (unsigned int i = 0; i < plc; i++) {
             MultiParticleDataCall::Particles& p = inData.AccessParticles(i);
 
@@ -172,34 +174,30 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
                     glm::vec3(finalData[i][7 * loop + 0], finalData[i][7 * loop + 1], finalData[i][7 * loop + 2]));
             }
 
-            vislib::math::Cuboid<float> newBoxLocal;
-            newBoxLocal.Set(lbb_local.x, lbb_local.y, lbb_local.z, rtf_local.x, rtf_local.y, rtf_local.z);
-            _global_box = newBoxLocal;
+            finalLocalBBox[i].Set(lbb_local.x, lbb_local.y, lbb_local.z, rtf_local.x, rtf_local.y, rtf_local.z);
+            _global_box = finalLocalBBox[i];
             MultiParticleDataCall::Particles& outp = outData.AccessParticles(i);
-            outp.SetBBox(newBoxLocal);
-            outp.SetCount(cnt);
-            outp.SetVertexData(
-                MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, finalData[i].data(), 7 * sizeof(float));
-            outp.SetColourData(
-                MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, finalData[i].data() + 3, 7 * sizeof(float));
-            outp.SetGlobalRadius(p.GetGlobalRadius() * scaleX);
         }
 
-        if (plc > 0) {
-            auto bbox = outData.AccessParticles(0).GetBBox();
-            auto lbb = glm::vec3(bbox.Left(), bbox.Bottom(), bbox.Back());
-            auto rtf = glm::vec3(bbox.Right(), bbox.Top(), bbox.Front());
-            for (unsigned int i = 1; i < plc; i++) {
-                bbox = outData.AccessParticles(i).GetBBox();
-                lbb = glm::min(lbb, glm::vec3(bbox.Left(), bbox.Bottom(), bbox.Back()));
-                rtf = glm::max(rtf, glm::vec3(bbox.Right(), bbox.Top(), bbox.Front()));
-            }
-
-            _global_box.Set(lbb.x, lbb.y, lbb.z, rtf.x, rtf.y, rtf.z);
-            outData.AccessBoundingBoxes().SetObjectSpaceBBox(_global_box);
-            outData.AccessBoundingBoxes().SetObjectSpaceClipBox(_global_box);
-        }
     }
+    auto lbb = glm::vec3(std::numeric_limits<float>::max());
+    auto rtf= glm::vec3(std::numeric_limits<float>::lowest());
+    for (unsigned int i = 0; i < inData.GetParticleListCount(); i++) {
+        MultiParticleDataCall::Particles& outp = outData.AccessParticles(i);
+        MultiParticleDataCall::Particles& inp = inData.AccessParticles(i);
+        outp.SetBBox(finalLocalBBox[i]);
+        lbb = glm::min(lbb, glm::vec3(finalLocalBBox[i].Left(), finalLocalBBox[i].Bottom(), finalLocalBBox[i].Back()));
+        rtf = glm::max(rtf, glm::vec3(finalLocalBBox[i].Right(), finalLocalBBox[i].Top(), finalLocalBBox[i].Front()));
+        outp.SetCount(inp.GetCount());
+        outp.SetVertexData(
+            MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, finalData[i].data(), 7 * sizeof(float));
+        outp.SetColourData(
+            MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, finalData[i].data() + 3, 7 * sizeof(float));
+        outp.SetGlobalRadius(inp.GetGlobalRadius() * scaleX);
+    }
+    _global_box.Set(lbb.x, lbb.y, lbb.z, rtf.x, rtf.y, rtf.z);
+    outData.AccessBoundingBoxes().SetObjectSpaceBBox(_global_box);
+    outData.AccessBoundingBoxes().SetObjectSpaceClipBox(_global_box);
     outData.SetDataHash(this->hash);
     outData.SetFrameID(this->frameID);
 

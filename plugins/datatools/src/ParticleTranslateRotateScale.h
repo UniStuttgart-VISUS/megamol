@@ -66,6 +66,7 @@ private:
     unsigned int frameID = -1;
 
     std::vector<std::vector<float>> finalData;
+    std::vector<vislib::math::Cuboid<float>> finalLocalBBox;
     vislib::math::Cuboid<float> _global_box;
 };
 
