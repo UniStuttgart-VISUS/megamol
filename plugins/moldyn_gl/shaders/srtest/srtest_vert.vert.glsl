@@ -10,7 +10,7 @@ uniform float globalRad;
 uniform bool useGlobalCol;
 uniform bool useGlobalRad;
 
-flat out vec3 objPos;
+//flat out vec3 objPos;
 flat out float rad;
 flat out float sqrRad;
 flat out vec4 pointColor;
@@ -51,6 +51,7 @@ void main() {
     int inv_idx = INV_IDX;
     int bump_idx = BUMP_IDX;
 
+    vec3 objPos;
     access_data(base_idx, objPos, pointColor, rad);
 
     oc_pos = objPos - camPos;

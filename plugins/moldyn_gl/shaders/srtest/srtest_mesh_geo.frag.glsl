@@ -4,7 +4,7 @@
 
 in Point {
     flat vec4 pointColor;
-    flat vec3 objPos;
+    //flat vec3 objPos;
     flat vec3 oc_pos;
     flat float rad;
     flat float sqrRad;

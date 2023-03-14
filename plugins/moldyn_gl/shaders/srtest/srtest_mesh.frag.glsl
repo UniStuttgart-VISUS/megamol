@@ -6,13 +6,13 @@
 #extension GL_ARB_conservative_depth : enable
 
 in Point {
-    flat vec3 objPos;
+    //flat vec3 objPos;
     flat float rad;
     flat float sqrRad;
     flat vec4 pointColor;
     flat vec3 oc_pos;
     //flat float c;
-    flat vec3 new_camPos;
+    //flat vec3 new_camPos;
 }
 pp;
 

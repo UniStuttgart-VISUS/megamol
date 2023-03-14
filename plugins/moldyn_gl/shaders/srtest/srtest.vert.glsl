@@ -6,7 +6,7 @@ uniform float globalRad;
 uniform bool useGlobalCol;
 uniform bool useGlobalRad;
 
-flat out vec3 objPos;
+//flat out vec3 objPos;
 flat out float rad;
 flat out float sqrRad;
 flat out vec4 pointColor;
@@ -25,6 +25,7 @@ flat out vec3 oc_pos;
 #include "srtest_touchplane.glsl"
 
 void main(void) {
+    vec3 objPos;
     access_data(gl_VertexID, objPos, pointColor, rad);
 
     sqrRad = rad * rad;

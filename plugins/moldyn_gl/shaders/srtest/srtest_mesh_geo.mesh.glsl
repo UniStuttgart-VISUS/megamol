@@ -28,7 +28,7 @@ uniform bool useGlobalRad;
 
 out Point {
     flat vec4 pointColor;
-    flat vec3 objPos;
+    //flat vec3 objPos;
     flat vec3 oc_pos;
     flat float rad;
     flat float sqrRad;
@@ -91,7 +91,7 @@ void main() {
             //v[i] /= v[i].w;
 
             pp[l_idx * NUM_V + i].pointColor = pointColor;
-            pp[l_idx * NUM_V + i].objPos = objPos;
+            //pp[l_idx * NUM_V + i].objPos = objPos;
 
             pp[l_idx * NUM_V + i].oc_pos = oc_pos;
 

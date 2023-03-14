@@ -6,7 +6,7 @@ layout(triangle_strip, max_vertices = 4) out;
 #include "srtest_ubo.glsl"
 
 in VPoint {
-    flat vec3  objPos;
+    //flat vec3  objPos;
     flat float rad;
     flat float sqrRad;
     flat vec4  pointColor;
@@ -15,7 +15,7 @@ in VPoint {
 v_pp[];
 
 out Point{
-    flat vec3 objPos;
+    //flat vec3 objPos;
     flat float rad;
     flat float sqrRad;
     flat vec4 pointColor;
@@ -48,7 +48,8 @@ void main() {
     v[2] = MVP * v[2];
     v[3] = MVP * v[3];*/
     mat4 v;
-    touchplane_old(v_pp[idx].objPos, v_pp[idx].rad, v_pp[idx].oc_pos, v);
+    //touchplane_old(v_pp[idx].objPos, v_pp[idx].rad, v_pp[idx].oc_pos, v);
+    touchplane_old(gl_in[idx].gl_Position.xyz, v_pp[idx].rad, v_pp[idx].oc_pos, v);
 
     /*v[0] /= v[0].w;
     v[1] /= v[1].w;
@@ -60,7 +61,7 @@ void main() {
 
     //gl_Position = vec4(v[0].xy, projPos.z, projPos.w);
     gl_Position = v[0];
-    g_pp.objPos = v_pp[idx].objPos;
+    //g_pp.objPos = v_pp[idx].objPos;
     g_pp.rad = v_pp[idx].rad;
     g_pp.sqrRad = v_pp[idx].sqrRad;
     g_pp.pointColor = v_pp[idx].pointColor;
@@ -68,7 +69,7 @@ void main() {
     EmitVertex();
     //gl_Position = vec4(v[1].xy, projPos.z, projPos.w);
     gl_Position = v[1];
-    g_pp.objPos = v_pp[idx].objPos;
+    //g_pp.objPos = v_pp[idx].objPos;
     g_pp.rad = v_pp[idx].rad;
     g_pp.sqrRad = v_pp[idx].sqrRad;
     g_pp.pointColor = v_pp[idx].pointColor;
@@ -76,7 +77,7 @@ void main() {
     EmitVertex();
     //gl_Position = vec4(v[3].xy, projPos.z, projPos.w);
     gl_Position = v[3];
-    g_pp.objPos = v_pp[idx].objPos;
+    //g_pp.objPos = v_pp[idx].objPos;
     g_pp.rad = v_pp[idx].rad;
     g_pp.sqrRad = v_pp[idx].sqrRad;
     g_pp.pointColor = v_pp[idx].pointColor;
@@ -84,7 +85,7 @@ void main() {
     EmitVertex();
     //gl_Position = vec4(v[2].xy, projPos.z, projPos.w);
     gl_Position = v[2];
-    g_pp.objPos = v_pp[idx].objPos;
+    //g_pp.objPos = v_pp[idx].objPos;
     g_pp.rad = v_pp[idx].rad;
     g_pp.sqrRad = v_pp[idx].sqrRad;
     g_pp.pointColor = v_pp[idx].pointColor;

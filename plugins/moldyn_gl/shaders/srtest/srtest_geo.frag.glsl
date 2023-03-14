@@ -8,7 +8,7 @@ layout(depth_greater) out float gl_FragDepth;
 #include "srtest_ubo.glsl"
 
 in Point {
-    flat vec3 objPos;
+    //flat vec3 objPos;
     flat float rad;
     flat float sqrRad;
     flat vec4 pointColor;

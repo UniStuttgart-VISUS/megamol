@@ -7,7 +7,7 @@ uniform bool useGlobalCol;
 uniform bool useGlobalRad;
 
 out VPoint {
-    flat vec3  objPos;
+    //flat vec3  objPos;
     flat float rad;
     flat float sqrRad;
     flat vec4  pointColor;
@@ -24,10 +24,11 @@ v_pp;
 #endif
 
 void main() {
-    access_data(gl_VertexID, v_pp.objPos, v_pp.pointColor, v_pp.rad);
+    vec3 objPos;
+    access_data(gl_VertexID, objPos, v_pp.pointColor, v_pp.rad);
 
-    v_pp.oc_pos = v_pp.objPos - camPos;
+    v_pp.oc_pos = objPos - camPos;
     v_pp.sqrRad = v_pp.rad * v_pp.rad;
 
-    gl_Position = vec4(v_pp.objPos, 1.0f);
+    gl_Position = vec4(objPos, 1.0f);
 }
