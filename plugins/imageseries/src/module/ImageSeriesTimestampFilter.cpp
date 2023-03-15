@@ -35,7 +35,7 @@ ImageSeriesTimestampFilter::ImageSeriesTimestampFilter()
     denoiseIterations.SetUpdateCallback(&ImageSeriesTimestampFilter::filterParametersChangedCallback);
     MakeSlotAvailable(&denoiseIterations);
 
-    denoiseNeighborThreshold << new core::param::IntParam(100, 10);
+    denoiseNeighborThreshold << new core::param::IntParam(100, 1);
     denoiseNeighborThreshold.SetUpdateCallback(&ImageSeriesTimestampFilter::filterParametersChangedCallback);
     MakeSlotAvailable(&denoiseNeighborThreshold);
 
