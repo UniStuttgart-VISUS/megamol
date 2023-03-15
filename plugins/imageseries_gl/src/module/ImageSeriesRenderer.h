@@ -109,6 +109,7 @@ private:
     core::param::ParamSlot baseRadiusParam;
     core::param::ParamSlot edgeWidthParam;
 
+    core::param::ParamSlot autoSave; 
     core::param::ParamSlot outputPathParam;
 
     ImageSeries2DCall::Output metadata;

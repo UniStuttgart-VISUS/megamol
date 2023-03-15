@@ -26,6 +26,7 @@ ImageSeriesRenderer::ImageSeriesRenderer()
         , renderGraphParam("Render Graph", "Render the input graph if there is one.")
         , baseRadiusParam("Node radius", "Radius of the nodes.")
         , edgeWidthParam("Edge width", "Width of the edges.")
+        , autoSave("Save automatically", "Automatically save files when changes occur.")
         , outputPathParam("Image output path", "If set, write resulting images to the selected directory.")
         , image_hash(-9837)
         , graph_hash(-7345) {
@@ -60,6 +61,9 @@ ImageSeriesRenderer::ImageSeriesRenderer()
 
     edgeWidthParam << new core::param::FloatParam(2.0);
     MakeSlotAvailable(&edgeWidthParam);
+
+    autoSave << new core::param::BoolParam(false);
+    MakeSlotAvailable(&autoSave);
 
     outputPathParam << new core::param::FilePathParam("", core::param::FilePathParam::Flag_Directory_ToBeCreated);
     MakeSlotAvailable(&outputPathParam);
@@ -165,7 +169,8 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
             std::get<0>(tfInfo), {std::get<1>(tfInfo), std::get<2>(tfInfo)}, std::get<3>(tfInfo));
     }
 
-    display->setFilePath(outputPathParam.Param<core::param::FilePathParam>()->Value());
+    display->setFilePath(autoSave.Param<core::param::BoolParam>()->Value(),
+        outputPathParam.Param<core::param::FilePathParam>()->Value());
 
     return display->render(call, renderGraphParam.Param<core::param::BoolParam>()->Value());
 }

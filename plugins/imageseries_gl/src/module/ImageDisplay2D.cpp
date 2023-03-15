@@ -301,9 +301,12 @@ bool ImageDisplay2D::updateGraph(
 bool ImageDisplay2D::updateTransferFunction(
     const unsigned int texture, const std::array<float, 2>& valueRange, const unsigned int size) {
 
-    transferFunction = texture;
-    usedValueRange = valueRange;
-    transferFunctionSize = size;
+    if (transferFunction != texture || usedValueRange != valueRange || transferFunctionSize != size) {
+        transferFunction = texture;
+        usedValueRange = valueRange;
+        transferFunctionSize = size;
+        hasUpdate = true;
+    }
 
     return true;
 }
@@ -334,8 +337,12 @@ ImageDisplay2D::Mode ImageDisplay2D::getDisplayMode() const {
     return mode;
 }
 
-void ImageDisplay2D::setFilePath(const std::filesystem::path& path) {
-    basePath = path;
+void ImageDisplay2D::setFilePath(const bool saveToFile, const std::filesystem::path& path) {
+    if (path != basePath && saveToFile) {
+        saveFile = saveToFile;
+        basePath = path;
+        hasUpdate = true;
+    }
 }
 
 bool ImageDisplay2D::renderImpl(
@@ -344,7 +351,7 @@ bool ImageDisplay2D::renderImpl(
         return false;
     }
 
-    if (hasUpdate && !basePath.empty()) {
+    if (hasUpdate && saveFile && !basePath.empty()) {
         glowl::FramebufferObject fbo(width, height);
         fbo.createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
 
@@ -369,9 +376,16 @@ bool ImageDisplay2D::renderImpl(
             glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, image->PeekData());
 
             png_codec.Image() = image.get();
-            png_codec.Save(path.string().c_str());
 
-            core::utility::log::Log::DefaultLog.WriteInfo("Saved image to %s.", path.string().c_str());
+            if (!std::filesystem::is_directory(path.parent_path())) {
+                std::filesystem::create_directories(path.parent_path());
+            }
+
+            if (png_codec.Save(path.string().c_str())) {
+                core::utility::log::Log::DefaultLog.WriteInfo("Saved image to %s.", path.string().c_str());
+            } else {
+                core::utility::log::Log::DefaultLog.WriteInfo("Image could not be saved to %s.", path.string().c_str());
+            }
         };
 
         std::array<float, 4> viewPort{}, clearColor{};

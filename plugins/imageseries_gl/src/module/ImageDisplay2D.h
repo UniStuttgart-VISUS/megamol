@@ -55,7 +55,7 @@ public:
     void setDisplayMode(Mode mode);
     Mode getDisplayMode() const;
 
-    void setFilePath(const std::filesystem::path& path);
+    void setFilePath(bool saveToFile, const std::filesystem::path& path);
 
 private:
     enum class render_t { none = 0, image = 1, graph = 2, all = 3 };
@@ -102,7 +102,9 @@ private:
 
     Mode mode = Mode::Color;
 
+    bool saveFile = false;
     std::filesystem::path basePath;
+
     bool hasUpdate = false;
 };
 
