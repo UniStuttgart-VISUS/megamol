@@ -46,13 +46,13 @@ view::AbstractView::AbstractView(ViewDimension dim)
               "for multiple cameras if you use .lua project files")
 
         , _saveCamSettingsSlot("multicam::saveSettings", "Save camera settings to file immediately.")
-        , _loadCamSettingsSlot("multicam::loadSettings",
-              "Load camera settings from file, overwriting the current settings in MegaMol.")
-        , _overrideCamSettingsSlot("multicam::overrideSettings",
-              "When activated, existing camera settings files will be overwritten.")
-        , _autoSaveCamSettingsSlot(
-              "multicam::autoSaveSettings", "When activated, the camera settings will be stored to disk "
-                                                      "whenever a camera checkpoint is saved or MegaMol is closed.")
+        , _loadCamSettingsSlot(
+              "multicam::loadSettings", "Load camera settings from file, overwriting the current settings in MegaMol.")
+        , _overrideCamSettingsSlot(
+              "multicam::overrideSettings", "When activated, existing camera settings files will be overwritten.")
+        , _autoSaveCamSettingsSlot("multicam::autoSaveSettings",
+              "When activated, the camera settings will be stored to disk "
+              "whenever a camera checkpoint is saved or MegaMol is closed.")
         , _autoLoadCamSettingsSlot("multicam::autoLoadSettings",
               "When activated, the view will load the camera settings from disk at startup.")
 
