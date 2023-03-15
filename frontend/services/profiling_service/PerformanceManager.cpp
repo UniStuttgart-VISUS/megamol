@@ -45,6 +45,7 @@ void PerformanceManager::Itimer::end() {
 
 bool PerformanceManager::cpu_timer::start(frame_type frame) {
     const auto ret = Itimer::start(frame);
+    //printf("starting region %s as %u\n", parent_name(this->conf).c_str(), current_global_index);
     timer_region r{time_point::clock::now(), time_point(), current_global_index++};
     regions.emplace_back(r);
     return ret;
@@ -270,7 +271,8 @@ PerformanceManager::handle_type PerformanceManager::add_timer(std::unique_ptr<It
 void PerformanceManager::startFrame(frame_type frame) {
     current_frame = frame;
     gl_timer::last_query = 0;
-    current_global_index = 0;
+    // we never reset the global counter!
+    //current_global_index = 0;
     start_timer(whole_frame_cpu);
 #ifdef MEGAMOL_USE_OPENGL
     start_timer(whole_frame_gl);

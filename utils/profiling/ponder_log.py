@@ -1,11 +1,15 @@
+import argparse
 import pandas
 from joblib import Parallel, delayed, cpu_count
 
-verbose = False
-
-df = pandas.read_csv("pvp.txt", header=0, sep=';')
-
-df["self cost (ns)"] = ""
+parser = argparse.ArgumentParser(usage="%(prog)s <FILE>", description="check profiling log for inconsistencies")
+parser.add_argument('files', nargs="*")
+parser.add_argument('-p', action='store_true', help="parallelize frame analysis", dest='parallel')
+parser.add_argument('-v', action='store_true', help="show verbose output", dest='verbose')
+parser.add_argument('-s', type=int, help="override start frame", dest='start_frame')
+parser.add_argument('-e', type=int, help="override end frame", dest='end_frame')
+parser.add_argument('-a', type=str, help="filter by API (CPU or OpenGL)", dest='api', default="CPU")
+args = parser.parse_args()
 
 class Call_Info:
     def __init__(self, line, duration):
@@ -23,7 +27,7 @@ def extract_call_pieces(parent_string):
     return source_mod, source_slot, dest_mod, dest_slot
 
 def verbose_print(*stuff, **what):
-    if verbose:
+    if args.verbose:
         print(*stuff, **what)
 
 def show_stack_frame(df, start, end, descr):
@@ -34,6 +38,7 @@ def process_stack(dataframe, stack_start, stack_end):
     verbose_print(f"process_stack {stack_start} - {stack_end}")
     row = dataframe.iloc[stack_start]
     dur = row["duration (ns)"]
+    #dur = row["total_time"]
     parent = row["parent"]
     callback = row["name"]
     source_mod, source_slot, dest_mod, dest_slot = extract_call_pieces(parent)
@@ -45,6 +50,7 @@ def process_stack(dataframe, stack_start, stack_end):
         p2 = r2["parent"]
         c2 = r2["name"]
         d2 = r2["duration (ns)"]
+        #d2 = r2["total_time"]
         sm, ss, dm, ds = extract_call_pieces(p2)
         if dm == dest_mod:
             # we got called again ourselves, stack was closed
@@ -75,7 +81,7 @@ def process_stack(dataframe, stack_start, stack_end):
 
 def analyze_frame(curr_frame):
     print(f"Analyzing Frame {curr_frame}")
-    dataframe = df.loc[(df["frame"] == curr_frame) & (df["type"] == "Call") & (df["api"] == "CPU")]
+    dataframe = df.loc[(df["frame"] == curr_frame) & (df["type"] == "Call") & (df["api"] == args.api)]
 
     stack_start = 0
     stack_end = len(dataframe.index) - 1
@@ -83,24 +89,34 @@ def analyze_frame(curr_frame):
     #show_stack_frame(curr_df, stack_start, stack_end, "stack")
     process_stack(dataframe, stack_start, stack_end)
 
-#for col in df.columns:
-#    print(col)
+for file in args.files:
+    df = pandas.read_csv(file, header=0, sep=';', quotechar="'")
 
-start_frame = df["frame"].min()
-end_frame = df["frame"].max()
+    df["self cost (ns)"] = ""
 
-# debug
-#start_frame = 3
-#end_frame = 10
+    print("found columns:")
+    for col in df.columns:
+        print(col, end=";")
+    print()
 
-# we don't need the setup frame
-start_frame = max(0, start_frame)
-print(f"Analyzing frames {start_frame}-{end_frame}")
+    start_frame = df["frame"].min()
+    end_frame = df["frame"].max()
 
-#for curr_frame in range(start_frame, end_frame + 1):
-#    analyze_frame(curr_frame)
+    if args.start_frame:
+        start_frame = args.start_frame
+    if args.end_frame:
+        end_frame = args.end_frame
 
-Parallel(n_jobs=cpu_count())(delayed(analyze_frame)(i) for i in range(start_frame, end_frame + 1))
+    # we don't need the setup frame
+    start_frame = max(0, start_frame)
+    print(f"Analyzing frames {start_frame}-{end_frame}")
+
+    if (args.parallel):
+        Parallel(n_jobs=cpu_count())(delayed(analyze_frame)(i) for i in range(start_frame, end_frame + 1))
+    else:
+        for curr_frame in range(start_frame, end_frame + 1):
+            analyze_frame(curr_frame)
+
 
 
 

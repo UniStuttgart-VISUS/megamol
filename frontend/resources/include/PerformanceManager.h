@@ -90,12 +90,12 @@ public:
         user_index_type user_index = 0;
         parent_type parent_type = parent_type::BUILTIN;
         time_point start, end, duration;
-        int32_t global_index;
+        int64_t global_index;
     };
 
     struct timer_region {
         time_point start, end;
-        int32_t global_index = -1;
+        int64_t global_index = -1;
     };
 
     struct frame_info {
@@ -126,7 +126,7 @@ public:
         [[nodiscard]] time_point get_end(uint32_t index) const {
             return regions[index].end;
         }
-        [[nodiscard]] int32_t get_global_index(uint32_t index) const {
+        [[nodiscard]] int64_t get_global_index(uint32_t index) const {
             return regions[index].global_index;
         }
         [[nodiscard]] frame_type get_start_frame() const {
@@ -242,7 +242,7 @@ private:
     std::unordered_map<handle_type, std::unique_ptr<Itimer>> timers;
     frame_type current_frame = 0;
     // there can only be one PerformanceManager currently.
-    inline static int32_t current_global_index = 0;
+    inline static int64_t current_global_index = 0;
     std::vector<update_callback> subscribers;
 
 #ifdef MEGAMOL_USE_OPENGL
