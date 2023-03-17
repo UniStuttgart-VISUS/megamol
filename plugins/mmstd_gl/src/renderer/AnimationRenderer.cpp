@@ -33,11 +33,14 @@ megamol::mmstd_gl::AnimationRenderer::AnimationRenderer()
     observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar), &AnimationRenderer::OnObservedChar);
     observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton), &AnimationRenderer::OnObservedMouseButton);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
+        &AnimationRenderer::OnObservedMouseButton);
     observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove), &AnimationRenderer::OnObservedMouseMove);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove),
+        &AnimationRenderer::OnObservedMouseMove);
     observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
-        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll), &AnimationRenderer::OnObservedMouseScroll);
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
+        &AnimationRenderer::OnObservedMouseScroll);
 
     // the interesting stuff we want to hook into
     observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
@@ -143,7 +146,8 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     }
 
     try {
-        orientations_program = core::utility::make_glowl_shader("orientation", shaderOptions, "mmstd_gl/animation/orientation.vert.glsl",
+        orientations_program =
+            core::utility::make_glowl_shader("orientation", shaderOptions, "mmstd_gl/animation/orientation.vert.glsl",
                 "mmstd_gl/animation/orientation.geom.glsl", "mmstd_gl/animation/orientation.frag.glsl");
     } catch (std::exception& e) {
         core::utility::log::Log::DefaultLog.WriteError(

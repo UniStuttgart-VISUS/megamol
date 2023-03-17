@@ -32,8 +32,8 @@ bool Profiling_Service::init(void* configPtr) {
             log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
         }
         // header
-        log_file << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end (" << unit_name
-                 << ");duration (" << unit_name << ")" << std::endl;
+        log_file << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end ("
+                 << unit_name << ");duration (" << unit_name << ")" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
             if (!profiling_logging.active) {
                 return;
@@ -118,27 +118,23 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
     };
 
     profiling_manager_subscription.AddModule = [&](core::ModuleInstance_t const& mod_inst) {
-
         log_graph_event(mod_inst.modulePtr->ClassName(), mod_inst.modulePtr->FullName().PeekBuffer(), "AddModule");
         return true;
     };
 
     profiling_manager_subscription.DeleteModule = [&](core::ModuleInstance_t const& mod_inst) {
-
         log_graph_event("", mod_inst.modulePtr->FullName().PeekBuffer(), "DeleteModule");
         return true;
     };
 
     profiling_manager_subscription.RenameModule = [&](std::string const& old_name, std::string const& new_name,
                                                       core::ModuleInstance_t const& mod_inst) {
-
         log_graph_event(old_name + "->" + new_name, "", "RenameModule");
         return true;
     };
 
     profiling_manager_subscription.ParameterChanged = [&](core::param::ParamSlot* const& param,
                                                           std::string const& new_value) {
-
         log_graph_event(param->Parent()->FullName().PeekBuffer(), param->Name().PeekBuffer(),
             "'ParamValueChanged=" + new_value + "'");
         return true;

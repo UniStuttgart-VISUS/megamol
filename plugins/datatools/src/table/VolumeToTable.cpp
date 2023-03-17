@@ -42,7 +42,7 @@ bool VolumeToTable::create(void) {
 }
 
 bool VolumeToTable::assertVDC(geocalls::VolumetricDataCall* in, table::TableDataCall* tc) {
-    
+
     in->SetFrameID(tc->GetFrameID(), true);
     do {
         if (!(*in)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))

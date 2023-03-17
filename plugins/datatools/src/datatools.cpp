@@ -75,7 +75,6 @@
 #include "table/MMFTDataSource.h"
 #include "table/MMFTDataWriter.h"
 #include "table/ParticlesToTable.h"
-#include "table/VolumeToTable.h"
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
 #include "table/TableFlagFilter.h"
@@ -91,6 +90,7 @@
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 #include "table/TableWhere.h"
+#include "table/VolumeToTable.h"
 
 namespace megamol::datatools {
 class DatatoolsPluginInstance : public megamol::core::factories::AbstractPluginInstance {
