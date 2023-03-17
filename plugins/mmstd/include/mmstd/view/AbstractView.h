@@ -272,6 +272,24 @@ protected:
     bool onRestoreCamera(param::ParamSlot& p);
 
     /**
+     * Saves the camera settings to file
+     *
+     * @param p Must be saveCamSettingsSlot
+     *
+     * @return true
+     */
+    bool onSaveCamera(param::ParamSlot& p);
+
+    /**
+     * Loads the camera settings from file
+     *
+     * @param p Must be loadCamSettingsSlot
+     *
+     * @return true
+     */
+    bool onLoadCamera(param::ParamSlot& p);
+
+    /**
      * This method determines the file path the camera file should have
      *
      * @return The file path of the camera file as string
@@ -305,6 +323,12 @@ protected:
     /** Triggers the restore of the camera settings */
     param::ParamSlot _restoreCameraSettingsSlot;
 
+    /** Triggers that the camera parameters are saved to disk immediately */
+    param::ParamSlot _saveCamSettingsSlot;
+
+    /** Triggers that the camera parameters are loaded from disk immediately */
+    param::ParamSlot _loadCamSettingsSlot;
+
     /** Slot activating or deactivating the override of already present camera settings */
     param::ParamSlot _overrideCamSettingsSlot;
 
@@ -328,7 +352,7 @@ protected:
     param::ParamSlot _showViewCubeParam;
 
     /** Array that holds the saved camera states */
-    std::array<std::pair<Camera, bool>, 11> _savedCameras;
+    std::array<std::pair<Camera, bool>, 10> _savedCameras;
 
     /** The object responsible for camera serialization */
     CameraSerializer _cameraSerializer;

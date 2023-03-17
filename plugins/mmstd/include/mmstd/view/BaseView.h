@@ -245,7 +245,7 @@ inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnK
                 this->_savedCameras[index].first = this->_camera;
                 this->_savedCameras[index].second = true;
                 if (this->_autoSaveCamSettingsSlot.template Param<param::BoolParam>()->Value()) {
-                    this->onStoreCamera(this->_storeCameraSettingsSlot); // manually trigger the storing
+                    this->onSaveCamera(this->_saveCamSettingsSlot); // manually trigger the storing
                 }
             } else {
                 if (this->_savedCameras[index].second) {

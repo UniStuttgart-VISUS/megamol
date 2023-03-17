@@ -40,7 +40,7 @@ jobs:
         run: |
           # Run style fix with script from master branch
           cd pr
-          ../master/.ci/check_format.sh fix
+          ../master/.ci/check_format.sh --fix
 
           # Commit changes
           if ! git diff --quiet --exit-code; then
