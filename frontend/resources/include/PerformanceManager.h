@@ -88,7 +88,7 @@ public:
         uint32_t frame_index = 0;
         // user payload, used to track call indices, for example
         user_index_type user_index = 0;
-        parent_type parent_type = parent_type::BUILTIN;
+        PerformanceManager::parent_type parent_type = parent_type::BUILTIN;
         time_point start, end, duration;
         int64_t global_index;
     };
@@ -247,8 +247,8 @@ private:
 
 #ifdef MEGAMOL_USE_OPENGL
     handle_type whole_frame_gl;
-    handle_type whole_frame_cpu;
 #endif
+    handle_type whole_frame_cpu;
 };
 
 } // namespace megamol::frontend_resources
