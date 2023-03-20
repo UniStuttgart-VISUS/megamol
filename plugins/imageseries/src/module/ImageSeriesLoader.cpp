@@ -146,7 +146,7 @@ void ImageSeriesLoader::refreshDirectory() {
 
     imageFilesUnfiltered.clear();
 
-    for (auto& entry : std::filesystem::recursive_directory_iterator(path)) {
+    for (auto& entry : std::filesystem::directory_iterator(path)) {
         imageFilesUnfiltered.push_back(entry.path().generic_u8string());
     }
 

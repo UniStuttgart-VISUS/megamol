@@ -552,6 +552,10 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     // Create output directory for file dumps
+    if (input.outputPath.empty()) {
+        input.outputPath = ".";
+    }
+
     if (!input.outputPath.empty() && !std::filesystem::is_directory(input.outputPath)) {
         std::filesystem::create_directories(input.outputPath);
     }

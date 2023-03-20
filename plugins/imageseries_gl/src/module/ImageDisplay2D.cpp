@@ -338,8 +338,9 @@ ImageDisplay2D::Mode ImageDisplay2D::getDisplayMode() const {
 }
 
 void ImageDisplay2D::setFilePath(const bool saveToFile, const std::filesystem::path& path) {
+    saveFile = saveToFile;
+
     if (path != basePath && saveToFile) {
-        saveFile = saveToFile;
         basePath = path;
         hasUpdate = true;
     }
@@ -351,7 +352,7 @@ bool ImageDisplay2D::renderImpl(
         return false;
     }
 
-    if (hasUpdate && saveFile && !basePath.empty()) {
+    if (hasUpdate && saveFile) {
         glowl::FramebufferObject fbo(width, height);
         fbo.createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT);
 
@@ -395,9 +396,14 @@ bool ImageDisplay2D::renderImpl(
         glViewport(0, 0, width, height);
         glClearColor(0.0, 0.0, 0.0, 0.0);
 
-        renderAndSave(basePath / "image_0_image.png", render_t::image);
-        renderAndSave(basePath / "image_1_graph.png", render_t::graph);
-        renderAndSave(basePath / "image_2_combined.png", render_t::all);
+        auto path = basePath;
+        if (path.empty()) {
+            path = ".";
+        }
+
+        renderAndSave(path / "image_0_image.png", render_t::image);
+        renderAndSave(path / "image_1_graph.png", render_t::graph);
+        renderAndSave(path / "image_2_combined.png", render_t::all);
 
         glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
         glViewport(viewPort[0], viewPort[1], viewPort[2], viewPort[3]);
