@@ -111,7 +111,11 @@ bool ArrowRenderer::create() {
 bool ArrowRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->get_data_slot_.CallAs<MultiParticleDataCall>();
+    if (c2 != nullptr) {
+        c2->SetFrameID(call.Time());
+    }
     if ((c2 != nullptr) && ((*c2)(1))) {
+
         call.SetTimeFramesCount(c2->FrameCount());
         call.AccessBoundingBoxes() = c2->AccessBoundingBoxes();
 

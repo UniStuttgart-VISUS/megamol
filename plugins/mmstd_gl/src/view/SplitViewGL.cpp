@@ -118,6 +118,9 @@ core::view::ImageWrapper view::SplitViewGL::Render(double time, double instanceT
         bool anything_connected = false;
         auto cr = render1();
         if (cr) {
+            if (_enableTimeSyncSlot.Param<core::param::BoolParam>()->Value()) {
+                cr->SetTime(static_cast<float>(time));
+            }
             (*cr)(CallRenderViewGL::CALL_EXTENTS);
             fcount = cr->TimeFramesCount();
             insitu = cr->IsInSituTime();
@@ -125,6 +128,9 @@ core::view::ImageWrapper view::SplitViewGL::Render(double time, double instanceT
         }
         cr = render2();
         if (cr) {
+            if (_enableTimeSyncSlot.Param<core::param::BoolParam>()->Value()) {
+                cr->SetTime(static_cast<float>(time));
+            }
             (*cr)(CallRenderViewGL::CALL_EXTENTS);
             fcount = std::max(fcount, cr->TimeFramesCount());
             insitu = insitu && cr->IsInSituTime();
@@ -246,18 +252,29 @@ core::view::ImageWrapper view::SplitViewGL::GetRenderingResult() const {
 }
 
 bool view::SplitViewGL::GetExtents(core::Call& call) {
+    const auto* crv = dynamic_cast<CallRenderViewGL*>(&call);
+    if (crv == nullptr)
+        return false;
+
     if (_enableTimeSyncSlot.Param<core::param::BoolParam>()->Value()) {
         unsigned int fcount = 1;
         bool insitu = false;
         bool anything_connected = false;
+
         auto cr = render1();
         if (cr) {
+            if (_enableTimeSyncSlot.Param<core::param::BoolParam>()->Value()) {
+                cr->SetTime(crv->Time());
+            }
             anything_connected = (*cr)(CallRenderViewGL::CALL_EXTENTS);
             fcount = cr->TimeFramesCount();
             insitu = cr->IsInSituTime();
         }
         cr = render2();
         if (cr) {
+            if (_enableTimeSyncSlot.Param<core::param::BoolParam>()->Value()) {
+                cr->SetTime(crv->Time());
+            }
             anything_connected = anything_connected || (*cr)(CallRenderViewGL::CALL_EXTENTS);
             fcount = std::max(fcount, cr->TimeFramesCount());
             insitu = insitu && cr->IsInSituTime();
