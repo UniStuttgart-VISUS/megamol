@@ -137,6 +137,11 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw PUBLIC glad::glad core_gl)
   endif()
 
+  if (MEGAMOL_USE_POWER)
+    find_package(power_overwhelming CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC power_overwhelming::power_overwhelming)
+  endif ()
+
   if (MEGAMOL_USE_VR_INTEROP)
     find_package(mwk-mint-interop)
     target_link_libraries(${PROJECT_NAME} PUBLIC mwk-mint-interop::mwk-mint-interop)
