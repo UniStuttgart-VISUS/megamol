@@ -108,6 +108,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
         frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
+        "ImagePresentationEntryPoints"
 #ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name
 #endif
@@ -688,6 +689,37 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             }
             return VoidResult{};
         }});
+    callbacks.add<VoidResult, std::string, std::string>("mmBindSink",
+        "(string sinkName, string moduleName)\n\tBind specified entry point to the sink.",
+        {[&](std::string sinkName, std::string moduleName) -> VoidResult {
+            auto& ep_ref =
+                m_requestedResourceReferences[11].getResource<frontend_resources::ImagePresentationEntryPoints>();
+            auto res = ep_ref.bind_sink_entry_point(sinkName, moduleName);
+            if (!res) {
+                return Error{"Could not bind entry point " + moduleName + " to sink " + sinkName};
+            }
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult, std::string, std::string>("mmUnbindSink",
+        "(string sinkName, string moduleName)\n\tUnbind specified entry point from the sink.",
+        {[&](std::string sinkName, std::string moduleName) -> VoidResult {
+            auto& ep_ref =
+                m_requestedResourceReferences[11].getResource<frontend_resources::ImagePresentationEntryPoints>();
+            auto res = ep_ref.unbind_sink_entry_point(sinkName, moduleName);
+            if (!res) {
+                return Error{"Could not unbind entry point " + moduleName + " from sink " + sinkName};
+            }
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult, std::string>("mmAddGraphEntryPoint",
+        "(string moduleName)\n\tAdd active graph entry point from one specific module.",
+        {[&](std::string moduleName) -> VoidResult {
+            auto res = graph.AddGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not add graph entry point " + moduleName};
+            }
+            return VoidResult{};
+        }});
     callbacks.add<VoidResult, std::string>("mmRemoveGraphEntryPoint",
         "(string moduleName)\n\tRemove active graph entry point from one specific module.",
         {[&](std::string moduleName) -> VoidResult {
@@ -712,7 +744,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<StringResult, std::string>("mmListModuleTimers",
         "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-                &this->m_requestedResourceReferences[11]
+                &this->m_requestedResourceReferences[12]
                      .getResource<megamol::frontend_resources::PerformanceManager>());
             std::stringstream output;
             auto m = graph.FindModule(name);
@@ -731,7 +763,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
         "(int handle, string comment)\n\tSet a transient comment for a timer; will show up in profiling log.",
         {[&](int handle, std::string comment) -> VoidResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-                &this->m_requestedResourceReferences[11]
+                &this->m_requestedResourceReferences[12]
                      .getResource<megamol::frontend_resources::PerformanceManager>());
             perf_manager->set_transient_comment(handle, comment);
             return VoidResult{};

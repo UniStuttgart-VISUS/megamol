@@ -202,7 +202,7 @@ int megamol::gui::LogBuffer::sync() {
 // ----------------------------------------------------------------------------
 
 megamol::gui::LogConsole::LogConsole(const std::string& window_name)
-        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_LOGCONSOLE)
+        : AbstractWindow2(window_name)
         , echo_log_buffer()
         , echo_log_stream(&this->echo_log_buffer)
         , log_msg_count(0)
@@ -224,12 +224,13 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
     sink_idx_ = megamol::core::utility::log::Log::DefaultLog.AddEchoTarget(sink);
 
     // Configure CONSOLE Window
-    this->win_config.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 50.0f * megamol::gui::gui_scaling.Get());
-    this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags =
+    this->win_config_.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 50.0f * megamol::gui::gui_scaling.Get());
+    this->win_config_.reset_size = this->win_config_.size;
+    this->win_config_.flags =
         ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoNavInputs;
-    this->win_config.hotkey =
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);
+    /*this->win_config_.hotkey =
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);*/
+    this->win_config_.hotkey = GetTypeInfo().hotkey;
 
     // Initialise
     this->input_shared_data = std::make_shared<InputSharedData>();
@@ -259,7 +260,7 @@ bool megamol::gui::LogConsole::Update() {
             if (this->win_log_force_open) {
                 if (entry.level == megamol::core::utility::log::Log::log_level::warn ||
                     entry.level == megamol::core::utility::log::Log::log_level::error) {
-                    this->win_config.show = true;
+                    this->win_config_.show = true;
                 }
             }
         }

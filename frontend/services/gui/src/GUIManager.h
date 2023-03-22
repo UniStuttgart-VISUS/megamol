@@ -22,6 +22,8 @@
 #include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
 
+#include "windows/WindowCollection2.h"
+
 
 namespace megamol::gui {
 
@@ -174,6 +176,11 @@ public:
         return this->render_backend.GetImage();
     }
 
+
+    std::vector<megamol::frontend_resources::ImagePresentationEntryPoints::SubscriberFunction> GetSubscribers() {
+        return std::vector<megamol::frontend_resources::ImagePresentationEntryPoints::SubscriberFunction>();
+    }
+
     ///////// SET ///////////
 
     /**
@@ -249,7 +256,7 @@ public:
     void RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
 
     void SetLuaFunc(megamol::frontend_resources::common_types::lua_func_type* lua_func) {
-        auto cons = win_collection.GetWindow<LogConsole>();
+        auto cons = win_collection2.GetWindow<LogConsole>("LogConsole");
         if (cons) {
             cons->SetLuaFunc(lua_func);
         }
@@ -314,6 +321,8 @@ public:
     }
 
     void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
+
+    void digestChangedRequestedResources();
 
     ///////////////////////////////////////////////////////////////////////
 
@@ -386,7 +395,9 @@ private:
     StateBuffer gui_state;
 
     /** GUI element collections. */
-    WindowCollection win_collection;
+    // WindowCollection win_collection;
+
+    WindowCollection2 win_collection2;
 
     /** Resource requests from the GUI windows. */
     std::vector<std::string> requested_resources;

@@ -12,6 +12,7 @@
 #include "LogConsole.h"
 #include "ParameterList.h"
 #include "PerformanceMonitor.h"
+#include "RenderingEndPoint.h"
 #include "TransferFunctionEditor.h"
 
 
@@ -19,25 +20,101 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-WindowCollection::WindowCollection() : windows() {
+AbstractWindow::WindowType get_window_type(AbstractWindow::WindowConfigID id) {
+    switch (id) {
+    case AbstractWindow::WINDOW_ID_MAIN_PARAMETERS: {
+        PerformanceMonitor win("Performance Metrics");
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_PERFORMANCE;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_PARAMETERS: {
 
-    this->windows.emplace_back(std::make_shared<HotkeyEditor>("Hotkey Editor"));
-    this->windows.emplace_back(std::make_shared<LogConsole>("Log Console"));
-    this->windows.emplace_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));
-    this->windows.emplace_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
-    this->windows.emplace_back(
+    } break;
+    case AbstractWindow::WINDOW_ID_PERFORMANCE: {
+        PerformanceMonitor win("Performance Metrics");
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_PERFORMANCE;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_HOTKEYEDITOR: {
+        HotkeyEditor win("Hotkey Editor");
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_HOTKEYEDITOR;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION: {
+        TransferFunctionEditor win("Transfer Function Editor", true);
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_CONFIGURATOR: {
+        auto tf = std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true);
+        Configurator win("Configurator", tf);
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_LOGCONSOLE: {
+        LogConsole win("Log Console");
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_LOGCONSOLE;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_RENDERING_ENDPOINT: {
+        AbstractWindow::WindowType wt;
+        wt.unique = false;
+    } break;
+    default:
+        return AbstractWindow::WindowType{};
+    }
+}
+
+
+WindowCollection::WindowCollection() {
+
+    this->avail_windows.push_back(std::make_shared<HotkeyEditor>("Hotkey Editor"));
+    AddWindow<HotkeyEditor>("Hotkey Editor");
+    this->avail_windows.push_back(std::make_shared<LogConsole>("Log Console"));
+    AddWindow<LogConsole>("Log Console");
+    this->avail_windows.push_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));
+    AddWindow<TransferFunctionEditor>("Transfer Function Editor", true);
+    this->avail_windows.push_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
+    AddWindow<PerformanceMonitor>("Performance Metrics");
+    this->avail_windows.push_back(
         std::make_shared<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>()));
+    AddWindow<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>());
+    this->avail_windows.push_back(std::make_shared<RenderingEndPoint>("Rendering Endpoint"));
     // Requires Configurator and TFEditor to be added before
     this->add_parameter_window("Parameters", AbstractWindow::WINDOW_ID_MAIN_PARAMETERS);
 
     // Windows are sorted depending on hotkey
-    std::sort(this->windows.begin(), this->windows.end(),
+    std::sort(this->avail_windows.begin(), this->avail_windows.end(),
         [&](std::shared_ptr<AbstractWindow> const& a, std::shared_ptr<AbstractWindow> const& b) {
             return (a->Config().hotkey.key > b->Config().hotkey.key);
         });
 
     // retrieve resource requests of each window class
-    for (auto const& win : windows) {
+    for (auto const& win : avail_windows) {
         auto res = win->requested_lifetime_resources();
         requested_resources.insert(requested_resources.end(), res.begin(), res.end());
     }
@@ -57,14 +134,14 @@ bool WindowCollection::AddWindow(
     auto win_hash = std::hash<std::string>()(window_name);
     if (this->WindowExists(win_hash)) {
         // Overwrite volatile callback for existing window
-        for (auto& win : this->windows) {
+        for (auto& [key, win] : this->created_windows) {
             if (win->Hash() == win_hash) {
                 win->SetVolatileCallback(callback);
                 continue;
             }
         }
     } else {
-        this->windows.push_back(std::make_shared<AbstractWindow>(
+        this->created_windows[window_name] = (std::make_shared<AbstractWindow>(
             window_name, const_cast<std::function<void(AbstractWindow::BasicConfig&)>&>(callback)));
     }
     return true;
@@ -74,7 +151,7 @@ bool WindowCollection::AddWindow(
 void WindowCollection::Update() {
 
     // Call window update functions
-    for (auto& win : this->windows) {
+    for (auto& [key, win] : this->created_windows) {
         win->Update();
     }
 }
@@ -123,7 +200,7 @@ void WindowCollection::Draw(bool menu_visible) {
         }
     };
 
-    this->EnumWindows(func);
+    this->EnumCreatedWindows(func);
 }
 
 
@@ -166,7 +243,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
         }
 
         // Then read configuration for all existing windows
-        for (auto& window : this->windows) {
+        for (auto& [key, window] : this->created_windows) {
             window->StateFromJSON(in_json);
             window->SpecificStateFromJSON(in_json);
         }
@@ -188,7 +265,7 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
 
     try {
         // Append to given json
-        for (auto& window : this->windows) {
+        for (auto& [key, window] : this->created_windows) {
 
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window->Name()]["win_callback"] =
                 static_cast<int>(window->WindowID()); /// XXX rename to "win_config_id"
@@ -210,12 +287,20 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
 
 
 bool WindowCollection::DeleteWindow(size_t win_hash_id) {
-
-    for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
-        if (((*iter)->Hash() == win_hash_id)) {
-            if (((*iter)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) ||
-                ((*iter)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
-                this->windows.erase(iter);
+    /*windows.erase(windows.begin(), std::remove_if(windows.begin(), windows.end(), [&win_hash_id](auto& entry) {
+        if (((entry.second)->Hash() == win_hash_id)) {
+            if (((entry.second)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) ||
+                ((entry.second)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
+                return true;
+            }
+        }
+        return false;
+    }));*/
+    for (auto iter = this->created_windows.begin(); iter != this->created_windows.end(); iter++) {
+        if (((iter->second)->Hash() == win_hash_id)) {
+            if (((iter->second)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) ||
+                ((iter->second)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
+                this->created_windows.erase(iter->second->Name());
                 return true;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -231,8 +316,15 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 
 void megamol::gui::WindowCollection::setRequestedResources(
     std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
-    for (auto& win : windows) {
+    for (auto& [key, win] : created_windows) {
         win->setRequestedResources(resources);
+    }
+}
+
+
+void megamol::gui::WindowCollection::digestChangedRequestedResources() {
+    for (auto& [key, win] : created_windows) {
+        win->digestChangedRequestedResources();
     }
 }
 
@@ -246,6 +338,6 @@ void WindowCollection::add_parameter_window(
             [&](const std::string& windowname, AbstractWindow::WindowConfigID winid, ImGuiID initialmoduleuid) {
                 this->add_parameter_window(windowname, winid, initialmoduleuid);
             });
-        this->windows.emplace_back(win_paramlist);
+        this->created_windows[window_name] = win_paramlist;
     }
 }

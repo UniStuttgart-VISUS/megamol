@@ -16,7 +16,7 @@ using namespace megamol::gui;
 
 
 PerformanceMonitor::PerformanceMonitor(const std::string& window_name)
-        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_PERFORMANCE)
+        : AbstractWindow2(window_name)
         , win_show_options(false)
         , win_buffer_size(20)
         , win_refresh_rate(2.0f)
@@ -31,10 +31,9 @@ PerformanceMonitor::PerformanceMonitor(const std::string& window_name)
         , averaged_ms(0.0f) {
 
     // Configure FPS/MS Window
-    this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar |
+    this->win_config_.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar |
                              ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoNavInputs;
-    this->win_config.hotkey =
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F7, core::view::Modifier::NONE);
+    this->win_config_.hotkey = GetTypeInfo().hotkey;
 }
 
 

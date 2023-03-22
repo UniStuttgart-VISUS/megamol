@@ -15,6 +15,8 @@
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
 
+#include "AbstractWindow2.h"
+
 
 namespace megamol::gui {
 
@@ -22,8 +24,16 @@ namespace megamol::gui {
 /* ************************************************************************
  * The graph configurator GUI window
  */
-class Configurator : public AbstractWindow {
+class Configurator : public AbstractWindow2 {
 public:
+    static WindowType GetTypeInfo() {
+        WindowType wt;
+        wt.unique = true;
+        wt.name = "Configurator";
+        wt.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F11, core::view::Modifier::NONE);
+        return wt;
+    }
+
     explicit Configurator(const std::string& window_name, std::shared_ptr<TransferFunctionEditor> win_tfe_ptr);
     ~Configurator() = default;
 

@@ -9,6 +9,7 @@
 
 #include "EntryPoint.h"
 #include "FrontendResource.h"
+#include "ImagePresentationSink.h"
 
 #include <any>
 #include <functional>
@@ -27,14 +28,21 @@ using EntryPointRenderFunctions = std::tuple<
 // the ImagePresentation Service manages the entry points - things that are held and "get rendered" by the frontend
 // using the ImagePresentationEntryPoints resource participants (services) may add/remove entry points to the image presentation
 struct ImagePresentationEntryPoints {
+    static std::string const GLFW_Sink_Name;
     std::function<bool(std::string const&, EntryPointRenderFunctions const&)> add_entry_point;
     std::function<bool(std::string const&, const int)> set_entry_point_priority;
     std::function<bool(std::string const&)> remove_entry_point;
     std::function<bool(std::string const&, std::string const&)> rename_entry_point;
     std::function<void()> clear_entry_points;
 
+    std::function<bool(ImagePresentationSink const&)> add_sink;
+    std::function<bool(std::string const&)> remove_sink;
+
+    std::function<bool(std::string const&, std::string const&)> bind_sink_entry_point;
+    std::function<bool(std::string const&, std::string const&)> unbind_sink_entry_point;
+
     // services may also subscribe to entry point changes to get notified when entry points get added/removed
-    enum class SubscriptionEvent { Add, Remove, Rename, Clear };
+    enum class SubscriptionEvent { Add, Remove, Rename, Clear, AddSink, RemoveSink, BindSink, UnbindSink };
 
     using SubscriberFunction =
         std::function<void(frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const&,

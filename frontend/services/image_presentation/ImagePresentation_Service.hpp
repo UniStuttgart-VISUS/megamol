@@ -105,6 +105,10 @@ private:
     bool remove_entry_point(std::string const& name);
     bool rename_entry_point(std::string const& oldName, std::string const& newName);
     bool clear_entry_points();
+    bool add_sink(ImagePresentationSink const& sink);
+    bool remove_sink(std::string const& name);
+    bool bind_sink_to_ep(std::string const& sink_name, std::string const& ep_name);
+    bool unbind_sink_to_ep(std::string const& sink_name, std::string const& ep_name);
 
     void subscribe_to_entry_point_changes(
         frontend_resources::ImagePresentationEntryPoints::SubscriberFunction const& subscriber);
@@ -134,6 +138,8 @@ private:
     void fill_lua_callbacks();
 
     std::function<bool(std::string const&, std::string const&)> m_entrypointToPNG_trigger;
+
+    std::unordered_map<std::string, std::list<std::string>> ep_sink_map;
 };
 
 } // namespace megamol::frontend

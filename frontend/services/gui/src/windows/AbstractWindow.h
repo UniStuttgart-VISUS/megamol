@@ -39,7 +39,15 @@ public:
         WINDOW_ID_HOTKEYEDITOR = 4,
         WINDOW_ID_TRANSFER_FUNCTION = 5,
         WINDOW_ID_CONFIGURATOR = 6,
-        WINDOW_ID_LOGCONSOLE = 7
+        WINDOW_ID_LOGCONSOLE = 7,
+        WINDOW_ID_RENDERING_ENDPOINT = 8
+    };
+
+    struct WindowType {
+        bool unique = true;
+        WindowConfigID id = WINDOW_ID_VOLATILE;
+        std::string name;
+        frontend_resources::KeyCode hotkey;
     };
 
     struct BasicConfig {
@@ -63,6 +71,8 @@ public:
     virtual void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
         frontend_resources = resources;
     };
+
+    virtual void digestChangedRequestedResources() {}
 
     AbstractWindow(const std::string& name, WindowConfigID window_id)
             : win_config()

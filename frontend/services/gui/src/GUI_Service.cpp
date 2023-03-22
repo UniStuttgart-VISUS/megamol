@@ -132,6 +132,7 @@ void GUI_Service::digestChangedRequestedResources() {
     this->setShutdown(this->m_gui->GetTriggeredShutdown());
 
     // Check for updates in requested resources --------------------------------
+    m_gui->digestChangedRequestedResources();
 
     /// KeyboardEvents = resource index 2
     auto maybe_keyboard_events = frontend_resources->getOptional<megamol::frontend_resources::KeyboardEvents>();
@@ -360,6 +361,12 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     if (!view_presentation_ok) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "GUI_Service: error adding graph entry point ... image presentation service rejected GUI Service.");
+    }
+    {
+        auto subs = m_gui->GetSubscribers();
+        for (auto const& sub : subs) {
+            image_presentation.subscribe_to_entry_point_changes(sub);
+        }
     }
 
     m_exec_lua = const_cast<megamol::frontend_resources::common_types::lua_func_type*>(

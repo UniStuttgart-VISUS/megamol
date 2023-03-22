@@ -11,14 +11,24 @@
 #include "AbstractWindow.h"
 #include "widgets/HoverToolTip.h"
 
+#include "AbstractWindow2.h"
+
 
 namespace megamol::gui {
 
 /* ************************************************************************
  * The performance monitor GUI window
  */
-class PerformanceMonitor : public AbstractWindow {
+class PerformanceMonitor : public AbstractWindow2 {
 public:
+    struct WindowType GetTypeInfo() {
+        WindowType wt;
+        wt.unique = true;
+        wt.name = "PerformanceMonitor";
+        wt.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F7, core::view::Modifier::NONE);
+        return wt;
+    }
+
     enum TimingMode { TIMINGMODE_FPS, TIMINGMODE_MS };
 
     explicit PerformanceMonitor(const std::string& window_name);

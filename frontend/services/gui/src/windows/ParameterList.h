@@ -13,6 +13,8 @@
 #include "windows/Configurator.h"
 #include "windows/TransferFunctionEditor.h"
 
+#include "AbstractWindow2.h"
+
 
 namespace megamol::gui {
 
@@ -20,12 +22,19 @@ namespace megamol::gui {
 /* ************************************************************************
  * The parameter list GUI window
  */
-class ParameterList : public AbstractWindow {
+class ParameterList : public AbstractWindow2 {
 public:
-    typedef std::function<void(const std::string&, AbstractWindow::WindowConfigID, ImGuiID)>
-        RequestParamWindowCallback_t;
+    static WindowType GetTypeInfo() {
+        WindowType wt;
+        wt.unique = true;
+        wt.name = "ParameterList";
+        wt.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
+        return wt;
+    }
 
-    ParameterList(const std::string& window_name, AbstractWindow::WindowConfigID win_id, ImGuiID initial_module_uid,
+    typedef std::function<void(const std::string&, ImGuiID)> RequestParamWindowCallback_t;
+
+    ParameterList(const std::string& window_name, ImGuiID initial_module_uid,
         std::shared_ptr<Configurator> win_configurator, std::shared_ptr<TransferFunctionEditor> win_tfeditor,
         const RequestParamWindowCallback_t& add_parameter_window);
     ~ParameterList() = default;

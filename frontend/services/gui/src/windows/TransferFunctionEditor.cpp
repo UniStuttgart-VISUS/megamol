@@ -165,7 +165,7 @@ std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
 // ----------------------------------------------------------------------------
 
 TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, bool windowed)
-        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION)
+        : AbstractWindow2(window_name)
         , windowed_mode(windowed)
         , connected_parameter_ptr(nullptr)
         , nodes()
@@ -206,9 +206,8 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
     RampAdapter(this->nodes, this->texture_size);
 
     // Configure TRANSFER FUNCTION Window
-    this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNavInputs;
-    this->win_config.hotkey =
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F8, core::view::Modifier::NONE);
+    this->win_config_.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNavInputs;
+    this->win_config_.hotkey = GetTypeInfo().hotkey;
 }
 
 
@@ -313,11 +312,11 @@ bool TransferFunctionEditor::Update() {
 
     // Change window flags depending on current view of transfer function editor
     if (this->IsMinimized()) {
-        this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
+        this->win_config_.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
                                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
                                  ImGuiWindowFlags_NoNavInputs;
     } else {
-        this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNavInputs;
+        this->win_config_.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNavInputs;
     }
     this->win_view_minimized = this->IsMinimized();
     this->win_view_vertical = this->IsVertical();

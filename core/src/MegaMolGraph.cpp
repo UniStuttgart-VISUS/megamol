@@ -389,6 +389,10 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListP
 }
 
 bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
+    return AddGraphEntryPoint(module);
+}
+
+bool megamol::core::MegaMolGraph::AddGraphEntryPoint(std::string module) {
     auto moduleName = clean(module);
     // currently, we expect the entry point to be derived from AbstractViewInterface
     auto module_it = find_module(moduleName);

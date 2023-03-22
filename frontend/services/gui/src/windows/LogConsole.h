@@ -13,6 +13,8 @@
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 
+#include "AbstractWindow2.h"
+
 
 namespace megamol::gui {
 
@@ -54,7 +56,7 @@ private:
 /* ************************************************************************
  * The content of the log console GUI window
  */
-class LogConsole : public AbstractWindow {
+class LogConsole : public AbstractWindow2 {
 public:
     using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
 
@@ -67,6 +69,14 @@ public:
         size_t history_index;
         std::string param_hint;
     };
+
+    static WindowType GetTypeInfo() {
+        WindowType wt;
+        wt.unique = true;
+        wt.name = "LogConsole";
+        wt.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);
+        return wt;
+    }
 
     explicit LogConsole(const std::string& window_name);
     ~LogConsole();

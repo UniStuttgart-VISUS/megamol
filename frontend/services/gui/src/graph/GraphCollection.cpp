@@ -366,6 +366,15 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
                 (*input_lua_func)("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
             } break;
+            case (Graph::QueueAction::BIND_GLFW_SINK): {
+                (*input_lua_func)("mmBindSink([=[" + frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name +
+                                  "]=],[=[" + data.name_id + "]=])");
+            } break;
+            case (Graph::QueueAction::UNBIND_GLFW_SINK): {
+                (*input_lua_func)("mmUnbindSink([=[" +
+                                  frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name + "]=],[=[" +
+                                  data.name_id + "]=])");
+            } break;
             default:
                 break;
             }
@@ -864,7 +873,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                 std::string projectstr;
                 std::stringstream confInstances, confModules, confCalls, confParams;
                 for (auto& module_ptr : graph_ptr->Modules()) {
-                    if (module_ptr->IsGraphEntry()) {
+                    if (module_ptr->HasGLFWSink()) {
                         confInstances << "mmCreateView(\"" << module_ptr->GraphEntryName() << "\",\""
                                       << module_ptr->ClassName() << "\",\"" << module_ptr->FullName() << "\")\n";
                     } else {
@@ -1905,7 +1914,7 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                 for (auto& module_ptr : last_running_graph->Modules()) {
                     Graph::QueueData queue_data;
                     queue_data.name_id = module_ptr->FullName();
-                    if (module_ptr->IsGraphEntry()) {
+                    if (module_ptr->HasGLFWSink()) {
                         running_graph->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     }
                     if (!running_graph->ModuleExists(module_ptr->FullName())) {
@@ -1926,7 +1935,7 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                     queue_data.name_id = module_ptr->FullName();
                     queue_data.class_name = module_ptr->ClassName();
                     running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
-                    if (module_ptr->IsGraphEntry()) {
+                    if (module_ptr->HasGLFWSink()) {
                         running_graph->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                     }
                     // Set all parameters in GUI graph dirty in order to propagate current values to new core

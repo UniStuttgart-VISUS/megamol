@@ -85,6 +85,23 @@ bool ImagePresentation_Service::init(const Config& config) {
         };
     m_entry_points_registry_resource.get_entry_point = [&](auto const& name) { return get_entry_point(name); };
 
+    m_entry_points_registry_resource.add_sink = [&](auto const& sink) {
+        return add_sink(sink) && tell_subscribers(ev::AddSink, {sink});
+    };
+
+    m_entry_points_registry_resource.remove_sink = [&](auto const& name) {
+        return remove_sink(name) && tell_subscribers(ev::RemoveSink, {name});
+    };
+
+    m_entry_points_registry_resource.bind_sink_entry_point = [&](std::string const& sink_name,
+                                                                 std::string const& ep_name) {
+        return bind_sink_to_ep(sink_name, ep_name) && tell_subscribers(ev::BindSink, {sink_name, ep_name});
+    };
+    m_entry_points_registry_resource.unbind_sink_entry_point = [&](std::string const& sink_name,
+                                                                   std::string const& ep_name) {
+        return unbind_sink_to_ep(sink_name, ep_name) && tell_subscribers(ev::UnbindSink, {sink_name, ep_name});
+    };
+
     this->m_providedResourceReferences = {
         {"ImagePresentationEntryPoints", m_entry_points_registry_resource}, // used by MegaMolGraph to set entry points
         {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger},
@@ -202,18 +219,20 @@ void ImagePresentation_Service::PresentRenderedImages() {
     // this way sinks can access the current fbo size as previous_state
     m_global_framebuffer_events.clear();
 
-    // pull result images into separate list
-    static std::vector<ImageWrapper> wrapped_images;
-    wrapped_images.clear();
-    wrapped_images.reserve(m_entry_points.size());
+    // pull result images into separate lists
+    std::unordered_map<std::string, std::vector<ImageWrapper>> sink_img_map;
+    sink_img_map.reserve(m_presentation_sinks.size());
 
     // rendering results are presented in order of execution of entry points
     for (auto& entry : m_entry_points) {
-        wrapped_images.push_back(entry.execution_result_image);
+        auto const& sink_list = ep_sink_map[entry.moduleName];
+        for (auto const& sink : sink_list) {
+            sink_img_map[sink].push_back(entry.execution_result_image);
+        }
     }
 
     for (auto& sink : m_presentation_sinks) {
-        sink.present_images(wrapped_images);
+        sink.present_images(sink_img_map[sink.name]);
     }
 }
 
@@ -330,6 +349,8 @@ bool ImagePresentation_Service::add_entry_point(std::string const& name, EntryPo
     // ensure sorting of entry points according to priorities
     set_entry_point_priority(name, 0);
 
+    bind_sink_to_ep(frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name, name);
+
     return true;
 }
 
@@ -351,6 +372,8 @@ bool ImagePresentation_Service::set_entry_point_priority(std::string const& name
 
 bool ImagePresentation_Service::remove_entry_point(std::string const& name) {
 
+    ep_sink_map.erase(name);
+
     m_entry_points.remove_if([&](auto& entry) { return entry.moduleName == name; });
 
     return true;
@@ -367,11 +390,52 @@ bool ImagePresentation_Service::rename_entry_point(std::string const& oldName, s
 
     entry_it->moduleName = newName;
 
+    auto l = ep_sink_map[oldName];
+    ep_sink_map.erase(oldName);
+    ep_sink_map[newName] = l;
+
     return true;
 }
 
 bool ImagePresentation_Service::clear_entry_points() {
     m_entry_points.clear();
+
+    ep_sink_map.clear();
+
+    return true;
+}
+
+bool ImagePresentation_Service::add_sink(ImagePresentationSink const& sink) {
+    m_presentation_sinks.push_back(sink);
+    return true;
+}
+
+bool ImagePresentation_Service::remove_sink(std::string const& name) {
+    m_presentation_sinks.remove_if([&name](auto const& entry) { return entry.name == name; });
+    for (auto& [key, list] : ep_sink_map) {
+        list.remove(name);
+    }
+    return true;
+}
+
+bool ImagePresentation_Service::bind_sink_to_ep(std::string const& sink_name, std::string const& ep_name) {
+    auto& sink_list = ep_sink_map[ep_name];
+    if (std::find(sink_list.begin(), sink_list.end(), sink_name) == sink_list.end()) {
+        sink_list.push_back(sink_name);
+    }
+
+    return true;
+}
+
+bool ImagePresentation_Service::unbind_sink_to_ep(std::string const& sink_name, std::string const& ep_name) {
+    if (ep_name.empty()) {
+        for (auto& [key, list] : ep_sink_map) {
+            list.remove(sink_name);
+        }
+    } else {
+        auto& sink_list = ep_sink_map[ep_name];
+        sink_list.remove(sink_name);
+    }
 
     return true;
 }
@@ -385,8 +449,8 @@ void ImagePresentation_Service::add_glfw_sink() {
         return;
     }
 
-    m_presentation_sinks.push_back(
-        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
+    m_presentation_sinks.push_back({frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name,
+        [&](auto const& images) { this->present_images_to_glfw_window(images); }});
 }
 
 void ImagePresentation_Service::subscribe_to_entry_point_changes(
