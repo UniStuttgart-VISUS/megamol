@@ -38,8 +38,6 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
               "Remove 1-to-1 connected nodes, as these do not provide any valuable information.")
         , resolveDiamondsParam("simplification::Resolve diamond patterns",
               "Resolve diamond patterns, as these usually result from small local velocities.")
-        , combineTinyParam("simplification::Combine small areas",
-              "Combine small areas, as these usually result from small local velocities.")
         , minAreaParam("simplification::Minimum area", "Minimum area, used for combining small areas.")
         , keepBreakthroughNodesParam("simplification::Keep breakthrough nodes",
               "Keep breakthrough nodes, although they would be removed using other fixes.")
@@ -121,10 +119,6 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     resolveDiamondsParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&resolveDiamondsParam);
 
-    combineTinyParam << new core::param::BoolParam(false);
-    combineTinyParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
-    MakeSlotAvailable(&combineTinyParam);
-
     minAreaParam << new core::param::IntParam(10, 1, 1000);
     minAreaParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     minAreaParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
@@ -196,7 +190,6 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
                     (falseSinksParam.Param<bool_pt>()->Value() ? fixes_t::false_sinks : fixes_t::nope) |
                     (resolveDiamondsParam.Param<bool_pt>()->Value() ? fixes_t::resolve_diamonds : fixes_t::nope) |
                     (combineTrivialParam.Param<bool_pt>()->Value() ? fixes_t::combine_trivial : fixes_t::nope) |
-                    (combineTinyParam.Param<bool_pt>()->Value() ? fixes_t::combine_tiny : fixes_t::nope) |
                     (removeTrivialParam.Param<bool_pt>()->Value() ? fixes_t::remove_trivial : fixes_t::nope) |
                     (keepBreakthroughNodesParam.Param<bool_pt>()->Value() ? fixes_t::keep_breakthrough_nodes : fixes_t::nope);
 

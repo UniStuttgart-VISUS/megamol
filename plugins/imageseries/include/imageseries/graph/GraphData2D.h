@@ -173,7 +173,11 @@ public:
     };
 
     struct Edge {
-        Edge(NodeID from, NodeID to, float weight = 0.0f) : from(from), to(to), weight(weight) {}
+        Edge(NodeID from, NodeID to, float weight = 0.0f, float velocity = 0.0f)
+                : from(from)
+                , to(to)
+                , weight(weight)
+                , velocity(velocity) {}
         Edge(const Edge& src) = default;
         Edge(Edge&& src) noexcept = default;
         Edge& operator=(const Edge& rhs) = default;
@@ -185,6 +189,7 @@ public:
 
         NodeID from, to;
         float weight;
+        float velocity;
     };
 
     GraphData2D() = default;

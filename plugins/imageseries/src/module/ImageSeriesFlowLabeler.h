@@ -98,7 +98,6 @@ private:
     core::param::ParamSlot combineTrivialParam;
     core::param::ParamSlot removeTrivialParam;
     core::param::ParamSlot resolveDiamondsParam;
-    core::param::ParamSlot combineTinyParam;
     core::param::ParamSlot minAreaParam;
     core::param::ParamSlot keepBreakthroughNodesParam;
 
