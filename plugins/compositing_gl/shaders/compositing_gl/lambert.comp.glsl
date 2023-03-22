@@ -1,5 +1,8 @@
 #version 430
 
+#include "mmstd_gl/shading/color.inc.glsl"
+#include "mmstd_gl/shading/transformations.inc.glsl"
+
 struct LightParams
 {
     float x,y,z,intensity;
@@ -29,21 +32,6 @@ uniform float k_diff;
 uniform float k_spec;
 uniform float k_exp;
 
-
-vec3 depthToWorldPos(float depth, vec2 uv) {
-    float z = depth * 2.0 - 1.0;
-
-    vec4 cs_pos = vec4(uv * 2.0 - 1.0, z, 1.0);
-    vec4 vs_pos = inv_proj_mx * cs_pos;
-
-    // Perspective division
-    vs_pos /= vs_pos.w;
-    
-    vec4 ws_pos = inv_view_mx * vs_pos;
-
-    return ws_pos.xyz;
-}
-
 //Lambert Illumination 
 float lambert(vec3 normal, vec3 light_dir)
 {
@@ -72,7 +60,7 @@ void main() {
 
     if (depth > 0.0f && depth < 1.0f)
     {
-        vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm);
+        vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm, inv_view_mx, inv_proj_mx);
 
         float reflected_light = 0.0;
         for(int i=0; i<point_light_cnt; ++i)
@@ -89,7 +77,7 @@ void main() {
             reflected_light += lambert(light_dir,normal) * distant_light_params[i].intensity;
         }
         //Sets pixelcolor to illumination + color (alpha channels remains the same)
-        retval.rgb = vec3(reflected_light) * albedo.rgb;
+        retval.rgb = toSRGB(vec4(reflected_light)).rgb * albedo.rgb;
     }
 
     imageStore(tgt_tx2D, pixel_coords , retval );
