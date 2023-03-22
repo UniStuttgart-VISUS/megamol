@@ -5,6 +5,8 @@
 uniform sampler2D image;
 uniform int displayMode;
 uniform int texSize;
+uniform float selectedValue;
+uniform vec4 highlightColor;
 
 in vec2 texCoord;
 
@@ -62,6 +64,10 @@ vec4 getColor(vec4 color) {
         } else if (value > 65532.0) {
             return vec4(1.0, 1.0, 1.0, 1.0);
         }
+    }
+
+    if (selectedValue != 0.0 && value > selectedValue - 0.1 && value < selectedValue + 0.1) {
+        return highlightColor;
     }
 
     switch (displayMode) {

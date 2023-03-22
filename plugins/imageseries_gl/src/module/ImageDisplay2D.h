@@ -55,6 +55,7 @@ public:
     void setDisplayMode(Mode mode);
     Mode getDisplayMode() const;
 
+    void setHighlight(float selectedValue, const glm::vec4& highlightColor);
     void setFilePath(bool saveToFile, const std::filesystem::path& path);
 
 private:
@@ -101,6 +102,9 @@ private:
     unsigned int transferFunctionSize;
 
     Mode mode = Mode::Color;
+
+    float selectedValue;
+    glm::vec4 highlightColor;
 
     bool saveFile = false;
     std::filesystem::path basePath;

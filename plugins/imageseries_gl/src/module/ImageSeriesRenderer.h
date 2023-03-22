@@ -109,6 +109,10 @@ private:
     core::param::ParamSlot baseRadiusParam;
     core::param::ParamSlot edgeWidthParam;
 
+    core::param::ParamSlot highlight;
+    core::param::ParamSlot highlightValue;
+    core::param::ParamSlot highlightColor;
+
     core::param::ParamSlot autoSave; 
     core::param::ParamSlot outputPathParam;
 

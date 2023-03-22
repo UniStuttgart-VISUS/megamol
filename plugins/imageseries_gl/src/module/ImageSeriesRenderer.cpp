@@ -5,9 +5,11 @@
 #include "imageseries/graph/GraphData2DCall.h"
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
@@ -24,10 +26,13 @@ ImageSeriesRenderer::ImageSeriesRenderer()
         , getTransferFunctionCaller("requestTransferFunction", "Transfer function for mapping values to color.")
         , displayModeParam("Display Mode", "Controls how the image should be presented.")
         , renderGraphParam("Render Graph", "Render the input graph if there is one.")
-        , baseRadiusParam("Node radius", "Radius of the nodes.")
-        , edgeWidthParam("Edge width", "Width of the edges.")
-        , autoSave("Save automatically", "Automatically save files when changes occur.")
-        , outputPathParam("Image output path", "If set, write resulting images to the selected directory.")
+        , baseRadiusParam("graph::Node radius", "Radius of the nodes.")
+        , edgeWidthParam("graph::Edge width", "Width of the edges.")
+        , highlight("highlight::Enabled", "Enable highlighting the selected value.")
+        , highlightValue("highlight::Selected value", "Value that should be visually highlighted.")
+        , highlightColor("highlight::Highlight color", "Color of the highlight.")
+        , autoSave("output::Save automatically", "Automatically save files when changes occur.")
+        , outputPathParam("output::Image output path", "If set, write resulting images to the selected directory.")
         , image_hash(-9837)
         , graph_hash(-7345) {
 
@@ -61,6 +66,15 @@ ImageSeriesRenderer::ImageSeriesRenderer()
 
     edgeWidthParam << new core::param::FloatParam(2.0);
     MakeSlotAvailable(&edgeWidthParam);
+
+    highlight << new core::param::BoolParam(false);
+    MakeSlotAvailable(&highlight);
+
+    highlightValue << new core::param::IntParam(1, 1);
+    MakeSlotAvailable(&highlightValue);
+
+    highlightColor << new core::param::ColorParam(0.85, 0.17, 0.17, 1.0);
+    MakeSlotAvailable(&highlightColor);
 
     autoSave << new core::param::BoolParam(false);
     MakeSlotAvailable(&autoSave);
@@ -168,6 +182,12 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         display->updateTransferFunction(
             std::get<0>(tfInfo), {std::get<1>(tfInfo), std::get<2>(tfInfo)}, std::get<3>(tfInfo));
     }
+
+    const auto& paramColor = highlightColor.Param<core::param::ColorParam>()->Value();
+    display->setHighlight(highlight.Param<core::param::BoolParam>()->Value()
+                              ? static_cast<float>(highlightValue.Param<core::param::IntParam>()->Value())
+                              : 0.0f,
+        glm::vec4(paramColor[0], paramColor[1], paramColor[2], paramColor[3]));
 
     display->setFilePath(autoSave.Param<core::param::BoolParam>()->Value(),
         outputPathParam.Param<core::param::FilePathParam>()->Value());

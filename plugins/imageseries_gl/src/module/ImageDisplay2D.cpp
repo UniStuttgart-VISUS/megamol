@@ -346,6 +346,11 @@ void ImageDisplay2D::setFilePath(const bool saveToFile, const std::filesystem::p
     }
 }
 
+void ImageDisplay2D::setHighlight(float selectedValue, const glm::vec4& highlightColor) {
+    this->selectedValue = selectedValue;
+    this->highlightColor = highlightColor;
+}
+
 bool ImageDisplay2D::renderImpl(
     std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix, const bool render_graph) {
     if (!framebuffer || !shader || !texture || !mesh) {
@@ -442,6 +447,8 @@ void ImageDisplay2D::renderImplImpl(const glm::mat4& matrix, const render_t sele
         shader->setUniform("tfRange", usedValueRange[0], max);
         shader->setUniform("displayMode", static_cast<GLint>(getDisplayMode()));
         shader->setUniform("texSize", static_cast<GLint>(transferFunctionSize));
+        shader->setUniform("selectedValue", selectedValue);
+        shader->setUniform("highlightColor", highlightColor);
 
         mesh->draw();
 
