@@ -21,6 +21,7 @@
 #include <cmath>
 #include <regex>
 #include <map>
+#include <set>
 #include <sstream>
 #include <unordered_set>
 #include <vector>
@@ -151,7 +152,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                         current_region.interfaces[dataIn[neighborIndex]].insert(neighborIndex);
                     } else if (dataIn[index] < dataIn[neighborIndex]) {
                         // Add current fluid index to interfaces, indicating a current fluid-fluid interface
-                        current_region.interfaces[dataIn[neighborIndex]].insert(currentIndex);
+                        current_region.interfaces[dataIn[neighborIndex]].insert(neighborIndex);
 
                         if (interface_output == interface_t::full) {
                             interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] = current_region.getFrameIndex();
@@ -380,9 +381,9 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     auto fixedGraph = graph::GraphData2D(*nodeGraph);
 
     // Compute velocities
-    computeVelocities(originalGraph);
-    computeVelocities(fixedGraph);
-    computeVelocities(*nodeGraph);
+    computeVelocities(originalGraph, width);
+    computeVelocities(fixedGraph, width);
+    computeVelocities(*nodeGraph, width);
 
     // Get landmark times
     auto startTime = std::numeric_limits<int>::max();
@@ -686,7 +687,6 @@ graph::GraphData2D::Node FlowTimeLabelFilter::combineNodes(
         combinedNode.area += node.area;
         combinedNode.boundingBox.Union(node.boundingBox);
         combinedNode.centerOfMass += node.area * node.centerOfMass;
-        combinedNode.velocity += node.area * node.velocity;
         combinedNode.pixels.insert(combinedNode.pixels.end(), node.pixels.begin(), node.pixels.end());
         combinedNode.interfaceSolid += node.interfaceSolid;
 
@@ -697,8 +697,9 @@ graph::GraphData2D::Node FlowTimeLabelFilter::combineNodes(
     }
 
     combinedNode.centerOfMass /= combinedNode.area;
-    combinedNode.velocity /= combinedNode.area;
-    combinedNode.velocityMagnitude = glm::length(combinedNode.velocity);
+
+    combinedNode.velocity = glm::vec2(0.0f);
+    combinedNode.velocityMagnitude = 0.0f;
 
     for (const auto& node : nodesToCombine) {
         combinedNode.interfaces.erase(node.getLabel());
@@ -711,42 +712,6 @@ graph::GraphData2D::Node FlowTimeLabelFilter::combineNodes(
     }
 
     return combinedNode;
-}
-
-std::vector<graph::GraphData2D::Edge> FlowTimeLabelFilter::combineEdges(const graph::GraphData2D& nodeGraph,
-    const std::vector<graph::GraphData2D::NodeID>& nodesToCombine, const graph::GraphData2D::NodeID newNodeID) const {
-
-    std::vector<graph::GraphData2D::Edge> newEdges;
-
-    const auto& newNode = nodeGraph.getNode(newNodeID);
-
-    for (const auto nodeID : nodesToCombine) {
-        const auto& node = nodeGraph.getNode(nodeID);
-
-        for (const auto parentID : node.getParentNodes()) {
-            const auto& neighbor = nodeGraph.getNode(parentID);
-
-            if (!neighbor.isRemoved()) {
-                graph::GraphData2D::Edge inEdge(parentID, newNodeID);
-                inEdge.weight = glm::distance(newNode.centerOfMass, neighbor.centerOfMass);
-
-                newEdges.push_back(inEdge);
-            }
-        }
-
-        for (const auto childID : node.getChildNodes()) {
-            const auto& neighbor = nodeGraph.getNode(childID);
-
-            if (!neighbor.isRemoved()) {
-                graph::GraphData2D::Edge outEdge(newNodeID, childID);
-                outEdge.weight = glm::distance(newNode.centerOfMass, neighbor.centerOfMass);
-
-                newEdges.push_back(outEdge);
-            }
-        }
-    }
-
-    return newEdges;
 }
 
 void FlowTimeLabelFilter::combineTrivialNodes(
@@ -814,11 +779,23 @@ void FlowTimeLabelFilter::combineTrivialNodes(
                 graph::GraphData2D::Edge outEdge(newNodeID, *nodesToCombine.back().getChildNodes().begin());
                 outEdge.weight = nodeGraph.getEdge(nodeIDsToCombine.back(), outEdge.to).weight + distance / 2.0f;
 
-                const auto velocity = distance / std::abs(nodeGraph.getNode(outEdge.to).getFrameIndex() -
-                                                          nodeGraph.getNode(inEdge.from).getFrameIndex());
+                // Combine velocities
+                graph::GraphData2D::Edge currentEdge = nodeGraph.getEdge(inEdge.from, nodesToCombine.front().getID());
+                float velocity = currentEdge.velocity;
+                int num_velocities = 1;
 
-                inEdge.velocity = velocity;
-                outEdge.velocity = velocity;
+                for (std::size_t i = 1; i < nodesToCombine.size(); ++i) {
+                    currentEdge = nodeGraph.getEdge(nodesToCombine[i - 1].getID(), nodesToCombine[i].getID());
+                    velocity += currentEdge.velocity;
+                    ++num_velocities;
+                }
+
+                currentEdge = nodeGraph.getEdge(nodesToCombine.back().getID(), outEdge.to);
+                velocity += currentEdge.velocity;
+                ++num_velocities;
+
+                inEdge.velocity = velocity / num_velocities;
+                outEdge.velocity = velocity / num_velocities;
 
                 nodeGraph.addEdge(inEdge);
                 nodeGraph.addEdge(outEdge);
@@ -896,24 +873,30 @@ bool FlowTimeLabelFilter::resolveDiamonds(
                 float distance_in = 0.0f;
                 float distance_out = 0.0f;
 
+                float velocity_in = 0.0f;
+                float velocity_out = 0.0f;
+
                 for (const auto& nodeID : nodeIDsToCombine) {
                     nodesToCombine.push_back(nodeGraph.removeNode(nodeID, true));
 
                     distance_in += nodeGraph.getEdge(edgeIn.from, nodeID).weight;
                     distance_out += nodeGraph.getEdge(nodeID, edgeOut.to).weight;
+
+                    velocity_in += nodeGraph.getEdge(edgeIn.from, nodeID).velocity;
+                    velocity_out += nodeGraph.getEdge(nodeID, edgeOut.to).velocity;
                 }
 
                 distance_in /= nodeIDsToCombine.size();
                 distance_out /= nodeIDsToCombine.size();
 
-                const auto velocity =
-                    (distance_in + distance_out) / std::abs(target.getFrameIndex() - origin.getFrameIndex());
+                velocity_in /= nodeIDsToCombine.size();
+                velocity_out /= nodeIDsToCombine.size();
 
                 // Modify graph
                 const auto newNodeID = nodeGraph.addNode(combineNodes(nodesToCombine, nextLabel));
 
-                nodeGraph.addEdge(graph::GraphData2D::Edge(edgeIn.from, newNodeID, distance_in, velocity));
-                nodeGraph.addEdge(graph::GraphData2D::Edge(newNodeID, edgeOut.to, distance_out, velocity));
+                nodeGraph.addEdge(graph::GraphData2D::Edge(edgeIn.from, newNodeID, distance_in, velocity_in));
+                nodeGraph.addEdge(graph::GraphData2D::Edge(newNodeID, edgeOut.to, distance_out, velocity_out));
 
                 has_changes = true;
             }
@@ -942,10 +925,7 @@ void FlowTimeLabelFilter::removeTrivialNodes(
 
             graph::GraphData2D::Edge edge(parentID, childID);
             edge.weight = nodeGraph.getEdge(parentID, nodeID).weight + nodeGraph.getEdge(nodeID, childID).weight;
-            edge.velocity =
-                (glm::distance(nodeGraph.getNode(parentID).centerOfMass, oldNode.centerOfMass) +
-                    glm::distance(nodeGraph.getNode(childID).centerOfMass, oldNode.centerOfMass)) /
-                std::abs(nodeGraph.getNode(childID).getFrameIndex() - nodeGraph.getNode(parentID).getFrameIndex());
+            edge.velocity = 0.5f * (nodeGraph.getEdge(parentID, nodeID).velocity + nodeGraph.getEdge(nodeID, childID).velocity);
 
             nodeGraph.addEdge(edge);
         }
@@ -954,7 +934,7 @@ void FlowTimeLabelFilter::removeTrivialNodes(
     nodeGraph.finalizeLazyRemoval();
 }
 
-void FlowTimeLabelFilter::computeVelocities(graph::GraphData2D& nodeGraph) const {
+void FlowTimeLabelFilter::computeVelocities(graph::GraphData2D& nodeGraph, const Index domainWidth) const {
     for (auto& node_info : nodeGraph.getNodes()) {
         auto& node = node_info.second;
 
@@ -962,7 +942,31 @@ void FlowTimeLabelFilter::computeVelocities(graph::GraphData2D& nodeGraph) const
         node.velocityMagnitude = 0.0f;
 
         if (input.hausdorff) {
-            // TODO
+            // Calculate Hausdorff distance between all current and all previous interfaces
+            // for the velocity at the node
+            const auto nodeTime = node.getFrameIndex();
+
+            std::vector<Index> source, target;
+
+            for (const auto& interface : node.interfaces) {
+                const auto time = interface.first;
+                const auto& pixels = interface.second;
+
+                if (time < nodeTime) {
+                    source.insert(source.end(), pixels.begin(), pixels.end());
+                } else if (time > nodeTime) {
+                    target.insert(target.end(), pixels.begin(), pixels.end());
+                }
+            }
+
+            if (source.empty() || target.empty()) {
+                node.velocityMagnitude = 0.0f;
+            } else {
+                const auto hausdorff = computeHausdorffDistance(source, target, hausdorff_direction::both, domainWidth);
+                // TODO: handle quantized time steps
+
+                node.velocityMagnitude = hausdorff;
+            }
         } else {
             for (const auto parentID : node.getParentNodes()) {
                 const auto& parent = nodeGraph.getNode(parentID);
@@ -990,6 +994,129 @@ void FlowTimeLabelFilter::computeVelocities(graph::GraphData2D& nodeGraph) const
             }
         }
     }
+
+    if (input.hausdorff) {
+        for (auto& edge : nodeGraph.getEdges()) {
+            const auto& sourceNode = nodeGraph.getNode(edge.from);
+            const auto& targetNode = nodeGraph.getNode(edge.to);
+
+            edge.velocity = 0.0f;
+
+            // Calculate Hausdorff distance at the source node between all current interfaces
+            // and the specific interface to that edge
+            {
+                const auto& node = sourceNode;
+                const auto nodeTime = node.getFrameIndex();
+
+                std::vector<Index> source, target;
+
+                for (const auto& interface : node.interfaces) {
+                    const auto time = interface.first;
+                    const auto& pixels = interface.second;
+
+                    if (time < nodeTime) {
+                        source.insert(source.end(), pixels.begin(), pixels.end());
+                    } else if (time > nodeTime) {
+                        std::set<Index> interfacePixels, targetPixels;
+                        interfacePixels.insert(pixels.begin(), pixels.end());
+                        targetPixels.insert(targetNode.pixels.begin(), targetNode.pixels.end());
+
+                        std::set_union(interfacePixels.begin(), interfacePixels.end(), targetPixels.begin(),
+                            targetPixels.end(), std::back_inserter(target));
+                    }
+                }
+
+                if (!source.empty() && !target.empty()) {
+                    const auto hausdorff =
+                        computeHausdorffDistance(source, target, hausdorff_direction::backward, domainWidth);
+
+                    edge.velocity += 0.5f * hausdorff;
+                }
+            }
+
+            // Calculate Hausdorff distance at the target node between the specific interface
+            // to that edge and all previous interfaces
+            {
+                const auto& node = targetNode;
+                const auto nodeTime = node.getFrameIndex();
+
+                std::vector<Index> source, target;
+
+                for (const auto& interface : node.interfaces) {
+                    const auto time = interface.first;
+                    const auto& pixels = interface.second;
+
+                    if (time < nodeTime) {
+                        std::set<Index> interfacePixels, sourcePixels;
+                        interfacePixels.insert(pixels.begin(), pixels.end());
+                        sourcePixels.insert(sourceNode.pixels.begin(), sourceNode.pixels.end());
+
+                        std::set_union(interfacePixels.begin(), interfacePixels.end(), sourcePixels.begin(),
+                            sourcePixels.end(), std::back_inserter(source));
+                    } else if (time > nodeTime) {
+                        target.insert(target.end(), pixels.begin(), pixels.end());
+                    }
+                }
+
+                if (!source.empty() && !target.empty()) {
+                    const auto hausdorff =
+                        computeHausdorffDistance(source, target, hausdorff_direction::forward, domainWidth);
+
+                    edge.velocity += 0.5f * hausdorff;
+                }
+            }
+
+            edge.velocity /= (targetNode.getFrameIndex() - sourceNode.getFrameIndex());
+        }
+    }
+}
+
+float FlowTimeLabelFilter::computeHausdorffDistance(const std::vector<Index>& source, const std::vector<Index>& target,
+    const hausdorff_direction direction, const Index domainWidth) const {
+
+    const auto computeDistance = [&domainWidth](const Index source, const Index target) -> float {
+        glm::vec2 sourcePos(source % domainWidth, source / domainWidth);
+        glm::vec2 targetPos(target % domainWidth, target / domainWidth);
+
+        return glm::distance(sourcePos, targetPos);
+    };
+
+    const auto computeMinDistance = [&computeDistance](const Index source, const std::vector<Index>& target) -> float {
+        float minDistance = std::numeric_limits<float>::max();
+
+        for (const auto targetIndex : target) {
+            const auto distance = computeDistance(source, targetIndex);
+
+            minDistance = std::min(minDistance, distance);
+        }
+
+        return minDistance;
+    };
+
+    const auto computeMaxDistance = [&computeMinDistance](
+                                        const std::vector<Index>& source, const std::vector<Index>& target) -> float {
+        float maxDistance = 0.0f;
+
+        for (const auto sourceIndex : source) {
+            const auto distance = computeMinDistance(sourceIndex, target);
+
+            maxDistance = std::max(maxDistance, distance);
+        }
+
+        return maxDistance;
+    };
+
+    // Perform distance calculation
+    float distance = 0.0f;
+
+    if (direction == hausdorff_direction::forward || direction == hausdorff_direction::both) {
+        distance = std::max(distance, computeMaxDistance(source, target));
+    }
+    if (direction == hausdorff_direction::backward || direction == hausdorff_direction::both) {
+        distance = std::max(distance, computeMaxDistance(target, source));
+    }
+
+    return distance;
 }
 
 void FlowTimeLabelFilter::layoutMainChannel(

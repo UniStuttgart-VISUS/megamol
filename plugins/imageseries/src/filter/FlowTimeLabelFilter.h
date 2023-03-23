@@ -96,14 +96,19 @@ private:
 
     graph::GraphData2D::Node combineNodes(
         const std::vector<graph::GraphData2D::Node>& nodesToCombine, Label& nextLabel) const;
-    std::vector<graph::GraphData2D::Edge> combineEdges(const graph::GraphData2D& nodeGraph,
-        const std::vector<graph::GraphData2D::NodeID>& nodesToCombine, graph::GraphData2D::NodeID newNodeID) const;
 
     void combineTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
     bool resolveDiamonds(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
     void removeTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, int breakthroughTime) const;
 
-    void computeVelocities(graph::GraphData2D& nodeGraph) const;
+    void computeVelocities(graph::GraphData2D& nodeGraph, Index domainWidth) const;
+
+    enum class hausdorff_direction {
+        both, forward, backward
+    };
+
+    float computeHausdorffDistance(const std::vector<Index>& source, const std::vector<Index>& target,
+        hausdorff_direction direction, Index domainWidth) const;
 
     void layoutMainChannel(graph::GraphData2D& nodeGraph, graph::GraphData2D::NodeID breakthroughNode) const;
 };
