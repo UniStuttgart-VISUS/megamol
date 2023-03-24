@@ -164,54 +164,63 @@ void ImageSeriesFlowLabeler::release() {
 }
 
 bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
-    if (auto* call = dynamic_cast<ImageSeries2DCall*>(&caller)) {
-        // Try to get time map
-        if (auto* getTimeMap = getTimeMapCaller.CallAs<ImageSeries::ImageSeries2DCall>()) {
-            getTimeMap->SetInput(call->GetInput());
-            if ((*getTimeMap)(ImageSeries::ImageSeries2DCall::CallGetData)) {
-                ImageSeries2DCall::Output timeMap = getTimeMap->GetOutput();
+    filter::FlowTimeLabelFilter::Input filterInput;
+    filterInput.outputImage = static_cast<filter::FlowTimeLabelFilter::Input::image_t>(
+        outputImageParam.Param<core::param::EnumParam>()->Value());
+    filterInput.inflowArea = static_cast<filter::FlowTimeLabelFilter::Input::inflow_t>(
+        inflowAreaParam.Param<core::param::EnumParam>()->Value());
+    filterInput.inflowMargin = inflowMarginParam.Param<core::param::IntParam>()->Value();
+    filterInput.minArea = minAreaParam.Param<core::param::IntParam>()->Value();
+    filterInput.hausdorff = velocityMethodParam.Param<core::param::EnumParam>()->Value() == 1;
 
-                filter::FlowTimeLabelFilter::Input filterInput;
-                filterInput.timeMap = timeMap.imageData;
-                filterInput.outputImage = static_cast<filter::FlowTimeLabelFilter::Input::image_t>(
-                    outputImageParam.Param<core::param::EnumParam>()->Value());
-                filterInput.inflowArea = static_cast<filter::FlowTimeLabelFilter::Input::inflow_t>(
-                    inflowAreaParam.Param<core::param::EnumParam>()->Value());
-                filterInput.inflowMargin = inflowMarginParam.Param<core::param::IntParam>()->Value();
-                filterInput.minArea = minAreaParam.Param<core::param::IntParam>()->Value();
-                filterInput.hausdorff = velocityMethodParam.Param<core::param::EnumParam>()->Value() == 1;
+    using bool_pt = core::param::BoolParam;
+    using fixes_t = filter::FlowTimeLabelFilter::Input ::fixes_t;
 
-                using bool_pt = core::param::BoolParam;
-                using fixes_t = filter::FlowTimeLabelFilter::Input ::fixes_t;
+    filterInput.fixes =
+        (isolatedParam.Param<bool_pt>()->Value() ? fixes_t::isolated : fixes_t::nope) |
+        (falseSourcesParam.Param<bool_pt>()->Value() ? fixes_t::false_sources : fixes_t::nope) |
+        (falseSinksParam.Param<bool_pt>()->Value() ? fixes_t::false_sinks : fixes_t::nope) |
+        (resolveDiamondsParam.Param<bool_pt>()->Value() ? fixes_t::resolve_diamonds : fixes_t::nope) |
+        (combineTrivialParam.Param<bool_pt>()->Value() ? fixes_t::combine_trivial : fixes_t::nope) |
+        (removeTrivialParam.Param<bool_pt>()->Value() ? fixes_t::remove_trivial : fixes_t::nope) |
+        (keepBreakthroughNodesParam.Param<bool_pt>()->Value() ? fixes_t::keep_breakthrough_nodes : fixes_t::nope);
 
-                filterInput.fixes =
-                    (isolatedParam.Param<bool_pt>()->Value() ? fixes_t::isolated : fixes_t::nope) |
-                    (falseSourcesParam.Param<bool_pt>()->Value() ? fixes_t::false_sources : fixes_t::nope) |
-                    (falseSinksParam.Param<bool_pt>()->Value() ? fixes_t::false_sinks : fixes_t::nope) |
-                    (resolveDiamondsParam.Param<bool_pt>()->Value() ? fixes_t::resolve_diamonds : fixes_t::nope) |
-                    (combineTrivialParam.Param<bool_pt>()->Value() ? fixes_t::combine_trivial : fixes_t::nope) |
-                    (removeTrivialParam.Param<bool_pt>()->Value() ? fixes_t::remove_trivial : fixes_t::nope) |
-                    (keepBreakthroughNodesParam.Param<bool_pt>()->Value() ? fixes_t::keep_breakthrough_nodes : fixes_t::nope);
+    filterInput.outputGraphs = outputGraphsParam.Param<bool_pt>()->Value();
+    filterInput.outputLabelImages = outputLabelImagesParam.Param<bool_pt>()->Value();
+    filterInput.outputTimeImages = outputTimeImagesParam.Param<bool_pt>()->Value();
+    filterInput.outputPath = outputPathParam.Param<core::param::FilePathParam>()->Value();
 
-                filterInput.outputGraphs = outputGraphsParam.Param<bool_pt>()->Value();
-                filterInput.outputLabelImages = outputLabelImagesParam.Param<bool_pt>()->Value();
-                filterInput.outputTimeImages = outputTimeImagesParam.Param<bool_pt>()->Value();
-                filterInput.outputPath = outputPathParam.Param<core::param::FilePathParam>()->Value();
+    // Try to get time map
+    if (auto* getTimeMap = getTimeMapCaller.CallAs<ImageSeries::ImageSeries2DCall>()) {
+        getTimeMap->SetInput(ImageSeries2DCall::Input{0});
+        if ((*getTimeMap)(ImageSeries::ImageSeries2DCall::CallGetData)) {
+            ImageSeries2DCall::Output timeMap = getTimeMap->GetOutput();
 
-                auto output = imageCache.findOrCreate(
-                    timeMap.getHash(), [=](typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash) {
+            filterInput.timeMap = timeMap.imageData;
+
+            auto output = imageCache.findOrCreate(
+                timeMap.getHash(), [=](typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash) {
                     return filterRunner->run<filter::FlowTimeLabelFilter>(filterInput);
                 });
+        }
+    }
 
-                auto intermediate =
-                    std::make_shared<AsyncImageData2D<>>([output]() { return output->getImageData()->image; },
-                        filter::FlowTimeLabelFilter(filterInput).getMetadata());
+    if (auto* call = dynamic_cast<ImageSeries2DCall*>(&caller)) {
+        const auto hash = getTimeMapCaller.CallAs<ImageSeries::ImageSeries2DCall>()->GetOutput().getHash();
 
-                timeMap.imageData = intermediate;
+        auto output = imageCache.find(hash);
 
-                call->SetOutput(timeMap);
-                return true;
-            }
+        if (output != nullptr) {
+            auto intermediate =
+                std::make_shared<AsyncImageData2D<>>([output]() { return output->getImageData()->image; },
+                    filter::FlowTimeLabelFilter(filterInput).getMetadata());
+
+            ImageSeries2DCall::Output timeMap;
+            timeMap.imageData = intermediate;
+
+            call->SetOutput(timeMap);
+
+            return true;
         }
     } else if (auto* call = dynamic_cast<GraphData2DCall*>(&caller)) {
         const auto hash = getTimeMapCaller.CallAs<ImageSeries::ImageSeries2DCall>()->GetOutput().getHash();

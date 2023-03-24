@@ -414,13 +414,16 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             break;
         }
 
-        if (std::abs(outflowRef) <= input.inflowMargin) {
-            breakthroughTime = std::min(breakthroughTime, static_cast<int>(node.getFrameIndex()));
+        if (std::abs(outflowRef) <= input.inflowMargin && node.getFrameIndex() < breakthroughTime) {
+            breakthroughTime = static_cast<int>(node.getFrameIndex());
             breakthroughNode = node.getID();
         }
     }
 
     breakthroughTime = std::clamp(breakthroughTime, startTime, endTime);
+
+    core::utility::log::Log::DefaultLog.WriteInfo(
+        "Start: %d - Breakthrough: %d - End: %d", startTime, breakthroughTime, endTime);
 
     const auto keepBreakthroughTime = (input.fixes & Input::fixes_t::keep_breakthrough_nodes) ? breakthroughTime : -1;
 
