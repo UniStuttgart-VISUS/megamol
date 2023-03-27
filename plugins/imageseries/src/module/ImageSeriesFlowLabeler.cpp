@@ -8,6 +8,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
 
 #include "../filter/FlowTimeLabelFilter.h"
 #include "imageseries/util/ImageUtils.h"
@@ -41,6 +42,10 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         , minAreaParam("simplification::Minimum area", "Minimum area, used for combining small areas.")
         , keepBreakthroughNodesParam("simplification::Keep breakthrough nodes",
               "Keep breakthrough nodes, although they would be removed using other fixes.")
+        , keepVelocityJumpsParam(
+              "simplification::Keep velocity jumps", "Keep nodes that exhibit a large velocity jump.")
+        , keepVelocityJumpsFactorParam("simplification::Velocity jump threshold",
+              "Threshold for defining a large velocity jumps in the form of a factor.")
 
         , outputGraphsParam("output::Write graphs to file", "Option to write the (intermediate) graphs to file.")
         , outputLabelImagesParam(
@@ -75,7 +80,7 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     inflowAreaParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&inflowAreaParam);
 
-    inflowMarginParam << new core::param::IntParam(5, 1, 100);
+    inflowMarginParam << new core::param::IntParam(5, 0, 100);
     inflowMarginParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     inflowMarginParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&inflowMarginParam);
@@ -127,6 +132,14 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     keepBreakthroughNodesParam << new core::param::BoolParam(true);
     keepBreakthroughNodesParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&keepBreakthroughNodesParam);
+
+    keepVelocityJumpsParam << new core::param::BoolParam(false);
+    keepVelocityJumpsParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&keepVelocityJumpsParam);
+
+    keepVelocityJumpsFactorParam << new core::param::FloatParam(10.0f, 1.0f);
+    keepVelocityJumpsFactorParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&keepVelocityJumpsFactorParam);
 
     // Parameters for output
     outputGraphsParam << new core::param::BoolParam(false);
@@ -183,7 +196,9 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
         (resolveDiamondsParam.Param<bool_pt>()->Value() ? fixes_t::resolve_diamonds : fixes_t::nope) |
         (combineTrivialParam.Param<bool_pt>()->Value() ? fixes_t::combine_trivial : fixes_t::nope) |
         (removeTrivialParam.Param<bool_pt>()->Value() ? fixes_t::remove_trivial : fixes_t::nope) |
-        (keepBreakthroughNodesParam.Param<bool_pt>()->Value() ? fixes_t::keep_breakthrough_nodes : fixes_t::nope);
+        (keepBreakthroughNodesParam.Param<bool_pt>()->Value() ? fixes_t::keep_breakthrough_nodes : fixes_t::nope) |
+        (keepVelocityJumpsParam.Param<bool_pt>()->Value() ? fixes_t::keep_velocity_jumps : fixes_t::nope);
+    filterInput.velocityJumpFactor = keepVelocityJumpsFactorParam.Param<core::param::FloatParam>()->Value();
 
     filterInput.outputGraphs = outputGraphsParam.Param<bool_pt>()->Value();
     filterInput.outputLabelImages = outputLabelImagesParam.Param<bool_pt>()->Value();

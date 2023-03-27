@@ -159,6 +159,7 @@ public:
         float interfaceSolid = 0.f;
 
         bool valid = true;
+        bool fixed = false;
 
     private:
         const NodeID id;

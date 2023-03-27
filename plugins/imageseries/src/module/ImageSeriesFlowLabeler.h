@@ -100,6 +100,8 @@ private:
     core::param::ParamSlot resolveDiamondsParam;
     core::param::ParamSlot minAreaParam;
     core::param::ParamSlot keepBreakthroughNodesParam;
+    core::param::ParamSlot keepVelocityJumpsParam;
+    core::param::ParamSlot keepVelocityJumpsFactorParam;
 
     core::param::ParamSlot outputGraphsParam;
     core::param::ParamSlot outputLabelImagesParam;
