@@ -37,6 +37,7 @@ public:
 
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Base::requested_lifetime_resources(req);
+        req.require<frontend_resources::RuntimeConfig>();
         req.require<core::MegaMolGraph>();
     }
 
