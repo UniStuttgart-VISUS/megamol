@@ -47,16 +47,17 @@ ImageSamplingFilter::ImagePtr ImageSamplingFilter::operator()() {
 
     std::memcpy(mapTemp, mapIn, size * sizeof(std::uint16_t));
 
-
-
     constexpr std::uint16_t LabelSolid = 0;
     constexpr std::uint16_t LabelUnassigned = std::numeric_limits<std::uint16_t>::max() - 1;
     constexpr std::uint16_t LabelEmpty = std::numeric_limits<std::uint16_t>::max();
+
+    uint16_t max = 0;
 
     for (std::size_t index = 0; index < size; ++index) {
         if (mapIn[index] == LabelSolid || mapIn[index] == LabelEmpty) {
             mapOut[index] = mapIn[index];
         } else {
+            max = std::max(max, mapIn[index]);
             mapOut[index] = LabelUnassigned;
         }
 
@@ -147,9 +148,15 @@ ImageSamplingFilter::ImagePtr ImageSamplingFilter::operator()() {
                 neighbor_max = std::numeric_limits<std::uint16_t>::max();
             }
 
-            std::uint16_t newValue = mapOut[representative] + ((mod >= exponent) ? (range - mod) : (-mod));
+            std::uint16_t newValue = mapOut[representative] + (-mod)/*((mod >= exponent) ? (range - mod) : (-mod))*/;
             newValue = std::max(neighbor_min, newValue);
             newValue = std::min(neighbor_max, newValue);
+
+            if (newValue == 0) {
+                newValue = LabelEmpty;
+            } else if (newValue > max) {
+                newValue = max;
+            }
 
             for (const auto pixel : area.second.pixels) {
                 mapOut[pixel] = newValue;
