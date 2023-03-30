@@ -1114,6 +1114,8 @@ void AnimationEditor::DrawCurves() {
             } else {
                 custom_zoom *= factor;
             }
+            custom_zoom.x = std::clamp(custom_zoom.x, 0.0001f, 4096.0f);
+            custom_zoom.y = std::clamp(custom_zoom.y, 0.0001f, 4096.0f);
             auto widget_coords = canvas.ToLocal(ImGui::GetMousePos());
             auto old_point = widget_coords / old_zoom;
             auto mouse_pos = ImGui::GetMousePos() - canvas.Rect().GetTL();
