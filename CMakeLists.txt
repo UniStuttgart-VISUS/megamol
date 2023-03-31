@@ -4,31 +4,10 @@
 #
 cmake_minimum_required(VERSION 3.15...3.24 FATAL_ERROR)
 
-# vcpkg
-include(FetchContent)
-mark_as_advanced(FORCE
-  FETCHCONTENT_BASE_DIR
-  FETCHCONTENT_FULLY_DISCONNECTED
-  FETCHCONTENT_QUIET
-  FETCHCONTENT_UPDATES_DISCONNECTED)
+set(MEGAMOL_VCPKG_DIR "${CMAKE_CURRENT_BINARY_DIR}/vcpkg")
+set(MEGAMOL_VCPKG_VERSION "2023.02.24") # Update default-registry baseline in vcpkg-configuration.json when changing!
 
-# Require git for download
-find_package(Git REQUIRED)
-
-FetchContent_Declare(vcpkg-download
-  GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
-  GIT_TAG 2023.02.24 # Update default-registry baseline in vcpkg-configuration.json when changing!
-  GIT_SHALLOW TRUE
-  SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/vcpkg)
-FetchContent_GetProperties(vcpkg-download)
-if (NOT vcpkg-download_POPULATED)
-  message(STATUS "Fetch vcpkg ...")
-  FetchContent_Populate(vcpkg-download)
-  mark_as_advanced(FORCE
-    FETCHCONTENT_SOURCE_DIR_VCPKG-DOWNLOAD
-    FETCHCONTENT_UPDATES_DISCONNECTED_VCPKG-DOWNLOAD)
-endif ()
-
+include(cmake/megamol_vcpkg_download.cmake)
 include(cmake/megamol_feature_option.cmake)
 
 megamol_feature_option(CGAL "Enable CGAL support" OFF)
@@ -46,10 +25,8 @@ megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
 
-include(cmake/megamol_vcpkg_empty_port.cmake)
-
 # option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
-set(VCPKG_OVERLAY_PORTS "${mm_empty_ports_dir}${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
+set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_triplets") # We are using triplets with VCPKG_DISABLE_COMPILER_TRACKING set (on Windows).
 set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
 set(VCPKG_INSTALL_OPTIONS "--clean-after-build" "--no-print-usage") # Build dirs get quite large and are usually only needed for debugging new ports.
@@ -60,6 +37,8 @@ option(MEGAMOL_DOWNLOAD_VCPKG_CACHE "Download prebuilt dependency binaries if av
 if (MEGAMOL_DOWNLOAD_VCPKG_CACHE)
   set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
 endif ()
+
+include(cmake/megamol_vcpkg_empty_port.cmake)
 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)

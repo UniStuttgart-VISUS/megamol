@@ -1,4 +1,19 @@
-set(MEGAMOL_VCPKG_EMPTY_PORT_OVERRIDE "" CACHE STRING "';'-separated list of ports which are overridden to be empty.")
+# MegaMol
+# Copyright (c) 2022, MegaMol Dev Team
+# All rights reserved.
+#
+
+# Notes:
+# This feature allows to automatically overwrite any port with an empty port.
+# The port should still keep all features and also load all dependencies. In
+# order to do so, we copy the original vcpkg.json next an empty portfile.
+# Currently this could only be done for ports from the upstream vcpkg repo and
+# overlay ports within the MegaMol repository, because they already exist on
+# well known paths within the filesystem. External repositories are not
+# implemented. Further, this features just copies the available vcpkg.json
+# files, ignoring all versioning features of vcpkg.
+
+set(MEGAMOL_VCPKG_EMPTY_PORT_OVERRIDE "" CACHE STRING "Semicolon-separated list of ports which are overridden to be empty.")
 mark_as_advanced(FORCE MEGAMOL_VCPKG_EMPTY_PORT_OVERRIDE)
 
 if (NOT "${MEGAMOL_VCPKG_EMPTY_PORT_OVERRIDE}" STREQUAL "")
@@ -8,44 +23,23 @@ if (NOT "${MEGAMOL_VCPKG_EMPTY_PORT_OVERRIDE}" STREQUAL "")
   file(REMOVE_RECURSE "${mm_empty_ports_dir}")
   file(MAKE_DIRECTORY "${mm_empty_ports_dir}")
 
+  # Directories for searching port files
+  set(port_search_dirs "${VCPKG_OVERLAY_PORTS};${MEGAMOL_VCPKG_DIR}/ports")
+
   # Create empty port
   foreach (portname ${MEGAMOL_VCPKG_EMPTY_PORT_OVERRIDE})
-    # match format "portname[feature1,feature2]"
-    if (NOT "${portname}" MATCHES "^[a-z0-9-]+(\\[[a-z0-9-]+(,[a-z0-9-]+)*\\])?$")
-      message(FATAL_ERROR "Invalid portname: \"${portname}\" Required format: \"portname[feature1,feature2]\", with only lowercase chars, numbers and hyphens.")
+    # Search port
+    unset(vcpkg_file)
+    find_file(vcpkg_file "vcpkg.json" PATHS ${port_search_dirs} PATH_SUFFIXES "${portname}" NO_CACHE NO_DEFAULT_PATH)
+
+    if (NOT vcpkg_file)
+      message(FATAL_ERROR "Cannot overwrite port \"${portname}\", vcpkg.json not found.")
     endif ()
 
-    # Transform to list "portname;feature1;feature2"
-    string(REPLACE "," ";" portname "${portname}")
-    string(REPLACE "[" ";" portname "${portname}")
-    string(REPLACE "]" "" portname "${portname}")
-
-    # Split into portname and feature list
-    set(features "${portname}")
-    list(POP_FRONT features portname)
-
-    set(feature_json "")
-    if (NOT "${features}" STREQUAL "")
-      set(comma "") # no comma on first entry
-      foreach (feature ${features})
-        string(APPEND feature_json "${comma}\"${feature}\": {\"description\": \"\"}")
-        set(comma ",")
-      endforeach ()
-
-      set(feature_json ",\"features\": {${feature_json}}")
-    endif ()
-
-    # TODO This still does not set the dependencies of the port we are trying to replace, so we
-    #      basically need to fetch the original vcpkg.json somehow next to the empty portfile.
-
-    set(vcpkg_json "{\"name\": \"${portname}\", \"version-string\": \"megamol-empty-port\"${feature_json}}\n")
-
-    file(WRITE "${mm_empty_ports_dir}/${portname}/vcpkg.json" "${vcpkg_json}")
+    file(COPY "${vcpkg_file}" DESTINATION "${mm_empty_ports_dir}/${portname}/")
     file(WRITE "${mm_empty_ports_dir}/${portname}/portfile.cmake" "")
+    unset(vcpkg_file)
   endforeach ()
 
-  # Add separator
-  string(APPEND mm_empty_ports_dir ";")
-else ()
-  set(mm_empty_ports_dir "")
+  set(VCPKG_OVERLAY_PORTS "${mm_empty_ports_dir};${VCPKG_OVERLAY_PORTS}")
 endif ()
