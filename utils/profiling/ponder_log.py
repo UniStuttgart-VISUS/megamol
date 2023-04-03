@@ -86,7 +86,7 @@ def process_stack(dataframe, stack_start, stack_end):
         process_stack(dataframe, valid_end + 1, stack_end)
 
 def analyze_frame(curr_frame):
-    print(f"Analyzing Frame {curr_frame}")
+    print(f"Analyzing Frame {curr_frame} for api {args.api}")
     dataframe = df.loc[(df["frame"] == curr_frame) & (df["type"] == "Call") & (df["api"] == args.api)]
 
     stack_start = 0
@@ -129,7 +129,7 @@ for file in args.files:
         outfile = os.path.splitext(outfile)[0] + "_self.csv"
         if not os.path.exists(outfile) or args.overwrite_output:
             print(f"writing {outfile}...")
-            df.to_csv(outfile, index=False)
+            df.to_csv(outfile, index=False, sep=';', quotechar="'")
         else:
             print(f"warning: not overwriting {outfile}!")
 
