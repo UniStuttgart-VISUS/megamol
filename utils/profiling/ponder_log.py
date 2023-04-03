@@ -1,15 +1,22 @@
 import argparse
 import pandas
+import os.path
+import pathlib
 from joblib import Parallel, delayed, cpu_count
 
 parser = argparse.ArgumentParser(usage="%(prog)s <FILE>", description="check profiling log for inconsistencies")
 parser.add_argument('files', nargs="*")
 parser.add_argument('-p', action='store_true', help="parallelize frame analysis", dest='parallel')
 parser.add_argument('-v', action='store_true', help="show verbose output", dest='verbose')
+parser.add_argument('-w', action='store_true', help="write result to file", dest='write_out')
+parser.add_argument('-f', action='store_true', help="overwrite file if existing", dest='overwrite_output')
 parser.add_argument('-s', type=int, help="override start frame", dest='start_frame')
 parser.add_argument('-e', type=int, help="override end frame", dest='end_frame')
 parser.add_argument('-a', type=str, help="filter by API (CPU or OpenGL)", dest='api', default="CPU")
 args = parser.parse_args()
+
+df: pandas.DataFrame
+self_time_col: int
 
 class Call_Info:
     def __init__(self, line, duration):
@@ -64,10 +71,9 @@ def process_stack(dataframe, stack_start, stack_end):
     verbose_print("stopping.\n")
     assert dur >= 0
     #show_stack_frame(dataframe, stack_start + 1, valid_end, "children")
-
-    # TODO write the crap back without getting the copy of slice error
-    #row["self cost (ns)"] = dur
-    # TODO print in source format
+    #print(f"name {row.name} vs. stack_start {stack_start}")
+    df.iat[row.name, self_time_col] = dur
+    # TODO print in source format?
     #verbose_print(row.to_csv(index=False, header=False, line_terminator=''))
     # recurse children
     if (stack_start + 1 <= valid_end):
@@ -93,6 +99,7 @@ for file in args.files:
     df = pandas.read_csv(file, header=0, sep=';', quotechar="'")
 
     df["self cost (ns)"] = ""
+    self_time_col = df.columns.get_loc("self cost (ns)")
 
     print("found columns:")
     for col in df.columns:
@@ -112,10 +119,19 @@ for file in args.files:
     print(f"Analyzing frames {start_frame}-{end_frame}")
 
     if (args.parallel):
-        Parallel(n_jobs=cpu_count())(delayed(analyze_frame)(i) for i in range(start_frame, end_frame + 1))
+        Parallel(n_jobs=cpu_count(),require='sharedmem')(delayed(analyze_frame)(i) for i in range(start_frame, end_frame + 1))
     else:
         for curr_frame in range(start_frame, end_frame + 1):
             analyze_frame(curr_frame)
+
+    if args.write_out:
+        outfile = pathlib.Path(file).absolute()
+        outfile = os.path.splitext(outfile)[0] + "_self.csv"
+        if not os.path.exists(outfile) or args.overwrite_output:
+            print(f"writing {outfile}...")
+            df.to_csv(outfile, index=False)
+        else:
+            print(f"warning: not overwriting {outfile}!")
 
 
 
