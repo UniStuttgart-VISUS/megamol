@@ -13,8 +13,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 namespace {
 template<typename T>
@@ -159,5 +158,4 @@ make_read_write(double);
 make_read_write(std::string);
 #undef make_read_write
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

@@ -114,6 +114,7 @@ static std::string guiscale_option = "guiscale";
 static std::string privacynote_option = "privacynote";
 static std::string versionnote_option = "versionnote";
 static std::string profile_log_option = "profiling-log";
+static std::string profile_log_no_autostart_option = "pause-profiling";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -172,6 +173,11 @@ static void versionnote_handler(
 static void profile_log_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.profiling_output_file = parsed_options[option_name].as<std::string>();
+}
+
+static void profile_log_autostart_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.autostart_profiling = !parsed_options[option_name].as<bool>();
 }
 
 static void remote_head_handler(
@@ -271,6 +277,10 @@ static void echolevel_handler(
 static void project_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
+    while (v.size() > 1) {
+        v.front() += "," + v[1];
+        v.pop_back();
+    }
     files_exist(v, "Project file");
 
     config.project_files.insert(config.project_files.end(), v.begin(), v.end());
@@ -547,7 +557,9 @@ std::vector<OptionsListEntry> cli_options_list =
 #ifdef MEGAMOL_USE_PROFILING
         ,
         {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
-            profile_log_handler}
+            profile_log_handler},
+        {profile_log_no_autostart_option, "Do not automatically start writing the profiling log",
+            cxxopts::value<bool>(), profile_log_autostart_handler}
 #endif
         ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",
@@ -603,9 +615,7 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
     options.allow_unrecognised_options();
 
     try {
-        int _argc = argc;
-        auto _argv = const_cast<char**>(argv);
-        auto parsed_options = options.parse(_argc, _argv);
+        auto parsed_options = options.parse(argc, argv);
 
         std::string config_file_name = "megamol_config.lua";
         auto user_dir_config = getHomeDir() / ("." + config_file_name);
@@ -643,7 +653,9 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         return config_files;
 
-    } catch (cxxopts::OptionException ex) { exit(ex.what()); }
+    } catch (cxxopts::exceptions::exception ex) {
+        exit(ex.what());
+    }
 }
 
 #define add_option(X) (std::get<0>(X), std::get<1>(X), std::get<2>(X))
@@ -832,7 +844,9 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
                 }
             }
 
-        } catch (cxxopts::OptionException ex) { exit(std::string(ex.what()) + "\nIn file: " + file); }
+        } catch (cxxopts::exceptions::exception ex) {
+            exit(std::string(ex.what()) + "\nIn file: " + file);
+        }
 
         config.configuration_file_contents.push_back(file_contents);
         config.configuration_file_contents_as_cli.push_back(
@@ -854,9 +868,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
     for (int i = 0; i < argc; i++)
         config.program_invocation_string += std::string{argv[i]} + " ";
 
-    int _argc = argc;
-    auto _argv = const_cast<char**>(argv);
-
     // parse input project files
     options.positional_help("<additional project files>");
     for (auto& opt : cli_options_list) {
@@ -866,7 +877,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
 
     // actually process passed options
     try {
-        auto parsed_options = options.parse(_argc, _argv);
+        auto parsed_options = options.parse(argc, argv);
         std::string res;
 
         if (parsed_options.count("help")) {
@@ -882,7 +893,9 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
             }
         }
 
-    } catch (cxxopts::OptionException ex) { exit(std::string(ex.what()) + "\n" + options.help({""})); }
+    } catch (cxxopts::exceptions::exception ex) {
+        exit(std::string(ex.what()) + "\n" + options.help({""}));
+    }
 
     return config;
 }

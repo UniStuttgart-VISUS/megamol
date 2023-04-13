@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "mmvtkm/mmvtkmDataCall.h"
 #include "mmvtkm/mmvtkmDataSource.h"
@@ -14,14 +14,14 @@
 
 
 namespace megamol::mmvtkm {
-class MmvtkmPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MmvtkmPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MmvtkmPluginInstance)
 
 public:
     MmvtkmPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("vtkm", "Plugin to read and render vtkm data."){};
+            : megamol::core::factories::AbstractPluginInstance("vtkm", "Plugin to read and render vtkm data."){};
 
-    virtual ~MmvtkmPluginInstance() override = default;
+    ~MmvtkmPluginInstance() override = default;
 
     // Registers modules and calls
     void registerClasses() override {

@@ -25,7 +25,7 @@ CallOSPRayStructure::CallOSPRayStructure() {
 /*
  * megamol::ospray::CallOSPRayStructure::~CallOSPRayStructure
  */
-CallOSPRayStructure::~CallOSPRayStructure(void) {
+CallOSPRayStructure::~CallOSPRayStructure() {
     this->structureMap = NULL;
 }
 

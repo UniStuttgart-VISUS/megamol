@@ -3,8 +3,6 @@
  *
  * Copyright (C) 2015 by TU Dresden. Alle Rechte vorbehalten.
  */
-#ifndef VISLIB_FASTFILE_H_INCLUDED
-#define VISLIB_FASTFILE_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -16,8 +14,7 @@
 #include "vislib/sys/BufferedFile.h"
 #endif
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * The FastFile typedef selects the best file implementation for the
@@ -33,10 +30,8 @@ typedef MemmappedFile FastFile;
 typedef BufferedFile FastFile;
 #endif
 
-} // namespace sys
-} // namespace vislib
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_FASTFILE_H_INCLUDED */

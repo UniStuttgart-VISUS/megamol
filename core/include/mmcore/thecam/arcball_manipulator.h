@@ -28,11 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED
-#define THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -40,9 +36,7 @@
 #include "mmcore/thecam/manipulator_base.h"
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * Implements an arcball that rotates a camera.
@@ -68,7 +62,7 @@ public:
     /**
      * Finalises the instance.
      */
-    virtual ~arcball_manipulator(void);
+    virtual ~arcball_manipulator();
 
     /**
      * Report that the mouse pointer has been dragged (moved while the
@@ -91,7 +85,7 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) {
+    inline void setInactive() {
         this->end_manipulation();
     }
 
@@ -103,13 +97,10 @@ private:
     screen_type lastSy;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::thecam
 
 #include "mmcore/thecam/arcball_manipulator.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* THE_GRAPHICS_CAMERA_ARCBALL_MANIPULATOR_H_INCLUDED */

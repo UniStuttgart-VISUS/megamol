@@ -19,7 +19,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayStructuredVolume::OSPRayStructuredVolume(void)
+OSPRayStructuredVolume::OSPRayStructuredVolume()
         : AbstractOSPRayStructure()
         , getDataSlot("getdata", "Connects to the data source")
         , getTFSlot("gettransferfunction", "Connects to a color transfer function module")

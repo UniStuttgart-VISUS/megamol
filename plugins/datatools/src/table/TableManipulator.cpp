@@ -21,7 +21,7 @@ std::string TableManipulator::ModuleName = std::string("TableManipulator");
 
 std::string TableManipulator::defaultScript = "";
 
-TableManipulator::TableManipulator(void)
+TableManipulator::TableManipulator()
         : core::Module()
         , dataOutSlot("dataOut", "Output")
         , dataInSlot("dataIn", "Input")
@@ -89,11 +89,11 @@ TableManipulator::TableManipulator(void)
     this->MakeSlotAvailable(&this->scriptSlot);
 }
 
-TableManipulator::~TableManipulator(void) {
+TableManipulator::~TableManipulator() {
     this->Release();
 }
 
-bool TableManipulator::create(void) {
+bool TableManipulator::create() {
     theLua.RegisterCallback<TableManipulator, &TableManipulator::getInputSize>(
         "mmGetInputSize", "()\n\treturns the number of rows, columns in the input data");
     theLua.RegisterCallback<TableManipulator, &TableManipulator::setOutputColumns>(
@@ -116,7 +116,7 @@ bool TableManipulator::create(void) {
     return true;
 }
 
-void TableManipulator::release(void) {}
+void TableManipulator::release() {}
 
 bool TableManipulator::processData(core::Call& c) {
     try {

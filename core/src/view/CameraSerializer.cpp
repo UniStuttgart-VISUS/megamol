@@ -298,7 +298,9 @@ bool CameraSerializer::getCamFromJsonObject(Camera& cam, nlohmann::json::value_t
             //TODO
         }
 
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     // TODO
     //  try {

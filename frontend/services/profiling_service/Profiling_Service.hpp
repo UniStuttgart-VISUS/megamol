@@ -10,15 +10,16 @@
 #include <fstream>
 
 #include "AbstractFrontendService.hpp"
+#include "FrameStatistics.h"
 #include "PerformanceManager.h"
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 class Profiling_Service final : public AbstractFrontendService {
 public:
     struct Config {
         std::string log_file;
+        bool autostart_profiling;
     };
 
     std::string serviceName() const override {
@@ -48,9 +49,9 @@ private:
     std::vector<std::string> _requestedResourcesNames;
     std::vector<FrontendResource> _requestedResourcesReferences;
 
-    megamol::frontend_resources::PerformanceManager _perf_man;
+    frontend_resources::PerformanceManager _perf_man;
     std::ofstream log_file;
+    frontend_resources::ProfilingLoggingStatus profiling_logging;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

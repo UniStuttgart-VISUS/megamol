@@ -27,7 +27,7 @@ vislib::graphics::BitmapPainter::BitmapPainter(BitmapImage* img)
 /*
  * vislib::graphics::BitmapPainter::~BitmapPainter
  */
-vislib::graphics::BitmapPainter::~BitmapPainter(void) {
+vislib::graphics::BitmapPainter::~BitmapPainter() {
     this->img = NULL; // DO NOT DELETE
     this->clearColourCache();
 }
@@ -36,7 +36,7 @@ vislib::graphics::BitmapPainter::~BitmapPainter(void) {
 /*
  * vislib::graphics::BitmapPainter::Clear
  */
-void vislib::graphics::BitmapPainter::Clear(void) {
+void vislib::graphics::BitmapPainter::Clear() {
     this->preDraw();
     unsigned int bpp = this->img->BytesPerPixel();
     unsigned char* bytes = this->img->PeekDataAs<unsigned char>();
@@ -98,7 +98,7 @@ void vislib::graphics::BitmapPainter::DrawLine(int x1, int y1, int x2, int y2) {
 inline
 #endif /* _WIN32 */
     void
-    vislib::graphics::BitmapPainter::preDraw(void) {
+    vislib::graphics::BitmapPainter::preDraw() {
     if (this->img == NULL) {
         throw vislib::IllegalStateException("You must set an image to draw to", __FILE__, __LINE__);
     }

@@ -7,14 +7,12 @@
 
 #include "vk_platform.h"
 
-#ifndef MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
-#define MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
+#pragma once
 
 #include "PerformanceManager.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -89,9 +87,7 @@
 #endif // GL_VERSION_4_5
 
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::moldyn_gl::rendering {
 
 using namespace megamol::core;
 using namespace megamol::geocalls;
@@ -108,7 +104,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SphereRenderer";
     }
 
@@ -117,7 +113,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for sphere glyphs providing different modes using e.g. a bit of bleeding-edge features or a "
                "geometry shader.";
     }
@@ -127,7 +123,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
 
 #ifdef _WIN32
 #if defined(DEBUG) || defined(_DEBUG)
@@ -175,18 +171,17 @@ public:
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
-        return resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        ModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::PerformanceManager>();
     }
 #endif
 
     /** Ctor. */
-    SphereRenderer(void);
+    SphereRenderer();
 
     /** Dtor. */
-    virtual ~SphereRenderer(void);
+    ~SphereRenderer() override;
 
 protected:
     /**
@@ -194,12 +189,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -208,7 +203,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::mmstd_gl::CallRender3DGL& call);
+    bool Render(megamol::mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -219,7 +214,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(megamol::mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /*********************************************************************/
@@ -236,6 +231,8 @@ private:
         AMBIENT_OCCLUSION = 6,
         OUTLINE = 7
     };
+
+    enum ShadingMode { FORWARD = 0, DEFERRED = 1 };
 
     typedef std::map<std::tuple<int, int, bool>, std::shared_ptr<glowl::GLSLProgram>> shader_map;
 
@@ -275,6 +272,7 @@ private:
 
     bool init_resources_;
     RenderMode render_mode_;
+    ShadingMode shading_mode_;
     GLuint grey_tf_;
     std::array<float, 2> range_;
 
@@ -341,6 +339,7 @@ private:
     /*********************************************************************/
 
     megamol::core::param::ParamSlot render_mode_param_;
+    megamol::core::param::ParamSlot shading_mode_param_;
     megamol::core::param::ParamSlot radius_scaling_param_;
     megamol::core::param::ParamSlot force_time_slot_;
     megamol::core::param::ParamSlot use_local_bbox_param_;
@@ -379,6 +378,11 @@ private:
      * Return specified render mode as human readable string.
      */
     static std::string getRenderModeString(RenderMode rm);
+
+    /**
+     * Return specified shading mode as human readable string.
+     */
+    static std::string getShadingModeString(ShadingMode sm);
 
     /**
      * TODO: Document
@@ -428,14 +432,19 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool createResources(void);
+    bool createResources();
 
     /**
      * Reset all OpenGL resources.
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool resetResources(void);
+    bool resetOpenGLResources();
+
+    /**
+     * Reset the state of all conditional parameters.
+     */
+    void resetConditionalParameters();
 
     /**
      * Render spheres in different render modes.
@@ -495,7 +504,7 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool disableShaderData(void);
+    bool disableShaderData();
 
     /**
      * Enables the transfer function texture.
@@ -511,7 +520,7 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool disableTransferFunctionTexture(void);
+    bool disableTransferFunctionTexture();
 
     /**
      * Enable flag storage.
@@ -625,7 +634,7 @@ private:
      *
      * @return ...
      */
-    bool rebuildGBuffer(void);
+    bool rebuildGBuffer();
 
     /**
      * Rebuild working data.
@@ -667,8 +676,4 @@ private:
     bool updateVolumeData(const unsigned int frameID);
 };
 
-} /* end namespace rendering */
-} // namespace moldyn_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED */
+} // namespace megamol::moldyn_gl::rendering

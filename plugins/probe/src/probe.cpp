@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "ConstructKDTree.h"
 #include "ExtractCenterline.h"
@@ -34,12 +34,12 @@
 #include "TessellateBoundingBox.h"
 
 namespace megamol::probe {
-class ProbePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ProbePluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ProbePluginInstance)
 
 public:
     ProbePluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "probe", "Putting probes into data and render glyphs at the end of the probe."){};
 
     ~ProbePluginInstance(void) override = default;

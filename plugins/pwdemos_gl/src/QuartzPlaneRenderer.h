@@ -7,15 +7,17 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractMultiShaderQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/CallRender2DGL.h"
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * QuartzPlaneRenderer
@@ -27,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzPlaneRenderer";
     }
 
@@ -36,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module rendering gridded quartz particles onto a clipping plane";
     }
 
@@ -45,19 +47,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return AbstractMultiShaderQuartzRenderer::IsAvailable();
     }
 
     /**
      * Ctor
      */
-    QuartzPlaneRenderer(void);
+    QuartzPlaneRenderer();
 
     /**
      * Dtor
      */
-    virtual ~QuartzPlaneRenderer(void);
+    ~QuartzPlaneRenderer() override;
 
 protected:
     /**
@@ -65,7 +67,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -76,12 +78,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -90,7 +92,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender2DGL& call);
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * Creates a raycasting shader for the specified crystalite
@@ -99,12 +101,11 @@ protected:
      *
      * @return The shader
      */
-    virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
+    std::shared_ptr<glowl::GLSLProgram> makeShader(const CrystalDataCall::Crystal& c) override;
 
 private:
     /** Use clipping plane or grain colour for grains */
     core::param::ParamSlot useClipColSlot;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

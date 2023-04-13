@@ -37,7 +37,7 @@ using namespace megamol::protein_gl;
 /*
  * MSMSGenus0Generator::MSMSGenus0Generator
  */
-MSMSGenus0Generator::MSMSGenus0Generator(void)
+MSMSGenus0Generator::MSMSGenus0Generator()
         : core::Module()
         , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
         , getDataSlot("getdata", "The slot publishing the loaded data")
@@ -140,7 +140,7 @@ MSMSGenus0Generator::MSMSGenus0Generator(void)
 /*
  * MSMSGenus0Generator::~MSMSGenus0Generator
  */
-MSMSGenus0Generator::~MSMSGenus0Generator(void) {
+MSMSGenus0Generator::~MSMSGenus0Generator() {
     this->Release();
 }
 
@@ -148,7 +148,7 @@ MSMSGenus0Generator::~MSMSGenus0Generator(void) {
 /*
  * MSMSGenus0Generator::create
  */
-bool MSMSGenus0Generator::create(void) {
+bool MSMSGenus0Generator::create() {
     // intentionally empty
     return true;
 }
@@ -157,7 +157,7 @@ bool MSMSGenus0Generator::create(void) {
 /*
  * MSMSGenus0Generator::release
  */
-void MSMSGenus0Generator::release(void) {
+void MSMSGenus0Generator::release() {
     // TODO clear data
 }
 

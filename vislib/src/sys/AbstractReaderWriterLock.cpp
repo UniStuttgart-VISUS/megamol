@@ -12,7 +12,7 @@
 /*
  * vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock
  */
-vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock(void) : SyncObject() {
+vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock() : SyncObject() {
     // Intentionally empty
 }
 
@@ -20,7 +20,7 @@ vislib::sys::AbstractReaderWriterLock::AbstractReaderWriterLock(void) : SyncObje
 /*
  * vislib::sys::AbstractReaderWriterLock::~AbstractReaderWriterLock
  */
-vislib::sys::AbstractReaderWriterLock::~AbstractReaderWriterLock(void) {
+vislib::sys::AbstractReaderWriterLock::~AbstractReaderWriterLock() {
     // Intentionally empty
 }
 
@@ -28,7 +28,7 @@ vislib::sys::AbstractReaderWriterLock::~AbstractReaderWriterLock(void) {
 /*
  * vislib::sys::AbstractReaderWriterLock::Lock
  */
-void vislib::sys::AbstractReaderWriterLock::Lock(void) {
+void vislib::sys::AbstractReaderWriterLock::Lock() {
     this->LockExclusive();
 }
 
@@ -36,7 +36,7 @@ void vislib::sys::AbstractReaderWriterLock::Lock(void) {
 /*
  * vislib::sys::AbstractReaderWriterLock::Unlock
  */
-void vislib::sys::AbstractReaderWriterLock::Unlock(void) {
+void vislib::sys::AbstractReaderWriterLock::Unlock() {
     this->UnlockExclusive();
 }
 

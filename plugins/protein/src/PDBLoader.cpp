@@ -73,7 +73,7 @@ PDBLoader::Frame::Frame(view::AnimDataModule& owner)
 /*
  * PDBLoader::Frame::~Frame
  */
-PDBLoader::Frame::~Frame(void) {}
+PDBLoader::Frame::~Frame() {}
 
 /*
  * PDBLoader::Frame::operator==
@@ -744,7 +744,7 @@ bool PDBLoader::Frame::SetAtomOccupancy(unsigned int idx, float val) {
 /*
  * protein::PDBLoader::PDBLoader
  */
-PDBLoader::PDBLoader(void)
+PDBLoader::PDBLoader()
         : AnimDataModule()
         , pdbFilenameSlot("pdbFilename", "The path to the PDB data file to be loaded")
         , xtcFilenameSlot("xtcFilename", "The path to the XTC data file to be loaded")
@@ -805,7 +805,7 @@ PDBLoader::PDBLoader(void)
 /*
  * protein::PDBLoader::~PDBLoader
  */
-PDBLoader::~PDBLoader(void) {
+PDBLoader::~PDBLoader() {
     if (mdd != NULL) {
         if (mdd->IsRunning()) {
             mdd->RequestTerminate();
@@ -821,7 +821,7 @@ PDBLoader::~PDBLoader(void) {
 /*
  * PDBLoader::create
  */
-bool PDBLoader::create(void) {
+bool PDBLoader::create() {
     // intentionally empty
     return true;
 }
@@ -1022,7 +1022,7 @@ bool PDBLoader::getExtent(core::Call& call) {
 /*
  * PDBLoader::release
  */
-void PDBLoader::release(void) {
+void PDBLoader::release() {
     // stop frame-loading thread before clearing data array
     resetFrameCache();
 
@@ -1041,7 +1041,7 @@ void PDBLoader::release(void) {
 /*
  * PDBLoader::constructFrame
  */
-view::AnimDataModule::Frame* PDBLoader::constructFrame(void) const {
+view::AnimDataModule::Frame* PDBLoader::constructFrame() const {
     Frame* f = new Frame(*const_cast<PDBLoader*>(this));
     f->SetAtomCount(this->data[0]->AtomCount());
     return f;

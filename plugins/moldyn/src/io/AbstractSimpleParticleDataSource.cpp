@@ -14,7 +14,7 @@ namespace megamol::datatools::io {
 /*
  * AbstractSimpleParticleDataSource::AbstractSimpleParticleDataSource
  */
-AbstractSimpleParticleDataSource::AbstractSimpleParticleDataSource(void)
+AbstractSimpleParticleDataSource::AbstractSimpleParticleDataSource()
         : Module()
         , filenameSlot("filename", "Full path to the file to load")
         , getDataSlot("getdata", "Publishes data for other modules") {
@@ -33,7 +33,7 @@ AbstractSimpleParticleDataSource::AbstractSimpleParticleDataSource(void)
 /*
  * AbstractSimpleParticleDataSource::AbstractSimpleParticleDataSource
  */
-AbstractSimpleParticleDataSource::~AbstractSimpleParticleDataSource(void) {
+AbstractSimpleParticleDataSource::~AbstractSimpleParticleDataSource() {
     this->Release();
 }
 

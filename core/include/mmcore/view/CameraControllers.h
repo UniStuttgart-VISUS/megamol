@@ -1,8 +1,16 @@
-#ifndef CAMERA_CONTROLLER_H_INCLUDED
-#define CAMERA_CONTROLLER_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+
+#include <glm/gtx/quaternion.hpp>    // glm::rotate(quat, vector)
+#include <glm/gtx/rotate_vector.hpp> // glm::rotate(quaternion, vector)
 
 #include "KeyboardMouseInput.h"
 #include "mmcore/BoundingBoxes_2.h"
@@ -15,12 +23,7 @@
 #include "mmcore/view/Camera.h"
 #include "mmcore/view/cam_typedefs.h"
 
-#include "glm/gtx/quaternion.hpp"    // glm::rotate(quat, vector)
-#include "glm/gtx/rotate_vector.hpp" // glm::rotate(quaternion, vector)
-
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 using megamol::frontend_resources::Key;
 using megamol::frontend_resources::KeyAction;
@@ -335,21 +338,19 @@ public:
         const bool makeDirty = false;
         this->_cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
             vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), makeDirty);
-        this->_cameraPositionParam.QueueUpdateNotification();
+        // TODO before here we made a consume on the param, which did nothing internally.
+        //  But without dirty flag camera changes are currently not automatically detectable. Is this wanted behavior?
 
         glm::quat orientation = cam_pose.to_quat();
         this->_cameraOrientationParam.Param<param::Vector4fParam>()->SetValue(
             vislib::math::Vector<float, 4>(orientation.x, orientation.y, orientation.z, orientation.w), makeDirty);
-        this->_cameraOrientationParam.QueueUpdateNotification();
 
         this->_cameraViewOrientationParam.Param<param::Vector4fParam>()->SetValue(
             vislib::math::Vector<float, 4>(orientation.x, orientation.y, orientation.z, orientation.w), makeDirty);
-        this->_cameraViewOrientationParam.QueueUpdateNotification();
 
         auto cam_proj_type = _target_camera->get<Camera::ProjectionType>();
         this->_cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(
             static_cast<int>(cam_proj_type), makeDirty);
-        this->_cameraProjectionTypeParam.QueueUpdateNotification();
 
         /*this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), makeDirty);
         this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), makeDirty);*/
@@ -364,7 +365,6 @@ public:
             auto cam_intrinsics = _target_camera->get<Camera::PerspectiveParameters>();
             this->_cameraHalfApertureDegreesParam.Param<param::FloatParam>()->SetValue(
                 cam_intrinsics.fovy * 180.0f / 3.14159265359 /*TODO*/, makeDirty);
-            this->_cameraHalfApertureDegreesParam.QueueUpdateNotification();
 
             this->_cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam_intrinsics.near_plane, makeDirty);
             this->_cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam_intrinsics.far_plane, makeDirty);
@@ -1591,8 +1591,4 @@ private:
     float _mouseY;
 };
 
-} // namespace view
-} // namespace core
-} // namespace megamol
-
-#endif // !CAMERA_CONTROLLER_H_INCLUDED
+} // namespace megamol::core::view

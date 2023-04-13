@@ -12,7 +12,6 @@
 
 #include "SimpleMoleculeRenderer.h"
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -21,7 +20,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
@@ -38,7 +36,6 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
@@ -46,7 +43,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
-SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
+SimpleMoleculeRenderer::SimpleMoleculeRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
@@ -193,19 +190,19 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
 /*
  * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
-SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
+SimpleMoleculeRenderer::~SimpleMoleculeRenderer() {
     this->Release();
 }
 
 /*
  * protein::SimpleMoleculeRenderer::release
  */
-void SimpleMoleculeRenderer::release(void) {}
+void SimpleMoleculeRenderer::release() {}
 
 /*
  * protein::SimpleMoleculeRenderer::create
  */
-bool SimpleMoleculeRenderer::create(void) {
+bool SimpleMoleculeRenderer::create() {
 
     glEnable(GL_DEPTH_TEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -214,7 +211,8 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // new shaders
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
             std::filesystem::path("protein_gl/simplemolecule/sm_sphere.vert.glsl"),
@@ -296,7 +294,7 @@ bool SimpleMoleculeRenderer::create(void) {
     glDisableVertexAttribArray(static_cast<int>(Buffers::FILTER));
 
     // setup all the deferred stuff
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }

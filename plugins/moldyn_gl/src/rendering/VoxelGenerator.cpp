@@ -158,7 +158,7 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
 
 bool VoxelGenerator::initVolumeGenerator() {
 
-    auto shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto shader_options = core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()); //msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     vol_gen_ = new misc::MDAOVolumeGenerator();
     vol_gen_->SetShaderSourceFactory(&shader_options);
 

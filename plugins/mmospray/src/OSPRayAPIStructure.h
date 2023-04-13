@@ -9,8 +9,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmospray/AbstractOSPRayStructure.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class OSPRayAPIStructure : public AbstractOSPRayStructure {
 
@@ -20,7 +19,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OSPRayAPIStructure";
     }
 
@@ -29,7 +28,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Creator for OSPRay API structures.";
     }
 
@@ -38,22 +37,22 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Dtor. */
-    virtual ~OSPRayAPIStructure(void);
+    ~OSPRayAPIStructure() override;
 
     /** Ctor. */
-    OSPRayAPIStructure(void);
+    OSPRayAPIStructure();
 
 protected:
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
 
-    virtual bool readData(core::Call& call);
-    virtual bool getExtends(core::Call& call);
+    bool readData(core::Call& call) override;
+    bool getExtends(core::Call& call) override;
 
 
     bool InterfaceIsDirty();
@@ -62,5 +61,4 @@ protected:
     core::CallerSlot getDataSlot;
 };
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

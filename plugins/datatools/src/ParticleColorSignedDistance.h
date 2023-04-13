@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED
-#define MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
@@ -14,8 +12,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -23,26 +20,26 @@ namespace datatools {
 class ParticleColorSignedDistance : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleColorSignedDistance";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes signed distances of particles to the closest particle with a color value of zero. The sign is "
                "preserved from the original color.";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleColorSignedDistance(void);
+    ParticleColorSignedDistance();
 
     /** Dtor */
-    virtual ~ParticleColorSignedDistance(void);
+    ~ParticleColorSignedDistance() override;
 
 protected:
     /**
@@ -55,7 +52,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     void compute_colors(geocalls::MultiParticleDataCall& dat);
@@ -71,7 +68,4 @@ private:
     float minCol, maxCol;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED */
+} // namespace megamol::datatools

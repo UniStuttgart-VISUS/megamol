@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
-#define MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
 #pragma once
 
 
@@ -19,8 +17,7 @@
 #endif
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -68,7 +65,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_PARAMETERGROUPS_H_INCLUDED
+} // namespace megamol::gui

@@ -14,12 +14,13 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol::compositing {
+#include "mmstd_gl/ModuleGL.h"
 
-class TextureDepthCompositing : public core::Module {
+namespace megamol::compositing_gl {
+
+class TextureDepthCompositing : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -36,7 +37,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description() {
-        return "Compositing module that combines two texture using depth aware alpha compositing.";
+        return "Compositing module that combines two texture using depth aware alpha compositing_gl.";
     }
 
     /**
@@ -49,7 +50,7 @@ public:
     }
 
     TextureDepthCompositing();
-    ~TextureDepthCompositing();
+    ~TextureDepthCompositing() override;
 
 protected:
     /**
@@ -57,12 +58,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO
@@ -112,4 +113,4 @@ private:
     megamol::core::CallerSlot m_depth_tex_1_slot;
 };
 
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

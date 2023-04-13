@@ -66,7 +66,7 @@ public:
     CallClipPlane();
 
     /** Dtor. */
-    virtual ~CallClipPlane();
+    ~CallClipPlane() override;
 
     /**
      * Calculates the coordinate system of the clipping plane

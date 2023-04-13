@@ -7,10 +7,12 @@
 
 #pragma once
 
+#include <string>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
+
+static std::string FrameStatistics_Req_Name = "FrameStatistics";
 
 struct FrameStatistics {
     double elapsed_program_time_seconds = 0.0;
@@ -21,5 +23,4 @@ struct FrameStatistics {
     double last_averaged_mspf = 0.0;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

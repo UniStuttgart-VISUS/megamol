@@ -11,8 +11,7 @@
 #include "vislib/UnsupportedOperationException.h"
 #endif /* _WIN32 */
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /*
@@ -141,7 +140,7 @@ DirectoryIterator<CharTraitsW>::DirectoryIterator(const Char* path, bool isPatte
  * DirectoryIterator<T>::fetchNextItem
  */
 template<>
-void DirectoryIterator<CharTraitsA>::fetchNextItem(void) {
+void DirectoryIterator<CharTraitsA>::fetchNextItem() {
 #ifdef _WIN32
     WIN32_FIND_DATAA fd;
     DWORD le;
@@ -207,7 +206,7 @@ void DirectoryIterator<CharTraitsA>::fetchNextItem(void) {
  * DirectoryIterator<T>::fetchNextItem
  */
 template<>
-void DirectoryIterator<CharTraitsW>::fetchNextItem(void) {
+void DirectoryIterator<CharTraitsW>::fetchNextItem() {
 #ifdef _WIN32
     WIN32_FIND_DATAW fd;
     DWORD le;
@@ -269,5 +268,4 @@ void DirectoryIterator<CharTraitsW>::fetchNextItem(void) {
 }
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys

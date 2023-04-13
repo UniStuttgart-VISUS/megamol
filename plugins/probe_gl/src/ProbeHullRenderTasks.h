@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef PROBE_HULL_RENDER_TASK_H_INCLUDED
-#define PROBE_HULL_RENDER_TASK_H_INCLUDED
+#pragma once
 
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
@@ -85,6 +84,3 @@ private:
 
 } // namespace probe_gl
 } // namespace megamol
-
-
-#endif // !SIMPLE_PROBE_HULL_RENDER_TASK_H_INCLUDED

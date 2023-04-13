@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_RAWSTORAGEWRITER_H_INCLUDED
-#define VISLIB_RAWSTORAGEWRITER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -46,14 +42,14 @@ public:
     RawStorageWriter(vislib::RawStorage& store, SIZE_T pos = 0, SIZE_T end = SIZE_MAX, SIZE_T inc = DEFAULT_INCREMENT);
 
     /** Dtor. */
-    ~RawStorageWriter(void);
+    ~RawStorageWriter();
 
     /**
      * Answer the reference to the raw data store
      *
      * @return The reference to the raw data store
      */
-    inline vislib::RawStorage& Data(void) const {
+    inline vislib::RawStorage& Data() const {
         return this->data;
     }
 
@@ -62,7 +58,7 @@ public:
      *
      * @return The end-of-data pointer
      */
-    inline SIZE_T End(void) const {
+    inline SIZE_T End() const {
         return this->end;
     }
 
@@ -71,7 +67,7 @@ public:
      *
      * @return The memory increment step size
      */
-    inline SIZE_T Increment(void) const {
+    inline SIZE_T Increment() const {
         return this->inc;
     }
 
@@ -80,7 +76,7 @@ public:
      *
      * @return The position pointer
      */
-    inline SIZE_T Position(void) const {
+    inline SIZE_T Position() const {
         return this->pos;
     }
 
@@ -216,4 +212,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_RAWSTORAGEWRITER_H_INCLUDED */

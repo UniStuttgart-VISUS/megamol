@@ -2,10 +2,8 @@
 
 #include "AbstractParticleBoxFilter.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 using ParticleBoxFilter = AbstractParticleBoxFilter<geocalls::MultiParticleDataCall>;
 
-} // end namespace datatools
-} // end namespace megamol
+} // namespace megamol::datatools

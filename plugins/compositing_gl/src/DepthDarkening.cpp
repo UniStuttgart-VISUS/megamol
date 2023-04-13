@@ -9,13 +9,12 @@
 #include <glm/glm.hpp>
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
-megamol::compositing::DepthDarkening::DepthDarkening()
-        : core::Module()
+megamol::compositing_gl::DepthDarkening::DepthDarkening()
+        : mmstd_gl::ModuleGL()
         , outputTexSlot_("OutputTexture", "Gives access to the resulting output texture")
         , inputColorSlot_("ColorTexture", "Connects the color render target texture")
         , inputDepthSlot_("DepthTexture", "Connects the depth render target texture")
@@ -50,13 +49,14 @@ megamol::compositing::DepthDarkening::DepthDarkening()
     lambdaValueParam_.ForceSetDirty();
 }
 
-megamol::compositing::DepthDarkening::~DepthDarkening() {
+megamol::compositing_gl::DepthDarkening::~DepthDarkening() {
     this->Release();
 }
 
-bool megamol::compositing::DepthDarkening::create() {
+bool megamol::compositing_gl::DepthDarkening::create() {
 
-    auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shdr_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     try {
 
         blurShader_ = core::utility::make_glowl_shader(
@@ -85,9 +85,9 @@ bool megamol::compositing::DepthDarkening::create() {
     return true;
 }
 
-void megamol::compositing::DepthDarkening::release() {}
+void megamol::compositing_gl::DepthDarkening::release() {}
 
-bool megamol::compositing::DepthDarkening::getDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::DepthDarkening::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     auto call_color = inputColorSlot_.CallAs<CallTexture2D>();
     auto call_depth = inputDepthSlot_.CallAs<CallTexture2D>();
@@ -199,11 +199,11 @@ bool megamol::compositing::DepthDarkening::getDataCallback(core::Call& caller) {
     return true;
 }
 
-bool megamol::compositing::DepthDarkening::getMetaDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::DepthDarkening::getMetaDataCallback(core::Call& caller) {
     return true;
 }
 
-void megamol::compositing::DepthDarkening::fitTextures(std::shared_ptr<glowl::Texture2D> source) {
+void megamol::compositing_gl::DepthDarkening::fitTextures(std::shared_ptr<glowl::Texture2D> source) {
     std::pair<int, int> resolution(source->getWidth(), source->getHeight());
     std::vector<std::shared_ptr<glowl::Texture2D>> texVec = {outputTex_, intermediateTex_, intermediateTex2_};
     for (auto& tex : texVec) {
@@ -215,7 +215,7 @@ void megamol::compositing::DepthDarkening::fitTextures(std::shared_ptr<glowl::Te
     }
 }
 
-void megamol::compositing::DepthDarkening::recalcKernel(void) {
+void megamol::compositing_gl::DepthDarkening::recalcKernel() {
     auto radius = kernelRadiusParam_.Param<core::param::IntParam>()->Value();
     auto length = 2 * radius - 1;
     std::vector<float> kernelVec(length, 0.0f);

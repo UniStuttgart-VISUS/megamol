@@ -5,15 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
-#define MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
 #pragma once
 
 
 #include "CommandRegistry.h"
+#include "FrontendResource.h"
+#include "PluginsResource.h"
 #include "gui_render_backend.h"
 #include "implot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking.h"
 #include "widgets/FileBrowserWidget.h"
@@ -24,8 +23,7 @@
 #include "windows/WindowCollection.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -239,11 +237,11 @@ public:
 
     void RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 
-    bool InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance) {
-        return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(core_instance);
+    bool InitializeGraphSynchronisation(const megamol::frontend_resources::PluginsResource& pluginsRes) {
+        return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(pluginsRes);
     }
 
-    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph);
 
     /**
      * Register GUI hotkeys.
@@ -261,6 +259,12 @@ public:
 #ifdef MEGAMOL_USE_PROFILING
     void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
         this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
+    }
+
+    frontend_resources::ProfilingLoggingStatus* perf_logging;
+
+    void SetProfilingLoggingStatus(frontend_resources::ProfilingLoggingStatus* perf_logging_status) {
+        this->perf_logging = perf_logging_status;
     }
     void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi) {
         this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi);
@@ -305,6 +309,12 @@ public:
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DisableEntryPoint(module_inst);
     }
 
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
+
     ///////////////////////////////////////////////////////////////////////
 
 private:
@@ -338,6 +348,7 @@ private:
         bool open_popup_screenshot;                    // Flag for opening screenshot file pop-up
         bool open_popup_font;                          // Flag for opening font pop-up
         bool menu_visible;                             // Flag indicating menu state
+        bool show_imgui_metrics;                       // Flag indicating ImGui metrics window
         unsigned int graph_fonts_reserved;             // Number of fonts reserved for the configurator graph canvas
         bool shutdown_triggered;                       // Flag indicating user triggered shutdown
         bool screenshot_triggered;                     // Trigger and file name for screenshot
@@ -376,6 +387,9 @@ private:
 
     /** GUI element collections. */
     WindowCollection win_collection;
+
+    /** Resource requests from the GUI windows. */
+    std::vector<std::string> requested_resources;
 
     struct PopUpData {
         std::weak_ptr<bool> open_flag;
@@ -430,7 +444,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
+} // namespace megamol::gui

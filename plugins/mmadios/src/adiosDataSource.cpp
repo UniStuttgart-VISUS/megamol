@@ -10,8 +10,7 @@
 #include <numeric>
 
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 adiosDataSource::adiosDataSource()
         : callRequestMpi("requestMpi", "Requests initialization of MPI and the communicator for the view.")
@@ -154,7 +153,12 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                 return false;
             }
 
-            auto const frameIDtoLoad = cad->getFrameIDtoLoad();
+            auto const frameIDtoLoad = std::min(frameCount - 1, cad->getFrameIDtoLoad());
+            if (frameIDtoLoad != cad->getFrameIDtoLoad()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[adiosDataSource] Could not load frame %u, returning last frame (%u) instead",
+                    cad->getFrameIDtoLoad(), frameIDtoLoad);
+            }
             std::vector<adios2Params> content = variables;
             content.insert(content.end(), attributes.begin(), attributes.end());
 
@@ -203,7 +207,8 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[adiosDataSource] Time spent for reading frame: %d ms", duration);
 
-            loadedFrameID = cad->getFrameIDtoLoad();
+            loadedFrameID = frameIDtoLoad;
+            cad->setLoadedFrameID(loadedFrameID);
             // here data is loaded
         } catch (std::invalid_argument& e) {
 #ifdef MEGAMOL_USE_MPI
@@ -305,6 +310,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 
             availVars.clear();
             availVars.reserve(tmp_variables.size());
+            allVariables = tmp_variables;
             variables.clear();
             variables.reserve(tmp_variables.size());
             availAttribs.clear();
@@ -372,14 +378,16 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
     }
 
     cad->setAvailableVars(availVars);
+    cad->setAllVars(allVariables);
     cad->setAvailableAttributes(availAttribs);
     if (timesteps.size() != 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[adiosDataSource] Detected variables with different count of time steps - Using lowest");
-        cad->setFrameCount(*std::min_element(timesteps.begin(), timesteps.end()));
+        frameCount = *std::min_element(timesteps.begin(), timesteps.end());
     } else {
-        cad->setFrameCount(timesteps[0]);
+        frameCount = timesteps[0];
     }
+    cad->setFrameCount(frameCount);
 
     cad->setDataHash(this->data_hash);
     dataHashChanged = false;
@@ -436,7 +444,7 @@ bool adiosDataSource::initMPI() {
 #endif /* MEGAMOL_USE_MPI */
 }
 
-vislib::StringA adiosDataSource::getCommandLine(void) {
+vislib::StringA adiosDataSource::getCommandLine() {
     vislib::StringA retval;
 
 #ifdef _WIN32
@@ -462,5 +470,4 @@ vislib::StringA adiosDataSource::getCommandLine(void) {
     return retval;
 }
 
-} // namespace adios
-} // namespace megamol
+} // namespace megamol::adios

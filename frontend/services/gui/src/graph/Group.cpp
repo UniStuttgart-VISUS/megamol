@@ -423,7 +423,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             std::string button_label = "group_" + std::to_string(this->uid);
             ImGui::SetCursorScreenPos(group_rect_min);
             ImGui::SetItemAllowOverlap();
-            ImGui::InvisibleButton(button_label.c_str(), group_size);
+            ImGui::InvisibleButton(button_label.c_str(), group_size, ImGuiButtonFlags_NoSetKeyOwner);
             ImGui::SetItemAllowOverlap();
             if (ImGui::IsItemActivated()) {
                 state.interact.button_active_uid = this->uid;
@@ -509,7 +509,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
             // Deselection
             else if (this->gui_selected &&
-                     ((mouse_clicked_anywhere && !hovered) || (active && ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
+                     ((mouse_clicked_anywhere && !hovered) || (active && ImGui::IsKeyPressed(ImGuiMod_Shift)) ||
                          (state.interact.group_selected_uid != this->uid))) {
                 this->gui_selected = false;
                 if (state.interact.group_selected_uid == this->uid) {

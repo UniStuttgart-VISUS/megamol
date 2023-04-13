@@ -22,7 +22,7 @@ using namespace megamol::geocalls;
 using namespace megamol::moldyn_gl::rendering;
 
 
-ArrowRenderer::ArrowRenderer(void)
+ArrowRenderer::ArrowRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getdata", "Connects to the data source")
         , get_tf_slot_("gettransferfunction", "Connects to the transfer function module")
@@ -57,13 +57,13 @@ ArrowRenderer::ArrowRenderer(void)
 }
 
 
-ArrowRenderer::~ArrowRenderer(void) {
+ArrowRenderer::~ArrowRenderer() {
 
     this->Release();
 }
 
 
-bool ArrowRenderer::create(void) {
+bool ArrowRenderer::create() {
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
@@ -75,11 +75,10 @@ bool ArrowRenderer::create(void) {
 #endif
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
-        return false;
 
     // create shader programs
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         // TODO: use std::filesystem::path?
@@ -125,7 +124,7 @@ bool ArrowRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 }
 
 
-void ArrowRenderer::release(void) {
+void ArrowRenderer::release() {
     glDeleteTextures(1, &this->grey_tf_);
 
 #ifdef MEGAMOL_USE_PROFILING
@@ -393,7 +392,7 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             glUniform1ui(this->arrow_pgrm_->getUniformLocation("flagsAvailable"), use_flags ? 1 : 0);
 
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+            perf_manager_->start_timer(timers_[0]);
 #endif
 
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));

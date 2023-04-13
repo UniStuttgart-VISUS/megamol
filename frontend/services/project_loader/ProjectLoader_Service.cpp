@@ -7,11 +7,14 @@
 
 #include "ProjectLoader_Service.hpp"
 
+#include <fstream>
+#include <sstream>
+
 #include "Window_Events.h"
-
+#include "mmcore/utility/String.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
-
 #include "mmcore/utility/log/Log.h"
+
 static void log(const char* text) {
     const std::string msg = "ProjectLoader_Service: " + std::string(text);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -25,8 +28,7 @@ static void log_error(std::string const& text) {
     megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
 }
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 ProjectLoader_Service::ProjectLoader_Service() {
     // init members to default states
@@ -84,8 +86,7 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
 
     auto found_it = std::find_if(supported_filetypes.begin(), supported_filetypes.end(), [&](auto& item) {
         const std::string suffix = std::get<0>(item);
-        return megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(
-            filename.generic_u8string(), suffix);
+        return megamol::core::utility::string::EndsWithAsciiCaseInsensitive(filename.generic_u8string(), suffix);
     });
 
     if (found_it == supported_filetypes.end()) {
@@ -195,5 +196,4 @@ void ProjectLoader_Service::postGraphRender() {
 }
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

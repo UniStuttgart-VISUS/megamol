@@ -14,8 +14,7 @@
 
 #include <memory> // unique_ptr
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 class Remote_Service final : public AbstractFrontendService {
 public:
@@ -49,7 +48,7 @@ public:
     }
 
     Remote_Service();
-    ~Remote_Service();
+    ~Remote_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;
@@ -126,5 +125,4 @@ private:
 std::string handle_remote_session_config(
     megamol::frontend_resources::RuntimeConfig const& config, Remote_Service::Config& remote_config);
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

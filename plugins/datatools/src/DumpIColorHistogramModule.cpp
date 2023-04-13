@@ -10,7 +10,7 @@
 using namespace megamol;
 
 
-datatools::DumpIColorHistogramModule::DumpIColorHistogramModule(void)
+datatools::DumpIColorHistogramModule::DumpIColorHistogramModule()
         : core::Module()
         , inDataSlot("indata", "accessing the original data")
         , dumpBtnSlot("dump", "Dumps the data")
@@ -28,17 +28,17 @@ datatools::DumpIColorHistogramModule::DumpIColorHistogramModule(void)
 }
 
 
-datatools::DumpIColorHistogramModule::~DumpIColorHistogramModule(void) {
+datatools::DumpIColorHistogramModule::~DumpIColorHistogramModule() {
     this->Release();
 }
 
 
-bool datatools::DumpIColorHistogramModule::create(void) {
+bool datatools::DumpIColorHistogramModule::create() {
     return true;
 }
 
 
-void datatools::DumpIColorHistogramModule::release(void) {}
+void datatools::DumpIColorHistogramModule::release() {}
 
 void writeSVG(const std::vector<int>& buckets, float rangeMin, float rangeMax) {
     int width = 2048;

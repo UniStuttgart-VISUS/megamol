@@ -41,7 +41,7 @@ vislib::sys::IOException::IOException(const IOException& rhs) : SystemException(
 /*
  * vislib::sys::IOException::~IOException
  */
-vislib::sys::IOException::~IOException(void) {}
+vislib::sys::IOException::~IOException() {}
 
 
 /*

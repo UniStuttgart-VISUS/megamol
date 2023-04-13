@@ -17,14 +17,27 @@ layout(rgba32f, binding = 1) writeonly uniform highp image2D normal_target_tx2D;
 /* output depth */
 layout(r32f, binding = 2) writeonly uniform highp image2D depth_target_tx2D;
 
+/* inputs */
+uniform highp sampler2D color_tx2D;
+uniform highp sampler2D depth_tx2D;
+uniform int use_depth_tx;
+
 /* main function for computation */
 void compute(float t, const float tfar, const Ray ray, const float rayStep, const ivec2 pixel_coords) {
     // Initialize results
     vec4 result = vec4(0.0f);
+    bool have_hit = false;
 
     // Initialize output depth and normal value
     float depth = FLT_MAX;
     vec3 normal = vec3(0.0f);
+
+    vec2 pixel_tex_coords = vec2(pixel_coords.x / rt_resolution.x, pixel_coords.y / rt_resolution.y);
+    pixel_tex_coords += vec2(0.5/rt_resolution.x, 0.5/rt_resolution.y);
+
+    // input values
+    const float input_depth = texture(depth_tx2D, pixel_tex_coords).x;
+    const vec4 input_color = texture(color_tx2D, pixel_tex_coords);
 
     // Store value and position from previous step
     vec3 old_pos = ray.o + t * ray.d;
@@ -50,14 +63,27 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
 
             depth = calculate_depth(surface_pos);
 
+            if (use_depth_tx != 0) {
+                // Compare depth values and decide to abort
+                if (depth > input_depth) {
+                    break;
+                }
+            }
+
             // Compute normal
             normal = calculate_normal(texCoords);
+
+            have_hit = true;
 
             // Compute illumination from fixed light
             if (use_lighting) {
                 result = vec4(phong(material_col, normal, -ray.d, -light), opacity);
             } else {
                 result = vec4(material_col, opacity);
+            }
+            if (use_depth_tx != 0) {
+                result.rgb = result.rgb * result.a + (1.0f - result.a) * input_color.rgb;
+                result.a += input_color.a;
             }
 
             break;
@@ -74,6 +100,17 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
             t += rayStep * (1.0f + (rayStep / 10.0f) - vol_sample / isoValue);
         }
     }
+
+    if (!have_hit) {
+        if(use_depth_tx != 0){
+            result = input_color;
+            depth = input_depth;
+        } else {
+            result.a = 0.0f;
+            depth = FLT_MAX;
+        }
+        normal = vec3(0.0f);
+    }    
 
     // Write results
     imageStore(render_target_tx2D, pixel_coords, result);

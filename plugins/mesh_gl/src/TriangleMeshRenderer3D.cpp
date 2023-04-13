@@ -10,7 +10,6 @@
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -31,8 +30,9 @@
 #include <utility>
 #include <vector>
 
-namespace megamol {
-namespace mesh_gl {
+using megamol::core::utility::log::Log;
+
+namespace megamol::mesh_gl {
 
 TriangleMeshRenderer3D::TriangleMeshRenderer3D()
         : triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input")
@@ -107,7 +107,8 @@ void TriangleMeshRenderer3D::createMaterialCollection() {
         Log::DefaultLog.WriteError("GL version too low or required extensions not available.");
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->shader_program = core::utility::make_shared_glowl_shader("triangle_mesh_renderer_3d", shader_options,
@@ -287,12 +288,6 @@ void TriangleMeshRenderer3D::updateRenderTaskCollection(mmstd_gl::CallRender3DGL
     this->shader_changed = false;
 }
 
-std::vector<std::string> TriangleMeshRenderer3D::requested_lifetime_resources() {
-    std::vector<std::string> resources = Module::requested_lifetime_resources();
-    resources.emplace_back("OpenGL_Context");
-    return resources;
-}
-
 bool TriangleMeshRenderer3D::get_input_data() {
     auto tmc_ptr = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();
     auto mdc_ptr = this->mesh_data_slot.CallAs<mesh::MeshDataCall>();
@@ -433,5 +428,4 @@ bool TriangleMeshRenderer3D::get_input_extent() {
     return true;
 }
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

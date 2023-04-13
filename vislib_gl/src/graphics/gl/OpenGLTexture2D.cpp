@@ -40,7 +40,7 @@ GLenum vislib_gl::graphics::gl::OpenGLTexture2D::SetWrap(const GLint s, const GL
 /*
  * vislib_gl::graphics::gl::OpenGLTexture2D::OpenGLTexture2D
  */
-vislib_gl::graphics::gl::OpenGLTexture2D::OpenGLTexture2D(void) : Super() {
+vislib_gl::graphics::gl::OpenGLTexture2D::OpenGLTexture2D() : Super() {
     // Nothing to do.
 }
 
@@ -48,7 +48,7 @@ vislib_gl::graphics::gl::OpenGLTexture2D::OpenGLTexture2D(void) : Super() {
 /*
  * vislib_gl::graphics::gl::OpenGLTexture2D::~OpenGLTexture2D
  */
-vislib_gl::graphics::gl::OpenGLTexture2D::~OpenGLTexture2D(void) {
+vislib_gl::graphics::gl::OpenGLTexture2D::~OpenGLTexture2D() {
     // Nothing to do.
 }
 
@@ -56,7 +56,7 @@ vislib_gl::graphics::gl::OpenGLTexture2D::~OpenGLTexture2D(void) {
 /*
  * vislib_gl::graphics::gl::OpenGLTexture2D::Bind
  */
-GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Bind(void) {
+GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Bind() {
     USES_GL_VERIFY;
     GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, this->GetId()));
     return GL_NO_ERROR;
@@ -74,7 +74,9 @@ GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Create(const uint32_t width, co
     if (!this->IsValid()) {
         try {
             this->createId();
-        } catch (OpenGLException e) { return e.GetErrorCode(); }
+        } catch (OpenGLException e) {
+            return e.GetErrorCode();
+        }
     }
 
     GL_VERIFY_EXPR_RETURN(this->Bind());

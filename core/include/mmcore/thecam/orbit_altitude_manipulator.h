@@ -5,14 +5,11 @@
  * All rights reserved.
  */
 
-#ifndef ORBIT_ALTITUDE_MANIPULATOR_H_INCLUDED
-#define ORBIT_ALTITUDE_MANIPULATOR_H_INCLUDED
+#pragma once
 
 #include "mmcore/thecam/manipulator_base.h"
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * Manipulator
@@ -85,7 +82,7 @@ public:
     /**
      * Set manipulator to inactive (usually on mouse button release).
      */
-    inline void setInactive(void) {
+    inline void setInactive() {
         this->end_manipulation();
     }
 
@@ -97,9 +94,4 @@ private:
     screen_type m_last_sy;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
-
-
-#endif // !ORBIT_ALTITUDE_MANIPULATOR_H_INCLUDED
+} // namespace megamol::core::thecam

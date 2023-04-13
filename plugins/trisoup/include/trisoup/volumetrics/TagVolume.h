@@ -5,21 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TAGVOLUME_H_INCLUDED
-#define MEGAMOLCORE_TAGVOLUME_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-namespace megamol {
-namespace trisoup {
-namespace volumetrics {
+namespace megamol::trisoup::volumetrics {
 
 class TagVolume {
 public:
     TagVolume(unsigned int xRes, unsigned int yRes, unsigned int zRes);
-    ~TagVolume(void);
+    ~TagVolume();
     void Tag(unsigned int x, unsigned int y, unsigned int z);
     bool IsTagged(unsigned int x, unsigned int y, unsigned int z);
     void UnTag(unsigned int x, unsigned int y, unsigned int z);
@@ -33,8 +27,4 @@ private:
     unsigned char* volume;
 };
 
-} /* end namespace volumetrics */
-} /* end namespace trisoup */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TAGVOLUME_H_INCLUDED */
+} // namespace megamol::trisoup::volumetrics

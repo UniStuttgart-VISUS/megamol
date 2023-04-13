@@ -12,9 +12,7 @@
 #include "OpenGL_Context.h"
 
 
-namespace megamol {
-namespace moldyn_gl {
-namespace misc {
+namespace megamol::moldyn_gl::misc {
 
 class MDAOVolumeGenerator {
 
@@ -61,6 +59,4 @@ private:
     GLint prev_fbo_;
 };
 
-} /* end namespace misc */
-} // namespace moldyn_gl
-} /* end namespace megamol */
+} // namespace megamol::moldyn_gl::misc

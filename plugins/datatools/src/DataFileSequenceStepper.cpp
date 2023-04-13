@@ -17,7 +17,7 @@
 /*
  * megamol::datatools::DataFileSequenceStepper::DataFileSequenceStepper
  */
-megamol::datatools::DataFileSequenceStepper::DataFileSequenceStepper(void)
+megamol::datatools::DataFileSequenceStepper::DataFileSequenceStepper()
         : core::Module()
         , conSlot("connection", "Connects to a view to make this module part of the same module network.")
         , filenameSlotNameSlot("filenameSlot", "String parameter identifying the filename slot to manipulate")
@@ -44,7 +44,7 @@ megamol::datatools::DataFileSequenceStepper::DataFileSequenceStepper(void)
 /*
  * megamol::datatools::DataFileSequenceStepper::~DataFileSequenceStepper
  */
-megamol::datatools::DataFileSequenceStepper::~DataFileSequenceStepper(void) {
+megamol::datatools::DataFileSequenceStepper::~DataFileSequenceStepper() {
     this->Release();
     // Intentionally empty
 }
@@ -53,7 +53,7 @@ megamol::datatools::DataFileSequenceStepper::~DataFileSequenceStepper(void) {
 /*
  * megamol::datatools::DataFileSequenceStepper::create
  */
-bool megamol::datatools::DataFileSequenceStepper::create(void) {
+bool megamol::datatools::DataFileSequenceStepper::create() {
     // Intentionally empty
     return true;
 }
@@ -62,7 +62,7 @@ bool megamol::datatools::DataFileSequenceStepper::create(void) {
 /*
  * megamol::datatools::DataFileSequenceStepper::findFilenameSlot
  */
-megamol::core::param::ParamSlot* megamol::datatools::DataFileSequenceStepper::findFilenameSlot(void) {
+megamol::core::param::ParamSlot* megamol::datatools::DataFileSequenceStepper::findFilenameSlot() {
     vislib::StringA name(this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
     if (name.IsEmpty())
         return NULL;
@@ -263,7 +263,7 @@ bool megamol::datatools::DataFileSequenceStepper::onPrevFile(core::param::ParamS
 /*
  * megamol::datatools::DataFileSequenceStepper::release
  */
-void megamol::datatools::DataFileSequenceStepper::release(void) {
+void megamol::datatools::DataFileSequenceStepper::release() {
     // Intentionally empty
 }
 

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_CINEMATICUTILS_H_INCLUDED
-#define MEGAMOL_CINEMATIC_CINEMATICUTILS_H_INCLUDED
 #pragma once
 
 
@@ -17,8 +15,7 @@
 // ##################################################################### //
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 
 /*
@@ -27,9 +24,9 @@ namespace cinematic_gl {
 class CinematicUtils : public core_gl::utility::RenderUtils {
 
 public:
-    CinematicUtils(void);
+    CinematicUtils();
 
-    ~CinematicUtils(void);
+    ~CinematicUtils();
 
     enum Colors {
         BACKGROUND,
@@ -51,7 +48,7 @@ public:
         MANIPULATOR_CTRLPOINT
     };
 
-    bool Initialise(megamol::core::CoreInstance* core_instance);
+    bool Initialise(frontend_resources::RuntimeConfig const& runtimeConf);
 
     const glm::vec4 Color(CinematicUtils::Colors color) const;
 
@@ -68,7 +65,7 @@ public:
 
     void DrawAll(const glm::mat4& mvp, glm::vec2 dim_vp);
 
-    float GetTextLineHeight(void);
+    float GetTextLineHeight();
 
     float GetTextLineWidth(const std::string& text_line);
 
@@ -76,7 +73,7 @@ public:
 
     void ResetTextRotation();
 
-    bool Initialized(void) {
+    bool Initialized() {
         return this->init_once;
     }
 
@@ -97,12 +94,9 @@ private:
 
     const float lightness(glm::vec4 background) const;
 
-    void gui_update(void);
+    void gui_update();
 
     void gui_table_row(const char* left, const char* right);
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOL_CINEMATIC_CINEMATICUTILS_H_INCLUDED
+} // namespace megamol::cinematic_gl

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_VERSIONNUMBER_H_INCLUDED
-#define VISLIB_VERSIONNUMBER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -73,14 +69,14 @@ public:
     VersionNumber(const wchar_t* ver);
 
     /** Dtor. */
-    ~VersionNumber(void);
+    ~VersionNumber();
 
     /**
      * Answer the major version number.
      *
      * @return The major version number.
      */
-    inline VersionInt GetMajorVersionNumber(void) const {
+    inline VersionInt GetMajorVersionNumber() const {
         return this->majorNumber;
     }
 
@@ -89,7 +85,7 @@ public:
      *
      * @return The minor version number.
      */
-    inline VersionInt GetMinorVersionNumber(void) const {
+    inline VersionInt GetMinorVersionNumber() const {
         return this->minorNumber;
     }
 
@@ -99,7 +95,7 @@ public:
      *
      * @return The revision number.
      */
-    inline VersionRev GetRevisionNumber(void) const {
+    inline VersionRev GetRevisionNumber() const {
         return this->revisionNumber;
     }
 
@@ -287,4 +283,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_VERSIONNUMBER_H_INCLUDED */

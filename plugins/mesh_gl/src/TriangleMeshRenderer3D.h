@@ -25,8 +25,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 /**
  * Module for uploading a 3D triangle mesh to the GPU.
@@ -55,14 +54,14 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TriangleMeshRenderer3D();
+    ~TriangleMeshRenderer3D() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TriangleMeshRenderer3D";
     }
     /**
@@ -70,8 +69,16 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Upload 3D data to the GPU for use with the mesh plugin";
+    }
+
+    /**
+     * Request resources to ask for OpenGL state
+     */
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::OpenGL_Context>();
     }
 
 protected:
@@ -89,11 +96,6 @@ protected:
     void createMaterialCollection() override;
 
     void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
-
-    /**
-     * Request resources to ask for OpenGL state
-     */
-    virtual std::vector<std::string> requested_lifetime_resources() override;
 
 private:
     /** Get input data and extent from called modules */
@@ -168,5 +170,4 @@ private:
 
     } render_data;
 };
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

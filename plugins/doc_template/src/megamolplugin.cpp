@@ -4,15 +4,15 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 namespace megamol::MegaMolPlugin {
-class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class PluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(PluginInstance)
 public:
     PluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   // machine-readable plugin assembly name
                   "MegaMolPlugin", // TODO: Change this!
 

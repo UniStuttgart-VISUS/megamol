@@ -17,7 +17,7 @@ using namespace megamol;
 /*
  * datatools::MPIVolumeAggregator::MPIVolumeAggregator
  */
-datatools::MPIVolumeAggregator::MPIVolumeAggregator(void)
+datatools::MPIVolumeAggregator::MPIVolumeAggregator()
         : AbstractVolumeManipulator("outData", "indata")
         , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
         , operatorSlot("operator", "the operator to apply to the volume when aggregating") {
@@ -38,7 +38,7 @@ datatools::MPIVolumeAggregator::MPIVolumeAggregator(void)
 /*
  * datatools::MPIVolumeAggregator::~MPIVolumeAggregator
  */
-datatools::MPIVolumeAggregator::~MPIVolumeAggregator(void) {
+datatools::MPIVolumeAggregator::~MPIVolumeAggregator() {
     this->Release();
 }
 
@@ -102,7 +102,7 @@ bool datatools::MPIVolumeAggregator::manipulateData(
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "MPIVolumeAggregator: multi-component volume detected! Computing min/max density on the first component "
             "only. Op %s is applied on all components.",
-            this->operatorSlot.Param<core::param::EnumParam>()->getMap()[opVal].PeekBuffer());
+            this->operatorSlot.Param<core::param::EnumParam>()->getMap()[opVal].c_str());
     }
     switch (opVal) {
     case 0:

@@ -7,8 +7,7 @@
  * $Id$
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_CRITPOINTS_H
-#define MMPROTEINCUDAPLUGIN_CRITPOINTS_H
+#pragma once
 
 #include "UniGrid3D.h"
 #include "protein_calls/CrystalStructureDataCall.h"
@@ -98,5 +97,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif /* MMPROTEINCUDAPLUGIN_CRITPOINTS_H */

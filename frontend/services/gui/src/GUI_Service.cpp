@@ -16,6 +16,7 @@
 #include "KeyboardMouse_Events.h"
 #include "ModuleGraphSubscription.h"
 #include "OpenGL_Context.h"
+#include "PluginsResource.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
@@ -25,8 +26,7 @@
 #include "mmcore/utility/log/Log.h"
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 
 bool GUI_Service::init(void* configPtr) {
@@ -46,7 +46,6 @@ bool GUI_Service::init(const Config& config) {
     this->m_config = config;
 
     this->m_queuedProjectFiles.clear();
-    this->m_requestedResourceReferences.clear();
     this->m_providedResourceReferences.clear();
     this->m_requestedResourcesNames = {
         "MegaMolGraph",                                                 // 0 - sync graphs
@@ -65,12 +64,17 @@ bool GUI_Service::init(const Config& config) {
         "ImagePresentationEntryPoints",                                 // 13 - Entry point
         "ExecuteLuaScript",                                             // 14 - Execute Lua Scripts (from Console)
         frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, // 15 MegaMol Graph subscription
+        "PluginsResource",                                              // 16 - Plugins
 #ifdef MEGAMOL_USE_PROFILING
-        frontend_resources::PerformanceManager_Req_Name // 16 - Performance Manager
+        frontend_resources::PerformanceManager_Req_Name // 17 - Performance Manager
 #endif
     };
 
     this->m_gui = std::make_shared<megamol::gui::GUIManager>();
+    auto gui_resources = m_gui->requested_lifetime_resources();
+    m_requestedResourcesNames.insert(m_requestedResourcesNames.end(), gui_resources.begin(), gui_resources.end());
+    m_requestedResourcesNames.erase(std::unique(m_requestedResourcesNames.begin(), m_requestedResourcesNames.end()),
+        m_requestedResourcesNames.end());
 
     // Set function pointer in state resource once
     this->m_providedStateResource.request_gui_state = [&](bool as_lua) -> std::string {
@@ -130,8 +134,7 @@ void GUI_Service::digestChangedRequestedResources() {
     // Check for updates in requested resources --------------------------------
 
     /// KeyboardEvents = resource index 2
-    auto maybe_keyboard_events =
-        this->m_requestedResourceReferences[2].getOptionalResource<megamol::frontend_resources::KeyboardEvents>();
+    auto maybe_keyboard_events = frontend_resources->getOptional<megamol::frontend_resources::KeyboardEvents>();
     if (maybe_keyboard_events.has_value()) {
         megamol::frontend_resources::KeyboardEvents const& keyboard_events = maybe_keyboard_events.value().get();
 
@@ -161,8 +164,7 @@ void GUI_Service::digestChangedRequestedResources() {
     }
 
     /// MouseEvents = resource index 3
-    auto maybe_mouse_events =
-        this->m_requestedResourceReferences[3].getOptionalResource<megamol::frontend_resources::MouseEvents>();
+    auto maybe_mouse_events = frontend_resources->getOptional<megamol::frontend_resources::MouseEvents>();
     if (maybe_mouse_events.has_value()) {
         megamol::frontend_resources::MouseEvents const& mouse_events = maybe_mouse_events.value().get();
 
@@ -204,16 +206,14 @@ void GUI_Service::digestChangedRequestedResources() {
     }
 
     /// FramebufferEvents = resource index 5
-    auto framebuffer_events =
-        &this->m_requestedResourceReferences[5].getResource<megamol::frontend_resources::FramebufferEvents>();
+    auto framebuffer_events = &frontend_resources->get<megamol::frontend_resources::FramebufferEvents>();
     for (auto& size_event : framebuffer_events->size_events) {
         this->m_framebuffer_size.x = static_cast<float>(size_event.width);
         this->m_framebuffer_size.y = static_cast<float>(size_event.height);
     }
 
     /// WindowEvents = resource index 1
-    auto maybe_window_events =
-        this->m_requestedResourceReferences[1].getOptionalResource<megamol::frontend_resources::WindowEvents>();
+    auto maybe_window_events = frontend_resources->getOptional<megamol::frontend_resources::WindowEvents>();
     if (maybe_window_events.has_value()) {
         megamol::frontend_resources::WindowEvents const& window_events = maybe_window_events.value().get();
 
@@ -231,32 +231,28 @@ void GUI_Service::digestChangedRequestedResources() {
 
     /// Trigger Screenshot = resource index 6
     if (this->m_gui->GetTriggeredScreenshot()) {
-        auto& screenshot_to_file_trigger =
-            this->m_requestedResourceReferences[6].getResource<std::function<bool(std::filesystem::path const&)>>();
+        auto& screenshot_to_file_trigger = frontend_resources->get<std::function<bool(std::filesystem::path const&)>>();
         screenshot_to_file_trigger(this->m_gui->GetScreenshotFileName());
     }
 
     /// Pipe lua script paths to gui = resource index 7
-    auto& script_paths = this->m_requestedResourceReferences[7].getResource<megamol::frontend_resources::ScriptPaths>();
+    auto& script_paths = frontend_resources->get<megamol::frontend_resources::ScriptPaths>();
     this->m_gui->SetProjectScriptPaths(script_paths.lua_script_paths);
 
     /// Pipe project loading request from GUI to project loader = resource index 8
     auto requested_project_file = this->m_gui->GetProjectLoadRequest();
     if (!requested_project_file.empty()) {
-        auto& project_loader =
-            this->m_requestedResourceReferences[8].getResource<megamol::frontend_resources::ProjectLoader>();
+        auto& project_loader = frontend_resources->get<megamol::frontend_resources::ProjectLoader>();
         project_loader.load_filename(requested_project_file);
     }
 
     /// Get current FPS and MS frame statistic = resource index 9
-    auto& frame_statistics =
-        this->m_requestedResourceReferences[9].getResource<megamol::frontend_resources::FrameStatistics>();
+    auto& frame_statistics = frontend_resources->get<megamol::frontend_resources::FrameStatistics>();
     this->m_gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf,
         frame_statistics.rendered_frames_count);
 
     /// Get window manipulation resource = resource index 11
-    auto maybe_window_manipulation =
-        this->m_requestedResourceReferences[11].getOptionalResource<megamol::frontend_resources::WindowManipulation>();
+    auto maybe_window_manipulation = frontend_resources->getOptional<megamol::frontend_resources::WindowManipulation>();
     if (maybe_window_manipulation.has_value()) {
         megamol::frontend_resources::WindowManipulation const& window_manipulation =
             maybe_window_manipulation.value().get();
@@ -274,9 +270,9 @@ void GUI_Service::preGraphRender() {
 
     if (this->m_gui != nullptr) {
         // Propagate changes from the GUI graph to the MegaMol graph
-        if ((this->m_megamol_graph != nullptr) && (this->m_config.core_instance != nullptr)) {
+        if ((this->m_megamol_graph != nullptr)) {
             // Requires enabled OpenGL context, e.g. for textures used in parameters
-            this->m_gui->SynchronizeGraphs((*this->m_megamol_graph), (*this->m_config.core_instance));
+            this->m_gui->SynchronizeGraphs((*this->m_megamol_graph));
         }
         this->m_gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
     }
@@ -310,17 +306,18 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
     /// (Called only once)
+    frontend_resources = std::make_shared<frontend_resources::FrontendResourcesMap>(resources);
 
-    this->m_requestedResourceReferences = resources;
     if (this->m_gui == nullptr) {
         return;
     }
 
-    this->m_gui->InitializeGraphSynchronisation((*this->m_config.core_instance));
+    auto const& pluginsRes = frontend_resources->get<megamol::frontend_resources::PluginsResource>();
+
+    this->m_gui->InitializeGraphSynchronisation(pluginsRes);
 
     // Check render backend prerequisites
-    auto maybe_opengl_context =
-        m_requestedResourceReferences[4].getOptionalResource<frontend_resources::OpenGL_Context>();
+    auto maybe_opengl_context = frontend_resources->getOptional<frontend_resources::OpenGL_Context>();
     if (!maybe_opengl_context.has_value() && (m_config.backend == megamol::gui::GUIRenderBackend::OPEN_GL)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "GUI_Service: no OpenGL_Context available ... switching to CPU backend.");
@@ -332,21 +329,20 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     }
 
     /// MegaMolGraph = resource index 0
-    auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
+    auto graph_resource_ptr = &frontend_resources->get<megamol::core::MegaMolGraph>();
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     this->m_megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
     assert(this->m_megamol_graph != nullptr);
 
     /// Resource Directories = resource index 10
-    auto& runtime_config =
-        this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
+    auto& runtime_config = frontend_resources->get<megamol::frontend_resources::RuntimeConfig>();
     if (!runtime_config.resource_directories.empty()) {
         this->m_gui->SetResourceDirectories(runtime_config.resource_directories);
     }
 
     /// Command Registry = resource index 12
     auto& command_registry = const_cast<megamol::frontend_resources::CommandRegistry&>(
-        this->m_requestedResourceReferences[12].getResource<megamol::frontend_resources::CommandRegistry>());
+        frontend_resources->get<megamol::frontend_resources::CommandRegistry>());
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     this->m_gui->RegisterHotkeys(command_registry, *this->m_megamol_graph);
 
@@ -354,8 +350,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     // the image presentation will issue the rendering and provide the view with resources for rendering
     // probably we dont care or dont check wheter the same view is added as entry point multiple times
     auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
-        this->m_requestedResourceReferences[13]
-            .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+        frontend_resources->get<megamol::frontend_resources::ImagePresentationEntryPoints>());
     const std::string gui_entry_point_name = "GUI_Service";
     bool view_presentation_ok = image_presentation.add_entry_point(
         gui_entry_point_name, {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
@@ -368,12 +363,12 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     }
 
     m_exec_lua = const_cast<megamol::frontend_resources::common_types::lua_func_type*>(
-        &m_requestedResourceReferences[14].getResource<frontend_resources::common_types::lua_func_type>());
+        &frontend_resources->get<frontend_resources::common_types::lua_func_type>());
     m_gui->SetLuaFunc(m_exec_lua);
 
     // MegaMol Graph Subscription
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
-        this->m_requestedResourceReferences[15].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+        frontend_resources->get<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
 
     frontend_resources::ModuleGraphSubscription gui_subscription("GUI");
 
@@ -398,6 +393,10 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     gui_subscription.ParameterChanged =
         [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
             std::string const& new_value) { return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, new_value); };
+    gui_subscription.ParameterPresentationChanged =
+        [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot) {
+            return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, "");
+        };
 
     gui_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
         return m_gui->NotifyRunningGraph_AddCall(call_inst);
@@ -416,13 +415,19 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
 #ifdef MEGAMOL_USE_PROFILING
     // PerformanceManager
-    perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-        &this->m_requestedResourceReferences[16].getResource<megamol::frontend_resources::PerformanceManager>());
+    perf_manager = const_cast<frontend_resources::PerformanceManager*>(
+        &frontend_resources->get<frontend_resources::PerformanceManager>());
+    perf_logging = const_cast<frontend_resources::ProfilingLoggingStatus*>(
+        &frontend_resources->get<frontend_resources::ProfilingLoggingStatus>());
+    m_gui->SetProfilingLoggingStatus(perf_logging);
     // this needs to happen before the first (gui) module is spawned to help it look up the timers
     m_gui->SetPerformanceManager(perf_manager);
     perf_manager->subscribe_to_updates(
         [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
 #endif
+
+    // now come the resources for the gui windows
+    m_gui->setRequestedResources(frontend_resources);
 }
 
 
@@ -526,5 +531,4 @@ void GUI_Service::resource_register_notification(
     }
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

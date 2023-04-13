@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTVECTORIMPL_H_INCLUDED
-#define VISLIB_ABSTRACTVECTORIMPL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,8 +18,7 @@
 #include "vislib/memutils.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * This template implements the major behaviour of vectors. Its only
@@ -57,7 +52,7 @@ class AbstractVectorImpl {
 
 public:
     /** Dtor. */
-    ~AbstractVectorImpl(void);
+    ~AbstractVectorImpl();
 
     /**
      * Answer the angle between this vector and 'rhs'.
@@ -82,7 +77,7 @@ public:
      *
      * @return true, if the vector is normalised, false otherwise.
      */
-    inline bool IsNormalised(void) const {
+    inline bool IsNormalised() const {
         return IsEqual<T>(this->Length(), static_cast<T>(1));
     }
 
@@ -91,7 +86,7 @@ public:
      *
      * @return true, if the vector is a null vector, false otherwise.
      */
-    bool IsNull(void) const;
+    bool IsNull() const;
 
     /**
      * Answer whether the rhs vector and this are parallel.
@@ -109,21 +104,21 @@ public:
      *
      * @return The length of the vector.
      */
-    T Length(void) const;
+    T Length() const;
 
     /**
      * Answer the maximum norm of the vector.
      *
      * @return The maximum norm of the vector.
      */
-    T MaxNorm(void) const;
+    T MaxNorm() const;
 
     /**
      * Answer the euclidean norm (length) of the vector.
      *
      * @return The length of the vector.
      */
-    inline T Norm(void) const {
+    inline T Norm() const {
         return this->Length();
     }
 
@@ -132,7 +127,7 @@ public:
      *
      * @return The OLD length of the vector.
      */
-    T Normalise(void);
+    T Normalise();
 
     /**
      * Directly access the internal pointer holding the vector components.
@@ -140,7 +135,7 @@ public:
      *
      * @return The vector components in an array.
      */
-    inline T* PeekComponents(void) {
+    inline T* PeekComponents() {
         return this->components;
     }
 
@@ -150,14 +145,14 @@ public:
      *
      * @return The vector components in an array.
      */
-    inline const T* PeekComponents(void) const {
+    inline const T* PeekComponents() const {
         return this->components;
     }
 
     /**
      * Make this vector a null vector.
      */
-    void SetNull(void);
+    void SetNull();
 
     /**
      * Make this vector having a length of 'newLength'.
@@ -175,14 +170,14 @@ public:
      *
      * @return The square of the length of the vector.
      */
-    T SquareLength(void) const;
+    T SquareLength() const;
 
     /**
      * Answer the taxicab or Manhattan norm.
      *
      * @return The taxicab norm of the vector.
      */
-    T TaxicabNorm(void) const;
+    T TaxicabNorm() const;
 
     /**
      * Assignment.
@@ -268,7 +263,7 @@ public:
      *
      * @return The negated version of this vector.
      */
-    C<T, D, S> operator-(void) const;
+    C<T, D, S> operator-() const;
 
     /**
      * Answer the sum of this vector and 'rhs'.
@@ -395,7 +390,7 @@ protected:
     /**
      * Disallow instances of this class. This ctor does nothing!
      */
-    inline AbstractVectorImpl(void){};
+    inline AbstractVectorImpl(){};
 
     /**
      * The vector components. This can be a T * pointer or a T[D] static
@@ -409,7 +404,7 @@ protected:
  * vislib::math::AbstractVectorImpl<T, D, S, C>::~AbstractVectorImpl
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-AbstractVectorImpl<T, D, S, C>::~AbstractVectorImpl(void) {}
+AbstractVectorImpl<T, D, S, C>::~AbstractVectorImpl() {}
 
 
 /*
@@ -451,7 +446,7 @@ T AbstractVectorImpl<T, D, S, C>::Dot(const C<T, D, S>& rhs) const {
  * vislib::math::AbstractVectorImpl<T, D, S, C>::IsNull
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-bool AbstractVectorImpl<T, D, S, C>::IsNull(void) const {
+bool AbstractVectorImpl<T, D, S, C>::IsNull() const {
     for (unsigned int d = 0; d < D; d++) {
         if (!IsEqual<T>(this->components[d], static_cast<T>(0))) {
             return false;
@@ -507,7 +502,7 @@ bool AbstractVectorImpl<T, D, S, C>::IsParallel(const C<Tp, D, Sp>& rhs) const {
  * vislib::math::AbstractVectorImpl<T, D, S, C>::Length
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-T AbstractVectorImpl<T, D, S, C>::Length(void) const {
+T AbstractVectorImpl<T, D, S, C>::Length() const {
     T retval = static_cast<T>(0);
 
     for (unsigned int d = 0; d < D; d++) {
@@ -522,7 +517,7 @@ T AbstractVectorImpl<T, D, S, C>::Length(void) const {
  * vislib::math::AbstractVectorImpl<T, D, S, C>::MaxNorm
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-T AbstractVectorImpl<T, D, S, C>::MaxNorm(void) const {
+T AbstractVectorImpl<T, D, S, C>::MaxNorm() const {
 #ifdef _MSC_VER
 #pragma push_macro("min")
 #undef min
@@ -549,7 +544,7 @@ T AbstractVectorImpl<T, D, S, C>::MaxNorm(void) const {
  * vislib::math::AbstractVectorImpl<T, D, S, C>::Normalise
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-T AbstractVectorImpl<T, D, S, C>::Normalise(void) {
+T AbstractVectorImpl<T, D, S, C>::Normalise() {
     T length = this->Length();
 
     if (length != static_cast<T>(0)) {
@@ -571,7 +566,7 @@ T AbstractVectorImpl<T, D, S, C>::Normalise(void) {
  * vislib::math::AbstractVectorImpl<T, D, S, C>::SetNull
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-void AbstractVectorImpl<T, D, S, C>::SetNull(void) {
+void AbstractVectorImpl<T, D, S, C>::SetNull() {
     for (unsigned int d = 0; d < D; d++) {
         this->components[d] = static_cast<T>(0);
     }
@@ -601,7 +596,7 @@ T AbstractVectorImpl<T, D, S, C>::ScaleToLength(const T newLength) {
  * vislib::math::AbstractVectorImpl<T, D, S, C>::SquareLength
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-T AbstractVectorImpl<T, D, S, C>::SquareLength(void) const {
+T AbstractVectorImpl<T, D, S, C>::SquareLength() const {
     T retval = static_cast<T>(0);
 
     for (unsigned int d = 0; d < D; d++) {
@@ -616,7 +611,7 @@ T AbstractVectorImpl<T, D, S, C>::SquareLength(void) const {
  * vislib::math::AbstractVectorImpl<T, D, S, C>::TaxicabNorm
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-T AbstractVectorImpl<T, D, S, C>::TaxicabNorm(void) const {
+T AbstractVectorImpl<T, D, S, C>::TaxicabNorm() const {
     T retval = static_cast<T>(0);
 
     for (unsigned int d = 0; d < D; d++) {
@@ -701,7 +696,7 @@ bool AbstractVectorImpl<T, D, S, C>::operator==(const C<Tp, Dp, Sp>& rhs) const 
  * vislib::math::AbstractVectorImpl<T, D, S, C>::operator -
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-C<T, D, S> AbstractVectorImpl<T, D, S, C>::operator-(void) const {
+C<T, D, S> AbstractVectorImpl<T, D, S, C>::operator-() const {
     C<T, D, S> retval;
 
     for (unsigned int d = 0; d < D; d++) {
@@ -888,10 +883,8 @@ const T& AbstractVectorImpl<T, D, S, C>::operator[](const int i) const {
     }
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTVECTORIMPL_H_INCLUDED */

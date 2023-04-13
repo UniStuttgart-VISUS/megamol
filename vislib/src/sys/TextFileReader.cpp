@@ -32,7 +32,7 @@ vislib::sys::TextFileReader::TextFileReader(vislib::sys::File* file, unsigned in
 /*
  * vislib::sys::TextFileReader::~TextFileReader
  */
-vislib::sys::TextFileReader::~TextFileReader(void) {
+vislib::sys::TextFileReader::~TextFileReader() {
     ARY_SAFE_DELETE(this->buf);
     this->validBufSize = 0;
     this->file = NULL; // DO NOT DELETE!
@@ -42,7 +42,7 @@ vislib::sys::TextFileReader::~TextFileReader(void) {
 /*
  * vislib::sys::TextFileReader::FilePositionToReaderPosition
  */
-void vislib::sys::TextFileReader::FilePositionToReaderPosition(void) {
+void vislib::sys::TextFileReader::FilePositionToReaderPosition() {
     ASSERT(this->file != NULL);
     this->bufStart = this->file->Tell();
     this->bufPos = 0;
@@ -53,7 +53,7 @@ void vislib::sys::TextFileReader::FilePositionToReaderPosition(void) {
 /*
  * vislib::sys::TextFileReader::ReaderPositionToFilePosition
  */
-void vislib::sys::TextFileReader::ReaderPositionToFilePosition(void) {
+void vislib::sys::TextFileReader::ReaderPositionToFilePosition() {
     ASSERT(this->file != NULL);
     this->file->Seek(this->bufStart + this->bufPos);
 }

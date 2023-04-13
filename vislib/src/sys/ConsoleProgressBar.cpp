@@ -27,7 +27,7 @@
 
 namespace {
 // From log/Console.cpp
-unsigned int GetConsoleWidth(void) {
+unsigned int GetConsoleWidth() {
 #ifdef _WIN32
     // get handle
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -52,17 +52,13 @@ unsigned int GetConsoleWidth(void) {
 /*
  * vislib::sys::ConsoleProgressBar::ConsoleProgressBar
  */
-vislib::sys::ConsoleProgressBar::ConsoleProgressBar(void)
-        : running(false)
-        , maxValue(100)
-        , lastPers(-1.0f)
-        , startTime(0) {}
+vislib::sys::ConsoleProgressBar::ConsoleProgressBar() : running(false), maxValue(100), lastPers(-1.0f), startTime(0) {}
 
 
 /*
  * vislib::sys::ConsoleProgressBar::~ConsoleProgressBar
  */
-vislib::sys::ConsoleProgressBar::~ConsoleProgressBar(void) {
+vislib::sys::ConsoleProgressBar::~ConsoleProgressBar() {
     if (this->running) {
         this->Stop();
     }
@@ -128,7 +124,7 @@ void vislib::sys::ConsoleProgressBar::Start(const char* title, vislib::sys::Cons
 /*
  * vislib::sys::ConsoleProgressBar::Stop
  */
-void vislib::sys::ConsoleProgressBar::Stop(void) {
+void vislib::sys::ConsoleProgressBar::Stop() {
     if (this->running) {
         this->lastPers = 1.0f;
         this->lastPersTime = vislib::sys::GetTicksOfDay();
@@ -142,7 +138,7 @@ void vislib::sys::ConsoleProgressBar::Stop(void) {
 /*
  * vislib::sys::ConsoleProgressBar::update
  */
-void vislib::sys::ConsoleProgressBar::update(void) {
+void vislib::sys::ConsoleProgressBar::update() {
     static vislib::StringA left;
     static vislib::StringA right;
     static vislib::StringA line;

@@ -21,7 +21,7 @@
 /*
  * vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions
  */
-const char* vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions(void) {
+const char* vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions() {
     return "GL_EXT_framebuffer_object GL_ARB_draw_buffers ";
 }
 
@@ -29,7 +29,7 @@ const char* vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions(void)
 /*
  * vislib_gl::graphics::gl::FramebufferObject::GetMaxColourAttachments
  */
-UINT vislib_gl::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
+UINT vislib_gl::graphics::gl::FramebufferObject::GetMaxColourAttachments() {
     USES_GL_VERIFY;
     GLint retval = 0;
 
@@ -42,7 +42,7 @@ UINT vislib_gl::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
 /*
  * vislib_gl::graphics::gl::FramebufferObject::FramebufferObject
  */
-vislib_gl::graphics::gl::FramebufferObject::FramebufferObject(void)
+vislib_gl::graphics::gl::FramebufferObject::FramebufferObject()
         : attachmentColour(NULL)
         , cntColourAttachments(0)
         , idFb(UINT_MAX)
@@ -62,7 +62,7 @@ vislib_gl::graphics::gl::FramebufferObject::FramebufferObject(void)
 /*
  * vislib_gl::graphics::gl::FramebufferObject::~FramebufferObject
  */
-vislib_gl::graphics::gl::FramebufferObject::~FramebufferObject(void) {
+vislib_gl::graphics::gl::FramebufferObject::~FramebufferObject() {
     try {
         this->Disable();
         this->Release();
@@ -105,7 +105,7 @@ GLenum vislib_gl::graphics::gl::FramebufferObject::BindColourTexture(const UINT 
 /*
  * vislib_gl::graphics::gl::FramebufferObject::BindDepthTexture
  */
-GLenum vislib_gl::graphics::gl::FramebufferObject::BindDepthTexture(void) {
+GLenum vislib_gl::graphics::gl::FramebufferObject::BindDepthTexture() {
     USES_GL_VERIFY;
 
     if ((this->attachmentOther[ATTACH_IDX_DEPTH].state == ATTACHMENT_TEXTURE) ||
@@ -243,7 +243,7 @@ bool vislib_gl::graphics::gl::FramebufferObject::Create(const UINT width, const 
 /*
  * vislib_gl::graphics::gl::FramebufferObject::Disable
  */
-GLenum vislib_gl::graphics::gl::FramebufferObject::Disable(void) throw() {
+GLenum vislib_gl::graphics::gl::FramebufferObject::Disable() throw() {
     USES_GL_VERIFY;
 
     if (::glBindFramebufferEXT == NULL) {
@@ -427,7 +427,7 @@ GLuint vislib_gl::graphics::gl::FramebufferObject::GetColourTextureID(const UINT
 /*
  * vislib_gl::graphics::gl::FramebufferObject::GetDepthTextureID
  */
-GLuint vislib_gl::graphics::gl::FramebufferObject::GetDepthTextureID(void) const {
+GLuint vislib_gl::graphics::gl::FramebufferObject::GetDepthTextureID() const {
     if ((this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_TEXTURE) &&
         (this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_EXTERNAL_TEXTURE)) {
         throw vislib::IllegalStateException("The depth attachment must be a "
@@ -442,7 +442,7 @@ GLuint vislib_gl::graphics::gl::FramebufferObject::GetDepthTextureID(void) const
 /*
  * vislib_gl::graphics::gl::FramebufferObject::IsEnabled
  */
-bool vislib_gl::graphics::gl::FramebufferObject::IsEnabled(void) {
+bool vislib_gl::graphics::gl::FramebufferObject::IsEnabled() {
     USES_GL_VERIFY;
     GLint tmp;
 
@@ -455,7 +455,7 @@ bool vislib_gl::graphics::gl::FramebufferObject::IsEnabled(void) {
 /*
  * vislib_gl::graphics::gl::FramebufferObject::IsValid
  */
-bool vislib_gl::graphics::gl::FramebufferObject::IsValid(void) const throw() {
+bool vislib_gl::graphics::gl::FramebufferObject::IsValid() const throw() {
     try {
         if (this->cntColourAttachments > 0) {
             // TODO: This might not be sufficient. It could be required to
@@ -465,14 +465,16 @@ bool vislib_gl::graphics::gl::FramebufferObject::IsValid(void) const throw() {
             // FBO without colour attachment cannot be valid.
             return false;
         }
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 }
 
 
 /*
  * vislib_gl::graphics::gl::FramebufferObject::Release
  */
-void vislib_gl::graphics::gl::FramebufferObject::Release(void) {
+void vislib_gl::graphics::gl::FramebufferObject::Release() {
     USES_GL_VERIFY;
     USES_GL_DEFERRED_VERIFY;
 
@@ -668,7 +670,7 @@ GLenum vislib_gl::graphics::gl::FramebufferObject::drawTexture(
 /*
  * vislib_gl::graphics::gl::FramebufferObject::isComplete
  */
-bool vislib_gl::graphics::gl::FramebufferObject::isComplete(void) const {
+bool vislib_gl::graphics::gl::FramebufferObject::isComplete() const {
     GLenum status = ::glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 
     switch (status) {
@@ -724,7 +726,7 @@ GLenum vislib_gl::graphics::gl::FramebufferObject::readTexture(
 /*
  * vislib_gl::graphics::gl::FramebufferObject::saveState
  */
-void vislib_gl::graphics::gl::FramebufferObject::saveState(void) {
+void vislib_gl::graphics::gl::FramebufferObject::saveState() {
     USES_GL_VERIFY;
     GLint tmp;
 

@@ -6,8 +6,7 @@
  */
 
 
-#ifndef MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
-#define MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -15,8 +14,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class MeshDataAccessCollection {
 public:
@@ -280,7 +278,4 @@ inline std::vector<std::vector<unsigned int>> MeshDataAccessCollection::getForma
     return retval;
 }
 
-} // namespace mesh
-} // namespace megamol
-
-#endif // !MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
+} // namespace megamol::mesh

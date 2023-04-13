@@ -29,7 +29,7 @@ public:
     /**
      * Destructor
      */
-    ~AbstractStreamProvider();
+    ~AbstractStreamProvider() override;
 
 protected:
     /**
@@ -44,19 +44,19 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
     /**
      * Starts the job.
      *
      * @return true if the job has been successfully started.
      */
-    virtual bool run() override;
+    bool run() override;
 
 private:
     /** Input slot  */

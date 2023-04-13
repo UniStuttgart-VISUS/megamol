@@ -8,8 +8,7 @@
 #include "AbstractReaderWriterLock.h"
 #include "Mutex.h"
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 class ReaderWriterMutexWrapper : public AbstractReaderWriterLock {
 public:
@@ -49,5 +48,4 @@ private:
     Mutex mutex;
 }; // end class ReaderWriterMutexWrapper
 
-} // end namespace sys
-} // end namespace vislib
+} // namespace vislib::sys

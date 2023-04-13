@@ -4,8 +4,6 @@
  * Copyright (C) 2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -20,9 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 class STLDataSource : public core::Module {
 public:
     /// <summary>
@@ -57,14 +53,14 @@ public:
     /// <summary>
     /// Destructor
     /// </summary>
-    ~STLDataSource();
+    ~STLDataSource() override;
 
 protected:
     /// <summary>
     /// Create the module
     /// </summary>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool create() override;
+    bool create() override;
 
     /// <summary>
     /// Read in file and store data
@@ -89,7 +85,7 @@ protected:
     /// <summary>
     /// Release the module
     /// </summary>
-    virtual void release() override;
+    void release() override;
 
 private:
     /// <summary>
@@ -165,8 +161,4 @@ protected:
     std::shared_ptr<std::vector<float>> vertex_buffer, normal_buffer;
     std::shared_ptr<std::vector<unsigned int>> index_buffer;
 };
-} // namespace io
-} // namespace datatools_gl
-} // namespace megamol
-
-#endif // !MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED
+} // namespace megamol::datatools_gl::io

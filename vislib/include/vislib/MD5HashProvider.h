@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MD5HASHPROVIDER_H_INCLUDED
-#define VISLIB_MD5HASHPROVIDER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -35,10 +31,10 @@ public:
      * Initialises the hash. It is not necessary to call Initialise before
      * the first use.
      */
-    MD5HashProvider(void);
+    MD5HashProvider();
 
     /** Dtor. */
-    virtual ~MD5HashProvider(void);
+    ~MD5HashProvider() override;
 
     /**
      * Initialise the hash. This method must be called before any other
@@ -47,7 +43,7 @@ public:
      * If the hash has already been initialised, this method erases all
      * previous data and reinitialises it.
      */
-    virtual void Initialise(void);
+    void Initialise() override;
 
     /**
      * Update the hash with a new block of 'cntInput' bytes.
@@ -60,7 +56,7 @@ public:
      *
      * @throws IllegalStateException If the hash has not been initialised.
      */
-    virtual void TransformBlock(const BYTE* input, const SIZE_T cntInput);
+    void TransformBlock(const BYTE* input, const SIZE_T cntInput) override;
 
     /**
      * Update the hash with a new block of 'cntInput' bytes and compute the
@@ -80,7 +76,7 @@ public:
      *
      * @throws IllegalStateException If the hash has not been initialised.
      */
-    virtual bool TransformFinalBlock(BYTE* outHash, SIZE_T& inOutSize, const BYTE* input, const SIZE_T cntInput);
+    bool TransformFinalBlock(BYTE* outHash, SIZE_T& inOutSize, const BYTE* input, const SIZE_T cntInput) override;
 
 private:
     /** MD5 context. */
@@ -160,4 +156,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MD5HASHPROVIDER_H_INCLUDED */

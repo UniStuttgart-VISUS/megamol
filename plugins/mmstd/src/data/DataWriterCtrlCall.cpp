@@ -13,7 +13,7 @@ using namespace megamol::core;
 /*
  * DataWriterCtrlCall::DataWriterCtrlCall
  */
-DataWriterCtrlCall::DataWriterCtrlCall(void) : Call(), abortable(false) {
+DataWriterCtrlCall::DataWriterCtrlCall() : Call(), abortable(false) {
     // intentionally empty
 }
 
@@ -21,7 +21,7 @@ DataWriterCtrlCall::DataWriterCtrlCall(void) : Call(), abortable(false) {
 /*
  * DataWriterCtrlCall::~DataWriterCtrlCall
  */
-DataWriterCtrlCall::~DataWriterCtrlCall(void) {
+DataWriterCtrlCall::~DataWriterCtrlCall() {
     // intentionally empty
 }
 

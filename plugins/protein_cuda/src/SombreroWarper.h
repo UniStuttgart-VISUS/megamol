@@ -3,11 +3,7 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMSOMBREROSPLUGIN_SOMBREROWARPER_H_INCLUDED
-#define MMSOMBREROSPLUGIN_SOMBREROWARPER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -374,6 +370,3 @@ private:
 
 } // namespace protein_cuda
 } /* end namespace megamol */
-
-
-#endif

@@ -1,21 +1,15 @@
-/*
- * BoundingBoxes_2.h
- *
- * Copyright (C) 2018-2019 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_BOUNDINGBOXES_2_H_INCLUDED
-#define MEGAMOLCORE_BOUNDINGBOXES_2_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/BoundingBoxes.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * New variant of the Bounding Box class. The determination between object space and world space
@@ -27,7 +21,7 @@ public:
     /**
      * Constructor
      */
-    BoundingBoxes_2(void);
+    BoundingBoxes_2();
 
     /**
      * Copy Constructor
@@ -39,12 +33,12 @@ public:
     /**
      * Destructor
      */
-    virtual ~BoundingBoxes_2(void);
+    virtual ~BoundingBoxes_2();
 
     /**
      * Clears all members to invalid bounding boxes and a scale of zero.
      */
-    inline void Clear(void) {
+    inline void Clear() {
         this->clipBoxValid = false;
         this->boundingBoxValid = false;
     }
@@ -58,7 +52,7 @@ public:
      *
      * @return The best match for a clipping bounding box.
      */
-    inline const vislib::math::Cuboid<float>& ClipBox(void) const {
+    inline const vislib::math::Cuboid<float>& ClipBox() const {
         if (!this->clipBoxValid) {
             this->calcClipBox();
         }
@@ -70,7 +64,7 @@ public:
      *
      * @return True if any of the boxes is valid
      */
-    inline bool IsAnyValid(void) const {
+    inline bool IsAnyValid() const {
         return this->clipBoxValid || this->boundingBoxValid;
     }
 
@@ -79,7 +73,7 @@ public:
      *
      * @return True if the bounding box is valid
      */
-    inline bool IsBoundingBoxValid(void) const {
+    inline bool IsBoundingBoxValid() const {
         return this->boundingBoxValid;
     }
 
@@ -88,7 +82,7 @@ public:
      *
      * @return True if the clipping box is valid
      */
-    inline bool IsClipBoxValid(void) const {
+    inline bool IsClipBoxValid() const {
         return this->clipBoxValid;
     }
 
@@ -97,7 +91,7 @@ public:
      *
      * @return The bounding box
      */
-    inline const vislib::math::Cuboid<float>& BoundingBox(void) const {
+    inline const vislib::math::Cuboid<float>& BoundingBox() const {
         return this->boundingBox;
     }
 
@@ -215,11 +209,8 @@ private:
     /**
      * Calculate the composed clipping box.
      */
-    void calcClipBox(void) const;
+    void calcClipBox() const;
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif
     /** The composed clipping box */
     mutable vislib::math::Cuboid<float> clipBox;
 
@@ -231,12 +222,6 @@ private:
 
     /** The valid flag for the bounding box */
     bool boundingBoxValid;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif
 };
-} // namespace core
-} // namespace megamol
 
-
-#endif /* MEGAMOLCORE_BOUNDINGBOXES_2_H_INCLUDED */
+} // namespace megamol::core

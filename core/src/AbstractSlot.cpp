@@ -14,7 +14,7 @@ using namespace megamol::core;
 /*
  * AbstractSlot::~AbstractSlot
  */
-AbstractSlot::~AbstractSlot(void) {
+AbstractSlot::~AbstractSlot() {
     this->listeners.Clear(); // DO NOT DELETE ELEMENTS
 }
 
@@ -22,7 +22,7 @@ AbstractSlot::~AbstractSlot(void) {
 /*
  * AbstractSlot::MakeAvailable
  */
-void AbstractSlot::MakeAvailable(void) {
+void AbstractSlot::MakeAvailable() {
     if (this->status != STATUS_UNAVAILABLE) {
         throw vislib::IllegalStateException("Status of slot is illegal for this operation", __FILE__, __LINE__);
     }
@@ -33,20 +33,11 @@ void AbstractSlot::MakeAvailable(void) {
 /*
  * AbstractSlot::MakeUnavailable
  */
-void AbstractSlot::MakeUnavailable(void) {
+void AbstractSlot::MakeUnavailable() {
     if (this->status != STATUS_ENABLED) {
         throw vislib::IllegalStateException("Status of slot is illegal for this operation", __FILE__, __LINE__);
     }
     this->status = STATUS_UNAVAILABLE;
-}
-
-
-/*
- * AbstractSlot::IsParamRelevant
- */
-bool AbstractSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
-    return false;
 }
 
 

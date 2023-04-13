@@ -6,7 +6,6 @@
  */
 #include "XYZLoader.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -79,11 +78,11 @@ io::XYZLoader::~XYZLoader() {
     Release();
 }
 
-bool io::XYZLoader::create(void) {
+bool io::XYZLoader::create() {
     return true;
 }
 
-void io::XYZLoader::release(void) {
+void io::XYZLoader::release() {
     clear();
     hash = 0;
 }
@@ -139,13 +138,13 @@ bool io::XYZLoader::getExtentCallback(core::Call& caller) {
     return true;
 }
 
-void io::XYZLoader::clear(void) {
+void io::XYZLoader::clear() {
     hash++;
     bbox.SetNull();
     poss.clear();
 }
 
-void io::XYZLoader::assertData(void) {
+void io::XYZLoader::assertData() {
     if (!filenameSlot.IsDirty() && !hasCountLineSlot.IsDirty() && !hasCommentLineSlot.IsDirty() &&
         !hasElementSymbolSlot.IsDirty() && !groupByElementSlot.IsDirty())
         return;

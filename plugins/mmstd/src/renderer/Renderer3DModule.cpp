@@ -14,7 +14,7 @@ namespace megamol::core::view {
 /*
  * Renderer3DModule::Renderer3DModule
  */
-Renderer3DModule::Renderer3DModule(void) : RendererModule<CallRender3D, Module>() {
+Renderer3DModule::Renderer3DModule() : RendererModule<CallRender3D, Module>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
 
@@ -25,7 +25,7 @@ Renderer3DModule::Renderer3DModule(void) : RendererModule<CallRender3D, Module>(
 /*
  * Renderer3DModule::~Renderer3DModule
  */
-Renderer3DModule::~Renderer3DModule(void) {
+Renderer3DModule::~Renderer3DModule() {
     // intentionally empty
 }
 
@@ -81,8 +81,7 @@ bool Renderer3DModule::GetExtentsChain(CallRender3D& call) {
         call.AccessBoundingBoxes().SetBoundingBox(newbb);
         call.AccessBoundingBoxes().SetClipBox(newcb);
 
-        // TODO machs richtig
-        call.SetTimeFramesCount(chainedCall->TimeFramesCount());
+        call.SetTimeFramesCount(std::min(chainedCall->TimeFramesCount(), call.TimeFramesCount()));
     }
 
     return true;

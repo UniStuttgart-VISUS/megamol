@@ -7,8 +7,7 @@
 
 #pragma once
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct GUIState {
 
@@ -18,10 +17,10 @@ struct GUIState {
     std::function<std::string(bool)> request_gui_state = [&](bool) { return std::string(); };
 
     // Request GUI visibility
-    std::function<bool(void)> request_gui_visibility = [&](void) { return false; };
+    std::function<bool(void)> request_gui_visibility = [&]() { return false; };
 
     // Request GUI scale
-    std::function<float(void)> request_gui_scale = [&](void) { return 1.0f; };
+    std::function<float(void)> request_gui_scale = [&]() { return 1.0f; };
 
     // Provide GUI state as JSON string from argument of lua command
     /// (e.g. Lua_Service_Wrapper loads project providing GUI state via mmSetGUIState)
@@ -36,5 +35,4 @@ struct GUIState {
     std::function<void(float)> provide_gui_scale;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

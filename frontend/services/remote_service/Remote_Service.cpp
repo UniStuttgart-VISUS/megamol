@@ -36,8 +36,7 @@ static void log_warning(std::string const& text) {
 }
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 using frontend_resources::MPI_Context;
 
@@ -787,5 +786,4 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 // #endif
 //
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

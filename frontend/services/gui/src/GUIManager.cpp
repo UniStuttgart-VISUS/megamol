@@ -54,6 +54,11 @@ GUIManager::GUIManager()
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
     assert(this->win_configurator_ptr != nullptr);
 
+    requested_resources = win_collection.requested_lifetime_resources();
+#ifdef MEGAMOL_USE_PROFILING
+    requested_resources.push_back(frontend_resources::Performance_Logging_Status_Req_Name);
+#endif
+
     this->init_state();
 }
 
@@ -82,6 +87,7 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.open_popup_screenshot = false;
     this->gui_state.open_popup_font = false;
     this->gui_state.menu_visible = true;
+    this->gui_state.show_imgui_metrics = false;
     this->gui_state.graph_fonts_reserved = 0;
     this->gui_state.shutdown_triggered = false;
     this->gui_state.screenshot_triggered = false;
@@ -565,14 +571,13 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::SynchronizeGraphs(
-    megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph) {
 
     // Synchronization is not required when no gui element is visible (?)
     if (!this->gui_state.gui_visible)
         return true;
 
-    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(megamol_graph, core_instance)) {
+    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(megamol_graph)) {
 
         // Check for new GUI state
         if (!this->gui_state.new_gui_state.empty()) {
@@ -1003,6 +1008,11 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Font")) {
             this->gui_state.open_popup_font = true;
         }
+#ifdef MEGAMOL_USE_PROFILING
+        if (ImGui::MenuItem(this->perf_logging->active ? "Pause performance logging" : "Resume performance logging")) {
+            this->perf_logging->active = !this->perf_logging->active;
+        }
+#endif
 
         ImGui::EndMenu();
     }
@@ -1010,6 +1020,11 @@ void GUIManager::draw_menu() {
 
     // HELP -------------------------------------------------------------------
     if (ImGui::BeginMenu("Help")) {
+        if (ImGui::BeginMenu("Debug")) {
+            ImGui::MenuItem("Dear ImGui Metrics", nullptr, &this->gui_state.show_imgui_metrics);
+            ImGui::EndMenu();
+        }
+        ImGui::Separator();
         if (ImGui::MenuItem("About")) {
             this->gui_state.open_popup_about = true;
         }
@@ -1269,6 +1284,11 @@ void megamol::gui::GUIManager::draw_popups() {
             this->gui_state.open_popup_screenshot, {"png"},
             megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
+    }
+
+    // ImGui metrics
+    if (this->gui_state.show_imgui_metrics) {
+        ImGui::ShowMetricsWindow(&this->gui_state.show_imgui_metrics);
     }
 }
 
@@ -1541,4 +1561,10 @@ void GUIManager::RegisterHotkeys(
     if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
         win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &megamolgraph, &this->win_collection, &this->gui_hotkeys);
     }
+}
+
+
+void megamol::gui::GUIManager::setRequestedResources(
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
+    win_collection.setRequestedResources(resources);
 }

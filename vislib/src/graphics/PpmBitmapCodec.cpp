@@ -19,7 +19,7 @@
 /*
  * vislib::graphics::PpmBitmapCodec::PpmBitmapCodec
  */
-vislib::graphics::PpmBitmapCodec::PpmBitmapCodec(void) : AbstractBitmapCodec(), saveBinary(true) {
+vislib::graphics::PpmBitmapCodec::PpmBitmapCodec() : AbstractBitmapCodec(), saveBinary(true) {
     // Intentionally empty
 }
 
@@ -27,7 +27,7 @@ vislib::graphics::PpmBitmapCodec::PpmBitmapCodec(void) : AbstractBitmapCodec(), 
 /*
  * vislib::graphics::PpmBitmapCodec::~PpmBitmapCodec
  */
-vislib::graphics::PpmBitmapCodec::~PpmBitmapCodec(void) {
+vislib::graphics::PpmBitmapCodec::~PpmBitmapCodec() {
     // Intentionally empty
 }
 
@@ -51,7 +51,7 @@ int vislib::graphics::PpmBitmapCodec::AutoDetect(const void* mem, SIZE_T size) c
 /*
  * vislib::graphics::PpmBitmapCodec::CanAutoDetect
  */
-bool vislib::graphics::PpmBitmapCodec::CanAutoDetect(void) const {
+bool vislib::graphics::PpmBitmapCodec::CanAutoDetect() const {
     return true;
 }
 
@@ -59,7 +59,7 @@ bool vislib::graphics::PpmBitmapCodec::CanAutoDetect(void) const {
 /*
  * vislib::graphics::PpmBitmapCodec::FileNameExtsA
  */
-const char* vislib::graphics::PpmBitmapCodec::FileNameExtsA(void) const {
+const char* vislib::graphics::PpmBitmapCodec::FileNameExtsA() const {
     return ".ppm;.pfm";
 }
 
@@ -67,7 +67,7 @@ const char* vislib::graphics::PpmBitmapCodec::FileNameExtsA(void) const {
 /*
  * vislib::graphics::PpmBitmapCodec::FileNameExtsW
  */
-const wchar_t* vislib::graphics::PpmBitmapCodec::FileNameExtsW(void) const {
+const wchar_t* vislib::graphics::PpmBitmapCodec::FileNameExtsW() const {
     return L".ppm;.pfm";
 }
 
@@ -75,7 +75,7 @@ const wchar_t* vislib::graphics::PpmBitmapCodec::FileNameExtsW(void) const {
 /*
  * vislib::graphics::PpmBitmapCodec::NameA
  */
-const char* vislib::graphics::PpmBitmapCodec::NameA(void) const {
+const char* vislib::graphics::PpmBitmapCodec::NameA() const {
     return "Portable Pixmap / Floatmap";
 }
 
@@ -83,7 +83,7 @@ const char* vislib::graphics::PpmBitmapCodec::NameA(void) const {
 /*
  * vislib::graphics::PpmBitmapCodec::NameW
  */
-const wchar_t* vislib::graphics::PpmBitmapCodec::NameW(void) const {
+const wchar_t* vislib::graphics::PpmBitmapCodec::NameW() const {
     return L"Portable Pixmap / Floatmap";
 }
 
@@ -278,7 +278,7 @@ bool vislib::graphics::PpmBitmapCodec::loadFromMemory(const void* mem, SIZE_T si
 /*
  * vislib::graphics::PpmBitmapCodec::loadFromMemoryImplemented
  */
-bool vislib::graphics::PpmBitmapCodec::loadFromMemoryImplemented(void) const {
+bool vislib::graphics::PpmBitmapCodec::loadFromMemoryImplemented() const {
     return true;
 }
 
@@ -411,6 +411,6 @@ bool vislib::graphics::PpmBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
 /*
  * vislib::graphics::PpmBitmapCodec::saveToMemoryImplemented
  */
-bool vislib::graphics::PpmBitmapCodec::saveToMemoryImplemented(void) const {
+bool vislib::graphics::PpmBitmapCodec::saveToMemoryImplemented() const {
     return true;
 }

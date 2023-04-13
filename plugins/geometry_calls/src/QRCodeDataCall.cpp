@@ -32,10 +32,10 @@ const unsigned int QRCodeDataCall::CallForGetBoundingBox = 4;
  */
 const unsigned int QRCodeDataCall::CallForSetBoundingBox = 5;
 
-QRCodeDataCall::QRCodeDataCall(void) : qr_text(NULL), qr_pointer(NULL), bbox(NULL) {}
+QRCodeDataCall::QRCodeDataCall() : qr_text(NULL), qr_pointer(NULL), bbox(NULL) {}
 
 
-QRCodeDataCall::~QRCodeDataCall(void) {
+QRCodeDataCall::~QRCodeDataCall() {
     qr_text = NULL;
     qr_pointer = NULL;
     bbox = NULL;

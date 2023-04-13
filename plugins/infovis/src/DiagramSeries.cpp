@@ -13,7 +13,7 @@ using namespace megamol::datatools;
 /*
  * DiagramSeries::DiagramSeries
  */
-DiagramSeries::DiagramSeries(void)
+DiagramSeries::DiagramSeries()
         : core::Module()
         , seriesInSlot("seriesIn", "Input of series for passthrough")
         , seriesOutSlot("seriesOut", "Output of owned series")
@@ -51,7 +51,7 @@ DiagramSeries::DiagramSeries(void)
 /*
  * DiagramSeries::~DiagramSeries
  */
-DiagramSeries::~DiagramSeries(void) {
+DiagramSeries::~DiagramSeries() {
     this->Release();
 }
 
@@ -59,7 +59,7 @@ DiagramSeries::~DiagramSeries(void) {
 /*
  * DiagramSeries::create
  */
-bool DiagramSeries::create(void) {
+bool DiagramSeries::create() {
     return true;
 }
 
@@ -67,7 +67,7 @@ bool DiagramSeries::create(void) {
 /*
  * DiagramSeries::release
  */
-void DiagramSeries::release(void) {}
+void DiagramSeries::release() {}
 
 
 /*
@@ -102,7 +102,9 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
                 return false;
             }
         }
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }
@@ -152,14 +154,14 @@ bool DiagramSeries::assertData(const table::TableDataCall* const ft) {
 /*
  * DiagramSeries::isAnythingDirty
  */
-bool DiagramSeries::isAnythingDirty(void) const {
+bool DiagramSeries::isAnythingDirty() const {
     return this->columnSelectorParam.IsDirty() || this->scalingParam.IsDirty() || this->colorParam.IsDirty();
 }
 
 /*
  * DiagramSeries::resetDirtyFlags
  */
-void DiagramSeries::resetDirtyFlags(void) {
+void DiagramSeries::resetDirtyFlags() {
     this->columnSelectorParam.ResetDirty();
     this->scalingParam.ResetDirty();
     this->colorParam.ResetDirty();

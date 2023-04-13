@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CLUSTERCONTROLLERCLIENT_H_INCLUDED
-#define MEGAMOLCORE_CLUSTERCONTROLLERCLIENT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "cluster/ClusterController.h"
 #include "mmcore/AbstractSlot.h"
@@ -20,9 +16,7 @@
 #include "vislib/net/DiscoveryService.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 /**
  * client class for cluster controller
@@ -47,10 +41,10 @@ public:
     class Listener : public vislib::Listenable<ClusterControllerClient>::Listener {
     public:
         /** Ctor */
-        Listener(void) {}
+        Listener() {}
 
         /** Dtor */
-        virtual ~Listener(void) {}
+        ~Listener() override {}
 
         /**
          * Informs the client that the cluster is now available.
@@ -98,12 +92,12 @@ public:
     /**
      * Ctor
      */
-    ClusterControllerClient(void);
+    ClusterControllerClient();
 
     /**
      * Dtor.
      */
-    virtual ~ClusterControllerClient(void);
+    ~ClusterControllerClient() override;
 
     /**
      * Sends a message to all nodes in the cluster.
@@ -130,7 +124,7 @@ public:
      *
      * @return The caller to register the client at the controller
      */
-    inline CallerSlot& RegisterSlot(void) {
+    inline CallerSlot& RegisterSlot() {
         return this->registerSlot;
     }
 
@@ -140,24 +134,24 @@ protected:
      *
      * @param slot The slot that triggered this event.
      */
-    virtual void OnConnect(AbstractSlot& slot);
+    void OnConnect(AbstractSlot& slot) override;
 
     /**
      * This method is called when an object disconnects from the slot.
      *
      * @param slot The slot that triggered this event.
      */
-    virtual void OnDisconnect(AbstractSlot& slot);
+    void OnDisconnect(AbstractSlot& slot) override;
 
     /**
      * Informs the client that the cluster is now available.
      */
-    void onClusterAvailable(void);
+    void onClusterAvailable();
 
     /**
      * Informs the client that the cluster is no longer available.
      */
-    void onClusterUnavailable(void);
+    void onClusterUnavailable();
 
     /**
      * Informs the client that a new node has been found in the
@@ -193,8 +187,4 @@ private:
 };
 
 
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CLUSTERCONTROLLERCLIENT_H_INCLUDED */
+} // namespace megamol::core::cluster

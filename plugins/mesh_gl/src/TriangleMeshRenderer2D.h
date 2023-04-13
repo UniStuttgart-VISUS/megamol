@@ -69,7 +69,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TriangleMeshRenderer2D();
+    ~TriangleMeshRenderer2D() override;
 
 protected:
     /**

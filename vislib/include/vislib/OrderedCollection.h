@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ORDEREDCOLLECTION_H_INCLUDED
-#define VISLIB_ORDEREDCOLLECTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -39,7 +35,7 @@ class OrderedCollection : public Collection<T, L> {
 
 public:
     /** Dtor. */
-    virtual ~OrderedCollection(void);
+    ~OrderedCollection() override;
 
     /**
      * Add 'element' as last element in the collection.
@@ -56,7 +52,7 @@ public:
      * @throws OutOfRangeException or
      *         NoSuchElementException If the collection is empty.
      */
-    virtual const T& First(void) const = 0;
+    virtual const T& First() const = 0;
 
     /**
      * Answer the first element in the collection.
@@ -66,7 +62,7 @@ public:
      * @throws OutOfRangeException or
      *         NoSuchElementException If the collection is empty.
      */
-    virtual T& First(void) = 0;
+    virtual T& First() = 0;
 
     /**
      * Answer the last element in the collection.
@@ -76,7 +72,7 @@ public:
      * @throws OutOfRangeException or
      *         NoSuchElementException If the collection is empty.
      */
-    virtual const T& Last(void) const = 0;
+    virtual const T& Last() const = 0;
 
     /**
      * Answer the last element in the collection.
@@ -86,7 +82,7 @@ public:
      * @throws OutOfRangeException or
      *         NoSuchElementException If the collection is empty.
      */
-    virtual T& Last(void) = 0;
+    virtual T& Last() = 0;
 
     /**
      * Add 'element' as first element in the collection.
@@ -107,13 +103,13 @@ public:
      * Remove the first element from the collection. If the collection
      * is empty, this method has no effect.
      */
-    virtual void RemoveFirst(void) = 0;
+    virtual void RemoveFirst() = 0;
 
     /**
      * Remove the last element from the collection. If the collection is
      * empty, this method has no effect.
      */
-    virtual void RemoveLast(void) = 0;
+    virtual void RemoveLast() = 0;
 
     /**
      * Sorts the elements in the collection based on the results of the
@@ -128,7 +124,7 @@ public:
 
 protected:
     /** Ctor. */
-    inline OrderedCollection(void) : Collection<T, L>() {}
+    inline OrderedCollection() : Collection<T, L>() {}
 };
 
 
@@ -136,11 +132,10 @@ protected:
  * vislib::OrderedCollection<T, L>::~OrderedCollection
  */
 template<class T, class L>
-OrderedCollection<T, L>::~OrderedCollection(void) {}
+OrderedCollection<T, L>::~OrderedCollection() {}
 
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ORDEREDCOLLECTION_H_INCLUDED */

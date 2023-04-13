@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef PROBE_INTERACTION_COLLECTION_H_INCLUDED
-#define PROBE_INTERACTION_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <list>
 
@@ -55,5 +54,3 @@ private:
 
 } // namespace probe_gl
 } // namespace megamol
-
-#endif // !PROBE_INTERACTION_COLLECTION_H_INCLUDED

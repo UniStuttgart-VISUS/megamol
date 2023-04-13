@@ -19,7 +19,7 @@ void megamol::core::view::light::HDRILight::addLight(LightCollection& light_coll
 /*
  * megamol::core::view::light::HDRILight::HDRILight
  */
-HDRILight::HDRILight(void) : AbstractLight(), up("up", ""), direction("Direction", ""), evnfile("EvironmentFile", "") {
+HDRILight::HDRILight() : AbstractLight(), up("up", ""), direction("Direction", ""), evnfile("EvironmentFile", "") {
 
     // HDRI light
     lightsource = std::make_shared<HDRILightType>();
@@ -35,7 +35,7 @@ HDRILight::HDRILight(void) : AbstractLight(), up("up", ""), direction("Direction
 /*
  * megamol::core::view::light::HDRILight::~HDRILight
  */
-HDRILight::~HDRILight(void) {
+HDRILight::~HDRILight() {
     this->Release();
 }
 

@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "rendering/ArrowRenderer.h"
 #include "rendering/GlyphRenderer.h"
@@ -14,12 +14,12 @@
 #include "rendering/VoxelGenerator.h"
 
 namespace megamol::moldyn_gl {
-class MoldynGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MoldynGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MoldynGLPluginInstance)
 
 public:
     MoldynGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "moldyn_gl", "MegaMol Plugins for Molecular Dynamics Data Visualization"){};
 
     ~MoldynGLPluginInstance() override = default;

@@ -11,8 +11,11 @@ if(BUILD_FRONTEND_SERVICES)
 
   find_package(glm CONFIG REQUIRED)
   find_package(imgui CONFIG REQUIRED)
+  find_package(imgui_software_renderer CONFIG REQUIRED)
   find_package(imguizmoquat CONFIG REQUIRED)
   find_package(implot CONFIG REQUIRED)
+  find_package(ZeroMQ REQUIRED)
+  find_package(cppzmq REQUIRED)
 
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "include/*.h"
@@ -128,46 +131,34 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
   
-  # GLFW
   if (MEGAMOL_USE_OPENGL)
     find_package(glfw3 CONFIG REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    find_package(glad REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw PUBLIC glad::glad core_gl)
   endif()
+
+  if (MEGAMOL_USE_POWER)
+    find_package(power_overwhelming CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC power_overwhelming::power_overwhelming)
+  endif ()
 
   if (MEGAMOL_USE_VR_INTEROP)
     find_package(mwk-mint-interop)
     target_link_libraries(${PROJECT_NAME} PUBLIC mwk-mint-interop::mwk-mint-interop)
   endif()
 
-  # Linux Stacktrace
-  # Use Boost stacktrace if installed (is fully optional).
-  # sudo apt install libboost-stacktrace-dev
-  #
-  # Enable backtrace backend, addr2line is unusable slow and has no line numbers, unfortunately this only works for gcc out the box.
-  # Clang would require backtrace.h from an installed gcc version, see
-  # https://www.boost.org/doc/libs/1_77_0/doc/html/stacktrace/configuration_and_build.html#ftn.stacktrace.configuration_and_build.f3
-  if (UNIX AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    find_package(Boost 1.71.0
-      COMPONENTS
-        stacktrace_basic
-        stacktrace_backtrace
-        stacktrace_addr2line
-        stacktrace_noop)
-    if (Boost_FOUND)
-      target_link_libraries(${PROJECT_NAME} PUBLIC
-        ${Boost_STACKTRACE_BASIC_LIBRARY}
-        ${Boost_STACKTRACE_BACKTRACE_LIBRARY}
-        ${Boost_STACKTRACE_ADDR2LINE_LIBRARY}
-        ${Boost_STACKTRACE_NOOP_LIBRARY})
-      target_compile_definitions(${PROJECT_NAME} PRIVATE
-        MEGAMOL_USE_BOOST_STACKTRACE
-        BOOST_STACKTRACE_USE_BACKTRACE)
+  # Boost.Stacktrace
+  if (MEGAMOL_USE_STACKTRACE)
+    set(Boost_NO_WARN_NEW_VERSIONS 1)
+    if (WIN32)
+      find_package(Boost REQUIRED COMPONENTS stacktrace_windbg)
+      target_link_libraries(${PROJECT_NAME} PUBLIC Boost::stacktrace_windbg)
+    else ()
+      find_package(Boost REQUIRED COMPONENTS stacktrace_backtrace)
+      target_link_libraries(${PROJECT_NAME} PRIVATE Boost::stacktrace_backtrace backtrace)
+      target_compile_definitions(${PROJECT_NAME} PRIVATE BOOST_STACKTRACE_USE_BACKTRACE)
     endif ()
   endif ()
-
-  if (MEGAMOL_USE_OPENGL)
-    target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
-  endif()
 
   target_link_libraries(${PROJECT_NAME}
     PRIVATE
@@ -178,8 +169,11 @@ if(BUILD_FRONTEND_SERVICES)
       core
       glm::glm
       imgui::imgui
+      imgui_software_renderer::imgui_software_renderer
       imguizmoquat::imguizmoquat
-      implot::implot)
+      implot::implot
+      libzmq
+      cppzmq)
 
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")

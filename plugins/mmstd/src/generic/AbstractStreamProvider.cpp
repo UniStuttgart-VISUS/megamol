@@ -12,8 +12,7 @@
 
 #include <functional>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 AbstractStreamProvider::AbstractStreamProvider() : inputSlot("inputSlot", "Slot for providing a callback") {
 
@@ -43,5 +42,4 @@ bool AbstractStreamProvider::run() {
     return true;
 }
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

@@ -24,7 +24,7 @@ using namespace megamol;
 /*
  * TableToParticles::ParticlesToTable
  */
-ParticlesToTable::ParticlesToTable(void)
+ParticlesToTable::ParticlesToTable()
         : Module()
         , slotTableOut("floattable", "Provides the data as table.")
         , slotParticlesIn("particles", "Particle input call") {
@@ -46,7 +46,7 @@ ParticlesToTable::ParticlesToTable(void)
 /*
  * TableToParticles::~TableToParticles
  */
-ParticlesToTable::~ParticlesToTable(void) {
+ParticlesToTable::~ParticlesToTable() {
     this->Release();
 }
 
@@ -54,7 +54,7 @@ ParticlesToTable::~ParticlesToTable(void) {
 /*
  * megamol::pcl::PclDataSource::create
  */
-bool ParticlesToTable::create(void) {
+bool ParticlesToTable::create() {
     return true;
 }
 
@@ -185,4 +185,4 @@ bool ParticlesToTable::getTableHash(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void ParticlesToTable::release(void) {}
+void ParticlesToTable::release() {}

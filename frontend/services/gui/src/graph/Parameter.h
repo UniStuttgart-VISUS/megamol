@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
-#define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 #pragma once
 
 
@@ -20,8 +18,7 @@
 #include <variant>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 // Forward declarations
@@ -119,14 +116,14 @@ public:
         std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
         bool save_core_param_pointer, const std::string& parent_module_name);
 
-    static bool ReadCoreParameterToParameter(vislib::SmartPtr<megamol::core::param::AbstractParam> in_param_ptr,
+    static bool ReadCoreParameterToParameter(std::shared_ptr<megamol::core::param::AbstractParam> in_param_ptr,
         megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty);
 
     static bool ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
         megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty, bool save_core_param_pointer);
 
     static bool WriteCoreParameterGUIState(
-        megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr);
+        megamol::gui::Parameter& in_param, std::shared_ptr<megamol::core::param::AbstractParam> out_param_ptr);
 
     // ----------------------------
 
@@ -243,7 +240,7 @@ public:
     inline const bool IsExtended() const {
         return this->gui_extended;
     }
-    inline vislib::SmartPtr<megamol::core::param::AbstractParam> CoreParamPtr() const {
+    inline std::shared_ptr<megamol::core::param::AbstractParam> CoreParamPtr() const {
         return this->core_param_ptr;
     }
     inline void ResetCoreParamPtr() {
@@ -289,7 +286,7 @@ private:
     std::string parent_module_name; /// ::<module_group>::<module_name>
     std::string description;
 
-    vislib::SmartPtr<megamol::core::param::AbstractParam> core_param_ptr;
+    std::shared_ptr<megamol::core::param::AbstractParam> core_param_ptr;
 
     Min_t minval;
     Max_t maxval;
@@ -449,7 +446,4 @@ void Parameter::SetStorage(T store) {
 }
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
+} // namespace megamol::gui

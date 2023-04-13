@@ -7,18 +7,13 @@
  * $Id: CrystalStructureDataCall.h 1443 2015-07-08 12:18:12Z reina $
  */
 
-#ifndef MMPROTEINCALLPLUGIN_CRYSTALSTRCUTUREDATACALL_H_INCLUDED
-#define MMPROTEINCALLPLUGIN_CRYSTALSTRCUTUREDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/data/AbstractGetData3DCall.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Class providing data call for CrystalStructureDataSource.
@@ -40,7 +35,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CrystalStructureDataCall";
     }
 
@@ -49,7 +44,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get dynamic particle data in a crystal structure.";
     }
 
@@ -58,7 +53,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -79,10 +74,10 @@ public:
     }
 
     /** Ctor. */
-    CrystalStructureDataCall(void);
+    CrystalStructureDataCall();
 
     /** Dtor. */
-    virtual ~CrystalStructureDataCall(void);
+    ~CrystalStructureDataCall() override;
 
     /**
      * Answers the atom count.
@@ -179,7 +174,7 @@ public:
      *
      * @return the calltime
      */
-    float GetCalltime(void) const {
+    float GetCalltime() const {
         return this->calltime;
     }
 
@@ -281,7 +276,4 @@ private:
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CrystalStructureDataCall> CrystalStructureDataCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
-
-#endif /* MMPROTEINCALLPLUGIN_CRYSTALSTRCUTUREDATACALL_H_INCLUDED */
+} // namespace megamol::protein_calls

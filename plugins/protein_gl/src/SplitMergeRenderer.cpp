@@ -1,5 +1,4 @@
 #include "SplitMergeRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -29,7 +28,7 @@ protein_calls::SplitMergeCall* SplitMergeRenderer::FastMapWrapper::diagram;
 /*
  * SplitMergeRenderer::SplitMergeRenderer (CTOR)
  */
-SplitMergeRenderer::SplitMergeRenderer(void)
+SplitMergeRenderer::SplitMergeRenderer()
         : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the diagram rendering with data storage.")
         , selectionCallerSlot("getSelection", "Connects the diagram rendering with selection storage.")
@@ -81,7 +80,7 @@ SplitMergeRenderer::SplitMergeRenderer(void)
 /*
  * SplitMergeRenderer::~SplitMergeRenderer (DTOR)
  */
-SplitMergeRenderer::~SplitMergeRenderer(void) {
+SplitMergeRenderer::~SplitMergeRenderer() {
     this->Release();
 }
 

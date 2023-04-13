@@ -12,7 +12,7 @@
 using namespace megamol::ospray;
 
 
-OSPRaySphereGeometry::OSPRaySphereGeometry(void)
+OSPRaySphereGeometry::OSPRaySphereGeometry()
         : AbstractOSPRayStructure()
         , getDataSlot("getdata", "Connects to the data source") {
 

@@ -7,12 +7,12 @@
 
 #pragma once
 
+#include <filesystem>
 #include <memory>
 
 #include <glm/glm.hpp>
 #include <glowl/glowl.h>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 
 namespace megamol::core::utility {
@@ -30,8 +30,8 @@ namespace megamol::core::utility {
  *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PRESET_EVOLVENTA_SANS, megamol::core::utility::SDFFont::RENDERMODE_FILL);
  *                           OR: this->sdfFont("filename-of-own-font");
  *
- *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
- *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available there yet (call once e.g. in create()) !!!
+ *     - Initialise (once):  this->sdfFont.Initialise(runtimeConfig);
+ *                           !!! DO NOT CALL Initialise() in CTOR because resources are not available there yet (call once e.g. in create()) !!!
  *
  *     - Draw:               this->sdfFont.DrawString(mvm, pm, color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
  *
@@ -176,7 +176,7 @@ public:
         SDFFont(const SDFFont& src);
 
         /** Dtor. */
-        ~SDFFont(void);
+        ~SDFFont();
 
         /**
          * Initialises the object. You must not call this method directly.
@@ -187,12 +187,12 @@ public:
          *
          * @return 'true' on success, 'false' on failure.
          */
-        bool Initialise(megamol::core::CoreInstance* core_instance_ptr);
+        bool Initialise(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 
         /**
          * Deinitialises the object.
          */
-        void Deinitialise(void);
+        void Deinitialise();
 
         /**
          * 
@@ -316,7 +316,7 @@ public:
          *
          * @return True if batch draw is enabled, false otherwise.
          */
-        inline bool GetBatchDrawMode(void) const {
+        inline bool GetBatchDrawMode() const {
             return this->batchDrawMode;
         }
 
@@ -360,7 +360,7 @@ public:
         /**
          * Clears the batch draw caches.
          */
-        inline void ClearBatchDrawCache(void) {
+        inline void ClearBatchDrawCache() {
             this->posBatchCache.clear();
             this->texBatchCache.clear();
             this->colBatchCache.clear();
@@ -387,7 +387,7 @@ public:
          *
          * @return The height of a single line in logical units.
          */
-        inline float LineHeight(void) const {
+        inline float LineHeight() const {
             return this->LineHeight(this->globalSize);
         }
 
@@ -434,7 +434,7 @@ public:
          *
          * @return The render mode of the font
          */
-        inline RenderMode GetRenderMode(void) const {
+        inline RenderMode GetRenderMode() const {
             return this->renderMode;
         }
 
@@ -450,7 +450,7 @@ public:
          *
          * @return True if billboard mode is enabled, false otherwise.
          */
-        inline bool GetBillboardMode(void) const {
+        inline bool GetBillboardMode() const {
             return this->billboardMode;
         }
 
@@ -472,7 +472,7 @@ public:
         * Reset font rotation globally.
         * (Facing in direction of positive z-Axis)
         */
-        inline void ResetRotation(void) {
+        inline void ResetRotation() {
             this->rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
         }
 
@@ -493,7 +493,7 @@ public:
          *
          * @return The default size of the font.
          */
-        inline float GetSize(void) const {
+        inline float GetSize() const {
             return this->globalSize;
         }
 
@@ -525,7 +525,7 @@ public:
          *
          * @return The flag 'flipY'
          */
-        inline bool IsFlipY(void) const {
+        inline bool IsFlipY() const {
             return this->globalFlipY;
         }
 
@@ -534,11 +534,6 @@ public:
         /**********************************************************************
         * variables
         **********************************************************************/
-
-// Disable dll export warning for not exported classes in ::vislib and ::std 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
 
         /** Indicating if font could be loaded successfully. */
         bool initialised;
@@ -635,21 +630,17 @@ public:
         /** The glyph kernings. */
         std::vector<SDFGlyphKerning> glyphKrns;
 
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
-
         /**********************************************************************
         * functions
         **********************************************************************/
 
-        bool loadFont(megamol::core::CoreInstance *core_instance_ptr);
+        bool loadFont(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 
         bool loadFontBuffers();
 
-        bool loadFontInfo(vislib::StringW filename);
+        bool loadFontInfo(std::filesystem::path filepath);
 
-        bool loadFontShader(megamol::core::CoreInstance* core_instance_ptr);
+        bool loadFontShader(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 
         /**
         * Answer the number of lines in the glyph run

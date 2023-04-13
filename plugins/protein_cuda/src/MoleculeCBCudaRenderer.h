@@ -4,11 +4,7 @@
  * Copyright (C) 2010 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MOLSURFREN_CONTOURBUILDUP_CUDA_H_INCLUDED
-#define MEGAMOL_MOLSURFREN_CONTOURBUILDUP_CUDA_H_INCLUDED
-#if (_MSC_VER > 1000)
 #pragma once
-#endif /* (_MSC_VER > 1000) */
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
@@ -18,7 +14,6 @@
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include <memory>
 #include <vector>
 
@@ -278,5 +273,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif /* MEGAMOL_MOLSURFACERENDERERCONTOURBUILDUP_CUDA_H_INCLUDED */

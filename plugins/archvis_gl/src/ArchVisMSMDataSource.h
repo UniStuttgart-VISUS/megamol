@@ -8,6 +8,7 @@
 
 #include <chrono>
 
+#include "RuntimeConfig.h"
 #include "ScaleModel.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
@@ -20,6 +21,11 @@ namespace megamol::archvis_gl {
 
 class ArchVisMSMDataSource : public megamol::core::Module {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::RuntimeConfig>(); // resource paths
+    }
+
     /**
      * Answer the name of this module.
      *

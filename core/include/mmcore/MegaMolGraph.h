@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <functional>
@@ -17,14 +23,12 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/serializable.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class MegaMolGraph {
 public:
-    MegaMolGraph(megamol::core::CoreInstance& core, factories::ModuleDescriptionManager const& moduleProvider,
+    MegaMolGraph(factories::ModuleDescriptionManager const& moduleProvider,
         factories::CallDescriptionManager const& callProvider);
 
     virtual ~MegaMolGraph();
@@ -145,8 +149,13 @@ private:
         module_param_changes_queue.push_back(slot);
         return true;
     };
+
+    std::vector<core::param::AbstractParamSlot*> module_param_presentation_changes_queue;
+    core::param::AbstractParam::ParamChangeCallback param_presentation_change_callback =
+        [&](core::param::AbstractParamSlot* slot) {
+            module_param_presentation_changes_queue.push_back(slot);
+            return true;
+        };
 };
 
-
-} /* namespace core */
-} // namespace megamol
+} // namespace megamol::core

@@ -3,8 +3,8 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO UniStuttgart-VISUS/megamol-shader-factory
-    REF v0.10
-    SHA512 8169e2b97877103194990cf2a1a5abb7e741ece9014ecf43a171e42b8ec856361cab74d7c5b56d5c562595c0e7b3900ca39b37e461a86b71d77de46692d45ef6
+    REF v0.11
+    SHA512 f74c24f43dbdac9c4204ea2ce7937d6b6d4616199091a66b4a3da8bcbd1477f2c4a01f7b386d3e8260dabec949f1a463f88174ce60b5a1ded5b65d85046960cf
     HEAD_REF master
 )
 

@@ -242,7 +242,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 // Button
                 ImGui::SetCursorScreenPos(module_rect_min);
                 ImGui::SetItemAllowOverlap();
-                ImGui::InvisibleButton(button_label.c_str(), module_size);
+                ImGui::InvisibleButton(button_label.c_str(), module_size, ImGuiButtonFlags_NoSetKeyOwner);
                 ImGui::SetItemAllowOverlap();
                 if (this->gui_set_active || ImGui::IsItemActivated()) {
                     state.interact.button_active_uid = this->uid;
@@ -360,7 +360,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 if (!this->gui_selected &&
                     (active || this->found_uid(state.interact.modules_selected_uids, this->uid))) {
                     if (!this->found_uid(state.interact.modules_selected_uids, this->uid)) {
-                        if (ImGui::IsKeyPressed(ImGuiKey_ModShift)) {
+                        if (ImGui::IsKeyPressed(ImGuiMod_Shift)) {
                             // Multiple Selection
                             this->add_uid(state.interact.modules_selected_uids, this->uid);
                         } else {
@@ -378,8 +378,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 // Deselection
                 else if (this->gui_selected &&
                          ((mouse_clicked_anywhere && (state.interact.module_hovered_uid == GUI_INVALID_ID) &&
-                              !ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
-                             (active && ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
+                              !ImGui::IsKeyPressed(ImGuiMod_Shift)) ||
+                             (active && ImGui::IsKeyPressed(ImGuiMod_Shift)) ||
                              (!this->found_uid(state.interact.modules_selected_uids, this->uid)))) {
                     this->gui_selected = false;
                     this->erase_uid(state.interact.modules_selected_uids, this->uid);
@@ -521,11 +521,12 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
                             ImGui::PopFont();
                         }
-                        ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                     }
 #ifdef MEGAMOL_USE_PROFILING
                     // Profiling Button
                     if (profiling_button) {
+                        ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+
                         // Lazy loading of performance button texture
                         if (!this->gui_profiling_button.IsLoaded()) {
                             this->gui_profiling_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_PROFILING_BUTTON);

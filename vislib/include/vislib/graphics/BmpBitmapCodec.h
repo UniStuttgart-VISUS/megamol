@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_BMPBITMAPCODEC_H_INCLUDED
-#define VISLIB_BMPBITMAPCODEC_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -25,8 +21,7 @@
 //#define VISLIB_BMP_LOAD_BY_HAND 1
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -36,10 +31,10 @@ namespace graphics {
 class BmpBitmapCodec : public AbstractBitmapCodec {
 public:
     /** Ctor. */
-    BmpBitmapCodec(void);
+    BmpBitmapCodec();
 
     /** Dtor. */
-    virtual ~BmpBitmapCodec(void);
+    ~BmpBitmapCodec() override;
 
     /**
      * Autodetects if an image can be loaded by this codec by checking
@@ -54,7 +49,7 @@ public:
      *         1 if the file can be loaded by this codec (loading might
      *           still fail however, e.g. if file data is corrupt).
      */
-    virtual int AutoDetect(const void* mem, SIZE_T size) const;
+    int AutoDetect(const void* mem, SIZE_T size) const override;
 
     /**
      * Answers whether this codec can autodetect if an image is supported
@@ -62,7 +57,7 @@ public:
      *
      * @return 'true' if the codec can autodetect image compatibility.
      */
-    virtual bool CanAutoDetect(void) const;
+    bool CanAutoDetect() const override;
 
     /**
      * Answer the file name extensions usually used for image files of
@@ -73,7 +68,7 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    virtual const char* FileNameExtsA(void) const;
+    const char* FileNameExtsA() const override;
 
     /**
      * Answer the file name extensions usually used for image files of
@@ -84,21 +79,21 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    virtual const wchar_t* FileNameExtsW(void) const;
+    const wchar_t* FileNameExtsW() const override;
 
     /**
      * Answer the human-readable name of the codec.
      *
      * @return The human-readable name of the codec.
      */
-    virtual const char* NameA(void) const;
+    const char* NameA() const override;
 
     /**
      * Answer the human-readable name of the codec.
      *
      * @return The human-readable name of the codec.
      */
-    virtual const wchar_t* NameW(void) const;
+    const wchar_t* NameW() const override;
 
 protected:
     /**
@@ -112,14 +107,14 @@ protected:
      *
      * @return 'true' if the file was successfully loaded.
      */
-    virtual bool loadFromMemory(const void* mem, SIZE_T size);
+    bool loadFromMemory(const void* mem, SIZE_T size) override;
 
     /**
      * Answer whether or not 'loadFromMemory' has been implement.
      *
      * @return true
      */
-    virtual bool loadFromMemoryImplemented(void) const;
+    bool loadFromMemoryImplemented() const override;
 
     /**
      * Saves the image to a memory block.
@@ -132,14 +127,14 @@ protected:
      *
      * @return 'true' if the file was successfully saved.
      */
-    virtual bool saveToMemory(vislib::RawStorage& outmem) const;
+    bool saveToMemory(vislib::RawStorage& outmem) const override;
 
     /**
      * Answer whether or not 'saveToMemory' has been implement.
      *
      * @return true
      */
-    virtual bool saveToMemoryImplemented(void) const;
+    bool saveToMemoryImplemented() const override;
 
 private:
 #if defined(VISLIB_BMP_LOAD_BY_HAND) || !defined(_WIN32)
@@ -243,10 +238,8 @@ private:
 #endif /* defined(VISLIB_BMP_LOAD_BY_HAND) || !defined(_WIN32) */
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_BMPBITMAPCODEC_H_INCLUDED */

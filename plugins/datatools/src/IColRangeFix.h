@@ -8,26 +8,25 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColRangeFix : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IColRangeFix";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Fixes the ICol min and max values by iterating over all particles";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     IColRangeFix();
-    virtual ~IColRangeFix();
+    ~IColRangeFix() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     size_t hash;
@@ -35,5 +34,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

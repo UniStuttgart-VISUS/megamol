@@ -7,7 +7,6 @@
 
 #include "io/MMSPDDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/ArrayAllocator.h"
@@ -792,7 +791,7 @@ float MMSPDDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T da
 /*
  * MMSPDDataSource::MMSPDDataSource
  */
-MMSPDDataSource::MMSPDDataSource(void)
+MMSPDDataSource::MMSPDDataSource()
         : core::view::AnimDataModule()
         , filename("filename", "The path to the MMSPD file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -830,7 +829,7 @@ MMSPDDataSource::MMSPDDataSource(void)
 /*
  * MMSPDDataSource::~MMSPDDataSource
  */
-MMSPDDataSource::~MMSPDDataSource(void) {
+MMSPDDataSource::~MMSPDDataSource() {
     this->Release();
 }
 
@@ -838,7 +837,7 @@ MMSPDDataSource::~MMSPDDataSource(void) {
 /*
  * MMSPDDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* MMSPDDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* MMSPDDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<MMSPDDataSource*>(this));
     return f;
 }
@@ -847,7 +846,7 @@ core::view::AnimDataModule::Frame* MMSPDDataSource::constructFrame(void) const {
 /*
  * MMSPDDataSource::create
  */
-bool MMSPDDataSource::create(void) {
+bool MMSPDDataSource::create() {
     return true;
 }
 
@@ -919,7 +918,7 @@ void MMSPDDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsign
 /*
  * MMSPDDataSource::release
  */
-void MMSPDDataSource::release(void) {
+void MMSPDDataSource::release() {
     this->clearData();
     this->resetFrameCache();
     if (this->file != NULL) {
@@ -1307,7 +1306,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
 /*
  * MMSPDDataSource::clearData
  */
-void MMSPDDataSource::clearData(void) {
+void MMSPDDataSource::clearData() {
     if (this->frameIdxThread.IsRunning()) {
         this->frameIdxLock.Lock();
         ARY_SAFE_DELETE(this->frameIdx);
@@ -1895,7 +1894,9 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
                 try {
                     UINT64 pc = vislib::CharTraitsA::ParseUInt64(ln);
                     pcnt = vislib::math::Max(pcnt, pc);
-                } catch (...) { _ERROR_OUT("Frame marker error"); }
+                } catch (...) {
+                    _ERROR_OUT("Frame marker error");
+                }
             }
 
             dataSizeInMem = static_cast<SIZE_T>(pcnt * maxFields * sizeof(float));

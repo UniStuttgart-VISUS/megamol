@@ -15,7 +15,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "GLSLVolumeRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -50,7 +49,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::GLSLVolumeRenderer::GLSLVolumeRenderer (CTOR)
  */
-protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
+protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , protDataCallerSlot("getData", "Connects the volume rendering with data storage")
         , protRendererCallerSlot("renderProtein", "Connects the volume rendering with a protein renderer")
@@ -193,7 +192,7 @@ protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
 /*
  * protein::GLSLVolumeRenderer::~GLSLVolumeRenderer (DTOR)
  */
-protein_gl::GLSLVolumeRenderer::~GLSLVolumeRenderer(void) {
+protein_gl::GLSLVolumeRenderer::~GLSLVolumeRenderer() {
     this->Release();
 }
 
@@ -201,13 +200,13 @@ protein_gl::GLSLVolumeRenderer::~GLSLVolumeRenderer(void) {
 /*
  * protein::GLSLVolumeRenderer::release
  */
-void protein_gl::GLSLVolumeRenderer::release(void) {}
+void protein_gl::GLSLVolumeRenderer::release() {}
 
 
 /*
  * protein::GLSLVolumeRenderer::create
  */
-bool protein_gl::GLSLVolumeRenderer::create(void) {
+bool protein_gl::GLSLVolumeRenderer::create() {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -217,7 +216,8 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
 
     using namespace vislib_gl::graphics::gl;
 
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         updateVolumeShader = core::utility::make_glowl_shader("updateVolumeShader", shaderOptions,
@@ -243,10 +243,8 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
         return false;
     }
 
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-
     // Initialize render utils
-    if (!renderUtils.InitPrimitiveRendering(*ssf)) {
+    if (!renderUtils.InitPrimitiveRendering(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

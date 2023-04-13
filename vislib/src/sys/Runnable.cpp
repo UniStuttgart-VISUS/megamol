@@ -10,7 +10,7 @@
 /*
  * vislib::sys::Runnable::~Runnable
  */
-vislib::sys::Runnable::~Runnable(void) {}
+vislib::sys::Runnable::~Runnable() {}
 
 
 /*
@@ -28,6 +28,6 @@ void vislib::sys::Runnable::OnThreadStarting(void* userData) {}
 /*
  * vislib::sys::Runnable::Terminate
  */
-bool vislib::sys::Runnable::Terminate(void) {
+bool vislib::sys::Runnable::Terminate() {
     return false;
 }

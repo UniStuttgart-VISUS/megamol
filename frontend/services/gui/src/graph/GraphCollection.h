@@ -5,22 +5,19 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
-#define MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
 #pragma once
 
 
 #include "CommonTypes.h"
 #include "Graph.h"
-#include "mmcore/CoreInstance.h"
+#include "PluginsResource.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
 #include "widgets/FileBrowserWidget.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 // Forward declarations
@@ -67,9 +64,9 @@ public:
     void SetLuaFunc(lua_func_type* func);
 
     // ! Has to be called once before calling SynchronizeGraphs() or NotifyRunningGraph_*()
-    bool InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance);
+    bool InitializeGraphSynchronisation(const megamol::frontend_resources::PluginsResource& pluginsRes);
 
-    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph);
 
     bool LoadOrAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
@@ -122,8 +119,8 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool load_module_stock(const megamol::core::CoreInstance& core_instance);
-    bool load_call_stock(const megamol::core::CoreInstance& core_instance);
+    bool load_module_stock(const megamol::frontend_resources::PluginsResource& pluginsRes);
+    bool load_call_stock(const megamol::frontend_resources::PluginsResource& pluginsRes);
 
     std::string get_state(ImGuiID graph_id, const std::string& filename);
 
@@ -159,7 +156,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
+} // namespace megamol::gui

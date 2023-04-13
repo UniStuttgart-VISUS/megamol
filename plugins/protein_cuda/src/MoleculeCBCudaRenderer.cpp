@@ -29,7 +29,6 @@ extern "C" void copyArrayFromDevice(void* host, const void* device, unsigned int
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 using namespace megamol::core::utility::log;
@@ -117,7 +116,8 @@ void protein_cuda::MoleculeCBCudaRenderer::release(void) {
  */
 bool MoleculeCBCudaRenderer::create(void) {
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
             std::filesystem::path("protein_cuda/molecule_cb/mcbc_sphere.vert.glsl"),

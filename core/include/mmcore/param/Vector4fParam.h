@@ -1,8 +1,7 @@
-/*
- * Vector4fParam.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -10,10 +9,8 @@
 #include <sstream>
 
 #include "GenericParam.h"
-#include "vislib/Array.h"
-#include "vislib/StringTokeniser.h"
+#include "mmcore/utility/String.h"
 #include "vislib/math/Vector.h"
-
 
 namespace megamol::core::param {
 
@@ -29,39 +26,16 @@ public:
         vislib::math::Vector<float, 4> const& maxVal)
             : Super(initVal, minVal, maxVal) {}
 
-    virtual ~Vector4fParam() = default;
-
-    std::string Definition() const override {
-        std::string name = "MMVC4F";
-        std::string return_str;
-        return_str.resize(6 + 8 * sizeof(float));
-        std::copy(name.begin(), name.end(), return_str.begin());
-        for (int i = 0; i < 4; ++i) {
-            std::copy(reinterpret_cast<char const*>(&MinValue()[i]),
-                reinterpret_cast<char const*>(&MinValue()[i]) + sizeof(float),
-                return_str.begin() + name.size() + i * sizeof(float));
-        }
-        for (int i = 0; i < 4; ++i) {
-            std::copy(reinterpret_cast<char const*>(&MaxValue()[i]),
-                reinterpret_cast<char const*>(&MaxValue()[i]) + sizeof(float),
-                return_str.begin() + name.size() + 4 * sizeof(float) + i * sizeof(float));
-        }
-        return return_str;
-    }
+    ~Vector4fParam() override = default;
 
     bool ParseValue(std::string const& v) override {
-        vislib::Array<vislib::TString> comps = vislib::TStringTokeniser::Split(v.c_str(), _T(";"), true);
-        if (comps.Count() == 4) {
+        const auto& segments = utility::string::Split(v, ';');
+        if (segments.size() == 4) {
             try {
-                comps[0].TrimSpaces();
-                comps[1].TrimSpaces();
-                comps[2].TrimSpaces();
-                comps[3].TrimSpaces();
-                float x = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[0]));
-                float y = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[1]));
-                float z = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[2]));
-                float w = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[3]));
-
+                float x = std::stof(utility::string::TrimCopy(segments[0]));
+                float y = std::stof(utility::string::TrimCopy(segments[1]));
+                float z = std::stof(utility::string::TrimCopy(segments[2]));
+                float w = std::stof(utility::string::TrimCopy(segments[3]));
                 this->SetValue(vislib::math::Vector<float, 4>(x, y, z, w));
                 return true;
             } catch (...) {}

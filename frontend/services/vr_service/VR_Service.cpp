@@ -43,8 +43,7 @@ static void log_warning(std::string const& text) {
 }
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 VR_Service::VR_Service() {}
 
@@ -171,7 +170,7 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
     m_entry_points_registry.rename_entry_point = [&](auto const& name, auto const& newname) -> bool { return true; };
     m_entry_points_registry.clear_entry_points = [&]() -> void { vr_device(clear_entry_points()); };
     m_entry_points_registry.subscribe_to_entry_point_changes = [&](auto const& func) -> void {};
-    m_entry_points_registry.get_entry_point = [&](std::string const& name) -> auto {
+    m_entry_points_registry.get_entry_point = [&](std::string const& name) -> auto{
         return std::nullopt;
     };
 
@@ -198,8 +197,7 @@ void VR_Service::postGraphRender() {
     vr_device(postGraphRender());
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend
 
 #ifdef MEGAMOL_USE_VR_INTEROP
 namespace {

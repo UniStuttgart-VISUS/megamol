@@ -284,7 +284,7 @@ public:
     /**
      * Ctor
      */
-    SimpleSphericalParticles(void);
+    SimpleSphericalParticles();
 
     /**
      * Copy ctor
@@ -296,14 +296,14 @@ public:
     /**
      * Dtor
      */
-    ~SimpleSphericalParticles(void);
+    ~SimpleSphericalParticles();
 
     /**
      * Answer the colour data type
      *
      * @return The colour data type
      */
-    inline ColourDataType GetColourDataType(void) const {
+    inline ColourDataType GetColourDataType() const {
         return this->colDataType;
     }
 
@@ -312,7 +312,7 @@ public:
      *
      * @return The colour data pointer
      */
-    inline const void* GetColourData(void) const {
+    inline const void* GetColourData() const {
         return this->colPtr;
     }
 
@@ -322,7 +322,7 @@ public:
      *
      * @return The colour data stride in byte.
      */
-    inline unsigned int GetColourDataStride(void) const {
+    inline unsigned int GetColourDataStride() const {
         return this->colStride == ColorDataSize[this->colDataType] ? 0 : this->colStride;
     }
 
@@ -331,7 +331,7 @@ public:
      *
      * @return The direction data type
      */
-    inline DirDataType GetDirDataType(void) const {
+    inline DirDataType GetDirDataType() const {
         return this->dirDataType;
     }
 
@@ -340,7 +340,7 @@ public:
      *
      * @return The direction data pointer
      */
-    inline const void* GetDirData(void) const {
+    inline const void* GetDirData() const {
         return this->dirPtr;
     }
 
@@ -349,7 +349,7 @@ public:
      *
      * @return The direction data stride
      */
-    inline unsigned int GetDirDataStride(void) const {
+    inline unsigned int GetDirDataStride() const {
         return this->dirStride == DirDataSize[this->dirDataType] ? 0 : this->dirStride;
     }
 
@@ -358,7 +358,7 @@ public:
      *
      * @return The number of stored objects
      */
-    inline UINT64 GetCount(void) const {
+    inline UINT64 GetCount() const {
         return this->count;
     }
 
@@ -368,7 +368,7 @@ public:
      * @return The global colour as a pointer to four unsigned bytes
      *         storing the RGBA colour components
      */
-    inline const unsigned char* GetGlobalColour(void) const {
+    inline const unsigned char* GetGlobalColour() const {
         return this->col;
     }
 
@@ -377,7 +377,7 @@ public:
      *
      * @return The global radius
      */
-    inline float GetGlobalRadius(void) const {
+    inline float GetGlobalRadius() const {
         return this->radius;
     }
 
@@ -386,7 +386,7 @@ public:
      *
      * @return the global type
      */
-    inline unsigned int GetGlobalType(void) const {
+    inline unsigned int GetGlobalType() const {
         return this->particleType;
     }
 
@@ -395,7 +395,7 @@ public:
      *
      * @return The maximum colour index value to be mapped
      */
-    inline float GetMaxColourIndexValue(void) const {
+    inline float GetMaxColourIndexValue() const {
         return this->maxColI;
     }
 
@@ -404,7 +404,7 @@ public:
      *
      * @return The minimum colour index value to be mapped
      */
-    inline float GetMinColourIndexValue(void) const {
+    inline float GetMinColourIndexValue() const {
         return this->minColI;
     }
 
@@ -413,7 +413,7 @@ public:
      *
      * @return The vertex data type
      */
-    inline VertexDataType GetVertexDataType(void) const {
+    inline VertexDataType GetVertexDataType() const {
         return this->vertDataType;
     }
 
@@ -422,7 +422,7 @@ public:
      *
      * @return The vertex data pointer
      */
-    inline const void* GetVertexData(void) const {
+    inline const void* GetVertexData() const {
         return this->vertPtr;
     }
 
@@ -432,7 +432,7 @@ public:
      *
      * @return The vertex data stride in byte.
      */
-    inline unsigned int GetVertexDataStride(void) const {
+    inline unsigned int GetVertexDataStride() const {
         return this->vertStride == VertexDataSize[this->vertDataType] ? 0 : this->vertStride;
     }
 
@@ -441,7 +441,7 @@ public:
      *
      * @return The id data type
      */
-    inline IDDataType GetIDDataType(void) const {
+    inline IDDataType GetIDDataType() const {
         return this->idDataType;
     }
 
@@ -450,7 +450,7 @@ public:
      *
      * @return The id data pointer
      */
-    inline const void* GetIDData(void) const {
+    inline const void* GetIDData() const {
         return this->idPtr;
     }
 
@@ -460,7 +460,7 @@ public:
      *
      * @return The id data stride in byte.
      */
-    inline unsigned int GetIDDataStride(void) const {
+    inline unsigned int GetIDDataStride() const {
         return this->idStride == IDDataSize[this->idDataType] ? 0 : this->idStride;
     }
 

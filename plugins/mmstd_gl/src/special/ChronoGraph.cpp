@@ -7,7 +7,6 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "mmcore/CoreInstance.h"
 #include "mmstd_gl/special/ChronoGraph.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -33,7 +32,7 @@ special::ChronoGraph::~ChronoGraph() {
 /*
  * view::special::ChronoGraph::create
  */
-bool special::ChronoGraph::create(void) {
+bool special::ChronoGraph::create() {
     // intentionally empty
     return true;
 }
@@ -78,7 +77,7 @@ bool special::ChronoGraph::Render(mmstd_gl::CallRender2DGL& call) {
 /*
  * view::special::ChronoGraph::release
  */
-void special::ChronoGraph::release(void) {
+void special::ChronoGraph::release() {
     // intentionally empty
 }
 

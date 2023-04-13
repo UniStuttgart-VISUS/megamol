@@ -13,13 +13,12 @@
 #include "vislib/sys/ASCIIFileBuffer.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * CrystalDataSource::CrystalDataSource
  */
-CrystalDataSource::CrystalDataSource(void)
+CrystalDataSource::CrystalDataSource()
         : core::Module()
         , filenameSlot("filename", "The path to the file to be loaded")
         , dataOutSlot("dataout", "The slot providing the loaded data")
@@ -40,7 +39,7 @@ CrystalDataSource::CrystalDataSource(void)
 /*
  * CrystalDataSource::~CrystalDataSource
  */
-CrystalDataSource::~CrystalDataSource(void) {
+CrystalDataSource::~CrystalDataSource() {
     this->Release();
 }
 
@@ -48,7 +47,7 @@ CrystalDataSource::~CrystalDataSource(void) {
 /*
  * CrystalDataSource::create
  */
-bool CrystalDataSource::create(void) {
+bool CrystalDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -78,7 +77,7 @@ bool CrystalDataSource::getData(core::Call& c) {
 /*
  * CrystalDataSource::release
  */
-void CrystalDataSource::release(void) {
+void CrystalDataSource::release() {
     this->crystals.Clear();
 }
 
@@ -108,12 +107,16 @@ void CrystalDataSource::loadFile(const vislib::TString& filename) {
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(2))));
                 // Do not normalize! Length of v is radius of base-sphere for that plane
                 crystal.AddFace(v);
-            } catch (...) { Log::DefaultLog.WriteWarn("Error parsing vector line \"%d\"", static_cast<int>(l)); }
+            } catch (...) {
+                Log::DefaultLog.WriteWarn("Error parsing vector line \"%d\"", static_cast<int>(l));
+            }
         } else if (file[l].Count() == 2) {
             try {
                 crystal.SetBaseRadius(static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(1))));
                 crystal.SetBoundingRadius(static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(0))));
-            } catch (...) { Log::DefaultLog.WriteWarn("Error parsing radius line \"%d\"", static_cast<int>(l)); }
+            } catch (...) {
+                Log::DefaultLog.WriteWarn("Error parsing radius line \"%d\"", static_cast<int>(l));
+            }
             if (!crystal.IsEmpty())
                 this->crystals.Add(crystal);
             crystal.Clear();
@@ -125,5 +128,4 @@ void CrystalDataSource::loadFile(const vislib::TString& filename) {
     Log::DefaultLog.WriteInfo(
         "Loaded \"%u\" crystalite definitions\n", static_cast<unsigned int>(this->crystals.Count()));
 }
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

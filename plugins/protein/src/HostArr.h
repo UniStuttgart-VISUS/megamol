@@ -8,13 +8,11 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
-#define MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
+#pragma once
 
 #include <cstdlib>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 template<class T>
 class HostArr {
@@ -113,7 +111,4 @@ private:
     T* pt;
 };
 
-} // namespace protein
-} // namespace megamol
-
-#endif // MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
+} // namespace megamol::protein

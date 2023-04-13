@@ -7,7 +7,6 @@
 
 #include "MMPGDDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "moldyn/ParticleGridDataCall.h"
@@ -236,7 +235,7 @@ void MMPGDDataSource::Frame::SetData(ParticleGridDataCall& call) {
 /*
  * MMPGDDataSource::MMPGDDataSource
  */
-MMPGDDataSource::MMPGDDataSource(void)
+MMPGDDataSource::MMPGDDataSource()
         : view::AnimDataModule()
         , filename("filename", "The path to the MMPGD file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -261,7 +260,7 @@ MMPGDDataSource::MMPGDDataSource(void)
 /*
  * MMPGDDataSource::~MMPGDDataSource
  */
-MMPGDDataSource::~MMPGDDataSource(void) {
+MMPGDDataSource::~MMPGDDataSource() {
     this->Release();
 }
 
@@ -269,7 +268,7 @@ MMPGDDataSource::~MMPGDDataSource(void) {
 /*
  * MMPGDDataSource::constructFrame
  */
-view::AnimDataModule::Frame* MMPGDDataSource::constructFrame(void) const {
+view::AnimDataModule::Frame* MMPGDDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<MMPGDDataSource*>(this));
     return f;
 }
@@ -278,7 +277,7 @@ view::AnimDataModule::Frame* MMPGDDataSource::constructFrame(void) const {
 /*
  * MMPGDDataSource::create
  */
-bool MMPGDDataSource::create(void) {
+bool MMPGDDataSource::create() {
     return true;
 }
 
@@ -307,7 +306,7 @@ void MMPGDDataSource::loadFrame(view::AnimDataModule::Frame* frame, unsigned int
 /*
  * MMPGDDataSource::release
  */
-void MMPGDDataSource::release(void) {
+void MMPGDDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;

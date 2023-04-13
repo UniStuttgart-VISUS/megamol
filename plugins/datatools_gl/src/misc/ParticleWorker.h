@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -16,8 +20,6 @@
 #include "vislib/types.h"
 
 #include "glad/gl.h"
-
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 
 namespace megamol::datatools_gl::misc {
@@ -31,8 +33,8 @@ public:
     class VAOUnlocker : public core::AbstractGetDataCall::Unlocker {
     public:
         VAOUnlocker(){};
-        virtual ~VAOUnlocker(){};
-        void Unlock() {
+        ~VAOUnlocker() override{};
+        void Unlock() override {
             glBindVertexArray(0);
             glBindBufferARB(GL_SHADER_STORAGE_BUFFER, 0);
         };
@@ -43,7 +45,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleWorker";
     }
 
@@ -52,7 +54,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Modify incoming particles";
     }
 
@@ -61,24 +63,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
     /** Ctor. */
-    ParticleWorker(void);
+    ParticleWorker();
 
     /** Dtor. */
-    virtual ~ParticleWorker(void);
+    ~ParticleWorker() override;
 
 protected:
     /**
@@ -86,12 +79,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -121,7 +114,7 @@ private:
     vislib::Array<GLuint> glCB;
 
     GLuint glClusterInfos;
-    vislib_gl::graphics::gl::GLSLComputeShader shaderOnClusterComputation;
+    std::unique_ptr<glowl::GLSLProgram> shaderOnClusterComputation;
 
     /*
     GLuint glParticleList;

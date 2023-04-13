@@ -1,8 +1,7 @@
-/*
- * ParamUpdateListener.cpp
- *
- * Copyright (C) 2010, 2020 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/ParamUpdateListener.h"
@@ -13,7 +12,7 @@ using namespace megamol::core::param;
 /*
  * ParamUpdateListener::ParamUpdateListener
  */
-ParamUpdateListener::ParamUpdateListener(void) {
+ParamUpdateListener::ParamUpdateListener() {
     // intentionally empty
 }
 
@@ -21,7 +20,7 @@ ParamUpdateListener::ParamUpdateListener(void) {
 /*
  * ParamUpdateListener::~ParamUpdateListener
  */
-ParamUpdateListener::~ParamUpdateListener(void) {
+ParamUpdateListener::~ParamUpdateListener() {
     // intentionally empty
 }
 

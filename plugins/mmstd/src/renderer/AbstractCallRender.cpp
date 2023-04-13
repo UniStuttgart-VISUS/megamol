@@ -37,7 +37,7 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(const view::Abstra
 /*
  * view::AbstractCallRender::AbstractCallRender
  */
-view::AbstractCallRender::AbstractCallRender(void)
+view::AbstractCallRender::AbstractCallRender()
         : InputCall()
         , _cntTimeFrames(1)
         , _time(0.0f)

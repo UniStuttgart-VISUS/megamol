@@ -33,7 +33,8 @@ bool megamol::probe_gl::ProbeRenderTasks::create() {
     try {
         std::vector<std::filesystem::path> shaderfiles = {
             "probes/dfr_interaction_probe.vert.glsl", "probes/dfr_interaction_probe.frag.glsl"};
-        m_material_collection->addMaterial(this->instance(), "ProbeInteraction", shaderfiles);
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ProbeInteraction", shaderfiles);
     } catch (std::runtime_error const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);

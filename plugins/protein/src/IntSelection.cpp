@@ -5,9 +5,7 @@ using namespace megamol;
 using namespace megamol::protein;
 
 
-IntSelection::IntSelection(void)
-        : getSelectionSlot("getSelection", "Provides selection data to clients.")
-        , selection() {
+IntSelection::IntSelection() : getSelectionSlot("getSelection", "Provides selection data to clients."), selection() {
 
     this->getSelectionSlot.SetCallback(protein_calls::IntSelectionCall::ClassName(),
         protein_calls::IntSelectionCall::FunctionName(protein_calls::IntSelectionCall::CallForGetSelection),
@@ -19,17 +17,17 @@ IntSelection::IntSelection(void)
 }
 
 
-IntSelection::~IntSelection(void) {
+IntSelection::~IntSelection() {
     this->Release();
 }
 
 
-bool IntSelection::create(void) {
+bool IntSelection::create() {
     return true;
 }
 
 
-void IntSelection::release(void) {
+void IntSelection::release() {
     // intentionally empty
 }
 

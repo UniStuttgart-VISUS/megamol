@@ -10,9 +10,7 @@
 #include "TableProcessorBase.h"
 
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * This module sorts tabular data according to the specified column.
@@ -25,7 +23,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TableSort";
     }
 
@@ -34,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Selects rows from a data table";
     }
 
@@ -43,26 +41,26 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableSort(void);
+    TableSort();
 
     /**
      * Finalises an instance.
      */
-    virtual ~TableSort(void);
+    ~TableSort() override;
 
 protected:
-    virtual bool create(void);
+    bool create() override;
 
-    virtual bool prepareData(TableDataCall& src, const unsigned int frameID) override;
+    bool prepareData(TableDataCall& src, const unsigned int frameID) override;
 
-    virtual void release(void);
+    void release() override;
 
 private:
     core::param::ParamSlot paramColumn;
@@ -70,6 +68,4 @@ private:
     core::param::ParamSlot paramIsStable;
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table

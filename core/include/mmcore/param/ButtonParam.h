@@ -1,25 +1,15 @@
-/*
- * ButtonParam.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_BUTTONPARAM_H_INCLUDED
-#define MEGAMOLCORE_BUTTONPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParam.h"
 #include "mmcore/view/Input.h"
-#include "vislib/types.h"
 
-
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /**
  * Special class for parameter objects representing a button. These
@@ -81,15 +71,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~ButtonParam(void);
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    std::string Definition() const override;
+    ~ButtonParam() override;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -107,9 +89,9 @@ public:
      *
      * @return The value of the parameter as string.
      */
-    std::string ValueString(void) const override;
+    std::string ValueString() const override;
 
-    inline core::view::KeyCode GetKeyCode(void) const {
+    inline core::view::KeyCode GetKeyCode() const {
         return this->keycode;
     }
 
@@ -121,8 +103,4 @@ private:
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_BUTTONPARAM_H_INCLUDED */
+} // namespace megamol::core::param

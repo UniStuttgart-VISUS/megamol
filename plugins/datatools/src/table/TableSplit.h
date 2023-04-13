@@ -13,23 +13,23 @@ namespace megamol::datatools::table {
 class TableSplit : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TableSplit";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "split table in two parts based on column name selection string";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     TableSplit();
 
-    virtual ~TableSplit();
+    ~TableSplit() override;
 
 protected:
     bool create() override;

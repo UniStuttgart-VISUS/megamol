@@ -17,7 +17,7 @@ using namespace megamol::geocalls_gl;
 /*
  * io::PlyWriter::PlyWriter
  */
-io::PlyWriter::PlyWriter(void)
+io::PlyWriter::PlyWriter()
         : AbstractDataWriter()
         , filenameSlot("filename", "The path to the .ply file to be written")
         , frameIDSlot("frameID", "The ID of the frame to be written")
@@ -37,26 +37,26 @@ io::PlyWriter::PlyWriter(void)
 /*
  * io::PlyWriter::~PlyWriter
  */
-io::PlyWriter::~PlyWriter(void) {
+io::PlyWriter::~PlyWriter() {
     this->Release();
 }
 
 /*
  * io::PlyWriter::create
  */
-bool io::PlyWriter::create(void) {
+bool io::PlyWriter::create() {
     return true;
 }
 
 /*
  * io::PlyWriter::release
  */
-void io::PlyWriter::release(void) {}
+void io::PlyWriter::release() {}
 
 /*
  * io::PlyWriter::run
  */
-bool io::PlyWriter::run(void) {
+bool io::PlyWriter::run() {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
     if (filename.empty()) {

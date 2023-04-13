@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <type_traits>
@@ -50,7 +56,7 @@ public:
         this->stepSize = stepSize;
     }
 
-    virtual ~GenericParam() = default;
+    ~GenericParam() override = default;
 
     /**
      * Sets the value of the parameter and optionally sets the dirty flag
@@ -62,16 +68,18 @@ public:
      */
     void SetValue(T v, bool setDirty = true) {
         if constexpr (enable_cond_v<T>) {
-            if (v < this->minVal)
+            if (v < this->minVal) {
                 v = this->minVal;
-            else if (v > this->maxVal)
+            } else if (v > this->maxVal) {
                 v = this->maxVal;
+            }
         }
         if (this->val != v) {
             this->val = v;
-            this->indicateChange();
-            if (setDirty)
+            this->indicateParamChange();
+            if (setDirty) {
                 this->setDirty();
+            }
         }
     }
 
@@ -90,7 +98,7 @@ public:
      *
      * @return The value of the parameter
      */
-    T const& Value(void) const {
+    T const& Value() const {
         return this->val;
     }
 

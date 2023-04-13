@@ -11,26 +11,25 @@
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColSelectClassify : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IColSelectClassify";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes new ICol values: 1 for particles with original ICols close to the selected value; 0 else";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     IColSelectClassify();
-    virtual ~IColSelectClassify();
+    ~IColSelectClassify() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::param::ParamSlot valueSlot;
@@ -42,5 +41,4 @@ private:
     std::vector<float> colors;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

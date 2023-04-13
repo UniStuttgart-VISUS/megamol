@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SCOPEDLOCK_H_INCLUDED
-#define VISLIB_SCOPEDLOCK_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,8 +15,7 @@
 #include "vislib/UnsupportedOperationException.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * This class provides a simplifies mechanism for using synchronisation
@@ -47,7 +42,7 @@ public:
     /**
      * The dtor releases 'lock'.
      */
-    inline ~ScopedLock(void) {
+    inline ~ScopedLock() {
         this->lock.Unlock();
     }
 
@@ -81,10 +76,8 @@ private:
     T& lock;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SCOPEDLOCK_H_INCLUDED */

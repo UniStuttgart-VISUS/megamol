@@ -9,17 +9,23 @@
 
 #include <glowl/glowl.h>
 
+#include "FrameStatistics.h"
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-namespace megamol::compositing {
+namespace megamol::compositing_gl {
 
 /**
  * TODO
  */
 class DrawToScreen : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Renderer3DModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
+    }
+
     /**
      * Answer the name of this module.
      *
@@ -52,7 +58,7 @@ public:
     DrawToScreen();
 
     /** Dtor. */
-    ~DrawToScreen();
+    ~DrawToScreen() override;
 
 protected:
     /**
@@ -60,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -76,7 +82,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -85,14 +91,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(mmstd_gl::CallRender3DGL& call);
+    void PreRender(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** Dummy color texture to use when no texture is connected */
@@ -114,4 +120,4 @@ private:
     glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

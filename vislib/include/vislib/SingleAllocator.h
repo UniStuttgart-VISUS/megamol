@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SINGLEALLOCATOR_H_INCLUDED
-#define VISLIB_SINGLEALLOCATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -48,7 +44,7 @@ public:
      * @throws std::bad_alloc If there was not enough memory to allocate the
      *                        object.
      */
-    static inline TargetPtrType Allocate(void) {
+    static inline TargetPtrType Allocate() {
         return new T;
     }
 
@@ -65,10 +61,10 @@ public:
 
 private:
     /** Disallow instances. */
-    SingleAllocator(void);
+    SingleAllocator();
 
     /** Dtor. */
-    ~SingleAllocator(void);
+    ~SingleAllocator();
 };
 
 } /* end namespace vislib */
@@ -76,4 +72,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SINGLEALLOCATOR_H_INCLUDED */

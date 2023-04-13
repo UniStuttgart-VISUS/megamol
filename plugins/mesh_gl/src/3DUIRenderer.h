@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED
-#define THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <list>
@@ -21,20 +20,19 @@
 
 #include "mesh/3DInteractionCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class ThreeDimensionalUIRenderer : public BaseMeshRenderer {
 public:
     ThreeDimensionalUIRenderer();
-    ~ThreeDimensionalUIRenderer();
+    ~ThreeDimensionalUIRenderer() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "3DUIRenderer";
     }
     /**
@@ -42,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "....TODO...";
     }
 
@@ -81,7 +79,4 @@ private:
     megamol::core::CallerSlot m_glTF_callerSlot;
 };
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED
+} // namespace megamol::mesh_gl

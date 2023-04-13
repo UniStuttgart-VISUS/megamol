@@ -16,7 +16,7 @@ using namespace megamol::geocalls;
 /*
  * TunnelToParticles::TunnelToParticles
  */
-TunnelToParticles::TunnelToParticles(void)
+TunnelToParticles::TunnelToParticles()
         : Module()
         , dataOutSlot("getData", "Slot providing the tunnel data as particles")
         , tunnelInSlot("tunnelIn", "Slot taking the tunnel data as input") {
@@ -38,21 +38,21 @@ TunnelToParticles::TunnelToParticles(void)
 /*
  * TunnelToParticles::~TunnelToParticles
  */
-TunnelToParticles::~TunnelToParticles(void) {
+TunnelToParticles::~TunnelToParticles() {
     this->Release();
 }
 
 /*
  * TunnelToParticles::create
  */
-bool TunnelToParticles::create(void) {
+bool TunnelToParticles::create() {
     return true;
 }
 
 /*
  * TunnelToParticles::release
  */
-void TunnelToParticles::release(void) {}
+void TunnelToParticles::release() {}
 
 /*
  * TunnelToParticles::getData

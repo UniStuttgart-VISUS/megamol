@@ -13,7 +13,7 @@ using namespace megamol::core;
 /*
  * cluster::CallRegisterAtController::CallRegisterAtController
  */
-cluster::CallRegisterAtController::CallRegisterAtController(void)
+cluster::CallRegisterAtController::CallRegisterAtController()
         : Call()
         , client(NULL)
         , statRun(false)
@@ -26,6 +26,6 @@ cluster::CallRegisterAtController::CallRegisterAtController(void)
 /*
  * cluster::CallRegisterAtController::~CallRegisterAtController
  */
-cluster::CallRegisterAtController::~CallRegisterAtController(void) {
+cluster::CallRegisterAtController::~CallRegisterAtController() {
     this->client = NULL; // DO NOT DELETE
 }

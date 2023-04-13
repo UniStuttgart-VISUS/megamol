@@ -61,7 +61,7 @@ struct PointCloud {
 /*
  * FloattableToLines::FloattableToLines
  */
-TableToLines::TableToLines(void)
+TableToLines::TableToLines()
         : Module()
         , slotTF("gettransferfunction", "Connects to the transfer function module")
         , slotDeployData("linedata", "Provides the data as line data call.")
@@ -147,7 +147,7 @@ TableToLines::TableToLines(void)
 /*
  * FloattableToLines::~FloattableToLines
  */
-TableToLines::~TableToLines(void) {
+TableToLines::~TableToLines() {
     this->Release();
 }
 
@@ -155,7 +155,7 @@ TableToLines::~TableToLines(void) {
 /*
  * megamol::pcl::PclDataSource::create
  */
-bool TableToLines::create(void) {
+bool TableToLines::create() {
     bool retval = true;
     return true;
 }
@@ -585,7 +585,7 @@ bool TableToLines::getLineDataExtent(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void TableToLines::release(void) {}
+void TableToLines::release() {}
 
 
 void TableToLines::colorTransferGray(std::vector<float>& grayArray, float const* transferTable, unsigned int tableSize,

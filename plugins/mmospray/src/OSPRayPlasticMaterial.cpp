@@ -11,7 +11,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayPlasticMaterial::OSPRayPlasticMaterial(void)
+OSPRayPlasticMaterial::OSPRayPlasticMaterial()
         : AbstractOSPRayMaterial()
         ,
         // PLASTIC
@@ -30,7 +30,7 @@ OSPRayPlasticMaterial::OSPRayPlasticMaterial(void)
     this->MakeSlotAvailable(&this->plasticThickness);
 }
 
-OSPRayPlasticMaterial::~OSPRayPlasticMaterial(void) {
+OSPRayPlasticMaterial::~OSPRayPlasticMaterial() {
     this->Release();
 }
 

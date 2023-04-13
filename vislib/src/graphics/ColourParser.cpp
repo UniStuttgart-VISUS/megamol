@@ -442,19 +442,27 @@ bool vislib::graphics::ColourParser::parseArray(
     float r, g, b, a;
     try {
         r = static_cast<float>(vislib::CharTraitsA::ParseDouble(rStr));
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
     try {
         g = static_cast<float>(vislib::CharTraitsA::ParseDouble(gStr));
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
     try {
         b = static_cast<float>(vislib::CharTraitsA::ParseDouble(bStr));
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
     if (aStr.IsEmpty()) {
         a = isFloat ? 1.0f : 255.0f;
     } else {
         try {
             a = static_cast<float>(vislib::CharTraitsA::ParseDouble(aStr));
-        } catch (...) { return false; }
+        } catch (...) {
+            return false;
+        }
     }
 
     if (!isFloat) {
@@ -595,7 +603,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(const v
 /*
  * vislib::graphics::ColourParser::ColourParser
  */
-vislib::graphics::ColourParser::ColourParser(void) {
+vislib::graphics::ColourParser::ColourParser() {
     throw vislib::UnsupportedOperationException("ColourParser::ctor", __FILE__, __LINE__);
 }
 
@@ -603,6 +611,6 @@ vislib::graphics::ColourParser::ColourParser(void) {
 /*
  * vislib::graphics::ColourParser::~ColourParser
  */
-vislib::graphics::ColourParser::~ColourParser(void) {
+vislib::graphics::ColourParser::~ColourParser() {
     throw vislib::UnsupportedOperationException("ColourParser::dtor", __FILE__, __LINE__);
 }

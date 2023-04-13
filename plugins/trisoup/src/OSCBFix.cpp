@@ -16,7 +16,7 @@ using namespace megamol::quartz;
 /*
  * OSCBFix::OSCBFix
  */
-OSCBFix::OSCBFix(void)
+OSCBFix::OSCBFix()
         : core::Module()
         , dataOutSlot("dataOut", "The slot providing the fixed data")
         , dataInSlot("dataIn", "The slot fetching the original data")
@@ -38,7 +38,7 @@ OSCBFix::OSCBFix(void)
 /*
  * OSCBFix::~OSCBFix
  */
-OSCBFix::~OSCBFix(void) {
+OSCBFix::~OSCBFix() {
     this->Release();
 }
 
@@ -46,7 +46,7 @@ OSCBFix::~OSCBFix(void) {
 /*
  * OSCBFix::create
  */
-bool OSCBFix::create(void) {
+bool OSCBFix::create() {
     // intentionally empty
     return true;
 }
@@ -130,7 +130,7 @@ bool OSCBFix::getExtent(core::Call& c) {
 /*
  * OSCBFix::release
  */
-void OSCBFix::release(void) {
+void OSCBFix::release() {
     //this->crystals.Clear();
 }
 

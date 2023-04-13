@@ -11,8 +11,7 @@
 
 #include "ProjectLoader.h"
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 class ProjectLoader_Service final : public AbstractFrontendService {
 public:
@@ -23,7 +22,7 @@ public:
     }
 
     ProjectLoader_Service();
-    ~ProjectLoader_Service();
+    ~ProjectLoader_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;
@@ -56,5 +55,4 @@ private:
     bool m_digestion_recursion = false;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

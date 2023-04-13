@@ -8,16 +8,10 @@ pr:
 variables:
   defaultConfig: >-
     -DMEGAMOL_WARNING_LEVEL="Off"
-    -DMEGAMOL_PLUGIN_ASTRO=ON
-    -DMEGAMOL_PLUGIN_ASTRO_GL=ON
-    -DMEGAMOL_PLUGIN_IMAGE_GL=ON
     -DMEGAMOL_PLUGIN_MEGAMOL101_GL=ON
-    -DMEGAMOL_PLUGIN_MMADIOS=ON
-    -DMEGAMOL_PLUGIN_MMVTKM=ON
-    -DMEGAMOL_PLUGIN_MMVTKM_GL=ON
-    -DMEGAMOL_PLUGIN_PROTEIN=ON
-    -DMEGAMOL_PLUGIN_PROTEIN_GL=ON
-    -DMEGAMOL_PLUGIN_REMOTE=OFF
+    -DMEGAMOL_USE_CGAL=ON
+    -DMEGAMOL_USE_PROFILING=ON
+    -DMEGAMOL_USE_VTKM=ON
   nonGlConfig: >-
     -DMEGAMOL_WARNING_LEVEL="Off"
     -DMEGAMOL_USE_OPENGL=OFF
@@ -51,7 +45,7 @@ jobs:
     - VisualStudio_16.0
 
   steps:
-  - template: .ci/check-pr-labels-step.yml
+  - template: .ci/check-pr-labels-step-pwsh.yml
   - powershell: |
       New-Item -ItemType "directory" -Path "$Env:VCPKG_DEFAULT_BINARY_CACHE" -Force
       New-Item -ItemType "directory" -Path "$Env:X_VCPKG_REGISTRIES_CACHE" -Force
@@ -59,7 +53,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs)'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs) -DMEGAMOL_DOWNLOAD_VCPKG_CACHE=ON'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
@@ -73,48 +67,54 @@ jobs:
   strategy:
     matrix:
       ## Temporarily disabled until more CI machines are available!
-      #'GCC9 / Make / Release':
-      #  cCompiler: gcc-9
-      #  cxxCompiler: g++-9
+      #'GCC11 / Make / Release':
+      #  dockerImage: megamol_ci_ubuntu
+      #  cCompiler: gcc-11
+      #  cxxCompiler: g++-11
       #  configuration: Release
       #  generator: 'Unix Makefiles'
       #  cmakeExtraArgs: '$(defaultConfig)'
-      'GCC9 / Make / Debug':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
+      'GCC11 / Make / Debug':
+        dockerImage: megamol_ci_ubuntu
+        cCompiler: gcc-11
+        cxxCompiler: g++-11
         configuration: Debug
         generator: 'Unix Makefiles'
         cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily disabled until more CI machines are available!
-      #'GCC9 / Ninja / Release':
-      #  cCompiler: gcc-9
-      #  cxxCompiler: g++-9
+      #'GCC11 / Ninja / Release':
+      #  dockerImage: megamol_ci_ubuntu
+      #  cCompiler: gcc-11
+      #  cxxCompiler: g++-11
       #  configuration: Release
       #  generator: 'Ninja'
       #  cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily changed to Ninja instead of Make until more CI machines are available!
-      'Clang10 / Ninja / Release':
-        cCompiler: clang-10
-        cxxCompiler: clang++-10
+      'Clang14 / Ninja / Release':
+        dockerImage: megamol_ci_ubuntu
+        cCompiler: clang-14
+        cxxCompiler: clang++-14
         configuration: Release
         generator: 'Ninja'
         cmakeExtraArgs: '$(defaultConfig)'
-      'GCC9 / Make / Release (nonGL)':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
+      'GCC11 / Ninja / Release (nonGL)':
+        dockerImage: megamol_ci_ubuntu
+        cCompiler: gcc-11
+        cxxCompiler: g++-11
         configuration: Release
-        generator: 'Unix Makefiles'
+        generator: 'Ninja'
         cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
-    name: 'default'
+    name: 'hardware'
     demands:
     - Agent.OS -equals Linux
-    - cmake
-    - megamol_build_enabled
+    - docker
+
+  container: ghcr.io/unistuttgart-visus/$(dockerImage):master
 
   steps:
-  - template: .ci/check-pr-labels-step.yml
+  - template: .ci/check-pr-labels-step-bash.yml
   - bash: |
       mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
       mkdir -p $X_VCPKG_REGISTRIES_CACHE

@@ -15,7 +15,7 @@ namespace megamol::datatools::io {
 /*
  * AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource
  */
-AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource(void)
+AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource()
         : AbstractSimpleParticleDataSource()
         , posData()
         , posDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE)
@@ -35,7 +35,7 @@ AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource
 /*
  * AbstractSimpleStoringParticleDataSource::~AbstractSimpleStoringParticleDataSource
  */
-AbstractSimpleStoringParticleDataSource::~AbstractSimpleStoringParticleDataSource(void) {
+AbstractSimpleStoringParticleDataSource::~AbstractSimpleStoringParticleDataSource() {
     this->Release();
 }
 
@@ -57,7 +57,9 @@ void AbstractSimpleStoringParticleDataSource::assertData(bool needLoad) {
         } catch (vislib::Exception ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Exception: %s [%s, %d]\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected exception"); }
+        } catch (...) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected exception");
+        }
     }
 }
 

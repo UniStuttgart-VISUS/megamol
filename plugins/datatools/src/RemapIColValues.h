@@ -4,16 +4,13 @@
  * Copyright (C) 2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_REMAPICOLVALUES_H_INCLUDED
-#define MEGAMOL_DATATOOLS_REMAPICOLVALUES_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/CallerSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -21,24 +18,21 @@ namespace datatools {
  */
 class RemapIColValues : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "RemapIColValues";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Replaces ICol Values in filtered particles from unfiltered particles";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
-    static bool SupportQuickstart(void) {
-        return false;
-    }
 
-    RemapIColValues(void);
-    virtual ~RemapIColValues(void);
+    RemapIColValues();
+    ~RemapIColValues() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::CallerSlot inIColValuesSlot;
@@ -53,7 +47,4 @@ private:
     float minCol, maxCol;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_REMAPICOLVALUES_H_INCLUDED */
+} // namespace megamol::datatools

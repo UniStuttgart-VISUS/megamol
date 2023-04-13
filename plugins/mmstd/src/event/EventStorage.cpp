@@ -1,6 +1,6 @@
 #include "EventStorage.h"
 
-#include "mmcore/CoreInstance.h"
+#include "FrameStatistics.h"
 #include "mmstd/event/EventCall.h"
 
 megamol::core::EventStorage::EventStorage()
@@ -19,18 +19,18 @@ megamol::core::EventStorage::~EventStorage() {
     this->Release();
 }
 
-bool megamol::core::EventStorage::create(void) {
+bool megamol::core::EventStorage::create() {
     return true;
 }
 
-void megamol::core::EventStorage::release(void) {}
+void megamol::core::EventStorage::release() {}
 
 bool megamol::core::EventStorage::dataCallback(core::Call& caller) {
     auto ec = dynamic_cast<CallEvent*>(&caller);
     if (ec == nullptr)
         return false;
 
-    auto current_frame_id = this->GetCoreInstance()->GetFrameID();
+    auto current_frame_id = frontend_resources.get<frontend_resources::FrameStatistics>().rendered_frames_count;
 
     // the first call in a frame to either readData or writeData needs to swap the double buffer
     if (current_frame_id > this->m_version) {
@@ -38,7 +38,7 @@ bool megamol::core::EventStorage::dataCallback(core::Call& caller) {
         m_events->swap();
     }
 
-    ec->setData(m_events, this->GetCoreInstance()->GetFrameID());
+    ec->setData(m_events, current_frame_id);
 
     return true;
 }

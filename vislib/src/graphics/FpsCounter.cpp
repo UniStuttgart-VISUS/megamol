@@ -36,7 +36,7 @@ vislib::graphics::FpsCounter::FpsCounter(unsigned int bufLength)
 /*
  * vislib::graphics::FpsCounter::~FpsCounter
  */
-vislib::graphics::FpsCounter::~FpsCounter(void) {
+vislib::graphics::FpsCounter::~FpsCounter() {
     ARY_SAFE_DELETE(this->timeValues);
     this->timeValuesCount = 0; // paranoia
 }
@@ -45,7 +45,7 @@ vislib::graphics::FpsCounter::~FpsCounter(void) {
 /*
  * vislib::graphics::FpsCounter::FrameBegin
  */
-void vislib::graphics::FpsCounter::FrameBegin(void) {
+void vislib::graphics::FpsCounter::FrameBegin() {
     if (this->frameRunning) {
         throw IllegalStateException("Must call \"FrameEnd\" first.", __FILE__, __LINE__);
     }
@@ -62,7 +62,7 @@ void vislib::graphics::FpsCounter::FrameBegin(void) {
 /*
  * vislib::graphics::FpsCounter::FrameEnd
  */
-void vislib::graphics::FpsCounter::FrameEnd(void) {
+void vislib::graphics::FpsCounter::FrameEnd() {
     if (!this->frameRunning) {
         throw IllegalStateException("Must call \"FrameBegin\" first.", __FILE__, __LINE__);
     }
@@ -83,7 +83,7 @@ void vislib::graphics::FpsCounter::FrameEnd(void) {
 /*
  * vislib::graphics::FpsCounter::LastFrameTime
  */
-double vislib::graphics::FpsCounter::LastFrameTime(void) const {
+double vislib::graphics::FpsCounter::LastFrameTime() const {
     unsigned int idx = this->timeValuesPos;
     if (idx > 0) {
         idx--;
@@ -99,7 +99,7 @@ double vislib::graphics::FpsCounter::LastFrameTime(void) const {
 /*
  * vislib::graphics::FpsCounter::Reset
  */
-void vislib::graphics::FpsCounter::Reset(void) {
+void vislib::graphics::FpsCounter::Reset() {
     this->now = vislib::sys::PerformanceCounter::QueryMillis();
     this->timeValuesPos = 0;
     this->wholeBufferValid = false;
@@ -141,7 +141,7 @@ vislib::graphics::FpsCounter& vislib::graphics::FpsCounter::operator=(const visl
 /*
  * vislib::graphics::FpsCounter::evaluate
  */
-void vislib::graphics::FpsCounter::evaluate(void) const {
+void vislib::graphics::FpsCounter::evaluate() const {
     unsigned int count =
         (this->wholeBufferValid ? this->timeValuesCount : vislib::math::Max<int>(this->timeValuesPos - 1, 0));
 

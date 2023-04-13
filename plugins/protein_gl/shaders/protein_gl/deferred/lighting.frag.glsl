@@ -35,22 +35,9 @@ uniform bool no_lighting = false;
 
 in vec2 uv_coord;
 
+#include "mmstd_gl/shading/transformations.inc.glsl"
 #include "protein_gl/deferred/blinn_phong.glsl"
 #include "protein_gl/deferred/lambert.glsl"
-
-vec3 depthToWorldPos(float depth, vec2 uv, mat4 invview, mat4 invproj) {
-    float z = depth * 2.0 - 1.0;
-
-    vec4 cs_pos = vec4(uv * 2.0 - 1.0, z, 1.0);
-    vec4 vs_pos = invproj * cs_pos;
-
-    // Perspective division
-    vs_pos /= vs_pos.w;
-    
-    vec4 ws_pos = invview * vs_pos;
-
-    return ws_pos.xyz;
-}
 
 void main(void) {
     vec4 albedo = texture(albedo_tx2D, uv_coord);

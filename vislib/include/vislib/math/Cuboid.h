@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_CUBOID_H_INCLUDED
-#define VISLIB_CUBOID_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,8 +13,7 @@
 #include "vislib/math/AbstractCuboid.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * This class represents a cubiod. The cuboid has its origin in
@@ -33,7 +28,7 @@ public:
     /**
      * Create a zero sized cuboid beginning at (0, 0, 0).
      */
-    inline Cuboid(void) : Super() {
+    inline Cuboid() : Super() {
         this->bounds[0] = this->bounds[1] = this->bounds[2] = this->bounds[3] = this->bounds[4] = this->bounds[5] =
             static_cast<T>(0);
     }
@@ -100,7 +95,7 @@ public:
     }
 
     /** Dtor. */
-    ~Cuboid(void);
+    ~Cuboid();
 
 protected:
     /** Super class typedef. */
@@ -112,13 +107,11 @@ protected:
  * vislib::math::Cuboid<T>::~Cuboid
  */
 template<class T>
-Cuboid<T>::~Cuboid(void) {}
+Cuboid<T>::~Cuboid() {}
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_CUBOID_H_INCLUDED */

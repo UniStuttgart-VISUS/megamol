@@ -47,20 +47,20 @@ public:
     /**
      * Add the lightsource of this module to a given collection
      */
-    void addLight(LightCollection& light_collection);
+    void addLight(LightCollection& light_collection) override;
 
     /** Ctor. */
     PointLight();
 
     /** Dtor. */
-    virtual ~PointLight();
+    ~PointLight() override;
 
 private:
     core::param::ParamSlot position;
     core::param::ParamSlot radius;
 
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    bool InterfaceIsDirty() override;
+    void readParams() override;
 };
 
 } // namespace megamol::core::view::light

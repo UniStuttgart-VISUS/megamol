@@ -5,21 +5,19 @@
  * All rights reserved.
  */
 
-#ifndef BASE_MESH_RENDERER_H_INCLUDED
-#define BASE_MESH_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CallerSlot.h"
 
 #include "mesh/MeshCalls.h"
 #include "mesh_gl/BaseRenderTaskRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class BaseMeshRenderer : public BaseRenderTaskRenderer {
 public:
     BaseMeshRenderer();
-    ~BaseMeshRenderer() = default;
+    ~BaseMeshRenderer() override = default;
 
 protected:
     /**
@@ -31,7 +29,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     bool updateMeshCollection() override;
 
@@ -97,7 +95,4 @@ inline bool BaseMeshRenderer::updateMeshCollection() {
     return something_has_changed;
 }
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !BASE_MESH_RENDERER_H_INCLUDED
+} // namespace megamol::mesh_gl

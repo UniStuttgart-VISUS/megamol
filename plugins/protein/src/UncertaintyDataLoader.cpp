@@ -15,10 +15,10 @@
 #include "UncertaintyDataLoader.h"
 
 #include <algorithm>
+#include <cfloat>
 #include <math.h>
 #include <string>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -26,6 +26,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 
+#include "vislib/StringConverter.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
@@ -45,7 +46,7 @@ using namespace megamol::protein_calls;
 /*
  * UncertaintyDataLoader::UncertaintyDataLoader (CTOR)
  */
-UncertaintyDataLoader::UncertaintyDataLoader(void)
+UncertaintyDataLoader::UncertaintyDataLoader()
         : megamol::core::Module()
         , dataOutSlot("dataout", "The slot providing the uncertainty data")
         , filenameSlot("uidFilename", "The filename of the uncertainty input data file.")
@@ -73,7 +74,7 @@ UncertaintyDataLoader::UncertaintyDataLoader(void)
 /*
  * UncertaintyDataLoader::~UncertaintyDataLoader (DTOR)
  */
-UncertaintyDataLoader::~UncertaintyDataLoader(void) {
+UncertaintyDataLoader::~UncertaintyDataLoader() {
     this->Release();
 }
 
@@ -627,7 +628,7 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 /*
  * UncertaintyDataLoader::CalculateStructureLength
  */
-bool UncertaintyDataLoader::CalculateStructureLength(void) {
+bool UncertaintyDataLoader::CalculateStructureLength() {
 
     const unsigned int methodCnt = static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM);
 
@@ -683,7 +684,7 @@ bool UncertaintyDataLoader::CalculateStructureLength(void) {
 /*
  * UncertaintyDataLoader::CalculateUncertaintyExtended
  */
-bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
+bool UncertaintyDataLoader::CalculateUncertaintyExtended() {
     using megamol::core::utility::log::Log;
 
     // return if no data is present ...
@@ -1503,7 +1504,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 /*
  * UncertaintyDataLoader::CalculateUncertaintyAverage
  */
-bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
+bool UncertaintyDataLoader::CalculateUncertaintyAverage() {
     using megamol::core::utility::log::Log;
 
     // return if no data is present ...

@@ -28,7 +28,7 @@ vislib::OutOfRangeException::OutOfRangeException(const OutOfRangeException& rhs)
 /*
  * vislib::OutOfRangeException::~OutOfRangeException
  */
-vislib::OutOfRangeException::~OutOfRangeException(void) {}
+vislib::OutOfRangeException::~OutOfRangeException() {}
 
 
 /*

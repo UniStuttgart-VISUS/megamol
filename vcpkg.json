@@ -12,12 +12,12 @@
     "bhtsne",
     "blend2d",
     "chemfiles",
+    "cmakerc",
     "cppzmq",
     "curl",
     "cxxopts",
     "delaunator-cpp",
     "eigen3",
-    "expat",
     "glfw3",
     "glm",
     {
@@ -26,6 +26,7 @@
         "docking-experimental"
       ]
     },
+    "imgui-software-renderer",
     "imguizmoquat",
     "implot",
     "libigl",
@@ -89,6 +90,7 @@
     "use-opengl": {
       "description": "Use OpenGL",
       "dependencies": [
+        "glad",
         {
           "name": "glowl",
           "features": [
@@ -111,6 +113,9 @@
         "megamol-shader-factory"
       ]
     },
+    "use-opengl-debuggroups": {
+      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
+    },
     "use-ospray": {
       "description": "Use OSPRay",
       "dependencies": [
@@ -124,8 +129,35 @@
         }
       ]
     },
+    "use-power": {
+      "description": "Use power consumption measurement",
+      "dependencies": [
+        "power-overwhelming"
+      ]
+    },
     "use-profiling": {
       "description": "Use Profiling"
+    },
+    "use-stacktrace": {
+      "description": "Use Boost.Stacktrace",
+      "dependencies": [
+        "boost-stacktrace",
+        {
+          "name": "libbacktrace",
+          "platform": "!windows"
+        }
+      ]
+    },
+    "use-tracy": {
+      "description": "Use Tracy",
+      "dependencies": [
+        {
+          "name": "tracy",
+          "features": [
+            "gui-tools"
+          ]
+        }
+      ]
     },
     "use-vr-interop": {
       "description": "Use VR Interop",

@@ -12,8 +12,9 @@ build_*/
 cmake-build-*/
 
 # In-source-build artifacts
-CMakeFiles/
-CMakeCache.txt
+/CMakeFiles/
+/CMakeCache.txt
+/_deps/
 
 # Install artifacts
 /bin/
@@ -29,9 +30,9 @@ utils/MMPLD/test*.lua
 utils/MMPLD/test*.png
 utils/MMPLD/SphereTest.bat
 
+# Intermediate python files
+__pycache__/
+
 # Individual developer settings for local machines
 mmprjs/**/*
 *.orig
-
-# Intermediate python files
-**/__pycache__/

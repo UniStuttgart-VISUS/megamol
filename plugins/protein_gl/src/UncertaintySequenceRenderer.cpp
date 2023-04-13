@@ -23,7 +23,6 @@
 #include <cmath>
 #include <ctime>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -32,19 +31,17 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "protein_calls/ProteinColor.h"
+#include "protein_calls/RamachandranDataCall.h"
+#include "vislib/StringConverter.h"
 #include "vislib/graphics/PngBitmapCodec.h"
-
+#include "vislib/math/Matrix.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib/math/ShallowMatrix.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-
-#include "vislib/math/Matrix.h"
-#include "vislib/math/ShallowMatrix.h"
-
-#include "protein_calls/ProteinColor.h"
-#include "protein_calls/RamachandranDataCall.h"
 
 #include <iostream> // DEBUG
 
@@ -54,7 +51,6 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_gl;
 
@@ -66,7 +62,7 @@ using core::utility::log::Log;
 /*
  * UncertaintySequenceRenderer::UncertaintySequenceRenderer (CTOR)
  */
-UncertaintySequenceRenderer::UncertaintySequenceRenderer(void)
+UncertaintySequenceRenderer::UncertaintySequenceRenderer()
         : Renderer2DModuleGL()
         , uncertaintyDataSlot(
               "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage.")
@@ -333,7 +329,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer(void)
 /*
  * UncertaintySequenceRenderer::~UncertaintySequenceRenderer (DTOR)
  */
-UncertaintySequenceRenderer::~UncertaintySequenceRenderer(void) {
+UncertaintySequenceRenderer::~UncertaintySequenceRenderer() {
     this->Release(); // DON'T change !
 }
 
@@ -343,7 +339,6 @@ UncertaintySequenceRenderer::~UncertaintySequenceRenderer(void) {
  */
 void UncertaintySequenceRenderer::release() {
 
-    this->shader.Release();
     /** intentionally left empty ... */
 }
 
@@ -466,32 +461,16 @@ void UncertaintySequenceRenderer::calculateGeometryVertices(int samples) {
 /*
  * UncertaintySequenceRenderer::LoadShader
  */
-bool UncertaintySequenceRenderer::LoadShader(void) {
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    //instance()->ShaderSourceFactory().LoadBTF("uncertaintysequence", true);
-
-    this->vertex = new ShaderSource();
-    this->fragment = new ShaderSource();
-
-    if (!ssf->MakeShaderSource("uncertaintysequence::vertex", *this->vertex)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("uncertaintysequence::fragment", *this->fragment)) {
-        return false;
-    }
+bool UncertaintySequenceRenderer::LoadShader() {
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
-        // compile the shader
-        if (!this->shader.Compile(
-                this->vertex->Code(), this->vertex->Count(), this->fragment->Code(), this->fragment->Count())) {
-            throw vislib::Exception("Could not compile shader. ", __FILE__, __LINE__);
-        }
-        // link the shader
-        if (!this->shader.Link()) {
-            throw vislib::Exception("Could not link shader", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
+        shader = core::utility::make_glowl_shader("shader", shader_options,
+            "protein_gl/uncertaintysequence/main.vert.glsl", "protein_gl/uncertaintysequence/main.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("UncertaintySequenceRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -2966,20 +2945,21 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix =
                         projMatrix * modelViewMatrix;
 
-                    this->shader.Enable();
+                    this->shader->use();
 
                     glUniformMatrix4fv(
-                        this->shader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-                    glUniform2fv(this->shader.ParameterLocation("worldPos"), 1, (GLfloat*)posOffset.PeekComponents());
+                        this->shader->getUniformLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+                    glUniform2fv(this->shader->getUniformLocation("worldPos"), 1, (GLfloat*)posOffset.PeekComponents());
                     glUniform4fv(
-                        this->shader.ParameterLocation("structCol"), structCount, &this->secStructColor.front().x);
-                    glUniform1iv(this->shader.ParameterLocation("sortedStruct"), structCount,
+                        this->shader->getUniformLocation("structCol"), structCount, &this->secStructColor.front().x);
+                    glUniform1iv(this->shader->getUniformLocation("sortedStruct"), structCount,
                         (GLint*)sortedStructLR.PeekComponents());
-                    glUniform1fv(this->shader.ParameterLocation("structUnc"), structCount,
+                    glUniform1fv(this->shader->getUniformLocation("structUnc"), structCount,
                         (GLfloat*)secUncertainty->operator[](i).PeekComponents());
-                    glUniform1f(this->shader.ParameterLocation("gradientInt"), this->currentUncertainGardientInterval);
+                    glUniform1f(
+                        this->shader->getUniformLocation("gradientInt"), this->currentUncertainGardientInterval);
                     glUniform1i(
-                        this->shader.ParameterLocation("colorInterpol"), (int)this->currentUncertainColorInterpol);
+                        this->shader->getUniformLocation("colorInterpol"), (int)this->currentUncertainColorInterpol);
 
                     glBegin(GL_QUADS);
 
@@ -2990,7 +2970,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                     glEnd();
 
-                    this->shader.Disable();
+                    glUseProgram(0);
 
                 }
                 // BLOCK CHART - VERTICAL
@@ -3299,22 +3279,22 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                         vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix =
                             projMatrix * modelViewMatrix;
 
-                        this->shader.Enable();
+                        this->shader->use();
 
                         glUniformMatrix4fv(
-                            this->shader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+                            this->shader->getUniformLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
                         glUniform2fv(
-                            this->shader.ParameterLocation("worldPos"), 1, (GLfloat*)posOffset.PeekComponents());
-                        glUniform4fv(this->shader.ParameterLocation("structCol"), structCount,
+                            this->shader->getUniformLocation("worldPos"), 1, (GLfloat*)posOffset.PeekComponents());
+                        glUniform4fv(this->shader->getUniformLocation("structCol"), structCount,
                             (GLfloat*)&this->secStructColor.front().x);
-                        glUniform1iv(this->shader.ParameterLocation("sortedStruct"), structCount,
+                        glUniform1iv(this->shader->getUniformLocation("sortedStruct"), structCount,
                             (GLint*)sortedStructLR.PeekComponents());
-                        glUniform1fv(this->shader.ParameterLocation("structUnc"), structCount,
+                        glUniform1fv(this->shader->getUniformLocation("structUnc"), structCount,
                             (GLfloat*)secUncertainty->operator[](i).PeekComponents());
                         glUniform1f(
-                            this->shader.ParameterLocation("gradientInt"), this->currentUncertainGardientInterval);
-                        glUniform1i(
-                            this->shader.ParameterLocation("colorInterpol"), (int)this->currentUncertainColorInterpol);
+                            this->shader->getUniformLocation("gradientInt"), this->currentUncertainGardientInterval);
+                        glUniform1i(this->shader->getUniformLocation("colorInterpol"),
+                            (int)this->currentUncertainColorInterpol);
                     }
 
                     posOffset.SetY(posOffset.Y() - 0.5f);
@@ -3343,7 +3323,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     glEnd();
 
                     if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
-                        this->shader.Disable();
+                        glUseProgram(0);
                     }
                 }
             }
@@ -3931,12 +3911,11 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
     static sg::graphics::PngBitmapCodec pbc;
     pbc.Image() = &img;
     ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void* buf = NULL;
-    SIZE_T size = 0;
+    try {
+        const auto buf = core::utility::ResourceWrapper::LoadResource(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), std::string(filename.PeekBuffer()));
 
-    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-             this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
-        if (pbc.Load(buf, size)) {
+        if (pbc.Load(buf.data(), buf.size())) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
                 BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
@@ -3953,16 +3932,14 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
             if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) !=
                 GL_NO_ERROR) {
                 Log::DefaultLog.WriteError("Could not load \"%s\" texture.", filename.PeekBuffer());
-                ARY_SAFE_DELETE(buf);
                 return false;
             }
             markerTextures.Last()->SetFilter(GL_LINEAR, GL_LINEAR);
-            ARY_SAFE_DELETE(buf);
             return true;
         } else {
             Log::DefaultLog.WriteError("Could not read \"%s\" texture.", filename.PeekBuffer());
         }
-    } else {
+    } catch (...) {
         Log::DefaultLog.WriteError("Could not find \"%s\" texture.", filename.PeekBuffer());
     }
     return false;

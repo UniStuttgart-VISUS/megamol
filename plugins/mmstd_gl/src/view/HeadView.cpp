@@ -36,7 +36,7 @@ view::HeadView::HeadView()
 /*
  * view::HeadView::~HeadView
  */
-view::HeadView::~HeadView(void) {
+view::HeadView::~HeadView() {
     this->Release();
 }
 
@@ -125,7 +125,7 @@ core::view::ImageWrapper megamol::mmstd_gl::view::HeadView::GetRenderingResult()
 /*
  * view::HeadView::ResetView
  */
-void view::HeadView::ResetView(void) {
+void view::HeadView::ResetView() {
     CallRenderViewGL* view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr)
@@ -283,7 +283,7 @@ bool view::HeadView::OnMouseScroll(double dx, double dy) {
 /*
  * view::HeadView::create
  */
-bool view::HeadView::create(void) {
+bool view::HeadView::create() {
     // nothing to do
     return true;
 }
@@ -292,7 +292,7 @@ bool view::HeadView::create(void) {
 /*
  * view::HeadView::release
  */
-void view::HeadView::release(void) {}
+void view::HeadView::release() {}
 
 
 /*

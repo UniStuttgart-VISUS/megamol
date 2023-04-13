@@ -9,6 +9,7 @@
 
 #include "AbstractSimpleParticleDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "vislib/RawStorage.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/math/Cuboid.h"
 
@@ -23,10 +24,10 @@ class AbstractSimpleStoringParticleDataSource : public AbstractSimpleParticleDat
 public:
 protected:
     /** Ctor. */
-    AbstractSimpleStoringParticleDataSource(void);
+    AbstractSimpleStoringParticleDataSource();
 
     /** Dtor. */
-    virtual ~AbstractSimpleStoringParticleDataSource(void);
+    ~AbstractSimpleStoringParticleDataSource() override;
 
     /**
      * Loads data if required to
@@ -51,7 +52,7 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool getData(geocalls::MultiParticleDataCall& call);
+    bool getData(geocalls::MultiParticleDataCall& call) override;
 
     /**
      * Gets the data from the source.
@@ -60,7 +61,7 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool getExtent(geocalls::MultiParticleDataCall& call);
+    bool getExtent(geocalls::MultiParticleDataCall& call) override;
 
 #ifdef _WIN32
 #pragma warning(disable : 4251)

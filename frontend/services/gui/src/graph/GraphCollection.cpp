@@ -9,7 +9,6 @@
 #include "GraphCollection.h"
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/view/AbstractViewInterface.h"
 
 
@@ -124,7 +123,7 @@ megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetRunningGraph() {
 }
 
 
-bool megamol::gui::GraphCollection::load_call_stock(const megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::load_call_stock(const megamol::frontend_resources::PluginsResource& pluginsRes) {
 
     // Load only once
     if (!this->calls_stock.empty()) {
@@ -146,24 +145,9 @@ bool megamol::gui::GraphCollection::load_call_stock(const megamol::core::CoreIns
 
             // Get plugin calls (get prior to core calls for being  able to find duplicates in core instance call desc.
             // manager)
-            auto plugins = core_instance.GetPlugins();
-            for (auto& plugin : plugins) {
+            for (auto& plugin : pluginsRes.plugins) {
                 plugin_name = plugin->GetObjectFactoryName();
                 for (auto& c_desc : plugin->GetCallDescriptionManager()) {
-                    Call::StockCall call;
-                    if (this->get_call_stock_data(call, c_desc, plugin_name)) {
-                        this->calls_stock.emplace_back(call);
-                    }
-                }
-            }
-
-            // Get core calls
-            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
-            for (auto& c_desc : core_instance.GetCallDescriptionManager()) {
-                std::string class_name(c_desc->ClassName());
-                if (std::find_if(this->calls_stock.begin(), this->calls_stock.end(),
-                        [class_name](const Call::StockCall& call) { return (call.class_name == class_name); }) ==
-                    this->calls_stock.end()) {
                     Call::StockCall call;
                     if (this->get_call_stock_data(call, c_desc, plugin_name)) {
                         this->calls_stock.emplace_back(call);
@@ -194,7 +178,7 @@ bool megamol::gui::GraphCollection::load_call_stock(const megamol::core::CoreIns
 }
 
 
-bool megamol::gui::GraphCollection::load_module_stock(const megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::load_module_stock(const megamol::frontend_resources::PluginsResource& pluginsRes) {
 
     if (this->calls_stock.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -225,33 +209,9 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::core::CoreI
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
             // desc. manager)
-            auto plugins = core_instance.GetPlugins();
-            for (auto& plugin : plugins) {
+            for (auto& plugin : pluginsRes.plugins) {
                 plugin_name = plugin->GetObjectFactoryName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
-                    Module::StockModule mod;
-                    if (this->get_module_stock_data(mod, m_desc, plugin_name)) {
-                        this->modules_stock.emplace_back(mod);
-                    }
-#ifdef GUI_VERBOSE
-                    auto module_load_time_count =
-                        static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
-                            .count();
-                    module_load_time = std::chrono::system_clock::now();
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
-                        module_load_time_count);
-#endif // GUI_VERBOSE
-                }
-            }
-
-            // Get core modules
-            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
-            for (auto& m_desc : core_instance.GetModuleDescriptionManager()) {
-                std::string class_name(m_desc->ClassName());
-                if (std::find_if(this->modules_stock.begin(), this->modules_stock.end(),
-                        [class_name](const Module::StockModule& mod) { return (mod.class_name == class_name); }) ==
-                    this->modules_stock.end()) {
                     Module::StockModule mod;
                     if (this->get_module_stock_data(mod, m_desc, plugin_name)) {
                         this->modules_stock.emplace_back(mod);
@@ -272,9 +232,9 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::core::CoreI
             std::sort(this->modules_stock.begin(), this->modules_stock.end(),
                 [](Module::StockModule& mod1, Module::StockModule& mod2) {
                     std::string a_str(mod1.class_name);
-                    megamol::gui::gui_utils::StringToUpperCase(a_str);
+                    core::utility::string::ToUpperAscii(a_str);
                     std::string b_str(mod2.class_name);
-                    megamol::gui::gui_utils::StringToUpperCase(b_str);
+                    core::utility::string::ToUpperAscii(b_str);
                     return (a_str < b_str);
                 });
         }
@@ -306,16 +266,17 @@ void megamol::gui::GraphCollection::SetLuaFunc(lua_func_type* func) {
 }
 
 
-bool megamol::gui::GraphCollection::InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::InitializeGraphSynchronisation(
+    const megamol::frontend_resources::PluginsResource& pluginsRes) {
 
     // Load all known calls from core instance ONCE
-    if (!this->load_call_stock(core_instance)) {
+    if (!this->load_call_stock(pluginsRes)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Load all known modules from core instance ONCE
-    if (!this->load_module_stock(core_instance)) {
+    if (!this->load_module_stock(pluginsRes)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -348,8 +309,7 @@ bool megamol::gui::GraphCollection::InitializeGraphSynchronisation(const megamol
 }
 
 
-bool megamol::gui::GraphCollection::SynchronizeGraphs(
-    megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph) {
 
     if (!this->initialized_syncing) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -428,7 +388,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
             for (auto& p : module_ptr->Parameters()) {
 
                 // Try to connect gui parameter to newly created parameter of core modules
-                if (p.CoreParamPtr().IsNull()) {
+                if (p.CoreParamPtr() == nullptr) {
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = megamol_graph.FindModule(module_name).get();
                     // Connect pointer of new parameters of core module to parameters in gui module
@@ -457,7 +417,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
 #endif // GUI_VERBOSE
                 }
 
-                if (!p.CoreParamPtr().IsNull()) {
+                if (p.CoreParamPtr() != nullptr) {
                     // Write changed gui state to core parameter
                     if (p.IsGUIStateDirty()) {
                         p.ResetGUIStateDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
@@ -937,7 +897,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                 }
 
                 projectstr = std::string("mmCheckVersion(\"") + megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH() +
-                             "\") \n" + confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
+                             "\")\n" + confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
                              confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();

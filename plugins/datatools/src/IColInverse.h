@@ -9,26 +9,25 @@
 #include "datatools/AbstractParticleManipulator.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColInverse : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IColInverse";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Inverts the ICol value range.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     IColInverse();
-    virtual ~IColInverse();
+    ~IColInverse() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     size_t dataHash;
@@ -37,5 +36,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

@@ -1,25 +1,17 @@
-/*
- * AbstractSlot.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTSLOT_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTSLOT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "factories/CallDescription.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 
-
-namespace megamol {
-namespace core {
-
+namespace megamol::core {
 
 /**
  * Abstract base class for all module slots.
@@ -39,14 +31,14 @@ public:
         /**
          * Ctor.
          */
-        inline Listener(void) {
+        inline Listener() {
             // intentionally empty
         }
 
         /**
          * Dtor.
          */
-        virtual ~Listener(void) {
+        virtual ~Listener() {
             // intentionally empty
         }
 
@@ -73,14 +65,14 @@ public:
     enum SlotStatus { STATUS_UNAVAILABLE, STATUS_ENABLED, STATUS_CONNECTED };
 
     /** Dtor. */
-    virtual ~AbstractSlot(void);
+    ~AbstractSlot() override;
 
     /**
      * Gets a human readable description of this slot.
      *
      * @return A human readable description of this slot.
      */
-    inline const vislib::StringA& Description(void) const {
+    inline const vislib::StringA& Description() const {
         return this->desc;
     }
 
@@ -89,7 +81,7 @@ public:
      *
      * @return The status of the slot.
      */
-    inline const SlotStatus& GetStatus(void) const {
+    inline const SlotStatus& GetStatus() const {
         return this->status;
     }
 
@@ -97,19 +89,8 @@ public:
      * Makes this slot available. After this method was called the
      * settings of the slot can no longer be changed.
      */
-    virtual void MakeAvailable(void);
-    virtual void MakeUnavailable(void);
-
-    /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const;
+    virtual void MakeAvailable();
+    virtual void MakeUnavailable();
 
     /**
      * Adds a listener to the list of registered listeners. The caller
@@ -165,7 +146,7 @@ protected:
      * Sets the status of the Slot to indicate that the slot is no
      * longer connected.
      */
-    inline void SetStatusDisconnected(void) {
+    inline void SetStatusDisconnected() {
         this->SetStatusConnected(false);
     }
 
@@ -176,9 +157,6 @@ private:
     /** forbidden assignment */
     AbstractSlot& operator=(const AbstractSlot& rhs);
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** A human readable description of the slot */
     vislib::StringA desc;
 
@@ -190,14 +168,7 @@ private:
 
     /** List of listeners */
     vislib::SingleLinkedList<Listener*> listeners;
-
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTSLOT_H_INCLUDED */
+} // namespace megamol::core

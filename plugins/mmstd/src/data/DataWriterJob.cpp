@@ -37,7 +37,7 @@ job::DataWriterJob::~DataWriterJob() {
 /*
  * job::DataWriterJob::create
  */
-bool job::DataWriterJob::create(void) {
+bool job::DataWriterJob::create() {
     return true; // intentionally empty ATM
 }
 
@@ -45,7 +45,7 @@ bool job::DataWriterJob::create(void) {
 /*
  * job::DataWriterJob::release
  */
-void job::DataWriterJob::release(void) {
+void job::DataWriterJob::release() {
     // intentionally empty ATM
 }
 
@@ -53,7 +53,7 @@ void job::DataWriterJob::release(void) {
 /*
  * job::DataWriterJob::Terminate
  */
-bool job::DataWriterJob::Terminate(void) {
+bool job::DataWriterJob::Terminate() {
     AbstractThreadedJob::Terminate();
     if (this->abortable) {
         DataWriterCtrlCall* dwcc = this->writerSlot.CallAs<DataWriterCtrlCall>();

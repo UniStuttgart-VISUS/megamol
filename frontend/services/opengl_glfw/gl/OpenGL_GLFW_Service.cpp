@@ -7,28 +7,25 @@
 
 #include "OpenGL_GLFW_Service.hpp"
 
-#include "FrameStatistics.h"
-
 #include <array>
 #include <chrono>
+#include <functional>
+#include <iostream>
 #include <vector>
 
-#ifdef MEGAMOL_USE_BOOST_STACKTRACE
+#include "FrameStatistics.h"
+#include "ModuleGraphSubscription.h"
+#include "mmcore/utility/log/Log.h"
+
+#ifdef MEGAMOL_USE_STACKTRACE
 #include <boost/stacktrace.hpp>
 #endif
 
-#include "glad/gl.h"
+#include <glad/gl.h>
 #ifdef _WIN32
-// clang-format off
-#include <Windows.h>
-#include <DbgHelp.h>
-// clang-format on
-#pragma comment(lib, "dbghelp.lib")
-#undef min
-#undef max
-#include "glad/wgl.h"
+#include <glad/wgl.h>
 #else
-#include "glad/glx.h"
+#include <glad/glx.h>
 #endif
 
 #include <GLFW/glfw3.h>
@@ -39,11 +36,6 @@
 #include <GLFW/glfw3native.h>
 #endif
 #endif
-
-#include <functional>
-#include <iostream>
-
-#include "mmcore/utility/log/Log.h"
 
 static const std::string service_name = "OpenGL_GLFW_Service: ";
 static void log(std::string const& text) {
@@ -114,46 +106,6 @@ static std::string get_message_id_name(GLuint id) {
 
     return std::to_string(id);
 }
-
-#ifdef _WIN32
-static std::string GetStack() {
-    unsigned int i;
-    void* stack[100];
-    unsigned short frames;
-    SYMBOL_INFO* symbol;
-    HANDLE process;
-    std::stringstream output;
-
-    process = GetCurrentProcess();
-
-    SymSetOptions(SYMOPT_LOAD_LINES);
-
-    SymInitialize(process, NULL, TRUE);
-
-    frames = CaptureStackBackTrace(0, 200, stack, NULL);
-    symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
-    symbol->MaxNameLen = 255;
-    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-
-    for (i = 0; i < frames; i++) {
-        SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol);
-        DWORD dwDisplacement;
-        IMAGEHLP_LINE64 line;
-
-        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-        if (!strstr(symbol->Name, "khr::getStack") && !strstr(symbol->Name, "khr::DebugCallback") &&
-            SymGetLineFromAddr64(process, (DWORD64)(stack[i]), &dwDisplacement, &line)) {
-
-            output << "function: " << symbol->Name << " - line: " << line.LineNumber << "\n";
-        }
-        if (0 == strcmp(symbol->Name, "main"))
-            break;
-    }
-
-    free(symbol);
-    return output.str();
-}
-#endif
 
 static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
     GLsizei length, const GLchar* message, const void* userParam) {
@@ -273,15 +225,10 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
     output << "[" << sourceText << " " << severityText << "] (" << typeText << " " << id << " ["
            << get_message_id_name(id) << "]) " << message << std::endl
            << "stack trace:" << std::endl;
-#ifdef _WIN32
-    output << GetStack() << std::endl;
-    OutputDebugStringA(output.str().c_str());
-#else
-#ifdef MEGAMOL_USE_BOOST_STACKTRACE
+#ifdef MEGAMOL_USE_STACKTRACE
     output << boost::stacktrace::stacktrace() << std::endl;
 #else
     output << "(disabled)" << std::endl;
-#endif
 #endif
 
     if (type == GL_DEBUG_TYPE_ERROR) {
@@ -574,6 +521,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
         ignorethis = 131204;
         glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
+        glDebugMessageControl(
+            GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+        glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
         glDebugMessageCallback(opengl_debug_message_callback, nullptr);
         log("Enabled OpenGL debug context. Will print debug messages.");
     }
@@ -612,12 +562,16 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void { update_glfw_mouse_cursors(cursor_id); };
 
     // make the events and resources managed/provided by this service available to the outside world
-    m_renderResourceReferences = {{"KeyboardEvents", m_keyboardEvents}, {"MouseEvents", m_mouseEvents},
-        {"WindowEvents", m_windowEvents},
+    m_renderResourceReferences = {{frontend_resources::KeyboardEvents_Req_Name, m_keyboardEvents},
+        {frontend_resources::MouseEvents_Req_Name, m_mouseEvents},
+        {frontend_resources::WindowEvents_Req_Name, m_windowEvents},
         //{"FramebufferEvents", m_framebufferEvents}, // pushes own events into global FramebufferEvents
-        {"OpenGL_Context", m_opengl_context}, {"WindowManipulation", m_windowManipulation}};
+        {frontend_resources::OpenGL_Context_Req_Name, m_opengl_context},
+        {frontend_resources::WindowManipulation_Req_Name, m_windowManipulation},
+        {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
 
-    m_requestedResourcesNames = {"FrameStatistics", "FramebufferEvents"};
+    m_requestedResourcesNames = {
+        "FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
 
     m_pimpl->last_time = std::chrono::system_clock::now();
 
@@ -821,6 +775,23 @@ void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> re
 
     m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(
         resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
+
+    auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
+        resources[2].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+    frontend_resources::ModuleGraphSubscription debug_helper_subscription("OpenGL Debug Helper");
+
+    debug_helper_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
+        auto the_call = call_inst.callPtr.get();
+        if (the_call->GetCapabilities().OpenGLRequired()) {
+            the_call->gl_helper = &m_opengl_helper;
+        }
+        return true;
+    };
+
+    megamolgraph_subscription.subscribe(debug_helper_subscription);
+#endif
 }
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {

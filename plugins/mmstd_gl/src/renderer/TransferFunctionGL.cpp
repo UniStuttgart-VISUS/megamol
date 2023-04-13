@@ -6,6 +6,7 @@
 
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
 
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 
 
@@ -13,24 +14,33 @@ using namespace megamol::mmstd_gl;
 using namespace megamol::core::param;
 
 
-TransferFunctionGL::TransferFunctionGL(void) : ModuleGL(), AbstractTransferFunction(), texID(0) {
+TransferFunctionGL::TransferFunctionGL()
+        : ModuleGL()
+        , AbstractTransferFunction()
+        , texID(0)
+        , interpolationParam("textureInterpolation", "Interpolation mode for the transfer function texture.") {
 
     CallGetTransferFunctionGLDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunctionGL::requestTF);
     this->MakeSlotAvailable(&this->getTFSlot);
+
+    this->interpolationParam << new EnumParam(0);
+    this->interpolationParam.Param<EnumParam>()->SetTypePair(0, "Linear");
+    this->interpolationParam.Param<EnumParam>()->SetTypePair(1, "Nearest neighbor");
+    this->MakeSlotAvailable(&this->interpolationParam);
 
     this->tfParam << new TransferFunctionParam("");
     this->MakeSlotAvailable(&this->tfParam);
 }
 
 
-bool TransferFunctionGL::create(void) {
+bool TransferFunctionGL::create() {
 
     return true;
 }
 
 
-void TransferFunctionGL::release(void) {
+void TransferFunctionGL::release() {
 
     glDeleteTextures(1, &this->texID);
     this->texID = 0;
@@ -52,6 +62,11 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
         auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
         this->ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
         this->tfParam.ResetDirty();
+        something_has_changed = true;
+    }
+
+    if (this->interpolationParam.IsDirty()) {
+        this->interpolationParam.ResetDirty();
         something_has_changed = true;
     }
 
@@ -113,8 +128,13 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
 
         // Always keep both at linear! UV-Coords here are data values, so OpenGL
         // cannot correctly decide if min or mag is the correct operation.
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        if (this->interpolationParam.Param<EnumParam>()->Value() == 0) {
+            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        } else {
+            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 
         glBindTexture(GL_TEXTURE_1D, otid);
