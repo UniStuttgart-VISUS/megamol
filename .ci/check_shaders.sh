@@ -44,7 +44,7 @@ do
     LOCAL_INCLUDE_PATHS=("-I$(pwd)/$(dirname "$sfile")")
 
     glslang_exit_code=0
-    glslangValidator -l "${INCLUDE_PATHS[@]}" "${LOCAL_INCLUDE_PATHS[@]}" $sfile || glslang_exit_code=$?
+    glslangValidator -l "${INCLUDE_PATHS[@]}" --p "#extension GL_GOOGLE_include_directive : require" "${LOCAL_INCLUDE_PATHS[@]}" $sfile || glslang_exit_code=$?
     if [[ $glslang_exit_code -ne 0 ]]; then
       EXIT_CODE=1
     fi
