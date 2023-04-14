@@ -10,6 +10,7 @@
 
 #include "AbstractWindow.h"
 #include "CommonTypes.h"
+#include "LuaScriptExecution.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 
@@ -56,7 +57,7 @@ private:
  */
 class LogConsole : public AbstractWindow {
 public:
-    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
+    using lua_func_type = megamol::frontend_resources::LuaScriptExecution;
 
     struct InputSharedData {
         bool move_cursor_to_end;

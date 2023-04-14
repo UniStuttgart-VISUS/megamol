@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "LuaScriptExecution.h"
 #include "Window_Events.h"
 #include "mmcore/utility/String.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
@@ -52,7 +53,7 @@ bool ProjectLoader_Service::init(const Config& config) {
     this->m_providedResourceReferences = {{"ProjectLoader", m_loader}};
 
     this->m_requestedResourcesNames = {
-        "ExecuteLuaScript",
+        frontend_resources::LuaScriptExecution_Req_Name,
         "optional<WindowEvents>",
     };
 
@@ -108,12 +109,11 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     }
 
     // run lua
-    using LuaFuncType = std::function<std::tuple<bool, std::string>(std::string const&)>;
-    const LuaFuncType& execute_lua = m_requestedResourceReferences[0].getResource<LuaFuncType>();
+    const auto& execute_lua = m_requestedResourceReferences[0].getResource<frontend_resources::LuaScriptExecution>();
+
+    auto result = execute_lua.execute_immediate(script);
 
 
-
-    auto result = execute_lua(script);
     bool script_ok = std::get<0>(result);
     std::string script_error = std::get<1>(result);
 

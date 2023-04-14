@@ -423,7 +423,7 @@ bool megamol::gui::LogConsole::Draw() {
     if (ImGui::InputText("###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback,
             (void*)this->input_shared_data.get())) {
         std::string command = this->input_buffer;
-        auto result = (*this->input_lua_func)(command);
+        auto result = (*input_lua_func).execute_immediate(command);
         if (std::get<0>(result)) {
             // command was fine, no editing required
             auto blah = std::get<1>(result);
@@ -498,7 +498,7 @@ void LogConsole::SetLuaFunc(lua_func_type* func) {
     this->input_lua_func = func;
 
     if (this->input_shared_data->commands.empty()) {
-        auto result = (*this->input_lua_func)("return mmHelp()");
+        auto result = (*this->input_lua_func).execute_immediate("return mmHelp()");
         if (std::get<0>(result)) {
             auto res = std::get<1>(result);
             std::regex cmd_regex("mm[A-Z]\\w+(.*)", std::regex_constants::ECMAScript);

@@ -9,7 +9,6 @@
 
 
 #include "AbstractFrontendService.hpp"
-#include "CommonTypes.h"
 #include "GUIRegisterWindow.h"
 #include "GUIState.h"
 #include "PerformanceManager.h"
@@ -87,7 +86,6 @@ private:
 
     megamol::frontend_resources::GUIState m_providedStateResource;
     megamol::frontend_resources::GUIRegisterWindow m_providedRegisterWindowResource;
-    megamol::frontend_resources::common_types::lua_func_type* m_exec_lua;
 
     std::string resource_request_gui_state(bool as_lua);
     bool resource_request_gui_visibility();

@@ -8,8 +8,8 @@
 #pragma once
 
 
-#include "CommonTypes.h"
 #include "Graph.h"
+#include "LuaScriptExecution.h"
 #include "PluginsResource.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
@@ -33,7 +33,7 @@ typedef std::vector<GraphPtr_t> GraphPtrVector_t;
  */
 class GraphCollection {
 public:
-    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
+    using lua_func_type = megamol::frontend_resources::LuaScriptExecution;
 
     GraphCollection();
     ~GraphCollection() = default;

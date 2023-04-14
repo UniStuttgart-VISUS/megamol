@@ -9,6 +9,7 @@
 #include "AbstractFrontendService.hpp"
 #include "LuaCallbacksCollection.h"
 #include "LuaRemoteConnectionsBroker.h"
+#include "LuaScriptExecution.h"
 #include "LuaScriptPaths.h"
 #include "mmcore/LuaAPI.h"
 
@@ -88,7 +89,7 @@ private:
 
     std::list<megamol::frontend_resources::LuaCallbacksCollection> m_callbacks;
 
-    std::function<std::tuple<bool, std::string>(std::string const&)> m_executeLuaScript_resource;
+    frontend_resources::LuaScriptExecution m_LuaScriptExecution_resource;
     megamol::frontend_resources::LuaScriptPaths m_LuaScriptPaths_resource;
     frontend_resources::set_lua_script_path_func m_setScriptPath_resource;
     std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)> m_registerLuaCallbacks_resource;

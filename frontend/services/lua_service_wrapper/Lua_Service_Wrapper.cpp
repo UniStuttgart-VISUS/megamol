@@ -80,11 +80,20 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     m_config = config;
 
-    m_executeLuaScript_resource = [&](std::string const& script) -> std::tuple<bool, std::string> {
+    using namespace frontend_resources;
+
+    auto execute_immediate = lua_execution_func{[&](std::string const& script) -> LuaExecutionResult {
         std::string result_str;
         bool result_b = luaAPI.RunString(script, result_str);
         return {result_b, result_str};
-    };
+    }};
+
+    auto execute_deferred = lua_deferred_execution_func{};
+
+    auto execute_deferred_callback = lua_deferred_execution_callback_func{};
+
+    m_LuaScriptExecution_resource =
+        frontend_resources::LuaScriptExecution{execute_immediate, execute_deferred, execute_deferred_callback};
 
     m_setScriptPath_resource = [&](std::string const& script_path) -> void { luaAPI.SetScriptPath(script_path); };
 
@@ -94,7 +103,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     this->m_providedResourceReferences = {
         {frontend_resources::LuaScriptPaths_Req_Name, m_LuaScriptPaths_resource},
-        {"ExecuteLuaScript", m_executeLuaScript_resource},
+        {frontend_resources::LuaScriptExecution_Req_Name, m_LuaScriptExecution_resource},
         {frontend_resources::SetLuaScriptPath_Req_Name, m_setScriptPath_resource},
         {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
