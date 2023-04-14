@@ -42,6 +42,7 @@ public:
             nullptr; // lua api object that will be used/called by the service wrapper only one level deep
         int retry_socket_port = 0;
         bool show_version_notification = true;
+        bool interactive = false;
     };
 
     // sometimes somebody wants to know the name of the service
@@ -71,6 +72,8 @@ public:
     void preGraphRender() override;
     void postGraphRender() override;
 
+    void run_lua_queue();
+
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
     // bool shouldShutdown() const; // shutdown initially false
@@ -88,6 +91,16 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 
     std::list<megamol::frontend_resources::LuaCallbacksCollection> m_callbacks;
+
+    using LuaExecutionResultPromise = std::promise<frontend_resources::LuaExecutionResult>;
+    struct LuaDeferredScript {
+        std::string script;
+        std::string script_path;
+
+        std::optional<LuaExecutionResultPromise> result_promise;
+        std::optional<frontend_resources::LuaExecutionResultCallback> result_callback;
+    };
+    std::vector<LuaDeferredScript> m_lua_deferred_scripts;
 
     frontend_resources::LuaScriptExecution m_LuaScriptExecution_resource;
     megamol::frontend_resources::LuaScriptPaths m_LuaScriptPaths_resource;

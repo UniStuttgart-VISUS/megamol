@@ -124,6 +124,7 @@ int main(const int argc, const char** argv) {
     luaConfig.host_address = config.lua_host_address;
     luaConfig.retry_socket_port = config.lua_host_port_retry;
     luaConfig.show_version_notification = config.show_version_note;
+    luaConfig.interactive = config.interactive;
     lua_service_wrapper.setPriority(0);
 
     megamol::frontend::ProjectLoader_Service projectloader_service;
