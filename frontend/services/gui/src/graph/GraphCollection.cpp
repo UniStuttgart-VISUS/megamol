@@ -328,7 +328,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
         graph_ptr->ResetDirty();
     }
 
-    auto const& run_lua = [&](std::string const& script) { (*input_lua_func).execute_immediate(script); };
+    auto const& queue_lua = [&](std::string const& script) { (*input_lua_func).execute_deferred(script, ""); };
 
     // Propagate all changes from the GUI graph to the MegaMol graph
     if (graph_ptr != nullptr) {
@@ -341,29 +341,29 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
 
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
-                run_lua("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])");
+                queue_lua("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
-                run_lua("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])");
+                queue_lua("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])");
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
-                run_lua("mmDeleteModule([=[" + data.name_id + "]=])");
+                queue_lua("mmDeleteModule([=[" + data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::ADD_CALL): {
-                run_lua(
+                queue_lua(
                     "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])");
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
-                run_lua("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])");
+                queue_lua("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])");
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 // megamol currently does not handle well having multiple entrypoints active
-                run_lua("mmRemoveAllGraphEntryPoints()\n"
-                        "mmSetGraphEntryPoint([=[" +
-                        data.name_id + "]=])");
+                queue_lua("mmRemoveAllGraphEntryPoints()\n"
+                          "mmSetGraphEntryPoint([=[" +
+                          data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
-                run_lua("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
+                queue_lua("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
             } break;
             default:
                 break;
@@ -426,7 +426,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                     // Write changed parameter value to core parameter
                     if (p.IsValueDirty()) {
                         p.ResetValueDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
-                        run_lua("mmSetParamValue([=[" + p.FullNameCore() + "]=],[=[" + p.GetValueString() + "]=])");
+                        queue_lua("mmSetParamValue([=[" + p.FullNameCore() + "]=],[=[" + p.GetValueString() + "]=])");
                     }
                 }
             }
