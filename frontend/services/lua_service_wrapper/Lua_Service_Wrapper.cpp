@@ -108,7 +108,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
 
-    this->m_requestedResourcesNames = {"FrontendResourcesList",
+    this->m_requestedResourcesNames = {
+        "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics",                      // for LastFrameTime
         "optional<WindowManipulation>",         // for Framebuffer resize
@@ -116,11 +117,13 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "MegaMolGraph",                         // LuaAPI manipulates graph
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
-        frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
+        frontend_resources::CommandRegistry_Req_Name,
+        "optional<GUIRegisterWindow>",
+        "RuntimeConfig",
 #ifdef MEGAMOL_USE_PROFILING
-        frontend_resources::PerformanceManager_Req_Name
+        frontend_resources::PerformanceManager_Req_Name,
 #endif
-    }; //= {"ZMQ_Context"};
+    };
 
     *open_version_notification = false;
 
@@ -175,8 +178,10 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
 
 #define recursion_guard                           \
     RecursionGuard rg{m_service_recursion_depth}; \
-    if (rg.abort())                               \
-        return;
+    if (rg.abort()) {                             \
+        return;                                   \
+    }
+
 
 void Lua_Service_Wrapper::updateProvidedResources() {
     // during the previous frame module parameters of the graph may have changed.
