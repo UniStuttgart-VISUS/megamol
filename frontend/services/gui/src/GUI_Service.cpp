@@ -14,12 +14,12 @@
 #include "GUIManager.h"
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
+#include "LuaScriptPaths.h"
 #include "ModuleGraphSubscription.h"
 #include "OpenGL_Context.h"
 #include "PluginsResource.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
-#include "ScriptPaths.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
 
@@ -55,7 +55,7 @@ bool GUI_Service::init(const Config& config) {
         "optional<OpenGL_Context>",                                     // 4 - graphics api for imgui context
         "FramebufferEvents",                                            // 5 - viewport size
         "GLFrontbufferToPNG_ScreenshotTrigger",                         // 6 - trigger screenshot
-        "LuaScriptPaths",                                               // 7 - current project path
+        frontend_resources::LuaScriptPaths_Req_Name,                    // 7 - current project path
         "ProjectLoader",                                                // 8 - trigger loading of new running project
         "FrameStatistics",                                              // 9 - current fps and ms value
         "RuntimeConfig",                                                // 10 - resource paths
@@ -236,7 +236,7 @@ void GUI_Service::digestChangedRequestedResources() {
     }
 
     /// Pipe lua script paths to gui = resource index 7
-    auto& script_paths = frontend_resources->get<megamol::frontend_resources::ScriptPaths>();
+    auto& script_paths = frontend_resources->get<megamol::frontend_resources::LuaScriptPaths>();
     this->m_gui->SetProjectScriptPaths(script_paths.lua_script_paths);
 
     /// Pipe project loading request from GUI to project loader = resource index 8

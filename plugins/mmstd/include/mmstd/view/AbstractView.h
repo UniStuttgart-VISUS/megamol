@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "ScriptPaths.h"
+#include "LuaScriptPaths.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/AbstractParam.h"
@@ -38,7 +38,7 @@ class AbstractView : public AbstractViewInterface {
 public:
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Module::requested_lifetime_resources(req);
-        req.require<frontend_resources::ScriptPaths>();
+        req.require<frontend_resources::LuaScriptPaths>();
     }
 
     /**

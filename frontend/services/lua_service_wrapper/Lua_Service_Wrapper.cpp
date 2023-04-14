@@ -93,9 +93,9 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     };
 
     this->m_providedResourceReferences = {
-        {"LuaScriptPaths", m_scriptpath_resource},
+        {frontend_resources::LuaScriptPaths_Req_Name, m_LuaScriptPaths_resource},
         {"ExecuteLuaScript", m_executeLuaScript_resource},
-        {"SetScriptPath", m_setScriptPath_resource},
+        {frontend_resources::SetLuaScriptPath_Req_Name, m_setScriptPath_resource},
         {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
 
