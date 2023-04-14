@@ -21,16 +21,17 @@ done
 
 # Build include path string
 INCLUDE_PATHS=()
-for sdir in "${SHADER_DIRS[@]}"
-do
+for sdir in "${SHADER_DIRS[@]}"; do
   INCLUDE_PATHS+=("-I$(pwd)/${sdir}")
 done
+
+# Read ignore list
+readarray -t ignore_list < .ci/check-shaders-ignore.txt
 
 echo "::add-matcher::.ci/check-shaders-problem-matchers.json"
 
 # Iterate over all shaders
-for sdir in "${SHADER_DIRS[@]}"
-do
+for sdir in "${SHADER_DIRS[@]}"; do
   echo "=================================================="
   echo "=== $sdir"
   echo "=================================================="
@@ -40,6 +41,19 @@ do
   while read -r sfile; do
     # Skip empty or deleted filename
     if [[ ! -f "$sfile" ]]; then
+      continue
+    fi
+
+    # Skip ignored files
+    ignore=false
+    for ignore_entry in "${ignore_list[@]}"; do
+      if [[ "$sfile" == $ignore_entry ]]; then
+        ignore=true
+        break
+      fi
+    done
+    if [[ "$ignore" == true ]]; then
+      echo "::warning::Ignore file $sfile"
       continue
     fi
 
