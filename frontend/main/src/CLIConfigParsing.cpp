@@ -277,6 +277,10 @@ static void echolevel_handler(
 static void project_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
+    while (v.size() > 1) {
+        v.front() += "," + v[1];
+        v.pop_back();
+    }
     files_exist(v, "Project file");
 
     config.project_files.insert(config.project_files.end(), v.begin(), v.end());
@@ -611,9 +615,7 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
     options.allow_unrecognised_options();
 
     try {
-        int _argc = argc;
-        auto _argv = const_cast<char**>(argv);
-        auto parsed_options = options.parse(_argc, _argv);
+        auto parsed_options = options.parse(argc, argv);
 
         std::string config_file_name = "megamol_config.lua";
         auto user_dir_config = getHomeDir() / ("." + config_file_name);
@@ -866,9 +868,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
     for (int i = 0; i < argc; i++)
         config.program_invocation_string += std::string{argv[i]} + " ";
 
-    int _argc = argc;
-    auto _argv = const_cast<char**>(argv);
-
     // parse input project files
     options.positional_help("<additional project files>");
     for (auto& opt : cli_options_list) {
@@ -878,7 +877,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
 
     // actually process passed options
     try {
-        auto parsed_options = options.parse(_argc, _argv);
+        auto parsed_options = options.parse(argc, argv);
         std::string res;
 
         if (parsed_options.count("help")) {
