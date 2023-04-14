@@ -129,6 +129,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::ProjectLoader_Service projectloader_service;
     megamol::frontend::ProjectLoader_Service::Config projectloaderConfig;
+    projectloaderConfig.interactive = config.interactive;
     projectloader_service.setPriority(1);
 
     megamol::frontend::ImagePresentation_Service imagepresentation_service;

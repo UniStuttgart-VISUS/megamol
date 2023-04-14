@@ -15,7 +15,9 @@ namespace megamol::frontend {
 
 class ProjectLoader_Service final : public AbstractFrontendService {
 public:
-    struct Config {};
+    struct Config {
+        bool interactive = false; // dont shut down megamol when errors occur during lua script execution
+    };
 
     std::string serviceName() const override {
         return "ProjectLoader_Service";
@@ -38,7 +40,7 @@ public:
     void preGraphRender() override;
     void postGraphRender() override;
 
-    bool load_file(std::filesystem::path const& filename) const;
+    bool load_file(std::filesystem::path const& filename);
 
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
@@ -53,6 +55,9 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 
     bool m_digestion_recursion = false;
+    bool m_lua_script_failed = false;
+
+    Config m_config;
 };
 
 } // namespace megamol::frontend
