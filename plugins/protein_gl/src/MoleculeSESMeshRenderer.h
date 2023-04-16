@@ -119,6 +119,15 @@ private:
     bool getTriangleDataCallback(core::Call& caller);
 
     /**
+     * Finds nearest Vertice to the given one on an vector
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    static unsigned int findNearestVertice(const std::vector<std::vector<unsigned int>>& edgelord, unsigned int& referenceIndex0, unsigned int& referenceIndex1, const std::vector<float>& vertex, int index);
+
+    /**
      * Gets the data from the source.
      *
      * @param caller The calling call.
