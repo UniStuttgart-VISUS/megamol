@@ -279,6 +279,13 @@ private:
     std::vector<geocalls_gl::CallTriMeshDataGL::Mesh*> triaMesh;
 
     DeferredRenderingProvider deferredProvider_;
+
+
+     /** variables of SES mesh  */
+    std::vector<float> vertex;
+    std::vector<float> normal;
+    std::vector<float> color; 
+    std::vector<unsigned int> face;
 };
 
 } // namespace protein_gl
