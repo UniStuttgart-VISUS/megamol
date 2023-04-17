@@ -6,6 +6,7 @@
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/factories/PluginRegister.h"
 
+#include "FrontendResourcesMap.h"
 #include "GlobalValueStore.h"
 #include "RuntimeConfig.h"
 
@@ -322,54 +323,43 @@ int main(const int argc, const char** argv) {
         ret += 2;
     }
 
-    // load project files via lua
-    if (run_megamol && graph_resources_ok)
-        for (auto& file : config.project_files) {
-            // attention: the project files are only _queued_ for later lua execution here
-            // if a project file leads to errors on the file-level, we exit here, if not in interactive mode
-            if (!projectloader_service.load_file(file)) {
-                log_error("Project file \"" + file + "\" did not execute correctly");
+    // queue CLI project files and raw lua
+    if (run_megamol && graph_resources_ok) {
+        const auto& frontend_resources_map = megamol::frontend_resources::FrontendResourcesMap{frontend_resources};
+        const auto& execute_lua_deferred =
+            frontend_resources_map.get<megamol::frontend_resources::LuaScriptExecution>().execute_deferred_callback;
+        auto raw_lua_callback = [&](auto const& result) {
+            const bool cli_lua_ok = std::get<0>(result);
+            const std::string lua_result = std::get<1>(result);
+
+            if (!cli_lua_ok)
+                log_error("Error in CLI Lua command: " + lua_result);
+        };
+        for (auto& request : config.cli_execute_lua_commands) {
+            switch (request.source) {
+            case RuntimeConfig::CliLuaRequest::Type::File: {
+                // attention: the project files are only _queued_ for later lua execution here
+                // if a project file leads to errors on the file-level, we exit here, if not in interactive mode
+                auto& file = request.contents;
+                if (!projectloader_service.load_file(file)) {
+                    log_error("Loading project file \"" + file + "\" produced error");
+                    run_megamol = false;
+                    ret += 8;
+                }
+            } break;
+            case RuntimeConfig::CliLuaRequest::Type::Raw:
+                // queue Lua commands passed via CLI. this also include CLI param changes.
+                execute_lua_deferred(request.contents, "", raw_lua_callback);
+                break;
+            default:
+                log_warning("CLI Lua Commands: unknown type: " + std::to_string(static_cast<int>(request.source)));
                 run_megamol = false;
                 ret += 4;
-
-                // if interactive, continue to run MegaMol
-                if (config.interactive) {
-                    log_warning("Interactive mode: start MegaMol anyway");
-                    run_megamol = true;
-                }
+                break;
             }
         }
-
-    // execute Lua commands passed via CLI
-    if (graph_resources_ok)
-        if (!config.cli_execute_lua_commands.empty()) {
-
-            auto& resources = services.getProvidedResources();
-            auto const& lua_execution =
-                std::find_if(resources.begin(), resources.end(), [](megamol::frontend::FrontendResource const& r) {
-                    return r.getIdentifier() == std::string{"LuaScriptExecution"};
-                });
-
-            const bool interactive = config.interactive;
-            auto callback = [&, interactive](auto const& result) {
-                bool cli_lua_ok = std::get<0>(result);
-                std::string lua_result = std::get<1>(result);
-
-                if (!cli_lua_ok) {
-                    log_error("Error in CLI Lua command: " + lua_result);
-                    if (!interactive) {
-                        lua_service_wrapper.setShutdown(true);
-                    }
-                }
-            };
-
-            // attention: the CLI lua commands are only _queued_ for later lua execution here
-            // if the CLI scripts lead to lua errors, we exit the program, if not in interactive mode
-            if (lua_execution != resources.end()) {
-                lua_execution->getResource<megamol::frontend_resources::LuaScriptExecution>().execute_deferred_callback(
-                    config.cli_execute_lua_commands, "", callback);
-            }
-        }
+        // if interactive, continuing to run MegaMol is ensured by the Project or Lua service itself
+    }
 
     while (run_megamol) {
         // we run the lua queue here as a starting point to evaluate CLI-related lua inputs
