@@ -36,3 +36,4 @@ __pycache__/
 # Individual developer settings for local machines
 mmprjs/**/*
 *.orig
+/out/install/x64-Debug
