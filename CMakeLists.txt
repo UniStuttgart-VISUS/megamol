@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.15...3.24 FATAL_ERROR)
 
 set(MEGAMOL_VCPKG_DIR "${CMAKE_CURRENT_BINARY_DIR}/vcpkg")
-set(MEGAMOL_VCPKG_VERSION "2023.02.24") # Update default-registry baseline in vcpkg-configuration.json when changing!
+set(MEGAMOL_VCPKG_VERSION "2023.04.15") # Update default-registry baseline in vcpkg-configuration.json when changing!
 
 include(cmake/megamol_vcpkg_download.cmake)
 include(cmake/megamol_feature_option.cmake)

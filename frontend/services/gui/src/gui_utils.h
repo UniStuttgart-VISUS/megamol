@@ -12,8 +12,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 //#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS // TODO implot currently requires deprecated functions, can be enabled when implot is updated.
 #define IMGUI_DISABLE_OBSOLETE_KEYIO
-#include "imgui.h"
-#include "imgui_internal.h"
+#include <imgui.h>
+#include <imgui_internal.h>
 
 #include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/utility/log/Log.h"
