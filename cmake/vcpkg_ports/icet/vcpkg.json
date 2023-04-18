@@ -1,9 +1,8 @@
 {
   "name": "icet",
-  "version-date": "2022-08-02",
-  "port-version": 0,
-  "homepage": "https://icet.sandia.gov/",
+  "version-date": "2022-02-11",
   "description": "The Image Composition Engine for Tiles (IceT) is a high-performance sort-last parallel rendering library.",
+  "homepage": "https://icet.sandia.gov/",
   "license": "BSD-3-Clause",
   "dependencies": [
     {
