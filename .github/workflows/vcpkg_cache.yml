@@ -1,4 +1,4 @@
-name: Build Vcpkg Cache
+name: Vcpkg Cache
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   windows:
-    name: Windows-Build
+    name: Windows
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v3
@@ -22,7 +22,7 @@ jobs:
       env:
         VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
   ubuntu-docker:
-    name: Ubuntu-Docker-Build
+    name: Ubuntu-Docker
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master
