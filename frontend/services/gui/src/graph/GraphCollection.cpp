@@ -837,8 +837,8 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
 }
 
 
-bool megamol::gui::GraphCollection::SaveProjectToFile(
-    ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json, bool write_all_param_values) {
+bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename,
+    const std::string& state_json, bool write_all_param_values) {
 
     /// Should be same as: megamol::core::MegaMolGraph_Convenience::SerializeGraph()
     try {

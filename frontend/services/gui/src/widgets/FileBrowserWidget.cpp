@@ -161,9 +161,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
             // Footer Height: 1x save gui state line + 2x line for button + 2x max log lines
-            float footer_height =
-                ImGui::GetFrameHeightWithSpacing() * ((mode != DIALOGMODE_SAVE) ? (2.0f) : (3.0f)) +
-                (ImGui::GetTextLineHeightWithSpacing() * 2.0f);
+            float footer_height = ImGui::GetFrameHeightWithSpacing() * ((mode != DIALOGMODE_SAVE) ? (2.0f) : (3.0f)) +
+                                  (ImGui::GetTextLineHeightWithSpacing() * 2.0f);
             float child_select_height = (ImGui::GetContentRegionAvail().y - footer_height);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);

@@ -40,8 +40,8 @@ public:
      * @return True on success, false otherwise.
      */
     bool PopUp_Save(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
-        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
-        bool& inout_save_gui_state, bool& inout_save_all_param_values) {
+        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool& inout_save_gui_state,
+        bool& inout_save_all_param_values) {
         return this->popup(DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags,
             inout_save_gui_state, inout_save_all_param_values);
     }
@@ -100,8 +100,8 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     bool popup(DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup,
-        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
-        bool& inout_save_gui_state, bool& inout_save_all_param_values);
+        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool& inout_save_gui_state,
+        bool& inout_save_all_param_values);
 
     bool validate_split_path(
         const std::string& in_path, FilePathParam::Flags_t flags, std::string& out_dir, std::string& out_file) const;
