@@ -51,6 +51,13 @@ for pdir in *; do
         echo "The directory \"$pdir/shaders\" must have exactly one subdir named \"$pname\"!"
       fi
     fi
+    # Check if all shaders end with .glsl (ignore /3rd/, also allow .txt and .md files) (TODO and .btf for now)
+    readarray -d '' bad_shader_files < <(find "$pdir/shaders" -type f -not -path "*/3rd/*" -not -name "*.glsl" -not -name "*.md" -not -name "*.txt" -not -name "*.btf" -print0)
+    if [[ ${#bad_shader_files[@]} -ne 0 ]]; then
+      EXIT_CODE=1
+      echo "Found shader files with invalid extension in \"$pdir/shaders\"! Use .glsl, .md or .txt."
+      printf '  %s\n' "${bad_shader_files[@]}"
+    fi
   fi
 
   # Check CMake target name
