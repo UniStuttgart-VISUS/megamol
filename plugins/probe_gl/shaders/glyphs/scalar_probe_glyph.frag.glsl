@@ -23,7 +23,7 @@ vec3 fakeViridis(float lerp)
     vec3 c2 = vec3(0.9529994532916154,0.9125452328290099,0.11085876909361342);
 
     return lerp < 0.5 ? mix(c0,c1,lerp * 2.0) : mix(c1,c2,(lerp*2.0)-1.0);
-};
+}
 
 void main() {
 

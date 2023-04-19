@@ -62,7 +62,7 @@ float toonRamp(float light_intensity, float shadow, float midtone, float light){
     float midtone_to_light = mix(midtone,light,smoothstep(midtone,midtone + feathering, light_intensity));
 
     return light_intensity > midtone ? midtone_to_light : shadow_to_midtone;
-};
+}
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 

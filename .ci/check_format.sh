@@ -62,12 +62,6 @@ while read -r file; do
     continue
   fi
 
-  # ignore externals
-  # TODO we probably want to distinguish more granular between 3rd-party and our files here
-  if [[ $file == "./externals/"* ]]; then
-    continue
-  fi
-
   # is cpp file?
   is_cpp=false
   if [[ $file == *.cpp ]] || [[ $file == *.h ]] || [[ $file == *.hpp ]] || [[ $file == *.inl ]]; then
