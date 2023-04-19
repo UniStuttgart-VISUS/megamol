@@ -525,7 +525,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
 #ifdef MEGAMOL_USE_PROFILING
                     // Profiling Button
                     if (profiling_button) {
-                        ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+                        if (parameter_button || graph_entry_button) {
+                            ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+                        }
 
                         // Lazy loading of performance button texture
                         if (!this->gui_profiling_button.IsLoaded()) {

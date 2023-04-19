@@ -2404,14 +2404,14 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
         for (auto& group_ptr : this->GetGroups()) {
             group_ptr->Draw(phase, this->gui_graph_state);
 
-            // 3] MODULES and CALL SLOTS (of group) ---------------------------
+            // 2] MODULES and CALL SLOTS (of group) ---------------------------
             for (auto& module_ptr : this->Modules()) {
                 if (module_ptr->GroupUID() == group_ptr->UID()) {
                     module_ptr->Draw(phase, this->gui_graph_state);
                 }
             }
 
-            // 2] CALLS (of group) --------------------------------------------
+            // 3] CALLS (of group) --------------------------------------------
             for (auto& module_ptr : this->Modules()) {
                 if (module_ptr->GroupUID() == group_ptr->UID()) {
                     /// Check only for calls of caller slots for considering each call only once
