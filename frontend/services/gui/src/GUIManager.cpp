@@ -1251,16 +1251,18 @@ void megamol::gui::GUIManager::draw_popups() {
         this->gui_state.open_popup_save |= this->win_configurator_ptr->ConsumeTriggeredGlobalProjectSave();
 
         auto filename = graph_ptr->GetFilename();
-        auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
+        bool save_all_param_values = false;
+        bool save_gui_state = false;
         bool popup_failed = false;
         if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save, {"lua"},
-                megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
+                megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state,
+                save_all_param_values)) {
             std::string state_str;
-            if (save_gui_state.IsTrue()) {
+            if (save_gui_state) {
                 state_str = this->project_to_lua_string(true);
             }
             popup_failed = !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(
-                graph_ptr->UID(), filename, state_str);
+                graph_ptr->UID(), filename, state_str, save_all_param_values);
         }
         PopUps::Minimal(
             "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
@@ -1279,10 +1281,10 @@ void megamol::gui::GUIManager::draw_popups() {
     this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed = false;
 
     // File name for screenshot pop-up
-    auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
+    auto dummy = false;
     if (this->file_browser.PopUp_Save("File Name for Screenshot", this->gui_state.screenshot_filepath,
             this->gui_state.open_popup_screenshot, {"png"},
-            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, dummy, dummy)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 
