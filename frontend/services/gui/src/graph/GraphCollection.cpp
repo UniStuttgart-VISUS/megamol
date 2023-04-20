@@ -835,8 +835,8 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
 }
 
 
-bool megamol::gui::GraphCollection::SaveProjectToFile(
-    ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json) {
+bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename,
+    const std::string& state_json, bool write_all_param_values) {
 
     /// Should be same as: megamol::core::MegaMolGraph_Convenience::SerializeGraph()
     try {
@@ -871,10 +871,9 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                     }
 
                     for (auto& parameter : module_ptr->Parameters()) {
-                        // - Write all parameters for running graph (default value is not available)
-                        // - For other graphs only write parameters with other values than the default
-                        // - Ignore button parameters
-                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
+                        // Either write_all_param_values or only write parameters with values deviating from the default
+                        // Button parameters are always ignored
+                        if ((write_all_param_values || parameter.DefaultValueMismatch()) &&
                             (parameter.Type() != ParamType_t::BUTTON)) {
                             confParams << "mmSetParamValue(\"" << parameter.FullName() << "\",[=["
                                        << parameter.GetValueString() << "]=])\n";
@@ -1504,8 +1503,9 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
                 if (param_slot != nullptr) {
                     std::string param_full_name(param_slot->FullName().PeekBuffer());
                     std::shared_ptr<Parameter> param_ptr;
+                    // This is the default value of the parameter since changed values are propagated separately via parameter subscription
                     megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(
-                        (*param_slot), param_ptr, false, false, true, gui_module_ptr->FullName());
+                        (*param_slot), param_ptr, true, false, true, gui_module_ptr->FullName());
                     gui_module_ptr->Parameters().emplace_back((*param_ptr));
                 }
 
@@ -1846,17 +1846,19 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& o
             project_filename = graph_ptr->GetFilename();
         }
     }
-    // Default for option asking for saving gui state
-    auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
+    // Default for saving gui state and parameter values
+    bool save_all_param_values = true;
+    bool save_gui_state = false;
     if (this->gui_file_browser.PopUp_Save("Save Configurator Project", project_filename, open_dialog, {"lua"},
-            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state,
+            save_all_param_values)) {
 
         std::string gui_state;
-        if (save_gui_state.IsTrue()) {
+        if (save_gui_state) {
             gui_state = this->get_state(graph_uid, project_filename);
         }
 
-        popup_failed = !this->SaveProjectToFile(graph_uid, project_filename, gui_state);
+        popup_failed = !this->SaveProjectToFile(graph_uid, project_filename, gui_state, save_all_param_values);
     }
     PopUps::Minimal("Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
 
