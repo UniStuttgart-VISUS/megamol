@@ -686,7 +686,7 @@ bool megamol::gui::Module::StateToJSON(nlohmann::json& inout_json) {
     bool retval = this->gui_param_groups.StateToJSON(inout_json, this->FullName());
     // Parameters
     for (auto& param : this->parameters) {
-        retval &= param.StateToJSON(inout_json, param.FullNameProject());
+        retval &= param.StateToJSON(inout_json, param.FullName());
     }
     return retval;
 }
@@ -698,7 +698,7 @@ bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
     bool retval = this->gui_param_groups.StateFromJSON(in_json, this->FullName());
     // Parameters
     for (auto& param : this->parameters) {
-        retval &= param.StateFromJSON(in_json, param.FullNameProject());
+        retval &= param.StateFromJSON(in_json, param.FullName());
         param.ForceSetGUIStateDirty();
     }
     return retval;

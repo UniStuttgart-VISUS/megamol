@@ -71,7 +71,7 @@ bool Configurator::Update() {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 std::string module_full_name = module_ptr->FullName();
                 for (auto& param : module_ptr->Parameters()) {
-                    std::string param_full_name = param.FullNameProject();
+                    std::string param_full_name = param.FullName();
                     if (gui_utils::CaseInsensitiveStringEqual(tf_param_connect_request, param_full_name) &&
                         (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                         win_tfeditor_ptr->SetConnectedParameter(&param, param_full_name);
