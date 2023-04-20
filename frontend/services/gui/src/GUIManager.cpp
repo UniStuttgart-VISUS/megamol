@@ -1251,9 +1251,10 @@ void megamol::gui::GUIManager::draw_popups() {
         this->gui_state.open_popup_save |= this->win_configurator_ptr->ConsumeTriggeredGlobalProjectSave();
 
         auto filename = graph_ptr->GetFilename();
-        bool save_all_param_values = false;
-        bool save_gui_state = false;
         bool popup_failed = false;
+        // Default for saving gui state and parameter values
+        bool save_all_param_values = true;
+        bool save_gui_state = false;
         if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save, {"lua"},
                 megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state,
                 save_all_param_values)) {
