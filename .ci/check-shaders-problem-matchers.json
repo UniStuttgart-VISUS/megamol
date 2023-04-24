@@ -1,0 +1,16 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "glslang-check",
+      "pattern": [
+        {
+          "regexp": "^([A-Z]+):\\s(.+):([0-9]+):\\s(.*)$",
+          "file": 2,
+          "line": 3,
+          "severity": 1,
+          "message": 4
+        }
+      ]
+    }
+  ]
+}

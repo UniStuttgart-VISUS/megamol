@@ -24,7 +24,6 @@ megamol::gui::Configurator::Configurator(
         , module_list_popup_hovered_group_uid(GUI_INVALID_ID)
         , show_module_list_sidebar(false)
         , show_module_list_popup(false)
-        , module_list_popup_pos()
         , last_selected_callslot_uid(GUI_INVALID_ID)
         , open_popup_load(false)
         , file_browser()
@@ -72,7 +71,7 @@ bool Configurator::Update() {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 std::string module_full_name = module_ptr->FullName();
                 for (auto& param : module_ptr->Parameters()) {
-                    std::string param_full_name = param.FullNameProject();
+                    std::string param_full_name = param.FullName();
                     if (gui_utils::CaseInsensitiveStringEqual(tf_param_connect_request, param_full_name) &&
                         (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                         win_tfeditor_ptr->SetConnectedParameter(&param, param_full_name);
@@ -200,9 +199,11 @@ void megamol::gui::Configurator::PopUps() {
             this->module_list_popup_hovered_group_uid = selected_graph_ptr->GetHoveredGroup();
         }
     }
+
+    ImVec2 module_list_popup_pos;
     if (this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed) {
         this->show_module_list_popup = true;
-        this->module_list_popup_pos = ImGui::GetMousePos();
+        module_list_popup_pos = ImGui::GetMousePos();
     }
     if (this->show_module_list_popup) {
 
@@ -216,31 +217,33 @@ void megamol::gui::Configurator::PopUps() {
             ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
             this->search_widget.SetSearchFocus();
 
-            float diff_width = (this->win_config.position.x + this->win_config.size.x - this->module_list_popup_pos.x);
-            float diff_height = (this->win_config.position.y + this->win_config.size.y - this->module_list_popup_pos.y);
+            float diff_width = (this->win_config.position.x + this->win_config.size.x - module_list_popup_pos.x);
+            float diff_height = (this->win_config.position.y + this->win_config.size.y - module_list_popup_pos.y);
             if (diff_width < popup_width) {
-                this->module_list_popup_pos.x -= ((popup_width - diff_width) + offset_x);
+                module_list_popup_pos.x -= ((popup_width - diff_width) + offset_x);
             }
-            this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, this->win_config.position.x);
+            module_list_popup_pos.x = std::max(module_list_popup_pos.x, this->win_config.position.x);
             if (diff_height < popup_height) {
-                this->module_list_popup_pos.y -= ((popup_height - diff_height) + offset_y);
+                module_list_popup_pos.y -= ((popup_height - diff_height) + offset_y);
             }
-            this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, this->win_config.position.y);
-            ImGui::SetNextWindowPos(this->module_list_popup_pos);
+            module_list_popup_pos.y = std::max(module_list_popup_pos.y, this->win_config.position.y);
+            ImGui::SetNextWindowPos(module_list_popup_pos);
             ImGui::SetNextWindowSize(ImVec2(10.0f, 10.0f));
         }
         auto popup_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
-                           ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
+                           ImGuiWindowFlags_NoCollapse;
         if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
+
+            ImVec2 popup_position = ImGui::GetWindowPos();
 
             this->draw_window_module_list(
                 std::max(0.0f, (popup_width - offset_x)), std::max(0.0f, (popup_height - offset_y)), false);
 
             bool module_list_popup_hovered = false;
-            if ((ImGui::GetMousePos().x >= this->module_list_popup_pos.x) &&
-                (ImGui::GetMousePos().x <= (this->module_list_popup_pos.x + popup_width)) &&
-                (ImGui::GetMousePos().y >= this->module_list_popup_pos.y) &&
-                (ImGui::GetMousePos().y <= (this->module_list_popup_pos.y + popup_height))) {
+            if ((ImGui::GetMousePos().x >= popup_position.x) &&
+                (ImGui::GetMousePos().x <= (popup_position.x + popup_width)) &&
+                (ImGui::GetMousePos().y >= popup_position.y) &&
+                (ImGui::GetMousePos().y <= (popup_position.y + popup_height))) {
                 module_list_popup_hovered = true;
             }
             if (((ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !module_list_popup_hovered)) ||

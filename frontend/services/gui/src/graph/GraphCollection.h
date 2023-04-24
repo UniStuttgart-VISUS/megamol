@@ -70,7 +70,8 @@ public:
 
     bool LoadOrAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
-    bool SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json);
+    bool SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json,
+        bool write_all_param_values);
 
     void Draw(GraphState_t& state);
 

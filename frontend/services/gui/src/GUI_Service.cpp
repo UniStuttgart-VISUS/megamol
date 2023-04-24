@@ -225,6 +225,10 @@ void GUI_Service::digestChangedRequestedResources() {
         }
         this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
             window_events._clipboard_user_data);
+        for (auto const& scale_event : window_events.content_scale_events) {
+            auto const scale = std::max(std::get<0>(scale_event), std::get<1>(scale_event));
+            this->m_gui->SetScale(scale);
+        }
     } else {
         // no GL
         this->m_window_size = m_framebuffer_size;

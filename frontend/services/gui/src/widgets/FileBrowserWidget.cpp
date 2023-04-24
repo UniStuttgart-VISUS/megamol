@@ -29,7 +29,8 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
         , file_errors()
         , file_warnings()
         , child_directories()
-        , save_gui_state(vislib::math::Ternary::TRI_UNKNOWN)
+        , save_gui_state(false)
+        , save_all_param_values(false)
         , label_uid_map()
         , search_widget()
         , tooltip() {
@@ -84,7 +85,7 @@ bool megamol::gui::FileBrowserWidget::Button_Select(
 
 bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, const std::string& label,
     std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions,
-    FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state) {
+    FilePathParam::Flags_t flags, bool& inout_save_gui_state, bool& inout_save_all_param_values) {
 
     bool retval = false;
 
@@ -119,7 +120,9 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             inout_open_popup = false;
 
             this->search_widget.ClearSearchString();
+
             this->save_gui_state = inout_save_gui_state;
+            this->save_all_param_values = inout_save_all_param_values;
         }
 
         bool open = true;
@@ -158,9 +161,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
             // Footer Height: 1x save gui state line + 2x line for button + 2x max log lines
-            float footer_height =
-                ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown()) ? (2.0f) : (3.0f)) +
-                (ImGui::GetTextLineHeightWithSpacing() * 2.0f);
+            float footer_height = ImGui::GetFrameHeightWithSpacing() * ((mode != DIALOGMODE_SAVE) ? (2.0f) : (3.0f)) +
+                                  (ImGui::GetTextLineHeightWithSpacing() * 2.0f);
             float child_select_height = (ImGui::GetContentRegionAvail().y - footer_height);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
@@ -298,12 +300,12 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             }
 
             // Optional save GUI state option ------------
-            if (!inout_save_gui_state.IsUnknown()) {
-                bool check = this->save_gui_state.IsTrue();
-                megamol::gui::ButtonWidgets::ToggleButton("Save GUI state", check);
-                this->save_gui_state =
-                    ((check) ? (vislib::math::Ternary::TRI_TRUE) : (vislib::math::Ternary::TRI_FALSE));
+            if (mode == DIALOGMODE_SAVE) {
+                megamol::gui::ButtonWidgets::ToggleButton("Save GUI state", this->save_gui_state);
                 this->tooltip.Marker("Check this option to also save all settings affecting the GUI.");
+                ImGui::SameLine();
+                megamol::gui::ButtonWidgets::ToggleButton("Save all parameter values", this->save_all_param_values);
+                this->tooltip.Marker("Check this option to save all paramter values, not only the changed.");
             }
 
             // Buttons --------------------------
@@ -351,6 +353,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 }
                 inout_filename = tmp_path.generic_u8string();
                 inout_save_gui_state = this->save_gui_state;
+                inout_save_all_param_values = this->save_all_param_values;
                 ImGui::CloseCurrentPopup();
                 retval = true;
             }
