@@ -46,11 +46,12 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
         , smaa_detection_technique_("EdgeDetection",
               "Sets smaa edge detection base: luma, color, or depth. Use depth only when a depth "
               "texture can be provided as it is mandatory to have one")
+        , out_texture_format_slot_("OutTexFormat", "texture format of output texture")
         , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")
         , input_tex_slot_("InputTexture", "Connects the input texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth texture")
         , settings_have_changed_(false) {
-    auto aa_modes = new core::param::EnumParam(0);
+    auto aa_modes = new core::param::EnumParam(1);
     aa_modes->SetTypePair(0, "SMAA");
     aa_modes->SetTypePair(1, "FXAA");
     aa_modes->SetTypePair(2, "None");
@@ -129,6 +130,15 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
         this->MakeSlotAvailable(tex_slot);
     }
 
+    auto out_tex_formats = new megamol::core::param::EnumParam(0);
+    out_tex_formats->SetTypePair(0, "RGBA_32F");
+    out_tex_formats->SetTypePair(1, "RGBA_16F");
+    out_tex_formats->SetTypePair(2, "RGBA_8UI");
+
+    this->out_texture_format_slot_.SetParameter(out_tex_formats);
+    this->out_texture_format_slot_.SetUpdateCallback(&megamol::compositing_gl::AntiAliasing::setTextureFormatCallback);
+    this->MakeSlotAvailable(&this->out_texture_format_slot_);
+
     this->output_tex_slot_.SetCallback(
         compositing_gl::CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
     this->output_tex_slot_.SetCallback(
@@ -168,12 +178,13 @@ bool megamol::compositing_gl::AntiAliasing::create() {
     // create shader programs
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-
+    auto shader_options_flags = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
+    shader_options_flags->addDefinition("OUT32F");
     try {
         copy_prgm_ = core::utility::make_glowl_shader("copy_texture", shader_options, "compositing_gl/copy.comp.glsl");
 
-        fxaa_prgm_ =
-            core::utility::make_glowl_shader("fxaa", shader_options, "compositing_gl/AntiAliasing/fxaa.comp.glsl");
+        fxaa_prgm_ = core::utility::make_glowl_shader(
+            "fxaa", *shader_options_flags, "compositing_gl/AntiAliasing/fxaa.comp.glsl");
 
         smaa_edge_detection_prgm_ = core::utility::make_glowl_shader(
             "smaa_edge_detection", shader_options, "compositing_gl/AntiAliasing/smaa_edge_detection.comp.glsl");
@@ -182,13 +193,13 @@ bool megamol::compositing_gl::AntiAliasing::create() {
             shader_options, "compositing_gl/AntiAliasing/smaa_blending_weights_calculation.comp.glsl");
 
         smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader("smaa_neighborhood_blending",
-            shader_options, "compositing_gl/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
+            *shader_options_flags, "compositing_gl/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("AntiAliasing: " + std::string(e.what())).c_str());
     }
 
     // init all textures
-    glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
+    glowl::TextureLayout tx_layout(out_tex_internal_format_, 1, 1, 1, out_tex_format_, out_tex_type_, 1);
     output_tx2D_ = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
 
     // textures for smaa
@@ -566,7 +577,8 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
 
         // init output texture if necessary
         if (output_tx2D_->getWidth() != input_width || output_tx2D_->getHeight() != input_height) {
-            glowl::TextureLayout tx_layout(GL_RGBA16F, input_width, input_height, 1, GL_RGBA, GL_HALF_FLOAT, 1);
+            glowl::TextureLayout tx_layout(
+                out_tex_internal_format_, input_width, input_height, 1, out_tex_format_, out_tex_type_, 1);
 
             output_tx2D_->reload(tx_layout, nullptr);
         }
@@ -660,9 +672,56 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
 }
 
 
+bool megamol::compositing_gl::AntiAliasing::setTextureFormatCallback(core::param::ParamSlot& slot) {
+    switch (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value()) {
+    case 0: //RGBA32F
+        out_tex_internal_format_ = GL_RGBA32F;
+        out_tex_format_ = GL_RGB;
+        out_tex_type_ = GL_FLOAT;
+        break;
+    case 1: //RGBA16F
+        out_tex_internal_format_ = GL_RGBA16F;
+        out_tex_format_ = GL_RGBA;
+        out_tex_type_ = GL_HALF_FLOAT;
+        break;
+    case 2: //RGBA8UI
+        out_tex_internal_format_ = GL_RGBA8_SNORM;
+        out_tex_format_ = GL_RGBA;
+        out_tex_type_ = GL_UNSIGNED_BYTE;
+        break;
+    }
+    // reinit all textures
+    glowl::TextureLayout tx_layout(out_tex_internal_format_, 1, 1, 1, out_tex_format_, out_tex_type_, 1);
+    output_tx2D_ = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
+    return true;
+}
+
 /*
  * @megamol::compositing_gl::AntiAliasing::getMetaDataCallback
  */
 bool megamol::compositing_gl::AntiAliasing::getMetaDataCallback(core::Call& caller) {
     return true;
+}
+
+void megamol::compositing_gl::AntiAliasing::checkFormatsAndRecompile(const std::shared_ptr<glowl::Texture2D>& input) {
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto shader_options_flags = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
+    if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 0) {
+        shader_options_flags->addDefinition("OUT32F");
+    } else if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 1) {
+        shader_options_flags->addDefinition("OUT16HF");
+    } else if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 2) {
+        shader_options_flags->addDefinition("OUT8NB");
+    }
+    
+    try {
+
+        fxaa_prgm_ = core::utility::make_glowl_shader(
+            "fxaa", *shader_options_flags, "compositing_gl/AntiAliasing/fxaa.comp.glsl");
+        smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader("smaa_neighborhood_blending",
+            shader_options, "compositing_gl/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(("AntiAliasing: " + std::string(e.what())).c_str());
+    }
 }

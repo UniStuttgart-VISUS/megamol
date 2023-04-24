@@ -44,7 +44,15 @@ uniform int SMAA_REPROJECTION;
 uniform sampler2D g_colorTex;
 uniform sampler2D g_blendingWeightsTex;
 uniform sampler2D g_velocityTex;
-layout(rgba16f, binding = 0) uniform image2D g_output;
+#if defined OUT32F
+layout(rgba32f) writeonly uniform image2D g_output;
+#endif
+#if defined OUT16HF
+layout(rgba16f) writeonly uniform image2D g_output;
+#endif
+#if defined OUT8NB
+layout(rgba8_snorm) writeonly uniform image2D g_output;
+#endif
 
 
 /**

@@ -149,6 +149,11 @@ private:
     bool visibilityCallback(core::param::ParamSlot& slot);
 
     /**
+     * \brief Sets GUI parameter slot visibility depending on antialiasing technique.
+     */
+    bool setTextureFormatCallback(core::param::ParamSlot& slot);
+
+    /**
      * \brief Sets the setting parameter values of the SMAAConstants struct depending
      * on the chosen quality level.
      */
@@ -210,6 +215,8 @@ private:
     void copyTextureViaShader(
         const std::shared_ptr<glowl::Texture2D>& tgt, const std::shared_ptr<glowl::Texture2D>& src);
 
+    void checkFormatsAndRecompile(const std::shared_ptr<glowl::Texture2D>& input);
+
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timers_;
@@ -263,6 +270,11 @@ private:
     /** Parameter for selecting the antialiasing technique, e.g. smaa, fxaa, no aa */
     megamol::core::param::ParamSlot mode_;
 
+    /** Texture format variables*/
+    int out_tex_internal_format_ = GL_RGBA32F;
+    int out_tex_format_ = GL_RGBA;
+    int out_tex_type_ = GL_FLOAT;
+
     /** Parameter for selecting the smaa technique: SMAA 1x, SMAA S2x, SMAA T2x, or SMAA 4x
      * SMAA 1x:  basic version of SMAA
      * SMAA S2x: includes all SMAA 1x features plus spatial multismapling (not implemented yet)
@@ -301,6 +313,9 @@ private:
     /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
     megamol::core::param::ParamSlot smaa_detection_technique_;
 
+    /** Parameter for choosing texture formats used within this module*/
+    megamol::core::param::ParamSlot out_texture_format_slot_;
+
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot output_tex_slot_;
 
@@ -309,7 +324,6 @@ private:
 
     /** Slot for optionally querying a depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot depth_tex_slot_;
-
 
     bool settings_have_changed_;
 };
