@@ -328,6 +328,8 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
         graph_ptr->ResetDirty();
     }
 
+    auto const& queue_lua = [&](std::string const& script) { (*input_lua_func).execute_deferred(script, ""); };
+
     // Propagate all changes from the GUI graph to the MegaMol graph
     if (graph_ptr != nullptr) {
         bool graph_sync_success = true;
@@ -339,32 +341,29 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
 
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
-                graph_sync_success &= std::get<0>(
-                    (*input_lua_func)("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])"));
+                queue_lua("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
-                graph_sync_success &= std::get<0>(
-                    (*input_lua_func)("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])"));
+                queue_lua("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])");
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
-                graph_sync_success &= std::get<0>((*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])"));
+                queue_lua("mmDeleteModule([=[" + data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::ADD_CALL): {
-                graph_sync_success &= std::get<0>((*input_lua_func)(
-                    "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
+                queue_lua(
+                    "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])");
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
-                graph_sync_success &=
-                    std::get<0>((*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
+                queue_lua("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])");
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 // megamol currently does not handle well having multiple entrypoints active
-                (*input_lua_func)("mmRemoveAllGraphEntryPoints()\n"
-                                  "mmSetGraphEntryPoint([=[" +
-                                  data.name_id + "]=])");
+                queue_lua("mmRemoveAllGraphEntryPoints()\n"
+                          "mmSetGraphEntryPoint([=[" +
+                          data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
-                (*input_lua_func)("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
+                queue_lua("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
             } break;
             default:
                 break;
@@ -426,8 +425,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                     // Write changed parameter value to core parameter
                     if (p.IsValueDirty()) {
                         p.ResetValueDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
-                        param_sync_success &= std::get<0>((*input_lua_func)(
-                            "mmSetParamValue([=[" + p.FullName() + "]=],[=[" + p.GetValueString() + "]=])"));
+                        queue_lua("mmSetParamValue([=[" + p.FullName() + "]=],[=[" + p.GetValueString() + "]=])");
                     }
                 }
             }
@@ -597,7 +595,8 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                         graph_ptr->AddModule(this->modules_stock, module_class_name, module_name, module_namespace);
                     if (graph_module == nullptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Load Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
+                            "[GUI] Load Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line "
+                            "%d]\n",
                             project_filename.c_str(), (i + 1), module_class_name.c_str(), __FILE__, __FUNCTION__,
                             __LINE__);
                         retval = false;
@@ -710,7 +709,8 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                     // Add call
                     if (!graph_ptr->AddCall(this->calls_stock, caller_slot, callee_slot)) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Load Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line %d]\n",
+                            "[GUI] Load Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line "
+                            "%d]\n",
                             project_filename.c_str(), (i + 1), call_class_name.c_str(), __FILE__, __FUNCTION__,
                             __LINE__);
                         retval = false;
@@ -732,7 +732,8 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                 size_t first_bracket_idx = param_line.find('(');
                 if (first_bracket_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Load Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line %d]\n",
+                        "[GUI] Load Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line "
+                        "%d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     retval = false;
                     continue;
@@ -740,7 +741,8 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                 size_t first_delimiter_idx = param_line.find(',');
                 if (first_delimiter_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Load Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line "
+                        "[GUI] Load Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, "
+                        "line "
                         "%d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     retval = false;
@@ -849,7 +851,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                     for (auto& mod_2 : graph_ptr->Modules()) {
                         if ((mod_1 != mod_2) && (mod_1->FullName() == mod_2->FullName())) {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] Save Project File '%s': Found non unique module name: %s [%s, %s, line %d]\n",
+                                "[GUI] Save Project File '%s': Found non unique module name: %s [%s, %s, line "
+                                "%d]\n",
                                 project_filename.c_str(), mod_1->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
                             found_error = true;
                         }

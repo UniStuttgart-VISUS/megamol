@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "LuaScriptExecution.h"
 #include "Window_Events.h"
 #include "mmcore/utility/String.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
@@ -46,18 +47,22 @@ bool ProjectLoader_Service::init(void* configPtr) {
 }
 
 bool ProjectLoader_Service::init(const Config& config) {
+    m_config = config;
 
     m_loader.load_filename = [&](std::filesystem::path const& filename) { return this->load_file(filename); };
 
     this->m_providedResourceReferences = {{"ProjectLoader", m_loader}};
 
-    this->m_requestedResourcesNames = {"ExecuteLuaScript", "SetScriptPath", "optional<WindowEvents>"};
+    this->m_requestedResourcesNames = {
+        frontend_resources::LuaScriptExecution_Req_Name,
+        "optional<WindowEvents>",
+    };
 
     log("initialized successfully");
     return true;
 }
 
-bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) const {
+bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) {
     // file loaders
     const auto load_lua = [](std::filesystem::path const& filename, std::string& script) -> bool {
         std::ifstream input(filename, std::ios::in);
@@ -105,26 +110,25 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     }
 
     // run lua
-    using LuaFuncType = std::function<std::tuple<bool, std::string>(std::string const&)>;
-    const LuaFuncType& execute_lua = m_requestedResourceReferences[0].getResource<LuaFuncType>();
+    const auto& execute_lua = m_requestedResourceReferences[0].getResource<frontend_resources::LuaScriptExecution>();
 
-    // TODO: remove this resource from Lua when project-centric struture is in place
-    using SetScriptPath = std::function<void(std::string const&)>;
-    const SetScriptPath& set_script_path = m_requestedResourceReferences[1].getResource<SetScriptPath>();
+    const auto script_path = filename.generic_u8string();
 
-    set_script_path(filename.generic_u8string());
+    const auto callback = frontend_resources::LuaExecutionResultCallback{
+        [&, script_path](frontend_resources::LuaExecutionResult const& result) {
+            bool script_ok = std::get<0>(result);
+            std::string script_error = std::get<1>(result);
 
-    auto result = execute_lua(script);
-    bool script_ok = std::get<0>(result);
-    std::string script_error = std::get<1>(result);
+            if (!script_ok) {
+                log_error("failed to execute lua from file " + script_path + "\n\t" + script_error);
+                m_lua_script_failed = true;
+            } else
+                log("success executing lua: " + script_path);
+        }};
 
-    if (!script_ok) {
-        log_error("failed to load file " + filename.generic_u8string() + "\n\t" + script_error);
-        set_script_path("");
-        return false;
-    }
+    execute_lua.execute_deferred_callback(script, script_path, callback);
 
-    log("loaded file " + filename.generic_u8string() + ((script_error.size()) ? "\n\t" + script_error : ""));
+    log("queued lua script: " + filename.generic_u8string());
     return true;
 }
 
@@ -154,7 +158,7 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
 
     // execute lua files dropped into megamol window
     auto maybe_window_events =
-        this->m_requestedResourceReferences[2].getOptionalResource<frontend_resources::WindowEvents>();
+        this->m_requestedResourceReferences[1].getOptionalResource<frontend_resources::WindowEvents>();
     if (!maybe_window_events.has_value()) {
         return;
     }
@@ -175,6 +179,11 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
     window_events.dropped_path_events = possible_files;
 
     m_digestion_recursion = false;
+
+    if (m_lua_script_failed && !m_config.interactive) {
+        this->setShutdown(true);
+    }
+    m_lua_script_failed = false;
 }
 
 void ProjectLoader_Service::resetProvidedResources() {}

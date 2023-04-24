@@ -40,9 +40,19 @@ struct RuntimeConfig {
         megamol::core::utility::log::Log::log_level::info; // mmSetLogLevel
     megamol::core::utility::log::Log::log_level echo_level =
         megamol::core::utility::log::Log::log_level::info; // mmSetEchoLevel
-    std::vector<Path> project_files = {};       // NEW: mmLoadProject - project files are loaded after services are up
-    std::vector<StringPair> global_values = {}; // use GlobalValueStore resource for access to global values!
-    std::string cli_execute_lua_commands;
+    std::vector<StringPair> global_values = {};            // use GlobalValueStore resource for access to global values!
+    std::vector<Path> project_files = {};                  // mmLoadProject
+
+    struct CliLuaRequest {
+        enum class Type {
+            File,
+            Raw,
+        };
+        Type source;
+        std::string contents;
+    };
+    // CLI project files and raw lua scripts, in the order as provided via CLI
+    std::vector<CliLuaRequest> cli_execute_lua_commands;
 
     // detailed and service-specific configurations
     // every CLI option can be set via the config file using mmSetConfigValue

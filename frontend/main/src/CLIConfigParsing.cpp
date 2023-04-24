@@ -64,9 +64,10 @@ std::pair<RuntimeConfig, GlobalValueStore> megamol::frontend::handle_cli_and_con
     }
 
     // set delimiter ; in lua commands to newlines, so lua can actually execute
-    for (auto& character : config.cli_execute_lua_commands) {
-        if (character == ';')
-            character = '\n';
+    for (auto& command : config.cli_execute_lua_commands) {
+        for (auto& character : command.contents)
+            if (command.source == RuntimeConfig::CliLuaRequest::Type::Raw && character == ';')
+                character = '\n';
     }
 
     return {config, global_value_store};
@@ -140,165 +141,129 @@ static void files_exist(std::vector<std::string> vec, std::string const& type) {
 
 // option handlers fill the config struct with passed options
 // this is a handler template
-static void empty_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config){
-    // config.option = parsed_options[option_name].as<bool>();
+static void empty_handler(cxxopts::KeyValue const& option, RuntimeConfig& config){
+    // config.option = option.as<bool>();
 };
 
-static void guishow_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.gui_show = parsed_options[option_name].as<bool>();
+static void guishow_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.gui_show = option.as<bool>();
 };
 
-static void nogui_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.gui_show = !parsed_options[option_name].as<bool>();
+static void nogui_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.gui_show = !option.as<bool>();
 };
 
-static void guiscale_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.gui_scale = parsed_options[option_name].as<float>();
+static void guiscale_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.gui_scale = option.as<float>();
 };
 
-static void privacynote_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.screenshot_show_privacy_note = parsed_options[option_name].as<bool>();
+static void privacynote_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.screenshot_show_privacy_note = option.as<bool>();
 };
 
-static void versionnote_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.show_version_note = parsed_options[option_name].as<bool>();
+static void versionnote_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.show_version_note = option.as<bool>();
 };
 
-static void profile_log_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.profiling_output_file = parsed_options[option_name].as<std::string>();
+static void profile_log_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.profiling_output_file = option.as<std::string>();
 }
 
-static void profile_log_autostart_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.autostart_profiling = !parsed_options[option_name].as<bool>();
+static void profile_log_autostart_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.autostart_profiling = !option.as<bool>();
 }
 
-static void remote_head_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_headnode = parsed_options[option_name].as<bool>();
+static void remote_head_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_headnode = option.as<bool>();
 };
 
-static void remote_render_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_rendernode = parsed_options[option_name].as<bool>();
+static void remote_render_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_rendernode = option.as<bool>();
 };
 
-static void remote_mpirender_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_mpirendernode = parsed_options[option_name].as<bool>();
+static void remote_mpirender_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_mpirendernode = option.as<bool>();
 };
 
-static void remote_mpirank_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_mpi_broadcast_rank = parsed_options[option_name].as<unsigned int>();
+static void remote_mpirank_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_mpi_broadcast_rank = option.as<unsigned int>();
 };
 
-static void remote_zmqtarget_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_headnode_zmq_target_address = parsed_options[option_name].as<std::string>();
+static void remote_zmqtarget_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_headnode_zmq_target_address = option.as<std::string>();
 };
 
-static void remote_zmqsource_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_rendernode_zmq_source_address = parsed_options[option_name].as<std::string>();
+static void remote_zmqsource_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_rendernode_zmq_source_address = option.as<std::string>();
 };
 
-static void remote_head_broadcast_quit_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_headnode_broadcast_quit = parsed_options[option_name].as<bool>();
+static void remote_head_broadcast_quit_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_headnode_broadcast_quit = option.as<bool>();
 };
 
-static void remote_head_broadcast_project_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_headnode_broadcast_initial_project = parsed_options[option_name].as<bool>();
+static void remote_head_broadcast_project_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_headnode_broadcast_initial_project = option.as<bool>();
 };
 
-static void remote_head_connect_at_start_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.remote_headnode_connect_on_start = parsed_options[option_name].as<bool>();
+static void remote_head_connect_at_start_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.remote_headnode_connect_on_start = option.as<bool>();
 };
 
-static void config_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config){
+static void config_handler(cxxopts::KeyValue const& option, RuntimeConfig& config){
     // is already done by first CLI pass which checks config files before running them through Lua
 };
 
-static void appdir_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto appdir = parsed_options[option_name].as<std::string>();
+static void appdir_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto appdir = option.as<std::string>();
     files_exist({appdir}, "Application directory");
 
     config.application_directory = appdir;
 };
 
-static void resourcedir_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto v = parsed_options[option_name].as<std::vector<std::string>>();
-    files_exist(v, "Resource directory");
+static void resourcedir_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto v = option.as<std::string>();
+    files_exist({v}, "Resource directory");
 
-    config.resource_directories.insert(config.resource_directories.end(), v.begin(), v.end());
+    config.resource_directories.push_back(v);
 };
 
-static void shaderdir_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto v = parsed_options[option_name].as<std::vector<std::string>>();
-    files_exist(v, "Shader directory");
+static void shaderdir_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto v = option.as<std::string>();
+    files_exist({v}, "Shader directory");
 
-    config.shader_directories.insert(config.shader_directories.end(), v.begin(), v.end());
+    config.shader_directories.push_back(v);
 };
 
-static void logfile_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.log_file = parsed_options[option_name].as<std::string>();
+static void logfile_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.log_file = option.as<std::string>();
 };
 
 static const std::string accepted_log_level_strings =
     "('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')";
 
-static void loglevel_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.log_level =
-        megamol::core::utility::log::Log::ParseLevelAttribute(parsed_options[option_name].as<std::string>());
+static void loglevel_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.log_level = megamol::core::utility::log::Log::ParseLevelAttribute(option.as<std::string>());
 };
 
-static void echolevel_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.echo_level =
-        megamol::core::utility::log::Log::ParseLevelAttribute(parsed_options[option_name].as<std::string>());
+static void echolevel_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.echo_level = megamol::core::utility::log::Log::ParseLevelAttribute(option.as<std::string>());
 };
 
-static void project_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto v = parsed_options[option_name].as<std::vector<std::string>>();
-    while (v.size() > 1) {
-        v.front() += "," + v[1];
-        v.pop_back();
-    }
-    files_exist(v, "Project file");
+static void project_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto v = option.as<std::string>();
+    files_exist({v}, "Project file");
 
-    config.project_files.insert(config.project_files.end(), v.begin(), v.end());
+    config.project_files.push_back(v);
+    config.cli_execute_lua_commands.push_back({RuntimeConfig::CliLuaRequest::Type::File, v});
 };
 
-static void execute_lua_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto commands = parsed_options[option_name].as<std::vector<std::string>>();
-
-    for (auto& cmd : commands) {
-        config.cli_execute_lua_commands += cmd + ";";
-    }
+static void execute_lua_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto command = option.as<std::string>();
+    config.cli_execute_lua_commands.push_back({RuntimeConfig::CliLuaRequest::Type::Raw, command + ";"});
 };
 
-static void param_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto strings = parsed_options[option_name].as<std::vector<std::string>>();
-    std::string cmds;
+static void param_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto string = option.as<std::string>();
 
     std::regex param_value("(.+)=(.+)");
 
@@ -308,47 +273,37 @@ static void param_handler(
             auto param = "\"" + match[1].str() + "\"";
             auto value = "\"" + match[2].str() + "\"";
 
-            std::string cmd = "mmSetParamValue(" + param + "," + value + ")";
-            cmds += cmd + ";";
+            return "mmSetParamValue(" + param + "," + value + ")";
         } else {
             exit("param option needs to be in the following format: param=value");
         }
     };
 
-    for (auto& paramstring : strings) {
-        handle_param(paramstring);
-    }
+    std::string cmd = handle_param(string);
 
-    // prepend param value changes before other CLI Lua commands
-    config.cli_execute_lua_commands = cmds + config.cli_execute_lua_commands;
+    config.cli_execute_lua_commands.push_back({RuntimeConfig::CliLuaRequest::Type::Raw, cmd});
 };
 
-static void global_value_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto v = parsed_options[option_name].as<std::vector<std::string>>();
+static void global_value_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto key_value = option.as<std::string>();
 
-    for (auto& key_value : v) {
-        auto delimiter = key_value.find(':');
-        if (delimiter == std::string::npos)
-            exit("Config Key-Value pair \"" + key_value +
-                 "\" not valid. Needs colon (:) delimiter between key and value.");
+    auto delimiter = key_value.find(':');
+    if (delimiter == std::string::npos)
+        exit("Config Key-Value pair \"" + key_value + "\" not valid. Needs colon (:) delimiter between key and value.");
 
-        auto key = key_value.substr(0, delimiter);
-        auto value = key_value.substr(delimiter + 1);
+    auto key = key_value.substr(0, delimiter);
+    auto value = key_value.substr(delimiter + 1);
 
-        config.global_values.push_back({key, value});
-    }
+    config.global_values.push_back({key, value});
 };
 
-static void host_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.lua_host_address = parsed_options[option_name].as<std::string>();
+static void host_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.lua_host_address = option.as<std::string>();
 };
 
 
-static void opengl_context_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto string = parsed_options[option_name].as<std::string>();
+static void opengl_context_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto string = option.as<std::string>();
 
     std::regex version("(\\d+).(\\d+)(core|compat)?");
     std::smatch match;
@@ -367,55 +322,44 @@ static void opengl_context_handler(
     }
 };
 
-static void khrdebug_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.opengl_khr_debug = parsed_options[option_name].as<bool>();
+static void khrdebug_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.opengl_khr_debug = option.as<bool>();
 };
-static void vsync_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.opengl_vsync = parsed_options[option_name].as<bool>();
+static void vsync_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.opengl_vsync = option.as<bool>();
 };
-static void no_opengl_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+static void no_opengl_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
     // User cannot overwrite default value when there is no openGL present
 #ifdef MEGAMOL_USE_OPENGL
-    config.no_opengl = parsed_options[option_name].as<bool>();
+    config.no_opengl = option.as<bool>();
 #endif
 };
-static void force_window_size_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.force_window_size = parsed_options[option_name].as<bool>();
+static void force_window_size_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.force_window_size = option.as<bool>();
 };
-static void fullscreen_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::fullscreen;
+static void fullscreen_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.window_mode |= option.as<bool>() * RuntimeConfig::WindowMode::fullscreen;
 };
-static void nodecoration_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nodecoration;
+static void nodecoration_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.window_mode |= option.as<bool>() * RuntimeConfig::WindowMode::nodecoration;
 };
-static void topmost_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::topmost;
+static void topmost_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.window_mode |= option.as<bool>() * RuntimeConfig::WindowMode::topmost;
 };
-static void nocursor_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nocursor;
+static void nocursor_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.window_mode |= option.as<bool>() * RuntimeConfig::WindowMode::nocursor;
 };
-static void hidden_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::hidden;
+static void hidden_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.window_mode |= option.as<bool>() * RuntimeConfig::WindowMode::hidden;
 };
 
 
-static void interactive_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.interactive = parsed_options[option_name].as<bool>();
+static void interactive_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    config.interactive = option.as<bool>();
 };
 
-static void window_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto s = parsed_options[option_name].as<std::string>();
+static void window_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto s = option.as<std::string>();
     // 'WIDTHxHEIGHT[+POSX+POSY]'
     // 'wxh+x+y' with optional '+x+y', e.g. 600x800+0+0 opens window in upper left corner
     std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
@@ -435,9 +379,8 @@ static void window_handler(
     }
 };
 
-static void framebuffer_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto string = parsed_options[option_name].as<std::string>();
+static void framebuffer_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto string = option.as<std::string>();
     // WIDTHxHEIGHT
     std::regex geometry("(\\d+)x(\\d+)");
     std::smatch match;
@@ -450,9 +393,8 @@ static void framebuffer_handler(
     }
 };
 
-static void viewport_tile_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto string = parsed_options[option_name].as<std::string>();
+static void viewport_tile_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto string = option.as<std::string>();
     // x,y;LWIDTHxLHEIGHT;GWIDTHxGHEIGHT
     std::regex geometry("(\\d+),(\\d+):(\\d+)x(\\d+):(\\d+)x(\\d+)");
     std::smatch match;
@@ -475,9 +417,8 @@ static void viewport_tile_handler(
     }
 };
 
-static void vr_service_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto string = parsed_options[option_name].as<std::string>();
+static void vr_service_handler(cxxopts::KeyValue const& option, RuntimeConfig& config) {
+    auto string = option.as<std::string>();
     // --vr=[off|unitykolab]
 
     std::vector<std::pair<std::string, RuntimeConfig::VRMode>> options = {
@@ -502,7 +443,7 @@ static void vr_service_handler(
 };
 
 using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>,
-    std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
+    std::function<void(cxxopts::KeyValue const&, megamol::frontend::RuntimeConfig&)>>;
 
 std::vector<OptionsListEntry> cli_options_list =
     { // config name         option description                                                                 type                                        handler
@@ -655,6 +596,33 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
     } catch (cxxopts::exceptions::exception ex) {
         exit(ex.what());
+    }
+}
+
+static void handle_options_individually(cxxopts::ParseResult const& parsed_options,
+    std::vector<OptionsListEntry> const& cli_options_list, RuntimeConfig& config) {
+    auto find_handler = [&](std::string const& name) {
+        auto find_it = std::find_if(cli_options_list.begin(), cli_options_list.end(), [&](auto& option) {
+            auto option_name = loong(std::get<0>(option));
+            return option_name == name;
+        });
+
+        if (find_it != cli_options_list.end()) {
+            auto& option = *find_it;
+            return std::get<3>(option);
+        } else {
+            std::cerr << "unknown option: " + name;
+        }
+    };
+
+    // go through provided CLI arguments in order of appearance
+    for (auto& option : parsed_options.arguments()) {
+        const auto& option_name = option.key();
+
+        if (parsed_options.count(option_name)) {
+            const auto& option_handler = find_handler(option_name);
+            option_handler(option, config);
+        }
     }
 }
 
@@ -834,15 +802,8 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
         // actually process passed options
         try {
             auto parsed_options = options.parse(argc, argv.data());
-            std::string res;
 
-            for (auto& option : cli_options_list) {
-                auto option_name = loong(std::get<0>(option));
-                if (parsed_options.count(option_name)) {
-                    auto& option_handler = std::get<3>(option);
-                    option_handler(option_name, parsed_options, config);
-                }
-            }
+            handle_options_individually(parsed_options, cli_options_list, config);
 
         } catch (cxxopts::exceptions::exception ex) {
             exit(std::string(ex.what()) + "\nIn file: " + file);
@@ -878,20 +839,13 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
     // actually process passed options
     try {
         auto parsed_options = options.parse(argc, argv);
-        std::string res;
 
         if (parsed_options.count("help")) {
             std::cout << options.help({""}) << std::endl;
             std::exit(0);
         }
 
-        for (auto& option : cli_options_list) {
-            auto option_name = loong(std::get<0>(option));
-            if (parsed_options.count(option_name)) {
-                auto& option_handler = std::get<3>(option);
-                option_handler(option_name, parsed_options, config);
-            }
-        }
+        handle_options_individually(parsed_options, cli_options_list, config);
 
     } catch (cxxopts::exceptions::exception ex) {
         exit(std::string(ex.what()) + "\n" + options.help({""}));

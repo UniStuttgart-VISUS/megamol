@@ -80,11 +80,42 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     m_config = config;
 
-    m_executeLuaScript_resource = [&](std::string const& script) -> std::tuple<bool, std::string> {
+    using namespace frontend_resources;
+
+    auto execute_immediate = lua_execution_func{[&](std::string const& script) -> LuaExecutionResult {
         std::string result_str;
         bool result_b = luaAPI.RunString(script, result_str);
         return {result_b, result_str};
-    };
+    }};
+
+    auto execute_deferred = lua_deferred_execution_func{
+        [&](std::string const& script, std::string const& script_path) -> LuaFutureExecutionResult {
+            LuaExecutionResultPromise promise;
+            auto future = promise.get_future();
+
+            m_lua_deferred_scripts.push_back(LuaDeferredScript{
+                script,
+                script_path,
+                std::optional<LuaExecutionResultPromise>{std::move(promise)},
+                std::nullopt,
+            });
+
+            return future;
+        }};
+
+    auto execute_deferred_callback =
+        lua_deferred_execution_callback_func{[&](std::string const& script, std::string const& script_path,
+                                                 LuaExecutionResultCallback const& callback) -> void {
+            m_lua_deferred_scripts.push_back(LuaDeferredScript{
+                script,
+                script_path,
+                std::nullopt,
+                std::optional<LuaExecutionResultCallback>{callback},
+            });
+        }};
+
+    m_LuaScriptExecution_resource =
+        frontend_resources::LuaScriptExecution{execute_immediate, execute_deferred, execute_deferred_callback};
 
     m_setScriptPath_resource = [&](std::string const& script_path) -> void { luaAPI.SetScriptPath(script_path); };
 
@@ -93,13 +124,14 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     };
 
     this->m_providedResourceReferences = {
-        {"LuaScriptPaths", m_scriptpath_resource},
-        {"ExecuteLuaScript", m_executeLuaScript_resource},
-        {"SetScriptPath", m_setScriptPath_resource},
+        {frontend_resources::LuaScriptPaths_Req_Name, m_LuaScriptPaths_resource},
+        {frontend_resources::LuaScriptExecution_Req_Name, m_LuaScriptExecution_resource},
+        {frontend_resources::SetLuaScriptPath_Req_Name, m_setScriptPath_resource},
         {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
 
-    this->m_requestedResourcesNames = {"FrontendResourcesList",
+    this->m_requestedResourcesNames = {
+        "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics",                      // for LastFrameTime
         "optional<WindowManipulation>",         // for Framebuffer resize
@@ -107,11 +139,13 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "MegaMolGraph",                         // LuaAPI manipulates graph
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
-        frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
+        frontend_resources::CommandRegistry_Req_Name,
+        "optional<GUIRegisterWindow>",
+        "RuntimeConfig",
 #ifdef MEGAMOL_USE_PROFILING
-        frontend_resources::PerformanceManager_Req_Name
+        frontend_resources::PerformanceManager_Req_Name,
 #endif
-    }; //= {"ZMQ_Context"};
+    };
 
     *open_version_notification = false;
 
@@ -166,29 +200,29 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
 
 #define recursion_guard                           \
     RecursionGuard rg{m_service_recursion_depth}; \
-    if (rg.abort())                               \
-        return;
+    if (rg.abort()) {                             \
+        return;                                   \
+    }
+
 
 void Lua_Service_Wrapper::updateProvidedResources() {
-    // during the previous frame module parameters of the graph may have changed.
-    // submit the queued parameter changes to graph subscribers before other services do their thing
-    auto& graph = const_cast<megamol::core::MegaMolGraph&>(
-        m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
-    graph.Broadcast_graph_subscribers_parameter_changes();
+    recursion_guard;
+}
 
+void Lua_Service_Wrapper::run_lua_queue() {
     recursion_guard;
     // we want lua to be the first thing executed in main loop
     // so we do all the lua work here
 
-    m_scriptpath_resource.lua_script_paths.clear();
-    m_scriptpath_resource.lua_script_paths.push_back(luaAPI.GetScriptPath());
+    m_LuaScriptPaths_resource.lua_script_paths.clear();
+    m_LuaScriptPaths_resource.lua_script_paths.push_back(luaAPI.GetScriptPath());
 
     bool need_to_shutdown = false; // e.g. mmQuit should set this to true
 
     // fetch Lua requests from ZMQ queue, execute, and give back result
+    std::string result;
     if (m_network_host != nullptr && !m_network_host->RequestQueueEmpty()) {
         auto lua_requests = std::move(m_network_host->GetRequestQueue());
-        std::string result;
         while (!lua_requests.empty()) {
             auto& request = lua_requests.front();
 
@@ -200,10 +234,40 @@ void Lua_Service_Wrapper::updateProvidedResources() {
         }
     }
 
-    // LuaAPI sets shutdown request of this service via direct callback
-    // -> see Lua_Service_Wrapper::setRequestedResources()
-    //if (need_to_shutdown)
-    //    this->setShutdown();
+    for (auto& lua_request : m_lua_deferred_scripts) {
+        auto& script = lua_request.script;
+        auto& path = lua_request.script_path;
+        auto& maybe_promise = lua_request.result_promise;
+        auto& maybe_callback = lua_request.result_callback;
+
+        m_LuaScriptPaths_resource.lua_script_paths.clear();
+        m_LuaScriptPaths_resource.lua_script_paths.push_back(path);
+        bool success = luaAPI.RunString(script, result);
+        auto execution_resut = frontend_resources::LuaExecutionResult{success, result};
+
+        if (maybe_promise.has_value()) {
+            auto& promise = maybe_promise.value();
+            promise.set_value({execution_resut});
+        }
+
+        if (maybe_callback.has_value()) {
+            auto& callback = maybe_callback.value();
+            callback(execution_resut);
+        }
+
+        if (!success && !m_config.interactive) {
+            need_to_shutdown = true;
+        }
+
+        result.clear();
+    }
+    m_lua_deferred_scripts.clear();
+    // why do we do this??
+    m_LuaScriptPaths_resource.lua_script_paths.clear();
+    m_LuaScriptPaths_resource.lua_script_paths.push_back(luaAPI.GetScriptPath());
+
+    if (need_to_shutdown)
+        this->setShutdown();
 }
 
 void Lua_Service_Wrapper::digestChangedRequestedResources() {

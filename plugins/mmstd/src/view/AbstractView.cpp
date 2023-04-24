@@ -496,7 +496,7 @@ bool view::AbstractView::onLoadCamera(param::ParamSlot& p) {
 std::string view::AbstractView::determineCameraFilePath() const {
     std::string path;
 
-    const auto& paths = frontend_resources.get<megamol::frontend_resources::ScriptPaths>().lua_script_paths;
+    const auto& paths = frontend_resources.get<megamol::frontend_resources::LuaScriptPaths>().lua_script_paths;
     if (!paths.empty()) {
         path = paths[0];
     } else {

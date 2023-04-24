@@ -212,10 +212,6 @@ bool megamol::core::MegaMolGraph::SetParameter(std::string const& paramName, std
 
     bool success = param_ptr->ParseValue(value);
 
-    // param changes are queued in the graphs parameter changes queue
-    // and get passed to graph subscribers at beginning of each frame by the Lua Service
-    // using MegaMolGraph::Broadcast_graph_subscribers_parameter_changes()
-
     if (!success)
         return false;
 

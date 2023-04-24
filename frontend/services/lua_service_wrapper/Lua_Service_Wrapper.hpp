@@ -9,7 +9,8 @@
 #include "AbstractFrontendService.hpp"
 #include "LuaCallbacksCollection.h"
 #include "LuaRemoteConnectionsBroker.h"
-#include "ScriptPaths.h"
+#include "LuaScriptExecution.h"
+#include "LuaScriptPaths.h"
 #include "mmcore/LuaAPI.h"
 
 namespace megamol::frontend {
@@ -41,6 +42,7 @@ public:
             nullptr; // lua api object that will be used/called by the service wrapper only one level deep
         int retry_socket_port = 0;
         bool show_version_notification = true;
+        bool interactive = false;
     };
 
     // sometimes somebody wants to know the name of the service
@@ -70,6 +72,8 @@ public:
     void preGraphRender() override;
     void postGraphRender() override;
 
+    void run_lua_queue();
+
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
     // bool shouldShutdown() const; // shutdown initially false
@@ -88,9 +92,19 @@ private:
 
     std::list<megamol::frontend_resources::LuaCallbacksCollection> m_callbacks;
 
-    megamol::frontend_resources::ScriptPaths m_scriptpath_resource;
-    std::function<std::tuple<bool, std::string>(std::string const&)> m_executeLuaScript_resource;
-    std::function<void(std::string const&)> m_setScriptPath_resource;
+    using LuaExecutionResultPromise = std::promise<frontend_resources::LuaExecutionResult>;
+    struct LuaDeferredScript {
+        std::string script;
+        std::string script_path;
+
+        std::optional<LuaExecutionResultPromise> result_promise;
+        std::optional<frontend_resources::LuaExecutionResultCallback> result_callback;
+    };
+    std::vector<LuaDeferredScript> m_lua_deferred_scripts;
+
+    frontend_resources::LuaScriptExecution m_LuaScriptExecution_resource;
+    megamol::frontend_resources::LuaScriptPaths m_LuaScriptPaths_resource;
+    frontend_resources::set_lua_script_path_func m_setScriptPath_resource;
     std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)> m_registerLuaCallbacks_resource;
 
     void fill_frontend_resources_callbacks(void* callbacks_collection_ptr);
