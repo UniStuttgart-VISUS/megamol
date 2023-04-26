@@ -149,7 +149,7 @@ private:
     bool visibilityCallback(core::param::ParamSlot& slot);
 
     /**
-     * \brief Sets GUI parameter slot visibility depending on antialiasing technique.
+     * \brief Sets Texture format variables and recompiles shaders.
      */
     bool setTextureFormatCallback(core::param::ParamSlot& slot);
 
@@ -215,7 +215,7 @@ private:
     void copyTextureViaShader(
         const std::shared_ptr<glowl::Texture2D>& tgt, const std::shared_ptr<glowl::Texture2D>& src);
 
-    void checkFormatsAndRecompile(const std::shared_ptr<glowl::Texture2D>& input);
+    void checkFormatsAndRecompile();
 
     // profiling
 #ifdef MEGAMOL_USE_PROFILING

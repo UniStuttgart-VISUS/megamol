@@ -693,6 +693,7 @@ bool megamol::compositing_gl::AntiAliasing::setTextureFormatCallback(core::param
     // reinit all textures
     glowl::TextureLayout tx_layout(out_tex_internal_format_, 1, 1, 1, out_tex_format_, out_tex_type_, 1);
     output_tx2D_ = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
+    checkFormatsAndRecompile();
     return true;
 }
 
@@ -703,7 +704,7 @@ bool megamol::compositing_gl::AntiAliasing::getMetaDataCallback(core::Call& call
     return true;
 }
 
-void megamol::compositing_gl::AntiAliasing::checkFormatsAndRecompile(const std::shared_ptr<glowl::Texture2D>& input) {
+void megamol::compositing_gl::AntiAliasing::checkFormatsAndRecompile() {
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     auto shader_options_flags = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);

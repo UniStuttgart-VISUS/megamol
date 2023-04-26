@@ -96,6 +96,11 @@ private:
     void fitTextures(std::shared_ptr<glowl::Texture2D> source);
 
     /**
+     * \brief Sets Texture format variables and recompiles shaders.
+     */
+    bool setTextureFormatCallback(core::param::ParamSlot& slot);
+
+    /**
      * Recalculates the contents of the kernel buffer based on the input
      */
     void recalcKernel();
@@ -112,6 +117,9 @@ private:
     core::param::ParamSlot kernelRadiusParam_;
     /** Parameter slot for the effect strength */
     core::param::ParamSlot lambdaValueParam_;
+
+    /** Parameter for choosing texture formats used within this module*/
+    megamol::core::param::ParamSlot out_texture_format_slot_;
 
     /** version identifier */
     uint32_t version_;
@@ -130,5 +138,10 @@ private:
 
     /** buffer for the gauss kernel */
     std::unique_ptr<glowl::BufferObject> gaussValues_;
+
+    /** Texture Format variables*/
+    int out_tex_internal_format_ = GL_RGBA32F;
+    int out_tex_format_ = GL_RGB;
+    int out_tex_type_ = GL_FLOAT;
 };
 } // namespace megamol::compositing_gl
