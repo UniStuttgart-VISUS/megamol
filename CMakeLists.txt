@@ -2,7 +2,7 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.15...3.24 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15...3.26 FATAL_ERROR)
 
 set(MEGAMOL_VCPKG_VERSION "2023.04.15") # Update default-registry baseline in vcpkg-configuration.json when changing!
 
