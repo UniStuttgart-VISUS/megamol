@@ -101,6 +101,19 @@ private:
 
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot camera_slot_;
+
+    /** Parameter for choosing texture formats used within this module*/
+    megamol::core::param::ParamSlot out_texture_format_slot_;
+
+    /**
+     * \brief Sets Texture format variables and recompiles shaders.
+     */
+    bool setTextureFormatCallback(core::param::ParamSlot& slot);
+
+    /** Texture format variables*/
+    int out_tex_internal_format_ = GL_RGBA32F;
+    int out_tex_format_ = GL_RGBA;
+    int out_tex_type_ = GL_FLOAT;
 };
 
 } // namespace megamol::compositing_gl
