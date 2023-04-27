@@ -1448,10 +1448,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
         ImGuiStyle& style = ImGui::GetStyle();
 
         auto last_val = val;
-        auto file_flags = store.first;
-        auto file_extensions = store.second;
-        bool button_edit = this->gui_file_browser.Button_Select(
-            std::get<std::string>(this->gui_widget_value), file_extensions, file_flags);
+        bool button_edit = this->gui_file_browser.Button_Select(std::get<std::string>(this->gui_widget_value), store);
         ImGui::SameLine();
 
         auto item_width = ImGui::CalcItemWidth();

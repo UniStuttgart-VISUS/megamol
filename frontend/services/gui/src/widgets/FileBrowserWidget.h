@@ -10,7 +10,6 @@
 
 #include "HoverToolTip.h"
 #include "StringSearchWidget.h"
-#include "mmcore/param/FilePathParam.h"
 
 
 using namespace megamol::core::param;
@@ -18,6 +17,12 @@ using namespace megamol::core::param;
 
 namespace megamol::gui {
 
+// forward declare the FilePathStorage_t type here
+// we cant include gui/src/grpah/Parameter.h because
+// it includes this header file itself, leading to endless recursive problems
+// instead we include the Parameter.h in the FileBrowserWidget.cpp file
+// since we actuall yuse the FilePathStorage_t implementation there
+struct FilePathStorage_t;
 
 /** ************************************************************************
  * File browser widget
@@ -40,20 +45,19 @@ public:
      * @return True on success, false otherwise.
      */
     bool PopUp_Save(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
-        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool& inout_save_gui_state,
-        bool& inout_save_all_param_values) {
-        return this->popup(DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags,
-            inout_save_gui_state, inout_save_all_param_values);
+        const FilePathStorage_t& store, bool& inout_save_gui_state, bool& inout_save_all_param_values) {
+        return this->popup(DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, store, inout_save_gui_state,
+            inout_save_all_param_values);
     }
-    bool PopUp_Load(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
-        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
+    bool PopUp_Load(
+        const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathStorage_t& store) {
         bool dummy = false;
-        return this->popup(DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, extensions, flags, dummy, dummy);
+        return this->popup(DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, store, dummy, dummy);
     }
-    bool PopUp_Select(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
-        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
+    bool PopUp_Select(
+        const std::string& label, std::string& inout_filename, bool& inout_open_popup, const FilePathStorage_t& store) {
         bool dummy = false;
-        return this->popup(DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, extensions, flags, dummy, dummy);
+        return this->popup(DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, store, dummy, dummy);
     }
 
     /**
@@ -67,8 +71,7 @@ public:
      *
      * @return True on success, false otherwise.
      */
-    bool Button_Select(
-        std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags);
+    bool Button_Select(std::string& inout_filename, const FilePathStorage_t& store);
 
 private:
     typedef std::pair<std::filesystem::path, bool> ChildData_t;
@@ -100,14 +103,13 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     bool popup(DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup,
-        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool& inout_save_gui_state,
-        bool& inout_save_all_param_values);
+        const FilePathStorage_t& store, bool& inout_save_gui_state, bool& inout_save_all_param_values);
 
     bool validate_split_path(
-        const std::string& in_path, FilePathParam::Flags_t flags, std::string& out_dir, std::string& out_file) const;
-    void validate_directory(FilePathParam::Flags_t flags, const std::string& directory_str);
-    void validate_file(DialogMode mode, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
-        const std::string& directory_str, const std::string& file_str);
+        const std::string& in_path, const FilePathStorage_t& store, std::string& out_dir, std::string& out_file) const;
+    void validate_directory(const FilePathStorage_t& store, const std::string& directory_str);
+    void validate_file(
+        DialogMode mode, const FilePathStorage_t& store, const std::string& directory_str, const std::string& file_str);
 
     std::string get_parent_path(const std::string& dir) const;
     std::string get_absolute_path(const std::string& dir) const;
