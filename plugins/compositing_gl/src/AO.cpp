@@ -2,59 +2,57 @@
 
 #include "OpenGL_Context.h"
 #include "mmcore/param/IntParam.h"
+#include "compositing_gl/CompositingCalls.h"
 
-using namespace megamol::moldyn_gl::rendering;
-using namespace megamol::geocalls;
+//using namespace megamol::geocalls;
 
-AO::AO(void)
+megamol::compositing_gl::AO::AO(void)
         : mmstd_gl::ModuleGL()
-        , output_tex_slot_("generateVoxels", "Slot for requesting voxel generation.")
+        , output_tex_slot_("AmbientOcclusionTexture", "Slot for requesting ambient occlusion texture.")
         , voxels_tex_slot_("getParticleData", "Connects to the data source")
         , vol_size_slot_("volumeSize", "Longest volume edge")
         , texture_handle()
         , voxel_handle()
-        , vol_gen_(nullptr)
+        //, vol_gen_(nullptr)
         , vertex_array_()
         , shader_options_flags_(nullptr)
         , sphere_prgm_()
         , vbo_() {
 
     // CallTexture2D
-    this->output_tex_slot_.SetCallback(VolumetricDataCall::ClassName(),
-        VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA), &AO::getDataCallback);
-    this->output_tex_slot_.SetCallback(VolumetricDataCall::ClassName(),
-        VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA), &AO::getMetadataCallback);
-
+    this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &AO::getDataCallback);
+    this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &AO::getMetadataCallback);
     this->MakeSlotAvailable(&this->output_tex_slot_);
 
-    // MultiParticleDataCall slot
-    this->voxels_tex_slot_.SetCompatibleCall<MultiParticleDataCallDescription>();
+    // VolumetricDataCall slot (get voxel texture)
+    /*this->voxels_tex_slot_.SetCompatibleCall<VolumetricDataCall>();
     this->voxels_tex_slot_.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
-    this->MakeSlotAvailable(&this->voxels_tex_slot_);
+    this->MakeSlotAvailable(&this->voxels_tex_slot_);*/
 
-    this->vol_size_slot_ << (new core::param::IntParam(256, 1, 1024));
-    this->MakeSlotAvailable(&this->vol_size_slot_);
+    //this->vol_size_slot_ << (new core::param::IntParam(256, 1, 1024));
+    //this->MakeSlotAvailable(&this->vol_size_slot_);
 }
 
-AO::~AO(void) {
+
+
+megamol::compositing_gl::AO::~AO(void) {
 
     this->release();
 }
 
-void AO::release(void) {
-}
+void megamol::compositing_gl::AO::release(void) {}
 
-bool AO::create(void) {
+bool megamol::compositing_gl::AO::create(void) {
     return true;
 }
 
 
-bool AO::getMetadataCallback(core::Call& call) {
+bool megamol::compositing_gl::AO::getMetadataCallback(core::Call& call) {
     return true;
 }
 
 
-bool AO::getDataCallback(core::Call& call) {
+bool megamol::compositing_gl::AO::getDataCallback(core::Call& call) {
 
     return true;
 }

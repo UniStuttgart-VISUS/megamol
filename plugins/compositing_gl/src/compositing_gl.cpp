@@ -15,6 +15,7 @@
 #include "NormalFromDepth.h"
 #include "PNGDataSource.h"
 #include "SSAO.h"
+#include "AO.h"
 #include "ScreenSpaceEdges.h"
 #include "SimpleRenderTarget.h"
 #include "TexInspectModule.h"
@@ -45,6 +46,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TextureDepthCompositing>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::NormalFromDepth>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::SSAO>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::AO>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::AntiAliasing>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::PNGDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TexInspectModule>();

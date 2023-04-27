@@ -1,24 +1,21 @@
-#ifndef MEGAMOL_MOLDYN_AO_H_INCLUDED
-#define MEGAMOL_MOLDYN_AO_H_INCLUDED
-
 #pragma once
 
 
-#include "geometry_calls/MultiParticleDataCall.h"
-#include "geometry_calls/VolumetricDataCall.h"
+//#include "geometry_calls/MultiParticleDataCall.h"
+//#include "geometry_calls/VolumetricDataCall.h"
 
-#include "misc/MDAOVolumeGenerator.h"
+//#include "misc/MDAOVolumeGenerator.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/ModuleGL.h"
 
+#include "mmcore_gl/utility/ShaderFactory.h"
+
 //#include "mmcore/CoreInstance.h"
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::compositing_gl {
 
 class AO : public mmstd_gl::ModuleGL {
 
@@ -103,11 +100,11 @@ private:
     GLuint texture_handle;
     GLuint voxel_handle;
 
-    geocalls::VolumetricDataCall::Metadata metadata;
+    //geocalls::VolumetricDataCall::Metadata metadata;
 
     core::param::ParamSlot vol_size_slot_;
 
-    misc::MDAOVolumeGenerator* vol_gen_;
+    //misc::MDAOVolumeGenerator* vol_gen_;
 
     GLuint vertex_array_;
 
@@ -118,8 +115,4 @@ private:
     std::shared_ptr<glowl::GLSLProgram> sphere_prgm_;
 };
 
-} // namespace rendering
-} // namespace moldyn_gl
-} // namespace megamol
-
-#endif /* MEGAMOL_MOLDYN_VOXELGENERATOR_H_INCLUDED */
+} // namespace megamol::compositing_gl
