@@ -461,6 +461,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
 
     auto const& flags = store.flags;
     auto const& extensions = store.extensions;
+    auto const& project_dir = store.project_directory;
 
     try {
         this->file_errors.clear();
@@ -476,7 +477,7 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
                 tmp_filepath = dir;
             }
         }
-        auto error_flags = FilePathParam::ValidatePath(tmp_filepath, extensions, flags);
+        auto error_flags = FilePathParam::ValidatePath(tmp_filepath, extensions, flags, project_dir);
         if (error_flags != 0) {
             this->valid_file = false;
         }

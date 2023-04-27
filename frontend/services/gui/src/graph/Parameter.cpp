@@ -171,7 +171,8 @@ std::string megamol::gui::Parameter::GetValueString() const {
             value_string = arg;
         } else if constexpr (std::is_same_v<T, std::filesystem::path>) {
             auto file_storage = this->GetStorage<FilePathStorage_t>();
-            auto parameter = megamol::core::param::FilePathParam(arg, file_storage.first, file_storage.second);
+            auto parameter = megamol::core::param::FilePathParam(
+                arg, file_storage.flags, file_storage.extensions, file_storage.project_directory);
             value_string = parameter.ValueString();
         } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
             auto parameter = megamol::core::param::TernaryParam(arg);
@@ -245,10 +246,10 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
     } break;
     case (ParamType_t::FILEPATH): {
         auto file_storage = this->GetStorage<FilePathStorage_t>();
-        megamol::core::param::FilePathParam parameter(
-            std::filesystem::u8path(val_str), file_storage.first, file_storage.second);
+        megamol::core::param::FilePathParam parameter(std::filesystem::path(val_str), file_storage.flags,
+            file_storage.extensions, file_storage.project_directory);
         retval = parameter.ParseValue(val_str);
-        this->SetValue(parameter.Value(), set_default_val, set_dirty);
+        this->SetValue(parameter.ValueString(), set_default_val, set_dirty);
     } break;
     case (ParamType_t::FLEXENUM): {
         megamol::core::param::FlexEnumParam parameter(val_str);
@@ -341,7 +342,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param.type = ParamType_t::FILEPATH;
         out_param.default_value = p_ptr->ValueString();
-        out_param.storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
+        out_param.storage = FilePathStorage_t{p_ptr->GetFlags(), p_ptr->GetExtensions(), p_ptr->GetProjectDirectory()};
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FlexEnumParam>()) {
         out_param.type = ParamType_t::FLEXENUM;
         out_param.default_value = p_ptr->ValueString();
@@ -485,8 +486,8 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::FILEPATH,
-            FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()}), std::monostate(), std::monostate(),
-            std::monostate(), param_name, description);
+            FilePathStorage_t{p_ptr->GetFlags(), p_ptr->GetExtensions(), p_ptr->GetProjectDirectory()},
+            std::monostate(), std::monostate(), std::monostate(), param_name, description);
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -563,8 +564,9 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         }
     } else if (auto* p_ptr = dynamic_cast<core::param::FilePathParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::FILEPATH) {
-            out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
-            auto file_storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
+            out_param.SetValue(std::filesystem::path{p_ptr->ValueString()}, set_default_val, set_dirty);
+            auto file_storage =
+                FilePathStorage_t{p_ptr->GetFlags(), p_ptr->GetExtensions(), p_ptr->GetProjectDirectory()};
             out_param.SetStorage(file_storage);
         } else {
             type_error = true;
@@ -1473,8 +1475,12 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
             std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
             val = std::filesystem::path(tmp_val_str);
             try {
+                const auto& extensions = store.extensions;
+                const auto& flags = store.flags;
+                const auto& projdir = store.project_directory;
+
                 if (last_val != val) {
-                    auto error_flags = FilePathParam::ValidatePath(val, file_extensions, file_flags);
+                    auto error_flags = FilePathParam::ValidatePath(val, extensions, flags, projdir);
                     if (error_flags & FilePathParam::FilePathParam::Flag_File) {
                         this->gui_popup_msg =
                             "Omitting value '" + val.generic_u8string() + "'. Expected file but directory is given.";
@@ -1488,7 +1494,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
                     }
                     if (error_flags & FilePathParam::Internal_RestrictExtension) {
                         std::string log_exts;
-                        for (auto& ext : file_extensions) {
+                        for (auto& ext : extensions) {
                             log_exts += "'." + ext + "' ";
                         }
                         this->gui_popup_msg = "Omitting value '" + val.generic_u8string() +
