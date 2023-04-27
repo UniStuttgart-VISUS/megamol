@@ -37,6 +37,7 @@ typedef std::map<int, std::string> EnumStorage_t;
 struct FilePathStorage_t {
     megamol::core::param::FilePathParam::Flags_t flags = 0;
     megamol::core::param::FilePathParam::Extensions_t extensions = {};
+    std::filesystem::path project_directory = "";
 };
 
 
