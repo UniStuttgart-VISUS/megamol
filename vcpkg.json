@@ -129,6 +129,12 @@
         }
       ]
     },
+    "use-power": {
+      "description": "Use power consumption measurement",
+      "dependencies": [
+        "power-overwhelming"
+      ]
+    },
     "use-profiling": {
       "description": "Use Profiling"
     },

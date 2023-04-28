@@ -191,12 +191,8 @@ public:
         return name_space;
     }
     // ::<module_group>::<module_name> + :: + <param_namespace>::<param_name>
-    inline std::string FullNameProject() const {
+    inline std::string FullName() const {
         return std::string(this->parent_module_name + "::" + this->param_name);
-    }
-    // :: + ::<module_group>::<module_name> + :: + <param_namespace>::<param_name>
-    inline std::string FullNameCore() const {
-        return std::string("::" + this->parent_module_name + "::" + this->param_name);
     }
 
     std::string GetValueString() const;

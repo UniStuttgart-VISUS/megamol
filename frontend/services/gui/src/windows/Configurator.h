@@ -72,7 +72,6 @@ private:
     ImGuiID module_list_popup_hovered_group_uid;
     bool show_module_list_sidebar;
     bool show_module_list_popup;
-    ImVec2 module_list_popup_pos;
     ImGuiID last_selected_callslot_uid;
     bool open_popup_load;
 

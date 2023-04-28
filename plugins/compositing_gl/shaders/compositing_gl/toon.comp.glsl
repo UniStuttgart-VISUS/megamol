@@ -1,5 +1,9 @@
 #version 430
 
+#include "mmstd_gl/shading/color.inc.glsl"
+#include "mmstd_gl/shading/tonemapping.inc.glsl"
+#include "mmstd_gl/shading/transformations.inc.glsl"
+
 struct LightParams
 {
     float x,y,z,intensity;
@@ -23,20 +27,6 @@ uniform mat4 inv_proj_mx;
 
 uniform float exposure_avg_intensity;
 uniform float roughness;
-
-vec3 depthToWorldPos(float depth, vec2 uv) {
-    float z = depth * 2.0 - 1.0;
-
-    vec4 cs_pos = vec4(uv * 2.0 - 1.0, z, 1.0);
-    vec4 vs_pos = inv_proj_mx * cs_pos;
-
-    // Perspective division
-    vs_pos /= vs_pos.w;
-    
-    vec4 ws_pos = inv_view_mx * vs_pos;
-
-    return ws_pos.xyz;
-}
 
 struct LightIntensities{
     float diffuse;
@@ -72,19 +62,7 @@ float toonRamp(float light_intensity, float shadow, float midtone, float light){
     float midtone_to_light = mix(midtone,light,smoothstep(midtone,midtone + feathering, light_intensity));
 
     return light_intensity > midtone ? midtone_to_light : shadow_to_midtone;
-};
-
-// see https://64.github.io/tonemapping/
-vec3 reinhardExt(vec3 c, vec3 c_white){
-    return (c * (vec3(1.0)+(c/pow(c_white,vec3(2.0)))))/(vec3(1.0)+c);
 }
-float reinhardExt(float c, float c_white){
-    return (c * (1.0+(c/pow(c_white,2.0))))/(1.0+c);
-}
-
-vec3 gamma(vec3 c){
-    return pow(  c, vec3(1.0/2.2) );
-};
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -107,7 +85,7 @@ void main() {
 
     if (depth > 0.0f && depth < 1.0f)
     {
-        vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm);
+        vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm, inv_view_mx, inv_proj_mx);
 
         LightIntensities reflected_light;
         reflected_light.diffuse = 0.0;
@@ -190,14 +168,13 @@ void main() {
 
         // combines specular and rim lighting with max operator, then balance with diffuse based on roughness
         float specular = max(reflected_light.specular, reflected_light.rim);
-        vec3 final_rgb =vec3(mix(specular, reflected_light.diffuse, roughness)) * albedo.rgb;
-        //final_rgb = vec3(specular);
+        vec3 final_light_intensity =vec3(mix(specular, reflected_light.diffuse, roughness));
 
-        // apply tone mapping
-        final_rgb = reinhardExt(final_rgb,vec3(1.0));
+        // apply tone mapping and gamma correction
+        final_light_intensity = toSRGB(vec4(reinhardExt(final_light_intensity,vec3(1.0)),1.0)).rgb;
 
-        // gamma correction
-        retval.rgb = gamma(final_rgb);
+        // multiply sRGB color with gamma corrected light intensity
+        retval.rgb = (albedo.rgb * final_light_intensity);
     }
 
     imageStore(tgt_tx2D, pixel_coords , retval );
