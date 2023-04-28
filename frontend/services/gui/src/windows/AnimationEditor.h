@@ -124,7 +124,7 @@ private:
     int export_screenshot_option = 0;
     bool propagate_to_siblings = false;
     std::string error_popup_message;
-    vislib::math::Ternary ternary = vislib::math::Ternary::TRI_UNKNOWN;
+    bool save_state = false, save_all_params = false;
     std::string animation_file, export_file;
     std::string output_prefix;
 

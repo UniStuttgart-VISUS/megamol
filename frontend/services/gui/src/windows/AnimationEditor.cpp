@@ -381,7 +381,7 @@ void AnimationEditor::DrawPopups() {
         open_popup_load = false;
     }
     if (this->file_browser.PopUp_Save("Save Animation", animation_file, open_popup_save, {"anim"},
-            FilePathParam::Flag_File_ToBeCreatedWithRestrExts, ternary)) {
+            FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_state, save_all_params)) {
         if (!SaveToFile(animation_file)) {
             error_popup_message = "Saving failed.";
             open_popup_error = true;
@@ -389,7 +389,7 @@ void AnimationEditor::DrawPopups() {
         open_popup_save = false;
     }
     if (this->file_browser.PopUp_Save("Export Lua Script", export_file, open_popup_export, {"lua"},
-            FilePathParam::Flag_File_ToBeCreatedWithRestrExts, ternary)) {
+            FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_state, save_all_params)) {
         if (!ExportToFile(export_file)) {
             error_popup_message = "Exporting failed.";
             open_popup_error = true;
