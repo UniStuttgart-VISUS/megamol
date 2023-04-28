@@ -9,7 +9,8 @@ megamol_plugin(compositing_gl
     opengl
   DEPENDS_PLUGINS
     mmstd
-    mmstd_gl)
+    mmstd_gl
+    geometry_calls)
 
 if (compositing_gl_PLUGIN_ENABLED)
   # Additional sources

@@ -10,8 +10,18 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/ModuleGL.h"
-
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "glowl/glowl.h"
+#include "mmcore/param/FloatParam.h"
+
+
+
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+#include <vector>
 
 //#include "mmcore/CoreInstance.h"
 
@@ -93,12 +103,16 @@ private:
     //MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
 
     /** The slot that requests the data. */
-    core::CalleeSlot output_tex_slot_; // VolumetricDataCall (left slot)
+    core::CalleeSlot output_tex_slot_; // Ambient occlusion texture (left slot)
 
-    core::CallerSlot voxels_tex_slot_; // MultiParticleDataCall (right slot)
+    core::CallerSlot voxels_tex_slot_; // VolumetricDataCall (right slot)
 
     GLuint texture_handle;
     GLuint voxel_handle;
+
+    GLuint depth_tex;
+    GLuint normal_tex;
+    GLuint color_tex;
 
     //geocalls::VolumetricDataCall::Metadata metadata;
 
@@ -112,7 +126,20 @@ private:
 
     std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shader_options_flags_;
 
-    std::shared_ptr<glowl::GLSLProgram> sphere_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> lighting_prgm_;
+
+    std::unique_ptr<glowl::BufferObject> ao_dir_ubo_;
+
+    megamol::core::param::ParamSlot ao_cone_apex_slot_;
+    megamol::core::param::ParamSlot enable_lighting_slot_;
+    megamol::core::param::ParamSlot ao_offset_slot_;
+    megamol::core::param::ParamSlot ao_strength_slot_;
+    megamol::core::param::ParamSlot ao_cone_length_slot_;
+
+
+    void renderAmbientOcclusion();
+
+    void generate3ConeDirections(std::vector<glm::vec4>& directions, float apex);
 };
 
 } // namespace megamol::compositing_gl
