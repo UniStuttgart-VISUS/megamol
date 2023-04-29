@@ -110,9 +110,14 @@ private:
     GLuint texture_handle;
     GLuint voxel_handle;
 
-    GLuint depth_tex;
-    GLuint normal_tex;
+    std::shared_ptr<glowl::Texture2D> final_output_;
+
+    std::shared_ptr<glowl::Texture2D> depth_tex;
+    std::shared_ptr<glowl::Texture2D> normal_tex;
     GLuint color_tex;
+
+    
+    glm::mat4 cur_mvp_inv_;
 
     //geocalls::VolumetricDataCall::Metadata metadata;
 
@@ -136,6 +141,14 @@ private:
     megamol::core::param::ParamSlot ao_strength_slot_;
     megamol::core::param::ParamSlot ao_cone_length_slot_;
 
+    /** Slot for querying normals render target texture, i.e. a rhs connection */
+    megamol::core::CallerSlot normals_tex_slot_;
+
+    /** Slot for querying depth render target texture, i.e. a rhs connection */
+    megamol::core::CallerSlot depth_tex_slot_;
+
+    /** Slot for querying camera, i.e. a rhs connection */
+    megamol::core::CallerSlot camera_slot_;
 
     void renderAmbientOcclusion();
 

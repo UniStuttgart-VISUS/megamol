@@ -21,15 +21,20 @@ megamol::compositing_gl::AO::AO(void)
         , shader_options_flags_(nullptr)
         , lighting_prgm_()
         , vbo_()
+        , cur_mvp_inv_()
         , ao_dir_ubo_(nullptr)
         , ao_offset_slot_("offset", "Offset from Surface")
         , ao_strength_slot_("strength", "Strength")
         , ao_cone_apex_slot_("apex", "Cone Apex Angle")
         , ao_cone_length_slot_("coneLength", "Cone length")
         , enable_lighting_slot_("enableLighting", "Enable Lighting")
+        , normals_tex_slot_("NormalTexture", "Connects the normals render target texture")
+        , depth_tex_slot_("DepthTexture", "Connects the depth render target texture")
+        , camera_slot_("Camera", "Connects a (copy of) camera state")
         , depth_tex()
         , normal_tex()
         , color_tex()
+        , final_output_(nullptr)
         {
 
     // CallTexture2D
@@ -59,6 +64,15 @@ megamol::compositing_gl::AO::AO(void)
 
     this->ao_cone_length_slot_ << (new param::FloatParam(0.8f, 0.01f, 1.0f));
     this->MakeSlotAvailable(&this->ao_cone_length_slot_);
+
+    this->normals_tex_slot_.SetCompatibleCall<CallTexture2DDescription>();
+    this->MakeSlotAvailable(&this->normals_tex_slot_);
+
+    this->depth_tex_slot_.SetCompatibleCall<CallTexture2DDescription>();
+    this->MakeSlotAvailable(&this->depth_tex_slot_);
+
+    this->camera_slot_.SetCompatibleCall<CallCameraDescription>();
+    this->MakeSlotAvailable(&this->camera_slot_);
 }
 
 
@@ -101,6 +115,10 @@ bool megamol::compositing_gl::AO::create(void) {
     lighting_prgm_ = core::utility::make_glowl_shader("sphere_mdao_deferred", lighting_so,
         "moldyn_gl/sphere_renderer/sphere_mdao_deferred.vert.glsl",
         "moldyn_gl/sphere_renderer/sphere_mdao_deferred.frag.glsl");
+
+    auto depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
+    final_output_ = std::make_shared<glowl::Texture2D>("final_output", depth_buffer_viewspace_linear_layout_, nullptr);
+    
     
     return true;
 }
@@ -112,22 +130,81 @@ bool megamol::compositing_gl::AO::getMetadataCallback(core::Call& call) {
 
 bool megamol::compositing_gl::AO::getDataCallback(core::Call& call) {
     auto lhsTc = dynamic_cast<CallTexture2D*>(&call);
-    //auto callNormal = normals_tex_slot_.CallAs<CallTexture2D>();
-    //auto callDepth = depth_tex_slot_.CallAs<CallTexture2D>();
-    //auto callCamera = camera_slot_.CallAs<CallCamera>();
+    auto callNormal = normals_tex_slot_.CallAs<CallTexture2D>();
+    auto callDepth = depth_tex_slot_.CallAs<CallTexture2D>();
+    auto callCamera = camera_slot_.CallAs<CallCamera>();
 
     if (lhsTc == NULL)
         return false;
+    if (callNormal == NULL)
+        return false;
+    if (callDepth == NULL)
+        return false;
+    if (callCamera == NULL)
+        return false;
+
+
+    if (!(*callNormal)(0))
+        return false;
+
+    if (!(*callDepth)(0))
+        return false;
+
+    if (!(*callCamera)(0))
+        return false;
+
+
+    bool normalUpdate = callNormal->hasUpdate();
+    bool depthUpdate = callDepth->hasUpdate();
+    bool cameraUpdate = callCamera->hasUpdate();
+
+    if (normalUpdate || depthUpdate || cameraUpdate) {
+        // TODO output texture
+
+        normal_tex = callNormal->getData();
+        //std::array<int, 2> txResNormal = {(int)normals_->getWidth(), (int)normals_->getHeight()};
+    
+        depth_tex = callDepth->getData();
+        //std::array<int, 2> txResDepth = {(int)depthTx2D->getWidth(), (int)depthTx2D->getHeight()};
+
+
+        // set output texture size to input texture size
+        if (final_output_->getWidth() != depth_tex->getWidth() ||
+            final_output_->getHeight() != depth_tex->getHeight()) {
+            glowl::TextureLayout tx_layout(
+                GL_RGBA16F, depth_tex->getWidth(), depth_tex->getHeight(), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+            final_output_->reload(tx_layout, nullptr);
+        }
+
+
+
+
+        // obtain camera information
+        core::view::Camera cam = callCamera->getData();
+        glm::mat4 viewMx = cam.getViewMatrix();
+        glm::mat4 projMx = cam.getProjectionMatrix();
+
+
+        cur_mvp_inv_ = glm::inverse(projMx * viewMx);
+        auto cur_cam_pos_ = cam.getPose().position;
+        
+        renderAmbientOcclusion();
+    }
 
     
+
     //setupOutputTexture(depthTx2D, final_output_);
 
-    renderAmbientOcclusion();
 
     //final_output_->bindImage(0, GL_WRITE_ONLY);
 
+    /*if (lhsTc->version() < version_) {
+        settings_have_changed_ = false;
+        update_caused_by_normal_slot_change_ = false;
+    }*/
+
     // set data
-    //lhsTc->setData(final_output_, version_);
+    lhsTc->setData(normal_tex, lhsTc->version()); //final_output_, version_);
 
     // TODO make texture available!
 
@@ -162,19 +239,18 @@ void megamol::compositing_gl::AO::generate3ConeDirections(std::vector<glm::vec4>
 }
 
 
-void megamol::compositing_gl::AO::renderAmbientOcclusion() {
-
+void megamol::compositing_gl::AO::renderAmbientOcclusion(){
 //void SphereRenderer::renderDeferredPass(mmstd_gl::CallRender3DGL& call) {
 //
-    //bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
+    bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
     //bool high_precision = this->use_hp_textures_slot_.Param<param::BoolParam>()->Value();
 
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, depth_tex);
+    depth_tex->bindTexture();
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, normal_tex);
+    normal_tex->bindTexture();
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, color_tex);
+    glBindTexture(GL_TEXTURE_2D, color_tex);  // TODO... necessary?
 
     // voxel texture
     VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
@@ -203,12 +279,10 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion() {
     this->lighting_prgm_->setUniform("inNormalsTex", static_cast<int>(1));
     this->lighting_prgm_->setUniform("inDepthTex", static_cast<int>(2));
     this->lighting_prgm_->setUniform("inDensityTex", static_cast<int>(3));
-
-    /*this->lighting_prgm_->setUniform("inWidth", static_cast<float>(this->cur_vp_width_));
-    this->lighting_prgm_->setUniform("inHeight", static_cast<float>(this->cur_vp_height_));
-    glUniformMatrix4fv(
-        this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
-    this->lighting_prgm_->setUniform("inUseHighPrecision", high_precision);
+    this->lighting_prgm_->setUniform("inWidth", static_cast<float>(normal_tex->getWidth()));
+    this->lighting_prgm_->setUniform("inHeight", static_cast<float>(normal_tex->getHeight()));
+    glUniformMatrix4fv(this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
+    /* this->lighting_prgm_->setUniform("inUseHighPrecision", high_precision);
     if (enable_lighting) {
         this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(this->cur_light_dir_));
         this->lighting_prgm_->setUniform("inObjCamPos", glm::vec3(this->cur_cam_pos_));
