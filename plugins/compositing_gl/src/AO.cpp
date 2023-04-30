@@ -116,7 +116,9 @@ bool megamol::compositing_gl::AO::create(void) {
         "moldyn_gl/sphere_renderer/sphere_mdao_deferred.vert.glsl",
         "moldyn_gl/sphere_renderer/sphere_mdao_deferred.frag.glsl");
 
-    auto depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
+    //auto depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
+    //auto depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_RGB, 1, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, 1);
+    auto depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_UNSIGNED_BYTE, 1);
     final_output_ = std::make_shared<glowl::Texture2D>("final_output", depth_buffer_viewspace_linear_layout_, nullptr);
     
     
@@ -187,6 +189,7 @@ bool megamol::compositing_gl::AO::getDataCallback(core::Call& call) {
 
         cur_mvp_inv_ = glm::inverse(projMx * viewMx);
         auto cur_cam_pos_ = cam.getPose().position;
+
         
         renderAmbientOcclusion();
     }
@@ -240,6 +243,34 @@ void megamol::compositing_gl::AO::generate3ConeDirections(std::vector<glm::vec4>
 
 
 void megamol::compositing_gl::AO::renderAmbientOcclusion(){
+
+    
+    // TODO bind fbo?
+    /*
+    GLint prev_fbo;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, this->g_buffer_.fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->g_buffer_.color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->g_buffer_.normals, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->g_buffer_.depth, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
+    */
+    /* glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->g_buffer_.color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->g_buffer_.normals, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->g_buffer_.depth, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }*/
+
 //void SphereRenderer::renderDeferredPass(mmstd_gl::CallRender3DGL& call) {
 //
     bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
@@ -250,7 +281,8 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     glActiveTexture(GL_TEXTURE1);
     normal_tex->bindTexture();
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, color_tex);  // TODO... necessary?
+    final_output_->bindTexture();
+    //glBindTexture(GL_TEXTURE_2D, color_tex);  // TODO... necessary?
 
     // voxel texture
     VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
@@ -320,4 +352,11 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_3D);
+
+
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        // Process/log the error.
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("AO: error" + err);
+    }
 }

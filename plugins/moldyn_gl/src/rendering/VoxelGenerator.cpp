@@ -105,17 +105,17 @@ bool VoxelGenerator::getMetadataCallback(core::Call& call) {
 
     VolumetricDataCall* volume_call = dynamic_cast<VolumetricDataCall*>(&call);
     MultiParticleDataCall* particle_call = this->get_data_slot_.CallAs<MultiParticleDataCall>();
-    if (particle_call == nullptr)
+    if (particle_call == nullptr || volume_call == nullptr)
         return false;
 
-    if (volume_call != nullptr) {
-        // set metadata
-        int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
-        metadata.Resolution[0] = vol_size; // TODO?
-        metadata.MemLoc = MemoryLocation::VRAM;
+    // set metadata
+    int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
+    metadata.Resolution[0] = vol_size; // TODO?
+    metadata.MemLoc = MemoryLocation::VRAM;
 
-        volume_call->SetMetadata(&metadata);
-    }
+    volume_call->SetMetadata(&metadata);
+
+    return true;
 }
 
 
