@@ -88,8 +88,7 @@ void FrameStatistics_Service::postGraphRender() {}
 
 // TODO: maybe port FPS Counter from
 // #include "vislib/graphics/FpsCounter.h"
-void FrameStatistics_Service::start_frame() {
-}
+void FrameStatistics_Service::start_frame() {}
 
 void FrameStatistics_Service::finish_frame() {
     auto now = std::chrono::steady_clock::time_point::clock::now();

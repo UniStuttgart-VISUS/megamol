@@ -566,8 +566,8 @@ std::vector<OptionsListEntry> cli_options_list =
             cxxopts::value<bool>(), privacynote_handler},
         {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
             cxxopts::value<bool>(), versionnote_handler},
-        {flush_frequency_option, "Flush logs (performance, power, ...) every that many frames", cxxopts::value<uint32_t>(),
-            flush_frequency_handler}
+        {flush_frequency_option, "Flush logs (performance, power, ...) every that many frames",
+            cxxopts::value<uint32_t>(), flush_frequency_handler}
 #ifdef MEGAMOL_USE_PROFILING
         ,
         {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
