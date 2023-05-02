@@ -114,6 +114,7 @@ static std::string guiscale_option = "guiscale";
 static std::string privacynote_option = "privacynote";
 static std::string versionnote_option = "versionnote";
 static std::string profile_log_option = "profiling-log";
+static std::string flush_frequency_option = "flush-frequency";
 static std::string profile_log_no_autostart_option = "pause-profiling";
 static std::string profile_log_include_events_option = "profiling-include-events";
 static std::string param_option = "param";
@@ -174,6 +175,11 @@ static void versionnote_handler(
 static void profile_log_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.profiling_output_file = parsed_options[option_name].as<std::string>();
+}
+
+static void flush_frequency_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.flush_frequency = parsed_options[option_name].as<uint32_t>();
 }
 
 static void profile_log_autostart_handler(
@@ -559,7 +565,9 @@ std::vector<OptionsListEntry> cli_options_list =
         {privacynote_option, "Show privacy note when taking screenshot, use '=false' to disable",
             cxxopts::value<bool>(), privacynote_handler},
         {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
-            cxxopts::value<bool>(), versionnote_handler}
+            cxxopts::value<bool>(), versionnote_handler},
+        {flush_frequency_option, "Flush logs (performance, power, ...) every that many frames", cxxopts::value<uint32_t>(),
+            flush_frequency_handler}
 #ifdef MEGAMOL_USE_PROFILING
         ,
         {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),

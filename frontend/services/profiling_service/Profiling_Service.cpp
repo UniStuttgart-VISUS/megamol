@@ -30,10 +30,11 @@ bool Profiling_Service::init(void* configPtr) {
     if (conf != nullptr && !conf->log_file.empty()) {
         if (!log_file.is_open()) {
             log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
+            flush_frequency = conf->flush_frequency;
         }
         // header
-        log_file << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end ("
-                 << unit_name << ");duration (" << unit_name << ")" << std::endl;
+        log_buffer << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end ("
+                   << unit_name << ");duration (" << unit_name << ")" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
             if (!profiling_logging.active) {
                 return;
@@ -42,8 +43,8 @@ bool Profiling_Service::init(void* configPtr) {
             if (frame > 0) {
                 auto& _frame_stats =
                     _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
-                log_file << (frame - 1) << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
-                         << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
+                log_buffer << (frame - 1) << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
+                           << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
             }
             for (auto& e : fi.entries) {
                 auto conf = _perf_man.lookup_config(e.handle);
@@ -56,12 +57,17 @@ bool Profiling_Service::init(void* configPtr) {
                 const auto the_duration =
                     std::chrono::duration<double, timer_ratio>(e.duration.time_since_epoch()).count();
 
-                log_file << frame << ";" << frontend_resources::PerformanceManager::parent_type_string(e.parent_type)
-                         << ";" << parent << ";" << name << ";" << comment << ";" << e.global_index << ";"
-                         << e.frame_index << ";"
-                         << megamol::frontend_resources::PerformanceManager::query_api_string(e.api) << ";"
-                         << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
-                         << std::to_string(the_duration) << std::endl;
+                log_buffer << frame << ";" << frontend_resources::PerformanceManager::parent_type_string(e.parent_type)
+                           << ";" << parent << ";" << name << ";" << comment << ";" << e.global_index << ";"
+                           << e.frame_index << ";"
+                           << megamol::frontend_resources::PerformanceManager::query_api_string(e.api) << ";"
+                           << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
+                           << std::to_string(the_duration) << std::endl;
+            }
+            if (frame % flush_frequency == flush_frequency - 1) {
+                log_file << log_buffer.rdbuf();
+                log_buffer.str(std::string());
+                log_buffer.clear();
             }
         });
     }
@@ -78,8 +84,8 @@ void Profiling_Service::log_graph_event(
     if (this->include_graph_events) {
         const auto frames_rendered = static_cast<int64_t>(
             _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
-        log_file << frames_rendered - 1 << ";Graph;" << parent << ";" << name << ";" << comment << ";0;0;GraphEvent;;;"
-                 << std::endl;
+        log_buffer << frames_rendered - 1 << ";Graph;" << parent << ";" << name << ";" << comment
+                   << ";0;0;GraphEvent;;;" << std::endl;
     }
 }
 
@@ -160,6 +166,8 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
 void Profiling_Service::close() {
 #ifdef MEGAMOL_USE_PROFILING
     if (log_file.is_open()) {
+        // flush rest of log
+        log_file << log_buffer.rdbuf();
         log_file.close();
     }
 #endif

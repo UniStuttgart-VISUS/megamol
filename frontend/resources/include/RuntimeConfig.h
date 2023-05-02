@@ -80,6 +80,7 @@ struct RuntimeConfig {
     bool screenshot_show_privacy_note = true;
     bool show_version_note = true;
     std::string profiling_output_file;
+    uint32_t flush_frequency = 1000;
     bool autostart_profiling = true;
     bool include_graph_events = false;
 

@@ -167,6 +167,7 @@ int main(const int argc, const char** argv) {
     megamol::frontend::Profiling_Service profiling_service;
     megamol::frontend::Profiling_Service::Config profiling_config;
     profiling_config.log_file = config.profiling_output_file;
+    profiling_config.flush_frequency = config.flush_frequency;
     profiling_config.autostart_profiling = config.autostart_profiling;
     profiling_config.include_graph_events = config.include_graph_events;
 
