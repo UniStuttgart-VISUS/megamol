@@ -109,6 +109,7 @@ if(BUILD_FRONTEND_SERVICES)
     "image_presentation"
     "remote_service"
     "profiling_service"
+    "gui/3rd"
     "gui/src"
     "vr_service"
    # "service_template"

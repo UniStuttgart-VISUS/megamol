@@ -21,6 +21,7 @@ cmake-build-*/
 /examples/
 /lib/
 /share/
+install/
 
 # Utils
 utils/MMPLD/mmpld.bat

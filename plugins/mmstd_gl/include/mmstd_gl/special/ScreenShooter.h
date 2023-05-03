@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "ModuleGraphSubscription.h"
+
 #include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/MegaMolGraph.h"

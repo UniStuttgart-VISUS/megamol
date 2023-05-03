@@ -131,6 +131,13 @@ inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::Get
     }
     cr->SetCamera(this->_camera);
 
+    // get time from incoming call
+    double time = crv->Time();
+    if (time < 0.0f)
+        time = this->DefaultTime(crv->InstanceTime());
+    double instanceTime = crv->InstanceTime();
+    cr->SetTime(time);
+
     if (!(*cr)(AbstractCallRender::FnGetExtents)) {
         return false;
     }

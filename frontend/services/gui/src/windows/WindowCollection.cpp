@@ -7,6 +7,7 @@
 
 
 #include "WindowCollection.h"
+#include "AnimationEditor.h"
 #include "Configurator.h"
 #include "HotkeyEditor.h"
 #include "LogConsole.h"
@@ -21,6 +22,7 @@ using namespace megamol::gui;
 
 WindowCollection::WindowCollection() : windows() {
 
+    this->windows.emplace_back(std::make_shared<AnimationEditor>("Animation Editor"));
     this->windows.emplace_back(std::make_shared<HotkeyEditor>("Hotkey Editor"));
     this->windows.emplace_back(std::make_shared<LogConsole>("Log Console"));
     this->windows.emplace_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));

@@ -39,7 +39,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
   # Prevent build fail.
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-narrowing>)
-  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-non-pod-vararg>)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-non-pod-varargs>)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/MP>)
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/permissive->)

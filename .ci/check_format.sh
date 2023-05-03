@@ -26,8 +26,8 @@ elif [[ "$_branch" == true ]]; then
   # Git diff work dir to master
   file_list=$(git diff --name-only master ; git ls-files --exclude-standard --others .)
 else
-  # Find all files, ignore .git dirs.
-  file_list=$(find . -type d -name '.git' -prune -o -type f -print | sort)
+  # Find all files, ignore .git dirs. Remove leading './' from results.
+  file_list=$(find . -type d -name '.git' -prune -o -type f -print | sort | cut -c3-)
 fi
 
 while read -r file; do
@@ -48,7 +48,7 @@ while read -r file; do
   fi
 
   # ignore vcpkg ports, which are taken from upstream
-  if [[ $file == "./cmake/vcpkg_ports/"* ]]; then
+  if [[ $file == "cmake/vcpkg_ports/"* ]]; then
     if [[ $file == *"/implot/"* ]]; then
       continue
     fi
@@ -58,7 +58,7 @@ while read -r file; do
   if [[ $file == *"/3rd/"* ]]; then
     continue
   fi
-  if [[ $file == "./plugins/protein_gl/msms/"* ]]; then
+  if [[ $file == "plugins/protein_gl/msms/"* ]]; then
     continue
   fi
 

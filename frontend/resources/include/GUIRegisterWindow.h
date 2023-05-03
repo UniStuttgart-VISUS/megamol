@@ -11,6 +11,8 @@
 
 namespace megamol::frontend_resources {
 
+static std::string GUIRegisterWindow_Req_Name = "GUIRegisterWindow";
+
 struct GUIRegisterWindow {
 
     /// ! Make sure to call the following register functions only once to prevent performance overhead,

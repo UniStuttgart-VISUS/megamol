@@ -16,8 +16,8 @@
 
 namespace megamol::gui {
 
-typedef megamol::core::view::Camera3DController::DefaultView DefaultView_t;
-typedef megamol::core::view::Camera3DController::DefaultOrientation DefaultOrientation_t;
+typedef core::utility::DefaultView DefaultView_t;
+typedef core::utility::DefaultOrientation DefaultOrientation_t;
 
 
 /** ***********************************************************************

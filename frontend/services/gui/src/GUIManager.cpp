@@ -30,6 +30,7 @@ GUIManager::GUIManager()
         , win_collection()
         , popup_collection()
         , notification_collection()
+        , win_animation_editor_ptr(nullptr)
         , win_configurator_ptr(nullptr)
         , file_browser()
         , tooltip()
@@ -52,7 +53,9 @@ GUIManager::GUIManager()
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
+    this->win_animation_editor_ptr = this->win_collection.GetWindow<AnimationEditor>();
     assert(this->win_configurator_ptr != nullptr);
+    assert(this->win_animation_editor_ptr != nullptr);
 
     requested_resources = win_collection.requested_lifetime_resources();
 #ifdef MEGAMOL_USE_PROFILING
@@ -230,6 +233,9 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     if (auto win_perfmon_ptr = this->win_collection.GetWindow<PerformanceMonitor>()) {
         win_perfmon_ptr->SetData(
             this->gui_state.stat_averaged_fps, this->gui_state.stat_averaged_ms, this->gui_state.stat_frame_count);
+    }
+    if (win_animation_editor_ptr != nullptr) {
+        win_animation_editor_ptr->SetLastFrameMillis(gui_state.last_frame_ms);
     }
 
     // Update windows
@@ -416,6 +422,8 @@ bool GUIManager::PostDraw() {
 
     // Assume pending changes in scaling as applied  --------------------------
     megamol::gui::gui_scaling.ConsumePendingChange();
+
+    this->win_animation_editor_ptr->RenderAnimation();
 
     return true;
 }

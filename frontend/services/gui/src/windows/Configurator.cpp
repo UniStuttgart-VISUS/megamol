@@ -43,6 +43,8 @@ megamol::gui::Configurator::Configurator(
     this->win_hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {"_hotkey_gui_configurator_save_project",
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false};
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_LAYOUT_GRAPH] = {"_hotkey_gui_configurator_layout_graph",
+        core::view::KeyCode(core::view::Key::KEY_R, core::view::Modifier::SHIFT | core::view::Modifier::CTRL), false};
 
     this->graph_state.graph_zoom_font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.graph_width = 0.0f;
@@ -127,6 +129,11 @@ bool megamol::gui::Configurator::Draw() {
     if (this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed) {
         this->search_widget.SetSearchFocus();
         this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed = false;
+    }
+
+    if (this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_LAYOUT_GRAPH].is_pressed) {
+        this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)->SetLayoutGraph(true);
+        this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_LAYOUT_GRAPH].is_pressed = false;
     }
 
     // Draw Windows -------------------------------------------------------

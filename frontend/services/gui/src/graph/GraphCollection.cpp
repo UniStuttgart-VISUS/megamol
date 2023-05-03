@@ -339,21 +339,45 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
 
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
-                graph_sync_success &= std::get<0>(
+                auto created = std::get<0>(
                     (*input_lua_func)("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])"));
+                graph_sync_success &= created;
+#ifdef MEGAMOL_USE_PROFILING
+                if (created) {
+                    auto gui_module_ptr = graph_ptr->GetModule(data.name_id);
+                    auto graph_module_ptr = megamol_graph.FindModule(data.name_id).get();
+                    gui_module_ptr->SetProfilingData(graph_module_ptr, perf_manager);
+                    module_to_module[graph_module_ptr] = gui_module_ptr;
+                }
+#endif
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
                 graph_sync_success &= std::get<0>(
                     (*input_lua_func)("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])"));
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
+#ifdef MEGAMOL_USE_PROFILING
+                module_to_module.erase(megamol_graph.FindModule(data.name_id).get());
+#endif
                 graph_sync_success &= std::get<0>((*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])"));
             } break;
             case (Graph::QueueAction::ADD_CALL): {
-                graph_sync_success &= std::get<0>((*input_lua_func)(
+                auto created = std::get<0>((*input_lua_func)(
                     "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
+                graph_sync_success &= created;
+#ifdef MEGAMOL_USE_PROFILING
+                if (created) {
+                    auto gui_call_ptr = graph_ptr->GetCall(data.class_name, data.caller, data.callee);
+                    auto graph_call_ptr = megamol_graph.FindCall(data.caller, data.callee).get();
+                    gui_call_ptr->SetProfilingData(graph_call_ptr, graph_call_ptr->GetCallbackCount());
+                    call_to_call[graph_call_ptr] = gui_call_ptr;
+                }
+#endif
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
+#ifdef MEGAMOL_USE_PROFILING
+                call_to_call.erase(megamol_graph.FindCall(data.caller, data.callee).get());
+#endif
                 graph_sync_success &=
                     std::get<0>((*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
             } break;
@@ -1418,20 +1442,18 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
     const frontend_resources::PerformanceManager::frame_info& fi) {
     auto frame = fi.frame;
     for (auto& e : fi.entries) {
-        if (e.type == frontend_resources::PerformanceManager::entry_type::DURATION) {
-            auto p = perf_manager->lookup_parent_pointer(e.handle);
-            auto t = perf_manager->lookup_parent_type(e.handle);
-            if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
-                auto c = static_cast<megamol::core::Call*>(p);
-                // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
-                if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
-                    call_to_call[p].lock()->AppendPerformanceData(frame, e);
-                }
-            } else {
-                // Module
-                if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
-                    module_to_module[p].lock()->AppendPerformanceData(frame, e);
-                }
+        auto p = perf_manager->lookup_parent_pointer(e.handle);
+        auto t = perf_manager->lookup_parent_type(e.handle);
+        if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
+            auto c = static_cast<megamol::core::Call*>(p);
+            // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
+            if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
+                call_to_call[p].lock()->AppendPerformanceData(frame, e);
+            }
+        } else if (t == frontend_resources::PerformanceManager::parent_type::USER_REGION) {
+            // Region in a Module
+            if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
+                module_to_module[p].lock()->AppendPerformanceData(frame, e);
             }
         }
     }
@@ -1726,7 +1748,6 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddCall(core::CallInstanc
         }
 
         if (auto gui_call_ptr = graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2, false)) {
-
             gui_call_ptr->SetCapabilities(call_inst.callPtr->GetCapabilities());
 #ifdef MEGAMOL_USE_PROFILING
             gui_call_ptr->SetProfilingData(call_inst.callPtr.get(), call_inst.callPtr->GetCallbackCount());
