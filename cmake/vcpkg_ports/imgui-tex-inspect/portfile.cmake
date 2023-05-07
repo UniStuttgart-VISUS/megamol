@@ -8,18 +8,17 @@ vcpkg_from_github(
     HEAD_REF main
 )
 
-if ("opengl3-binding" IN_LIST FEATURES)
-  set(USE_OPENGL3 ON)
-else ()
-  set(USE_OPENGL3 OFF)
-endif ()
+vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+    FEATURES
+        opengl3-binding IMGUI_TEX_INSPECT_USE_OPENGL3
+)
 
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
-      -DIMGUI_TEX_INSPECT_USE_OPENGL3=${USE_OPENGL3}
+        ${FEATURE_OPTIONS}
 )
 
 vcpkg_cmake_install()
@@ -31,4 +30,4 @@ vcpkg_cmake_config_fixup(
 )
 
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
-file(INSTALL "${SOURCE_PATH}/LICENSE.txt" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE.txt")
