@@ -344,15 +344,13 @@ public:
     static void PushReadOnly(bool set = true) {
 
         if (set) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            ImGui::BeginDisabled(set);
         }
     }
     static void PopReadOnly(bool set = true) {
 
         if (set) {
-            ImGui::PopStyleVar();
-            ImGui::PopItemFlag();
+            ImGui::EndDisabled();
         }
     }
 

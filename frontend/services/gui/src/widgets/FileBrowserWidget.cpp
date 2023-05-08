@@ -278,7 +278,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
             // File name ------------------------
             if (!(flags & FilePathParam::Internal_NoExistenceCheck)) {
-                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::BeginDisabled();
             }
             auto last_file_name_str = this->current_file_str;
 
@@ -293,7 +293,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 apply = true;
             }
             if (!(flags & FilePathParam::Internal_NoExistenceCheck)) {
-                ImGui::PopItemFlag();
+                ImGui::EndDisabled();
             }
             if (last_file_name_str != this->current_file_str) {
                 this->validate_file(mode, extensions, flags, this->current_directory_str, this->current_file_str);
