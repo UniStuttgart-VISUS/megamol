@@ -12,12 +12,12 @@
 #include <string>
 #include <vector>
 
+#include "FrontendResource.h"
+#include "FrontendResourcesMap.h"
 #include "gui_utils.h"
 #include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
-#include "FrontendResource.h"
-#include "FrontendResourcesMap.h"
 
 
 namespace megamol::gui {
