@@ -15,7 +15,8 @@ if (BUILD_CORE)
   find_package(glm REQUIRED)
   find_package(TBB CONFIG REQUIRED)
   find_package(Lua REQUIRED)
-  
+  find_package(imgui REQUIRED)
+
   if (MEGAMOL_USE_CUESDK)
     find_package(CUESDK CONFIG REQUIRED)
   endif ()
@@ -42,6 +43,7 @@ if (BUILD_CORE)
       frontend_resources
       OpenMP::OpenMP_CXX
       TBB::tbb
+      imgui::imgui
     PRIVATE
       ${CMAKE_DL_LIBS}
       ${CMAKE_THREAD_LIBS_INIT}

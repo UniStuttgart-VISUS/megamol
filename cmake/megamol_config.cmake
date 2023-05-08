@@ -106,3 +106,8 @@ if (MEGAMOL_USE_CGAL)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 endif ()
+
+# imgui
+# Set IMGUI_USER_CONFIG globally on imgui target for all users.
+find_package(imgui CONFIG REQUIRED)
+target_compile_definitions(imgui::imgui INTERFACE "IMGUI_USER_CONFIG=\"${CMAKE_CURRENT_SOURCE_DIR}/cmake/imgui/megamol_imgui_config.h\"")
