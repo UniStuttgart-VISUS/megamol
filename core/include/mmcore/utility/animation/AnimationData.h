@@ -1,18 +1,18 @@
-/*
- * AnimationEditor.h
- *
- * Copyright (C) 2022 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "imgui.h"
-#include "mmcore/MegaMolGraph.h"
-
-#include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
 #include <map>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <imgui.h>
+
+#include "mmcore/MegaMolGraph.h"
 
 namespace megamol::core::utility::animation {
 

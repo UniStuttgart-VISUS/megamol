@@ -1,6 +1,6 @@
 #pragma once
-#include "imgui.h"
 #include <array>
+#include <imgui.h>
 
 struct GenericWindow {
     int width;
