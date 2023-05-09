@@ -8,10 +8,8 @@
 
 #pragma once
 
+#include <climits>
 
-#define IMGUI_DEFINE_MATH_OPERATORS
-//#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS // TODO implot currently requires deprecated functions, can be enabled when implot is updated.
-#define IMGUI_DISABLE_OBSOLETE_KEYIO
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -346,15 +344,13 @@ public:
     static void PushReadOnly(bool set = true) {
 
         if (set) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            ImGui::BeginDisabled(set);
         }
     }
     static void PopReadOnly(bool set = true) {
 
         if (set) {
-            ImGui::PopStyleVar();
-            ImGui::PopItemFlag();
+            ImGui::EndDisabled();
         }
     }
 

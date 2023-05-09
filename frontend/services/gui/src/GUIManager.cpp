@@ -1152,8 +1152,7 @@ void megamol::gui::GUIManager::draw_popups() {
             this->gui_state.font_input_string_buffer, std::string("ttf"));
 
         if (!valid_file) {
-            megamol::gui::gui_utils::PushReadOnly();
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::BeginDisabled();
         }
         if (ImGui::Button("Add Font")) {
             this->gui_state.font_load_name = this->gui_state.font_input_string_buffer;
@@ -1163,8 +1162,7 @@ void megamol::gui::GUIManager::draw_popups() {
         std::string help("Same font can be loaded multiple times with different font size.");
         this->tooltip.Marker(help);
         if (!valid_file) {
-            ImGui::PopItemFlag();
-            megamol::gui::gui_utils::PopReadOnly();
+            ImGui::EndDisabled();
             ImGui::SameLine();
             ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
         }

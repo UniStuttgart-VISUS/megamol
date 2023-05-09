@@ -7,17 +7,17 @@
 
 #pragma once
 
-
-#include "AbstractWindow.h"
-#include "FrontendResource.h"
-#include "imgui.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/Input.h"
 #include <functional>
 #include <map>
 #include <string>
 #include <vector>
 
+#include <imgui.h>
+
+#include "AbstractWindow.h"
+#include "FrontendResource.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Input.h"
 
 namespace megamol::gui {
 

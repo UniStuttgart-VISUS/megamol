@@ -1,8 +1,9 @@
 #include "TableInspector.h"
 
+#include <imgui.h>
+#include <imgui_internal.h>
+
 #include "FrameStatistics.h"
-#include "imgui.h"
-#include "imgui_internal.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::datatools;
