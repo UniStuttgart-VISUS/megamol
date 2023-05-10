@@ -218,4 +218,49 @@ public:
 private:
 };
 
+
+/**
+ * Dummy accessor for reporting the idx back;
+ */
+class Accessor_Idx : public Accessor {
+public:
+    Accessor_Idx() = default;
+
+    Accessor_Idx(Accessor_Idx const& rhs) = default;
+
+    Accessor_Idx(Accessor_Idx&& rhs) = default;
+
+    Accessor_Idx& operator=(Accessor_Idx const& rhs) = default;
+
+    Accessor_Idx& operator=(Accessor_Idx&& rhs) = default;
+
+    float Get_f(size_t idx) const override {
+        return static_cast<float>(idx);
+    }
+
+    double Get_d(size_t idx) const override {
+        return static_cast<double>(idx);
+    }
+
+    uint64_t Get_u64(size_t idx) const override {
+        return static_cast<uint64_t>(idx);
+    }
+
+    unsigned int Get_u32(size_t idx) const override {
+        return static_cast<unsigned int>(idx);
+    }
+
+    unsigned short Get_u16(size_t idx) const override {
+        return static_cast<unsigned short>(idx);
+    }
+
+    unsigned char Get_u8(size_t idx) const override {
+        return static_cast<unsigned char>(idx);
+    }
+
+    ~Accessor_Idx() override = default;
+
+private:
+};
+
 } // end namespace megamol::geocalls
