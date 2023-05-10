@@ -1,6 +1,7 @@
 
 #include "CLIConfigParsing.h"
 
+#define CXXOPTS_VECTOR_DELIMITER '\0'
 #include <cxxopts.hpp>
 
 #include <filesystem>
@@ -289,10 +290,6 @@ static void echolevel_handler(
 static void project_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
-    while (v.size() > 1) {
-        v.front() += "," + v[1];
-        v.pop_back();
-    }
     files_exist(v, "Project file");
 
     config.project_files.insert(config.project_files.end(), v.begin(), v.end());

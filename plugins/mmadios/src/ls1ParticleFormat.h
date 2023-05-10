@@ -87,6 +87,7 @@ private:
 
     std::vector<std::vector<float>> mix;
     std::vector<std::vector<float>> dirs;
+    std::vector<std::vector<uint64_t>> ids;
     std::vector<uint64_t> plist_count;
     std::vector<float> bbox;
     int num_plists;
