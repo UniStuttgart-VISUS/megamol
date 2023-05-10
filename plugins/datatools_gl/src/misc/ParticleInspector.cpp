@@ -1,8 +1,9 @@
 #include "ParticleInspector.h"
 
+#include <imgui.h>
+#include <imgui_internal.h>
+
 #include "FrameStatistics.h"
-#include "imgui.h"
-#include "imgui_internal.h"
 
 using namespace megamol::datatools_gl::misc;
 using namespace megamol;

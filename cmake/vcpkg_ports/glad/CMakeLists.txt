@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15...3.24 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15...3.26 FATAL_ERROR)
 
 project(glad
   VERSION 2.0.3

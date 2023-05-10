@@ -1,7 +1,10 @@
-#include "mmcore/utility/animation/AnimationUtils.h"
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
 
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui_internal.h"
+#include "mmcore/utility/animation/AnimationUtils.h"
 
 #include <sstream>
 

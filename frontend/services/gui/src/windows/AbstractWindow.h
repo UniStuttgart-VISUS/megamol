@@ -7,12 +7,6 @@
 
 #pragma once
 
-
-#include "gui_utils.h"
-#include "imgui.h"
-#include "mmcore/utility/JSONHelper.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/Input.h"
 #include <functional>
 #include <map>
 #include <string>
@@ -20,6 +14,10 @@
 
 #include "FrontendResource.h"
 #include "FrontendResourcesMap.h"
+#include "gui_utils.h"
+#include "mmcore/utility/JSONHelper.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Input.h"
 
 
 namespace megamol::gui {

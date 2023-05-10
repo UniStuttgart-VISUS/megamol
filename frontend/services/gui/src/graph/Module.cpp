@@ -339,7 +339,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 }
 
                 // Rename pop-up
-                std::string new_name;
+                std::string new_name = this->name;
                 std::string last_module_name = this->FullName();
                 if (this->gui_rename_popup.Rename("Rename Module", popup_rename, new_name)) {
                     this->SetName(new_name);

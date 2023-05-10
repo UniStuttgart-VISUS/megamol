@@ -1,7 +1,6 @@
 {
   "name": "glowl",
   "version-date": "2023-03-18",
-  "port-version": 0,
   "description": "OpenGL Object-Wrapper-Library.",
   "homepage": "https://github.com/invor/glowl",
   "license": "MIT",
@@ -16,14 +15,14 @@
     }
   ],
   "features": {
+    "gl-extensions": {
+      "description": "Use ARB_bindless_texture and NV_mesh_shader extensions."
+    },
     "glm": {
       "description": "Use glm functions.",
       "dependencies": [
         "glm"
       ]
-    },
-    "gl-extensions": {
-      "description": "Use ARB_bindless_texture and NV_mesh_shader extensions."
     }
   }
 }

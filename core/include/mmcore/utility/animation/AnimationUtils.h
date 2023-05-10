@@ -1,14 +1,14 @@
-/*
- * AnimationEditor.h
- *
- * Copyright (C) 2022 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include "mmcore/utility/animation/AnimationData.h"
-#include "nlohmann/json.hpp"
 
 namespace megamol::core::utility::animation {
 

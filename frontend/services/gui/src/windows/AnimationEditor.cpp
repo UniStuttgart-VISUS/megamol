@@ -426,7 +426,7 @@ void AnimationEditor::DrawToolbar() {
                 open_popup_load = true;
             }
             if (animation_file.empty()) {
-                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::BeginDisabled();
             }
             if (ImGui::MenuItem("Save")) {
                 if (!SaveToFile(animation_file)) {
@@ -435,7 +435,7 @@ void AnimationEditor::DrawToolbar() {
                 }
             }
             if (animation_file.empty()) {
-                ImGui::PopItemFlag();
+                ImGui::EndDisabled();
             }
             if (ImGui::MenuItem("Save as...")) {
                 open_popup_save = true;
@@ -664,7 +664,7 @@ void AnimationEditor::DrawParams() {
         have_orient = fva.VectorLength() == 4;
     }
     if (!have_pos) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::BeginDisabled();
     }
     if (ImGui::Button("use as 3D position")) {
         auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
@@ -673,11 +673,11 @@ void AnimationEditor::DrawParams() {
         animEditorData.active_region.second = animation_bounds[1];
     }
     if (!have_pos) {
-        ImGui::PopItemFlag();
+        ImGui::EndDisabled();
     }
     ImGui::SameLine();
     if (!have_orient) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::BeginDisabled();
     }
     if (ImGui::Button("use as orientation")) {
         auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
@@ -686,7 +686,7 @@ void AnimationEditor::DrawParams() {
         animEditorData.active_region.second = animation_bounds[1];
     }
     if (!have_orient) {
-        ImGui::PopItemFlag();
+        ImGui::EndDisabled();
     }
     ImGui::BeginChild(
         "anim_params", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
@@ -746,7 +746,7 @@ void AnimationEditor::DrawParams() {
     }
     ImGui::InputText("Output prefix", &output_prefix);
     if (output_prefix.empty()) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::BeginDisabled();
     }
     if (ImGui::Button("render")) {
         current_frame = animation_bounds[0] - 10; // a bit of pre-roll to let the GUI state settle
@@ -755,7 +755,7 @@ void AnimationEditor::DrawParams() {
         rendering = true;
     }
     if (output_prefix.empty()) {
-        ImGui::PopItemFlag();
+        ImGui::EndDisabled();
     }
     //ImGui::Dummy(ImVec2(0.0f, 2.0f));
     //animation::EndGroupPanel();
@@ -1238,9 +1238,9 @@ void AnimationEditor::DrawProperties() {
 
 
 void AnimationEditor::DrawVerticalSeparator() {
-    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    ImGui::BeginDisabled();
     ImGui::Button(" ", ImVec2(2, 0));
-    ImGui::PopItemFlag();
+    ImGui::EndDisabled();
 }
 
 

@@ -315,8 +315,8 @@ megamol_plugin(...
 ```
 **2)** Include the following ImGui headers in your modules's header:
 ```c++
-#include "imgui.h"
-#include "imgui_internal.h"
+#include <imgui.h>
+#include <imgui_internal.h>
 ```
 **3)** Before calling any ImGui function check for active ImGui context and valid scope:
 ```c++
