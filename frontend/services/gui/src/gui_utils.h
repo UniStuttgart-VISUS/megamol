@@ -268,7 +268,7 @@ typedef struct _interact_state_ {
     unsigned int call_coloring_mode; // in
     unsigned int call_coloring_map;  // in
 
-    ImGuiID slot_dropped_uid; // in out
+    UIDPair_t slot_drag_drop_uids; // in out
 
     ImGuiID callslot_selected_uid;       // in out
     ImGuiID callslot_hovered_uid;        // in out
