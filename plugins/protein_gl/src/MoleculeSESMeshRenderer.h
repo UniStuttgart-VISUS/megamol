@@ -9,17 +9,19 @@
 #include <algorithm>
 #include <list>
 #include <set>
+#include <tuple>
 #include <vector>
 
 #include <glowl/glowl.h>
 
-#include "mmcore/CallerSlot.h"
-#include "mmcore/CalleeSlot.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
+#include "protein/Icosphere.h"
 #include "protein/ReducedSurface.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -39,7 +41,6 @@ namespace protein_gl {
  */
 class MoleculeSESMeshRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
-
     /**
      * Answer the name of this module.
      *
@@ -125,7 +126,8 @@ private:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    static unsigned int findNearestVertice(const std::vector<std::vector<unsigned int>>& edgelord, unsigned int& referenceIndex0, unsigned int& referenceIndex1, const std::vector<float>& vertex, int index);
+    std::vector<unsigned int> findNearestVertice(const std::vector<std::vector<unsigned int>>& edgelord,
+        unsigned int& referenceIndex0, unsigned int& referenceIndex1, const std::vector<float>& vertex, int index);
 
     /**
      * Gets the data from the source.
@@ -279,13 +281,7 @@ private:
     std::vector<geocalls_gl::CallTriMeshDataGL::Mesh*> triaMesh;
 
     DeferredRenderingProvider deferredProvider_;
-
-
-     /** variables of SES mesh  */
-    std::vector<float> vertex;
-    std::vector<float> normal;
-    std::vector<float> color; 
-    std::vector<unsigned int> face;
+    static std::vector<std::vector<unsigned int>> getMultipleVertices(Icosphere* pIcosphere);
 };
 
 } // namespace protein_gl

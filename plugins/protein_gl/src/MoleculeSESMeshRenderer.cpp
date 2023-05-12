@@ -1,3 +1,4 @@
+
 /*
  * MoleculeSESMeshRenderer.cpp
  *
@@ -496,7 +497,6 @@ void MoleculeSESMeshRenderer::RenderAtoms(const MolecularDataCall* mol) {
     // disable sphere shader
     glUseProgram(0);
     glBindVertexArray(0);
-
 }
 
 /*
@@ -516,9 +516,7 @@ void MoleculeSESMeshRenderer::RenderReducedSurface(protein::ReducedSurface* rs) 
 /*
  * MoleculeSESMeshRenderer::deinitialise
  */
-void MoleculeSESMeshRenderer::deinitialise() {
-
-}
+void MoleculeSESMeshRenderer::deinitialise() {}
 
 /*
  * MoleculeSESMeshRenderer::getDataCallback
@@ -546,291 +544,282 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     if (this->reducedSurface.empty())
         return false;
     int subdivision_level = 2;
-    /*auto carbon = new Icosphere(1.70000005, subdivision_level, true);
-    auto nitrogen = new Icosphere(1.54999995, subdivision_level, true);
-    auto sulfur = new Icosphere(1, subdivision_level, true);
-    auto oxygen = new Icosphere(0.5, subdivision_level, true); */
     auto ico = new Icosphere(1, subdivision_level, true);
+    std::vector<std::vector<unsigned int>>multipleVertexPerIco = getMultipleVertices(ico);
     int vertex_counter = (int)(ico->getVertexCount() * mol->AtomCount());
-    this->vertex; // = new float[vertex_counter * 3]{};
-    this->normal; // = new float[vertex_counter * 3]{};
-    this->color; // = new float[vertex_counter * 3]{};
-    this->face;
-
-
-
+    std::vector<float> vertex;
+    std::vector<float> normal;
+    std::vector<float> color;
     std::vector<bool> muss_raus;
-    std::vector<unsigned int> facesTempStore;
+    //std::vector<unsigned int> facesTempStore;
 
-    std::vector<std::vector<unsigned int>> edgeVerticesPerAtom;  //temp vector array, may rename later
-    if (this->vertex.size() == 0) {
-        this->vertex.resize(0);
-        this->normal.resize(0);
-        this->color.resize(0);
-        this->face.resize(0);
+    std::vector<std::vector<unsigned int>> edgeVerticesPerAtom; //Hier befinden sich alle Vertices die Teile einer Kante eines Atoms sind
 
 
-        for (auto i = 0; i < mol->AtomCount(); i++) {
-            for (int j = 0; j < ico->getVertexCount(); j++) {
-                vertex.push_back(ico->getVertices()[3 * j + 0] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() +
-                                 mol->AtomPositions()[3 * i + 0]); // x
-                vertex.push_back(ico->getVertices()[3 * j + 1] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() +
-                                 mol->AtomPositions()[3 * i + 1]); // y
-                vertex.push_back(ico->getVertices()[3 * j + 2] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() +
-                                 mol->AtomPositions()[3 * i + 2]); // z
+    for (auto i = 0; i < mol->AtomCount(); i++) {
+        for (int j = 0; j < ico->getVertexCount(); j++) {
+            vertex.push_back(ico->getVertices()[3 * j + 0] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 0]);  // x
+            vertex.push_back(ico->getVertices()[3 * j + 1] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 1]);  // y
+            vertex.push_back(ico->getVertices()[3 * j + 2] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 2]);  // z
 
-                //normal[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getNormals()[3 * j + 0];
-                normal.push_back(ico->getNormals()[3 * j + 0]);
-                normal.push_back(ico->getNormals()[3 * j + 1]);
-                normal.push_back(ico->getNormals()[3 * j + 2]);
+            //normal[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getNormals()[3 * j + 0];
+            normal.push_back(ico->getNormals()[3 * j + 0]);
+            normal.push_back(ico->getNormals()[3 * j + 1]);
+            normal.push_back(ico->getNormals()[3 * j + 2]);
 
-                color.push_back(0.6f);
-                color.push_back(0.6f);
-                color.push_back(0.6f);
+            color.push_back(0.6f);
+            color.push_back(0.6f);
+            color.push_back(0.6f);
 
-                muss_raus.push_back(false);
+            muss_raus.push_back(false);
+        }
+    }
+    for (auto i = 0; i < mol->AtomCount(); i++) {
+        unsigned int lower_bound = vertex_counter / mol->AtomCount() * i;
+        unsigned int upper_bound = vertex_counter / mol->AtomCount() * (i + 1);
+        float atom_x = mol->AtomPositions()[(3 * i) + 0];
+        float atom_y = mol->AtomPositions()[(3 * i) + 1];
+        float atom_z = mol->AtomPositions()[(3 * i) + 2];
+        for (int j = 0; j < vertex_counter; ++j) {
+            if (j >= lower_bound && j < upper_bound) {
+                continue;
+            }
+
+            if (std::sqrt((atom_x - vertex[(j * 3) + 0]) * (atom_x - vertex[(j * 3) + 0]) +
+                          (atom_y - vertex[(j * 3) + 1]) * (atom_y - vertex[(j * 3) + 1]) +
+                          (atom_z - vertex[(j * 3) + 2]) * (atom_z - vertex[(j * 3) + 2])) <
+                mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius()) {
+                //color.at(j*3) = 1.0f;
+                muss_raus.at(j) = true;
             }
         }
-        //vertex_counter=126
-        //ico->getVertexCount=63
+    }
+    std::tuple<unsigned int, int> bla;
+    bla = {1, 2};
+    int xx = std::get<1>(bla);
 
-        //MARK ALL Vertices that are in other atoms red
-        for (auto i = 0; i < mol->AtomCount(); i++) {
-            unsigned int lower_bound = vertex_counter / mol->AtomCount() * i;
-            unsigned int upper_bound = vertex_counter / mol->AtomCount() * (i + 1);
-            float atom_x = mol->AtomPositions()[(3 * i) + 0];
-            float atom_y = mol->AtomPositions()[(3 * i) + 1];
-            float atom_z = mol->AtomPositions()[(3 * i) + 2];
-            for (int j = 0; j < vertex_counter; ++j) {
-                if (j >= lower_bound && j < upper_bound) {
-                    continue;
-                }
+    //TEST KUGEL ZUM DEBUGGEN in grün
+    std::vector<int> zusatz = {79, 80, 337, 248}; //84 == 80 247 oder 333
 
-                if (std::sqrt((atom_x - vertex[(j * 3) + 0]) * (atom_x - vertex[(j * 3) + 0]) +
-                              (atom_y - vertex[(j * 3) + 1]) * (atom_y - vertex[(j * 3) + 1]) +
-                              (atom_z - vertex[(j * 3) + 2]) * (atom_z - vertex[(j * 3) + 2])) <
-                    mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius()) {
-                    //color.at(j*3) = 1.0f;
-                    muss_raus.at(j) = true;
-                    // Damit weiß ich, welche Vertices innerhalb eines Atoms liegen.
+    for (int i :zusatz) {
 
-                    //Möglichkeit 1: Lookback auf letzte 3 und dann da die Sachen machen.
 
-                    //Am Elegantesten wäre es, wenn ich beim Anlegen schon weiß welche Vertices ich brauche
-                    //
+        for (int j = 0; j < ico->getVertexCount(); j++) {
+            vertex.push_back(ico->getVertices()[3 * j + 0] * 0.01 + vertex.at(i * 3 + 0)); // x
+            vertex.push_back(ico->getVertices()[3 * j + 1] * 0.01 + vertex.at(i * 3 + 1));
+            vertex.push_back(ico->getVertices()[3 * j + 2] * 0.01 + vertex.at(i * 3 + 2));
 
-                    // TODO: Schnittebene zwischen zwei Atomen berechnen.
-                    // Dann alle die nicht reinkommen "löschen": done
-                    // Dann die nächsten auf der anderen seite finden und "markieren"
-                    // Dann die markierten zusammenfügen
-                    //
+            //normal[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getNormals()[3 * j + 0];
+            normal.push_back(ico->getNormals()[3 * j + 0]);
+            normal.push_back(ico->getNormals()[3 * j + 1]);
+            normal.push_back(ico->getNormals()[3 * j + 2]);
 
-                    /*
-                     * faces array: in place löschen von falschen dreiecken und dann am Ende einfügen von neuen
-                     *
-                     */
-
-                    //1. wie schlimm sind die lücken
-                    //2. zusammennähen von den
-                    // kein Erzeugen von neuen Vertices
-                    // nur die faces
-                }
+            if (i==80){
+                color.push_back(1);
+                color.push_back(0);
+                color.push_back(0);
+            }
+            else if (i==337){
+                color.push_back(0);
+                color.push_back(0);
+                color.push_back(1);
+            }
+            else if (i==17){
+                color.push_back(0);
+                color.push_back(1);
+                color.push_back(1);
+            }
+            else {
+                color.push_back(0);
+                color.push_back(1);
+                color.push_back(0);
             }
         }
+    }
 
+    int face_counter = (int)(ico->getIndexCount() * mol->AtomCount());
+    std::vector<unsigned int> face;
+    std::vector<std::vector<std::tuple<unsigned int, int>>> referenceToOtherVertice(ico->getVertexCount() * mol->AtomCount());
+    /* referenceToOtherVertice: vector of all vertices with a "tuple" in it.
+     * 1. field is the index of the connected vertex
+     * 2. field is the number of faces of the edge
+     */
+    std::vector<bool> besucht;
+    std::vector<unsigned int> zuAtom;
+    std::vector<std::vector<unsigned int>> edgesInfo;
+    /* edgesInfo:
+     * erstes element, referenz zu erstem vertice
+     * zwrites element, referenz zu zweitem vertice
+     * drittes element, Anzahl faces der Kante
+     */
 
-        /*
-         * Ich weiß:
-         *  - Vertices des Atoms welches rot ist.
-         *    → in Liste welche die faces berechnet: wenn alle 3 "rot" sind → werfe alle 3 eckpunkte raus und vertice auch
-         *    → Wenn 2 rot sind: Berechne Schnittpunkte von Kreisumfang mit Schnittkante
-         *        → Verschiebe Vertices dorthin
-         *    -> Wenn 1 rot ist:
-         *        -> Berechne Schnittpunkte von Kreisumfang mit Schnittkante
-         */
-        /*
-         * vertex[3 * i + 0] = mol->AtomPositions()[3 * i];
-           vertex[3 * i + 1] = mol->AtomPositions()[3 * i + 1];
-           vertex[3 * i + 2] = mol->AtomPositions()[3 * i + 2];
-         */
+    // Gehe jedes Atom durch           | zusatz ist debug
+    for (auto i = 0; i < mol->AtomCount()+zusatz.size(); i++) {
+        std::vector<unsigned int> atomEdgeVerticeVector;
 
-        /*
-       //Kostet 30fps
-       for (auto i = 0; i < mol->AtomCount(); i++) {
-           for (int j = i+1; j < mol->AtomCount(); ++j) {
-               // gehe alle atome durch und schaue, welche nah beieinander liegen; damit kann ich viele vertices aussschließen
-               if (std::sqrt( (mol->AtomPositions()[i + 0] - mol->AtomPositions()[j + 0]) * (mol->AtomPositions()[i + 0] - mol->AtomPositions()[j + 0]) +
-                                  (mol->AtomPositions()[i + 1] - mol->AtomPositions()[j + 1]) * (mol->AtomPositions()[i + 1] - mol->AtomPositions()[j + 1]) +
-                                  (mol->AtomPositions()[i + 2] - mol->AtomPositions()[j + 2]) * (mol->AtomPositions()[i + 2] - mol->AtomPositions()[j + 2])) >
-                             mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[j]].Radius()) {
-                   //printf("lolcat");
-               }
-           }
-       }*/
+        int redCounter = 0;
+        // Gehe in jedem atom alle Ecken durch
+        for (int j = 0; j < ico->getIndexCount(); j += 3) {
+            if (i > 1) { //DEBUG CODE FÜR ZUSATZ KUGEL
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]); //Vertice 1 von face
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]); //Vertice 2 von face
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]); //Vertice 3 von face
+            }
 
+            // checks for each Vertex of a face, weather it is in an atom or not
+            //Alle Vertices sind außerhalb anderen Kugeln, also werden sie gezeichnet!
+            else if (!(muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]) ||
+                         muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 1]) ||
+                         muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 2]))) {
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]); //Vertice 1 von face
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]); //Vertice 2 von face
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]); //Vertice 3 von face
+            } // Nicht alle Vertices sind außerhalb. Schaue, dass nur Vertices die 2/3 drin sind ausgewählt werden.
+            // Wenn alle vertices drin liegen: ignore
+            // Wenn 2 Vertices drin liegen:Ignore, da
+            else {
+                //                              |Richtige Vertices pro Atom| Finde Richtige Vertices aus liste
+                bool staysIn0 = !muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
+                bool staysIn1 = !muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
+                bool staysIn2 = !muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
 
-        /*
-         * TODO: 1. Finde alle Vertices innerhalb anderer Spheres.
-         * Gehe jede Kugel durch
-         *   gehe jeden Eckpunkt durch und Markiere alle, die innerhalb des kugelradius liegen
-         *   Dazu dann: Wenn mehrere Punkte drin liegen schau, welche faces sie bilden; wie genau tbd
-         *
-         *   Wenn nur ein oder zwei Eckpunkte in Kugel sind berechne schnittkante mit mesh und versetze punkte
-         *   Oder verschiebe faces
-         *
-         * TODO: 2. Lösche diese und alle faces davon
-         * TODO: 3. Klassifiziere faces neu
-         *
-         */
+                //2 out of 3
+                // Sind IMMER miteinander verbunden UND folgen aufeinander, d.h. ich kann nix weglassen
+                if (staysIn0 ? (staysIn1 || staysIn2) : (staysIn1 && staysIn2)) {
+                    if (staysIn0) {
+                        zuAtom.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
+                        //color.at((ico->getVertexCount() * i + ico->getIndices()[j + 0])*3) = 1;
 
-
-        //tODO: 2. Wenn alle 3 Punkte rot sind: Rauswerfen
-
-        int face_counter = (int)(ico->getIndexCount() * mol->AtomCount());
-        
-
-        for (auto i = 0; i < mol->AtomCount(); i++) {
-            std::vector<unsigned int> atomEdgeVerticeVector;
-
-            int redCounter = 0;
-            for (int j = 0; j < ico->getIndexCount(); j += 3) {
-
-                // checks for each Vertex of a face, weather it is in an atom or not
-                //Alle Vertices sind außerhalb anderen Kugeln
-                if (!(muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]) ||
-                        muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 1]) ||
-                        muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 2]))) {
-                    face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]); //Vertice 1 von face
-                    face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]); //Vertice 2 von face
-                    face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]); //Vertice 3 von face
-                } else {
-                    bool staysIn0 = !muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
-                    bool staysIn1 = !muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
-                    bool staysIn2 = !muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
-
-                    //2 out of 3
-                    if (staysIn0 ? (staysIn1 || staysIn2) : (staysIn1 && staysIn2)) {
-                        if (staysIn0) {
-                            atomEdgeVerticeVector.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
-                        }
+                        atomEdgeVerticeVector.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
                         if (staysIn1) {
-                            atomEdgeVerticeVector.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
+                            referenceToOtherVertice.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
+
+                            referenceToOtherVertice.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]).emplace_back(ico->getVertexCount() * i + ico->getIndices()[j + 1], 1);
                         }
                         if (staysIn2) {
-                            atomEdgeVerticeVector.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
+                            referenceToOtherVertice.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]).emplace_back(ico->getVertexCount() * i + ico->getIndices()[j + 2], 1);
                         }
                     }
+                    if (staysIn1) {
+                        zuAtom.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
+                        //color.at((ico->getVertexCount() * i + ico->getIndices()[j + 1])*3) = 1;
 
-                    //if (!muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 0])) {
-                    // raussortieren von doppelten Einträgen.
-                    //TODO: 2 Vertices die Eckpunkte der Kanten sind -> Echte Eckpunkte.
-                    /*    Das heißt: 2 Eckpunkte: Schreibe sie in die Liste.
-                     *    Dann weiß ich: pro 2 Eckpunkte gibt es eine Kante die außen ist:
-                     *    Bei 3 die drinnen sind ignore
-                     *    bei 1 auch ignore
-                     *
-                     */
-                    /*if (std::find(atomEdgeVerticeVector.begin(), atomEdgeVerticeVector.end(),
-                            ico->getVertexCount() * i + ico->getIndices()[j + 0]) == atomEdgeVerticeVector.end()) {
-                        atomEdgeVerticeVector.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
-                    }
-                    }
-                    if (!muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 1])) {
-                    if (std::find(atomEdgeVerticeVector.begin(), atomEdgeVerticeVector.end(),
-                            ico->getVertexCount() * i + ico->getIndices()[j + 1]) == atomEdgeVerticeVector.end()) {
                         atomEdgeVerticeVector.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
+                        if (staysIn0) {
+                            referenceToOtherVertice.at(ico->getVertexCount() * i + ico->getIndices()[j + 1]).emplace_back(ico->getVertexCount() * i + ico->getIndices()[j + 0],1);
+                        }
+                        if (staysIn2) {
+                            referenceToOtherVertice.at(ico->getVertexCount() * i + ico->getIndices()[j + 1]).emplace_back(ico->getVertexCount() * i + ico->getIndices()[j + 2],1);
+                        }
                     }
-                    }
-                    if (!muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 2])) {
-                    if (std::find(atomEdgeVerticeVector.begin(), atomEdgeVerticeVector.end(),
-                            ico->getVertexCount() * i + ico->getIndices()[j + 2]) == atomEdgeVerticeVector.end()) {
-                        atomEdgeVerticeVector.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
-                    }
-                    }
-                    // If one or more of the edges of a face is in another atom, store the indices in another list
+                    if (staysIn2) {
+                        zuAtom.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
+                        //color.at((ico->getVertexCount() * i + ico->getIndices()[j + 2])*3) = 1;
 
-                     */
-                    facesTempStore.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
+                        atomEdgeVerticeVector.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
+                        if (staysIn0) {
+                            referenceToOtherVertice.at(ico->getVertexCount() * i + ico->getIndices()[j + 2]).emplace_back(ico->getVertexCount() * i + ico->getIndices()[j + 0],1);
+                        }
+                        if (staysIn1) {
+                            referenceToOtherVertice.at(ico->getVertexCount() * i + ico->getIndices()[j + 2]).emplace_back(ico->getVertexCount() * i + ico->getIndices()[j + 1],1);
+                        }
+                    }
+                }
+
+                //TODO: Hier wohl die erweiterte Datenstruktur rein bringen.
+                // Was kann ich hier rein bringen
+                // Nehme 3 Listen : Done
+                //  Fülle die Listen mit Daten
+                /*
+                 *  +------------------+
+                    |     Vertice      |
+                    +------------------+
+                    | - besucht: bool  |
+                    | - index: int[4]  |
+                    | - index_atom: int|
+                    +------------------+
+
+                 */
+
+            }
+        }
+        edgeVerticesPerAtom.push_back(atomEdgeVerticeVector);
+    }
+
+    // Hier habe ich jetzt alle Vertices der Atome.
+    // Gehe diese durch und finde nächsten Vertice auf anderen Atomen, nach Verticeliste
+
+    /* TODO:
+     *  Hier muss der neue Algorithmus rein.
+     *  Komme an, schaue nächste Vertices an.
+     */
+    for (int atom = 0; atom < edgeVerticesPerAtom.size(); ++atom) {
+        for (int vertices = 0; vertices < edgeVerticesPerAtom[atom].size(); vertices = vertices + 2) {
+            unsigned int a = edgeVerticesPerAtom[atom].at(vertices + 0); // 79
+            std::vector<unsigned int> finde_79 = findNearestVertice(edgeVerticesPerAtom, edgeVerticesPerAtom[atom].at(vertices + 0),
+                edgeVerticesPerAtom[atom].at(vertices + 1), vertex, atom);
+            // schau, ob 337 79 verbindung schon da ist
+            for (int i = 0; i < 3; ++i) { //tuple
+                for (int j = 0; j < referenceToOtherVertice.at(a).size(); ++j) {
+                    if (finde_79.at(i) == std::get<0>(referenceToOtherVertice.at(a).at(j))) {
+                        // verbindung gibt's schon
+                    }
+                }
+
+            }
+            referenceToOtherVertice.at(79);
+            //337, 248
+
+            std::vector<unsigned int> finde_80 = findNearestVertice(edgeVerticesPerAtom, edgeVerticesPerAtom[atom].at(vertices + 1),
+                edgeVerticesPerAtom[atom].at(vertices + 1), vertex, atom);
+            std::vector<unsigned int> finde_248 = findNearestVertice(edgeVerticesPerAtom, edgeVerticesPerAtom[1].at(4),
+                edgeVerticesPerAtom[atom].at(4), vertex, 1);
+            std::vector<unsigned int> finde_341 = findNearestVertice(edgeVerticesPerAtom, edgeVerticesPerAtom[1].at(9),
+                edgeVerticesPerAtom[atom].at(4), vertex, 1);
+
+            bool found = false;
+            int index = INT_MIN;
+
+            for (std::tuple<unsigned int, int> i : referenceToOtherVertice.at(79)) {
+                if (std::get<0>(i) == 337){
+
                 }
             }
-            edgeVerticesPerAtom.push_back(atomEdgeVerticeVector);
+
+
+            //face.push_back(edgeVerticesPerAtom[atom].at(vertices + 0)); // Vertice 1
+            //face.push_back(edgeVerticesPerAtom[atom].at(vertices + 1)); // Vertice 2
+            //face.push_back(findNearestVertice(edgeVerticesPerAtom, edgeVerticesPerAtom[atom].at(vertices + 0),
+            //    edgeVerticesPerAtom[atom].at(vertices + 1), vertex, atom));
         }
-        /*
-        glColor3f(1,0,0);
-        glPointSize(4.0);
-        glBegin(GL_POINTS);
-        glVertex3f(-0.944,  20.730, -12.605 );
-    */ /*
-         for (int i = 0; i < neighboringAtoms.size() - 2; i = i + 2) {
-             for (int k = 1; k < neighboringAtoms.size() - 2; k = k + 2) {
-                 unsigned int  vertexIndex = edgeVerticesPerAtom[neighboringAtoms[i]].at(k);
-                 float referenceIndexX = vertex.at(vertexIndex + 0);
-                 float referenceIndexY = vertex.at(vertexIndex + 1);
-                 float referenceIndexZ = vertex.at(vertexIndex + 2);
-                 //glVertex3f(referenceIndexX, referenceIndexY, referenceIndexZ);
-             }
-         }
-          / *
-         glEnd();
-         glFlush();
-          */
-
-        //TODO: rausfinden welche vertices mit welchen die vernähung bilden
-        // Für jedes Atom gehe Kanten Vertices durch
-        /* Suche in schneidedem Atom nächsten Vertice, Baue dreieck davon
-         *
-         * //TODO: ich hab jetzt 2er Paare auf jedem Atom
-         *
-         * 0 1, 0 2, 1 0, 1 2, 2 0, 2 1
-         */
-        /*
-         * Gehe jedes paar durch. in jedem paar gehe alle kantenvertices durch und suche das nächste
-         */
-        for (int atom = 0; atom < edgeVerticesPerAtom.size(); ++atom) {
-            for (int vertices = 0; vertices < edgeVerticesPerAtom[atom].size(); vertices = vertices + 2) {
-                face.push_back(edgeVerticesPerAtom[atom].at(vertices + 0)); // Vertice 1
-                face.push_back(edgeVerticesPerAtom[atom].at(vertices + 1)); // Vertice 2
-                //TODO: edgelord alles außer edgeVerticesPerAtom[atom]
-                face.push_back(findNearestVertice(edgeVerticesPerAtom, edgeVerticesPerAtom[atom].at(vertices + 0),
-                    edgeVerticesPerAtom[atom].at(vertices + 1), vertex, atom));
-            }
-        }
-        /*
-                for (int j = 0; j < edgeVerticesPerAtom[neighboringAtoms[i]].size() - 2; j = j + 2) {
-                    face.push_back(edgeVerticesPerAtom[neighboringAtoms[i]].at(j));     //erste beiden
-                    //face.push_back(findNearestVertice(edgeVerticesPerAtom[neighboringAtoms[i]], edgeVerticesPerAtom[neighboringAtoms[i]].at(j), vertex));
-                    //face.push_back(edgeVerticesPerAtom[neighboringAtoms[i]].at(j + 1)); //vertices auf Atom A
-                    //face.push_back(edgeVerticesPerAtom[neighboringAtoms[k]].at(0));     //vertices auf Atom A; //
-                    // TODO: finde nächsten Vertice auf anderem Atom
-                    for (int l = 0; l < edgeVerticesPerAtom[neighboringAtoms[k]].size(); l++) { // Zweiter Vector
-                        // TODO: Finde nächstes Vertice zu i j+0
-                        face.push_back(findNearestVertice(edgeVerticesPerAtom[neighboringAtoms[k]], edgeVerticesPerAtom[neighboringAtoms[i]].at(j), vertex));
-                        //face.push_back(edgeVerticesPerAtom[neighboringAtoms[k]].at(1));
-                    }
-                    */
-
-
-        /*
-         * 1. Sammle alle Schnitt vertices auf, speichere pro atom in matrix
-         * 2. suche nächsten Vertice des anderen Atoms und verbinde
-         *   . -. -. -. -. -. -.
-         *    \/ \/ \/ \/ \/ \/
-         *    .  .  .  .  .  .
-         * 3. mache das gleiche für die andere Seite.
-         *   . -. -. -. -. -. -.
-         *    \/ \/ \/ \/ \/ \/
-         *    . -. -. -. -. -.
-         *
-         */
-
-    
-        this->triaMesh[0]->SetVertexData(
-            vertex.size() / 3, this->vertex.data(), normal.data(), color.data(), nullptr, false);
-        this->triaMesh[0]->SetTriangleData(face.size() / 3, face.data(), false);
-        this->triaMesh[0]->SetMaterial(nullptr);
-
-        delete ico;
     }
+
+
+    //TODO: Kann rausoptimiert werden.
+    auto* vertex2 = new float[vertex.size()]{};
+    for (int i = 0; i < vertex.size(); ++i) {
+        vertex2[i] = vertex.at(i);
+    }
+    auto* normal2 = new float[normal.size()]{};
+    for (int i = 0; i < normal.size(); ++i) {
+        normal2[i] = normal.at(i);
+    }
+    auto* color2 = new float[color.size()]{};
+    for (int i = 0; i < color.size(); ++i) {
+        color2[i] = color.at(i);
+    }
+    auto* face2 = new unsigned int[face.size()];
+    for (int i = 0; i < face.size(); ++i) {
+        face2[i] = face.at(i);
+    }
+
+
+    this->triaMesh[0]->SetVertexData(vertex.size() / 3, vertex2, normal2, color2, nullptr, true);
+    this->triaMesh[0]->SetTriangleData(face.size() / 3, face2, true);
+    this->triaMesh[0]->SetMaterial(nullptr);
+
+    delete ico;
+
     // set triangle mesh to caller
     if (this->triaMesh[0]->GetVertexCount() > 0) {
         ctmd->SetDataHash(this->datahash);
@@ -864,7 +853,8 @@ bool MoleculeSESMeshRenderer::getExtentCallback(core::Call& caller) {
 /*
  * MoleculeSESMeshRenderer::findNearestVertice
  */
-unsigned int MoleculeSESMeshRenderer::findNearestVertice(const std::vector<std::vector<unsigned int>>& edgelord, unsigned int& referenceIndex0, unsigned int& referenceIndex1, const std::vector<float>& vertex, int index) {
+std::vector<unsigned int> MoleculeSESMeshRenderer::findNearestVertice(const std::vector<std::vector<unsigned int>>& edgelord,
+    unsigned int& referenceIndex0, unsigned int& referenceIndex1, const std::vector<float>& vertex, int index) {
     /* Int referenceIndex ist vetice index, edgelord ist
      * edgelord ist kanten vector
      *
@@ -872,24 +862,67 @@ unsigned int MoleculeSESMeshRenderer::findNearestVertice(const std::vector<std::
      */
     float referenceIndexX = (vertex.at(referenceIndex0 * 3 + 0) + vertex.at(referenceIndex0 * 3 + 0)) / 2;
     float referenceIndexY = (vertex.at(referenceIndex0 * 3 + 1) + vertex.at(referenceIndex0 * 3 + 1)) / 2;
-    float referenceIndexZ =(vertex.at(referenceIndex0 * 3 + 2) + vertex.at(referenceIndex0 * 3 + 2)) / 2;
+    float referenceIndexZ = (vertex.at(referenceIndex0 * 3 + 2) + vertex.at(referenceIndex0 * 3 + 2)) / 2;
     unsigned int indexOfNearestVertex = 0;
+    unsigned int indexOfSecondNearestVertex = 0;
+    unsigned int indexOfThirdNearestVertex = 0;
     float nearestDistance = FLT_MAX;
-
+    float secondNearestDistance = FLT_MAX;
+    float thirdNearestDistance = FLT_MAX;
     for (int j = 0; j < edgelord.size(); j++) {
         //Gehe alle vectoren drch
-        if (index != j){
+        if (index != j) {
             for (unsigned int i : edgelord[j]) {
-                float dist = std::sqrt((referenceIndexX - vertex.at(i * 3 + 0)) * (referenceIndexX - vertex.at(i * 3 + 0)) +
-                                       (referenceIndexY - vertex.at(i * 3 + 1)) * (referenceIndexY - vertex.at(i * 3 + 1)) +
-                                       (referenceIndexZ - vertex.at(i * 3 + 2)) * (referenceIndexZ - vertex.at(i * 3 + 2)));
+                float dist =
+                    std::sqrt((referenceIndexX - vertex.at(i * 3 + 0)) * (referenceIndexX - vertex.at(i * 3 + 0)) +
+                              (referenceIndexY - vertex.at(i * 3 + 1)) * (referenceIndexY - vertex.at(i * 3 + 1)) +
+                              (referenceIndexZ - vertex.at(i * 3 + 2)) * (referenceIndexZ - vertex.at(i * 3 + 2)));
 
                 if (dist > 0 && dist < nearestDistance) {
-                    nearestDistance = dist;
-                    indexOfNearestVertex = i;
+                    if (i != indexOfNearestVertex){
+                        thirdNearestDistance = secondNearestDistance;
+                        secondNearestDistance = nearestDistance;
+                        nearestDistance = dist;
+
+                        indexOfThirdNearestVertex = indexOfSecondNearestVertex;
+                        indexOfSecondNearestVertex = indexOfNearestVertex;
+                        indexOfNearestVertex = i;
+                    }}
+                else if (dist < secondNearestDistance){
+                    if (i != indexOfNearestVertex) {
+                        thirdNearestDistance = secondNearestDistance;
+                        secondNearestDistance = dist;
+
+                        indexOfThirdNearestVertex = indexOfSecondNearestVertex;
+                        indexOfSecondNearestVertex = i;
+                    }
                 }
+                else if (dist < thirdNearestDistance) {
+                    if (i != indexOfSecondNearestVertex) {
+
+                        thirdNearestDistance = dist;
+
+                        indexOfThirdNearestVertex = i;
+                    }
+                }
+
             }
         }
     }
-    return indexOfNearestVertex;
+    return {indexOfNearestVertex, indexOfSecondNearestVertex, indexOfThirdNearestVertex};
+}
+std::vector<std::vector<unsigned int>> MoleculeSESMeshRenderer::getMultipleVertices(Icosphere* pIcosphere) {
+    std::vector<std::vector<unsigned int>> multipleVertexVector(pIcosphere->getVertexCount());
+    for (int i = 0; i < pIcosphere->getVertexCount(); ++i) {
+        // doppelte for schleife, gehe jedes vertice durch und schaue die vertices an
+        for (int j = i+1; j < pIcosphere->getVertexCount(); ++j) {
+            if (pIcosphere->getVertices()[i*3] == pIcosphere->getVertices()[j*3] &&
+                pIcosphere->getVertices()[i*3+1] == pIcosphere->getVertices()[j*3+1] &&
+                pIcosphere->getVertices()[i*3+2] == pIcosphere->getVertices()[j*3+2]){
+                multipleVertexVector.at(i).push_back(j);
+                multipleVertexVector.at(j).push_back(i);
+            }
+        }
+    }
+    return multipleVertexVector;
 }
