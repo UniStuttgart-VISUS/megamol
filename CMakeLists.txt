@@ -116,54 +116,17 @@ if (WIN32)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif ()
 
+# Additional downlaoded and installed repositories
+include(cmake/megamol_extra_repo.cmake)
+
 # Examples
-option(EXAMPLES "Get the MegaMol example repository" ON)
-if (EXAMPLES)
-  set(EXAMPLES_DIR "${CMAKE_BINARY_DIR}/examples" CACHE PATH "Download directory of the examples")
-  option(EXAMPLES_UPDATE "Pull updates from the examples repo" ON)
-  if (NOT EXISTS "${EXAMPLES_DIR}")
-    message(STATUS "Downloading examples")
-    execute_process(COMMAND
-      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-examples.git "${EXAMPLES_DIR}" --depth 1
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  elseif (EXAMPLES_UPDATE)
-    message(STATUS "Pull example updates")
-    execute_process(COMMAND
-      ${GIT_EXECUTABLE} pull
-      WORKING_DIRECTORY "${EXAMPLES_DIR}"
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endif ()
-  option(EXAMPLES_INSTALL "Install examples" ON)
-  if (EXAMPLES_INSTALL)
-    install(DIRECTORY "${EXAMPLES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/examples" PATTERN ".git" EXCLUDE)
-  endif ()
-endif ()
+megamol_extra_repo(examples
+  GIT_REPO "https://github.com/UniStuttgart-VISUS/megamol-examples.git"
+  DEFAULT_ON)
 
 # Tests
-option(TESTS "Get the MegaMol tests repository" OFF)
-if (TESTS)
-  set(TESTS_DIR "${CMAKE_BINARY_DIR}/tests" CACHE PATH "Download directory of the tests")
-  option(TESTS_UPDATE "Pull updates from the tests repo" ON)
-  if (NOT EXISTS "${TESTS_DIR}")
-    message(STATUS "Downloading tests")
-    execute_process(COMMAND
-      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-tests.git "${TESTS_DIR}" --depth 1
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  elseif (TESTS_UPDATE)
-    message(STATUS "Pull tests updates")
-    execute_process(COMMAND
-      ${GIT_EXECUTABLE} pull
-      WORKING_DIRECTORY "${TESTS_DIR}"
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endif ()
-  install(DIRECTORY "${TESTS_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/tests" PATTERN ".git" EXCLUDE)
-endif ()
+megamol_extra_repo(tests
+  GIT_REPO "https://github.com/UniStuttgart-VISUS/megamol-tests.git")
 
 # Install vcpkg libraries
 # X_VCPKG_APPLOCAL_DEPS_INSTALL currently does only work for windows, in addition only actually used dll's are
