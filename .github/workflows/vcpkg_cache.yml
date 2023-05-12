@@ -21,11 +21,21 @@ jobs:
         -DMEGAMOL_USE_OSPRAY=ON
       env:
         VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
-  ubuntu-docker:
-    name: Ubuntu-Docker
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - docker_image: megamol_ci_ubuntu
+            cc: clang-14
+            cxx: clang++-14
+          - docker_image: megamol_ci_ubuntu
+            cc: gcc-11
+            cxx: g++-11
+    name: Linux
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master
+      image: ghcr.io/unistuttgart-visus/${{ matrix.config.docker_image }}:master
     steps:
     - uses: actions/checkout@v3
     - name: Configure
@@ -35,6 +45,6 @@ jobs:
         -DMEGAMOL_USE_CGAL=ON
         -DMEGAMOL_USE_OSPRAY=ON
       env:
-        CC: clang-14
-        CXX: clang++-14
+        CC: ${{ matrix.config.cc }}
+        CXX: ${{ matrix.config.cxx }}
         VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
