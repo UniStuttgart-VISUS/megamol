@@ -107,9 +107,6 @@ endif ()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/main)
 target_link_libraries(megamol PRIVATE plugins)
 
-# Remoteconsole
-add_subdirectory(remoteconsole)
-
 # Utils
 add_subdirectory(utils)
 

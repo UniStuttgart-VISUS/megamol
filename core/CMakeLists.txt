@@ -50,9 +50,6 @@ if (BUILD_CORE)
       abstract_frontend_service # abstract render api used by MegaMolGraph
       megamol_build_info_rc
     )
-  if (UNIX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
-  endif ()
   if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE Version)
   endif ()
