@@ -21,8 +21,6 @@ RUN apt-get update && apt-get install -y \
   autoconf libtool \
 # mpfr:
   autoconf-archive \
-# glslang:
-  python3 \
 # GL/glu.h:
   libglu1-mesa-dev \
   && rm -rf /var/lib/apt/lists/*
