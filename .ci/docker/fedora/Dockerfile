@@ -25,8 +25,6 @@ RUN dnf -y update && dnf -y install \
   autoconf-archive \
 # OpenGL
   mesa-libGL-devel mesa-libGLU-devel \
-# vislib
-  ncurses-devel \
 # image_gl
   libjpeg-turbo-devel \
   && dnf clean all

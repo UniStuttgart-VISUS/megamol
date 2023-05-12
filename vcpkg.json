@@ -34,6 +34,10 @@
     "lua",
     "mmpld-io",
     "nanoflann",
+    {
+      "name": "ncurses",
+      "platform": "!windows"
+    },
     "nlohmann-json",
     "obj-io",
     "qhull",

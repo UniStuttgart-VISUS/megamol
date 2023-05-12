@@ -105,7 +105,7 @@ Our CI pipeline tests the build with gcc-11 and clang-14 on Ubuntu 22.04.
 
 2. As prerequisites, following packages from the repository are required:
 
-    `$ sudo apt install curl zip unzip tar xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev`
+    `$ sudo apt install curl zip unzip tar xorg-dev libgl1-mesa-dev libglu1-mesa-dev`
 
     - Hint: You can optionally install `libboost-stacktrace-dev` to enable stacktrace printout for KHR debug messages.
 
