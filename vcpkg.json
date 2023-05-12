@@ -94,8 +94,8 @@
         {
           "name": "glowl",
           "features": [
-            "glm",
-            "gl-extensions"
+            "gl-extensions",
+            "glm"
           ]
         },
         {
@@ -121,11 +121,11 @@
       "dependencies": [
         {
           "name": "ospray",
-          "version>=": "2.10.0",
           "features": [
             "avx",
             "avx2"
-          ]
+          ],
+          "version>=": "2.10.0"
         }
       ]
     },
