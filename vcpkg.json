@@ -30,6 +30,10 @@
     "imguizmoquat",
     "implot",
     "libigl",
+    {
+      "name": "libjpeg-turbo",
+      "platform": "!windows"
+    },
     "libpng",
     "lua",
     "mmpld-io",
