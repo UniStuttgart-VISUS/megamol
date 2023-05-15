@@ -7,12 +7,14 @@ pr:
 
 variables:
   defaultConfig: >-
+    -DMEGAMOL_DOWNLOAD_VCPKG_CACHE=ON
     -DMEGAMOL_WARNING_LEVEL="Off"
     -DMEGAMOL_PLUGIN_MEGAMOL101_GL=ON
     -DMEGAMOL_USE_CGAL=ON
     -DMEGAMOL_USE_PROFILING=ON
     -DMEGAMOL_USE_VTKM=ON
   nonGlConfig: >-
+    -DMEGAMOL_DOWNLOAD_VCPKG_CACHE=ON
     -DMEGAMOL_WARNING_LEVEL="Off"
     -DMEGAMOL_USE_OPENGL=OFF
 
@@ -53,7 +55,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs) -DMEGAMOL_DOWNLOAD_VCPKG_CACHE=ON'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
