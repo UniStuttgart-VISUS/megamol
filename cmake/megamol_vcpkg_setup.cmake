@@ -48,3 +48,17 @@ option(MEGAMOL_VCPKG_DOWNLOAD_CACHE "Download prebuilt dependency binaries if av
 if (MEGAMOL_VCPKG_DOWNLOAD_CACHE)
   set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
 endif ()
+
+# Asset cache for offline build
+set(MEGAMOL_VCPKG_ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_assets" CACHE PATH "Path to vcpkg assets.")
+mark_as_advanced(FORCE MEGAMOL_VCPKG_ASSETS_DIR)
+if (MEGAMOL_VCPKG_SETUP_ASSET_CACHE)
+  file(MAKE_DIRECTORY "${MEGAMOL_VCPKG_ASSETS_DIR}")
+  set(ENV{X_VCPKG_ASSET_SOURCES} "x-azurl,file://${MEGAMOL_VCPKG_ASSETS_DIR}/,,readwrite")
+
+  list(APPEND VCPKG_INSTALL_OPTIONS "--only-downloads")
+  set(MEGAMOL_ENABLE_ALL_FEATURES ON)
+  set(MEGAMOL_STOP_AFTER_VCPKG ON)
+elseif (IS_DIRECTORY "${MEGAMOL_VCPKG_ASSETS_DIR}")
+  set(ENV{X_VCPKG_ASSET_SOURCES} "x-azurl,file://${MEGAMOL_VCPKG_ASSETS_DIR}/,,read")
+endif ()
