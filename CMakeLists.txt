@@ -25,7 +25,7 @@ megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 # MegaMol vcpkg features (dependent options)
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
-megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
+megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "WIN32;MEGAMOL_USE_OPENGL")
 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
