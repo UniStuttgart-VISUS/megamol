@@ -5,12 +5,16 @@
 
 # Allow user to specify custom vcpkg directory.
 set(MEGAMOL_VCPKG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg" CACHE PATH "Path to vcpkg.")
-mark_as_advanced(FORCE MEGAMOL_VCPKG_DIR)
+set(MEGAMOL_VCPKG_DOWNLOAD OFF CACHE BOOL "Download vcpkg.")
+mark_as_advanced(FORCE MEGAMOL_VCPKG_DIR MEGAMOL_VCPKG_DOWNLOAD)
 
 # Download vcpkg via FetchContent (this is the default option).
 if (NOT IS_DIRECTORY "${MEGAMOL_VCPKG_DIR}")
   set(MEGAMOL_VCPKG_DIR "${CMAKE_CURRENT_BINARY_DIR}/vcpkg" CACHE PATH "Path to vcpkg." FORCE)
+  set(MEGAMOL_VCPKG_DOWNLOAD ON CACHE BOOL "Download vcpkg." FORCE)
+endif ()
 
+if (MEGAMOL_VCPKG_DOWNLOAD)
   include(FetchContent)
   mark_as_advanced(FORCE
     FETCHCONTENT_BASE_DIR
