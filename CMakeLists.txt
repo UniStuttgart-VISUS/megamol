@@ -4,11 +4,14 @@
 #
 cmake_minimum_required(VERSION 3.15...3.26 FATAL_ERROR)
 
+# Vcpkg setup
 set(MEGAMOL_VCPKG_VERSION "2023.04.15") # Update default-registry baseline in vcpkg-configuration.json when changing!
 
 include(cmake/megamol_vcpkg_setup.cmake)
 include(cmake/megamol_feature_option.cmake)
+include(cmake/megamol_vcpkg_empty_port.cmake)
 
+# MegaMol vcpkg features
 megamol_feature_option(CGAL "Enable CGAL support" OFF)
 megamol_feature_option(CUDA "Enable CUDA support" OFF)
 megamol_feature_option(MPI "Enable MPI support" OFF)
@@ -19,25 +22,10 @@ megamol_feature_option(PROFILING "Enable profiling support" OFF)
 megamol_feature_option(STACKTRACE "Enable Boost.Stacktrace support" OFF)
 megamol_feature_option(TRACY "Enable tracy support" OFF)
 megamol_feature_option(VTKM "Enable VTK-m support" OFF)
-# dependent options
+# MegaMol vcpkg features (dependent options)
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
-
-# option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
-set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/vcpkg_ports")
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/vcpkg_triplets") # We are using triplets with VCPKG_DISABLE_COMPILER_TRACKING set (on Windows).
-set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
-set(VCPKG_INSTALL_OPTIONS "--clean-after-build" "--no-print-usage") # Build dirs get quite large and are usually only needed for debugging new ports.
-set(CMAKE_TOOLCHAIN_FILE "${MEGAMOL_VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-
-set(ENV{VCPKG_FORCE_DOWNLOADED_BINARIES} ON) # Vcpkg should always download tools (i.e. CMake) to have consistent versions over all systems.
-option(MEGAMOL_DOWNLOAD_VCPKG_CACHE "Download prebuilt dependency binaries if available" OFF)
-if (MEGAMOL_DOWNLOAD_VCPKG_CACHE)
-  set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
-endif ()
-
-include(cmake/megamol_vcpkg_empty_port.cmake)
 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
@@ -130,7 +118,7 @@ megamol_extra_repo(tests
 
 # Install vcpkg libraries
 # X_VCPKG_APPLOCAL_DEPS_INSTALL currently does only work for windows, in addition only actually used dll's are
-# installed. This is a problem for libraries that load dll's dynamically on runtime (.i.e. ospray).
+# installed. This is a problem for libraries that load dll's dynamically on runtime (i.e. ospray).
 # Therefore, we just copy all vcpkg libraries to our install dir, until vcpkg may has a better option in future.
 if (WIN32)
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-windows/$<$<CONFIG:Debug>:debug/>bin/

@@ -35,3 +35,16 @@ if (NOT IS_DIRECTORY "${MEGAMOL_VCPKG_DIR}")
       FETCHCONTENT_UPDATES_DISCONNECTED_VCPKG-DOWNLOAD)
   endif ()
 endif ()
+
+# vcpkg config
+set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/vcpkg_ports")
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/vcpkg_triplets") # Disable compiler tracking on Windows.
+set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics")
+set(VCPKG_INSTALL_OPTIONS "--clean-after-build" "--no-print-usage")
+set(CMAKE_TOOLCHAIN_FILE "${MEGAMOL_VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+set(ENV{VCPKG_FORCE_DOWNLOADED_BINARIES} ON) # Always download tools (i.e. CMake) to have consistent versions on all systems.
+
+option(MEGAMOL_VCPKG_DOWNLOAD_CACHE "Download prebuilt dependency binaries if available." OFF)
+if (MEGAMOL_VCPKG_DOWNLOAD_CACHE)
+  set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
+endif ()
