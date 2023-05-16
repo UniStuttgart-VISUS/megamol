@@ -22,6 +22,11 @@ function(megamol_feature_option OPTION_NAME OPTION_DESCRIPTION OPTION_DEFAULT)
     message(FATAL_ERROR "Option name is only allowed to contain uppercase letters, numbers and underscore, found: ${OPTION_NAME}.")
   endif ()
 
+  # Allow CI to override all features to default to on.
+  if (MEGAMOL_ENABLE_ALL_FEATURES)
+    set(OPTION_DEFAULT ON)
+  endif ()
+
   if (${ARGC} GREATER 3)
     cmake_dependent_option(MEGAMOL_USE_${OPTION_NAME} "${OPTION_DESCRIPTION}" "${OPTION_DEFAULT}" "${ARGV3}" OFF)
   else ()
