@@ -61,22 +61,22 @@
     "zlib"
   ],
   "features": {
-    "use-cgal": {
+    "cgal": {
       "description": "Use CGAL",
       "dependencies": [
         "cgal"
       ]
     },
-    "use-cuda": {
+    "cuda": {
       "description": "Use CUDA"
     },
-    "use-cuesdk": {
+    "cuesdk": {
       "description": "Use Corsair CUE",
       "dependencies": [
         "cuesdk"
       ]
     },
-    "use-mpi": {
+    "mpi": {
       "description": "Use MPI",
       "dependencies": [
         {
@@ -95,7 +95,7 @@
         "mpi"
       ]
     },
-    "use-opengl": {
+    "opengl": {
       "description": "Use OpenGL",
       "dependencies": [
         "glad",
@@ -126,10 +126,10 @@
         "megamol-shader-factory"
       ]
     },
-    "use-opengl-debuggroups": {
+    "opengl-debuggroups": {
       "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
     },
-    "use-ospray": {
+    "ospray": {
       "description": "Use OSPRay",
       "dependencies": [
         {
@@ -142,16 +142,16 @@
         }
       ]
     },
-    "use-power": {
+    "power": {
       "description": "Use power consumption measurement",
       "dependencies": [
         "power-overwhelming"
       ]
     },
-    "use-profiling": {
+    "profiling": {
       "description": "Use Profiling"
     },
-    "use-stacktrace": {
+    "stacktrace": {
       "description": "Use Boost.Stacktrace",
       "dependencies": [
         "boost-stacktrace",
@@ -161,7 +161,7 @@
         }
       ]
     },
-    "use-tracy": {
+    "tracy": {
       "description": "Use Tracy",
       "dependencies": [
         {
@@ -172,13 +172,13 @@
         }
       ]
     },
-    "use-vr-interop": {
+    "vr-interop": {
       "description": "Use VR Interop",
       "dependencies": [
         "mwk-mint-interop"
       ]
     },
-    "use-vtkm": {
+    "vtkm": {
       "description": "Use VTK-m",
       "dependencies": [
         "vtk-m"

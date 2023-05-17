@@ -8,7 +8,7 @@ include(CMakeDependentOption)
 # megamol_feature_option()
 #
 #   Adds an option `MEGAMOL_USE_<name>` to the CMake interface. Enables the vcpkg
-#   feature `use-<name>` and set a global compile definition `MEGAMOL_USE_<name>`.
+#   feature `<name>` and set a global compile definition `MEGAMOL_USE_<name>`.
 #
 # Parameters:
 #   OPTION_NAME:        Name of the option, only use uppercase letters, numbers and underscore.
@@ -37,7 +37,7 @@ function(megamol_feature_option OPTION_NAME OPTION_DESCRIPTION OPTION_DEFAULT)
     # Enable vcpkg feature
     string(TOLOWER ${OPTION_NAME} OPTION_NAME_LOWER)
     string(REPLACE "_" "-" OPTION_NAME_LOWER "${OPTION_NAME_LOWER}")
-    list(APPEND VCPKG_MANIFEST_FEATURES "use-${OPTION_NAME_LOWER}")
+    list(APPEND VCPKG_MANIFEST_FEATURES "${OPTION_NAME_LOWER}")
     set(VCPKG_MANIFEST_FEATURES "${VCPKG_MANIFEST_FEATURES}" PARENT_SCOPE)
 
     # add global compile definition for feature (TODO prefer a target based solution)
