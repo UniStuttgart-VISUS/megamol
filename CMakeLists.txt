@@ -31,6 +31,9 @@ megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." 
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+# Catch deprecated options before project()
+include(cmake/deprecation_warning.cmake)
+
 # Project
 project(megamol
   VERSION 1.3.0
