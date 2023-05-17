@@ -12,20 +12,20 @@ include(cmake/megamol_feature_option.cmake)
 include(cmake/megamol_vcpkg_empty_port.cmake)
 
 # MegaMol vcpkg features
-megamol_feature_option(CGAL "Enable CGAL support" OFF)
-megamol_feature_option(CUDA "Enable CUDA support" OFF)
-megamol_feature_option(MPI "Enable MPI support" OFF)
-megamol_feature_option(OPENGL "Enable OpenGL support" ON)
-megamol_feature_option(OSPRAY "Enable OSPRay support" OFF)
-megamol_feature_option(POWER "Enable power measurement support" OFF)
-megamol_feature_option(PROFILING "Enable profiling support" OFF)
-megamol_feature_option(STACKTRACE "Enable Boost.Stacktrace support" OFF)
-megamol_feature_option(TRACY "Enable tracy support" OFF)
-megamol_feature_option(VTKM "Enable VTK-m support" OFF)
+megamol_feature_option(CGAL "Enable CGAL support." OFF)
+megamol_feature_option(CUDA "Enable CUDA support." OFF)
+megamol_feature_option(MPI "Enable MPI support." OFF)
+megamol_feature_option(OPENGL "Enable OpenGL support." ON)
+megamol_feature_option(OSPRAY "Enable OSPRay support." OFF)
+megamol_feature_option(POWER "Enable power measurement support." OFF)
+megamol_feature_option(PROFILING "Enable profiling support." OFF)
+megamol_feature_option(STACKTRACE "Enable Boost.Stacktrace support." OFF)
+megamol_feature_option(TRACY "Enable tracy support." OFF)
+megamol_feature_option(VTKM "Enable VTK-m support." OFF)
 # MegaMol vcpkg features (dependent options)
-megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
-megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
-megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "WIN32;MEGAMOL_USE_OPENGL")
+megamol_feature_option(CUESDK "Enable Corsair CUESDK support." OFF "WIN32")
+megamol_feature_option(OPENGL_DEBUGGROUPS "Inject OpenGL debug groups into calls." OFF "MEGAMOL_USE_OPENGL")
+megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." OFF "WIN32;MEGAMOL_USE_OPENGL")
 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
@@ -50,9 +50,9 @@ endif ()
 
 # Default install prefix
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
 endif ()
-set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "default install path" FORCE) # This will replace "\" by "/"
+set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Install path prefix, prepended onto install directories." FORCE) # This will replace "\" by "/"
 
 # Modules
 include(GNUInstallDirs)
@@ -104,7 +104,7 @@ if (WIN32)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif ()
 
-# Additional downlaoded and installed repositories
+# Additional downloaded and installed repositories
 include(cmake/megamol_extra_repo.cmake)
 
 # Examples

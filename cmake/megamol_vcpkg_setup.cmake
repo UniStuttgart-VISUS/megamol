@@ -3,17 +3,22 @@
 # All rights reserved.
 #
 
-# Allow user to specify custom vcpkg directory.
+# Allow to configure a custom vcpkg directory, otherwise download vcpkg to the
+# build directory. Check for a `vcpkg` directory within the source directory
+# to make offline build bundles work out of the box. By default, download only
+# to the build directory, but `MEGAMOL_VCPKG_DOWNLOAD` can be used to enable
+# the download for a custom directory.
+
 set(MEGAMOL_VCPKG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg" CACHE PATH "Path to vcpkg.")
 set(MEGAMOL_VCPKG_DOWNLOAD OFF CACHE BOOL "Download vcpkg.")
 mark_as_advanced(FORCE MEGAMOL_VCPKG_DIR MEGAMOL_VCPKG_DOWNLOAD)
 
-# Download vcpkg via FetchContent (this is the default option).
 if (NOT IS_DIRECTORY "${MEGAMOL_VCPKG_DIR}")
   set(MEGAMOL_VCPKG_DIR "${CMAKE_CURRENT_BINARY_DIR}/vcpkg" CACHE PATH "Path to vcpkg." FORCE)
   set(MEGAMOL_VCPKG_DOWNLOAD ON CACHE BOOL "Download vcpkg." FORCE)
 endif ()
 
+# Download vcpkg via FetchContent.
 if (MEGAMOL_VCPKG_DOWNLOAD)
   include(FetchContent)
   mark_as_advanced(FORCE
