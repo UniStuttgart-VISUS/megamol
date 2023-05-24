@@ -641,7 +641,7 @@ bool SphereRenderer::createResources() {
 
             float apex = this->ao_cone_apex_slot_.Param<param::FloatParam>()->Value();
             std::vector<glm::vec4> directions;
-            this->generate3ConeDirections(directions, apex* static_cast<float>(M_PI) / 180.0f);
+            this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
             lighting_so.addDefinition("NUM_CONEDIRS", std::to_string(directions.size()));
 
             ao_dir_ubo_->rebuffer(directions);
@@ -683,8 +683,7 @@ bool SphereRenderer::createResources() {
         default:
             return false;
         }
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
             __FUNCTION__, __LINE__);
@@ -714,14 +713,12 @@ MultiParticleDataCall* SphereRenderer::getData(unsigned int t, float& out_scalin
                     out_scaling = temp;
                 }
             }
-        }
-        else {
+        } else {
             out_scaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         }
         if (out_scaling > 0.0000001) {
             out_scaling = 10.0f / out_scaling;
-        }
-        else {
+        } else {
             out_scaling = 1.0f;
         }
 
@@ -730,8 +727,7 @@ MultiParticleDataCall* SphereRenderer::getData(unsigned int t, float& out_scalin
             return nullptr;
 
         return c2;
-    }
-    else {
+    } else {
         return nullptr;
     }
 }
@@ -741,24 +737,24 @@ void SphereRenderer::getClipData(core::view::Camera in_cam, glm::vec4& out_clip_
 
     view::CallClipPlane* ccp = this->get_clip_plane_slot_.CallAs<view::CallClipPlane>();
 
-    // First set current camera ... 
+    // First set current camera ...
     if (ccp != nullptr) {
         ccp->SetCamera(in_cam);
     }
-    
+
     // ... then call callback and retrieve new values:
-    if ((ccp != nullptr)  && (*ccp)()) {
-            out_clip_dat[0] = ccp->GetPlane().Normal().X();
-            out_clip_dat[1] = ccp->GetPlane().Normal().Y();
-            out_clip_dat[2] = ccp->GetPlane().Normal().Z();
+    if ((ccp != nullptr) && (*ccp)()) {
+        out_clip_dat[0] = ccp->GetPlane().Normal().X();
+        out_clip_dat[1] = ccp->GetPlane().Normal().Y();
+        out_clip_dat[2] = ccp->GetPlane().Normal().Z();
 
-            vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
-            out_clip_dat[3] = grr.Dot(ccp->GetPlane().Normal());
+        vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
+        out_clip_dat[3] = grr.Dot(ccp->GetPlane().Normal());
 
-            out_clip_col[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
-            out_clip_col[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
-            out_clip_col[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
-            out_clip_col[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
+        out_clip_col[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
+        out_clip_col[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
+        out_clip_col[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
+        out_clip_col[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
     } else {
         out_clip_dat[0] = out_clip_dat[1] = out_clip_dat[2] = out_clip_dat[3] = 0.0f;
 
@@ -766,7 +762,6 @@ void SphereRenderer::getClipData(core::view::Camera in_cam, glm::vec4& out_clip_
         out_clip_col[3] = 1.0f;
     }
 }
-
 
 
 bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {

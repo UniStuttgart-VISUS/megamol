@@ -85,9 +85,7 @@ void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_
 }
 
 
-megamol::gui::ParameterGroups::ParameterGroups()
-        : tooltip()
-        , group_widgets() {
+megamol::gui::ParameterGroups::ParameterGroups() : tooltip(), group_widgets() {
 
     // Create/register available group widgets
 #ifdef MEGAMOL_USE_OPENGL
@@ -95,7 +93,6 @@ megamol::gui::ParameterGroups::ParameterGroups()
 #endif
     this->group_widgets.emplace_back(std::make_shared<ParameterGroupAnimationWidget>());
     this->group_widgets.emplace_back(std::make_shared<ParameterGroupClipPlaneWidget>());
-
 }
 
 

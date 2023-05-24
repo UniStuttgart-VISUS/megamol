@@ -104,7 +104,6 @@ private:
 
     /** The serialized camera */
     param::ParamSlot cameraSlot;
-
 };
 
 } // namespace megamol::core::view

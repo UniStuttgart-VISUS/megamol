@@ -29,8 +29,7 @@ public:
         megamol::core::utility::PickingBuffer* inout_picking_buffer, ImGuiID in_override_header_state) override;
 
 private:
-
-   // FUNCTIONS --------------------------------------------------------------
+    // FUNCTIONS --------------------------------------------------------------
 
 
     // TEMP:

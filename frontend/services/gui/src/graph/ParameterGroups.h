@@ -8,9 +8,9 @@
 #pragma once
 
 
-#include "widgets/AbstractParameterGroupWidget.h"
 #include "graph/Parameter.h"
 #include "vislib/math/Ternary.h"
+#include "widgets/AbstractParameterGroupWidget.h"
 #include "widgets/HoverToolTip.h"
 
 

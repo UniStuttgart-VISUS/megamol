@@ -23,8 +23,7 @@ megamol::gui::ParameterGroupClipPlaneWidget::ParameterGroupClipPlaneWidget()
         : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
         , tooltip()
         , cameraSerializer()
-        , guizmo_mat()
-{
+        , guizmo_mat() {
     this->InitPresentation(ParamType_t::GROUP_CLIPPLANE);
     this->name = "clip";
     this->guizmo_mat = glm::identity<glm::mat4>();
@@ -73,7 +72,7 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
         if ((param_ptr->Name() == "enable") && (param_ptr->Type() == ParamType_t::BOOL)) {
-            param_enable= param_ptr;
+            param_enable = param_ptr;
         } else if ((param_ptr->Name() == "colour") && (param_ptr->Type() == ParamType_t::COLOR)) {
             param_colour = param_ptr;
         } else if ((param_ptr->Name() == "normal") && (param_ptr->Type() == ParamType_t::VECTOR3F)) {
@@ -128,7 +127,6 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
                 this->name, params, in_search, in_scope, nullptr, in_override_header_state);
 
 
-
             ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
             if (ImGuizmo::IsUsing()) {
                 ImGui::Text("Using gizmo");
@@ -143,13 +141,11 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             }
 
 
-
             return true;
 
         } else if (in_scope == Parameter::WidgetScope::GLOBAL) {
 
             ImGui::PushID(static_cast<int>(this->uid));
-
 
 
             // DRAW -------------------------------------------------------------------
@@ -158,7 +154,6 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             auto cam_view = cam.getViewMatrix();
             auto cam_proj = cam.getProjectionMatrix();
             auto cam_pose = cam.get<core::view::Camera::Pose>();
-
 
 
             // TODO ////////////////////////////
@@ -180,13 +175,13 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             float boundsSnap[] = {0.1f, 0.1f, 0.1f};
 
             /// Grid
-            ImGuizmo::DrawGrid(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(this->guizmo_mat), 1.0f);
+            ImGuizmo::DrawGrid(
+                glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(this->guizmo_mat), 1.0f);
 
             /// Manipulator
             ImGuizmo::Manipulate(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), mCurrentGizmoOperation,
-                mCurrentGizmoMode,
-                glm::value_ptr(this->guizmo_mat), nullptr, useSnap ? &snap[0] : nullptr, boundSizing ? bounds : nullptr,
-                boundSizingSnap ? boundsSnap : nullptr);
+                mCurrentGizmoMode, glm::value_ptr(this->guizmo_mat), nullptr, useSnap ? &snap[0] : nullptr,
+                boundSizing ? bounds : nullptr, boundSizingSnap ? boundsSnap : nullptr);
 
             /// Cube inside manipulator
             //int gizmoCount = 1;
@@ -200,10 +195,9 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
 
 
             std::string popup_label = "guizmo_popup";
-            if ( ImGui::IsMouseClicked(ImGuiMouseButton_Right) &&
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) &&
                 !ImGui::IsPopupOpen(popup_label.c_str())) { // ImGuizmo::IsOver() &&
                 ImGui::OpenPopup(popup_label.c_str());
-
             }
             if (ImGui::BeginPopup(popup_label.c_str(), ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
 
@@ -212,12 +206,10 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
                 ImGui::EndPopup();
             }
 
-           
-
 
             //param_play->SetValue();
 
-            
+
             ///////////////////////////////////
 
             ImGui::PopID();

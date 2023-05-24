@@ -164,7 +164,6 @@ private:
 
     /** The camera */
     megamol::core::view::Camera camera;
-
 };
 
 
