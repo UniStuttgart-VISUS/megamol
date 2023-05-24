@@ -28,6 +28,7 @@
     },
     "imgui-software-renderer",
     "imguizmoquat",
+    "imguizmo",
     "implot",
     "libigl",
     "libpng",

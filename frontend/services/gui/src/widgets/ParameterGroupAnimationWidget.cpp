@@ -27,7 +27,7 @@ megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget()
 }
 
 
-bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPtrVector_t& params) {
+bool megamol::gui::ParameterGroupAnimationWidget::Check(ParamPtrVector_t& params) {
 
     bool param_play = false;
     bool param_time = false;
@@ -99,7 +99,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
             // LOCAL
 
             ImGui::PushID(static_cast<int>(this->uid));
-            ImGui::TextDisabled(this->name.c_str());
+            std::string widget_text_local = "Global Widget active...";
+            ImGui::TextDisabled(widget_text_local.c_str());
             ImGui::PopID();
 
             return true;
@@ -208,17 +209,6 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         param_play->SetValue(play);
         param_time->SetValue(time);
         param_speed->SetValue(speed);
-
-        if (in_scope == Parameter::WidgetScope::GLOBAL) {
-            // GLOBAL
-
-            ImGui::End();
-        } else if (in_scope == Parameter::WidgetScope::LOCAL) {
-            /// LOCAL
-            // Alternative LOCAL presentation
-
-            // ImGui::EndGroup();
-        }
 
         ImGui::PopID();
 

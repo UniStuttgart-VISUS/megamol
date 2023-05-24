@@ -9,6 +9,12 @@
 #include "ParameterGroups.h"
 #include "widgets/ButtonWidgets.h"
 
+#include "widgets/ParameterGroupAnimationWidget.h"
+#include "widgets/ParameterGroupClipPlaneWidget.h"
+#ifdef MEGAMOL_USE_OPENGL
+#include "widgets/gl/ParameterGroupViewCubeWidget.h"
+#endif
+
 
 using namespace megamol;
 using namespace megamol::core;
@@ -81,16 +87,15 @@ void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_
 
 megamol::gui::ParameterGroups::ParameterGroups()
         : tooltip()
-        , animation_group()
-        , group_widgets()
-#ifdef MEGAMOL_USE_OPENGL
-        , cube_widget_group() {
+        , group_widgets() {
+
     // Create/register available group widgets
-    this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->cube_widget_group));
-#else
-{
+#ifdef MEGAMOL_USE_OPENGL
+    this->group_widgets.emplace_back(std::make_shared<ParameterGroupViewCubeWidget>());
 #endif
-    this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->animation_group));
+    this->group_widgets.emplace_back(std::make_shared<ParameterGroupAnimationWidget>());
+    this->group_widgets.emplace_back(std::make_shared<ParameterGroupClipPlaneWidget>());
+
 }
 
 
@@ -137,7 +142,7 @@ bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_para
         for (auto& group_widget_data : this->group_widgets) {
 
             // Check for same group name
-            if ((group_widget_data->GetName() == group_name) && (group_widget_data->Check(true, group.second))) {
+            if ((group_widget_data->GetName() == group_name) && (group_widget_data->Check(group.second))) {
 
                 found_group_widget = true;
                 group_widget_data->SetActive(true);
@@ -283,7 +288,7 @@ bool megamol::gui::ParameterGroups::ParametersVisible(megamol::gui::ParamVector_
         auto group_name = group.first;
         bool found_group_widget = false;
         for (auto& group_widget_data : this->group_widgets) {
-            if ((group_widget_data->GetName() == group_name) && (group_widget_data->Check(true, group.second))) {
+            if ((group_widget_data->GetName() == group_name) && (group_widget_data->Check(group.second))) {
                 found_group_widget = true;
                 if (group_widget_data->IsGUIVisible()) {
                     params_visisble = true;

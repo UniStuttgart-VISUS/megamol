@@ -9,6 +9,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmstd/renderer/CallClipPlane.h"
@@ -19,18 +20,17 @@
 using namespace megamol::core;
 
 
-/*
- * view::ClipPlane::ClipPlane
- */
-view::ClipPlane::ClipPlane()
+megamol::core::view::ClipPlane::ClipPlane()
         : Module()
         , getClipPlaneSlot("getclipplane", "Provides the clipping plane")
         , plane()
-        , enableSlot("enable", "Disables or enables the clipping plane")
-        , colourSlot("colour", "Defines the colour of the clipping plane")
-        , normalSlot("normal", "Defines the normal of the clipping plane")
-        , pointSlot("point", "Defines a point in the clipping plane")
-        , distSlot("dist", "The plane-origin distance") {
+        , cameraSerializer()
+        , enableSlot("clip::enable", "Disables or enables the clipping plane")
+        , colourSlot("clip::colour", "Defines the colour of the clipping plane")
+        , normalSlot("clip::normal", "Defines the normal of the clipping plane")
+        , pointSlot("clip::point", "Defines a point in the clipping plane")
+        , distSlot("clip::dist", "The plane-origin distance")
+        , cameraSlot("clip::camera", "The serialized camera") {
 
     this->plane.Set(vislib::math::Point<float, 3>(0.0, 0.0f, 0.0f), vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
     this->col[0] = this->col[1] = this->col[2] = 0.5f;
@@ -54,41 +54,44 @@ view::ClipPlane::ClipPlane()
 
     this->distSlot << new param::FloatParam(-this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)));
     this->MakeSlotAvailable(&this->distSlot);
+
+    this->cameraSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->cameraSlot);
+    this->cameraSlot.Parameter()->SetGUIReadOnly(true);
+    this->cameraSlot.Parameter()->SetGUIVisible(false);
 }
 
 
-/*
- * view::ClipPlane::~ClipPlane
- */
-view::ClipPlane::~ClipPlane() {
+megamol::core::view::ClipPlane::~ClipPlane() {
+
     this->Release();
 }
 
 
-/*
- * view::ClipPlane::create
- */
-bool view::ClipPlane::create() {
+bool megamol::core::view::ClipPlane::create() {
+
     // intentionally empty
     return true;
 }
 
 
-/*
- * view::ClipPlane::release
- */
-void view::ClipPlane::release() {
+void megamol::core::view::ClipPlane::release() {
+
     // intentionally empty
 }
 
 
-/*
- * view::ClipPlane::requestPlane
- */
-bool view::ClipPlane::requestPlane(Call& call) {
-    view::CallClipPlane* ccp = dynamic_cast<view::CallClipPlane*>(&call);
-    if (ccp == NULL)
+bool megamol::core::view::ClipPlane::requestPlane(Call& call) {
+
+    megamol::core::view::CallClipPlane* ccp = dynamic_cast<megamol::core::view::CallClipPlane*>(&call);
+    if (ccp == nullptr) {
         return false;
+    }
+
+    auto camera = ccp->GetCamera();
+    this->cameraSerializer.setPrettyMode(false);
+    std::string camstring = this->cameraSerializer.serialize(camera);
+    this->cameraSlot.Param<param::StringParam>()->SetValue(camstring);
 
     if (!this->enableSlot.Param<param::BoolParam>()->Value()) {
         // clipping plane is disabled

@@ -13,6 +13,7 @@ if(BUILD_FRONTEND_SERVICES)
   find_package(imgui CONFIG REQUIRED)
   find_package(imgui_software_renderer CONFIG REQUIRED)
   find_package(imguizmoquat CONFIG REQUIRED)
+  find_package(imguizmo REQUIRED)
   find_package(implot CONFIG REQUIRED)
   find_package(ZeroMQ REQUIRED)
   find_package(cppzmq REQUIRED)
@@ -173,6 +174,7 @@ if(BUILD_FRONTEND_SERVICES)
       imgui_software_renderer::imgui_software_renderer
       imguizmoquat::imguizmoquat
       implot::implot
+      imguizmo::imguizmo
       libzmq
       cppzmq)
 

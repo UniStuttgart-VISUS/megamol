@@ -16,7 +16,7 @@
 #include "widgets/DefaultStyle.h"
 #include "windows/HotkeyEditor.h"
 #include "windows/PerformanceMonitor.h"
-
+#include <ImGuizmo.h>
 
 using namespace megamol::gui;
 
@@ -250,6 +250,8 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Start new ImGui frame --------------------------------------------------
     this->render_backend.NewFrame(framebuffer_size, window_size);
     ImGui::NewFrame();
+
+    ImGuizmo::SetImGuiContext(this->imgui_context);
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
@@ -486,7 +488,7 @@ bool GUIManager::OnMouseMove(double x, double y) {
     ImGuiIO& io = ImGui::GetIO();
     io.AddMousePosEvent(static_cast<float>(x), static_cast<float>(y));
 
-    bool consumed = io.WantCaptureMouse;
+    bool consumed = io.WantCaptureMouse || ImGuizmo::IsOver();
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseMove(x, y);
     }
@@ -513,7 +515,7 @@ bool GUIManager::OnMouseButton(
 
     io.AddMouseButtonEvent(buttonIndex, down);
 
-    bool consumed = io.WantCaptureMouse;
+    bool consumed = io.WantCaptureMouse || ImGuizmo::IsOver();
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseClick(button, action, mods);
     }

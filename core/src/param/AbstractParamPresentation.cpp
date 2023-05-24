@@ -45,6 +45,8 @@ std::string AbstractParamPresentation::GetTypeName(ParamType type) {
         return "AnimationGroup";
     case (ParamType::GROUP_3D_CUBE):
         return "3DCubeGroup";
+    case (ParamType::GROUP_CLIPPLANE):
+        return "ClipPlaneGroup";
     default:
         return "UNKNOWN";
     }
@@ -74,6 +76,7 @@ AbstractParamPresentation::AbstractParamPresentation()
     this->presentation_name_map.emplace(Presentation::Group_Animation, "Animation");
     this->presentation_name_map.emplace(Presentation::Group_3D_Cube, "3D Cube");
     this->presentation_name_map.emplace(Presentation::Checkbox, "Checkbox");
+    this->presentation_name_map.emplace(Presentation::Group_ClipPlane, "Clip Plane");
 }
 
 
@@ -158,6 +161,10 @@ void AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
     case (ParamType::GROUP_3D_CUBE): {
         this->compatible = Presentation::Basic | Presentation::Group_3D_Cube;
         this->SetGUIPresentation(Presentation::Basic);
+    } break;
+    case (ParamType::GROUP_CLIPPLANE): {
+        this->compatible = Presentation::Basic | Presentation::Group_ClipPlane;
+        this->SetGUIPresentation(Presentation::Group_ClipPlane);
     } break;
     default:
         break;

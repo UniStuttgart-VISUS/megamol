@@ -38,6 +38,7 @@ public:
         VECTOR4F,
         GROUP_ANIMATION,
         GROUP_3D_CUBE,
+        GROUP_CLIPPLANE,
         UNKNOWN
     };
 
@@ -58,6 +59,7 @@ public:
         Group_Animation = 1 << 12, // Animation widget group
         Group_3D_Cube = 1 << 13,   // 3D cube widget group
         Checkbox = 1 << 14,        // Check box for bool
+        Group_ClipPlane = 1 << 15, // clip plane widget group
     };
 
     /**
