@@ -33,6 +33,17 @@ AnimationEditor::AnimationEditor(const std::string& window_name)
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_MenuBar;
     this->win_config.hotkey = core::view::KeyCode(core::view::Key::KEY_F5, core::view::Modifier::NONE);
+
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_PLAY_ANIMATION] = {"_hotkey_gui_animationeditor_play_animation",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_STOP_ANIMATION] = {"_hotkey_gui_animationeditor_stop_animation",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_REVERSE_PLAY_ANIMATION] = {"_hotkey_gui_animationeditor_reverse_play_animation",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_START] = {"_hotkey_gui_animationeditor_move_to_animation_start",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_END] = {"_hotkey_gui_animationeditor_move_to_animation_end",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
 }
 
 
@@ -46,6 +57,27 @@ bool AnimationEditor::Update() {
 
 
 bool AnimationEditor::Draw() {
+
+    if (this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_PLAY_ANIMATION].is_pressed ||
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_REVERSE_PLAY_ANIMATION].is_pressed) {
+        playing = this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_PLAY_ANIMATION].is_pressed ? 1 : -1;
+        accumulated_ms = 0.0f;
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_PLAY_ANIMATION].is_pressed = false;
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_REVERSE_PLAY_ANIMATION].is_pressed = false;
+    }
+    if (this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_STOP_ANIMATION].is_pressed) {
+        playing = 0;
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_STOP_ANIMATION].is_pressed = false;
+    }
+    if (this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_START].is_pressed) {
+        current_frame = animation_bounds[0];
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_START].is_pressed = false;
+    }
+    if (this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_END].is_pressed) {
+        current_frame = animation_bounds[1];
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_END].is_pressed = false;
+    }
+
     if (playing != 0) {
         accumulated_ms += last_frame_ms;
         if (accumulated_ms > targeted_frame_time) {
