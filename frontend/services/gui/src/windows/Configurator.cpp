@@ -325,17 +325,17 @@ void megamol::gui::Configurator::draw_window_menu() {
 
         if (ImGui::BeginMenu("Help")) {
 
-            ImGui::TextUnformatted("Graph Interactions:");
+            ImGui::TextUnformatted("Graph Interactions");
             auto table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize;
             if (ImGui::BeginTable("configurator_help_table", 2, table_flags)) {
-                ImGui::TableSetupColumn("Description", ImGuiTableColumnFlags_WidthStretch);
-                ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableHeadersRow();
+                //ImGui::TableSetupColumn("Description", ImGuiTableColumnFlags_WidthStretch);
+                //ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed);
+                //ImGui::TableHeadersRow();
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted(
-                    "Spawn module selection pop-up (Only compatible modules when call slo tis clicked)");
+                    "Spawn module selection pop-up. Double Left-Click on call slots shows only compatible modules.");
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Mouse Double Left-Click");
 
@@ -348,7 +348,7 @@ void megamol::gui::Configurator::draw_window_menu() {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted(
-                    "Drag call slot of module to other compatible call slot to create call between modules");
+                    "Drag call slot of module to other compatible call slot to create call between modules.");
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Mouse Left Drag & Drop");
 

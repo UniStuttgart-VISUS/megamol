@@ -97,7 +97,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     this->gui_graph_state.interact.call_coloring_map = 0;
     this->gui_graph_state.interact.call_coloring_mode = 0;
 
-    this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
+    this->gui_graph_state.interact.slot_drag_drop_uids = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
 
     this->gui_graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
@@ -1542,7 +1542,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 std::pair<ImGuiID, std::string> group_pair(group->UID(), group->Name());
                 this->gui_graph_state.groups.emplace_back(group_pair);
             }
-            this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
+            this->gui_graph_state.interact.slot_drag_drop_uids = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
 
             // Compatible slot pointers
             this->gui_graph_state.interact.callslot_compat_ptr.reset();
@@ -1948,7 +1948,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 this->gui_graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
                 this->gui_graph_state.interact.callslot_add_group_uid = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
                 this->gui_graph_state.interact.callslot_remove_group_uid = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
-                this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
             }
 
             // Layout graph -------------------------------------------------------
