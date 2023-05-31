@@ -201,8 +201,12 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
         if (in_json.contains("animation_file")) {
             in_json["animation_file"].get_to(animation_file);
         }
-        in_json["pos_source_index"].get_to(pos_source_index);
-        in_json["orient_source_index"].get_to(orient_source_index);
+        if (in_json.contains("pos_source_index")) {
+            in_json["pos_source_index"].get_to(pos_source_index);
+        }
+        if (in_json.contains("orient_source_index")) {
+            in_json["orient_source_index"].get_to(orient_source_index);
+        }
 
         animation::FloatAnimation f_dummy("dummy");
         animation::StringAnimation s_dummy("dummy");
