@@ -72,6 +72,8 @@ private:
     void DrawToolbar();
     void CenterAnimation(const animations& anim);
     void SelectAnimation(int32_t a);
+    void set_as_position(int32_t anim_index);
+    void set_as_orientation(int32_t anim_index);
     void DrawParams();
     void DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& k2,
         ImU32 col = ImGui::GetColorU32(ImGuiCol_NavHighlight));
@@ -127,6 +129,7 @@ private:
     bool save_state = false, save_all_params = false;
     std::string animation_file, export_file;
     std::string output_prefix;
+    int32_t pos_source_index = -1, orient_source_index = -1;
 
     frontend_resources::AnimationEditorData animEditorData;
 };

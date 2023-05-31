@@ -201,6 +201,8 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
         if (in_json.contains("animation_file")) {
             in_json["animation_file"].get_to(animation_file);
         }
+        in_json["pos_source_index"].get_to(pos_source_index);
+        in_json["orient_source_index"].get_to(orient_source_index);
 
         animation::FloatAnimation f_dummy("dummy");
         animation::StringAnimation s_dummy("dummy");
@@ -225,6 +227,12 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
                 open_popup_error = true;
             }
         }
+        if (pos_source_index != -1) {
+            set_as_position(pos_source_index);
+        }
+        if (orient_source_index != -1) {
+            set_as_orientation(orient_source_index);
+        }
     }
 }
 
@@ -238,6 +246,8 @@ void AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json_all) {
     inout_json["current_frame"] = current_frame;
     inout_json["animation_file"] = animation_file;
     inout_json["output_prefix"] = output_prefix;
+    inout_json["pos_source_index"] = pos_source_index;
+    inout_json["orient_source_index"] = orient_source_index;
 
     nlohmann::json anims;
     for (auto& fa : allAnimations) {
@@ -486,9 +496,11 @@ void AnimationEditor::DrawToolbar() {
                 const auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 if (animEditorData.orientation_animation == &anim) {
                     animEditorData.orientation_animation = nullptr;
+                    orient_source_index = -1;
                 }
                 if (animEditorData.pos_animation == &anim) {
                     animEditorData.pos_animation = nullptr;
+                    pos_source_index = -1;
                 }
             }
             allAnimations.erase(allAnimations.begin() + selectedAnimation);
@@ -655,6 +667,26 @@ void AnimationEditor::SelectAnimation(int32_t a) {
     //selectedVec3Key = nullptr;
 }
 
+void AnimationEditor::set_as_position(int32_t anim_index) {
+    if (anim_index < static_cast<int32_t>(allAnimations.size())) {
+        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[anim_index]);
+        pos_source_index = selectedAnimation;
+        animEditorData.pos_animation = &fva;
+        animEditorData.active_region.first = animation_bounds[0];
+        animEditorData.active_region.second = animation_bounds[1];
+    }
+}
+
+void AnimationEditor::set_as_orientation(int32_t anim_index) {
+    if (anim_index < static_cast<int32_t>(allAnimations.size())) {
+        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[anim_index]);
+        orient_source_index = selectedAnimation;
+        animEditorData.orientation_animation = &fva;
+        animEditorData.active_region.first = animation_bounds[0];
+        animEditorData.active_region.second = animation_bounds[1];
+    }
+}
+
 void AnimationEditor::DrawParams() {
     ImGui::Text("Available Parameters");
     bool have_pos = false, have_orient = false;
@@ -668,10 +700,7 @@ void AnimationEditor::DrawParams() {
         ImGui::BeginDisabled();
     }
     if (ImGui::Button("use as 3D position")) {
-        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
-        animEditorData.pos_animation = &fva;
-        animEditorData.active_region.first = animation_bounds[0];
-        animEditorData.active_region.second = animation_bounds[1];
+        set_as_position(selectedAnimation);
     }
     if (!have_pos) {
         ImGui::EndDisabled();
@@ -681,10 +710,7 @@ void AnimationEditor::DrawParams() {
         ImGui::BeginDisabled();
     }
     if (ImGui::Button("use as orientation")) {
-        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
-        animEditorData.orientation_animation = &fva;
-        animEditorData.active_region.first = animation_bounds[0];
-        animEditorData.active_region.second = animation_bounds[1];
+        set_as_orientation(selectedAnimation);
     }
     if (!have_orient) {
         ImGui::EndDisabled();
