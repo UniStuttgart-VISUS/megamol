@@ -21,12 +21,6 @@ RUN apt-get update && apt-get install -y \
   autoconf libtool \
 # mpfr:
   autoconf-archive \
-# glslang:
-  python3 \
-# vislib:
-  libncurses-dev \
 # GL/glu.h:
   libglu1-mesa-dev \
-# plugin image_gl:
-  libjpeg-dev \
   && rm -rf /var/lib/apt/lists/*
