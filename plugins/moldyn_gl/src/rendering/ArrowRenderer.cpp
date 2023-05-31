@@ -273,6 +273,8 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     glUniform3fv(this->arrow_pgrm_->getUniformLocation("clipCol"), 1, clip_col);
 
     if (c2 != nullptr) {
+        unsigned int pal = glGetAttribLocationARB(this->arrow_pgrm_->getHandle(), "pos_attrib");
+        unsigned int cal = glGetAttribLocationARB(this->arrow_pgrm_->getHandle(), "col_attrib");
         unsigned int cial = glGetAttribLocationARB(this->arrow_pgrm_->getHandle(), "colIdx");
         unsigned int tpal = glGetAttribLocationARB(this->arrow_pgrm_->getHandle(), "dir");
         bool use_flags = false;
@@ -291,26 +293,29 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             float min_c = 0.0f, max_c = 0.0f;
             unsigned int col_tab_size = 0;
 
+            // we are using CPU buffers here
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
             // colour
             switch (parts.GetColourDataType()) {
             case MultiParticleDataCall::Particles::COLDATA_NONE:
                 glColor3ubv(parts.GetGlobalColour());
                 break;
             case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-                glEnableClientState(GL_COLOR_ARRAY);
-                glColorPointer(3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
+                glEnableVertexAttribArrayARB(cal);
+                glVertexAttribIPointer(cal, 3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
                 break;
             case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-                glEnableClientState(GL_COLOR_ARRAY);
-                glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
+                glEnableVertexAttribArrayARB(cal);
+                glVertexAttribIPointer(cal, 4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
                 break;
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-                glEnableClientState(GL_COLOR_ARRAY);
-                glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
+                glEnableVertexAttribArrayARB(cal);
+                glVertexAttribPointer(cal, 3, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
                 break;
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-                glEnableClientState(GL_COLOR_ARRAY);
-                glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
+                glEnableVertexAttribArrayARB(cal);
+                glVertexAttribPointer(cal, 4, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
                 break;
             case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I:
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
@@ -349,22 +354,22 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             case MultiParticleDataCall::Particles::VERTDATA_NONE:
                 continue;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-                glEnableClientState(GL_VERTEX_ARRAY);
+                glEnableVertexAttribArrayARB(pal);
                 glUniform4f(this->arrow_pgrm_->getUniformLocation("inConsts1"), parts.GetGlobalRadius(), min_c, max_c,
                     float(col_tab_size));
-                glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+                glVertexAttribPointer(pal, 3, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-                glEnableClientState(GL_VERTEX_ARRAY);
+                glEnableVertexAttribArrayARB(pal);
                 glUniform4f(
                     this->arrow_pgrm_->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
-                glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+                glVertexAttribPointer(pal, 4, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-                glEnableClientState(GL_VERTEX_ARRAY);
+                glEnableVertexAttribArrayARB(pal);
                 glUniform4f(
                     this->arrow_pgrm_->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
-                glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), parts.GetVertexData());
+                glVertexAttribPointer(pal, 3, GL_DOUBLE, GL_FALSE, parts.GetVertexDataStride(), parts.GetVertexData());
             default:
                 continue;
             }
@@ -389,12 +394,13 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                 fal = glGetAttribLocationARB(this->arrow_pgrm_->getHandle(), "flags");
                 glEnableVertexAttribArrayARB(fal);
                 // TODO highly unclear whether this works fine
+                // but: switching to GPU buffers here. (see bind above for the other attributes!)
                 flags->flags->bind(GL_ARRAY_BUFFER);
-                //flags->flags->bindAs(GL_ARRAY_BUFFER);
                 glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, nullptr);
             }
             glUniform1ui(this->arrow_pgrm_->getUniformLocation("flagsAvailable"), use_flags ? 1 : 0);
 
+            //glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 99, 25, "ArrowRenderer:DrawCommand");
 #ifdef MEGAMOL_USE_PROFILING
             perf_manager_->start_timer(timers_[0]);
 #endif
@@ -404,17 +410,13 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 #ifdef MEGAMOL_USE_PROFILING
             perf_manager_->stop_timer(timers_[0]);
 #endif
+            //glPopDebugGroup();
 
             if (use_flags) {
                 glEnableVertexAttribArrayARB(fal);
                 glVertexAttribIPointer(fal, 4, GL_UNSIGNED_INT, 0, nullptr);
                 glDisableVertexAttribArrayARB(fal);
             }
-
-            glColorPointer(4, GL_FLOAT, 0, nullptr);
-            glVertexPointer(4, GL_FLOAT, 0, nullptr);
-            glDisableClientState(GL_COLOR_ARRAY);
-            glDisableClientState(GL_VERTEX_ARRAY);
 
             if (parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_DOUBLE_I ||
                 parts.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
@@ -423,6 +425,8 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             }
             glVertexAttribPointerARB(tpal, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
             glDisableVertexAttribArrayARB(tpal);
+            glDisableVertexAttribArrayARB(cal);
+            glDisableVertexAttribArrayARB(pal);
             glDisable(GL_TEXTURE_1D);
         }
 
