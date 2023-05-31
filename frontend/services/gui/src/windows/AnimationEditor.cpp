@@ -97,9 +97,10 @@ bool AnimationEditor::NotifyParamChanged(
     if (auto_capture) {
         std::string the_name = param_slot->FullName().PeekBuffer();
         int found_idx = -1;
+        bool found = false;
         for (auto i = 0; i < allAnimations.size(); ++i) {
             auto& anim = allAnimations[i];
-            bool found = std::visit(
+            found = std::visit(
                 [&](auto&& arg) -> bool {
                     if (arg.GetName() == the_name) {
                         found_idx = i;
@@ -116,7 +117,7 @@ bool AnimationEditor::NotifyParamChanged(
 
         if (param_slot->Param<FloatParam>() || param_slot->Param<IntParam>()) {
             const float the_val = std::stof(new_value);
-            if (found_idx == -1) {
+            if (!found) {
                 animation::FloatAnimation f = {the_name};
                 allAnimations.emplace_back(f);
                 found_idx = static_cast<int>(allAnimations.size()) - 1;
@@ -134,7 +135,7 @@ bool AnimationEditor::NotifyParamChanged(
         }
         if (param_slot->Param<EnumParam>() || param_slot->Param<FlexEnumParam>() || param_slot->Param<StringParam>() ||
             param_slot->Param<FilePathParam>()) {
-            if (found_idx == -1) {
+            if (!found) {
                 animation::StringAnimation s = {the_name};
                 allAnimations.emplace_back(s);
                 found_idx = static_cast<int>(allAnimations.size()) - 1;
@@ -153,7 +154,7 @@ bool AnimationEditor::NotifyParamChanged(
         if (param_slot->Param<Vector2fParam>() || param_slot->Param<Vector3fParam>() ||
             param_slot->Param<Vector4fParam>()) {
             const auto vec = animation::GetFloats(new_value);
-            if (found_idx == -1) {
+            if (!found) {
                 animation::FloatVectorAnimation v{the_name};
                 allAnimations.emplace_back(v);
                 found_idx = static_cast<int>(allAnimations.size()) - 1;
