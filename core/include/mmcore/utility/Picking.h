@@ -69,7 +69,7 @@ typedef std::vector<Manipulation> ManipVector_t;
 class PickingBuffer {
 public:
     PickingBuffer();
-    ~PickingBuffer() GL_STUB();
+    ~PickingBuffer() GL_VSTUB();
 
     // Call only once per frame
     bool EnableInteraction(glm::vec2 vp_dim) GL_STUB(true);

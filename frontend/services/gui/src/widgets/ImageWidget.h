@@ -98,16 +98,16 @@ private:
 
 #ifdef MEGAMOL_USE_OPENGL
 
-    bool isToggleLoaded() {
+    bool isToggleLoaded() const {
         if (this->toggle_tex_ptr == nullptr)
             return false;
         return (this->toggle_tex_ptr->getName() != 0); // OpenGL texture id
     }
-    ImTextureID getImTextureID() {
-        return reinterpret_cast<ImTextureID>(this->tex_ptr->getName());
+    ImTextureID getImTextureID() const {
+        return reinterpret_cast<ImTextureID>(static_cast<uint64_t>(this->tex_ptr->getName()));
     }
-    ImTextureID getToggleImTextureID() {
-        return reinterpret_cast<ImTextureID>(this->toggle_tex_ptr->getName());
+    ImTextureID getToggleImTextureID() const {
+        return reinterpret_cast<ImTextureID>(static_cast<uint64_t>(this->toggle_tex_ptr->getName()));
     }
 
 #else
@@ -117,11 +117,11 @@ private:
             return false;
         return true;
     }
-    ImTextureID getImTextureID() {
-        return reinterpret_cast<ImTextureID>(this->cpu_tex_ptr->data.data());
+    ImTextureID getImTextureID() const {
+        return reinterpret_cast<ImTextureID>(static_cast<uint64_t>(this->cpu_tex_ptr->data.data()));
     }
-    ImTextureID getToggleImTextureID() {
-        return reinterpret_cast<ImTextureID>(this->cpu_toggle_tex_ptr->data.data());
+    ImTextureID getToggleImTextureID() const {
+        return reinterpret_cast<ImTextureID>(static_cast<uint64_t>(this->cpu_toggle_tex_ptr->data.data()));
     }
 
 #endif

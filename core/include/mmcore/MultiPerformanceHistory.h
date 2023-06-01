@@ -67,6 +67,7 @@ public:
         case metric_type::SUM:
             return window_metrics[static_cast<uint32_t>(inner_metric)].sum();
         }
+        return perf_type();
     }
 
     uint32_t samples() const {

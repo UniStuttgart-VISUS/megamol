@@ -56,27 +56,27 @@ public:
         return "OpenGL_GLFW_Service";
     }
 
-    OpenGL_GLFW_Service() GL_STUB();
-    ~OpenGL_GLFW_Service() override GL_STUB();
+    OpenGL_GLFW_Service() GL_VSTUB();
+    ~OpenGL_GLFW_Service() override GL_VSTUB();
     // TODO: delete copy/move/assign?
 
     // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
     bool init(const Config& config) GL_STUB(true);
     bool init(void* configPtr) override GL_STUB(true);
-    void close() override GL_STUB();
+    void close() override GL_VSTUB();
 
-    void updateProvidedResources() override GL_STUB();
-    void digestChangedRequestedResources() override GL_STUB();
-    void resetProvidedResources() override GL_STUB();
+    void updateProvidedResources() override GL_VSTUB();
+    void digestChangedRequestedResources() override GL_VSTUB();
+    void resetProvidedResources() override GL_VSTUB();
 
-    void preGraphRender() override GL_STUB(); // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
+    void preGraphRender() override GL_VSTUB(); // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
     void postGraphRender() override
-        GL_STUB(); // clean up after rendering, e.g. stop and show frame-timers in GLFW window
+        GL_VSTUB(); // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // expose the resources and input events this service provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
     std::vector<FrontendResource>& getProvidedResources() override GL_STUB(m_renderResourceReferences);
     const std::vector<std::string> getRequestedResourceNames() const override GL_STUB({});
-    void setRequestedResources(std::vector<FrontendResource> resources) override GL_STUB();
+    void setRequestedResources(std::vector<FrontendResource> resources) override GL_VSTUB();
 
     // from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
