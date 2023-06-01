@@ -32,15 +32,14 @@ public:
 private:
     // FUNCTIONS --------------------------------------------------------------
 
+    void drawPlane(const glm::mat4& mvp, float size, ImVec4 color, ImVec2 scree_pos, ImVec2 screen_size, bool plane_enabled);
 
-    // TEMP:
-    void OrthoGraphic(const float l, float r, float b, const float t, float zn, const float zf, float* m16);
+    ImVec2 worldToPos(const glm::vec4& worldPos, const glm::mat4& mat, ImVec2 position, ImVec2 size);
 
     // VARIABLES --------------------------------------------------------------
 
     HoverToolTip tooltip;
     megamol::core::view::CameraSerializer camera_serializer;
-    glm::mat4 guizmo_manipulation;
     ImGuizmo::OPERATION guizmo_operation;
 
 };

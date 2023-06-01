@@ -24,7 +24,6 @@ megamol::gui::ParameterGroupClipPlaneWidget::ParameterGroupClipPlaneWidget()
         : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
         , tooltip()
         , camera_serializer()
-        , guizmo_manipulation(glm::identity<glm::mat4>())
         , guizmo_operation(ImGuizmo::ROTATE) {
 
     this->InitPresentation(ParamType_t::GROUP_CLIPPLANE);
@@ -138,41 +137,36 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
 
             auto plane_enabled = std::get<bool>(param_enable->GetValue());
             auto plane_normal = std::get<glm::vec3>(param_normal->GetValue());
+            plane_normal = glm::normalize(plane_normal);
             auto plane_point = std::get<glm::vec3>(param_point->GetValue());
             auto plane_dist = std::get<float>(param_dist->GetValue());
-
-            // Transform plane vectors to matrix
-            auto plane_matrix = glm::orientation(plane_normal, glm::vec3(0.0f, 1.0f, 0.0f));
-            plane_matrix = glm::translate(plane_matrix, plane_normal * plane_dist);
 
             // Camera
             auto cam_view = cam.getViewMatrix();
             auto cam_proj = cam.getProjectionMatrix();
-            auto cam_pose = cam.get<core::view::Camera::Pose>();
+
+            auto screen_pos = ImVec2(0.0f, 0.0f);
+            auto screen_size = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
 
             ImGuizmo::BeginFrame();
             ImGuizmo::Enable(plane_enabled);
             ImGuizmo::SetID(0);
             ImGuizmo::SetOrthographic(false);
-            ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+            ImGuizmo::SetRect(screen_pos.x, screen_pos.y, screen_size.x, screen_size.y);
+            ImGuizmo::AllowAxisFlip(false);
+            ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
 
-            bool useSnap = false;
-            bool boundSizing = false;
-            bool boundSizingSnap = false;
-            float snap[3] = {1.f, 1.f, 1.f};
-            float bounds[] = {-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f};
-            float boundsSnap[] = {0.1f, 0.1f, 0.1f};
+            auto plane_matrix_translate = glm::translate(glm::identity<glm::mat4>(), plane_normal * plane_dist);
+            auto plane_matrix_rotate    = glm::orientation(plane_normal, glm::vec3(0.0f, 1.0f, 0.0f));
+            auto plane_matrix = plane_matrix_translate * plane_matrix_rotate;
 
             /// Grid
             ImGuizmo::DrawGrid(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(plane_matrix), 1.0f);
-
-            /// Manipulator
-            ImGuizmo::Manipulate(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), this->guizmo_operation, ImGuizmo::LOCAL,
-                glm::value_ptr(this->guizmo_manipulation), nullptr, useSnap ? &snap[0] : nullptr,
-                boundSizing ? bounds : nullptr, boundSizingSnap ? boundsSnap : nullptr);
+            auto mvp = cam_proj * cam_view * plane_matrix;
+            this->drawPlane(mvp, 1.0f, ImVec4(0.0f, 1.0f, 1.0f, 0.5f), screen_pos, screen_size, plane_enabled);
 
             /// Cube inside manipulator
-            //ImGuizmo::DrawCubes(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(this->guizmo_matrix), 1);
+            //ImGuizmo::DrawCubes(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(plane_matrix), 1);
 
             /// View Cube
             //float camDistance = 8.f;
@@ -180,12 +174,19 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             //float viewManipulateTop = 0;
             //ImGuizmo::ViewManipulate(glm::value_ptr(cam_view), camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
 
-            // Transform plane matrix to vectors
-            auto plane_vec = glm::vec3(this->guizmo_manipulation * glm::vec4(plane_point, 1.0f));
+            /// Manipulator
+            auto tmp_mat = plane_matrix;
+            if (ImGuizmo::Manipulate(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), this->guizmo_operation,
+                    ImGuizmo::LOCAL, glm::value_ptr(plane_matrix), nullptr,  nullptr, nullptr, nullptr)) {
 
-            // Write parameter values
-            param_enable->SetValue(plane_enabled);
-            param_point->SetValue(plane_vec);
+                auto delta_matrix = plane_matrix * (glm::inverse(tmp_mat));
+
+                auto plane_new_normal = glm::vec3(delta_matrix * glm::vec4(plane_normal, 1.0f));
+                param_normal->SetValue(glm::normalize(plane_new_normal));
+
+                auto plane_new_point = glm::vec3(delta_matrix * glm::vec4(plane_point, 1.0f));
+                param_point->SetValue(plane_new_point);
+            }
 
             // Context Menu ---------------------------------------------------
             std::string popup_label = "guizmo_popup";
@@ -212,6 +213,9 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
                 ImGui::EndPopup();
             }
 
+            // Write parameter values
+            param_enable->SetValue(plane_enabled);
+
             ImGui::PopID();
 
             return true;
@@ -222,22 +226,44 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
 }
 
 
-void megamol::gui::ParameterGroupClipPlaneWidget::OrthoGraphic(
-    const float l, float r, float b, const float t, float zn, const float zf, float* m16) {
-    m16[0] = 2 / (r - l);
-    m16[1] = 0.0f;
-    m16[2] = 0.0f;
-    m16[3] = 0.0f;
-    m16[4] = 0.0f;
-    m16[5] = 2 / (t - b);
-    m16[6] = 0.0f;
-    m16[7] = 0.0f;
-    m16[8] = 0.0f;
-    m16[9] = 0.0f;
-    m16[10] = 1.0f / (zf - zn);
-    m16[11] = 0.0f;
-    m16[12] = (l + r) / (l - r);
-    m16[13] = (t + b) / (b - t);
-    m16[14] = zn / (zn - zf);
-    m16[15] = 1.0f;
+
+ void megamol::gui::ParameterGroupClipPlaneWidget::drawPlane(
+    const glm::mat4& mvp, float size, ImVec4 color, ImVec2 scree_pos, ImVec2 screen_size, bool plane_enabled) {
+
+    ImDrawList* drawList = ImGui::GetBackgroundDrawList(); // ImGui::GetWindowDrawList();
+    assert(drawList != nullptr);
+
+    auto p_1 = glm::vec4(size, 0.0f, size, 1.0f);
+    auto p_2 = glm::vec4(size, 0.0f, -size, 1.0f);
+    auto p_3 = glm::vec4(-size, 0.0f, size, 1.0f);
+    auto p_4 = glm::vec4(-size, 0.0f, -size, 1.0f);
+
+
+    auto p_1_screen = this->worldToPos(p_1, mvp, scree_pos, screen_size);
+    auto p_2_screen = this->worldToPos(p_2, mvp, scree_pos, screen_size);
+    auto p_3_screen = this->worldToPos(p_3, mvp, scree_pos, screen_size);
+    auto p_4_screen = this->worldToPos(p_4, mvp, scree_pos, screen_size);
+
+    auto col = color;
+    if (!plane_enabled) {
+        col = ImVec4(1.0f, 1.0f, 1.0f, 0.2f);
+    }
+
+    drawList->AddQuadFilled(p_1_screen, p_2_screen, p_4_screen, p_3_screen, ImGui::GetColorU32(col));
+ }
+
+
+ImVec2 megamol::gui::ParameterGroupClipPlaneWidget::worldToPos(
+    const glm::vec4& worldPos, const glm::mat4& mat, ImVec2 position, ImVec2 size) {
+
+    glm::vec4 trans = mat * worldPos;
+    trans *= 0.5f / trans.w;
+    trans += glm::vec4(0.5f, 0.5f, 0.0f, 0.0f);
+    trans.y = 1.0f - trans.y;
+    trans.x *= size.x;
+    trans.y *= size.y;
+    trans.x += position.x;
+    trans.y += position.y;
+
+    return ImVec2(trans.x, trans.y);
 }
