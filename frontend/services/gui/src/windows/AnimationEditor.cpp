@@ -38,11 +38,14 @@ AnimationEditor::AnimationEditor(const std::string& window_name)
         core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
     this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_STOP_ANIMATION] = {"_hotkey_gui_animationeditor_stop_animation",
         core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
-    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_REVERSE_PLAY_ANIMATION] = {"_hotkey_gui_animationeditor_reverse_play_animation",
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_REVERSE_PLAY_ANIMATION] = {
+        "_hotkey_gui_animationeditor_reverse_play_animation",
         core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
-    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_START] = {"_hotkey_gui_animationeditor_move_to_animation_start",
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_START] = {
+        "_hotkey_gui_animationeditor_move_to_animation_start",
         core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
-    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_END] = {"_hotkey_gui_animationeditor_move_to_animation_end",
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_END] = {
+        "_hotkey_gui_animationeditor_move_to_animation_end",
         core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
 }
 
