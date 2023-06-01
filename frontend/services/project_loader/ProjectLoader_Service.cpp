@@ -167,9 +167,11 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
     auto possible_files = window_events.dropped_path_events;
 
     for (auto& events : possible_files)
-        std::remove_if(events.begin(), events.end(), [&](auto& filename) -> bool { return this->load_file(filename); });
+        events.erase(
+            std::remove_if(events.begin(), events.end(), [&](auto& filename) { return this->load_file(filename); }));
 
-    std::remove_if(possible_files.begin(), possible_files.end(), [&](auto& events) -> bool { return events.empty(); });
+    possible_files.erase(std::remove_if(
+        possible_files.begin(), possible_files.end(), [&](auto& events) -> bool { return events.empty(); }));
 
     // restore, this gets cleared by the service outside of the recursion again
     window_events.dropped_path_events = possible_files;
