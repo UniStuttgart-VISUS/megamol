@@ -118,9 +118,10 @@ bool megamol::core::view::ClipPlane::requestPlane(Call& call) {
         this->pointSlot.ResetDirty();
         this->distSlot.ResetDirty();
 
-        this->plane.Set(vislib::math::ShallowPoint<float, 3>(const_cast<float*>(
+        this->plane.Set(vislib::math::Point<float, 3>(const_cast<float*>(
                             this->pointSlot.Param<param::Vector3fParam>()->Value().PeekComponents())),
             this->normalSlot.Param<param::Vector3fParam>()->Value());
+
         this->distSlot.Param<param::FloatParam>()->SetValue(
             -this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)), false);
     }

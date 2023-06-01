@@ -11,6 +11,7 @@
 #include "AbstractParameterGroupWidget.h"
 #include "mmcore/view/CameraSerializer.h"
 
+#include <ImGuizmo.h>
 
 namespace megamol::gui {
 
@@ -38,10 +39,10 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     HoverToolTip tooltip;
+    megamol::core::view::CameraSerializer camera_serializer;
+    glm::mat4 guizmo_manipulation;
+    ImGuizmo::OPERATION guizmo_operation;
 
-    megamol::core::view::CameraSerializer cameraSerializer;
-
-    glm::mat4 guizmo_mat;
 };
 
 

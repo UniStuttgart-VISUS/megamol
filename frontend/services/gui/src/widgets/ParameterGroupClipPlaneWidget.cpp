@@ -9,8 +9,8 @@
 #include "widgets/ParameterGroupClipPlaneWidget.h"
 #include "graph/ParameterGroups.h"
 #include "mmcore/view/CameraSerializer.h"
-
-#include <ImGuizmo.h>
+#include "ButtonWidgets.h"
+#include <glm/gtx/rotate_vector.hpp>
 
 
 using namespace megamol;
@@ -19,14 +19,16 @@ using namespace megamol::core::utility;
 using namespace megamol::gui;
 
 
+
 megamol::gui::ParameterGroupClipPlaneWidget::ParameterGroupClipPlaneWidget()
         : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
         , tooltip()
-        , cameraSerializer()
-        , guizmo_mat() {
+        , camera_serializer()
+        , guizmo_manipulation(glm::identity<glm::mat4>())
+        , guizmo_operation(ImGuizmo::ROTATE) {
+
     this->InitPresentation(ParamType_t::GROUP_CLIPPLANE);
     this->name = "clip";
-    this->guizmo_mat = glm::identity<glm::mat4>();
 }
 
 
@@ -94,16 +96,16 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
     }
     std::string camstring = std::get<std::string>(param_camera->GetValue());
     megamol::core::view::Camera cam;
-    if (!this->cameraSerializer.deserialize(cam, camstring)) {
+    if (!this->camera_serializer.deserialize(cam, camstring)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The entered camera string was not valid. No change of the camera has been performed");
         return false;
     }
 
+    // Parameter presentation -------------------------------------------------
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
 
-    // Parameter presentation -------------------------------------------------
     auto presentation = this->GetGUIPresentation();
     if (presentation == param::AbstractParamPresentation::Presentation::Basic) {
 
@@ -123,23 +125,10 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
 
         if (in_scope == Parameter::WidgetScope::LOCAL) {
 
+            ImGui::Text("Right-Click Guizmo for Context Menu.");
+
             ParameterGroups::DrawGroupedParameters(
                 this->name, params, in_search, in_scope, nullptr, in_override_header_state);
-
-
-            ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
-            if (ImGuizmo::IsUsing()) {
-                ImGui::Text("Using gizmo");
-            } else {
-                ImGui::Text(ImGuizmo::IsOver() ? "Over gizmo" : "");
-                ImGui::SameLine();
-                ImGui::Text(ImGuizmo::IsOver(ImGuizmo::TRANSLATE) ? "Over translate gizmo" : "");
-                ImGui::SameLine();
-                ImGui::Text(ImGuizmo::IsOver(ImGuizmo::ROTATE) ? "Over rotate gizmo" : "");
-                ImGui::SameLine();
-                ImGui::Text(ImGuizmo::IsOver(ImGuizmo::SCALE) ? "Over scale gizmo" : "");
-            }
-
 
             return true;
 
@@ -147,45 +136,43 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
 
             ImGui::PushID(static_cast<int>(this->uid));
 
+            auto plane_enabled = std::get<bool>(param_enable->GetValue());
+            auto plane_normal = std::get<glm::vec3>(param_normal->GetValue());
+            auto plane_point = std::get<glm::vec3>(param_point->GetValue());
+            auto plane_dist = std::get<float>(param_dist->GetValue());
 
-            // DRAW -------------------------------------------------------------------
+            // Transform plane vectors to matrix
+            auto plane_matrix = glm::orientation(plane_normal, glm::vec3(0.0f, 1.0f, 0.0f));
+            plane_matrix = glm::translate(plane_matrix, plane_normal * plane_dist);
 
             // Camera
             auto cam_view = cam.getViewMatrix();
             auto cam_proj = cam.getProjectionMatrix();
             auto cam_pose = cam.get<core::view::Camera::Pose>();
 
-
-            // TODO ////////////////////////////
             ImGuizmo::BeginFrame();
-            ImGuizmo::Enable(true);
+            ImGuizmo::Enable(plane_enabled);
             ImGuizmo::SetID(0);
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
-            ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::ROTATE);
-            ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
-
             bool useSnap = false;
             bool boundSizing = false;
             bool boundSizingSnap = false;
-
             float snap[3] = {1.f, 1.f, 1.f};
             float bounds[] = {-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f};
             float boundsSnap[] = {0.1f, 0.1f, 0.1f};
 
             /// Grid
-            ImGuizmo::DrawGrid(
-                glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(this->guizmo_mat), 1.0f);
+            ImGuizmo::DrawGrid(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(plane_matrix), 1.0f);
 
             /// Manipulator
-            ImGuizmo::Manipulate(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), mCurrentGizmoOperation,
-                mCurrentGizmoMode, glm::value_ptr(this->guizmo_mat), nullptr, useSnap ? &snap[0] : nullptr,
+            ImGuizmo::Manipulate(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), this->guizmo_operation, ImGuizmo::LOCAL,
+                glm::value_ptr(this->guizmo_manipulation), nullptr, useSnap ? &snap[0] : nullptr,
                 boundSizing ? bounds : nullptr, boundSizingSnap ? boundsSnap : nullptr);
 
             /// Cube inside manipulator
-            //int gizmoCount = 1;
-            //ImGuizmo::DrawCubes(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(this->guizmo_mat), gizmoCount);
+            //ImGuizmo::DrawCubes(glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(this->guizmo_matrix), 1);
 
             /// View Cube
             //float camDistance = 8.f;
@@ -193,27 +180,39 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             //float viewManipulateTop = 0;
             //ImGuizmo::ViewManipulate(glm::value_ptr(cam_view), camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
 
+            // Transform plane matrix to vectors
+            auto plane_vec = glm::vec3(this->guizmo_manipulation * glm::vec4(plane_point, 1.0f));
 
+            // Write parameter values
+            param_enable->SetValue(plane_enabled);
+            param_point->SetValue(plane_vec);
+
+            // Context Menu ---------------------------------------------------
             std::string popup_label = "guizmo_popup";
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) &&
-                !ImGui::IsPopupOpen(popup_label.c_str())) { // ImGuizmo::IsOver() &&
+                !ImGui::IsPopupOpen(popup_label.c_str()) &&  ImGuizmo::IsOver()) {
                 ImGui::OpenPopup(popup_label.c_str());
             }
             if (ImGui::BeginPopup(popup_label.c_str(), ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
 
-                ImGui::TextDisabled("Context Menu");
+                ImGui::TextDisabled("Plane Widget");
+                ImGui::Separator();
+                ButtonWidgets::ToggleButton("Enable", plane_enabled);
+                ImGui::Separator();
+                bool mode_rot = (this->guizmo_operation == ImGuizmo::ROTATE);
+                if (ImGui::Checkbox("Rotate", &mode_rot)) {
+                    this->guizmo_operation = ImGuizmo::ROTATE;
+                }
+                ImGui::SameLine();
+                bool mode_trans = (this->guizmo_operation == ImGuizmo::TRANSLATE);
+                if (ImGui::Checkbox("Translate", &mode_trans)) {
+                    this->guizmo_operation = ImGuizmo::TRANSLATE;
+                }
 
                 ImGui::EndPopup();
             }
 
-
-            //param_play->SetValue();
-
-
-            ///////////////////////////////////
-
             ImGui::PopID();
-
 
             return true;
         }
