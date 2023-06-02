@@ -108,7 +108,7 @@ jobs:
         cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
-    name: 'hardware'
+    name: 'default'
     demands:
     - Agent.OS -equals Linux
     - docker
