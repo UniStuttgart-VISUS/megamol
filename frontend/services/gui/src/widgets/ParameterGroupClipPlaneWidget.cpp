@@ -198,7 +198,8 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
                 switch (this->guizmo_operation) {
                 case (ImGuizmo::ROTATE): {
 
-                    param_normal->SetValue(glm::normalize(glm::vec3(delta_manipulation * glm::vec4(plane_normal, 1.0f))));
+                    param_normal->SetValue(
+                        glm::normalize(glm::vec3(delta_manipulation * glm::vec4(plane_normal, 1.0f))));
 
                 } break;
                 case (ImGuizmo::TRANSLATE): {
