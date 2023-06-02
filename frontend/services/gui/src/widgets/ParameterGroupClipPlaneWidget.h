@@ -45,6 +45,8 @@ private:
     HoverToolTip tooltip;
     megamol::core::view::CameraSerializer camera_serializer;
     ImGuizmo::OPERATION guizmo_operation;
+    bool guizmo_draw_plane;
+    bool guizmo_draw_grid;
 };
 
 

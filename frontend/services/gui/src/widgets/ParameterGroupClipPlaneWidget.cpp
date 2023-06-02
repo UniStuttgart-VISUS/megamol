@@ -23,7 +23,9 @@ megamol::gui::ParameterGroupClipPlaneWidget::ParameterGroupClipPlaneWidget()
         : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
         , tooltip()
         , camera_serializer()
-        , guizmo_operation(ImGuizmo::TRANSLATE) {
+        , guizmo_operation(ImGuizmo::TRANSLATE)
+        , guizmo_draw_plane(false)
+        , guizmo_draw_grid(true) {
 
     this->InitPresentation(ParamType_t::GROUP_CLIPPLANE);
     this->name = "clip";
@@ -126,8 +128,11 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             ParameterGroups::DrawGroupedParameters(
                 this->name, params, in_search, in_scope, nullptr, in_override_header_state);
 
+            /// !!! The folowing options are not parameters of the calling module and are therefore NOT saved in the GUI state ...
             ImGui::Text(">>> Right-Click Guizmo for Context Menu <<<");
             ImGui::Separator();
+            ImGui::Text("Manipulate: ");
+            ImGui::SameLine();
             if (ImGui::RadioButton("Rotate", (this->guizmo_operation == ImGuizmo::ROTATE))) {
                 this->guizmo_operation = ImGuizmo::ROTATE;
             }
@@ -135,6 +140,12 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             if (ImGui::RadioButton("Translate", (this->guizmo_operation == ImGuizmo::TRANSLATE))) {
                 this->guizmo_operation = ImGuizmo::TRANSLATE;
             }
+            ImGui::Separator();
+            ImGui::Text("Draw: ");
+            ImGui::SameLine();
+            ImGui::Checkbox("Plane", &this->guizmo_draw_plane);
+            ImGui::SameLine();
+            ImGui::Checkbox("Grid", &this->guizmo_draw_grid);
             ImGui::Separator();
 
             return true;
@@ -159,6 +170,7 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             auto translate_mat = glm::translate(glm::identity<glm::mat4>(), plane_point);
             auto rotate_mat = glm::orientation(plane_normal, glm::vec3(0.0f, 1.0f, 0.0f));
             auto plane_mat = translate_mat * rotate_mat;
+            auto mvp = cam_proj * cam_view * plane_mat;
 
             float plane_size = 2.0f;
             ImVec4 grid_color = ImVec4(plane_colour.x, plane_colour.y, plane_colour.z, plane_colour.w);
@@ -173,10 +185,13 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
 
             /// Plane ---------------------------
-            auto mvp = cam_proj * cam_view * plane_mat;
-            this->draw_plane(mvp, plane_size, plane_color, screen_pos, screen_size, plane_enabled);
+            if (this->guizmo_draw_plane) {
+                this->draw_plane(mvp, plane_size, plane_color, screen_pos, screen_size, plane_enabled);
+            }
             /// Grid ----------------------------
-            this->draw_grid(mvp, plane_size, plane_color, screen_pos, screen_size, plane_enabled);
+            if (this->guizmo_draw_grid) {
+                this->draw_grid(mvp, plane_size, plane_color, screen_pos, screen_size, plane_enabled);
+            }
             ///ImGuizmo::DrawGrid(
             ///    glm::value_ptr(cam_view), glm::value_ptr(cam_proj), glm::value_ptr(plane_mat), plane_size);
 
@@ -198,7 +213,8 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
                 switch (this->guizmo_operation) {
                 case (ImGuizmo::ROTATE): {
 
-                    param_normal->SetValue(glm::normalize(glm::vec3(delta_manipulation * glm::vec4(plane_normal, 1.0f))));
+                    param_normal->SetValue(
+                        glm::normalize(glm::vec3(delta_manipulation * glm::vec4(plane_normal, 1.0f))));
 
                 } break;
                 case (ImGuizmo::TRANSLATE): {
@@ -225,6 +241,8 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::Separator();
+                ImGui::Text("Manipulate: ");
+                ImGui::SameLine();
                 if (ImGui::RadioButton("Rotate", (this->guizmo_operation == ImGuizmo::ROTATE))) {
                     this->guizmo_operation = ImGuizmo::ROTATE;
                     ImGui::CloseCurrentPopup();
@@ -234,6 +252,17 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
                     this->guizmo_operation = ImGuizmo::TRANSLATE;
                     ImGui::CloseCurrentPopup();
                 }
+                ImGui::Separator();
+                ImGui::Text("Draw: ");
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Plane", &this->guizmo_draw_plane)) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Grid", &this->guizmo_draw_grid)) {
+                    ImGui::CloseCurrentPopup();
+                }
+
 
                 ImGui::EndPopup();
             }
