@@ -16,6 +16,7 @@
 #include "mmcore/MegaMolGraph.h"
 
 // to write png files
+#include "FrameStatistics.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "png.h"
 #include "vislib/sys/FastFile.h"
@@ -52,6 +53,7 @@ static void log_warning(std::string const& text) {
 
 // need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
 static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
+static megamol::frontend_resources::FrameStatistics* frame_stats_ptr = nullptr;
 static megamol::frontend_resources::GUIState* guistate_resources_ptr = nullptr;
 static bool screenshot_show_privacy_note = true;
 
@@ -111,7 +113,9 @@ static bool write_png_to_file(
     if (guistate_resources_ptr) {
         project.append(guistate_resources_ptr->request_gui_state(true));
     }
-    megamol::core::utility::graphics::ScreenShotComments ssc(project);
+    auto additional = megamol::core::utility::graphics::ScreenShotComments::comments_storage_map();
+    additional["Frame ID"] = std::to_string(frame_stats_ptr->rendered_frames_count);
+    megamol::core::utility::graphics::ScreenShotComments ssc(project, additional);
     png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
     png_set_IHDR(pngPtr, pngInfoPtr, image.width, image.height, 8, PNG_COLOR_TYPE_RGB_ALPHA /* PNG_COLOR_TYPE_RGB */,
@@ -200,8 +204,8 @@ bool Screenshot_Service::init(void* configPtr) {
 bool Screenshot_Service::init(const Config& config) {
 
     m_requestedResourcesNames = {"optional<OpenGL_Context>", // TODO: for GLScreenshoSource. how to kill?
-        frontend_resources::MegaMolGraph_Req_Name, "optional<GUIState>", "RuntimeConfig",
-        "optional<GUIRegisterWindow>"};
+        frontend_resources::MegaMolGraph_Req_Name, "optional<GUIState>", "RuntimeConfig", "optional<GUIRegisterWindow>",
+        frontend_resources::FrameStatistics_Req_Name};
 
     this->m_frontbufferToPNG_trigger = [&](std::filesystem::path const& filename) -> bool {
         log("write screenshot to " + filename.generic_u8string());
@@ -253,6 +257,8 @@ void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> res
         gui_window_request_resource.register_notification(
             "Screenshot", std::weak_ptr<bool>(service_open_popup), privacy_note);
     }
+    frame_stats_ptr = const_cast<frontend_resources::FrameStatistics*>(
+        &resources[5].getResource<frontend_resources::FrameStatistics>());
 }
 
 void Screenshot_Service::updateProvidedResources() {}

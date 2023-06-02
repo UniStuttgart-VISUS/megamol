@@ -10,6 +10,8 @@
 #include "AbstractFrontendService.hpp"
 
 // ImageData struct and interfaces for screenshot sources/writers
+#include "FrameStatistics.h"
+#include "FrontendResourcesMap.h"
 #include "Screenshots.h"
 
 namespace megamol::frontend {
