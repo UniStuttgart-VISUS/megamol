@@ -54,6 +54,12 @@ int main(const int argc, const char** argv) {
 #endif
     megamol::core::LuaAPI lua_api;
 
+    // when you have a REALLY bad day...
+    //int tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+    //tmpDbgFlag |= _CRTDBG_CHECK_ALWAYS_DF;
+    //tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
+    //_CrtSetDbgFlag(tmpDbgFlag);
+
     auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 
     const bool with_gl = !config.no_opengl;
