@@ -13,6 +13,7 @@ cmake-build-*/
 
 # Bundled vcpkg
 /vcpkg/
+/vcpkg_assets/
 
 # In-source-build artifacts
 /CMakeFiles/

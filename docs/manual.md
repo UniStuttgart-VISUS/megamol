@@ -80,7 +80,7 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 1. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
 2. Create a new `build` directory.
 3. As generator, it is recommended to use the latest version of [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Community Edition is free to use) with default native compilers and for the platform x64.
-4. If you want to download prebuild binaries for required third party libraries enable the option `MEGAMOL_DOWNLOAD_VCPKG_CACHE` before configure. Otherwise, libraries will be built during configure.
+4. If you want to download prebuild binaries for required third party libraries enable the option `MEGAMOL_VCPKG_DOWNLOAD_CACHE` before configure. Otherwise, libraries will be built during configure.
 5. Next, click `Configure` a few times (until all red entries disappear).
 6. Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files and configure once more.
 7. Then click `Generate` to generate the build files.
@@ -105,7 +105,7 @@ Our CI pipeline tests the build with gcc-11 and clang-14 on Ubuntu 22.04.
 
 2. As prerequisites, following packages from the repository are required:
 
-    `$ sudo apt install curl zip unzip tar xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev`
+    `$ sudo apt install curl zip unzip tar xorg-dev libgl1-mesa-dev libglu1-mesa-dev`
 
     - Hint: You can optionally install `libboost-stacktrace-dev` to enable stacktrace printout for KHR debug messages.
 

@@ -1,10 +1,9 @@
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include <filesystem>
 
 struct ColumnInfo {
     uint16_t nameLength;
