@@ -16,6 +16,7 @@
 #include "widgets/DefaultStyle.h"
 #include "windows/HotkeyEditor.h"
 #include "windows/PerformanceMonitor.h"
+#include <ImGuizmo.h>
 
 using namespace megamol::gui;
 
@@ -33,7 +34,8 @@ GUIManager::GUIManager()
         , win_configurator_ptr(nullptr)
         , file_browser()
         , tooltip()
-        , picking_buffer() {
+        , picking_buffer()
+        , imguimo_btn_click_used(false) {
 
     // Init hotkeys
     this->gui_hotkeys[HOTKEY_GUI_TRIGGER_SCREENSHOT] = {"_hotkey_gui_trigger_screenshot",
@@ -486,6 +488,11 @@ bool GUIManager::OnMouseMove(double x, double y) {
     io.AddMousePosEvent(static_cast<float>(x), static_cast<float>(y));
 
     bool consumed = io.WantCaptureMouse;
+
+    if (consumed && ImGuizmo::IsOver() && !this->imguimo_btn_click_used) {
+        consumed = false;
+    }
+
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseMove(x, y);
     }
@@ -503,6 +510,7 @@ bool GUIManager::OnMouseButton(
     ImGui::SetCurrentContext(this->imgui_context);
 
     bool down = (action == core::view::MouseButtonAction::PRESS);
+    bool up = (action == core::view::MouseButtonAction::RELEASE);
     auto buttonIndex = static_cast<size_t>(button);
     ImGuiIO& io = ImGui::GetIO();
 
@@ -513,6 +521,12 @@ bool GUIManager::OnMouseButton(
     io.AddMouseButtonEvent(buttonIndex, down);
 
     bool consumed = io.WantCaptureMouse;
+
+    if (consumed && ImGuizmo::IsOver() && up) {
+        consumed = false;
+    }
+    this->imguimo_btn_click_used = ImGuizmo::IsUsing();
+
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseClick(button, action, mods);
     }
@@ -532,6 +546,11 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
     io.AddMouseWheelEvent(static_cast<float>(dx), static_cast<float>(dy));
 
     bool consumed = io.WantCaptureMouse;
+
+    if (consumed && ImGuizmo::IsOver() && !this->imguimo_btn_click_used) {
+        consumed = false;
+    }
+
     return consumed;
 }
 
