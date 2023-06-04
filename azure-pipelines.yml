@@ -42,7 +42,7 @@ jobs:
   timeoutInMinutes: 720
 
   pool:
-    name: 'hardware'
+    name: 'default'
     demands:
     - Agent.OS -equals Windows_NT
     - cmake
