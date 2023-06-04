@@ -39,6 +39,8 @@ jobs:
         generator: 'Visual Studio 16 2019'
         cmakeExtraArgs: '$(nonGlConfig)'
 
+  timeoutInMinutes: 720
+
   pool:
     name: 'hardware'
     demands:
@@ -106,6 +108,8 @@ jobs:
         configuration: Release
         generator: 'Ninja'
         cmakeExtraArgs: '$(nonGlConfig)'
+
+  timeoutInMinutes: 720
 
   pool:
     name: 'default'
