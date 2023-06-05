@@ -128,25 +128,7 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             ParameterGroups::DrawGroupedParameters(
                 this->name, params, in_search, in_scope, nullptr, in_override_header_state);
 
-            /// !!! The folowing options are not parameters of the calling module and are therefore NOT saved in the GUI state ...
-            ImGui::Text(">>> Right-Click Guizmo for Context Menu <<<");
-            ImGui::Separator();
-            ImGui::Text("Manipulate: ");
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Rotate", (this->guizmo_operation == ImGuizmo::ROTATE))) {
-                this->guizmo_operation = ImGuizmo::ROTATE;
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Translate", (this->guizmo_operation == ImGuizmo::TRANSLATE))) {
-                this->guizmo_operation = ImGuizmo::TRANSLATE;
-            }
-            ImGui::Separator();
-            ImGui::Text("Draw: ");
-            ImGui::SameLine();
-            ImGui::Checkbox("Plane", &this->guizmo_draw_plane);
-            ImGui::SameLine();
-            ImGui::Checkbox("Grid", &this->guizmo_draw_grid);
-            ImGui::Separator();
+            this->widget_params(false);
 
             return true;
 
@@ -181,7 +163,7 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
             ImGuizmo::SetID(0);
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::SetRect(screen_pos.x, screen_pos.y, screen_size.x, screen_size.y);
-            ImGuizmo::AllowAxisFlip(false);
+            ImGuizmo::AllowAxisFlip(true);
             ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
 
             /// Plane ---------------------------
@@ -234,36 +216,7 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
                 ImGui::OpenPopup(popup_label.c_str());
             }
             if (ImGui::BeginPopup(popup_label.c_str(), ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
-
-                ImGui::TextDisabled("Plane Widget");
-                ImGui::Separator();
-                if (ButtonWidgets::ToggleButton("Enable", plane_enabled)) {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::Separator();
-                ImGui::Text("Manipulate: ");
-                ImGui::SameLine();
-                if (ImGui::RadioButton("Rotate", (this->guizmo_operation == ImGuizmo::ROTATE))) {
-                    this->guizmo_operation = ImGuizmo::ROTATE;
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("Translate", (this->guizmo_operation == ImGuizmo::TRANSLATE))) {
-                    this->guizmo_operation = ImGuizmo::TRANSLATE;
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::Separator();
-                ImGui::Text("Draw: ");
-                ImGui::SameLine();
-                if (ImGui::Checkbox("Plane", &this->guizmo_draw_plane)) {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::SameLine();
-                if (ImGui::Checkbox("Grid", &this->guizmo_draw_grid)) {
-                    ImGui::CloseCurrentPopup();
-                }
-
-
+                this->widget_params(true);
                 ImGui::EndPopup();
             }
 
@@ -341,4 +294,62 @@ ImVec2 megamol::gui::ParameterGroupClipPlaneWidget::world_to_screen(
     trans.y += position.y;
 
     return ImVec2(trans.x, trans.y);
+}
+
+
+void megamol::gui::ParameterGroupClipPlaneWidget::widget_params(bool pop_up) {
+
+    /// ! The folowing options are not parameters of the calling module and are therefore NOT saved in the GUI stat.
+
+    ImGui::Text("Plane Widget");
+    if (!pop_up) {
+        ImGui::TextDisabled("INFO: Right-Click Widget for Context Menu");
+    }
+    ImGui::Separator();
+
+    auto column_flags = ImGuiTableColumnFlags_WidthStretch;
+    auto table_flags = ImGuiTableColumnFlags_NoResize |
+                       ImGuiTableFlags_BordersInnerV; // ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter
+    if (ImGui::BeginTable("guizmo_widget_params", 2, table_flags)) {
+        ImGui::TableSetupColumn("columns", column_flags);
+
+        ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted("Manipulate:");
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted("Draw:");
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        if (ImGui::RadioButton("Rotate", (this->guizmo_operation == ImGuizmo::ROTATE))) {
+            this->guizmo_operation = ImGuizmo::ROTATE;
+            if (pop_up) {
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::TableNextColumn();
+        if (ImGui::Checkbox("Plane", &this->guizmo_draw_plane)) {
+            if (pop_up) {
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        if (ImGui::RadioButton("Translate", (this->guizmo_operation == ImGuizmo::TRANSLATE))) {
+            this->guizmo_operation = ImGuizmo::TRANSLATE;
+            if (pop_up) {
+                ImGui::CloseCurrentPopup();
+            }
+        }
+
+        ImGui::TableNextColumn();
+        if (ImGui::Checkbox("Grid", &this->guizmo_draw_grid)) {
+            if (pop_up) {
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndTable();
+    }
 }

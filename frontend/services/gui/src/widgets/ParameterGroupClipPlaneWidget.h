@@ -40,6 +40,8 @@ private:
 
     ImVec2 world_to_screen(const glm::vec4& worldPos, const glm::mat4& mat, ImVec2 position, ImVec2 size);
 
+    void widget_params(bool pop_up);
+
     // VARIABLES --------------------------------------------------------------
 
     HoverToolTip tooltip;
