@@ -308,8 +308,9 @@ void megamol::gui::ParameterGroupClipPlaneWidget::widget_params(bool pop_up) {
     ImGui::Separator();
 
     auto column_flags = ImGuiTableColumnFlags_WidthStretch;
-    auto table_flags = ImGuiTableColumnFlags_NoResize |
-                       ImGuiTableFlags_BordersInnerV; // ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter
+    auto table_flags =
+        ImGuiTableColumnFlags_NoResize |
+        ImGuiTableFlags_BordersInnerV; // ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter
     if (ImGui::BeginTable("guizmo_widget_params", 2, table_flags)) {
         ImGui::TableSetupColumn("columns", column_flags);
 
