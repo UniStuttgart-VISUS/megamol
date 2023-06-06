@@ -84,7 +84,7 @@ void Profiling_Service::log_graph_event(
     if (this->include_graph_events) {
         const auto frames_rendered = static_cast<int64_t>(
             _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
-        log_buffer << frames_rendered - 1 << ";Graph;" << parent << ";" << name << ";" << comment
+        log_buffer << frames_rendered << ";Graph;" << parent << ";" << name << ";" << comment
                    << ";0;0;GraphEvent;;;" << std::endl;
     }
 }

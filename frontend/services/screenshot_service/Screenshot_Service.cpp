@@ -114,7 +114,7 @@ static bool write_png_to_file(
         project.append(guistate_resources_ptr->request_gui_state(true));
     }
     auto additional = megamol::core::utility::graphics::ScreenShotComments::comments_storage_map();
-    additional["Frame ID"] = std::to_string(frame_stats_ptr->rendered_frames_count);
+    additional["Frame ID"] = std::to_string(frame_stats_ptr->rendered_frames_count - 1);
     megamol::core::utility::graphics::ScreenShotComments ssc(project, additional);
     png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
