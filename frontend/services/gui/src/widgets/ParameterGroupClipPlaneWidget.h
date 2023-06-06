@@ -33,10 +33,10 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_plane(
-        const glm::mat4& mvp, float size, ImVec4 color, ImVec2 scree_pos, ImVec2 screen_size, bool plane_enabled);
+        const glm::mat4& mvp, float size, ImVec4 color, ImVec2 screen_pos, ImVec2 screen_size, bool plane_enabled);
 
     void draw_grid(
-        const glm::mat4& mvp, float size, ImVec4 color, ImVec2 scree_pos, ImVec2 screen_size, bool plane_enabled);
+        const glm::mat4& mvp, float size, ImVec4 color, ImVec2 screen_pos, ImVec2 screen_size, bool plane_enabled);
 
     ImVec2 world_to_screen(const glm::vec4& worldPos, const glm::mat4& mat, ImVec2 position, ImVec2 size);
 

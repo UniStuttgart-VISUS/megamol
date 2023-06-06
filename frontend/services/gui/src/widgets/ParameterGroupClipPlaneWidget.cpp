@@ -234,7 +234,7 @@ bool megamol::gui::ParameterGroupClipPlaneWidget::Draw(ParamPtrVector_t params, 
 
 
 void megamol::gui::ParameterGroupClipPlaneWidget::draw_plane(
-    const glm::mat4& mvp, float size, ImVec4 color, ImVec2 scree_pos, ImVec2 screen_size, bool plane_enabled) {
+    const glm::mat4& mvp, float size, ImVec4 color, ImVec2 screen_pos, ImVec2 screen_size, bool plane_enabled) {
 
     ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
     assert(draw_list != nullptr);
@@ -246,10 +246,10 @@ void megamol::gui::ParameterGroupClipPlaneWidget::draw_plane(
     auto p_3 = glm::vec4(-size, 0.0f, size, 1.0f);
     auto p_4 = glm::vec4(-size, 0.0f, -size, 1.0f);
 
-    auto p_1_screen = this->world_to_screen(p_1, mvp, scree_pos, screen_size);
-    auto p_2_screen = this->world_to_screen(p_2, mvp, scree_pos, screen_size);
-    auto p_3_screen = this->world_to_screen(p_3, mvp, scree_pos, screen_size);
-    auto p_4_screen = this->world_to_screen(p_4, mvp, scree_pos, screen_size);
+    auto p_1_screen = this->world_to_screen(p_1, mvp, screen_pos, screen_size);
+    auto p_2_screen = this->world_to_screen(p_2, mvp, screen_pos, screen_size);
+    auto p_3_screen = this->world_to_screen(p_3, mvp, screen_pos, screen_size);
+    auto p_4_screen = this->world_to_screen(p_4, mvp, screen_pos, screen_size);
 
     draw_list->AddQuadFilled(
         p_1_screen, p_2_screen, p_4_screen, p_3_screen, ImGui::GetColorU32(plane_enabled ? color : color_disabled));
@@ -257,7 +257,7 @@ void megamol::gui::ParameterGroupClipPlaneWidget::draw_plane(
 
 
 void megamol::gui::ParameterGroupClipPlaneWidget::draw_grid(
-    const glm::mat4& mvp, float size, ImVec4 color, ImVec2 scree_pos, ImVec2 screen_size, bool plane_enabled) {
+    const glm::mat4& mvp, float size, ImVec4 color, ImVec2 screen_pos, ImVec2 screen_size, bool plane_enabled) {
 
     ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
     assert(draw_list != nullptr);
@@ -271,8 +271,8 @@ void megamol::gui::ParameterGroupClipPlaneWidget::draw_grid(
 
             float thickness = 1.5f;
 
-            ImVec2 p_a_screen = this->world_to_screen(p_a, mvp, scree_pos, screen_size);
-            ImVec2 p_b_screen = this->world_to_screen(p_b, mvp, scree_pos, screen_size);
+            ImVec2 p_a_screen = this->world_to_screen(p_a, mvp, screen_pos, screen_size);
+            ImVec2 p_b_screen = this->world_to_screen(p_b, mvp, screen_pos, screen_size);
 
             draw_list->AddLine(
                 p_a_screen, p_b_screen, ImGui::GetColorU32(plane_enabled ? color : color_disabled), thickness);
