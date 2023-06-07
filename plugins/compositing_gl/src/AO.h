@@ -9,7 +9,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_gl/ModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -27,7 +27,7 @@
 
 namespace megamol::compositing_gl {
 
-class AO : public mmstd_gl::ModuleGL {
+class AO : public megamol::mmstd_gl::Renderer3DModuleGL {
 
 public:
     /**
@@ -65,7 +65,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~AO(void);
+    ~AO(void);
 
 protected:
     /**
@@ -73,23 +73,17 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void);
+
+    
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void);
 
-    /**
-     * Generates Voxels.
-     *
-     * @param caller The calling call.
-     *
-     * @return 'true' on success, 'false' on failure.
-     */
-    bool getDataCallback(core::Call& call);
-
-    bool getMetadataCallback(core::Call& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     ///**
@@ -110,14 +104,14 @@ private:
     GLuint texture_handle;
     GLuint voxel_handle;
 
-    std::shared_ptr<glowl::Texture2D> final_output_;
-
+    std::shared_ptr<glowl::Texture2D> color_tex;
     std::shared_ptr<glowl::Texture2D> depth_tex;
     std::shared_ptr<glowl::Texture2D> normal_tex;
-    GLuint color_tex;
-
     
     glm::mat4 cur_mvp_inv_;
+
+    int cur_vp_width_;
+    int cur_vp_height_;
 
     //geocalls::VolumetricDataCall::Metadata metadata;
 
@@ -146,6 +140,9 @@ private:
 
     /** Slot for querying depth render target texture, i.e. a rhs connection */
     megamol::core::CallerSlot depth_tex_slot_;
+
+    /** Slot for querying color render target texture, i.e. a rhs connection */
+    megamol::core::CallerSlot color_tex_slot_;
 
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot camera_slot_;

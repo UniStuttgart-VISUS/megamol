@@ -11,7 +11,7 @@ using namespace megamol::geocalls;
 
 
 megamol::compositing_gl::AO::AO(void)
-        : mmstd_gl::ModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , output_tex_slot_("AmbientOcclusionTexture", "Slot for requesting ambient occlusion texture.")
         , voxels_tex_slot_("getVoxelData", "Connects to the voxel data source")
         , vol_size_slot_("volumeSize", "Longest volume edge")
@@ -21,6 +21,8 @@ megamol::compositing_gl::AO::AO(void)
         , shader_options_flags_(nullptr)
         , lighting_prgm_()
         , vbo_()
+        , cur_vp_width_(-1)
+        , cur_vp_height_(-1)
         , cur_mvp_inv_()
         , ao_dir_ubo_(nullptr)
         , ao_offset_slot_("offset", "Offset from Surface")
@@ -30,17 +32,17 @@ megamol::compositing_gl::AO::AO(void)
         , enable_lighting_slot_("enableLighting", "Enable Lighting")
         , normals_tex_slot_("NormalTexture", "Connects the normals render target texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth render target texture")
+        , color_tex_slot_("ColorTexture", "Connects the color render target texture")
         , camera_slot_("Camera", "Connects a (copy of) camera state")
         , depth_tex()
         , normal_tex()
         , color_tex()
-        , final_output_(nullptr)
         {
 
     // CallTexture2D
-    this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &AO::getDataCallback);
-    this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &AO::getMetadataCallback);
-    this->MakeSlotAvailable(&this->output_tex_slot_);
+    //this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &AO::getDataCallback);
+    //this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &AO::getMetadataCallback);
+    //this->MakeSlotAvailable(&this->output_tex_slot_);
 
     // VolumetricDataCall slot (get voxel texture)
     this->voxels_tex_slot_.SetCompatibleCall<VolumetricDataCallDescription>();
@@ -65,6 +67,9 @@ megamol::compositing_gl::AO::AO(void)
     this->ao_cone_length_slot_ << (new param::FloatParam(0.8f, 0.01f, 1.0f));
     this->MakeSlotAvailable(&this->ao_cone_length_slot_);
 
+    this->color_tex_slot_.SetCompatibleCall<CallTexture2DDescription>();
+    this->MakeSlotAvailable(&this->color_tex_slot_);
+
     this->normals_tex_slot_.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->normals_tex_slot_);
 
@@ -86,14 +91,12 @@ void megamol::compositing_gl::AO::release(void) {}
 
 bool megamol::compositing_gl::AO::create(void) {
 
-    std::vector<float> dummy = {0};
-    ao_dir_ubo_ = std::make_unique<glowl::BufferObject>(GL_UNIFORM_BUFFER, dummy);
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>(); //TODO necessary?
 
     // Check for flag storage availability and get specific shader snippet
     // TODO: test flags!
     // create shader programs
-    auto const shader_options =
-        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto const shader_options = core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     shader_options_flags_ = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
 
      // Create the deferred shader
@@ -109,38 +112,34 @@ bool megamol::compositing_gl::AO::create(void) {
     this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
     lighting_so.addDefinition("NUM_CONEDIRS", std::to_string(directions.size()));
 
+    std::vector<float> dummy = {0};
+    ao_dir_ubo_ = std::make_unique<glowl::BufferObject>(GL_UNIFORM_BUFFER, dummy);
     ao_dir_ubo_->rebuffer(directions);
 
     lighting_prgm_.reset();
     lighting_prgm_ = core::utility::make_glowl_shader("sphere_mdao_deferred", lighting_so,
         "moldyn_gl/sphere_renderer/sphere_mdao_deferred.vert.glsl",
         "moldyn_gl/sphere_renderer/sphere_mdao_deferred.frag.glsl");
-
-    //auto depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
-    //auto depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_RGB, 1, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, 1);
-    auto depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_UNSIGNED_BYTE, 1);
-    final_output_ = std::make_shared<glowl::Texture2D>("final_output", depth_buffer_viewspace_linear_layout_, nullptr);
-    
     
     return true;
 }
 
-bool megamol::compositing_gl::AO::getMetadataCallback(core::Call& call) {
+bool megamol::compositing_gl::AO::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
 
-bool megamol::compositing_gl::AO::getDataCallback(core::Call& call) {
-    auto lhsTc = dynamic_cast<CallTexture2D*>(&call);
+bool megamol::compositing_gl::AO::Render(mmstd_gl::CallRender3DGL& call) {
     auto callNormal = normals_tex_slot_.CallAs<CallTexture2D>();
     auto callDepth = depth_tex_slot_.CallAs<CallTexture2D>();
+    auto callColor = color_tex_slot_.CallAs<CallTexture2D>();
     auto callCamera = camera_slot_.CallAs<CallCamera>();
 
-    if (lhsTc == NULL)
-        return false;
     if (callNormal == NULL)
         return false;
     if (callDepth == NULL)
+        return false;
+    if (callColor == NULL)
         return false;
     if (callCamera == NULL)
         return false;
@@ -152,15 +151,19 @@ bool megamol::compositing_gl::AO::getDataCallback(core::Call& call) {
     if (!(*callDepth)(0))
         return false;
 
+    if (!(*callColor)(0))
+        return false;
+
     if (!(*callCamera)(0))
         return false;
 
 
     bool normalUpdate = callNormal->hasUpdate();
     bool depthUpdate = callDepth->hasUpdate();
+    bool colorUpdate = callColor->hasUpdate();
     bool cameraUpdate = callCamera->hasUpdate();
 
-    if (normalUpdate || depthUpdate || cameraUpdate) {
+    if (true){ //normalUpdate || depthUpdate || cameraUpdate) {
         // TODO output texture
 
         normal_tex = callNormal->getData();
@@ -169,14 +172,15 @@ bool megamol::compositing_gl::AO::getDataCallback(core::Call& call) {
         depth_tex = callDepth->getData();
         //std::array<int, 2> txResDepth = {(int)depthTx2D->getWidth(), (int)depthTx2D->getHeight()};
 
+        color_tex = callColor->getData();
 
-        // set output texture size to input texture size
-        if (final_output_->getWidth() != depth_tex->getWidth() ||
-            final_output_->getHeight() != depth_tex->getHeight()) {
-            glowl::TextureLayout tx_layout(
-                GL_RGBA16F, depth_tex->getWidth(), depth_tex->getHeight(), 1, GL_RGBA, GL_HALF_FLOAT, 1);
-            final_output_->reload(tx_layout, nullptr);
-        }
+        //// set output texture size to input texture size
+        //if (final_output_->getWidth() != depth_tex->getWidth() ||
+        //    final_output_->getHeight() != depth_tex->getHeight()) {
+        //    glowl::TextureLayout tx_layout(
+        //        GL_RGBA16F, depth_tex->getWidth(), depth_tex->getHeight(), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+        //    final_output_->reload(tx_layout, nullptr);
+        //}
 
 
 
@@ -186,6 +190,10 @@ bool megamol::compositing_gl::AO::getDataCallback(core::Call& call) {
         glm::mat4 viewMx = cam.getViewMatrix();
         glm::mat4 projMx = cam.getProjectionMatrix();
 
+
+        auto fbo = call.GetFramebuffer();
+        cur_vp_width_ = fbo->getWidth();
+        cur_vp_height_ = fbo->getHeight();
 
         cur_mvp_inv_ = glm::inverse(projMx * viewMx);
         auto cur_cam_pos_ = cam.getPose().position;
@@ -207,7 +215,8 @@ bool megamol::compositing_gl::AO::getDataCallback(core::Call& call) {
     }*/
 
     // set data
-    lhsTc->setData(normal_tex, lhsTc->version()); //final_output_, version_);
+    //lhsTc->setData(normal_tex, lhsTc->version()); //final_output_, version_);
+    //lhsTc->setData(final_output_, lhsTc->version()); //final_output_, version_);
 
     // TODO make texture available!
 
@@ -245,6 +254,19 @@ void megamol::compositing_gl::AO::generate3ConeDirections(std::vector<glm::vec4>
 void megamol::compositing_gl::AO::renderAmbientOcclusion(){
 
     
+    //glEnable(GL_TEXTURE_2D);
+    //glEnable(GL_TEXTURE_3D);
+
+    //glBindFramebuffer(GL_FRAMEBUFFER, this->g_buffer_.fbo);
+    //GLenum bufs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    //glDrawBuffers(2, bufs);
+
+    //glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //glBindFragDataLocation(this->lighting_prgm_->getHandle(), 0, "outColor");
+    //glBindFragDataLocation(this->lighting_prgm_->getHandle(), 1, "outNormal");
+
     // TODO bind fbo?
     /*
     GLint prev_fbo;
@@ -281,7 +303,7 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     glActiveTexture(GL_TEXTURE1);
     normal_tex->bindTexture();
     glActiveTexture(GL_TEXTURE0);
-    final_output_->bindTexture();
+    color_tex->bindTexture();
     //glBindTexture(GL_TEXTURE_2D, color_tex);  // TODO... necessary?
 
     // voxel texture
@@ -311,20 +333,25 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     this->lighting_prgm_->setUniform("inNormalsTex", static_cast<int>(1));
     this->lighting_prgm_->setUniform("inDepthTex", static_cast<int>(2));
     this->lighting_prgm_->setUniform("inDensityTex", static_cast<int>(3));
-    this->lighting_prgm_->setUniform("inWidth", static_cast<float>(normal_tex->getWidth()));
-    this->lighting_prgm_->setUniform("inHeight", static_cast<float>(normal_tex->getHeight()));
+    
+
+    this->lighting_prgm_->setUniform("inWidth", static_cast<float>(cur_vp_width_));
+    this->lighting_prgm_->setUniform("inHeight", static_cast<float>(cur_vp_height_));
     glUniformMatrix4fv(this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
-    /* this->lighting_prgm_->setUniform("inUseHighPrecision", high_precision);
-    if (enable_lighting) {
+    this->lighting_prgm_->setUniform("inUseHighPrecision", false); //high_precision);
+    /* if (enable_lighting) {
         this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(this->cur_light_dir_));
         this->lighting_prgm_->setUniform("inObjCamPos", glm::vec3(this->cur_cam_pos_));
     }*/
     this->lighting_prgm_->setUniform("inAOOffset", this->ao_offset_slot_.Param<param::FloatParam>()->Value());
     this->lighting_prgm_->setUniform("inAOStrength", this->ao_strength_slot_.Param<param::FloatParam>()->Value());
     this->lighting_prgm_->setUniform("inAOConeLength", this->ao_cone_length_slot_.Param<param::FloatParam>()->Value());
-    /*this->lighting_prgm_->setUniform("inAmbVolShortestEdge", this->amb_cone_constants_[0]);
-    this->lighting_prgm_->setUniform("inAmbVolMaxLod", this->amb_cone_constants_[1]);
-    glm::vec3 cur_clip_box_coords = glm::vec3(this->cur_clip_box_.GetLeftBottomBack().GetX(),
+    this->lighting_prgm_->setUniform("inAmbVolShortestEdge", 0.0f); //this->amb_cone_constants_[0]);
+    this->lighting_prgm_->setUniform("inAmbVolMaxLod", 0.0f);//this->amb_cone_constants_[1]);
+
+    this->lighting_prgm_->setUniform("inBoundsMin", glm::vec3(-1,-1,-1));
+    this->lighting_prgm_->setUniform("inBoundsSize", glm::vec3(2,2,2));
+    /* glm::vec3 cur_clip_box_coords = glm::vec3(this->cur_clip_box_.GetLeftBottomBack().GetX(),
         this->cur_clip_box_.GetLeftBottomBack().GetY(), this->cur_clip_box_.GetLeftBottomBack().GetZ());
     this->lighting_prgm_->setUniform("inBoundsMin", cur_clip_box_coords);
     glm::vec3 cur_clip_box_size = glm::vec3(this->cur_clip_box_.GetSize().GetWidth(),
@@ -350,8 +377,8 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_TEXTURE_3D);
+    //glDisable(GL_TEXTURE_2D);
+    //glDisable(GL_TEXTURE_3D);
 
 
     GLenum err;
