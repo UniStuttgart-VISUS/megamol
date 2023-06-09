@@ -1,5 +1,7 @@
 #version 450
 
+#include "srtest_ext.glsl"
+
 flat in vec3 objPos;
 flat in float rad;
 flat in float sqrRad;

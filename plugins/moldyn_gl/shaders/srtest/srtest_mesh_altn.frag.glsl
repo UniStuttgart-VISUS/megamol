@@ -2,6 +2,8 @@
 
 #extension GL_ARB_gpu_shader_fp64 : enable
 
+#include "srtest_ext.glsl"
+
 #pragma optionNV(fastmath off)
 #pragma optionNV(fastprecision off)
 
@@ -24,7 +26,7 @@ pp;
 #include "srtest_ubo.glsl"
 
 layout(location = 0) out vec4 outColor;
-layout(depth_greater) out float gl_FragDepth;
+//layout(depth_greater) out float gl_FragDepth;
 
 #include "lightdirectional.glsl"
 

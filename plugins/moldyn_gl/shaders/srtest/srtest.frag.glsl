@@ -1,6 +1,7 @@
 #version 450
 
-#extension GL_ARB_conservative_depth: enable
+#include "srtest_ext.glsl"
+//#extension GL_ARB_conservative_depth: enable
 
 //flat in vec3 objPos;
 flat in float rad;
@@ -11,7 +12,7 @@ flat in vec3 oc_pos;
 #include "srtest_ubo.glsl"
 
 layout(location = 0) out vec4 outColor;
-layout(depth_greater) out float gl_FragDepth;
+//layout(depth_greater) out float gl_FragDepth;
 
 #include "lightdirectional.glsl"
 
