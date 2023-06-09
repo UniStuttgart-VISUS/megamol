@@ -17,9 +17,8 @@
 #include "srtest/ssbo_shader_task.h"
 
 #ifdef USE_NVPERF
-//#include<nvperf_host_impl.h>
-#include <nvperf_host.h>
 #include <NvPerfReportGeneratorOpenGL.h>
+#include <nvperf_host.h>
 #endif
 
 namespace megamol::moldyn_gl::rendering {
@@ -153,19 +152,12 @@ private:
 
 static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
 static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_TRIANGLES, 0, num_points * 6); };
-static draw_cmd_t dc_quads = [](unsigned int num_points) { //glDrawArrays(GL_QUADS, 4040112*4, 4);
-    glDrawArrays(GL_QUADS, 0, num_points * 4);
-    //glDrawArrays(GL_QUADS, 3677773 * 4, 4);
-};
+static draw_cmd_t dc_quads = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
 static draw_cmd_t dc_strip = [](unsigned int num_points) {
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, num_points);
 };
 static auto dc_muzic = [](unsigned int num_points, std::vector<uint32_t> const& indices) -> void {
-    //num_points /= 2;
     glDrawElements(GL_TRIANGLE_STRIP, num_points * 6 - 2, GL_UNSIGNED_INT, indices.data());
-    //glDrawElements(GL_TRIANGLE_STRIP, 32768, GL_UNSIGNED_INT, indices.data());
-    /*glDrawElementsBaseVertex(GL_TRIANGLE_STRIP, num_points*6-2, GL_UNSIGNED_INT, indices.data(), 0);
-    glDrawElementsBaseVertex(GL_TRIANGLE_STRIP, num_points*6-2, GL_UNSIGNED_INT, indices.data(), num_points);*/
 };
 static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / MESH_WARP_SIZE + 1); };
 
@@ -266,7 +258,7 @@ public:
 class SRTest : public mmstd_gl::Renderer3DModuleGL {
 public:
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
-        /*std::vector<std::string> resources = */ModuleGL::requested_lifetime_resources(req);
+        /*std::vector<std::string> resources = */ ModuleGL::requested_lifetime_resources(req);
         req.require<frontend_resources::PerformanceManager>();
         //resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
         //return resources;
