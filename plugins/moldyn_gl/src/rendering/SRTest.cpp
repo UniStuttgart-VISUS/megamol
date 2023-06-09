@@ -801,7 +801,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         colors.clear();
         colors.reserve(p_count * 4);
 
-        //#define ADDED_STUFF
+        #define ADDED_STUFF
 
 #ifdef ADDED_STUFF
         X.clear();
