@@ -43,95 +43,6 @@ private:
     per_list_package_t pl_data_;
 };
 
-//class tex_rt : public rendering_task {
-//public:
-//    tex_rt(msf::ShaderFactoryOptionsOpenGL const& options);
-//
-//    virtual ~tex_rt() = default;
-//
-//    bool render(GLuint ubo) override;
-//
-//    bool upload(data_package_t const& package) override;
-//
-//    bool cleanup() override;
-//
-//private:
-//    std::vector<GLuint> tex_;
-//    std::vector<GLuint> buf_;
-//    std::vector<uint64_t> num_prims_;
-//    per_list_package_t pl_data_;
-//};
-
-//class copy_rt : public rendering_task {
-//public:
-//    copy_rt(msf::ShaderFactoryOptionsOpenGL const& options);
-//
-//    virtual ~copy_rt();
-//
-//    bool render(GLuint ubo) override;
-//
-//    bool upload(data_package_t const& package) override;
-//
-//#ifdef MEGAMOL_USE_PROFILING
-//    bool upload(data_package_t const& package, frontend_resources::PerformanceManager& pm,
-//        frontend_resources::PerformanceManager::handle_type handle);
-//#endif
-//
-//    bool cleanup() override;
-//
-//private:
-//    std::vector<GLuint> copy_bos_;
-//
-//    std::vector<GLuint> xbos_;
-//    std::vector<GLuint> ybos_;
-//    std::vector<GLuint> zbos_;
-//    std::vector<GLuint> radbos_;
-//    std::vector<GLuint> rbos_;
-//    std::vector<GLuint> gbos_;
-//    std::vector<GLuint> bbos_;
-//    std::vector<GLuint> abos_;
-//
-//    std::vector<uint64_t> num_prims_;
-//    per_list_package_t pl_data_;
-//
-//    std::unique_ptr<glowl::GLSLProgram> comp_program_;
-//};
-
-//class copy_vert_rt : public rendering_task {
-//public:
-//    copy_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options);
-//
-//    virtual ~copy_vert_rt();
-//
-//    bool render(GLuint ubo) override;
-//
-//    bool upload(data_package_t const& package) override;
-//
-//#ifdef MEGAMOL_USE_PROFILING
-//    bool upload(data_package_t const& package, frontend_resources::PerformanceManager& pm,
-//        frontend_resources::PerformanceManager::handle_type handle);
-//#endif
-//
-//    bool cleanup() override;
-//
-//private:
-//    std::vector<GLuint> copy_bos_;
-//
-//    std::vector<GLuint> xbos_;
-//    std::vector<GLuint> ybos_;
-//    std::vector<GLuint> zbos_;
-//    std::vector<GLuint> radbos_;
-//    std::vector<GLuint> rbos_;
-//    std::vector<GLuint> gbos_;
-//    std::vector<GLuint> bbos_;
-//    std::vector<GLuint> abos_;
-//
-//    std::vector<uint64_t> num_prims_;
-//    per_list_package_t pl_data_;
-//
-//    std::unique_ptr<glowl::GLSLProgram> comp_program_;
-//};
-
 #define MESH_WARP_SIZE 31
 
 #define VERT_BASE_IDX "gl_VertexID / 6"
@@ -227,33 +138,12 @@ public:
     virtual ~mesh_rt() = default;
 };
 
-//class mesh_altn_rt : public ssbo_shader_task {
-//public:
-//    mesh_altn_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
-//
-//    virtual ~mesh_altn_rt() = default;
-//};
-
 class mesh_geo_rt : public ssbo_shader_task {
 public:
     mesh_geo_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~mesh_geo_rt() = default;
 };
-
-//class mesh_geo_altn_rt : public ssbo_shader_task {
-//public:
-//    mesh_geo_altn_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
-//
-//    virtual ~mesh_geo_altn_rt() = default;
-//};
-
-//class mesh_geo_task_rt : public mesh_shader_task {
-//public:
-//    mesh_geo_task_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
-//
-//    virtual ~mesh_geo_task_rt() = default;
-//};
 
 class SRTest : public mmstd_gl::Renderer3DModuleGL {
 public:
@@ -303,9 +193,6 @@ protected:
 private:
     enum class method_e : uint8_t {
         VAO,
-        //TEX, // << remove
-        //COPY, // << remove
-        //COPY_VERT, // << remove
         SSBO,
         SSBO_GEO,
         SSBO_VERT,
@@ -313,18 +200,11 @@ private:
         SSBO_STRIP,
         SSBO_MUZIC,
         MESH,
-        //MESH_ALTN, // << remove
         MESH_GEO,
-        MESH_GEO_TASK,
-        //MESH_GEO_ALTN, // << remove
-        //MESH_GEO_CAM // << remove
+        MESH_GEO_TASK
     };
 
     using method_ut = std::underlying_type_t<method_e>;
-
-    /*std::array<std::string, 16> method_strings = {"VAO", "TEX", "COPY", "COPY_VERT", "SSBO", "SSBO_GEO", "SSBO_VERT",
-        "SSBO_QUAD", "SSBO_STRIP", "SSBO_MUZIC", "MESH", "MESH_ALTN", "MESH_GEO", "MESH_GEO_TASK", "MESH_GEO_ALTN",
-        "MESH_GEO_CAM"};*/
 
     std::array<std::string, 10> method_strings = {"VAO", "SSBO", "SSBO_GEO", "SSBO_VERT", "SSBO_QUAD", "SSBO_STRIP",
         "SSBO_MUZIC", "MESH", "MESH_GEO", "MESH_GEO_TASK"};

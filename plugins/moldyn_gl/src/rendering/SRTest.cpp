@@ -1,12 +1,12 @@
 #include "SRTest.h"
 
+#include "OpenGL_Context.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd/light/DistantLight.h"
-#include "OpenGL_Context.h"
 
 #include "stb/stb_image_write.h"
 
@@ -37,9 +37,6 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
 
     auto ep = new core::param::EnumParam(static_cast<method_ut>(method_e::VAO));
     ep->SetTypePair(static_cast<method_ut>(method_e::VAO), "VAO");
-    /*ep->SetTypePair(static_cast<method_ut>(method_e::TEX), "TEX");
-    ep->SetTypePair(static_cast<method_ut>(method_e::COPY), "COPY");
-    ep->SetTypePair(static_cast<method_ut>(method_e::COPY_VERT), "COPY_VERT");*/
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO), "SSBO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_GEO), "SSBO_GEO");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_VERT), "SSBO_VERT");
@@ -47,11 +44,8 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_STRIP), "SSBO_STRIP");
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_MUZIC), "SSBO_MUZIC");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH), "MESH");
-    //ep->SetTypePair(static_cast<method_ut>(method_e::MESH_ALTN), "MESH_ALTN");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO), "MESH_GEO");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_TASK), "MESH_GEO_TASK");
-    //ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_ALTN), "MESH_GEO_ALTN");
-    //ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_CAM), "MESH_GEO_CAM");
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
 
@@ -86,15 +80,16 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             core::utility::make_path_shader_options(frontend_resources.get<frontend_resources::RuntimeConfig>());
         auto shdr_vao_options = base_options;
         shdr_vao_options.addDefinition("__SRTEST_VAO__");
-        /*auto shdr_tex_options = base_options;
-        shdr_tex_options.addDefinition("__SRTEST_TEX__");*/
+
         auto shdr_ssbo_options = base_options;
         shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
+
         auto shdr_ssbo_vert_options = base_options;
         shdr_ssbo_vert_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_vert_options.addDefinition("BASE_IDX", VERT_BASE_IDX);
         shdr_ssbo_vert_options.addDefinition("INV_IDX", VERT_INV_IDX);
         shdr_ssbo_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);
+
         auto shdr_ssbo_quads_options = base_options;
         shdr_ssbo_quads_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_quads_options.addDefinition("__SRTEST_QUAD__");
@@ -104,33 +99,23 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_ssbo_quads_options.addDefinition("BASE_IDX", QUADS_BASE_IDX);
         shdr_ssbo_quads_options.addDefinition("INV_IDX", QUADS_INV_IDX);
         shdr_ssbo_quads_options.addDefinition("BUMP_IDX", QUADS_BUMP_IDX);
+
         auto shdr_ssbo_strip_options = base_options;
         shdr_ssbo_strip_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_strip_options.addDefinition("BASE_IDX", STRIP_BASE_IDX);
         shdr_ssbo_strip_options.addDefinition("INV_IDX", STRIP_INV_IDX);
         shdr_ssbo_strip_options.addDefinition("BUMP_IDX", STRIP_BUMP_IDX);
+
         auto shdr_ssbo_muzic_options = base_options;
         shdr_ssbo_muzic_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_muzic_options.addDefinition("__SRTEST_MUZIC__");
         shdr_ssbo_muzic_options.addDefinition("BASE_IDX", MUZIC_BASE_IDX);
         shdr_ssbo_muzic_options.addDefinition("INV_IDX", MUZIC_INV_IDX);
         shdr_ssbo_muzic_options.addDefinition("BUMP_IDX", MUZIC_BUMP_IDX);
-        /*auto shdr_copy_options = base_options;
-        shdr_copy_options.addDefinition("__SRTEST_SSBO__");
-        shdr_copy_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");*/
-        /*auto shdr_copy_vert_options = base_options;
-        shdr_copy_vert_options.addDefinition("__SRTEST_SSBO__");
-        shdr_copy_vert_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
-        shdr_copy_vert_options.addDefinition("BASE_IDX", VERT_BASE_IDX);
-        shdr_copy_vert_options.addDefinition("INV_IDX", VERT_INV_IDX);
-        shdr_copy_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);*/
+
         auto shdr_mesh_options = base_options;
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
         shdr_mesh_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
-
-        /*auto shdr_mesh_altn_options = base_options;
-        shdr_mesh_altn_options.addDefinition("__SRTEST_MESH_ALTN__");
-        shdr_mesh_altn_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));*/
 
         auto shdr_mesh_geo_options = base_options;
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
@@ -140,18 +125,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
         shdr_mesh_geo_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
 
-        /*auto shdr_mesh_geo_altn_options = base_options;
-        shdr_mesh_geo_altn_options.addDefinition("__SRTEST_MESH_GEO_ALTN__");
-        shdr_mesh_geo_altn_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));*/
-
         auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
-
-        /*auto shdr_mesh_geo_cam_options = base_options;
-        shdr_mesh_geo_cam_options.addDefinition("__SRTEST_MESH_GEO__");
-        shdr_mesh_geo_cam_options.addDefinition("__SRTEST_CAM_ALIGNED__");
-        shdr_mesh_geo_cam_options.addDefinition("__SRTEST_MESH_GEO__");
-        shdr_mesh_geo_cam_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));*/
-
 
         switch (mode) {
         case upload_mode::FULL_SEP: {
@@ -161,10 +135,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
-            //shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
-            //shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
-            //shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
         } break;
         case upload_mode::VEC3_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
@@ -173,10 +144,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
-            //shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
-            //shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
-            //shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
         } break;
         case upload_mode::NO_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
@@ -185,10 +153,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
-            //shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
-            //shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
-            //shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
         } break;
         case upload_mode::BUFFER_ARRAY: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
@@ -197,10 +162,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
-            //shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
-            //shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
-            //shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
         } break;
         case upload_mode::POS_COL_SEP:
         default: {
@@ -210,21 +172,11 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
-            //shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
-            //shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
-            //shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
         }
         }
 
         rendering_tasks_.insert(std::make_pair(method_e::VAO, std::make_shared<vao_rt>(shdr_vao_options)));
-
-        //rendering_tasks_.insert(std::make_pair(method_e::TEX, std::make_shared<tex_rt>(shdr_tex_options)));
-
-        //rendering_tasks_.insert(std::make_pair(method_e::COPY, std::make_shared<copy_rt>(shdr_copy_options)));
-
-        /*rendering_tasks_.insert(
-            std::make_pair(method_e::COPY_VERT, std::make_shared<copy_vert_rt>(shdr_copy_vert_options)));*/
 
         rendering_tasks_.insert(std::make_pair(method_e::SSBO, std::make_shared<ssbo_rt>(mode, shdr_ssbo_options)));
         rendering_tasks_.insert(
@@ -241,19 +193,8 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         if (mesh_shader_avail_) {
             rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_shared<mesh_rt>(mode, shdr_mesh_options)));
 
-            /*rendering_tasks_.insert(
-                std::make_pair(method_e::MESH_ALTN, std::make_shared<mesh_altn_rt>(mode, shdr_mesh_altn_options)));*/
-
             rendering_tasks_.insert(
                 std::make_pair(method_e::MESH_GEO, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_options)));
-            /*rendering_tasks_.insert(std::make_pair(
-                method_e::MESH_GEO_TASK, std::make_shared<mesh_geo_task_rt>(mode, shdr_mesh_geo_options)));*/
-
-            /*rendering_tasks_.insert(
-                std::make_pair(method_e::MESH_GEO_CAM, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_cam_options)));*/
-
-            /*rendering_tasks_.insert(std::make_pair(
-                method_e::MESH_GEO_ALTN, std::make_shared<mesh_geo_altn_rt>(mode, shdr_mesh_geo_altn_options)));*/
         }
     } catch (glowl::GLSLProgramException const& e) {
         core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
@@ -491,7 +432,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     nvperf.PushRange("Draw_Full");
 #endif
     cr_fbo->bind();
-    
+
     if (new_data || enforce_upload_slot_.Param<core::param::BoolParam>()->Value() /* || clip_thres_slot_.IsDirty()*/) {
 #ifdef MEGAMOL_USE_PROFILING
         pm.set_transient_comment(
@@ -502,13 +443,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
         //#ifdef USE_NVPERF
         //        nvperf.PushRange("Upload");
         //#endif
-        /*if (method == method_e::COPY) {
-            std::dynamic_pointer_cast<copy_rt>(rt)->upload(data_, pm, timing_handles_[2]);
-        } else if (method == method_e::COPY_VERT) {
-            std::dynamic_pointer_cast<copy_vert_rt>(rt)->upload(data_, pm, timing_handles_[2]);
-        } else {*/
-            rt->upload(data_);
-        //}
+
+        rt->upload(data_);
 
 //#ifdef USE_NVPERF
 //        nvperf.PopRange();
@@ -657,8 +593,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             data_.pl_data.use_global_color[pl_idx] = 0;
         } else {
             data_.pl_data.use_global_color[pl_idx] = 1;
-            data_.pl_data.global_color[pl_idx] = glm::vec4(1,
-                0, 0, 1);
+            data_.pl_data.global_color[pl_idx] = glm::vec4(1, 0, 0, 1);
         }
 
         if (parts.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
@@ -677,7 +612,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         colors.clear();
         colors.reserve(p_count * 4);
 
-        #define ADDED_STUFF
+#define ADDED_STUFF
 
 #ifdef ADDED_STUFF
         X.clear();
@@ -881,702 +816,11 @@ megamol::moldyn_gl::rendering::mesh_rt::mesh_rt(upload_mode const& mode, msf::Sh
               std::filesystem::path("srtest/srtest_mesh.frag.glsl")) {}
 
 
-//megamol::moldyn_gl::rendering::mesh_geo_altn_rt::mesh_geo_altn_rt(
-//    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
-//        : ssbo_shader_task(mode, dc_mesh, "SRTestMeshGeoAltn", options,
-//              std::filesystem::path("srtest/srtest_mesh_geo_altn.mesh.glsl"),
-//              std::filesystem::path("srtest/srtest_mesh_geo_altn.frag.glsl")) {}
-
-
 megamol::moldyn_gl::rendering::mesh_geo_rt::mesh_geo_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_mesh, "SRTestMeshGeo", options,
               std::filesystem::path("srtest/srtest_mesh_geo.mesh.glsl"),
               std::filesystem::path("srtest/srtest_mesh_geo.frag.glsl")) {}
-
-
-//megamol::moldyn_gl::rendering::mesh_altn_rt::mesh_altn_rt(
-//    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
-//        : ssbo_shader_task(mode, dc_mesh, "SRTestMeshAltn", options,
-//              std::filesystem::path("srtest/srtest_mesh_altn.mesh.glsl"),
-//              std::filesystem::path("srtest/srtest_mesh_altn.frag.glsl")) {}
-
-
-//megamol::moldyn_gl::rendering::mesh_geo_task_rt::mesh_geo_task_rt(
-//    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
-//        : mesh_shader_task("SRTestMeshGeoTask", options, std::filesystem::path("srtest/srtest_mesh_geo_task.task.glsl"),
-//              std::filesystem::path("srtest/srtest_mesh_geo_task.mesh.glsl"),
-//              std::filesystem::path("srtest/srtest_mesh_geo.frag.glsl")) {}
-
-
-//megamol::moldyn_gl::rendering::tex_rt::tex_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-//        : rendering_task(upload_mode::NULL_MODE, "SRTestTex", options, std::filesystem::path("srtest/srtest.vert.glsl"),
-//              std::filesystem::path("srtest/srtest.frag.glsl")) {}
-
-
-//bool megamol::moldyn_gl::rendering::tex_rt::render(GLuint ubo) {
-//    glEnable(GL_PROGRAM_POINT_SIZE);
-//    glEnable(GL_DEPTH_TEST);
-//    auto program = get_program();
-//    program->use();
-//
-//    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
-//
-//    for (int i = 0; i < num_prims_.size(); ++i) {
-//        auto tex = tex_[i];
-//        auto num_prims = num_prims_[i];
-//
-//        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
-//        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
-//        program->setUniform("globalCol", pl_data_.global_color[i]);
-//        program->setUniform("globalRad", pl_data_.global_radii[i]);
-//        // program->setUniform("clip_dist", pl_data_.clip_distance);
-//
-//        program->setUniform("data_tex", 1);
-//        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
-//        auto base_size = sqrt(num_prims);
-//        program->setUniform("base_size", static_cast<unsigned int>(base_size));
-//
-//        glBindBuffer(GL_TEXTURE_BUFFER, buf_[i]);
-//        glActiveTexture(GL_TEXTURE1);
-//        glBindTexture(GL_TEXTURE_BUFFER, tex_[i]);
-//        glDrawArrays(GL_POINTS, 0, num_prims);
-//    }
-//    glBindVertexArray(0);
-//    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-//    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-//
-//    glUseProgram(0);
-//    glDisable(GL_DEPTH_TEST);
-//    glDisable(GL_PROGRAM_POINT_SIZE);
-//
-//    return true;
-//}
-//
-//
-//bool megamol::moldyn_gl::rendering::tex_rt::upload(data_package_t const& package) {
-//    int value;
-//    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &value);
-//    uint32_t num_tex = package.positions.size();
-//
-//    glDeleteTextures(tex_.size(), tex_.data());
-//    tex_.resize(num_tex);
-//    glGenTextures(tex_.size(), tex_.data());
-//
-//    glDeleteBuffers(buf_.size(), buf_.data());
-//    buf_.resize(num_tex);
-//    glCreateBuffers(buf_.size(), buf_.data());
-//
-//    num_prims_ = package.data_sizes;
-//    glActiveTexture(GL_TEXTURE0);
-//    for (uint32_t i = 0; i < package.positions.size(); ++i) {
-//        glNamedBufferStorage(buf_[i],
-//            package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
-//            package.positions[i].data(), 0);
-//
-//        auto total_tex_size = package.positions[i].size() / 4;
-//        auto base_size = std::floor(sqrt(total_tex_size));
-//        auto left_size = total_tex_size / base_size;
-//        glBindTexture(GL_TEXTURE_BUFFER, tex_[i]);
-//        // glTextureStorage2D(tex_[i], 0, GL_RGBA32F, base_size, left_size);
-//
-//        glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, buf_[i]);
-//
-//        // glTextureBuffer(tex_[i], GL_R32F, buf_[i]);
-//        /*glTextureSubImage2D(tex_[i], 0, 0, 0, base_size, left_size, GL_RGBA, GL_FLOAT,
-//            package.positions[i].data());*/
-//        glTexParameteri(GL_TEXTURE_BUFFER, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//        glTexParameteri(GL_TEXTURE_BUFFER, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//        glTexParameteri(GL_TEXTURE_BUFFER, GL_TEXTURE_WRAP_S, GL_REPEAT);
-//        glTexParameteri(GL_TEXTURE_BUFFER, GL_TEXTURE_WRAP_T, GL_REPEAT);
-//        // glBindTextureUnit(0, tex_[i]);
-//    }
-//    glBindTexture(GL_TEXTURE_BUFFER, 0);
-//
-//    pl_data_ = package.pl_data;
-//
-//    return true;
-//}
-//
-//bool megamol::moldyn_gl::rendering::tex_rt::cleanup() {
-//    if (!tex_.empty())
-//        glDeleteTextures(tex_.size(), tex_.data());
-//
-//    if (!buf_.empty())
-//        glDeleteBuffers(buf_.size(), buf_.data());
-//
-//    return true;
-//}
-
-
-//megamol::moldyn_gl::rendering::copy_rt::copy_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-//        : rendering_task(upload_mode::NULL_MODE, "SRTestCopy", options,
-//              std::filesystem::path("srtest/srtest.vert.glsl"), std::filesystem::path("srtest/srtest.frag.glsl")) {
-//    try {
-//        comp_program_ = core::utility::make_glowl_shader(
-//            "SRTestCopyComp", options, std::filesystem::path("srtest/srtest_copy.comp.glsl"));
-//    } catch (...) {
-//        core::utility::log::Log::DefaultLog.WriteError("[copy_rt] Failed to create program");
-//        throw;
-//    }
-//}
-//
-//
-//megamol::moldyn_gl::rendering::copy_rt::~copy_rt() {
-//    cleanup();
-//}
-//
-//
-//bool megamol::moldyn_gl::rendering::copy_rt::render(GLuint ubo) {
-//    glEnable(GL_PROGRAM_POINT_SIZE);
-//    glEnable(GL_DEPTH_TEST);
-//    auto program = get_program();
-//    program->use();
-//    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
-//    for (int i = 0; i < num_prims_.size(); ++i) {
-//        auto num_prims = num_prims_[i];
-//
-//        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
-//        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
-//        program->setUniform("globalCol", pl_data_.global_color[i]);
-//        program->setUniform("globalRad", pl_data_.global_radii[i]);
-//
-//        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, copy_bos_[i]);
-//
-//        glDrawArrays(GL_POINTS, 0, num_prims);
-//    }
-//    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-//    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-//
-//    glUseProgram(0);
-//    glDisable(GL_DEPTH_TEST);
-//    glDisable(GL_PROGRAM_POINT_SIZE);
-//
-//    return true;
-//}
-//
-//
-//bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& package) {
-//    auto const num_ssbos = package.positions.size();
-//
-//    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
-//    copy_bos_.resize(num_ssbos);
-//    glCreateBuffers(copy_bos_.size(), copy_bos_.data());
-//
-//    glDeleteBuffers(xbos_.size(), xbos_.data());
-//    xbos_.resize(num_ssbos);
-//    glCreateBuffers(xbos_.size(), xbos_.data());
-//
-//    glDeleteBuffers(ybos_.size(), ybos_.data());
-//    ybos_.resize(num_ssbos);
-//    glCreateBuffers(ybos_.size(), ybos_.data());
-//
-//    glDeleteBuffers(zbos_.size(), zbos_.data());
-//    zbos_.resize(num_ssbos);
-//    glCreateBuffers(zbos_.size(), zbos_.data());
-//
-//    glDeleteBuffers(radbos_.size(), radbos_.data());
-//    radbos_.resize(num_ssbos);
-//    glCreateBuffers(radbos_.size(), radbos_.data());
-//
-//    glDeleteBuffers(rbos_.size(), rbos_.data());
-//    rbos_.resize(num_ssbos);
-//    glCreateBuffers(rbos_.size(), rbos_.data());
-//
-//    glDeleteBuffers(gbos_.size(), gbos_.data());
-//    gbos_.resize(num_ssbos);
-//    glCreateBuffers(gbos_.size(), gbos_.data());
-//
-//    glDeleteBuffers(bbos_.size(), bbos_.data());
-//    bbos_.resize(num_ssbos);
-//    glCreateBuffers(bbos_.size(), bbos_.data());
-//
-//    glDeleteBuffers(abos_.size(), abos_.data());
-//    abos_.resize(num_ssbos);
-//    glCreateBuffers(abos_.size(), abos_.data());
-//
-//    num_prims_ = package.data_sizes;
-//
-//    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
-//        glNamedBufferData(copy_bos_[i], package.x[i].size() * 16, nullptr, GL_STATIC_COPY);
-//
-//        glNamedBufferStorage(xbos_[i], package.x[i].size() * sizeof(std::decay_t<decltype(package.x[i])>::value_type),
-//            package.x[i].data(), 0);
-//
-//        glNamedBufferStorage(ybos_[i], package.y[i].size() * sizeof(std::decay_t<decltype(package.y[i])>::value_type),
-//            package.y[i].data(), 0);
-//
-//        glNamedBufferStorage(zbos_[i], package.z[i].size() * sizeof(std::decay_t<decltype(package.z[i])>::value_type),
-//            package.z[i].data(), 0);
-//
-//        glNamedBufferStorage(radbos_[i],
-//            package.rad[i].size() * sizeof(std::decay_t<decltype(package.rad[i])>::value_type), package.rad[i].data(),
-//            0);
-//
-//        glNamedBufferStorage(rbos_[i], package.r[i].size() * sizeof(std::decay_t<decltype(package.r[i])>::value_type),
-//            package.r[i].data(), 0);
-//
-//        glNamedBufferStorage(gbos_[i], package.g[i].size() * sizeof(std::decay_t<decltype(package.g[i])>::value_type),
-//            package.g[i].data(), 0);
-//
-//        glNamedBufferStorage(bbos_[i], package.b[i].size() * sizeof(std::decay_t<decltype(package.b[i])>::value_type),
-//            package.b[i].data(), 0);
-//
-//        glNamedBufferStorage(abos_[i], package.a[i].size() * sizeof(std::decay_t<decltype(package.a[i])>::value_type),
-//            package.a[i].data(), 0);
-//    }
-//
-//    pl_data_ = package.pl_data;
-//
-//    comp_program_->use();
-//    for (int i = 0; i < num_prims_.size(); ++i) {
-//        auto num_prims = num_prims_[i];
-//        comp_program_->setUniform("num_points", static_cast<unsigned int>(num_prims));
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
-//
-//        glDispatchCompute(num_prims / 32 + 1, 1, 1);
-//    }
-//    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-//    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-//    glUseProgram(0);
-//
-//    return true;
-//}
-//
-//bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& package,
-//    frontend_resources::PerformanceManager& pm, frontend_resources::PerformanceManager::handle_type handle) {
-//    auto const num_ssbos = package.positions.size();
-//
-//    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
-//    copy_bos_.resize(num_ssbos);
-//    glCreateBuffers(copy_bos_.size(), copy_bos_.data());
-//
-//    glDeleteBuffers(xbos_.size(), xbos_.data());
-//    xbos_.resize(num_ssbos);
-//    glCreateBuffers(xbos_.size(), xbos_.data());
-//
-//    glDeleteBuffers(ybos_.size(), ybos_.data());
-//    ybos_.resize(num_ssbos);
-//    glCreateBuffers(ybos_.size(), ybos_.data());
-//
-//    glDeleteBuffers(zbos_.size(), zbos_.data());
-//    zbos_.resize(num_ssbos);
-//    glCreateBuffers(zbos_.size(), zbos_.data());
-//
-//    glDeleteBuffers(radbos_.size(), radbos_.data());
-//    radbos_.resize(num_ssbos);
-//    glCreateBuffers(radbos_.size(), radbos_.data());
-//
-//    glDeleteBuffers(rbos_.size(), rbos_.data());
-//    rbos_.resize(num_ssbos);
-//    glCreateBuffers(rbos_.size(), rbos_.data());
-//
-//    glDeleteBuffers(gbos_.size(), gbos_.data());
-//    gbos_.resize(num_ssbos);
-//    glCreateBuffers(gbos_.size(), gbos_.data());
-//
-//    glDeleteBuffers(bbos_.size(), bbos_.data());
-//    bbos_.resize(num_ssbos);
-//    glCreateBuffers(bbos_.size(), bbos_.data());
-//
-//    glDeleteBuffers(abos_.size(), abos_.data());
-//    abos_.resize(num_ssbos);
-//    glCreateBuffers(abos_.size(), abos_.data());
-//
-//    num_prims_ = package.data_sizes;
-//
-//    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
-//        glNamedBufferData(copy_bos_[i], package.x[i].size() * 16, nullptr, GL_STATIC_COPY);
-//
-//        glNamedBufferStorage(xbos_[i], package.x[i].size() * sizeof(std::decay_t<decltype(package.x[i])>::value_type),
-//            package.x[i].data(), 0);
-//
-//        glNamedBufferStorage(ybos_[i], package.y[i].size() * sizeof(std::decay_t<decltype(package.y[i])>::value_type),
-//            package.y[i].data(), 0);
-//
-//        glNamedBufferStorage(zbos_[i], package.z[i].size() * sizeof(std::decay_t<decltype(package.z[i])>::value_type),
-//            package.z[i].data(), 0);
-//
-//        glNamedBufferStorage(radbos_[i],
-//            package.rad[i].size() * sizeof(std::decay_t<decltype(package.rad[i])>::value_type), package.rad[i].data(),
-//            0);
-//
-//        glNamedBufferStorage(rbos_[i], package.r[i].size() * sizeof(std::decay_t<decltype(package.r[i])>::value_type),
-//            package.r[i].data(), 0);
-//
-//        glNamedBufferStorage(gbos_[i], package.g[i].size() * sizeof(std::decay_t<decltype(package.g[i])>::value_type),
-//            package.g[i].data(), 0);
-//
-//        glNamedBufferStorage(bbos_[i], package.b[i].size() * sizeof(std::decay_t<decltype(package.b[i])>::value_type),
-//            package.b[i].data(), 0);
-//
-//        glNamedBufferStorage(abos_[i], package.a[i].size() * sizeof(std::decay_t<decltype(package.a[i])>::value_type),
-//            package.a[i].data(), 0);
-//    }
-//
-//    pl_data_ = package.pl_data;
-//
-//#ifdef MEGAMOL_USE_PROFILING
-//    pm.set_transient_comment(handle, "COPY");
-//    pm.start_timer(handle);
-//#endif
-//
-//    comp_program_->use();
-//    for (int i = 0; i < num_prims_.size(); ++i) {
-//        auto num_prims = num_prims_[i];
-//        comp_program_->setUniform("num_points", static_cast<unsigned int>(num_prims));
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
-//
-//        glDispatchCompute(num_prims / 32 + 1, 1, 1);
-//    }
-//    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-//    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-//    glUseProgram(0);
-//
-//#ifdef MEGAMOL_USE_PROFILING
-//    pm.stop_timer(handle);
-//#endif
-//
-//    return true;
-//}
-//
-//bool megamol::moldyn_gl::rendering::copy_rt::cleanup() {
-//    if (!copy_bos_.empty())
-//        glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
-//
-//    if (!xbos_.empty())
-//        glDeleteBuffers(xbos_.size(), xbos_.data());
-//
-//    if (!ybos_.empty())
-//        glDeleteBuffers(ybos_.size(), ybos_.data());
-//
-//    if (!zbos_.empty())
-//        glDeleteBuffers(zbos_.size(), zbos_.data());
-//
-//    if (!radbos_.empty())
-//        glDeleteBuffers(radbos_.size(), radbos_.data());
-//
-//    if (!rbos_.empty())
-//        glDeleteBuffers(rbos_.size(), rbos_.data());
-//
-//    if (!gbos_.empty())
-//        glDeleteBuffers(gbos_.size(), gbos_.data());
-//
-//    if (!bbos_.empty())
-//        glDeleteBuffers(bbos_.size(), bbos_.data());
-//
-//    if (!abos_.empty())
-//        glDeleteBuffers(abos_.size(), abos_.data());
-//
-//    return true;
-//}
-//
-//
-//megamol::moldyn_gl::rendering::copy_vert_rt::copy_vert_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-//        : rendering_task(upload_mode::NULL_MODE, "SRTestCopyVert", options,
-//              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
-//              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {
-//    try {
-//        comp_program_ = core::utility::make_glowl_shader(
-//            "SRTestCopyVertComp", options, std::filesystem::path("srtest/srtest_copy.comp.glsl"));
-//    } catch (...) {
-//        core::utility::log::Log::DefaultLog.WriteError("[copy_rt] Failed to create program");
-//        throw;
-//    }
-//}
-//
-//
-//megamol::moldyn_gl::rendering::copy_vert_rt::~copy_vert_rt() {
-//    cleanup();
-//}
-//
-//
-//bool megamol::moldyn_gl::rendering::copy_vert_rt::render(GLuint ubo) {
-//    glEnable(GL_DEPTH_TEST);
-//    auto program = get_program();
-//    program->use();
-//    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
-//    for (int i = 0; i < num_prims_.size(); ++i) {
-//        auto num_prims = num_prims_[i];
-//
-//        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
-//        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
-//        program->setUniform("globalCol", pl_data_.global_color[i]);
-//        program->setUniform("globalRad", pl_data_.global_radii[i]);
-//
-//        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, copy_bos_[i]);
-//
-//        glDrawArrays(GL_TRIANGLES, 0, num_prims * 6);
-//    }
-//    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-//    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-//
-//    glUseProgram(0);
-//    glDisable(GL_DEPTH_TEST);
-//
-//    return true;
-//}
-//
-//
-//bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& package) {
-//    auto const num_ssbos = package.positions.size();
-//
-//    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
-//    copy_bos_.resize(num_ssbos);
-//    glCreateBuffers(copy_bos_.size(), copy_bos_.data());
-//
-//    glDeleteBuffers(xbos_.size(), xbos_.data());
-//    xbos_.resize(num_ssbos);
-//    glCreateBuffers(xbos_.size(), xbos_.data());
-//
-//    glDeleteBuffers(ybos_.size(), ybos_.data());
-//    ybos_.resize(num_ssbos);
-//    glCreateBuffers(ybos_.size(), ybos_.data());
-//
-//    glDeleteBuffers(zbos_.size(), zbos_.data());
-//    zbos_.resize(num_ssbos);
-//    glCreateBuffers(zbos_.size(), zbos_.data());
-//
-//    glDeleteBuffers(radbos_.size(), radbos_.data());
-//    radbos_.resize(num_ssbos);
-//    glCreateBuffers(radbos_.size(), radbos_.data());
-//
-//    glDeleteBuffers(rbos_.size(), rbos_.data());
-//    rbos_.resize(num_ssbos);
-//    glCreateBuffers(rbos_.size(), rbos_.data());
-//
-//    glDeleteBuffers(gbos_.size(), gbos_.data());
-//    gbos_.resize(num_ssbos);
-//    glCreateBuffers(gbos_.size(), gbos_.data());
-//
-//    glDeleteBuffers(bbos_.size(), bbos_.data());
-//    bbos_.resize(num_ssbos);
-//    glCreateBuffers(bbos_.size(), bbos_.data());
-//
-//    glDeleteBuffers(abos_.size(), abos_.data());
-//    abos_.resize(num_ssbos);
-//    glCreateBuffers(abos_.size(), abos_.data());
-//
-//    num_prims_ = package.data_sizes;
-//
-//    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
-//        glNamedBufferData(copy_bos_[i], package.x[i].size() * 16, nullptr, GL_STATIC_COPY);
-//
-//        glNamedBufferStorage(xbos_[i], package.x[i].size() * sizeof(std::decay_t<decltype(package.x[i])>::value_type),
-//            package.x[i].data(), 0);
-//
-//        glNamedBufferStorage(ybos_[i], package.y[i].size() * sizeof(std::decay_t<decltype(package.y[i])>::value_type),
-//            package.y[i].data(), 0);
-//
-//        glNamedBufferStorage(zbos_[i], package.z[i].size() * sizeof(std::decay_t<decltype(package.z[i])>::value_type),
-//            package.z[i].data(), 0);
-//
-//        glNamedBufferStorage(radbos_[i],
-//            package.rad[i].size() * sizeof(std::decay_t<decltype(package.rad[i])>::value_type), package.rad[i].data(),
-//            0);
-//
-//        glNamedBufferStorage(rbos_[i], package.r[i].size() * sizeof(std::decay_t<decltype(package.r[i])>::value_type),
-//            package.r[i].data(), 0);
-//
-//        glNamedBufferStorage(gbos_[i], package.g[i].size() * sizeof(std::decay_t<decltype(package.g[i])>::value_type),
-//            package.g[i].data(), 0);
-//
-//        glNamedBufferStorage(bbos_[i], package.b[i].size() * sizeof(std::decay_t<decltype(package.b[i])>::value_type),
-//            package.b[i].data(), 0);
-//
-//        glNamedBufferStorage(abos_[i], package.a[i].size() * sizeof(std::decay_t<decltype(package.a[i])>::value_type),
-//            package.a[i].data(), 0);
-//    }
-//
-//    pl_data_ = package.pl_data;
-//
-//    comp_program_->use();
-//    for (int i = 0; i < num_prims_.size(); ++i) {
-//        auto num_prims = num_prims_[i];
-//        comp_program_->setUniform("num_points", static_cast<unsigned int>(num_prims));
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
-//
-//        glDispatchCompute(num_prims / 32 + 1, 1, 1);
-//    }
-//    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-//    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-//    glUseProgram(0);
-//
-//    return true;
-//}
-//
-//bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& package,
-//    frontend_resources::PerformanceManager& pm, frontend_resources::PerformanceManager::handle_type handle) {
-//    auto const num_ssbos = package.positions.size();
-//
-//    glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
-//    copy_bos_.resize(num_ssbos);
-//    glCreateBuffers(copy_bos_.size(), copy_bos_.data());
-//
-//    glDeleteBuffers(xbos_.size(), xbos_.data());
-//    xbos_.resize(num_ssbos);
-//    glCreateBuffers(xbos_.size(), xbos_.data());
-//
-//    glDeleteBuffers(ybos_.size(), ybos_.data());
-//    ybos_.resize(num_ssbos);
-//    glCreateBuffers(ybos_.size(), ybos_.data());
-//
-//    glDeleteBuffers(zbos_.size(), zbos_.data());
-//    zbos_.resize(num_ssbos);
-//    glCreateBuffers(zbos_.size(), zbos_.data());
-//
-//    glDeleteBuffers(radbos_.size(), radbos_.data());
-//    radbos_.resize(num_ssbos);
-//    glCreateBuffers(radbos_.size(), radbos_.data());
-//
-//    glDeleteBuffers(rbos_.size(), rbos_.data());
-//    rbos_.resize(num_ssbos);
-//    glCreateBuffers(rbos_.size(), rbos_.data());
-//
-//    glDeleteBuffers(gbos_.size(), gbos_.data());
-//    gbos_.resize(num_ssbos);
-//    glCreateBuffers(gbos_.size(), gbos_.data());
-//
-//    glDeleteBuffers(bbos_.size(), bbos_.data());
-//    bbos_.resize(num_ssbos);
-//    glCreateBuffers(bbos_.size(), bbos_.data());
-//
-//    glDeleteBuffers(abos_.size(), abos_.data());
-//    abos_.resize(num_ssbos);
-//    glCreateBuffers(abos_.size(), abos_.data());
-//
-//    num_prims_ = package.data_sizes;
-//
-//    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
-//        glNamedBufferData(copy_bos_[i], package.x[i].size() * 16, nullptr, GL_STATIC_COPY);
-//
-//        glNamedBufferStorage(xbos_[i], package.x[i].size() * sizeof(std::decay_t<decltype(package.x[i])>::value_type),
-//            package.x[i].data(), 0);
-//
-//        glNamedBufferStorage(ybos_[i], package.y[i].size() * sizeof(std::decay_t<decltype(package.y[i])>::value_type),
-//            package.y[i].data(), 0);
-//
-//        glNamedBufferStorage(zbos_[i], package.z[i].size() * sizeof(std::decay_t<decltype(package.z[i])>::value_type),
-//            package.z[i].data(), 0);
-//
-//        glNamedBufferStorage(radbos_[i],
-//            package.rad[i].size() * sizeof(std::decay_t<decltype(package.rad[i])>::value_type), package.rad[i].data(),
-//            0);
-//
-//        glNamedBufferStorage(rbos_[i], package.r[i].size() * sizeof(std::decay_t<decltype(package.r[i])>::value_type),
-//            package.r[i].data(), 0);
-//
-//        glNamedBufferStorage(gbos_[i], package.g[i].size() * sizeof(std::decay_t<decltype(package.g[i])>::value_type),
-//            package.g[i].data(), 0);
-//
-//        glNamedBufferStorage(bbos_[i], package.b[i].size() * sizeof(std::decay_t<decltype(package.b[i])>::value_type),
-//            package.b[i].data(), 0);
-//
-//        glNamedBufferStorage(abos_[i], package.a[i].size() * sizeof(std::decay_t<decltype(package.a[i])>::value_type),
-//            package.a[i].data(), 0);
-//    }
-//
-//    pl_data_ = package.pl_data;
-//
-//#ifdef MEGAMOL_USE_PROFILING
-//    pm.set_transient_comment(handle, "COPY_VERT");
-//    pm.start_timer(handle);
-//#endif
-//
-//    comp_program_->use();
-//    for (int i = 0; i < num_prims_.size(); ++i) {
-//        auto num_prims = num_prims_[i];
-//        comp_program_->setUniform("num_points", static_cast<unsigned int>(num_prims));
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
-//
-//        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, copy_bos_[i]);
-//
-//        glDispatchCompute(num_prims / 32 + 1, 1, 1);
-//    }
-//    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-//    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-//    glUseProgram(0);
-//
-//#ifdef MEGAMOL_USE_PROFILING
-//    pm.stop_timer(handle);
-//#endif
-//
-//    return true;
-//}
-//
-//
-//bool megamol::moldyn_gl::rendering::copy_vert_rt::cleanup() {
-//    if (!copy_bos_.empty())
-//        glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
-//
-//    if (!xbos_.empty())
-//        glDeleteBuffers(xbos_.size(), xbos_.data());
-//
-//    if (!ybos_.empty())
-//        glDeleteBuffers(ybos_.size(), ybos_.data());
-//
-//    if (!zbos_.empty())
-//        glDeleteBuffers(zbos_.size(), zbos_.data());
-//
-//    if (!radbos_.empty())
-//        glDeleteBuffers(radbos_.size(), radbos_.data());
-//
-//    if (!rbos_.empty())
-//        glDeleteBuffers(rbos_.size(), rbos_.data());
-//
-//    if (!gbos_.empty())
-//        glDeleteBuffers(gbos_.size(), gbos_.data());
-//
-//    if (!bbos_.empty())
-//        glDeleteBuffers(bbos_.size(), bbos_.data());
-//
-//    if (!abos_.empty())
-//        glDeleteBuffers(abos_.size(), abos_.data());
-//
-//    return true;
-//}
 
 
 megamol::moldyn_gl::rendering::ssbo_quad_rt::ssbo_quad_rt(
@@ -1639,23 +883,12 @@ bool megamol::moldyn_gl::rendering::ssbo_muzic_rt::render(GLuint ubo) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbos_[i]);
         }
 
-        // glDrawArrays(GL_POINTS, 0, num_prims);
-        //dc_muzic(num_prims, indices_[i]);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ind_buf_[i]);
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, cmd_buf_[i]);
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, offset_buf_[i]);
 
         glMultiDrawElementsIndirect(GL_TRIANGLE_STRIP, GL_UNSIGNED_INT, 0, cmd_count_[i], 0);
-
-        /*constexpr int per_iter = 10000000;
-        auto num_iter = num_prims / per_iter + 1;
-        for (int iter = 0; iter < num_iter; ++iter) {
-            auto num_items = iter * per_iter;
-            num_items = std::fmin(num_prims - num_items, per_iter);
-            program->setUniform("offset", iter * per_iter);
-            glDrawElements(GL_TRIANGLE_STRIP, num_items * 6 - 2, GL_UNSIGNED_INT, nullptr);
-        }*/
     }
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
