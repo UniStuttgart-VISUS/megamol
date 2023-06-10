@@ -7,8 +7,6 @@ megamol::moldyn_gl::rendering::mesh_shader_task::~mesh_shader_task() {
 
 
 bool megamol::moldyn_gl::rendering::mesh_shader_task::render(GLuint ubo) {
-    /*glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);*/
     auto program = get_program();
     program->use();
 
@@ -46,8 +44,6 @@ bool megamol::moldyn_gl::rendering::mesh_shader_task::render(GLuint ubo) {
 
             program->setUniform("num_points", static_cast<unsigned int>(num_prims));
 
-            /*glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbo);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbo);*/
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
@@ -63,40 +59,12 @@ bool megamol::moldyn_gl::rendering::mesh_shader_task::render(GLuint ubo) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     glUseProgram(0);
-    /*glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);*/
 
     return true;
 }
 
 
 bool megamol::moldyn_gl::rendering::mesh_shader_task::upload(data_package_t const& package) {
-    /*auto const num_ssbos = package.positions.size();
-
-    glDeleteBuffers(vbos_.size(), vbos_.data());
-    vbos_.resize(num_ssbos);
-    glCreateBuffers(vbos_.size(), vbos_.data());
-
-    glDeleteBuffers(cbos_.size(), cbos_.data());
-    cbos_.resize(num_ssbos);
-    glCreateBuffers(cbos_.size(), cbos_.data());
-
-    num_prims_ = package.data_sizes;
-
-    for (std::decay_t<decltype(num_ssbos)> i = 0; i < num_ssbos; ++i) {
-        glNamedBufferStorage(vbos_[i],
-            package.positions[i].size() * sizeof(std::decay_t<decltype(package.positions[i])>::value_type),
-            package.positions[i].data(), 0);
-
-        glNamedBufferStorage(cbos_[i],
-            package.colors[i].size() * sizeof(std::decay_t<decltype(package.colors[i])>::value_type),
-            package.colors[i].data(), 0);
-    }
-
-    pl_data_ = package.pl_data;
-
-    return true;*/
-
     if (get_mode() == upload_mode::BUFFER_ARRAY) {
         bufArray = &package.bufArray;
     } else {
