@@ -150,6 +150,8 @@ private:
     void renderAmbientOcclusion();
 
     void generate3ConeDirections(std::vector<glm::vec4>& directions, float apex);
+
+    bool updateVolumeData(const unsigned int frameID);
 };
 
 } // namespace megamol::compositing_gl

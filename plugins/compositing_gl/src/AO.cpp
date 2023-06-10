@@ -120,7 +120,11 @@ bool megamol::compositing_gl::AO::create(void) {
     lighting_prgm_ = core::utility::make_glowl_shader("sphere_mdao_deferred", lighting_so,
         "moldyn_gl/sphere_renderer/sphere_mdao_deferred.vert.glsl",
         "moldyn_gl/sphere_renderer/sphere_mdao_deferred.frag.glsl");
-    
+
+    // TODO glowl implementation of GLSLprogram misses this functionality
+    auto ubo_idx = glGetUniformBlockIndex(lighting_prgm_->getHandle(), "cone_buffer");
+    glUniformBlockBinding(lighting_prgm_->getHandle(), ubo_idx, (GLuint)AO_DIR_UBO_BINDING_POINT);
+
     return true;
 }
 
@@ -134,6 +138,7 @@ bool megamol::compositing_gl::AO::Render(mmstd_gl::CallRender3DGL& call) {
     auto callDepth = depth_tex_slot_.CallAs<CallTexture2D>();
     auto callColor = color_tex_slot_.CallAs<CallTexture2D>();
     auto callCamera = camera_slot_.CallAs<CallCamera>();
+    auto callVoxel = voxels_tex_slot_.CallAs<VolumetricDataCall>();
 
     if (callNormal == NULL)
         return false;
@@ -142,6 +147,8 @@ bool megamol::compositing_gl::AO::Render(mmstd_gl::CallRender3DGL& call) {
     if (callColor == NULL)
         return false;
     if (callCamera == NULL)
+        return false;
+    if (callVoxel == NULL)
         return false;
 
 
@@ -182,7 +189,8 @@ bool megamol::compositing_gl::AO::Render(mmstd_gl::CallRender3DGL& call) {
         //    final_output_->reload(tx_layout, nullptr);
         //}
 
-
+        
+        updateVolumeData(call.Time());
 
 
         // obtain camera information
@@ -251,6 +259,35 @@ void megamol::compositing_gl::AO::generate3ConeDirections(std::vector<glm::vec4>
 }
 
 
+bool megamol::compositing_gl::AO::updateVolumeData(const unsigned int frameID) {
+    VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
+
+    if (c_voxel != nullptr) {
+        c_voxel->SetFrameID(frameID);
+        do {
+            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "SphereRenderer: could not get all extents (VolumetricDataCall)");
+                return false;
+            }
+            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "SphereRenderer: could not get metadata (VolumetricDataCall)");
+                return false;
+            }
+            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_DATA)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "SphereRenderer: could not get data (VolumetricDataCall)");
+                return false;
+            }
+
+            // TODO get datahash and frameId
+        } while (c_voxel->FrameID() != frameID);
+    }
+
+    return true;
+}
+
 void megamol::compositing_gl::AO::renderAmbientOcclusion(){
 
     
@@ -308,23 +345,31 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
 
     // voxel texture
     VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
-    if (c_voxel != nullptr) {
-        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "AO: could not get metadata (VolumetricDataCall)");
-        } else {
-            // get volume size from metadata
-            //int new_vol_size = c_voxel->GetMetadata()->Resolution[0]; //TODO access correct value
-            //if (new_vol_size != vol_size_) {
-            //    vol_size_ = new_vol_size;
-            //    vol_size_changed_ = true;
-            //}
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
-            glActiveTexture(GL_TEXTURE0);
-        }
-    }
+    //if (c_voxel == NULL) {
+    //    return; // TODO
+    //}
+    //if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
+    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+    //        "AO: could not get all extents (VolumetricDataCall)");
+    //    return;
+    //}
+    //if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
+    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+    //        "AO: could not get metadata (VolumetricDataCall)");
+    //    return;
+    //}
+    //if (!(*c_voxel)(VolumetricDataCall::IDX_GET_DATA)) {
+    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+    //        "AO: could not get data (VolumetricDataCall)");
+    //    return;
+    //}
 
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
+    glActiveTexture(GL_TEXTURE0);
+
+
+    // shader
     this->lighting_prgm_->use();
 
     ao_dir_ubo_->bind((GLuint)AO_DIR_UBO_BINDING_POINT);

@@ -39,7 +39,7 @@ void main()
 
     float depth = texelFetch(inDepthTex, texelCoord, 0).r;
 
-    /*if (depth == 1.0) {
+    if (depth == 1.0) {
         discard;
         return;
     }
@@ -60,11 +60,12 @@ void main()
     if (normal.w < 1.0)
         lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);
 
-    outColor = vec4(lightCol, 1.0);*/
+    outColor = vec4(lightCol, 1.0);
 
     //outColor = vec4(1.0, 0.0, 0.0, 1.0);
-    outColor = vec4(gl_FragCoord.xy/vec2(inWidth, inHeight), 0.0, 1.0);
+    //outColor = vec4(gl_FragCoord.xy/vec2(inWidth, inHeight), 0.0, 1.0);
     //outColor = vec4(texelFetch(inNormalsTex, texelCoord, 0).xyz, 1.0);
+    //outColor = vec4(texelFetch(inDepthTex, texelCoord, 0).xyz, 1.0);
     //outColor = texture(inNormalsTex, gl_FragCoord.xy/vec2(inWidth, inHeight));
     gl_FragDepth = depth;
 }
