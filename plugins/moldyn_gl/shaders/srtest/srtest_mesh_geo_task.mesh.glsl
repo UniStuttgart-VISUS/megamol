@@ -33,7 +33,6 @@ IN;
 
 out Point {
     flat vec4 pointColor;
-    //flat vec3 objPos;
     flat vec3 oc_pos;
     flat float rad;
     flat float sqrRad;
@@ -42,7 +41,7 @@ pp[];
 
 void main() {
     uint g_idx = IN.baseID + IN.subIDs[gl_WorkGroupID.x];
-    //uint g_idx = gl_GlobalInvocationID.x; // TODO Check size
+    //uint g_idx = gl_GlobalInvocationID.x;
     //if (g_idx < num_points) {
         uint l_idx = gl_LocalInvocationID.x;
 
@@ -77,7 +76,6 @@ void main() {
             v[i] /= v[i].w;
 
             pp[l_idx * NUM_V + i].pointColor = pointColor;
-            //pp[l_idx * NUM_V + i].objPos = objPos;
 
             pp[l_idx * NUM_V + i].oc_pos = oc_pos;
 
@@ -96,6 +94,5 @@ void main() {
         gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 4] = l_idx * NUM_V + 2;
         gl_PrimitiveIndicesNV[l_idx * 3 * NUM_P + 5] = l_idx * NUM_V + 3;
     //}
-    //gl_PrimitiveCountNV = min(num_points - gl_WorkGroupID.x * gl_WorkGroupSize.x, gl_WorkGroupSize.x) * NUM_P;
         gl_PrimitiveCountNV = WARP * NUM_P;
 }
