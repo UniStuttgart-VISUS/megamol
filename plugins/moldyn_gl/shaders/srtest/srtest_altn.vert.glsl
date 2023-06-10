@@ -19,11 +19,6 @@ flat out vec4 ve3;
 flat out vec2 vb;
 flat out float l;
 
-//flat out vec3 tt0;
-//flat out vec3 tt1;
-//flat out vec3 tt2;
-//flat out vec3 tt3;
-
 #include "srtest_ubo.glsl"
 
 #ifdef __SRTEST_VAO__
@@ -37,14 +32,8 @@ flat out float l;
 void main(void) {
     access_data(gl_VertexID, objPos, pointColor, rad);
 
-    // oc_pos = camPos - objPos;
     oc_pos = objPos - camPos;
     sqrRad = rad * rad;
-
-    /*vec4 projPos;
-    float l;
-    touchplane(objPos, rad, projPos, l);*/
-
 
     vec2 mins, maxs;
 
@@ -71,11 +60,6 @@ void main(void) {
     ve1.w = dot(oc_pos, ve1.xyz);
     ve2.w = dot(oc_pos, ve2.xyz);
     ve3.w = dot(oc_pos, ve3.xyz);
-
-    //tt0 = ve0.w * ve0.xyz - oc_pos;
-    //tt1 = ve1.w * ve1.xyz - oc_pos;
-    //tt2 = ve2.w * ve2.xyz - oc_pos;
-    //tt3 = ve3.w * ve3.xyz - oc_pos;
 
     v0 = MVP * v0;
     v1 = MVP * v1;
