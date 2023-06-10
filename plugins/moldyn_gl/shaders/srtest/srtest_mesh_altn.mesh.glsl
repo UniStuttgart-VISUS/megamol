@@ -36,20 +36,14 @@ out Point {
 pp[];
 
 void main() {
-    uint g_idx = gl_GlobalInvocationID.x; // TODO Check size
+    uint g_idx = gl_GlobalInvocationID.x;
     if (g_idx < num_points) {
         uint l_idx = gl_LocalInvocationID.x;
 
         access_data(g_idx, pp[l_idx].objPos, pp[l_idx].pointColor, pp[l_idx].rad);
 
-        // oc_pos = camPos - objPos;
         pp[l_idx].oc_pos = pp[l_idx].objPos - camPos;
         pp[l_idx].sqrRad = pp[l_idx].rad * pp[l_idx].rad;
-
-        /*vec4 projPos;
-        float l;
-        touchplane(objPos, rad, projPos, l);*/
-
 
         vec2 mins, maxs;
 
@@ -76,11 +70,6 @@ void main() {
         pp[l_idx].ve1.w = dot(pp[l_idx].oc_pos, pp[l_idx].ve1.xyz);
         pp[l_idx].ve2.w = dot(pp[l_idx].oc_pos, pp[l_idx].ve2.xyz);
         pp[l_idx].ve3.w = dot(pp[l_idx].oc_pos, pp[l_idx].ve3.xyz);
-
-        // tt0 = ve0.w * ve0.xyz - oc_pos;
-        // tt1 = ve1.w * ve1.xyz - oc_pos;
-        // tt2 = ve2.w * ve2.xyz - oc_pos;
-        // tt3 = ve3.w * ve3.xyz - oc_pos;
 
         v0 = MVP * v0;
         v1 = MVP * v1;
