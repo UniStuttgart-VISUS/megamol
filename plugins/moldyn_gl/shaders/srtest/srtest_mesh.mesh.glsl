@@ -20,18 +20,15 @@ uniform bool useGlobalRad;
 #include "srtest_touchplane.glsl"
 
 out Point {
-    //flat vec3 objPos;
     flat float rad;
     flat float sqrRad;
     flat vec4 pointColor;
     flat vec3 oc_pos;
-    //flat float c;
-    //flat vec3 new_camPos;
 }
 pp[];
 
 void main() {
-    uint g_idx = gl_GlobalInvocationID.x; // TODO Check size
+    uint g_idx = gl_GlobalInvocationID.x;
     if (g_idx < num_points) {
         uint l_idx = gl_LocalInvocationID.x;
 
@@ -40,12 +37,9 @@ void main() {
 
         pp[l_idx].oc_pos = objPos - camPos;
         pp[l_idx].sqrRad = pp[l_idx].rad * pp[l_idx].rad;
-        //pp[l_idx].c = dot(pp[l_idx].oc_pos, pp[l_idx].oc_pos) - pp[l_idx].sqrRad;
-        //pp[l_idx].new_camPos = camPos - pp[l_idx].objPos;
 
         vec4 projPos;
         float l;
-        //touchplane(pp[l_idx].objPos, pp[l_idx].rad, projPos, l);
         touchplane_old(objPos, pp[l_idx].rad, pp[l_idx].oc_pos, projPos, l);   
 
         gl_MeshVerticesNV[l_idx].gl_Position = projPos;
