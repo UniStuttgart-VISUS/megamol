@@ -7,7 +7,6 @@ uniform bool useGlobalCol;
 uniform bool useGlobalRad;
 
 out VPoint {
-    //flat vec3  objPos;
     flat float rad;
     flat float sqrRad;
     flat vec4  pointColor;
