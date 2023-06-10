@@ -27,8 +27,6 @@ void intersection(vec3 objPos, float sqrRad, vec3 oc_pos, float c, float rad, ou
 
 bool intersection_old(vec3 oc_pos, float sqrRad, float rad, out vec3 normal, out vec3 ray, out float t) {
     // transform fragment coordinates from window coordinates to view coordinates.
-    /*vec4 coord =
-        vec4(2.0f * (gl_FragCoord.xy / viewAttr.zw) - 1.0f, (2.0f * gl_FragCoord.z) / (far - near) - 1.0f, 1.0f);*/
     vec4 coord = gl_FragCoord * vec4(2.0f / viewAttr.z, 2.0f / viewAttr.w, 2.0, 0.0) + vec4(-1.0, -1.0, -1.0, 1.0);
 
     // transform fragment coordinates from view coordinates to object coordinates.

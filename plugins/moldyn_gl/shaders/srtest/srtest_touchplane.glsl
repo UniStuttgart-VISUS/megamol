@@ -171,7 +171,6 @@ void touchplane_old(vec3 objPos, float rad, vec3 oc_pos, out vec4 projPos, out f
     cpj2 *= p.y;
     cpm2 *= h.y;
 
-    // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
     projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
@@ -248,7 +247,6 @@ void touchplane_old(vec3 objPos, float rad, vec3 oc_pos, out mat4 v) {
     cpj2 *= p.y;
     cpm2 *= h.y;
 
-    // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
     projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
@@ -327,7 +325,6 @@ void touchplane_old_v2(vec3 objPos, float rad, vec3 oc_pos, out mat4 v) {
     cpj2 *= p.y;
     cpm2 *= h.y;
 
-    // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
     projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
