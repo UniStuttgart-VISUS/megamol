@@ -28,7 +28,6 @@ uniform bool useGlobalRad;
 
 out Point {
     flat vec4 pointColor;
-    //flat vec3 objPos;
     flat vec3 oc_pos;
     flat float rad;
     flat float sqrRad;
@@ -36,7 +35,7 @@ out Point {
 pp[];
 
 void main() {
-    uint g_idx = gl_GlobalInvocationID.x; // TODO Check size
+    uint g_idx = gl_GlobalInvocationID.x;
     if (g_idx < num_points) {
         uint l_idx = gl_LocalInvocationID.x;
 
@@ -48,37 +47,6 @@ void main() {
         vec3 oc_pos = objPos - camPos;
         float sqrRad = rad * rad;
 
-        /*float dd = dot(oc_pos, oc_pos);
-
-        float s = (sqrRad) / (dd);
-
-        float vi = rad / sqrt(1.0f - s);
-
-        vec3 vr = normalize(cross(oc_pos, camUp)) * vi;
-        vec3 vu = normalize(cross(oc_pos, vr)) * vi;
-
-        vec4 v[NUM_V];
-        v[0] = vec4(objPos - vr - vu, 1.0f);
-        v[1] = vec4(objPos + vr - vu, 1.0f);
-        v[2] = vec4(objPos + vr + vu, 1.0f);
-        v[3] = vec4(objPos - vr + vu, 1.0f);*/
-
-        /*v[0] = MVP * v[0];
-        v[1] = MVP * v[1];
-        v[2] = MVP * v[2];
-        v[3] = MVP * v[3];*/
-
-        /*vec4 projPos = MVP * vec4(objPos - rad * (camDir), 1.0f);
-        projPos = projPos / projPos.w;*/
-
-        /*mat4 v;
-        touchplane_old(objPos, rad, oc_pos, v);*/
-
-        //vec3 fac = vec3(1.0f);
-        /*if (isOutsideP(v[0], v[1], v[2], v[3], rad)) {
-            fac = vec3(0.0f);
-        }*/
-
         mat4 v;
 #ifdef __SRTEST_CAM_ALIGNED__
         touchplane(objPos, rad, oc_pos, v);
@@ -87,19 +55,13 @@ void main() {
 #endif
 
         for (int i = 0; i < NUM_V; ++i) {
-            //v[i] = MVP * v[i];
-            //v[i] /= v[i].w;
-
             pp[l_idx * NUM_V + i].pointColor = pointColor;
-            //pp[l_idx * NUM_V + i].objPos = objPos;
 
             pp[l_idx * NUM_V + i].oc_pos = oc_pos;
 
             pp[l_idx * NUM_V + i].rad = rad;
             pp[l_idx * NUM_V + i].sqrRad = sqrRad;
 
-
-            //gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = vec4(v[i].xy * fac.xy, projPos.z * fac.z, 1.0f);
             gl_MeshVerticesNV[l_idx * NUM_V + i].gl_Position = v[i];
         }
 
