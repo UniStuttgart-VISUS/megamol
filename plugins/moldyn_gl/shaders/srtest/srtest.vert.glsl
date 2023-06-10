@@ -6,7 +6,6 @@ uniform float globalRad;
 uniform bool useGlobalCol;
 uniform bool useGlobalRad;
 
-//flat out vec3 objPos;
 flat out float rad;
 flat out float sqrRad;
 flat out vec4 pointColor;
