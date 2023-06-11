@@ -2,8 +2,8 @@
 
 #include <array>
 
-#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 namespace megamol::test_gl::rendering {
 struct per_list_package {
@@ -71,7 +71,8 @@ enum class upload_mode { POS_COL_SEP, FULL_SEP, VEC3_SEP, NO_SEP, BUFFER_ARRAY, 
 
 using upload_mode_ut = std::underlying_type_t<upload_mode>;
 
-static inline std::array<std::string, 6> upload_mode_string = {"POS_COL_SEP", "FULL_SEP", "VEC3_SEP", "NO_SEP", "BUFFER_ARRAY", "NULL_MODE"};
+static inline std::array<std::string, 6> upload_mode_string = {
+    "POS_COL_SEP", "FULL_SEP", "VEC3_SEP", "NO_SEP", "BUFFER_ARRAY", "NULL_MODE"};
 
 class rendering_task {
 public:
