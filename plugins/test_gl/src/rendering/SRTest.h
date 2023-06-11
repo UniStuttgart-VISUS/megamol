@@ -208,8 +208,11 @@ private:
 
     using method_ut = std::underlying_type_t<method_e>;
 
-    std::array<std::string, 10> method_strings = {"VAO", "SSBO", "SSBO_GEO", "SSBO_VERT", "SSBO_QUAD", "SSBO_STRIP",
-        "SSBO_MUZIC", "MESH", "MESH_GEO", "MESH_GEO_TASK"};
+    /*std::array<std::string, 10> method_strings = {"VAO", "SSBO", "SSBO_GEO", "SSBO_VERT", "SSBO_QUAD", "SSBO_STRIP",
+        "SSBO_MUZIC", "MESH", "MESH_GEO", "MESH_GEO_TASK"};*/
+
+    std::array<std::string, 10> method_strings = {"VAO", "Point_Classic", "Geometry_Shader", "Triangles_Classic",
+        "Quads", "Triangle_Strip", "SSBO_MUZIC", "Point_Mesh_Shader", "Triangles_Mesh_Shader", "MESH_GEO_TASK"};
 
     bool Render(mmstd_gl::CallRender3DGL& call) override;
 

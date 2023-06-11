@@ -34,16 +34,26 @@ megamol::test_gl::rendering::SRTest::SRTest()
     this->MakeSlotAvailable(&this->getLightsSlot);
 
     auto ep = new core::param::EnumParam(static_cast<method_ut>(method_e::VAO));
-    ep->SetTypePair(static_cast<method_ut>(method_e::VAO), "VAO");
-    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO), "SSBO");
-    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_GEO), "SSBO_GEO");
-    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_VERT), "SSBO_VERT");
-    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_QUAD), "SSBO_QUAD");
-    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_STRIP), "SSBO_STRIP");
-    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_MUZIC), "SSBO_MUZIC");
-    ep->SetTypePair(static_cast<method_ut>(method_e::MESH), "MESH");
-    ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO), "MESH_GEO");
-    ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_TASK), "MESH_GEO_TASK");
+    ep->SetTypePair(
+        static_cast<method_ut>(method_e::VAO), method_strings[static_cast<method_ut>(method_e::VAO)].c_str());
+    ep->SetTypePair(
+        static_cast<method_ut>(method_e::SSBO), method_strings[static_cast<method_ut>(method_e::SSBO)].c_str());
+    ep->SetTypePair(
+        static_cast<method_ut>(method_e::SSBO_GEO), method_strings[static_cast<method_ut>(method_e::SSBO_GEO)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_VERT),
+        method_strings[static_cast<method_ut>(method_e::SSBO_VERT)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_QUAD),
+        method_strings[static_cast<method_ut>(method_e::SSBO_QUAD)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_STRIP),
+        method_strings[static_cast<method_ut>(method_e::SSBO_STRIP)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_MUZIC),
+        method_strings[static_cast<method_ut>(method_e::SSBO_MUZIC)].c_str());
+    ep->SetTypePair(
+        static_cast<method_ut>(method_e::MESH), method_strings[static_cast<method_ut>(method_e::MESH)].c_str());
+    ep->SetTypePair(
+        static_cast<method_ut>(method_e::MESH_GEO), method_strings[static_cast<method_ut>(method_e::MESH_GEO)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_TASK),
+        method_strings[static_cast<method_ut>(method_e::MESH_GEO_TASK)].c_str());
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
 
