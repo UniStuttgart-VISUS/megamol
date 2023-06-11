@@ -700,8 +700,8 @@ void megamol::test_gl::rendering::SRTest::loadData(geocalls::MultiParticleDataCa
 
 
 megamol::test_gl::rendering::vao_rt::vao_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : rendering_task(upload_mode::NULL_MODE, "SRTestVAO", options, std::filesystem::path("srtest/srtest.vert.glsl"),
-              std::filesystem::path("srtest/srtest.frag.glsl")) {}
+        : rendering_task(upload_mode::NULL_MODE, "SRTestVAO", options, std::filesystem::path("test_gl/srtest/srtest.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest.frag.glsl")) {}
 
 
 bool megamol::test_gl::rendering::vao_rt::render(GLuint ubo) {
@@ -790,56 +790,56 @@ bool megamol::test_gl::rendering::vao_rt::cleanup() {
 
 
 megamol::test_gl::rendering::ssbo_rt::ssbo_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(mode, dc_points, "SRTestSSBO", options, std::filesystem::path("srtest/srtest.vert.glsl"),
-              std::filesystem::path("srtest/srtest.frag.glsl")) {}
+        : ssbo_shader_task(mode, dc_points, "SRTestSSBO", options, std::filesystem::path("test_gl/srtest/srtest.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest.frag.glsl")) {}
 
 
 megamol::test_gl::rendering::ssbo_geo_rt::ssbo_geo_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_points, "SRTestSSBOGeo", options,
-              std::filesystem::path("srtest/srtest_geo.vert.glsl"),
-              std::filesystem::path("srtest/srtest_geo.geom.glsl"),
-              std::filesystem::path("srtest/srtest_geo.frag.glsl")) {}
+              std::filesystem::path("test_gl/srtest/srtest_geo.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_geo.geom.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_geo.frag.glsl")) {}
 
 
 megamol::test_gl::rendering::ssbo_vert_rt::ssbo_vert_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_verts, "SRTestSSBOVert", options,
-              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
-              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {}
+              std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
 
 megamol::test_gl::rendering::mesh_rt::mesh_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(mode, dc_mesh, "SRTestMesh", options, std::filesystem::path("srtest/srtest_mesh.mesh.glsl"),
-              std::filesystem::path("srtest/srtest_mesh.frag.glsl")) {}
+        : ssbo_shader_task(mode, dc_mesh, "SRTestMesh", options, std::filesystem::path("test_gl/srtest/srtest_mesh.mesh.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_mesh.frag.glsl")) {}
 
 
 megamol::test_gl::rendering::mesh_geo_rt::mesh_geo_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_mesh, "SRTestMeshGeo", options,
-              std::filesystem::path("srtest/srtest_mesh_geo.mesh.glsl"),
-              std::filesystem::path("srtest/srtest_mesh_geo.frag.glsl")) {}
+              std::filesystem::path("test_gl/srtest/srtest_mesh_geo.mesh.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_mesh_geo.frag.glsl")) {}
 
 
 megamol::test_gl::rendering::ssbo_quad_rt::ssbo_quad_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_quads, "SRTestSSBOQuad", options,
-              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
-              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {}
+              std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
 
 megamol::test_gl::rendering::ssbo_strip_rt::ssbo_strip_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_strip, "SRTestSSBOStrip", options,
-              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
-              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {}
+              std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
 
 megamol::test_gl::rendering::ssbo_muzic_rt::ssbo_muzic_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_strip, "SRTestSSBOMuzic", options,
-              std::filesystem::path("srtest/srtest_vert.vert.glsl"),
-              std::filesystem::path("srtest/srtest_vert.frag.glsl")) {}
+              std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
 
 bool megamol::test_gl::rendering::ssbo_muzic_rt::render(GLuint ubo) {
