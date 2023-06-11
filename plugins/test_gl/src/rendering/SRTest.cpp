@@ -700,7 +700,8 @@ void megamol::test_gl::rendering::SRTest::loadData(geocalls::MultiParticleDataCa
 
 
 megamol::test_gl::rendering::vao_rt::vao_rt(msf::ShaderFactoryOptionsOpenGL const& options)
-        : rendering_task(upload_mode::NULL_MODE, "SRTestVAO", options, std::filesystem::path("test_gl/srtest/srtest.vert.glsl"),
+        : rendering_task(upload_mode::NULL_MODE, "SRTestVAO", options,
+              std::filesystem::path("test_gl/srtest/srtest.vert.glsl"),
               std::filesystem::path("test_gl/srtest/srtest.frag.glsl")) {}
 
 
@@ -790,7 +791,8 @@ bool megamol::test_gl::rendering::vao_rt::cleanup() {
 
 
 megamol::test_gl::rendering::ssbo_rt::ssbo_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(mode, dc_points, "SRTestSSBO", options, std::filesystem::path("test_gl/srtest/srtest.vert.glsl"),
+        : ssbo_shader_task(mode, dc_points, "SRTestSSBO", options,
+              std::filesystem::path("test_gl/srtest/srtest.vert.glsl"),
               std::filesystem::path("test_gl/srtest/srtest.frag.glsl")) {}
 
 
@@ -810,7 +812,8 @@ megamol::test_gl::rendering::ssbo_vert_rt::ssbo_vert_rt(
 
 
 megamol::test_gl::rendering::mesh_rt::mesh_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
-        : ssbo_shader_task(mode, dc_mesh, "SRTestMesh", options, std::filesystem::path("test_gl/srtest/srtest_mesh.mesh.glsl"),
+        : ssbo_shader_task(mode, dc_mesh, "SRTestMesh", options,
+              std::filesystem::path("test_gl/srtest/srtest_mesh.mesh.glsl"),
               std::filesystem::path("test_gl/srtest/srtest_mesh.frag.glsl")) {}
 
 
