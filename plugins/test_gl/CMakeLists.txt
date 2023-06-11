@@ -9,6 +9,7 @@ megamol_plugin(test_gl
     opengl
   DEPENDS_PLUGINS
     mmstd
+    mmstd_gl
     geometry_calls
     # plugin1
     # plugin2

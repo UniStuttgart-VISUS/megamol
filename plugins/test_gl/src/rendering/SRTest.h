@@ -149,7 +149,9 @@ class SRTest : public mmstd_gl::Renderer3DModuleGL {
 public:
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         /*std::vector<std::string> resources = */ ModuleGL::requested_lifetime_resources(req);
+#ifdef MEGAMOL_USE_PROFILING
         req.require<frontend_resources::PerformanceManager>();
+#endif
         //resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
         //return resources;
     }
