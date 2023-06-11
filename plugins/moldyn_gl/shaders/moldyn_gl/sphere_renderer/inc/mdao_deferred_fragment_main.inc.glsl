@@ -57,15 +57,11 @@ void main()
     vec3 ray = normalize(objPos.xyz - inObjCamPos.xyz);
     vec3 lightCol = LocalLighting(ray, normal.xyz, inObjLightDir, color);
 
-    if (normal.w < 1.0)
-        lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);
+    //if (normal.w < 1.0)   // TODO find difference in normal.w ...? because Rendertarget?
+    lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);
 
+    //outColor = vec4(normal.w, 0.0, 0.0, 1.0);
     outColor = vec4(lightCol, 1.0);
 
-    //outColor = vec4(1.0, 0.0, 0.0, 1.0);
-    //outColor = vec4(gl_FragCoord.xy/vec2(inWidth, inHeight), 0.0, 1.0);
-    //outColor = vec4(texelFetch(inNormalsTex, texelCoord, 0).xyz, 1.0);
-    //outColor = vec4(texelFetch(inDepthTex, texelCoord, 0).xyz, 1.0);
-    //outColor = texture(inNormalsTex, gl_FragCoord.xy/vec2(inWidth, inHeight));
     gl_FragDepth = depth;
 }

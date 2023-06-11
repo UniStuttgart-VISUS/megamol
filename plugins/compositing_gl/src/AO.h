@@ -109,6 +109,7 @@ private:
     std::shared_ptr<glowl::Texture2D> normal_tex;
     
     glm::mat4 cur_mvp_inv_;
+    glm::vec3 cur_cam_pos_;
 
     int cur_vp_width_;
     int cur_vp_height_;
@@ -131,6 +132,7 @@ private:
 
     megamol::core::param::ParamSlot ao_cone_apex_slot_;
     megamol::core::param::ParamSlot enable_lighting_slot_;
+    megamol::core::param::ParamSlot use_hp_textures_slot_;
     megamol::core::param::ParamSlot ao_offset_slot_;
     megamol::core::param::ParamSlot ao_strength_slot_;
     megamol::core::param::ParamSlot ao_cone_length_slot_;
@@ -152,6 +154,8 @@ private:
     void generate3ConeDirections(std::vector<glm::vec4>& directions, float apex);
 
     bool updateVolumeData(const unsigned int frameID);
+
+    bool recreateResources(void);
 };
 
 } // namespace megamol::compositing_gl

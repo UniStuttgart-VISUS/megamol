@@ -24,12 +24,14 @@ megamol::compositing_gl::AO::AO(void)
         , cur_vp_width_(-1)
         , cur_vp_height_(-1)
         , cur_mvp_inv_()
+        , cur_cam_pos_()
         , ao_dir_ubo_(nullptr)
         , ao_offset_slot_("offset", "Offset from Surface")
         , ao_strength_slot_("strength", "Strength")
         , ao_cone_apex_slot_("apex", "Cone Apex Angle")
         , ao_cone_length_slot_("coneLength", "Cone length")
         , enable_lighting_slot_("enableLighting", "Enable Lighting")
+        , use_hp_textures_slot_("highPrecisionTexture", "Use high precision textures")
         , normals_tex_slot_("NormalTexture", "Connects the normals render target texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth render target texture")
         , color_tex_slot_("ColorTexture", "Connects the color render target texture")
@@ -54,6 +56,9 @@ megamol::compositing_gl::AO::AO(void)
 
     this->enable_lighting_slot_ << (new param::BoolParam(false)); // TODO necessary?
     this->MakeSlotAvailable(&this->enable_lighting_slot_);
+
+    this->use_hp_textures_slot_ << (new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->use_hp_textures_slot_);
 
     this->ao_cone_apex_slot_ << (new param::FloatParam(50.0f, 1.0f, 90.0f));
     this->MakeSlotAvailable(&this->ao_cone_apex_slot_);
@@ -89,7 +94,11 @@ megamol::compositing_gl::AO::~AO(void) {
 
 void megamol::compositing_gl::AO::release(void) {}
 
-bool megamol::compositing_gl::AO::create(void) {
+bool megamol::compositing_gl::AO::create(void){
+    return recreateResources();
+}
+
+bool megamol::compositing_gl::AO::recreateResources(void) {
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>(); //TODO necessary?
 
@@ -102,7 +111,7 @@ bool megamol::compositing_gl::AO::create(void) {
      // Create the deferred shader
     auto lighting_so = shader_options;
 
-    bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
+    bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value(); // TODO redo this when enable_lighting_slot_ changed
     if (enable_lighting) {
         lighting_so.addDefinition("ENABLE_LIGHTING");
     }
@@ -170,76 +179,35 @@ bool megamol::compositing_gl::AO::Render(mmstd_gl::CallRender3DGL& call) {
     bool colorUpdate = callColor->hasUpdate();
     bool cameraUpdate = callCamera->hasUpdate();
 
-    if (true){ //normalUpdate || depthUpdate || cameraUpdate) {
-        // TODO output texture
+    if (normalUpdate || depthUpdate || colorUpdate || cameraUpdate) {
 
+        // get textures
         normal_tex = callNormal->getData();
-        //std::array<int, 2> txResNormal = {(int)normals_->getWidth(), (int)normals_->getHeight()};
-    
         depth_tex = callDepth->getData();
-        //std::array<int, 2> txResDepth = {(int)depthTx2D->getWidth(), (int)depthTx2D->getHeight()};
-
         color_tex = callColor->getData();
 
-        //// set output texture size to input texture size
-        //if (final_output_->getWidth() != depth_tex->getWidth() ||
-        //    final_output_->getHeight() != depth_tex->getHeight()) {
-        //    glowl::TextureLayout tx_layout(
-        //        GL_RGBA16F, depth_tex->getWidth(), depth_tex->getHeight(), 1, GL_RGBA, GL_HALF_FLOAT, 1);
-        //    final_output_->reload(tx_layout, nullptr);
-        //}
-
-        
+        // update volume texture
         updateVolumeData(call.Time());
-
 
         // obtain camera information
         core::view::Camera cam = callCamera->getData();
         glm::mat4 viewMx = cam.getViewMatrix();
         glm::mat4 projMx = cam.getProjectionMatrix();
+        cur_mvp_inv_ = glm::inverse(projMx * viewMx);
+        cur_cam_pos_ = cam.getPose().position;
 
-
+        // fbo info
         auto fbo = call.GetFramebuffer();
         cur_vp_width_ = fbo->getWidth();
         cur_vp_height_ = fbo->getHeight();
 
-        cur_mvp_inv_ = glm::inverse(projMx * viewMx);
-        auto cur_cam_pos_ = cam.getPose().position;
+        // update shader
+        recreateResources();
 
-        
         renderAmbientOcclusion();
     }
-
-    
-
-    //setupOutputTexture(depthTx2D, final_output_);
-
-
-    //final_output_->bindImage(0, GL_WRITE_ONLY);
-
-    /*if (lhsTc->version() < version_) {
-        settings_have_changed_ = false;
-        update_caused_by_normal_slot_change_ = false;
-    }*/
-
-    // set data
-    //lhsTc->setData(normal_tex, lhsTc->version()); //final_output_, version_);
-    //lhsTc->setData(final_output_, lhsTc->version()); //final_output_, version_);
-
-    // TODO make texture available!
-
     return true;
 }
-
-// AO (sphere renderer)
-// shaders
-// rebuild working data (particle data, volume data)
-// render particle geometry (or get from sphere renderer)  sphere_geometry_prgm_ or sphere_prgm_
-// render deferred pass
-
-
-// render deferred pass:
-// need depth, normals, color, voxel texture, shader (sphere_mdao_deferred)
 
 void megamol::compositing_gl::AO::generate3ConeDirections(std::vector<glm::vec4>& directions, float apex) {
 
@@ -294,46 +262,8 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     //glEnable(GL_TEXTURE_2D);
     //glEnable(GL_TEXTURE_3D);
 
-    //glBindFramebuffer(GL_FRAMEBUFFER, this->g_buffer_.fbo);
-    //GLenum bufs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    //glDrawBuffers(2, bufs);
-
-    //glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //glBindFragDataLocation(this->lighting_prgm_->getHandle(), 0, "outColor");
-    //glBindFragDataLocation(this->lighting_prgm_->getHandle(), 1, "outNormal");
-
-    // TODO bind fbo?
-    /*
-    GLint prev_fbo;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, this->g_buffer_.fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->g_buffer_.color, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->g_buffer_.normals, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->g_buffer_.depth, 0);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
-    */
-    /* glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->g_buffer_.color, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->g_buffer_.normals, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->g_buffer_.depth, 0);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }*/
-
-//void SphereRenderer::renderDeferredPass(mmstd_gl::CallRender3DGL& call) {
-//
     bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
-    //bool high_precision = this->use_hp_textures_slot_.Param<param::BoolParam>()->Value();
+    bool high_precision = this->use_hp_textures_slot_.Param<param::BoolParam>()->Value();
 
     glActiveTexture(GL_TEXTURE2);
     depth_tex->bindTexture();
@@ -341,29 +271,9 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     normal_tex->bindTexture();
     glActiveTexture(GL_TEXTURE0);
     color_tex->bindTexture();
-    //glBindTexture(GL_TEXTURE_2D, color_tex);  // TODO... necessary?
 
     // voxel texture
     VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
-    //if (c_voxel == NULL) {
-    //    return; // TODO
-    //}
-    //if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
-    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-    //        "AO: could not get all extents (VolumetricDataCall)");
-    //    return;
-    //}
-    //if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
-    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-    //        "AO: could not get metadata (VolumetricDataCall)");
-    //    return;
-    //}
-    //if (!(*c_voxel)(VolumetricDataCall::IDX_GET_DATA)) {
-    //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-    //        "AO: could not get data (VolumetricDataCall)");
-    //    return;
-    //}
-
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
     glActiveTexture(GL_TEXTURE0);
@@ -383,16 +293,16 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     this->lighting_prgm_->setUniform("inWidth", static_cast<float>(cur_vp_width_));
     this->lighting_prgm_->setUniform("inHeight", static_cast<float>(cur_vp_height_));
     glUniformMatrix4fv(this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
-    this->lighting_prgm_->setUniform("inUseHighPrecision", false); //high_precision);
-    /* if (enable_lighting) {
-        this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(this->cur_light_dir_));
-        this->lighting_prgm_->setUniform("inObjCamPos", glm::vec3(this->cur_cam_pos_));
-    }*/
+    this->lighting_prgm_->setUniform("inUseHighPrecision", high_precision);
+    if (enable_lighting) {
+        this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(1.0, 1.0, 0.0));//this->cur_light_dir_)); // TODO
+        this->lighting_prgm_->setUniform("inObjCamPos", cur_cam_pos_);
+    }
     this->lighting_prgm_->setUniform("inAOOffset", this->ao_offset_slot_.Param<param::FloatParam>()->Value());
     this->lighting_prgm_->setUniform("inAOStrength", this->ao_strength_slot_.Param<param::FloatParam>()->Value());
     this->lighting_prgm_->setUniform("inAOConeLength", this->ao_cone_length_slot_.Param<param::FloatParam>()->Value());
-    this->lighting_prgm_->setUniform("inAmbVolShortestEdge", 0.0f); //this->amb_cone_constants_[0]);
-    this->lighting_prgm_->setUniform("inAmbVolMaxLod", 0.0f);//this->amb_cone_constants_[1]);
+    this->lighting_prgm_->setUniform("inAmbVolShortestEdge", 256.0f); //this->amb_cone_constants_[0]); // TODO calculate
+    this->lighting_prgm_->setUniform("inAmbVolMaxLod", 7.0f);//this->amb_cone_constants_[1]);  // TODO calculate
 
     this->lighting_prgm_->setUniform("inBoundsMin", glm::vec3(-1,-1,-1));
     this->lighting_prgm_->setUniform("inBoundsSize", glm::vec3(2,2,2));
