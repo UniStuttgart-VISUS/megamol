@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2023, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <array>
@@ -220,9 +226,9 @@ private:
 
     void loadData(geocalls::MultiParticleDataCall& in_data);
 
-    bool create_shaders();
+    bool createShaders();
 
-    bool update_upload_setting();
+    bool updateUploadSetting();
 
     core::CallerSlot data_in_slot_;
 

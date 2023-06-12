@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2021, MegaMol Dev Team
+ * Copyright (c) 2023, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -16,7 +16,7 @@ public:
     PluginInstance()
             : megamol::core::factories::AbstractPluginInstance(
                   // machine-readable plugin assembly name
-                  "Test_GL", // TODO: Change this!
+                  "Test_GL",
 
                   // human-readable plugin description
                   "Collection of modules for testing"){};
@@ -27,22 +27,10 @@ public:
     void registerClasses() override {
 
         // register modules
-
-        //
-        // TODO: Register your plugin's modules here:
-        // this->module_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyModule1>();
-        // this->module_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyModule2>();
-        // ...
-        //
         this->module_descriptions.RegisterAutoDescription<megamol::test_gl::rendering::SRTest>();
 
         // register calls
 
-        // TODO: Register your plugin's calls here:
-        // this->call_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyCall1>();
-        // this->call_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyCall2>();
-        // ...
-        //
     }
 };
 } // namespace megamol::MegaMolPlugin

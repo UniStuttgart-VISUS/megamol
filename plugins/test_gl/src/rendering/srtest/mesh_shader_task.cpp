@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2023, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mesh_shader_task.h"
 
 

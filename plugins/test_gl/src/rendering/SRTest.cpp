@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2023, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "SRTest.h"
 
 #include "OpenGL_Context.h"
@@ -82,7 +88,7 @@ megamol::test_gl::rendering::SRTest::~SRTest() {
 }
 
 
-bool megamol::test_gl::rendering::SRTest::create_shaders() {
+bool megamol::test_gl::rendering::SRTest::createShaders() {
     try {
         auto base_options =
             core::utility::make_path_shader_options(frontend_resources.get<frontend_resources::RuntimeConfig>());
@@ -216,10 +222,10 @@ bool megamol::test_gl::rendering::SRTest::create_shaders() {
 }
 
 
-bool megamol::test_gl::rendering::SRTest::update_upload_setting() {
+bool megamol::test_gl::rendering::SRTest::updateUploadSetting() {
     rendering_tasks_.clear();
 
-    return create_shaders();
+    return createShaders();
 }
 
 
@@ -245,7 +251,7 @@ bool megamol::test_gl::rendering::SRTest::create() {
         mesh_shader_avail_ = true;
     }
 
-    if (!create_shaders())
+    if (!createShaders())
         return false;
 
     glCreateBuffers(1, &ubo_);
@@ -388,7 +394,7 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
         method_slot_.IsDirty()*/) {
         //rt->cleanup();
         loadData(*in_call);
-        update_upload_setting();
+        updateUploadSetting();
         in_data_hash_ = in_call->DataHash();
         frame_id_ = in_call->FrameID();
         new_data = true;
