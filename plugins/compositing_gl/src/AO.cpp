@@ -138,6 +138,9 @@ bool megamol::compositing_gl::AO::recreateResources(void) {
 }
 
 bool megamol::compositing_gl::AO::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    auto cr = &call;
+    // TODO Set bounding box through volume bounding box?
+    cur_clip_box_ = cr->AccessBoundingBoxes().ClipBox();
     return true;
 }
 
@@ -274,6 +277,7 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
 
     // voxel texture
     VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
+    int vol_size = c_voxel->GetMetadata()->Resolution[0]; // TODO access correct value
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
     glActiveTexture(GL_TEXTURE0);
@@ -301,17 +305,27 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     this->lighting_prgm_->setUniform("inAOOffset", this->ao_offset_slot_.Param<param::FloatParam>()->Value());
     this->lighting_prgm_->setUniform("inAOStrength", this->ao_strength_slot_.Param<param::FloatParam>()->Value());
     this->lighting_prgm_->setUniform("inAOConeLength", this->ao_cone_length_slot_.Param<param::FloatParam>()->Value());
-    this->lighting_prgm_->setUniform("inAmbVolShortestEdge", 256.0f); //this->amb_cone_constants_[0]); // TODO calculate
-    this->lighting_prgm_->setUniform("inAmbVolMaxLod", 7.0f);//this->amb_cone_constants_[1]);  // TODO calculate
 
-    this->lighting_prgm_->setUniform("inBoundsMin", glm::vec3(-1,-1,-1));
-    this->lighting_prgm_->setUniform("inBoundsSize", glm::vec3(2,2,2));
-    /* glm::vec3 cur_clip_box_coords = glm::vec3(this->cur_clip_box_.GetLeftBottomBack().GetX(),
+    // calculate amb cone constants
+    vislib::math::Dimension<float, 3> dims = this->cur_clip_box_.GetSize();
+    // Calculate the extensions of the volume by using the specified number of voxels for the longest edge
+    float longest_edge = this->cur_clip_box_.LongestEdge();
+    dims.Scale(static_cast<float>(vol_size) / longest_edge);
+    // The X size must be a multiple of 4, so we might have to correct that a little
+    dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
+    dims.SetHeight(ceil(dims.GetHeight()));
+    dims.SetDepth(ceil(dims.GetDepth()));
+    float amb_cone_constant_0 = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
+    float amb_cone_constant_1 = ceil(std::log2(static_cast<float>(vol_size))) - 1.0f;
+
+    this->lighting_prgm_->setUniform("inAmbVolShortestEdge", amb_cone_constant_0);
+    this->lighting_prgm_->setUniform("inAmbVolMaxLod", amb_cone_constant_1);
+    glm::vec3 cur_clip_box_coords = glm::vec3(this->cur_clip_box_.GetLeftBottomBack().GetX(),
         this->cur_clip_box_.GetLeftBottomBack().GetY(), this->cur_clip_box_.GetLeftBottomBack().GetZ());
     this->lighting_prgm_->setUniform("inBoundsMin", cur_clip_box_coords);
     glm::vec3 cur_clip_box_size = glm::vec3(this->cur_clip_box_.GetSize().GetWidth(),
         this->cur_clip_box_.GetSize().GetHeight(), this->cur_clip_box_.GetSize().GetDepth());
-    this->lighting_prgm_->setUniform("inBoundsSize", cur_clip_box_size);*/
+    this->lighting_prgm_->setUniform("inBoundsSize", cur_clip_box_size);
 
     // Draw screen filling 'quad' (2 triangle, front facing: CCW)
     std::vector<GLfloat> vertices = {-1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f};

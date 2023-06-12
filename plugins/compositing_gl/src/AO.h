@@ -111,6 +111,8 @@ private:
     glm::mat4 cur_mvp_inv_;
     glm::vec3 cur_cam_pos_;
 
+    vislib::math::Cuboid<float> cur_clip_box_;
+
     int cur_vp_width_;
     int cur_vp_height_;
 

@@ -6,6 +6,7 @@
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "geometry_calls/VolumetricDataCall.h"
+#include "geometry_calls/EllipsoidalDataCall.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"

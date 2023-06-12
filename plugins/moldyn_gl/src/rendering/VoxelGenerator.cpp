@@ -122,6 +122,8 @@ bool VoxelGenerator::getMetadataCallback(core::Call& call) {
 bool VoxelGenerator::getDataCallback(core::Call& call) {
 
     MultiParticleDataCall* particle_call = this->get_data_slot_.CallAs<MultiParticleDataCall>();
+    //geocalls::EllipsoidalParticleDataCall* particle_call2 = this->get_data_slot_.CallAs<geocalls::EllipsoidalParticleDataCall>(); // for glyph renderer 
+
     if (particle_call == nullptr)
         return false;
 
