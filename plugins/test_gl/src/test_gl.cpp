@@ -30,7 +30,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::test_gl::rendering::SRTest>();
 
         // register calls
-
     }
 };
 } // namespace megamol::MegaMolPlugin
