@@ -4,16 +4,9 @@ uniform sampler2D color_tex;
 uniform sampler2D depth_tex;
 uniform sampler2D blurred_depth_tex;
 
-// only one of these 3 should be active
-#if defined OUT32F
-layout(rgba32f) writeonly uniform image2D target_tex;
-#endif
-#if defined OUT16HF
-layout(rgba16f) writeonly uniform image2D target_tex;
-#endif
-#if defined OUT8NB
-layout(rgba8_snorm) writeonly uniform image2D target_tex;
-#endif
+layout(OUTFORMAT) writeonly uniform image2D target_tex;
+
+
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 

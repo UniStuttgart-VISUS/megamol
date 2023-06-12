@@ -9,10 +9,11 @@
 #include <glm/glm.hpp>
 
 #include "compositing_gl/CompositingCalls.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/EnumParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+
 
 megamol::compositing_gl::DepthDarkening::DepthDarkening()
         : mmstd_gl::ModuleGL()
@@ -29,7 +30,7 @@ megamol::compositing_gl::DepthDarkening::DepthDarkening()
         , intermediateTex_(nullptr)
         , intermediateTex2_(nullptr)
         , outputTex_(nullptr)
-        {
+        , outHandler("OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM}) {
 
     outputTexSlot_.SetCallback(CallTexture2D::ClassName(), CallTexture2D::FunctionName(CallTexture2D::CallGetData),
         &DepthDarkening::getDataCallback);
@@ -51,14 +52,10 @@ megamol::compositing_gl::DepthDarkening::DepthDarkening()
     this->MakeSlotAvailable(&lambdaValueParam_);
     lambdaValueParam_.ForceSetDirty();
 
-    auto out_tex_formats = new megamol::core::param::EnumParam(0);
-    out_tex_formats->SetTypePair(0, "RGBA_32F");
-    out_tex_formats->SetTypePair(1, "RGBA_16F");
-    out_tex_formats->SetTypePair(2, "RGBA_8UI");
+    //this->MakeSlotAvailable(outHandler.getOutSlot());
 
-    this->out_texture_format_slot_.SetParameter(out_tex_formats);
-    this->out_texture_format_slot_.SetUpdateCallback(&megamol::compositing_gl::DepthDarkening::setTextureFormatCallback);
-    this->MakeSlotAvailable(&this->out_texture_format_slot_);
+    this->MakeSlotAvailable(outHandler.getFormatSelectorSlot());
+
 }
 
 megamol::compositing_gl::DepthDarkening::~DepthDarkening() {
@@ -66,18 +63,11 @@ megamol::compositing_gl::DepthDarkening::~DepthDarkening() {
 }
 
 bool megamol::compositing_gl::DepthDarkening::create() {
-
+    textureFormatUpdate();
     auto const shdr_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto shader_options_flags = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shdr_options);
 
-     if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 0) {
-        shader_options_flags->addDefinition("OUT32F");
-    } else if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 1) {
-        shader_options_flags->addDefinition("OUT16HF");
-    } else if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 2) {
-        shader_options_flags->addDefinition("OUT8NB");
-    }
+    auto shader_options_flags = outHandler.handleDefintions(shdr_options);
 
     try {
         blurShader_ = core::utility::make_glowl_shader(
@@ -97,7 +87,7 @@ bool megamol::compositing_gl::DepthDarkening::create() {
     }
 
     glowl::TextureLayout tx_layout{
-        (GLint) out_tex_internal_format_, 1, 1, 1, (GLenum)out_tex_format_, (GLenum)out_tex_type_, 1};
+        (GLint)outHandler.getInternalFormat(), 1, 1, 1, outHandler.getFormat(), outHandler.getType(), 1};
     outputTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_output", tx_layout, nullptr);
     intermediateTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_intermediate", tx_layout, nullptr);
     intermediateTex2_ = std::make_shared<glowl::Texture2D>("depth_darkening_intermediate2", tx_layout, nullptr);
@@ -110,6 +100,10 @@ bool megamol::compositing_gl::DepthDarkening::create() {
 void megamol::compositing_gl::DepthDarkening::release() {}
 
 bool megamol::compositing_gl::DepthDarkening::getDataCallback(core::Call& caller) {
+    if (outHandler.recentlyChanged()) {
+        textureFormatUpdate();
+    }
+
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     auto call_color = inputColorSlot_.CallAs<CallTexture2D>();
     auto call_depth = inputDepthSlot_.CallAs<CallTexture2D>();
@@ -263,36 +257,13 @@ void megamol::compositing_gl::DepthDarkening::recalcKernel() {
     gaussValues_->rebuffer(kernelVec);
 }
 
-bool megamol::compositing_gl::DepthDarkening::setTextureFormatCallback(core::param::ParamSlot& slot) {
-    switch (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value()) {
-    case 0: //RGBA32F
-        out_tex_internal_format_ = GL_RGBA32F;
-        out_tex_format_ = GL_RGB;
-        out_tex_type_ = GL_FLOAT;
-        break;
-    case 1: //RGBA16F
-        out_tex_internal_format_ = GL_RGBA16F;
-        out_tex_format_ = GL_RGBA;
-        out_tex_type_ = GL_HALF_FLOAT;
-        break;
-    case 2: //RGBA8UI
-        out_tex_internal_format_ = GL_RGBA8_SNORM;
-        out_tex_format_ = GL_RGBA;
-        out_tex_type_ = GL_UNSIGNED_BYTE;
-        break;
-    }
+bool megamol::compositing_gl::DepthDarkening::textureFormatUpdate() {
+
     // reinit all textures
     auto const shdr_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    auto shader_options_flags = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shdr_options);
-    if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 0) {
-        shader_options_flags->addDefinition("OUT32F");
-    } else if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 1) {
-        shader_options_flags->addDefinition("OUT16HF");
-    } else if (this->out_texture_format_slot_.Param<core::param::EnumParam>()->Value() == 2) {
-        shader_options_flags->addDefinition("OUT8NB");
-    }
+    auto shader_options_flags = outHandler.handleDefintions(shdr_options);
 
     try {
 
@@ -311,14 +282,21 @@ bool megamol::compositing_gl::DepthDarkening::setTextureFormatCallback(core::par
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[DepthDarkening] Unable to compile shader: Unknown exception.");
     }
+    glowl::TextureLayout tx_layout;
 
-    glowl::TextureLayout tx_layout{(GLint)out_tex_internal_format_,
-        static_cast<int>(inputDepthSlot_.CallAs<CallTexture2D>()->getData()->getWidth()),
-        static_cast<int>(inputDepthSlot_.CallAs<CallTexture2D>()->getData()->getHeight()), 1, (GLenum)out_tex_format_,
-        (GLenum)out_tex_type_, 1};
+    //checks if slot is connected
+    if (inputDepthSlot_.GetStatus() == 2) {
+        tx_layout = glowl::TextureLayout{(GLint)outHandler.getInternalFormat(),
+            static_cast<int>(inputDepthSlot_.CallAs<CallTexture2D>()->getData()->getWidth()),
+            static_cast<int>(inputDepthSlot_.CallAs<CallTexture2D>()->getData()->getHeight()), 1,
+            outHandler.getFormat(), outHandler.getType(), 1};
+    } else {
+        tx_layout = glowl::TextureLayout{
+            (GLint)outHandler.getInternalFormat(), 1, 1, 1, outHandler.getFormat(), outHandler.getType(), 1};
+    }
     outputTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_output", tx_layout, nullptr);
     intermediateTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_intermediate", tx_layout, nullptr);
     intermediateTex2_ = std::make_shared<glowl::Texture2D>("depth_darkening_intermediate2", tx_layout, nullptr);
 
     return true;
-    }
+}

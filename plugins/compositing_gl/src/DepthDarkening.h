@@ -14,6 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmstd_gl/ModuleGL.h"
+#include "CompositingOutHandler.h"
 
 namespace megamol::compositing_gl {
 /**
@@ -98,7 +99,7 @@ private:
     /**
      * \brief Sets Texture format variables and recompiles shaders.
      */
-    bool setTextureFormatCallback(core::param::ParamSlot& slot);
+    bool textureFormatUpdate();
 
     /**
      * Recalculates the contents of the kernel buffer based on the input
@@ -138,6 +139,8 @@ private:
 
     /** buffer for the gauss kernel */
     std::unique_ptr<glowl::BufferObject> gaussValues_;
+
+    CompositingOutHandler outHandler;
 
     /** Texture Format variables*/
     int out_tex_internal_format_ = GL_RGBA32F;
