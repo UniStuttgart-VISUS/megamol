@@ -33,7 +33,7 @@ megamol::test_gl::rendering::SRTest::SRTest()
     this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
     this->MakeSlotAvailable(&this->getLightsSlot);
 
-    auto ep = new core::param::EnumParam(static_cast<method_ut>(method_e::VAO));
+    auto ep = new core::param::EnumParam(static_cast<method_ut>(method_e::SSBO));
     ep->SetTypePair(
         static_cast<method_ut>(method_e::VAO), method_strings[static_cast<method_ut>(method_e::VAO)].c_str());
     ep->SetTypePair(
@@ -57,7 +57,7 @@ megamol::test_gl::rendering::SRTest::SRTest()
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
 
-    ep = new core::param::EnumParam(static_cast<upload_mode_ut>(upload_mode::FULL_SEP));
+    ep = new core::param::EnumParam(static_cast<upload_mode_ut>(upload_mode::BUFFER_ARRAY));
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::FULL_SEP), "FULL_SEP");
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::POS_COL_SEP), "POS_COL_SEP");
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::VEC3_SEP), "VEC3_SEP");
