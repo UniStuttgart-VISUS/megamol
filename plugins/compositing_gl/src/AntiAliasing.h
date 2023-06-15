@@ -14,6 +14,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "CompositingOutHandler.h"
 
 #include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/special/TextureInspector.h"
@@ -151,7 +152,7 @@ private:
     /**
      * \brief Sets Texture format variables and recompiles shaders.
      */
-    bool setTextureFormatCallback(core::param::ParamSlot& slot);
+    bool setTextureFormatCallback();
 
     /**
      * \brief Sets the setting parameter values of the SMAAConstants struct depending
@@ -270,10 +271,6 @@ private:
     /** Parameter for selecting the antialiasing technique, e.g. smaa, fxaa, no aa */
     megamol::core::param::ParamSlot mode_;
 
-    /** Texture format variables*/
-    int out_tex_internal_format_ = GL_RGBA32F;
-    int out_tex_format_ = GL_RGBA;
-    int out_tex_type_ = GL_FLOAT;
 
     /** Parameter for selecting the smaa technique: SMAA 1x, SMAA S2x, SMAA T2x, or SMAA 4x
      * SMAA 1x:  basic version of SMAA
@@ -313,9 +310,6 @@ private:
     /** Parameter for choosing the edge detection technique: based on Luma, Color, or Depth */
     megamol::core::param::ParamSlot smaa_detection_technique_;
 
-    /** Parameter for choosing texture formats used within this module*/
-    megamol::core::param::ParamSlot out_texture_format_slot_;
-
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot output_tex_slot_;
 
@@ -324,6 +318,8 @@ private:
 
     /** Slot for optionally querying a depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot depth_tex_slot_;
+
+    CompositingOutHandler outHandler_;
 
     bool settings_have_changed_;
 };

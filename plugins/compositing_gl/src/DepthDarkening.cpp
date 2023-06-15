@@ -66,7 +66,7 @@ bool megamol::compositing_gl::DepthDarkening::create() {
     auto const shdr_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    auto shader_options_flags = outHandler.handleDefintions(shdr_options);
+    auto shader_options_flags = outHandler.handleDefinitions(shdr_options);
 
     try {
         blurShader_ = core::utility::make_glowl_shader(
@@ -262,7 +262,7 @@ bool megamol::compositing_gl::DepthDarkening::textureFormatUpdate() {
     auto const shdr_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    auto shader_options_flags = outHandler.handleDefintions(shdr_options);
+    auto shader_options_flags = outHandler.handleDefinitions(shdr_options);
 
     try {
 

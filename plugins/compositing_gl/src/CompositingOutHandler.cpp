@@ -185,7 +185,7 @@ std::string CompositingOutHandler::enumToDefinition(unsigned int e) {
 }
 
 
-std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> CompositingOutHandler::handleDefintions(
+std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> CompositingOutHandler::handleDefinitions(
     msf::ShaderFactoryOptionsOpenGL shdr_options) {
     auto shader_options_flags = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shdr_options);
     shader_options_flags->addDefinition(defineName_, enumToDefinition(this->selectedInternal_));

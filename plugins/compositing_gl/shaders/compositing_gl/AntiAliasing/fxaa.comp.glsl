@@ -8,16 +8,8 @@
 
 uniform sampler2D src_tx2D;
 
-// only one of these 3 should be active
-#if defined OUT32F
-layout(rgba32f) writeonly uniform image2D tgt_tx2D;
-#endif
-#if defined OUT16HF
-layout(rgba16f) writeonly uniform image2D tgt_tx2D;
-#endif
-#if defined OUT8NB
-layout(rgba8_snorm) writeonly uniform image2D tgt_tx2D;
-#endif
+layout(OUTFORMAT) writeonly uniform image2D tgt_tx2D;
+
 
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;

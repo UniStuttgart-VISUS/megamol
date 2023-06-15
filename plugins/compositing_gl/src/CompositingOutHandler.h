@@ -51,7 +51,7 @@ public:
         std::string defineName, std::vector<unsigned int> allowedTypes, std::function<bool()> externalUpdatFunc_);
 
     //TODO bool return?
-    std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> handleDefintions(msf::ShaderFactoryOptionsOpenGL);
+    std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> handleDefinitions(msf::ShaderFactoryOptionsOpenGL);
     void handleDefinitions(std::unique_ptr<msf::ShaderFactoryOptionsOpenGL>);
 
     megamol::core::AbstractSlot* getOutSlot();
