@@ -3,6 +3,37 @@
 
 namespace megamol::compositing_gl {
 
+bool CompositingOutHandler::updateSelectionsExternally(core::param::ParamSlot& slot) {
+    selectedType_ = GL_FLOAT;
+    recentlyChanged_ = true;
+    unsigned int e = availableInternalFormats_[slot.Param<core::param::EnumParam>()->Value()];
+    selectedInternal_ = e;
+    switch (e) {
+    case GL_RGBA32F:
+    case GL_RGBA16F:
+    case GL_RGBA8_SNORM:
+        selectedFormat_ = GL_RGBA;
+        break;
+    case GL_RGB32F:
+    case GL_RGB16F:
+    case GL_RGB8_SNORM:
+        selectedFormat_ = GL_RGB;
+        break;
+    case GL_RG32F:
+    case GL_RG16F:
+    case GL_RG8_SNORM:
+        selectedFormat_ = GL_RG;
+        break;
+    case GL_R32F:
+    case GL_R16F:
+    case GL_R8_SNORM:
+        selectedFormat_ = GL_RED;
+        break;
+    }
+    //external update
+    return externalUpdateFunc_();
+}
+
 bool CompositingOutHandler::updateSelections(core::param::ParamSlot& slot) {
     selectedType_ = GL_FLOAT;
     recentlyChanged_ = true;
@@ -60,7 +91,6 @@ CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector
         , defineName_(defineName)
         , availableInternalFormats_(allowedInternalFormats)
         , selectedInternal_(allowedInternalFormats[0]) {
-    //can a single module change its outputs/selectable formats AFTER init?
     auto out_tex_formats = new megamol::core::param::EnumParam(0);
     for (int i = 0; i < allowedInternalFormats.size(); i++) {
         out_tex_formats->SetTypePair(i, enumToString(allowedInternalFormats[i]).c_str());
@@ -69,6 +99,25 @@ CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector
     formatSlot_.SetUpdateCallback(this, &CompositingOutHandler::updateSelections);
 }
 
+/**
+    Constructor with update function reference parameter.
+    Funciton from parameter is executed after selected paramaters are updated.
+*/
+CompositingOutHandler::CompositingOutHandler(
+    std::string defineName, std::vector<unsigned int> allowedInternalFormats, std::function<bool()> externalUpdateFunc)
+        : outSlot_("outSlot", "slot for tex outs")
+        , formatSlot_("slot for selecting Out Formats", "Slot for selecting Tex Outs")
+        , defineName_(defineName)
+        , availableInternalFormats_(allowedInternalFormats)
+        , selectedInternal_(allowedInternalFormats[0])
+        , externalUpdateFunc_(externalUpdateFunc) {
+    auto out_tex_formats = new megamol::core::param::EnumParam(0);
+    for (int i = 0; i < allowedInternalFormats.size(); i++) {
+        out_tex_formats->SetTypePair(i, enumToString(allowedInternalFormats[i]).c_str());
+    }
+    formatSlot_.SetParameter(out_tex_formats);
+    formatSlot_.SetUpdateCallback(this, &CompositingOutHandler::updateSelectionsExternally);
+}
 
 megamol::core::AbstractSlot* CompositingOutHandler::getOutSlot() {
     return &outSlot_;

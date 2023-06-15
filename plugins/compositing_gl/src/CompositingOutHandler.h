@@ -30,11 +30,15 @@ private:
     megamol::core::param::ParamSlot outSlot_;
     megamol::core::param::ParamSlot formatSlot_;
 
+    std::function<bool()> externalUpdateFuncStd_;
+    std::function<bool()> externalUpdateFunc_;
+
     std::string enumToString(unsigned int e);
     std::string enumToDefinition(unsigned int e);
 
     
     bool updateSelections(core::param::ParamSlot& slot);
+    bool updateSelectionsExternally(core::param::ParamSlot& slot);
 
 public:
     bool recentlyChanged();
@@ -43,6 +47,8 @@ public:
     GLenum getType();
     //TODO: make slot names unique
     CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedTypes);
+    CompositingOutHandler(
+        std::string defineName, std::vector<unsigned int> allowedTypes, std::function<bool()> externalUpdatFunc_);
 
     //TODO bool return?
     std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> handleDefintions(msf::ShaderFactoryOptionsOpenGL);

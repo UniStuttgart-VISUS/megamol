@@ -14,7 +14,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
-
 megamol::compositing_gl::DepthDarkening::DepthDarkening()
         : mmstd_gl::ModuleGL()
         , outputTexSlot_("OutputTexture", "Gives access to the resulting output texture")
@@ -30,7 +29,7 @@ megamol::compositing_gl::DepthDarkening::DepthDarkening()
         , intermediateTex_(nullptr)
         , intermediateTex2_(nullptr)
         , outputTex_(nullptr)
-        , outHandler("OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM}) {
+        , outHandler("OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM}, std::function<bool()>(std::bind(&DepthDarkening::textureFormatUpdate, this))) {
 
     outputTexSlot_.SetCallback(CallTexture2D::ClassName(), CallTexture2D::FunctionName(CallTexture2D::CallGetData),
         &DepthDarkening::getDataCallback);
