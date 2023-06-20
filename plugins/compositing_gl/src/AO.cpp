@@ -141,6 +141,15 @@ bool megamol::compositing_gl::AO::GetExtents(mmstd_gl::CallRender3DGL& call) {
     auto cr = &call;
     // TODO Set bounding box through volume bounding box?
     cur_clip_box_ = cr->AccessBoundingBoxes().ClipBox();
+
+    //chain rendering
+    mmstd_gl::CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
+    if (chainedCall != nullptr) {
+        *chainedCall = call;
+        bool retVal = (*chainedCall)(core::view::AbstractCallRender::FnGetExtents);
+        call = *chainedCall;
+    }
+
     return true;
 }
 

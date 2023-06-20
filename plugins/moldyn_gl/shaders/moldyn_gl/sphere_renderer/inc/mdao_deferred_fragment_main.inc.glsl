@@ -57,8 +57,8 @@ void main()
     vec3 ray = normalize(objPos.xyz - inObjCamPos.xyz);
     vec3 lightCol = LocalLighting(ray, normal.xyz, inObjLightDir, color);
 
-    //if (normal.w < 1.0)   // TODO find difference in normal.w ...? because Rendertarget?
-    lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);
+    if (normal.w < 1.0)   // TODO find difference in normal.w ...? because Rendertarget?
+        lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);
 
     //outColor = vec4(normal.w, 0.0, 0.0, 1.0);
     outColor = vec4(lightCol, 1.0);
