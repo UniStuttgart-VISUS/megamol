@@ -88,6 +88,7 @@ def process_stack(dataframe, stack_start, stack_end):
 def analyze_frame(curr_frame):
     print(f"Analyzing Frame {curr_frame} for api {args.api}")
     dataframe = df.loc[(df["frame"] == curr_frame) & (df["type"] == "Call") & (df["api"] == args.api)]
+    dataframe = dataframe.sort_values(by=["start (ns)"])
 
     stack_start = 0
     stack_end = len(dataframe.index) - 1
