@@ -9,11 +9,11 @@
 
 #include <glowl/FramebufferObject.hpp>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
-#include "CompositingOutHandler.h"
 
 namespace megamol::compositing_gl {
 
@@ -120,8 +120,8 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
     /**
-    *
-    */
+     *
+     */
     bool textureFormatCallback();
 
     /**

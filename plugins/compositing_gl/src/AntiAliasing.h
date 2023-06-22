@@ -10,11 +10,11 @@
 #include <glm/glm.hpp>
 #include <glowl/glowl.h>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "CompositingOutHandler.h"
 
 #include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/special/TextureInspector.h"

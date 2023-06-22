@@ -9,11 +9,11 @@
 
 #include <glowl/glowl.h>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/ModuleGL.h"
-#include "CompositingOutHandler.h"
 
 namespace megamol::compositing_gl {
 

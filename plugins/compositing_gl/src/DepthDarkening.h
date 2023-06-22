@@ -13,8 +13,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmstd_gl/ModuleGL.h"
 #include "CompositingOutHandler.h"
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 /**

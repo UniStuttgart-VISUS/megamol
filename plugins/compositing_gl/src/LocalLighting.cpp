@@ -45,7 +45,8 @@ megamol::compositing_gl::LocalLighting::LocalLighting()
               "RoughMetalTexture", "Connects to the roughness/metalness render target texture")
         , m_lightSlot("lights", "Lights are retrieved over this slot")
         , m_camera_slot("Camera", "Connects a (copy of) camera state")
-        , outHandler_("OUTFORMAT", { GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM}, std::bind(&LocalLighting::updateFormats, this)) {
+        , outHandler_(
+              "OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM}, std::bind(&LocalLighting::updateFormats, this)) {
     this->m_illuminationmode << new megamol::core::param::EnumParam(0);
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Lambert");
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Blinn-Phong");
@@ -119,8 +120,8 @@ bool megamol::compositing_gl::LocalLighting::create() {
         m_phong_prgm = core::utility::make_glowl_shader(
             "compositing_phong", *shader_options_flags, "compositing_gl/phong.comp.glsl");
 
-        m_toon_prgm =
-            core::utility::make_glowl_shader("compositing_toon", *shader_options_flags, "compositing_gl/toon.comp.glsl");
+        m_toon_prgm = core::utility::make_glowl_shader(
+            "compositing_toon", *shader_options_flags, "compositing_gl/toon.comp.glsl");
 
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("LocalLighting: " + std::string(e.what())).c_str());
@@ -235,7 +236,7 @@ bool megamol::compositing_gl::LocalLighting::getDataCallback(core::Call& caller)
                 for (auto tdl : tridirection_lights) {
                     if (tdl.in_view_space) {
                         auto inverse_view = glm::transpose(glm::mat3(view_mx));
-                        auto key_dir = 
+                        auto key_dir =
                             inverse_view * glm::vec3(tdl.key_direction[0], tdl.key_direction[1], tdl.key_direction[2]);
                         auto fill_dir = inverse_view *
                                         glm::vec3(tdl.fill_direction[0], tdl.fill_direction[1], tdl.fill_direction[2]);

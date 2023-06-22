@@ -1,8 +1,8 @@
 #include "NormalFromDepth.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 using megamol::core::utility::log::Log;
 
@@ -73,8 +73,8 @@ bool megamol::compositing_gl::NormalFromDepth::getDataCallback(core::Call& calle
                     static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
 
                 if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
-                    glowl::TextureLayout tx_layout(
-                        out_tex_internal_format, std::get<0>(texture_res), std::get<1>(texture_res), 1, out_tex_format, out_tex_type, 1);
+                    glowl::TextureLayout tx_layout(out_tex_internal_format, std::get<0>(texture_res),
+                        std::get<1>(texture_res), 1, out_tex_format, out_tex_type, 1);
                     tgt->reload(tx_layout, nullptr);
                 }
             };
@@ -84,8 +84,8 @@ bool megamol::compositing_gl::NormalFromDepth::getDataCallback(core::Call& calle
         }
         auto input_tx2D = call_input->getData();
 
-        setupOutputTexture(
-            input_tx2D, m_output_texture, outHandler_.getInternalFormat(), outHandler_.getFormat(), outHandler_.getType());
+        setupOutputTexture(input_tx2D, m_output_texture, outHandler_.getInternalFormat(), outHandler_.getFormat(),
+            outHandler_.getType());
 
         // obtain camera information
         core::view::Camera cam = call_camera->getData();

@@ -36,7 +36,7 @@ private:
     std::string enumToString(unsigned int e);
     std::string enumToDefinition(unsigned int e);
 
-    
+
     bool updateSelections(core::param::ParamSlot& slot);
     bool updateSelectionsExternally(core::param::ParamSlot& slot);
 

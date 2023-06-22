@@ -85,8 +85,8 @@ bool CompositingOutHandler::recentlyChanged() {
 
 
 //TODO: make slot names unique
-CompositingOutHandler::CompositingOutHandler(
-    std::string defineName, std::vector<unsigned int> allowedInternalFormats, std::string slotName, std::string slotDesc)
+CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedInternalFormats,
+    std::string slotName, std::string slotDesc)
         : outSlot_("outSlot", "slot for tex outs")
         , formatSlot_(slotName.c_str(), slotDesc.c_str())
         , defineName_(defineName)

@@ -50,7 +50,8 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
         , input_tex_slot_("InputTexture", "Connects the input texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth texture")
         , settings_have_changed_(false)
-        , outHandler_("OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM}, std::function<bool()>(std::bind(&AntiAliasing::setTextureFormatCallback, this))) {
+        , outHandler_("OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM},
+              std::function<bool()>(std::bind(&AntiAliasing::setTextureFormatCallback, this))) {
 
     auto aa_modes = new core::param::EnumParam(1);
     aa_modes->SetTypePair(0, "SMAA");
@@ -693,4 +694,3 @@ bool megamol::compositing_gl::AntiAliasing::setTextureFormatCallback() {
 bool megamol::compositing_gl::AntiAliasing::getMetaDataCallback(core::Call& caller) {
     return true;
 }
-
