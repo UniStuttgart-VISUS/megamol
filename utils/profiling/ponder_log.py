@@ -1,5 +1,6 @@
 import argparse
 import pandas
+import csv
 import os.path
 import pathlib
 from joblib import Parallel, delayed, cpu_count
@@ -146,8 +147,8 @@ def analyze_frame(curr_frame):
             stack_start = 0
             stack_end = len(dataframe.index) - 1
             #show_stack_frame(curr_df, stack_start, stack_end, "stack")
-            process_stack(dataframe, stack_start, stack_end)
-            #process_fullframe(dataframe, stack_start, stack_end)
+            #process_stack(dataframe, stack_start, stack_end)
+            process_fullframe(dataframe, stack_start, stack_end)
 
 for file in args.files:
     df = pandas.read_csv(file, header=0, sep=';', quotechar="'")
@@ -183,7 +184,7 @@ for file in args.files:
         outfile = os.path.splitext(outfile)[0] + "_self.csv"
         if not os.path.exists(outfile) or args.overwrite_output:
             print(f"writing {outfile}...")
-            df.to_csv(outfile, index=False, sep=';', quotechar="'")
+            df.to_csv(outfile, index=False, sep=';', quotechar="'", quoting=csv.QUOTE_NONNUMERIC)
         else:
             print(f"warning: not overwriting {outfile}!")
 
