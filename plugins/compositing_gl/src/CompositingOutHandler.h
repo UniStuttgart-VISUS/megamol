@@ -46,9 +46,11 @@ public:
     GLenum getFormat();
     GLenum getType();
     //TODO: make slot names unique
-    CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedTypes);
-    CompositingOutHandler(
-        std::string defineName, std::vector<unsigned int> allowedTypes, std::function<bool()> externalUpdatFunc_);
+    CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedTypes,
+        std::string slotName = "slot for selecting Out Formats", std::string slotDesc = "Slot for selecting Tex Outs");
+    CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedTypes,
+        std::function<bool()> externalUpdatFunc_, std::string slotName = "slot for selecting Out Formats",
+        std::string slotDesc = "Slot for selecting Tex Outs");
 
     //TODO bool return?
     std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> handleDefinitions(msf::ShaderFactoryOptionsOpenGL);

@@ -85,9 +85,10 @@ bool CompositingOutHandler::recentlyChanged() {
 
 
 //TODO: make slot names unique
-CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedInternalFormats)
+CompositingOutHandler::CompositingOutHandler(
+    std::string defineName, std::vector<unsigned int> allowedInternalFormats, std::string slotName, std::string slotDesc)
         : outSlot_("outSlot", "slot for tex outs")
-        , formatSlot_("slot for selecting Out Formats", "Slot for selecting Tex Outs")
+        , formatSlot_(slotName.c_str(), slotDesc.c_str())
         , defineName_(defineName)
         , availableInternalFormats_(allowedInternalFormats)
         , selectedInternal_(allowedInternalFormats[0]) {
@@ -103,10 +104,10 @@ CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector
     Constructor with update function reference parameter.
     Funciton from parameter is executed after selected paramaters are updated.
 */
-CompositingOutHandler::CompositingOutHandler(
-    std::string defineName, std::vector<unsigned int> allowedInternalFormats, std::function<bool()> externalUpdateFunc)
+CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedInternalFormats,
+    std::function<bool()> externalUpdateFunc, std::string slotName, std::string slotDesc)
         : outSlot_("outSlot", "slot for tex outs")
-        , formatSlot_("slot for selecting Out Formats", "Slot for selecting Tex Outs")
+        , formatSlot_(slotName.c_str(), slotDesc.c_str())
         , defineName_(defineName)
         , availableInternalFormats_(allowedInternalFormats)
         , selectedInternal_(allowedInternalFormats[0])

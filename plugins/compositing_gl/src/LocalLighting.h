@@ -13,6 +13,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/ModuleGL.h"
+#include "CompositingOutHandler.h"
 
 namespace megamol::compositing_gl {
 
@@ -74,6 +75,8 @@ protected:
      * TODO
      */
     bool getMetaDataCallback(core::Call& caller);
+
+    bool updateFormats();
 
 private:
     uint32_t m_version;
@@ -138,6 +141,8 @@ private:
 
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot m_camera_slot;
+
+    CompositingOutHandler outHandler_;
 };
 
 } // namespace megamol::compositing_gl
