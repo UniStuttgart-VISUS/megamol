@@ -222,7 +222,7 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::frontend_re
                             .count();
                     module_load_time = std::chrono::system_clock::now();
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
+                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", mod.class_name.c_str(),
                         module_load_time_count);
 #endif // GUI_VERBOSE
                 }
@@ -339,21 +339,45 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
 
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
-                graph_sync_success &= std::get<0>(
+                auto created = std::get<0>(
                     (*input_lua_func)("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])"));
+                graph_sync_success &= created;
+#ifdef MEGAMOL_USE_PROFILING
+                if (created) {
+                    auto gui_module_ptr = graph_ptr->GetModule(data.name_id);
+                    auto graph_module_ptr = megamol_graph.FindModule(data.name_id).get();
+                    gui_module_ptr->SetProfilingData(graph_module_ptr, perf_manager);
+                    module_to_module[graph_module_ptr] = gui_module_ptr;
+                }
+#endif
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
                 graph_sync_success &= std::get<0>(
                     (*input_lua_func)("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])"));
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
+#ifdef MEGAMOL_USE_PROFILING
+                module_to_module.erase(megamol_graph.FindModule(data.name_id).get());
+#endif
                 graph_sync_success &= std::get<0>((*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])"));
             } break;
             case (Graph::QueueAction::ADD_CALL): {
-                graph_sync_success &= std::get<0>((*input_lua_func)(
+                auto created = std::get<0>((*input_lua_func)(
                     "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
+                graph_sync_success &= created;
+#ifdef MEGAMOL_USE_PROFILING
+                if (created) {
+                    auto gui_call_ptr = graph_ptr->GetCall(data.class_name, data.caller, data.callee);
+                    auto graph_call_ptr = megamol_graph.FindCall(data.caller, data.callee).get();
+                    gui_call_ptr->SetProfilingData(graph_call_ptr, graph_call_ptr->GetCallbackCount());
+                    call_to_call[graph_call_ptr] = gui_call_ptr;
+                }
+#endif
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
+#ifdef MEGAMOL_USE_PROFILING
+                call_to_call.erase(megamol_graph.FindCall(data.caller, data.callee).get());
+#endif
                 graph_sync_success &=
                     std::get<0>((*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
             } break;
@@ -399,8 +423,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                             if (param_slot != nullptr) {
                                 std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
-                                    if (gui_utils::CaseInsensitiveStringEqual(
-                                            parameter.FullNameCore(), param_full_name)) {
+                                    if (gui_utils::CaseInsensitiveStringEqual(parameter.FullName(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }
@@ -409,7 +432,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                         }
                     }
 #ifdef GUI_VERBOSE
-                    if (p.CoreParamPtr().IsNull()) {
+                    if (p.CoreParamPtr() == nullptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Unable to connect core parameter to gui parameter. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
@@ -428,7 +451,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                     if (p.IsValueDirty()) {
                         p.ResetValueDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
                         param_sync_success &= std::get<0>((*input_lua_func)(
-                            "mmSetParamValue([=[" + p.FullNameCore() + "]=],[=[" + p.GetValueString() + "]=])"));
+                            "mmSetParamValue([=[" + p.FullName() + "]=],[=[" + p.GetValueString() + "]=])"));
                     }
                 }
             }
@@ -803,8 +826,7 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                 if (graph_ptr != nullptr) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         for (auto& parameter : module_ptr->Parameters()) {
-                            if (gui_utils::CaseInsensitiveStringEqual(
-                                    parameter.FullNameProject(), param_slot_full_name)) {
+                            if (gui_utils::CaseInsensitiveStringEqual(parameter.FullName(), param_slot_full_name)) {
                                 parameter.SetValueString(value_str);
                             }
                         }
@@ -837,8 +859,8 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
 }
 
 
-bool megamol::gui::GraphCollection::SaveProjectToFile(
-    ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json) {
+bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename,
+    const std::string& state_json, bool write_all_param_values) {
 
     /// Should be same as: megamol::core::MegaMolGraph_Convenience::SerializeGraph()
     try {
@@ -873,12 +895,11 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                     }
 
                     for (auto& parameter : module_ptr->Parameters()) {
-                        // - Write all parameters for running graph (default value is not available)
-                        // - For other graphs only write parameters with other values than the default
-                        // - Ignore button parameters
-                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
+                        // Either write_all_param_values or only write parameters with values deviating from the default
+                        // Button parameters are always ignored
+                        if ((write_all_param_values || parameter.DefaultValueMismatch()) &&
                             (parameter.Type() != ParamType_t::BUTTON)) {
-                            confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=["
+                            confParams << "mmSetParamValue(\"" << parameter.FullName() << "\",[=["
                                        << parameter.GetValueString() << "]=])\n";
                         }
                     }
@@ -1368,14 +1389,10 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
                 state.graph_delete = false;
             }
 
-            // Catch call drop event and create new call(s) ...
-            if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
-                if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
-                    auto* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
-                    auto drag_slot_uid = (*dragged_slot_uid_ptr);
-                    auto drop_slot_uid = graph_ptr->GetDropSlot();
-                    graph_ptr->AddCall(this->GetCallsStock(), drag_slot_uid, drop_slot_uid);
-                }
+            // Catch call drop event and create new call
+            auto drag_drop_uids = graph_ptr->ConsumeDragAndDropSlots();
+            if ((drag_drop_uids.first != GUI_INVALID_ID) && (drag_drop_uids.second != GUI_INVALID_ID)) {
+                graph_ptr->AddCall(this->GetCallsStock(), drag_drop_uids.first, drag_drop_uids.second);
             }
         }
         ImGui::EndTabBar();
@@ -1421,20 +1438,18 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
     const frontend_resources::PerformanceManager::frame_info& fi) {
     auto frame = fi.frame;
     for (auto& e : fi.entries) {
-        if (e.type == frontend_resources::PerformanceManager::entry_type::DURATION) {
-            auto p = perf_manager->lookup_parent_pointer(e.handle);
-            auto t = perf_manager->lookup_parent_type(e.handle);
-            if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
-                auto c = static_cast<megamol::core::Call*>(p);
-                // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
-                if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
-                    call_to_call[p].lock()->AppendPerformanceData(frame, e);
-                }
-            } else {
-                // Module
-                if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
-                    module_to_module[p].lock()->AppendPerformanceData(frame, e);
-                }
+        auto p = perf_manager->lookup_parent_pointer(e.handle);
+        auto t = perf_manager->lookup_parent_type(e.handle);
+        if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
+            auto c = static_cast<megamol::core::Call*>(p);
+            // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
+            if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
+                call_to_call[p].lock()->AppendPerformanceData(frame, e);
+            }
+        } else if (t == frontend_resources::PerformanceManager::parent_type::USER_REGION) {
+            // Region in a Module
+            if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
+                module_to_module[p].lock()->AppendPerformanceData(frame, e);
             }
         }
     }
@@ -1506,8 +1521,9 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
                 if (param_slot != nullptr) {
                     std::string param_full_name(param_slot->FullName().PeekBuffer());
                     std::shared_ptr<Parameter> param_ptr;
+                    // This is the default value of the parameter since changed values are propagated separately via parameter subscription
                     megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(
-                        (*param_slot), param_ptr, false, false, true, gui_module_ptr->FullName());
+                        (*param_slot), param_ptr, true, false, true, gui_module_ptr->FullName());
                     gui_module_ptr->Parameters().emplace_back((*param_ptr));
                 }
 
@@ -1728,7 +1744,6 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddCall(core::CallInstanc
         }
 
         if (auto gui_call_ptr = graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2, false)) {
-
             gui_call_ptr->SetCapabilities(call_inst.callPtr->GetCapabilities());
 #ifdef MEGAMOL_USE_PROFILING
             gui_call_ptr->SetProfilingData(call_inst.callPtr.get(), call_inst.callPtr->GetCallbackCount());
@@ -1848,17 +1863,19 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& o
             project_filename = graph_ptr->GetFilename();
         }
     }
-    // Default for option asking for saving gui state
-    auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
+    // Default for saving gui state and parameter values
+    bool save_all_param_values = true;
+    bool save_gui_state = false;
     if (this->gui_file_browser.PopUp_Save("Save Configurator Project", project_filename, open_dialog, {"lua"},
-            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state,
+            save_all_param_values)) {
 
         std::string gui_state;
-        if (save_gui_state.IsTrue()) {
+        if (save_gui_state) {
             gui_state = this->get_state(graph_uid, project_filename);
         }
 
-        popup_failed = !this->SaveProjectToFile(graph_uid, project_filename, gui_state);
+        popup_failed = !this->SaveProjectToFile(graph_uid, project_filename, gui_state, save_all_param_values);
     }
     PopUps::Minimal("Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
 

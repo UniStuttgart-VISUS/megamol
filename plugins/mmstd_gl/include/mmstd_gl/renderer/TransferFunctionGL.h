@@ -81,6 +81,9 @@ private:
 
     /** A flag that signals whether the tf range from the project file should be ignored */
     bool ignore_project_range = true;
+
+    /** Texture interpolation mode */
+    core::param::ParamSlot interpolationParam;
 };
 
 

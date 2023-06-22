@@ -65,7 +65,7 @@ public:
      *
      * @param param_type   The parameters type.
      */
-    bool InitPresentation(AbstractParamPresentation::ParamType param_type);
+    void InitPresentation(AbstractParamPresentation::ParamType param_type);
 
     /**
      * Answer visibility in GUI.

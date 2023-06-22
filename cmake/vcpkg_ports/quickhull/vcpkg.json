@@ -1,7 +1,6 @@
 {
   "name": "quickhull",
-  "version": "2020-08-26",
-  "port-version": 0,
+  "version-date": "2020-08-26",
   "homepage": "https://github.com/akuukka/quickhull",
   "dependencies": [
     {

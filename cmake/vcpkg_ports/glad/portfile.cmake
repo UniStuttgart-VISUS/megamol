@@ -13,7 +13,7 @@
 
 vcpkg_extract_source_archive(
   GLAD_DIR
-  ARCHIVE ${CMAKE_CURRENT_LIST_DIR}/glad.zip
+  ARCHIVE "${CMAKE_CURRENT_LIST_DIR}/glad.zip"
   NO_REMOVE_ONE_LEVEL
 )
 
@@ -26,4 +26,4 @@ vcpkg_cmake_install()
 vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/glad)
 
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
-file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${CMAKE_CURRENT_LIST_DIR}/LICENSE")

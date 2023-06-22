@@ -1,4 +1,4 @@
-#version 430
+#version 440
 #extension GL_ARB_shader_draw_parameters : require
 
 struct MeshShaderParams {

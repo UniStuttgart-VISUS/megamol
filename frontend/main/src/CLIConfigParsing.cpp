@@ -1,6 +1,7 @@
 
 #include "CLIConfigParsing.h"
 
+#define CXXOPTS_VECTOR_DELIMITER '\0'
 #include <cxxopts.hpp>
 
 #include <filesystem>
@@ -114,7 +115,9 @@ static std::string guiscale_option = "guiscale";
 static std::string privacynote_option = "privacynote";
 static std::string versionnote_option = "versionnote";
 static std::string profile_log_option = "profiling-log";
+static std::string flush_frequency_option = "flush-frequency";
 static std::string profile_log_no_autostart_option = "pause-profiling";
+static std::string profile_log_include_events_option = "profiling-include-events";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -175,9 +178,19 @@ static void profile_log_handler(
     config.profiling_output_file = parsed_options[option_name].as<std::string>();
 }
 
+static void flush_frequency_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.flush_frequency = parsed_options[option_name].as<uint32_t>();
+}
+
 static void profile_log_autostart_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.autostart_profiling = !parsed_options[option_name].as<bool>();
+}
+
+static void profile_log_include_events_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.include_graph_events = parsed_options[option_name].as<bool>();
 }
 
 static void remote_head_handler(
@@ -284,11 +297,11 @@ static void project_handler(
 
 static void execute_lua_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto commands = parsed_options[option_name].as<std::vector<std::string>>();
-
-    for (auto& cmd : commands) {
-        config.cli_execute_lua_commands += cmd + ";";
-    }
+    auto commands = parsed_options[option_name].as<std::string>();
+    config.cli_execute_lua_commands += commands + ";";
+    //for (auto& cmd : commands) {
+    //    config.cli_execute_lua_commands += cmd + ";";
+    //}
 };
 
 static void param_handler(
@@ -515,8 +528,8 @@ std::vector<OptionsListEntry> cli_options_list =
             echolevel_handler},
         {project_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
             project_handler},
-        {execute_lua_option, "Execute Lua command(s). Commands separated by ;",
-            cxxopts::value<std::vector<std::string>>(), execute_lua_handler},
+        {execute_lua_option, "Execute Lua command(s). Commands separated by ;", cxxopts::value<std::string>(),
+            execute_lua_handler},
         {global_option, "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value",
             cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
@@ -549,13 +562,18 @@ std::vector<OptionsListEntry> cli_options_list =
         {privacynote_option, "Show privacy note when taking screenshot, use '=false' to disable",
             cxxopts::value<bool>(), privacynote_handler},
         {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
-            cxxopts::value<bool>(), versionnote_handler}
+            cxxopts::value<bool>(), versionnote_handler},
+        {flush_frequency_option, "Flush logs (performance, power, ...) every that many frames",
+            cxxopts::value<uint32_t>(), flush_frequency_handler}
 #ifdef MEGAMOL_USE_PROFILING
         ,
         {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
             profile_log_handler},
         {profile_log_no_autostart_option, "Do not automatically start writing the profiling log",
-            cxxopts::value<bool>(), profile_log_autostart_handler}
+            cxxopts::value<bool>(), profile_log_autostart_handler},
+        {profile_log_include_events_option, "Include graph events in the profiling log", cxxopts::value<bool>(),
+            profile_log_include_events_handler}
+
 #endif
         ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",
@@ -611,9 +629,7 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
     options.allow_unrecognised_options();
 
     try {
-        int _argc = argc;
-        auto _argv = const_cast<char**>(argv);
-        auto parsed_options = options.parse(_argc, _argv);
+        auto parsed_options = options.parse(argc, argv);
 
         std::string config_file_name = "megamol_config.lua";
         auto user_dir_config = getHomeDir() / ("." + config_file_name);
@@ -651,7 +667,7 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         return config_files;
 
-    } catch (cxxopts::OptionException ex) {
+    } catch (cxxopts::exceptions::exception ex) {
         exit(ex.what());
     }
 }
@@ -842,7 +858,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
                 }
             }
 
-        } catch (cxxopts::OptionException ex) {
+        } catch (cxxopts::exceptions::exception ex) {
             exit(std::string(ex.what()) + "\nIn file: " + file);
         }
 
@@ -866,9 +882,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
     for (int i = 0; i < argc; i++)
         config.program_invocation_string += std::string{argv[i]} + " ";
 
-    int _argc = argc;
-    auto _argv = const_cast<char**>(argv);
-
     // parse input project files
     options.positional_help("<additional project files>");
     for (auto& opt : cli_options_list) {
@@ -878,7 +891,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
 
     // actually process passed options
     try {
-        auto parsed_options = options.parse(_argc, _argv);
+        auto parsed_options = options.parse(argc, argv);
         std::string res;
 
         if (parsed_options.count("help")) {
@@ -894,7 +907,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
             }
         }
 
-    } catch (cxxopts::OptionException ex) {
+    } catch (cxxopts::exceptions::exception ex) {
         exit(std::string(ex.what()) + "\n" + options.help({""}));
     }
 

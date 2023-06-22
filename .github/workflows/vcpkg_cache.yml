@@ -1,0 +1,56 @@
+name: Vcpkg Cache
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        opengl: [ON, OFF]
+    name: "Windows (OpenGL-${{ matrix.opengl }})"
+    runs-on: windows-2019
+    steps:
+    - uses: actions/checkout@v3
+    - name: Configure
+      run: >-
+        cmake -S . -B ${{ github.workspace }}/build -G "Visual Studio 16 2019"
+        -DMEGAMOL_STOP_AFTER_VCPKG=ON
+        -DMEGAMOL_USE_CGAL=ON
+        -DMEGAMOL_USE_OSPRAY=ON
+        -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
+      env:
+        VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        docker_image: [megamol_ci_ubuntu]
+        compiler:
+          - cc: clang-14
+            cxx: clang++-14
+          - cc: gcc-11
+            cxx: g++-11
+        opengl: [ON, OFF]
+    name: "${{ matrix.docker_image }} (${{ matrix.compiler.cc }}, OpenGL-${{ matrix.opengl }})"
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/unistuttgart-visus/${{ matrix.docker_image }}:master
+    steps:
+    - uses: actions/checkout@v3
+    - name: Configure
+      run: >-
+        cmake -S . -B ${{ github.workspace }}/build -G "Unix Makefiles"
+        -DMEGAMOL_STOP_AFTER_VCPKG=ON
+        -DMEGAMOL_USE_CGAL=ON
+        -DMEGAMOL_USE_OSPRAY=ON
+        -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
+      env:
+        CC: ${{ matrix.compiler.cc }}
+        CXX: ${{ matrix.compiler.cxx }}
+        VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"

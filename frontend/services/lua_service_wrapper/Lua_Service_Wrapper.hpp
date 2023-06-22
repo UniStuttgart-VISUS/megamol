@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AbstractFrontendService.hpp"
+#include "CommonTypes.h"
 #include "LuaCallbacksCollection.h"
 #include "LuaRemoteConnectionsBroker.h"
 #include "ScriptPaths.h"
@@ -89,7 +90,7 @@ private:
     std::list<megamol::frontend_resources::LuaCallbacksCollection> m_callbacks;
 
     megamol::frontend_resources::ScriptPaths m_scriptpath_resource;
-    std::function<std::tuple<bool, std::string>(std::string const&)> m_executeLuaScript_resource;
+    frontend_resources::common_types::lua_func_type m_executeLuaScript_resource;
     std::function<void(std::string const&)> m_setScriptPath_resource;
     std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)> m_registerLuaCallbacks_resource;
 

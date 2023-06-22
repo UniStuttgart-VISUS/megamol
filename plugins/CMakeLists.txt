@@ -47,7 +47,7 @@ function(megamol_plugin PLUGIN_NAME)
   endforeach ()
 
   # Enable plugin build option, show only if requirements are available and not always build
-  cmake_dependent_option(MEGAMOL_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" "${MMPLUGIN_ARGS_BUILD_DEFAULT}" "REQUIREMENTS_AVAILABLE;NOT MMPLUGIN_ARGS_ALWAYS_BUILD" OFF)
+  cmake_dependent_option(MEGAMOL_PLUGIN_${PLUGIN_NAME_UPPER} "Build plugin ${PLUGIN_NAME}." "${MMPLUGIN_ARGS_BUILD_DEFAULT}" "REQUIREMENTS_AVAILABLE;NOT MMPLUGIN_ARGS_ALWAYS_BUILD" OFF)
 
   if ((MEGAMOL_PLUGIN_${PLUGIN_NAME_UPPER} OR MMPLUGIN_ARGS_ALWAYS_BUILD) AND REQUIREMENTS_AVAILABLE)
 

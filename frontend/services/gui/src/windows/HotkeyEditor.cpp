@@ -189,13 +189,13 @@ bool megamol::gui::HotkeyEditor::Draw() {
                                  i < static_cast<int>(ImGuiKey_NamedKey_END); i++) {
                                 auto imgui_key = static_cast<ImGuiKey>(i);
                                 if (ImGui::IsKeyDown(imgui_key) && !this->is_key_modifier(imgui_key)) {
-                                    this->pending_hotkey.key = gui_utils::ImGuiKeyToGlfwKey(i);
+                                    this->pending_hotkey.key = gui_utils::ImGuiKeyToGlfwKey(imgui_key);
                                     this->pending_hotkey.mods = core::view::Modifier::NONE;
-                                    if (ImGui::IsKeyDown(ImGuiKey_ModAlt))
+                                    if (ImGui::IsKeyDown(ImGuiMod_Alt))
                                         this->pending_hotkey.mods |= core::view::Modifier::ALT;
-                                    if (ImGui::IsKeyDown(ImGuiKey_ModCtrl))
+                                    if (ImGui::IsKeyDown(ImGuiMod_Ctrl))
                                         this->pending_hotkey.mods |= core::view::Modifier::CTRL;
-                                    if (ImGui::IsKeyDown(ImGuiKey_ModShift))
+                                    if (ImGui::IsKeyDown(ImGuiMod_Shift))
                                         this->pending_hotkey.mods |= core::view::Modifier::SHIFT;
                                     break;
                                 }
@@ -325,8 +325,8 @@ bool megamol::gui::HotkeyEditor::is_key_modifier(ImGuiKey k) {
 
     if ((k == ImGuiKey_LeftCtrl) || (k == ImGuiKey_LeftShift) || (k == ImGuiKey_LeftAlt) || (k == ImGuiKey_LeftSuper) ||
         (k == ImGuiKey_RightCtrl) || (k == ImGuiKey_RightShift) || (k == ImGuiKey_RightAlt) ||
-        (k == ImGuiKey_RightSuper) || (k == ImGuiKey_ModCtrl) || (k == ImGuiKey_ModShift) || (k == ImGuiKey_ModAlt) ||
-        (k == ImGuiKey_ModSuper)) {
+        (k == ImGuiKey_RightSuper) || (k == ImGuiMod_Ctrl) || (k == ImGuiMod_Shift) || (k == ImGuiMod_Alt) ||
+        (k == ImGuiMod_Super)) {
         return true;
     }
     return false;

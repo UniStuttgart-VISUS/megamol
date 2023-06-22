@@ -23,6 +23,7 @@ public:
     friend class AbstractParamSlot;
 
     using ParamChangeCallback = std::function<void(AbstractParamSlot*)>;
+    using PresentationChangeCallback = std::function<void(AbstractParamSlot*)>;
 
     /**
      * Dtor.
@@ -72,67 +73,53 @@ public:
         this->hash = hash;
     }
 
-    /**
-     * Returns the has_changed flag and resets the flag to false.
-     *
-     * @return has_changed
-     */
-    bool ConsumeHasChanged() {
-        auto val = has_changed;
-        has_changed = false;
-        return val;
+    void SetParamChangeCallback(ParamChangeCallback const& callback) {
+        this->param_change_callback = callback;
     }
 
-    void setChangeCallback(ParamChangeCallback const& callback) {
-        this->change_callback = callback;
+    void SetPresentationChangeCallback(PresentationChangeCallback const& callback) {
+        this->presentation_change_callback = callback;
     }
 
     // TODO Temporary add wrappers around GuiPresentation() to avoid breaking changes for modules and merge hotfix
     //  until we know how this should be solved cleanly.
-    inline bool InitPresentation(AbstractParamPresentation::ParamType param_type) {
-        return GuiPresentation().InitPresentation(param_type);
+    inline void InitPresentation(AbstractParamPresentation::ParamType param_type) {
+        gui_presentation.InitPresentation(param_type);
+        indicatePresentationChange();
     }
 
     inline bool IsGUIVisible() const {
-        AbstractParamPresentation const& tmp = GuiPresentation();
-        return tmp.IsGUIVisible();
+        return gui_presentation.IsGUIVisible();
     }
 
     inline void SetGUIVisible(bool visible) {
-        GuiPresentation().SetGUIVisible(visible);
+        if (gui_presentation.IsGUIVisible() != visible) {
+            gui_presentation.SetGUIVisible(visible);
+            indicatePresentationChange();
+        }
     }
 
     inline bool IsGUIReadOnly() const {
-        AbstractParamPresentation const& tmp = GuiPresentation();
-        return tmp.IsGUIReadOnly();
+        return gui_presentation.IsGUIReadOnly();
     }
 
     inline void SetGUIReadOnly(bool read_only) {
-        GuiPresentation().SetGUIReadOnly(read_only);
+        if (gui_presentation.IsGUIReadOnly() != read_only) {
+            gui_presentation.SetGUIReadOnly(read_only);
+            indicatePresentationChange();
+        }
     }
 
     inline AbstractParamPresentation::Presentation GetGUIPresentation() const {
-        AbstractParamPresentation const& tmp = GuiPresentation();
-        return tmp.GetGUIPresentation();
+        return gui_presentation.GetGUIPresentation();
     }
 
     void SetGUIPresentation(AbstractParamPresentation::Presentation presentS) {
-        GuiPresentation().SetGUIPresentation(presentS);
+        if (gui_presentation.GetGUIPresentation() != presentS) {
+            gui_presentation.SetGUIPresentation(presentS);
+            indicatePresentationChange();
+        }
     }
-
-protected:
-    // we need to route all changes to the GUI presentation via this function in the parameter
-    // because the parameter needs to indicate internal state changes
-    // to the frontend, in order for the frontend GUI
-    // to get notified of presentation changes
-    AbstractParamPresentation& GuiPresentation() {
-        indicateChange();
-        return gui_presentation;
-    };
-
-    AbstractParamPresentation const& GuiPresentation() const {
-        return gui_presentation;
-    };
 
 protected:
     /**
@@ -148,12 +135,12 @@ protected:
      */
     bool isSlotPublic() const;
 
-    /**
-     * Set has_changed flag to true.
-     */
-    void indicateChange() {
-        has_changed = true;
-        change_callback(slot);
+    void indicateParamChange() {
+        param_change_callback(slot);
+    }
+
+    void indicatePresentationChange() {
+        presentation_change_callback(slot);
     }
 
 private:
@@ -167,17 +154,14 @@ private:
     uint64_t hash;
 
     /**
-     * Indicating that the value has changed.
-     */
-    bool has_changed;
-
-    /**
      * The change callback is set by the MegaMol Graph/Frontend as a notification mechanism
      * to be made aware of module-driven or other parameters changes not made via the lua parameter setter function
      */
-    ParamChangeCallback change_callback = [](auto*) {
+    ParamChangeCallback param_change_callback = [](auto*) {
         // needs default init for randomly created modules/params not to crash for default SetValue() calls
     };
+
+    PresentationChangeCallback presentation_change_callback = [](auto*) {};
 
     AbstractParamPresentation gui_presentation;
 };

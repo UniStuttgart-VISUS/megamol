@@ -1,6 +1,5 @@
 #version 450
 #extension GL_ARB_shading_language_420pack : enable
-#extension GL_ARB_shading_language_include : enable
 // FidelityFX Super Resolution Sample
 //
 // Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.

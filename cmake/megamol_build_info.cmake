@@ -2,7 +2,7 @@
 # This script will provide several build information as compiled resources.
 
 # Dependency
-include(cmrc/CMakeRC)
+find_package(CMakeRC CONFIG REQUIRED)
 
 # Used directories
 set(INFO_SCRIPT_DIR "${CMAKE_SOURCE_DIR}/cmake/megamol_build_info")

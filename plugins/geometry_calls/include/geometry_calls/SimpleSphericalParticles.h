@@ -201,7 +201,7 @@ public:
             } break;
             case SimpleSphericalParticles::IDDATA_NONE:
             default: {
-                this->id_acc_ = std ::make_shared<Accessor_0>();
+                this->id_acc_ = std ::make_shared<Accessor_Idx>();
             }
             }
         }

@@ -1,11 +1,13 @@
 {
   "name": "mwk-mint-interop",
-  "version": "2022-01-20",
-  "port-version": 0,
-  "homepage": "https://github.com/UniStuttgart-VISUS/MWK-mint",
+  "version-date": "2022-09-09",
   "description": "Implements a minimal C++ OpenGL Rendering Application and Interop Library to broadcast textures and exchange camera and rendering configurations via Spout2 and ZeroMQ/JSON.",
+  "homepage": "https://github.com/UniStuttgart-VISUS/MWK-mint",
   "supports": "windows",
   "dependencies": [
+    "cppzmq",
+    "nlohmann-json",
+    "spout2",
     {
       "name": "vcpkg-cmake",
       "host": true
@@ -13,9 +15,6 @@
     {
       "name": "vcpkg-cmake-config",
       "host": true
-    },
-    "cppzmq",
-    "nlohmann-json",
-    "spout2"
+    }
   ]
 }

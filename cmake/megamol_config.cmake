@@ -28,9 +28,9 @@ add_compile_definitions("$<$<CONFIG:DEBUG>:DEBUG>")
 add_compile_definitions("$<$<CONFIG:DEBUG>:_DEBUG>")
 
 # Compiler flags
-# Note: special C++ and C-Compiler flags should be set for each language seperately as done below.
+# Note: special C++ and C-Compiler flags should be set for each language separately as done below.
 # Otherwise, a possible compilation with CUDA will propagate those flags to the CUDA-Compiler and lead to a crash.
-# For certain systems, those flags should be set for both C++ and C compilers to work properly
+# For certain systems, those flags should be set for both C++ and C compilers to work properly.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # nothing to do
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -39,7 +39,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
   # Prevent build fail.
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-narrowing>)
-  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-non-pod-vararg>)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-non-pod-varargs>)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/MP>)
   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/permissive->)
@@ -68,7 +68,7 @@ endif ()
 # This uses the run-clang-tidy wrapper allowing very fast parallel execution, but also tries to fix not existent source files in the binary dir.
 #
 # Both solutions do not exclude 3rd directories and clang-tidy results seems to sometime trigger edge cases with weird results.
-# Therefore, results should be commited manually and currently do not run clang-tidy within the CI pipeline.
+# Therefore, results should be committed manually and currently do not run clang-tidy within the CI pipeline.
 option(MEGAMOL_RUN_CLANG_TIDY "Run clang-tidy." OFF)
 mark_as_advanced(FORCE MEGAMOL_RUN_CLANG_TIDY)
 if (MEGAMOL_RUN_CLANG_TIDY)
@@ -106,3 +106,8 @@ if (MEGAMOL_USE_CGAL)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 endif ()
+
+# imgui
+# Set IMGUI_USER_CONFIG globally on imgui target for all users.
+find_package(imgui CONFIG REQUIRED)
+target_compile_definitions(imgui::imgui INTERFACE "IMGUI_USER_CONFIG=\"${CMAKE_CURRENT_SOURCE_DIR}/cmake/imgui/megamol_imgui_config.h\"")

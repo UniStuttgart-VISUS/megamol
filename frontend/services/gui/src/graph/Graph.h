@@ -158,8 +158,10 @@ public:
     ImGuiID GetSelectedInterfaceSlot() const {
         return this->gui_graph_state.interact.interfaceslot_selected_uid;
     }
-    ImGuiID GetDropSlot() const {
-        return this->gui_graph_state.interact.slot_dropped_uid;
+    UIDPair_t ConsumeDragAndDropSlots() {
+        auto drag_drop_uids = this->gui_graph_state.interact.slot_drag_drop_uids;
+        this->gui_graph_state.interact.slot_drag_drop_uids = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
+        return drag_drop_uids;
     }
     bool IsCanvasHovered() const {
         return this->gui_canvas_hovered;

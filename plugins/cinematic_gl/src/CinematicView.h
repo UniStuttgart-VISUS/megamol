@@ -8,6 +8,7 @@
 #pragma once
 
 
+#include "ModuleGraphSubscription.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
@@ -36,6 +37,7 @@ public:
 
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Base::requested_lifetime_resources(req);
+        req.require<frontend_resources::RuntimeConfig>();
         req.require<core::MegaMolGraph>();
     }
 

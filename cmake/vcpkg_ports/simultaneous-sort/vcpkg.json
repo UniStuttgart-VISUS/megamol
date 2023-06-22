@@ -1,7 +1,6 @@
 {
   "name": "simultaneous-sort",
-  "version": "2021-05-03",
-  "port-version": 0,
+  "version-date": "2021-05-03",
   "description": "Small header-only library for providing the possibility to simultaneously sort multiple arrays, based on a comparator for the first one.",
   "homepage": "https://github.com/alexstraub1990/simultaneous-sort",
   "license": "MIT",

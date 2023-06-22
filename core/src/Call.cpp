@@ -11,7 +11,7 @@
 #include "mmcore/utility/log/Log.h"
 
 #ifdef MEGAMOL_USE_TRACY
-#include "Tracy.hpp"
+#include "tracy/Tracy.hpp"
 #endif
 #if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
 #include "mmcore/Module.h"

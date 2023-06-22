@@ -1,9 +1,8 @@
 {
   "name": "chemfiles",
-  "version": "0.10.2",
-  "port-version": 0,
+  "version": "0.10.3",
+  "description": "Library for reading and writing chemistry files.",
   "homepage": "https://github.com/chemfiles/chemfiles",
-  "description": "Chemfiles: a library for reading and writing chemistry files",
   "license": "BSD-3-Clause",
   "dependencies": [
     {

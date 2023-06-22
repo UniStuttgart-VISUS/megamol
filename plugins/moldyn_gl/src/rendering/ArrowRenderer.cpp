@@ -111,7 +111,11 @@ bool ArrowRenderer::create() {
 bool ArrowRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->get_data_slot_.CallAs<MultiParticleDataCall>();
+    if (c2 != nullptr) {
+        c2->SetFrameID(call.Time());
+    }
     if ((c2 != nullptr) && ((*c2)(1))) {
+
         call.SetTimeFramesCount(c2->FrameCount());
         call.AccessBoundingBoxes() = c2->AccessBoundingBoxes();
 
@@ -224,7 +228,7 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         for (auto const& light : distant_lights) {
             auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
-                cur_light_dir = glm::vec4(-cam_view, 1.0);
+                cur_light_dir = glm::vec4(cam_view, 1.0);
             } else {
                 auto light_dir = light.direction;
                 if (light_dir.size() == 3) {
