@@ -671,18 +671,6 @@ bool megamol::compositing_gl::AntiAliasing::setTextureFormatCallback() {
     glowl::TextureLayout tx_layout(
         outHandler_.getInternalFormat(), 1, 1, 1, outHandler_.getFormat(), outHandler_.getType(), 1);
     output_tx2D_ = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
-    checkFormatsAndRecompile();
-    return true;
-}
-
-/*
- * @megamol::compositing_gl::AntiAliasing::getMetaDataCallback
- */
-bool megamol::compositing_gl::AntiAliasing::getMetaDataCallback(core::Call& caller) {
-    return true;
-}
-
-void megamol::compositing_gl::AntiAliasing::checkFormatsAndRecompile() {
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     auto shader_options_flags = outHandler_.handleDefinitions(shader_options);
@@ -696,4 +684,13 @@ void megamol::compositing_gl::AntiAliasing::checkFormatsAndRecompile() {
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("AntiAliasing: " + std::string(e.what())).c_str());
     }
+    return true;
 }
+
+/*
+ * @megamol::compositing_gl::AntiAliasing::getMetaDataCallback
+ */
+bool megamol::compositing_gl::AntiAliasing::getMetaDataCallback(core::Call& caller) {
+    return true;
+}
+

@@ -13,6 +13,7 @@
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "CompositingOutHandler.h"
 
 namespace megamol::compositing_gl {
 
@@ -119,6 +120,11 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
     /**
+    *
+    */
+    bool textureFormatCallback();
+
+    /**
      * G-Buffer for deferred rendering. By default if uses three color attachments (and a depth renderbuffer):
      * surface albedo - RGB 16bit per channel
      * normals - RGB 16bit per channel
@@ -141,6 +147,9 @@ private:
 
     /** Slot for accessing the framebuffer object used by this render target module */
     core::CalleeSlot m_framebuffer_slot;
+
+    CompositingOutHandler colorOutHandler_;
+    CompositingOutHandler normalsOutHandler_;
 };
 
 } // namespace megamol::compositing_gl

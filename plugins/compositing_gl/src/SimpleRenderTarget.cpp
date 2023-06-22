@@ -12,7 +12,13 @@ megamol::compositing_gl::SimpleRenderTarget::SimpleRenderTarget()
         , m_normal_render_target("Normals", "Access the normals render target texture")
         , m_depth_buffer("Depth", "Access the depth render target texture")
         , m_camera("Camera", "Access the latest camera snapshot")
-        , m_framebuffer_slot("Framebuffer", "Access the framebuffer used by this render target") {
+        , m_framebuffer_slot("Framebuffer", "Access the framebuffer used by this render target")
+        , colorOutHandler_("COLORFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM},
+              std::function<bool()>(std::bind(&SimpleRenderTarget::textureFormatCallback, this)), "color Out Format",
+              "color format")
+        , normalsOutHandler_("NORMALSFORMAT", {GL_RGB32F, GL_RGB16F, GL_RGB8_SNORM},
+              std::function<bool()>(std::bind(&SimpleRenderTarget::textureFormatCallback, this)), "normals Out Format",
+              "normal Format") {
     this->m_color_render_target.SetCallback(
         CallTexture2D::ClassName(), "GetData", &SimpleRenderTarget::getColorRenderTarget);
     this->m_color_render_target.SetCallback(
@@ -42,6 +48,10 @@ megamol::compositing_gl::SimpleRenderTarget::SimpleRenderTarget()
 
     this->MakeSlotAvailable(&this->chainRenderSlot);
     this->MakeSlotAvailable(&this->renderSlot);
+
+    this->MakeSlotAvailable(colorOutHandler_.getFormatSelectorSlot());
+
+    this->MakeSlotAvailable(normalsOutHandler_.getFormatSelectorSlot());
 }
 
 megamol::compositing_gl::SimpleRenderTarget::~SimpleRenderTarget() {
@@ -52,8 +62,10 @@ megamol::compositing_gl::SimpleRenderTarget::~SimpleRenderTarget() {
 bool megamol::compositing_gl::SimpleRenderTarget::create() {
 
     m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);
-    m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
-    m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT);   // normals
+    m_GBuffer->createColorAttachment(colorOutHandler_.getInternalFormat(), colorOutHandler_.getFormat(),
+        colorOutHandler_.getType()); // surface albedo
+    m_GBuffer->createColorAttachment(normalsOutHandler_.getInternalFormat(), normalsOutHandler_.getFormat(),
+        normalsOutHandler_.getType()); // normals
 
     return true;
 }
@@ -159,5 +171,32 @@ bool megamol::compositing_gl::SimpleRenderTarget::getFramebufferObject(core::Cal
 }
 
 bool megamol::compositing_gl::SimpleRenderTarget::getMetaDataCallback(core::Call& caller) {
+    return true;
+}
+
+bool megamol::compositing_gl::SimpleRenderTarget::textureFormatCallback() {
+    /*
+    if (m_GBuffer == NULL) {
+        m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);
+        m_GBuffer->createColorAttachment(colorOutHandler_.getInternalFormat(), colorOutHandler_.getFormat(), colorOutHandler_.getType()); // surface albedo
+        m_GBuffer->createColorAttachment(normalsOutHandler_.getInternalFormat(), normalsOutHandler_.getFormat(), normalsOutHandler_.getType());   // normals
+    } else {
+        glowl::TextureLayout col_tx_layout(
+            colorOutHandler_.getInternalFormat(), 1, 1, 1, colorOutHandler_.getFormat(), colorOutHandler_.getType(), 1);
+        m_GBuffer->getColorAttachment(0)->reload(col_tx_layout, nullptr);
+        glowl::TextureLayout norm_tx_layout(normalsOutHandler_.getInternalFormat(), 1, 1, 1,
+            normalsOutHandler_.getFormat(), normalsOutHandler_.getType(), 1);
+        m_GBuffer->getColorAttachment(1)->reload(norm_tx_layout, nullptr);
+    }
+    */
+
+    m_GBuffer.reset();
+    m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);
+    m_GBuffer->createColorAttachment(colorOutHandler_.getInternalFormat(), colorOutHandler_.getFormat(),
+        colorOutHandler_.getType()); // surface albedo
+    m_GBuffer->createColorAttachment(normalsOutHandler_.getInternalFormat(), normalsOutHandler_.getFormat(),
+        normalsOutHandler_.getType()); // normals
+    if (this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>() != nullptr)
+        this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>()->SetFramebuffer(m_GBuffer);
     return true;
 }

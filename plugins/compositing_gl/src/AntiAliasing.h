@@ -216,7 +216,6 @@ private:
     void copyTextureViaShader(
         const std::shared_ptr<glowl::Texture2D>& tgt, const std::shared_ptr<glowl::Texture2D>& src);
 
-    void checkFormatsAndRecompile();
 
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
