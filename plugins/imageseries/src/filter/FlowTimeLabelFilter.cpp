@@ -1051,7 +1051,7 @@ void FlowTimeLabelFilter::computeVelocities(graph::GraphData2D& nodeGraph, const
                         interfacePixels.insert(pixels.begin(), pixels.end());
                         targetPixels.insert(targetNode.pixels.begin(), targetNode.pixels.end());
 
-                        std::set_union(interfacePixels.begin(), interfacePixels.end(), targetPixels.begin(),
+                        std::set_intersection(interfacePixels.begin(), interfacePixels.end(), targetPixels.begin(),
                             targetPixels.end(), std::back_inserter(target));
                     }
                 }
@@ -1081,7 +1081,7 @@ void FlowTimeLabelFilter::computeVelocities(graph::GraphData2D& nodeGraph, const
                         interfacePixels.insert(pixels.begin(), pixels.end());
                         sourcePixels.insert(sourceNode.pixels.begin(), sourceNode.pixels.end());
 
-                        std::set_union(interfacePixels.begin(), interfacePixels.end(), sourcePixels.begin(),
+                        std::set_intersection(interfacePixels.begin(), interfacePixels.end(), sourcePixels.begin(),
                             sourcePixels.end(), std::back_inserter(source));
                     } else if (time > nodeTime) {
                         target.insert(target.end(), pixels.begin(), pixels.end());
