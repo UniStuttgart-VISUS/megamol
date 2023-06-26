@@ -8,12 +8,10 @@
 
 #pragma once
 
+#include <climits>
 
-#define IMGUI_DEFINE_MATH_OPERATORS
-//#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS // TODO implot currently requires deprecated functions, can be enabled when implot is updated.
-#define IMGUI_DISABLE_OBSOLETE_KEYIO
-#include "imgui.h"
-#include "imgui_internal.h"
+#include <imgui.h>
+#include <imgui_internal.h>
 
 #include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/utility/log/Log.h"
@@ -203,7 +201,8 @@ enum HotkeyIndex : size_t {
     HOTKEY_CONFIGURATOR_MODULE_SEARCH,
     HOTKEY_CONFIGURATOR_PARAMETER_SEARCH,
     HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM,
-    HOTKEY_CONFIGURATOR_SAVE_PROJECT
+    HOTKEY_CONFIGURATOR_SAVE_PROJECT,
+    HOTKEY_CONFIGURATOR_LAYOUT_GRAPH
 };
 struct HotkeyData_t {
     std::string name;
@@ -269,7 +268,7 @@ typedef struct _interact_state_ {
     unsigned int call_coloring_mode; // in
     unsigned int call_coloring_map;  // in
 
-    ImGuiID slot_dropped_uid; // in out
+    UIDPair_t slot_drag_drop_uids; // in out
 
     ImGuiID callslot_selected_uid;       // in out
     ImGuiID callslot_hovered_uid;        // in out
@@ -345,15 +344,13 @@ public:
     static void PushReadOnly(bool set = true) {
 
         if (set) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            ImGui::BeginDisabled(set);
         }
     }
     static void PopReadOnly(bool set = true) {
 
         if (set) {
-            ImGui::PopStyleVar();
-            ImGui::PopItemFlag();
+            ImGui::EndDisabled();
         }
     }
 

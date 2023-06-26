@@ -302,8 +302,11 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         } else {
                             diff_vec -= ImBezierCubicClosestPoint(bez_p1, bez_p2, bez_p3, bez_p4, mouse_pos, 10.0f);
                         }
-                        auto curve_hovered = (fabs(diff_vec.x) <= std::max(1.0f, bez_linewidth / 2.0f)) &&
-                                             (fabs(diff_vec.y) <= std::max(1.0f, bez_linewidth / 2.0f));
+                        auto curve_hovered =
+                            (fabs(diff_vec.x) <= std::max(1.0f, bez_linewidth / 2.0f)) &&
+                            (fabs(diff_vec.y) <= std::max(1.0f, bez_linewidth / 2.0f)) &&
+                            !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel);
+                        /// Prevent curve hovering when pop up is open and might occlude call curve
 
                         if (this->gui_set_active || ImGui::IsItemActivated() ||
                             (curve_hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left))) {
@@ -510,11 +513,11 @@ void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceMa
         switch (entry.api) {
         case frontend_resources::PerformanceManager::query_api::CPU:
             this->cpu_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
-                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+                std::chrono::duration<double, std::milli>(entry.duration.time_since_epoch()).count());
             break;
         case frontend_resources::PerformanceManager::query_api::OPENGL:
             this->gl_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
-                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+                std::chrono::duration<double, std::milli>(entry.duration.time_since_epoch()).count());
             break;
         }
     }

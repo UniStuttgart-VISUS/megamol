@@ -5,11 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-
 #include "ButtonWidgets.h"
-#include "graph/Parameter.h"
-#include "imgui.h"
 
+#include <imgui.h>
+
+#include "graph/Parameter.h"
 
 using namespace megamol;
 using namespace megamol::gui;

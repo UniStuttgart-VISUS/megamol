@@ -339,7 +339,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 }
 
                 // Rename pop-up
-                std::string new_name;
+                std::string new_name = this->name;
                 std::string last_module_name = this->FullName();
                 if (this->gui_rename_popup.Rename("Rename Module", popup_rename, new_name)) {
                     this->SetName(new_name);
@@ -525,7 +525,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
 #ifdef MEGAMOL_USE_PROFILING
                     // Profiling Button
                     if (profiling_button) {
-                        ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+                        if (parameter_button || graph_entry_button) {
+                            ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+                        }
 
                         // Lazy loading of performance button texture
                         if (!this->gui_profiling_button.IsLoaded()) {
@@ -684,7 +686,7 @@ bool megamol::gui::Module::StateToJSON(nlohmann::json& inout_json) {
     bool retval = this->gui_param_groups.StateToJSON(inout_json, this->FullName());
     // Parameters
     for (auto& param : this->parameters) {
-        retval &= param.StateToJSON(inout_json, param.FullNameProject());
+        retval &= param.StateToJSON(inout_json, param.FullName());
     }
     return retval;
 }
@@ -696,7 +698,7 @@ bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
     bool retval = this->gui_param_groups.StateFromJSON(in_json, this->FullName());
     // Parameters
     for (auto& param : this->parameters) {
-        retval &= param.StateFromJSON(in_json, param.FullNameProject());
+        retval &= param.StateFromJSON(in_json, param.FullName());
         param.ForceSetGUIStateDirty();
     }
     return retval;
@@ -711,11 +713,11 @@ void megamol::gui::Module::AppendPerformanceData(frontend_resources::Performance
         switch (entry.api) {
         case frontend_resources::PerformanceManager::query_api::CPU:
             this->cpu_perf_history[entry.handle].push_sample(frame, entry.frame_index,
-                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+                std::chrono::duration<double, std::milli>(entry.duration.time_since_epoch()).count());
             break;
         case frontend_resources::PerformanceManager::query_api::OPENGL:
             this->gl_perf_history[entry.handle].push_sample(frame, entry.frame_index,
-                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+                std::chrono::duration<double, std::milli>(entry.duration.time_since_epoch()).count());
             break;
         }
     }

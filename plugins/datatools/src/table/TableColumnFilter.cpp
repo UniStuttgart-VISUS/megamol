@@ -66,7 +66,7 @@ bool TableColumnFilter::processData(core::Call& c) {
 
         if (this->datahash != inCall->DataHash() || this->frameID != inCall->GetFrameID() ||
             this->selectionStringSlot.IsDirty()) {
-            this->datahash++;
+            this->datahash = inCall->DataHash();
             this->selectionStringSlot.ResetDirty();
             this->frameID = inCall->GetFrameID();
 
