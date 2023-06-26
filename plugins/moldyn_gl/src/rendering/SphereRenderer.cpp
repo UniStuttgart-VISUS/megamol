@@ -26,8 +26,6 @@ using namespace vislib_gl::graphics::gl;
 
 #define SSBO_GENERATED_SHADER_INSTANCE "gl_VertexID" // or "gl_InstanceID"
 #define SSBO_GENERATED_SHADER_ALIGNMENT "std430"     // "std430"
-#define AO_DIR_UBO_BINDING_POINT 0
-
 
 // Beware of changing the binding points
 // Need to be changed in shaders accordingly
@@ -68,7 +66,6 @@ SphereRenderer::SphereRenderer()
         , sphere_prgm_()
         , sphere_geometry_prgm_()
         , lighting_prgm_()
-        , ao_dir_ubo_(nullptr)
         , vert_array_()
         , col_type_(SimpleSphericalParticles::ColourDataType::COLDATA_NONE)
         , vert_type_(SimpleSphericalParticles::VertexDataType::VERTDATA_NONE)
@@ -84,11 +81,8 @@ SphereRenderer::SphereRenderer()
         , old_hash_(-1)
         , old_frame_id_(0)
         , state_invalid_(0)
-        , amb_cone_constants_()
         , trigger_rebuild_g_buffer_(false)
-        , vol_size_(0)
-        , vol_size_changed_(false)
-// , timer()
+        // , timer()
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         /// This variant should not need the fence (?)
         // ,single_buffer_creation_bits_(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);
@@ -117,16 +111,6 @@ SphereRenderer::SphereRenderer()
               "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
         , use_static_data_param_(
               "ssbo::staticData", "SSBO: Upload data only once per hash change and keep data static on GPU")
-        , enable_lighting_slot_("ambient occlusion::enableLighting", "Ambient Occlusion: Enable Lighting")
-        , enable_geometry_shader_("ambient occlusion::useGsProxies",
-              "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
-        , ao_vol_size_slot_("ambient occlusion::volumeSize", "Ambient Occlusion: Longest volume edge")
-        , ao_cone_apex_slot_("ambient occlusion::apex", "Ambient Occlusion: Cone Apex Angle")
-        , ao_offset_slot_("ambient occlusion::offset", "Ambient Occlusion: Offset from Surface")
-        , ao_strength_slot_("ambient occlusion::strength", "Ambient Occlusion: Strength")
-        , ao_cone_length_slot_("ambient occlusion::coneLength", "Ambient Occlusion: Cone length")
-        , use_hp_textures_slot_(
-              "ambient occlusion::highPrecisionTexture", "Ambient Occlusion: Use high precision textures")
         , outline_width_slot_("outline::width", "Width of the outline in pixels") {
 
     this->get_data_slot_.SetCompatibleCall<MultiParticleDataCallDescription>();
@@ -159,7 +143,6 @@ SphereRenderer::SphereRenderer()
     rmp->SetTypePair(RenderMode::SSBO_STREAM, this->getRenderModeString(RenderMode::SSBO_STREAM).c_str());
     rmp->SetTypePair(RenderMode::BUFFER_ARRAY, this->getRenderModeString(RenderMode::BUFFER_ARRAY).c_str());
     rmp->SetTypePair(RenderMode::SPLAT, this->getRenderModeString(RenderMode::SPLAT).c_str());
-    rmp->SetTypePair(RenderMode::AMBIENT_OCCLUSION, this->getRenderModeString(RenderMode::AMBIENT_OCCLUSION).c_str());
     rmp->SetTypePair(RenderMode::OUTLINE, this->getRenderModeString(RenderMode::OUTLINE).c_str());
     this->render_mode_param_ << rmp;
     this->MakeSlotAvailable(&this->render_mode_param_);
@@ -197,30 +180,6 @@ SphereRenderer::SphereRenderer()
 
     this->use_static_data_param_ << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->use_static_data_param_);
-
-    this->enable_lighting_slot_ << (new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->enable_lighting_slot_);
-
-    this->enable_geometry_shader_ << (new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->enable_geometry_shader_);
-
-    this->ao_vol_size_slot_ << (new param::IntParam(128, 1, 1024));
-    this->MakeSlotAvailable(&this->ao_vol_size_slot_);
-
-    this->ao_cone_apex_slot_ << (new param::FloatParam(50.0f, 1.0f, 90.0f));
-    this->MakeSlotAvailable(&this->ao_cone_apex_slot_);
-
-    this->ao_offset_slot_ << (new param::FloatParam(0.01f, 0.0f, 0.2f));
-    this->MakeSlotAvailable(&this->ao_offset_slot_);
-
-    this->ao_strength_slot_ << (new param::FloatParam(1.0f, 0.1f, 20.0f));
-    this->MakeSlotAvailable(&this->ao_strength_slot_);
-
-    this->ao_cone_length_slot_ << (new param::FloatParam(0.8f, 0.01f, 1.0f));
-    this->MakeSlotAvailable(&this->ao_cone_length_slot_);
-
-    this->use_hp_textures_slot_ << (new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->use_hp_textures_slot_);
 
     this->outline_width_slot_ << (new core::param::FloatParam(2.0f, 0.0f));
     this->MakeSlotAvailable(&this->outline_width_slot_);
@@ -322,10 +281,6 @@ bool SphereRenderer::create() {
         this->render_mode_param_.Param<param::EnumParam>()->SetTypePair(
             RenderMode::BUFFER_ARRAY, this->getRenderModeString(RenderMode::BUFFER_ARRAY).c_str());
     }
-    if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION)) {
-        this->render_mode_param_.Param<param::EnumParam>()->SetTypePair(
-            RenderMode::AMBIENT_OCCLUSION, this->getRenderModeString(RenderMode::AMBIENT_OCCLUSION).c_str());
-    }
     if (this->isRenderModeAvailable(RenderMode::OUTLINE)) {
         this->render_mode_param_.Param<param::EnumParam>()->SetTypePair(
             RenderMode::OUTLINE, this->getRenderModeString(RenderMode::OUTLINE).c_str());
@@ -360,9 +315,6 @@ bool SphereRenderer::create() {
     timers_ = perf_manager_->add_timers(this, {upload_timer, render_timer});
 #endif
 
-    std::vector<float> dummy = {0};
-    ao_dir_ubo_ = std::make_unique<glowl::BufferObject>(GL_UNIFORM_BUFFER, dummy);
-
     return true;
 }
 
@@ -393,29 +345,6 @@ bool SphereRenderer::resetOpenGLResources() {
 
     this->col_type_ = SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
     this->vert_type_ = SimpleSphericalParticles::VertexDataType::VERTDATA_NONE;
-
-    // AMBIENT OCCLUSION
-    if (this->isRenderModeAvailable(RenderMode::AMBIENT_OCCLUSION, true)) {
-        for (unsigned int i = 0; i < this->gpu_data_.size(); i++) {
-            glDeleteVertexArrays(3, reinterpret_cast<GLuint*>(&(this->gpu_data_[i])));
-        }
-        this->gpu_data_.clear();
-
-        if (this->g_buffer_.color != 0) {
-            glDeleteTextures(1, &this->g_buffer_.color);
-        }
-        this->g_buffer_.color = 0;
-        if (this->g_buffer_.depth != 0) {
-            glDeleteTextures(1, &this->g_buffer_.depth);
-        }
-        this->g_buffer_.depth = 0;
-        if (this->g_buffer_.normals != 0) {
-            glDeleteTextures(1, &this->g_buffer_.normals);
-        }
-        this->g_buffer_.normals = 0;
-
-        glDeleteFramebuffers(1, &this->g_buffer_.fbo);
-    }
 
     // SPLAT or BUFFER_ARRAY
     if (this->isRenderModeAvailable(RenderMode::SPLAT, true) ||
@@ -457,15 +386,6 @@ void SphereRenderer::resetConditionalParameters() {
     this->attenuate_subpixel_param_.Param<param::BoolParam>()->SetGUIVisible(false);
     // SSBO
     this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(false);
-    // Ambient Occlusion
-    this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
-    this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(false);
-    this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
-    this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_cone_length_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->use_hp_textures_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
     // Outlining
     this->outline_width_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
 }
@@ -595,70 +515,6 @@ bool SphereRenderer::createResources() {
                 this->the_single_buffer_, 0, this->buf_size_ * this->num_buffers_, single_buffer_mapping_bits_);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
-        } break;
-
-        case (RenderMode::AMBIENT_OCCLUSION): {
-            this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(true);
-            this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(true);
-            //this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(true);
-            this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
-            this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
-            this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
-            this->ao_cone_length_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
-            this->use_hp_textures_slot_.Param<param::BoolParam>()->SetGUIVisible(true);
-
-            this->ao_cone_apex_slot_.ResetDirty();
-            this->enable_lighting_slot_.ResetDirty();
-
-            // Generate texture and frame buffer handles
-            glGenTextures(1, &this->g_buffer_.color);
-            glGenTextures(1, &this->g_buffer_.normals);
-            glGenTextures(1, &this->g_buffer_.depth);
-            glGenFramebuffers(1, &(this->g_buffer_.fbo));
-
-            // Create the sphere shader
-            sphere_prgm_.reset();
-            sphere_prgm_ = core::utility::make_glowl_shader("sphere_mdao", *shader_options_flags_,
-                "moldyn_gl/sphere_renderer/sphere_mdao.vert.glsl", "moldyn_gl/sphere_renderer/sphere_mdao.frag.glsl");
-
-            glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
-            glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
-            glBindAttribLocation(this->sphere_prgm_->getHandle(), 2, "inColIdx");
-
-            // Create the geometry shader
-            sphere_geometry_prgm_.reset();
-            sphere_geometry_prgm_ = core::utility::make_glowl_shader("sphere_mdao_geometry", *shader_options_flags_,
-                "moldyn_gl/sphere_renderer/sphere_mdao_geometry.vert.glsl",
-                "moldyn_gl/sphere_renderer/sphere_mdao_geometry.geom.glsl",
-                "moldyn_gl/sphere_renderer/sphere_mdao_geometry.frag.glsl");
-
-            glBindAttribLocation(this->sphere_geometry_prgm_->getHandle(), 0, "position");
-
-            // Create the deferred shader
-            auto lighting_so = shader_options;
-
-            bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
-            if (enable_lighting) {
-                lighting_so.addDefinition("ENABLE_LIGHTING");
-            }
-
-            float apex = this->ao_cone_apex_slot_.Param<param::FloatParam>()->Value();
-            std::vector<glm::vec4> directions;
-            this->generate3ConeDirections(directions, apex * static_cast<float>(M_PI) / 180.0f);
-            lighting_so.addDefinition("NUM_CONEDIRS", std::to_string(directions.size()));
-
-            ao_dir_ubo_->rebuffer(directions);
-
-            lighting_prgm_.reset();
-            lighting_prgm_ = core::utility::make_glowl_shader("sphere_mdao_deferred", lighting_so,
-                "moldyn_gl/sphere_renderer/sphere_mdao_deferred.vert.glsl",
-                "moldyn_gl/sphere_renderer/sphere_mdao_deferred.frag.glsl");
-
-            // TODO glowl implementation of GLSLprogram misses this functionality
-            auto ubo_idx = glGetUniformBlockIndex(lighting_prgm_->getHandle(), "cone_buffer");
-            glUniformBlockBinding(lighting_prgm_->getHandle(), ubo_idx, (GLuint)AO_DIR_UBO_BINDING_POINT);
-
-            this->trigger_rebuild_g_buffer_ = true;
         } break;
 
         case RenderMode::OUTLINE: {
@@ -817,20 +673,6 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
             warnstr += warnmode + "OpenGL version 4.5 or greater is required. \n";
         }
         break;
-    case (RenderMode::AMBIENT_OCCLUSION):
-        if (ogl_ctx.isVersionGEQ(4, 2) == 0) {
-            warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
-        }
-        if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
-            warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
-        }
-        if (!ogl_ctx.isExtAvailable("GL_ARB_gpu_shader_fp64")) {
-            warnstr += warnmode + "Extension GL_ARB_gpu_shader_fp64 is required. \n";
-        }
-        if (!ogl_ctx.isExtAvailable("GL_ARB_compute_shader")) {
-            warnstr += warnmode + "Extension GL_ARB_compute_shader is required. \n";
-        }
-        break;
     case (RenderMode::OUTLINE):
         if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
             warnstr += warnmode + "Minimum OpenGL version is 1.4 \n";
@@ -919,9 +761,6 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
         break;
     case (RenderMode::BUFFER_ARRAY):
         mode = "Buffer_Array";
-        break;
-    case (RenderMode::AMBIENT_OCCLUSION):
-        mode = "Ambient_Occlusion";
         break;
     case (RenderMode::OUTLINE):
         mode = "Outline";
@@ -1109,9 +948,6 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         break;
     case (RenderMode::BUFFER_ARRAY):
         retval = this->renderBufferArray(call, mpdc);
-        break;
-    case (RenderMode::AMBIENT_OCCLUSION):
-        retval = this->renderAmbientOcclusion(call, mpdc);
         break;
     case (RenderMode::OUTLINE):
         retval = this->renderOutline(call, mpdc);
@@ -1712,98 +1548,6 @@ bool SphereRenderer::renderGeometryShader(mmstd_gl::CallRender3DGL& call, MultiP
     return true;
 }
 
-
-bool SphereRenderer::renderAmbientOcclusion(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
-
-    // We need to regenerate the shader if certain settings are changed
-    if (this->enable_lighting_slot_.IsDirty() || this->ao_cone_apex_slot_.IsDirty()) {
-
-        this->ao_cone_apex_slot_.ResetDirty();
-        this->enable_lighting_slot_.ResetDirty();
-
-        this->createResources();
-    }
-
-    // Rebuild the g_buffer_ if neccessary
-    this->rebuildGBuffer();
-
-    // Render the particles' geometry
-    bool high_precision = this->use_hp_textures_slot_.Param<param::BoolParam>()->Value();
-
-    // Choose shader
-    bool use_geo = this->enable_geometry_shader_.Param<param::BoolParam>()->Value();
-    std::shared_ptr<glowl::GLSLProgram> the_shader = use_geo ? this->sphere_geometry_prgm_ : this->sphere_prgm_;
-
-    // Rebuild and reupload working data if neccessary
-    this->rebuildWorkingData(call, mpdc, the_shader);
-
-    GLint prev_fbo;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, this->g_buffer_.fbo);
-    GLenum bufs[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, bufs);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glBindFragDataLocation(the_shader->getHandle(), 0, "outColor");
-    glBindFragDataLocation(the_shader->getHandle(), 1, "outNormal");
-
-    the_shader->use();
-    this->enableFlagStorage(the_shader, mpdc);
-
-    glUniformMatrix4fv(the_shader->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_));
-    glUniformMatrix4fv(the_shader->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
-    glUniformMatrix4fv(the_shader->getUniformLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_inv_));
-    glUniformMatrix4fv(the_shader->getUniformLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_transp_));
-    glUniformMatrix4fv(the_shader->getUniformLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_transp_));
-    glUniform1f(
-        the_shader->getUniformLocation("scaling"), this->radius_scaling_param_.Param<param::FloatParam>()->Value());
-    glUniform4fv(the_shader->getUniformLocation("viewAttr"), 1, glm::value_ptr(this->cur_view_attrib_));
-    glUniform3fv(the_shader->getUniformLocation("camRight"), 1, glm::value_ptr(this->cur_cam_right_));
-    glUniform3fv(the_shader->getUniformLocation("camUp"), 1, glm::value_ptr(this->cur_cam_up_));
-    glUniform3fv(the_shader->getUniformLocation("camIn"), 1, glm::value_ptr(this->cur_cam_view_));
-    glUniform4fv(the_shader->getUniformLocation("clipDat"), 1, glm::value_ptr(this->cur_clip_dat_));
-    glUniform4fv(the_shader->getUniformLocation("clipCol"), 1, glm::value_ptr(this->cur_clip_col_));
-    glUniform1i(the_shader->getUniformLocation("inUseHighPrecision"), (int)high_precision);
-
-    GLuint flag_parts_count = 0;
-    for (unsigned int i = 0; i < this->gpu_data_.size(); i++) {
-        MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
-
-        if (!this->enableShaderData(the_shader, parts)) {
-            continue;
-        }
-
-        glUniform1ui(the_shader->getUniformLocation("flags_enabled"), GLuint(this->flags_enabled_));
-        if (this->flags_enabled_) {
-            glUniform1ui(the_shader->getUniformLocation("flags_offset"), flag_parts_count);
-            glUniform4fv(the_shader->getUniformLocation("flag_selected_col"), 1,
-                this->select_color_param_.Param<param::ColorParam>()->Value().data());
-            glUniform4fv(the_shader->getUniformLocation("flag_softselected_col"), 1,
-                this->soft_select_color_param_.Param<param::ColorParam>()->Value().data());
-        }
-
-        glBindVertexArray(this->gpu_data_[i].vertex_array);
-
-        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
-
-        this->disableShaderData();
-        flag_parts_count += parts.GetCount();
-    }
-
-    glBindVertexArray(0);
-    this->disableFlagStorage(the_shader);
-    glUseProgram(0); // the_shader.Disable();
-
-    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
-
-    // Deferred rendering pass
-    this->renderDeferredPass(call);
-
-    return true;
-}
-
-
 bool SphereRenderer::renderOutline(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphere_prgm_->use();
@@ -2333,291 +2077,3 @@ void SphereRenderer::waitSingle(const GLsync& sync_obj) {
 }
 
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
-
-
-// ##### Ambient Occlusion ################################################# //
-
-bool SphereRenderer::rebuildGBuffer() {
-
-    if (!this->trigger_rebuild_g_buffer_ && (this->cur_vp_width_ == this->last_vp_width_) &&
-        (this->cur_vp_height_ == this->last_vp_height_) && !this->use_hp_textures_slot_.IsDirty()) {
-        return true;
-    }
-
-    this->use_hp_textures_slot_.ResetDirty();
-
-    bool high_precision = this->use_hp_textures_slot_.Param<param::BoolParam>()->Value();
-
-    glBindTexture(GL_TEXTURE_2D, this->g_buffer_.color);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGB, this->cur_vp_width_, this->cur_vp_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-
-    glBindTexture(GL_TEXTURE_2D, this->g_buffer_.normals);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, high_precision ? GL_RGBA32F : GL_RGBA, this->cur_vp_width_, this->cur_vp_height_, 0,
-        GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-
-    glBindTexture(GL_TEXTURE_2D, this->g_buffer_.depth);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->cur_vp_width_, this->cur_vp_height_, 0,
-        GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Configure the framebuffer object
-    GLint prev_fbo;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, this->g_buffer_.fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->g_buffer_.color, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this->g_buffer_.normals, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->g_buffer_.depth, 0);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
-
-    this->trigger_rebuild_g_buffer_ = false;
-
-    return true;
-}
-
-
-void SphereRenderer::rebuildWorkingData(
-    mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc, const std::shared_ptr<glowl::GLSLProgram> prgm) {
-
-    // Upload new data if neccessary
-    if (this->state_invalid_) {
-        unsigned int parts_count = mpdc->GetParticleListCount();
-
-        // Add buffers if neccessary
-        for (unsigned int i = static_cast<unsigned int>(this->gpu_data_.size()); i < parts_count; i++) {
-            gpuParticleDataType data;
-            glGenVertexArrays(1, &(data.vertex_array));
-            glGenBuffers(1, &(data.vertex_vbo));
-            glGenBuffers(1, &(data.color_vbo));
-            this->gpu_data_.push_back(data);
-        }
-
-        // Remove buffers if neccessary
-        while (this->gpu_data_.size() > parts_count) {
-            gpuParticleDataType& data = this->gpu_data_.back();
-            glDeleteVertexArrays(1, &(data.vertex_array));
-            glDeleteBuffers(1, &(data.vertex_vbo));
-            glDeleteBuffers(1, &(data.color_vbo));
-            this->gpu_data_.pop_back();
-        }
-
-        // Reupload buffers
-        for (unsigned int i = 0; i < parts_count; i++) {
-            MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
-
-            glBindVertexArray(this->gpu_data_[i].vertex_array);
-            this->enableBufferData(prgm, parts, this->gpu_data_[i].vertex_vbo, parts.GetVertexData(),
-                this->gpu_data_[i].color_vbo, parts.GetColourData(), true);
-            glBindVertexArray(0);
-            this->disableBufferData(prgm);
-        }
-    }
-
-
-    // Check if voxelization is even needed
-
-    // Recreate the volume if neccessary
-    bool equal_clip_data = true;
-    for (size_t i = 0; i < 4; i++) {
-        if (this->old_clip_dat_[i] != this->cur_clip_dat_[i]) {
-            equal_clip_data = false;
-            break;
-        }
-    }
-    if (this->state_invalid_ || vol_size_changed_|| !equal_clip_data) {
-        vol_size_changed_ = false;
-
-        vislib::math::Dimension<float, 3> dims = this->cur_clip_box_.GetSize();
-
-        // Calculate the extensions of the volume by using the specified number of voxels for the longest edge
-        float longest_edge = this->cur_clip_box_.LongestEdge();
-        dims.Scale(static_cast<float>(vol_size_) / longest_edge);
-
-        // The X size must be a multiple of 4, so we might have to correct that a little
-        dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
-        dims.SetHeight(ceil(dims.GetHeight()));
-        dims.SetDepth(ceil(dims.GetDepth()));
-        this->amb_cone_constants_[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
-        this->amb_cone_constants_[1] = ceil(std::log2(static_cast<float>(vol_size_))) - 1.0f;
-
-        updateVolumeData(call.Time());
-    }
-}
-
-
-void SphereRenderer::renderDeferredPass(mmstd_gl::CallRender3DGL& call) {
-
-    bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
-    bool high_precision = this->use_hp_textures_slot_.Param<param::BoolParam>()->Value();
-
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, this->g_buffer_.depth);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->g_buffer_.normals);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->g_buffer_.color);
-
-    // voxel texture
-    VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
-    if (c_voxel != nullptr) {
-        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "SphereRenderer: could not get metadata (VolumetricDataCall)");
-        } else {
-            // get volume size from metadata
-            int new_vol_size = c_voxel->GetMetadata()->Resolution[0]; //TODO access correct value
-            if (new_vol_size != vol_size_) {
-                vol_size_ = new_vol_size;
-                vol_size_changed_ = true;
-            }
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
-            glActiveTexture(GL_TEXTURE0);
-        } 
-    }
-
-    this->lighting_prgm_->use();
-
-    ao_dir_ubo_->bind((GLuint)AO_DIR_UBO_BINDING_POINT);
-
-    this->lighting_prgm_->setUniform("inColorTex", static_cast<int>(0));
-    this->lighting_prgm_->setUniform("inNormalsTex", static_cast<int>(1));
-    this->lighting_prgm_->setUniform("inDepthTex", static_cast<int>(2));
-    this->lighting_prgm_->setUniform("inDensityTex", static_cast<int>(3));
-
-    this->lighting_prgm_->setUniform("inWidth", static_cast<float>(this->cur_vp_width_));
-    this->lighting_prgm_->setUniform("inHeight", static_cast<float>(this->cur_vp_height_));
-    glUniformMatrix4fv(
-        this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
-    this->lighting_prgm_->setUniform("inUseHighPrecision", high_precision);
-    if (enable_lighting) {
-        this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(this->cur_light_dir_));
-        this->lighting_prgm_->setUniform("inObjCamPos", glm::vec3(this->cur_cam_pos_));
-    }
-    this->lighting_prgm_->setUniform("inAOOffset", this->ao_offset_slot_.Param<param::FloatParam>()->Value());
-    this->lighting_prgm_->setUniform("inAOStrength", this->ao_strength_slot_.Param<param::FloatParam>()->Value());
-    this->lighting_prgm_->setUniform("inAOConeLength", this->ao_cone_length_slot_.Param<param::FloatParam>()->Value());
-    this->lighting_prgm_->setUniform("inAmbVolShortestEdge", this->amb_cone_constants_[0]);
-    this->lighting_prgm_->setUniform("inAmbVolMaxLod", this->amb_cone_constants_[1]);
-    glm::vec3 cur_clip_box_coords = glm::vec3(this->cur_clip_box_.GetLeftBottomBack().GetX(),
-        this->cur_clip_box_.GetLeftBottomBack().GetY(), this->cur_clip_box_.GetLeftBottomBack().GetZ());
-    this->lighting_prgm_->setUniform("inBoundsMin", cur_clip_box_coords);
-    glm::vec3 cur_clip_box_size = glm::vec3(this->cur_clip_box_.GetSize().GetWidth(),
-        this->cur_clip_box_.GetSize().GetHeight(), this->cur_clip_box_.GetSize().GetDepth());
-    this->lighting_prgm_->setUniform("inBoundsSize", cur_clip_box_size);
-
-    // Draw screen filling 'quad' (2 triangle, front facing: CCW)
-    std::vector<GLfloat> vertices = {-1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f};
-    GLuint vert_attrib_loc = glGetAttribLocation(this->lighting_prgm_->getHandle(), "inPosition");
-    glEnableVertexAttribArray(vert_attrib_loc);
-    glVertexAttribPointer(vert_attrib_loc, 2, GL_FLOAT, GL_TRUE, 0, vertices.data());
-    glDrawArrays(GL_TRIANGLES, static_cast<GLint>(0), static_cast<GLsizei>(vertices.size() / 2));
-    glDisableVertexAttribArray(vert_attrib_loc);
-
-    glUseProgram(0); // this->lighting_prgm_.Disable();
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_3D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_TEXTURE_3D);
-}
-
-
-void SphereRenderer::generate3ConeDirections(std::vector<glm::vec4>& directions, float apex) {
-
-    directions.clear();
-
-    float edge_length = 2.0f * tan(0.5f * apex);
-    float height = sqrt(1.0f - edge_length * edge_length / 12.0f);
-    float radius = sqrt(3.0f) / 3.0f * edge_length;
-
-    for (int i = 0; i < 3; i++) {
-        float angle = static_cast<float>(i) / 3.0f * 2.0f * static_cast<float>(M_PI);
-
-        glm::vec3 center(cos(angle) * radius, height, sin(angle) * radius);
-        center = glm::normalize(center);
-        directions.push_back(glm::vec4(center.x, center.y, center.z, edge_length));
-    }
-}
-
-
-// not used currently
-std::string SphereRenderer::generateDirectionShaderArrayString(
-    const std::vector<glm::vec4>& directions, const std::string& directions_name) {
-
-    std::stringstream result;
-
-    std::string upper_dir_name = directions_name;
-    std::transform(upper_dir_name.begin(), upper_dir_name.end(), upper_dir_name.begin(), ::toupper);
-
-    result << "\n#define NUM_" << upper_dir_name << " " << directions.size() << std::endl;
-    result << "\nconst vec4 " << directions_name << "[NUM_" << upper_dir_name << "] = vec4[NUM_" << upper_dir_name
-           << "](" << std::endl;
-
-    for (auto iter = directions.begin(); iter != directions.end(); iter++) {
-        result << "\tvec4(" << (*iter)[0] << ", " << (*iter)[1] << ", " << (*iter)[2] << ", " << (*iter)[3] << ")";
-        if (iter + 1 != directions.end())
-            result << ",";
-        result << std::endl;
-    }
-    result << ");" << std::endl;
-
-    return result.str();
-}
-
-
-bool SphereRenderer::updateVolumeData(const unsigned int frameID) {
-    VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
-
-    if (c_voxel != nullptr) {
-        c_voxel->SetFrameID(frameID, this->force_time_slot_.Param<param::BoolParam>()->Value());   
-        do {
-            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "SphereRenderer: could not get all extents (VolumetricDataCall)");
-                return false;
-            }
-            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "SphereRenderer: could not get metadata (VolumetricDataCall)");
-                return false;
-            }
-            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_DATA)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "SphereRenderer: could not get data (VolumetricDataCall)");
-                return false;
-            }
-
-            // TODO get datahash and frameId
-        } while (c_voxel->FrameID() != frameID);
-    }
-
-    return true;
-}

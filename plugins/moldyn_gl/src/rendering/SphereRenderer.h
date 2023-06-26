@@ -228,8 +228,7 @@ private:
         SSBO_STREAM = 3,
         BUFFER_ARRAY = 4,
         SPLAT = 5,
-        AMBIENT_OCCLUSION = 6,
-        OUTLINE = 7
+        OUTLINE = 7 // TODO = 6 ?
     };
 
     enum ShadingMode { FORWARD = 0, DEFERRED = 1 };
@@ -283,8 +282,6 @@ private:
     std::shared_ptr<glowl::GLSLProgram> sphere_geometry_prgm_;
     std::shared_ptr<glowl::GLSLProgram> lighting_prgm_;
 
-    std::unique_ptr<glowl::BufferObject> ao_dir_ubo_;
-
     GLuint vert_array_;
     SimpleSphericalParticles::ColourDataType col_type_;
     SimpleSphericalParticles::VertexDataType vert_type_;
@@ -302,7 +299,6 @@ private:
     SIZE_T old_hash_;
     unsigned int old_frame_id_;
     bool state_invalid_;
-    glm::vec2 amb_cone_constants_;
     bool trigger_rebuild_g_buffer_;
 
 #ifdef MEGAMOL_USE_PROFILING
@@ -351,20 +347,6 @@ private:
     core::param::ParamSlot alpha_scaling_param_;
     core::param::ParamSlot attenuate_subpixel_param_;
     core::param::ParamSlot use_static_data_param_;
-
-    // Affects only Ambient Occlusion rendering: --------------------------
-
-    megamol::core::param::ParamSlot enable_lighting_slot_;
-    megamol::core::param::ParamSlot enable_geometry_shader_;
-    megamol::core::param::ParamSlot ao_vol_size_slot_; //TODO remove?
-    megamol::core::param::ParamSlot ao_cone_apex_slot_;
-    megamol::core::param::ParamSlot ao_offset_slot_;
-    megamol::core::param::ParamSlot ao_strength_slot_;
-    megamol::core::param::ParamSlot ao_cone_length_slot_;
-    megamol::core::param::ParamSlot use_hp_textures_slot_;
-
-    int vol_size_;
-    bool vol_size_changed_;
 
     // Affects only Outline rendering: --------------------------
 
@@ -459,7 +441,6 @@ private:
     bool renderSSBO(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
     bool renderSplat(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
     bool renderBufferArray(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderAmbientOcclusion(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
     bool renderOutline(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 
     /**
@@ -626,54 +607,6 @@ private:
     void waitSingle(const GLsync& sync_obj);
 
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
-
-    // ONLY used for Ambient Occlusion rendering: -------------------------
-
-    /**
-     * Rebuild the ambient occlusion gBuffer.
-     *
-     * @return ...
-     */
-    bool rebuildGBuffer();
-
-    /**
-     * Rebuild working data.
-     *
-     * @param cr3d    ...
-     * @param mpdc    ...
-     * @param prgm    ...
-     */
-    void rebuildWorkingData(megamol::mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc,
-        const std::shared_ptr<glowl::GLSLProgram> prgm);
-
-    /**
-     * Render deferred pass.
-     *
-     * @param cr3d  ...
-     */
-    void renderDeferredPass(megamol::mmstd_gl::CallRender3DGL& cr3d);
-
-    /**
-     * Currently not in use.
-     * Generate direction shader array string.
-     *
-     * @param directions      ...
-     * @param directionsName  ...
-     *
-     * @return ...
-     */
-    std::string generateDirectionShaderArrayString(
-        const std::vector<glm::vec4>& directions, const std::string& directions_name);
-
-    /**
-     * Generate 3 cone directions.
-     *
-     * @param directions  ...
-     * @param apex        ...
-     */
-    void generate3ConeDirections(std::vector<glm::vec4>& out_directions, float apex);
-
-    bool updateVolumeData(const unsigned int frameID);
 };
 
 } // namespace megamol::moldyn_gl::rendering

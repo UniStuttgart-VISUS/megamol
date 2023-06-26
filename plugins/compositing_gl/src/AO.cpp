@@ -3,6 +3,7 @@
 #include "OpenGL_Context.h"
 #include "mmcore/param/IntParam.h"
 #include "compositing_gl/CompositingCalls.h"
+#include "mmstd/light/DistantLight.h"
 
 using namespace megamol::core;
 using namespace megamol::geocalls;
@@ -14,6 +15,7 @@ megamol::compositing_gl::AO::AO(void)
         : mmstd_gl::Renderer3DModuleGL()
         , output_tex_slot_("AmbientOcclusionTexture", "Slot for requesting ambient occlusion texture.")
         , voxels_tex_slot_("getVoxelData", "Connects to the voxel data source")
+        , get_lights_slot_("lights", "Lights are retrieved over this slot.")
         , vol_size_slot_("volumeSize", "Longest volume edge")
         , texture_handle()
         , voxel_handle()
@@ -21,6 +23,7 @@ megamol::compositing_gl::AO::AO(void)
         , shader_options_flags_(nullptr)
         , lighting_prgm_()
         , vbo_()
+        , cur_light_dir_()
         , cur_vp_width_(-1)
         , cur_vp_height_(-1)
         , cur_mvp_inv_()
@@ -31,7 +34,6 @@ megamol::compositing_gl::AO::AO(void)
         , ao_cone_apex_slot_("apex", "Cone Apex Angle")
         , ao_cone_length_slot_("coneLength", "Cone length")
         , enable_lighting_slot_("enableLighting", "Enable Lighting")
-        , use_hp_textures_slot_("highPrecisionTexture", "Use high precision textures")
         , normals_tex_slot_("NormalTexture", "Connects the normals render target texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth render target texture")
         , color_tex_slot_("ColorTexture", "Connects the color render target texture")
@@ -57,8 +59,9 @@ megamol::compositing_gl::AO::AO(void)
     this->enable_lighting_slot_ << (new param::BoolParam(false)); // TODO necessary?
     this->MakeSlotAvailable(&this->enable_lighting_slot_);
 
-    this->use_hp_textures_slot_ << (new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->use_hp_textures_slot_);
+    this->get_lights_slot_.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->get_lights_slot_.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->MakeSlotAvailable(&this->get_lights_slot_);
 
     this->ao_cone_apex_slot_ << (new param::FloatParam(50.0f, 1.0f, 90.0f));
     this->MakeSlotAvailable(&this->ao_cone_apex_slot_);
@@ -208,6 +211,48 @@ bool megamol::compositing_gl::AO::Render(mmstd_gl::CallRender3DGL& call) {
         cur_mvp_inv_ = glm::inverse(projMx * viewMx);
         cur_cam_pos_ = cam.getPose().position;
 
+        // obtain light information
+        cur_light_dir_ = {0.0f, 0.0f, 0.0f, 1.0f};
+        auto call_light = get_lights_slot_.CallAs<core::view::light::CallLight>();
+        if (call_light != nullptr) {
+            if (!(*call_light)(0)) {
+                return false;
+            }
+
+            auto lights = call_light->getData();
+            auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+            if (distant_lights.size() > 1) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
+            } else if (distant_lights.empty()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] No 'Distant Light' found");
+            }
+
+            for (auto const& light : distant_lights) {
+                auto use_eyedir = light.eye_direction;
+                if (use_eyedir) {
+                    cur_light_dir_ = glm::vec4(cam.get<core::view::Camera::Pose>().direction, 1.0f); //cur_cam_view_;
+                } else {
+                    auto light_dir = light.direction;
+                    if (light_dir.size() == 3) {
+                        cur_light_dir_[0] = light_dir[0];
+                        cur_light_dir_[1] = light_dir[1];
+                        cur_light_dir_[2] = light_dir[2];
+                    }
+                    if (light_dir.size() == 4) {
+                        cur_light_dir_[3] = light_dir[3];
+                    }
+                    /// View Space Lighting. Comment line to change to Object Space Lighting.
+                    // this->cur_light_dir_ = this->cur_mv_transp_ * this->cur_light_dir_;
+                }
+                /// TODO Implement missing distant light parameters:
+                // light.second.dl_angularDiameter;
+                // light.second.lightColor;
+                // light.second.lightIntensity;
+            }
+        }
+
         // fbo info
         auto fbo = call.GetFramebuffer();
         cur_vp_width_ = fbo->getWidth();
@@ -270,13 +315,8 @@ bool megamol::compositing_gl::AO::updateVolumeData(const unsigned int frameID) {
 
 void megamol::compositing_gl::AO::renderAmbientOcclusion(){
 
-    
-    //glEnable(GL_TEXTURE_2D);
-    //glEnable(GL_TEXTURE_3D);
-
     bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
-    bool high_precision = this->use_hp_textures_slot_.Param<param::BoolParam>()->Value();
-
+    
     glActiveTexture(GL_TEXTURE2);
     depth_tex->bindTexture();
     glActiveTexture(GL_TEXTURE1);
@@ -306,9 +346,8 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     this->lighting_prgm_->setUniform("inWidth", static_cast<float>(cur_vp_width_));
     this->lighting_prgm_->setUniform("inHeight", static_cast<float>(cur_vp_height_));
     glUniformMatrix4fv(this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
-    this->lighting_prgm_->setUniform("inUseHighPrecision", high_precision);
     if (enable_lighting) {
-        this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(1.0, 1.0, 0.0));//this->cur_light_dir_)); // TODO
+        this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(cur_light_dir_));
         this->lighting_prgm_->setUniform("inObjCamPos", cur_cam_pos_);
     }
     this->lighting_prgm_->setUniform("inAOOffset", this->ao_offset_slot_.Param<param::FloatParam>()->Value());
@@ -344,7 +383,7 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     glDrawArrays(GL_TRIANGLES, static_cast<GLint>(0), static_cast<GLsizei>(vertices.size() / 2));
     glDisableVertexAttribArray(vert_attrib_loc);
 
-    glUseProgram(0); // this->lighting_prgm_.Disable();
+    glUseProgram(0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -354,14 +393,4 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     glBindTexture(GL_TEXTURE_3D, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    //glDisable(GL_TEXTURE_2D);
-    //glDisable(GL_TEXTURE_3D);
-
-
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        // Process/log the error.
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("AO: error" + err);
-    }
 }

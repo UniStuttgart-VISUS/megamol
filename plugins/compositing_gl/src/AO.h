@@ -110,6 +110,7 @@ private:
     
     glm::mat4 cur_mvp_inv_;
     glm::vec3 cur_cam_pos_;
+    glm::vec4 cur_light_dir_;
 
     vislib::math::Cuboid<float> cur_clip_box_;
 
@@ -134,10 +135,10 @@ private:
 
     megamol::core::param::ParamSlot ao_cone_apex_slot_;
     megamol::core::param::ParamSlot enable_lighting_slot_;
-    megamol::core::param::ParamSlot use_hp_textures_slot_;
     megamol::core::param::ParamSlot ao_offset_slot_;
     megamol::core::param::ParamSlot ao_strength_slot_;
     megamol::core::param::ParamSlot ao_cone_length_slot_;
+    megamol::core::CallerSlot get_lights_slot_;
 
     /** Slot for querying normals render target texture, i.e. a rhs connection */
     megamol::core::CallerSlot normals_tex_slot_;

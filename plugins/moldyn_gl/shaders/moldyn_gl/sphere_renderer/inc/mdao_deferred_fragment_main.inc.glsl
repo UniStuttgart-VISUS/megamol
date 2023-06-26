@@ -8,8 +8,6 @@ uniform sampler2D inColorTex;
 uniform sampler2D inNormalsTex;
 uniform sampler2D inDepthTex;
 
-uniform bool inUseHighPrecision;
-
 uniform vec3 inObjLightDir;
 uniform vec3 inObjCamPos;
 
@@ -51,16 +49,12 @@ void main()
     vec3 color = texelFetch(inColorTex, texelCoord, 0).xyz;
     vec4 normal = texelFetch(inNormalsTex, texelCoord, 0);
 
-    if (!inUseHighPrecision)
-        normal = normal * 2.0 - 1.0;
-
     vec3 ray = normalize(objPos.xyz - inObjCamPos.xyz);
     vec3 lightCol = LocalLighting(ray, normal.xyz, inObjLightDir, color);
 
-    if (normal.w < 1.0)   // TODO find difference in normal.w ...? because Rendertarget?
+    if (normal.w < 1.0)
         lightCol *= evaluateAmbientOcclusion(objPos.xyz, normal.xyz);
 
-    //outColor = vec4(normal.w, 0.0, 0.0, 1.0);
     outColor = vec4(lightCol, 1.0);
 
     gl_FragDepth = depth;
