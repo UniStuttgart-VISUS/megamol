@@ -145,7 +145,8 @@
     "power": {
       "description": "Use power consumption measurement",
       "dependencies": [
-        "power-overwhelming"
+        "power-overwhelming",
+        "wil"
       ]
     },
     "profiling": {

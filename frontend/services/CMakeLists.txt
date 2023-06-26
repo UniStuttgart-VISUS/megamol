@@ -32,6 +32,7 @@ file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "remote_service/*.hpp"
   "profiling_service/*.hpp"
   "vr_service/*.hpp"
+  "power_service/*.hpp"
   # "service_template/*.hpp"
 )
 
@@ -48,6 +49,7 @@ file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "remote_service/*.cpp"
   "profiling_service/*.cpp"
   "vr_service/*.cpp"
+  "power_service/*.cpp"
   # "service_template/*.cpp"
 )
 
@@ -109,6 +111,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   "gui/3rd"
   "gui/src"
   "vr_service"
+  "power_service"
   # "service_template"
 )
 
@@ -138,6 +141,10 @@ endif ()
 if (MEGAMOL_USE_POWER)
   find_package(power_overwhelming CONFIG REQUIRED)
   target_link_libraries(${PROJECT_NAME} PUBLIC power_overwhelming::power_overwhelming)
+  if (WIN32)
+    find_package(wil REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC WIL::WIL)
+  endif()
 endif ()
 
 if (MEGAMOL_USE_VR_INTEROP)
