@@ -67,7 +67,6 @@ bool Power_Service::init(const Config& config) {
         return false;
     }*/
 
-    
 
     log("initialized successfully");
     return true;
