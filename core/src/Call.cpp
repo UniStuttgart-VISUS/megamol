@@ -12,6 +12,10 @@
 
 #ifdef MEGAMOL_USE_TRACY
 #include "tracy/Tracy.hpp"
+#ifdef MEGAMOL_USE_OPENGL
+#include "glad/gl.h"
+#include "tracy/TracyOpenGL.hpp"
+#endif
 #endif
 #if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
 #include "mmcore/Module.h"
@@ -59,6 +63,9 @@ bool Call::operator()(unsigned int func) {
 #ifdef MEGAMOL_USE_TRACY
         ZoneScoped;
         ZoneName(output.c_str(), output.size());
+#ifdef MEGAMOL_USE_OPENGL
+        TracyGpuZoneTransient(___tracy_gpu_zone, output.c_str(), caps.OpenGLRequired());
+#endif
 #endif
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {

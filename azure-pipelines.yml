@@ -39,8 +39,10 @@ jobs:
         generator: 'Visual Studio 16 2019'
         cmakeExtraArgs: '$(nonGlConfig)'
 
+  timeoutInMinutes: 720
+
   pool:
-    name: 'hardware'
+    name: 'default'
     demands:
     - Agent.OS -equals Windows_NT
     - cmake
@@ -107,8 +109,10 @@ jobs:
         generator: 'Ninja'
         cmakeExtraArgs: '$(nonGlConfig)'
 
+  timeoutInMinutes: 720
+
   pool:
-    name: 'hardware'
+    name: 'default'
     demands:
     - Agent.OS -equals Linux
     - docker
