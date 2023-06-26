@@ -43,10 +43,17 @@ Power_Service::~Power_Service() {
 }
 
 bool Power_Service::init(void* configPtr) {
-    if (configPtr == nullptr)
-        return false;
+    /*if (configPtr == nullptr)
+        return false;*/
 
-    return init(*static_cast<Config*>(configPtr));
+    try {
+        trigger_ = std::make_unique<ParallelPortTrigger>("\\\\.\\LPT1");
+    } catch (...) {
+        trigger_ = nullptr;
+    }
+
+    //return init(*static_cast<Config*>(configPtr));
+    return true;
 }
 
 bool Power_Service::init(const Config& config) {
@@ -59,6 +66,8 @@ bool Power_Service::init(const Config& config) {
         log_error("failed initialization because");
         return false;
     }*/
+
+    
 
     log("initialized successfully");
     return true;
@@ -145,6 +154,8 @@ void Power_Service::preGraphRender() {
     // rendering via MegaMol View is called after this function finishes
     // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
     // which leads to view.Render()
+    if (trigger_)
+        trigger_->WriteHigh();
 }
 
 void Power_Service::postGraphRender() {
@@ -152,6 +163,8 @@ void Power_Service::postGraphRender() {
     // e.g. end frame timer
     // update window name
     // swap buffers, glClear
+    if (trigger_)
+        trigger_->WriteLow();
 }
 
 

@@ -28,6 +28,10 @@
 #include "tracy/Tracy.hpp"
 #endif
 
+#ifdef MEGAMOL_USE_POWER
+#include "Power_Service.hpp"
+#endif
+
 using megamol::core::utility::log::Log;
 
 
@@ -171,6 +175,11 @@ int main(const int argc, const char** argv) {
     profiling_config.autostart_profiling = config.autostart_profiling;
     profiling_config.include_graph_events = config.include_graph_events;
 
+#ifdef MEGAMOL_USE_POWER
+    megamol::frontend::Power_Service power_service;
+    power_service.setPriority(1);
+#endif
+
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -191,6 +200,9 @@ int main(const int argc, const char** argv) {
     // clang-format on
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
+#ifdef MEGAMOL_USE_POWER
+    services.add(power_service, nullptr);
+#endif
     if (with_gl) {
         services.add(gl_service, &openglConfig);
     }

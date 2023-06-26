@@ -11,6 +11,8 @@
 
 #include "AbstractFrontendService.hpp"
 
+#include "ParallelPortTrigger.h"
+
 namespace megamol {
 namespace frontend {
 
@@ -160,6 +162,8 @@ private:
     // (or else std::any will throw a bad type cast exception that should terminate program execution.
     // you do NOT catch or check for that exception or need to care for it in any way!)
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    std::unique_ptr<ParallelPortTrigger> trigger_;
 };
 
 } // namespace frontend
