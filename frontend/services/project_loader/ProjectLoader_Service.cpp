@@ -171,8 +171,8 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
                          [&](auto& filename) -> bool { return this->load_file(filename); }),
             events.end());
 
-    possible_files.erase(std::remove_if(
-        possible_files.begin(), possible_files.end(), [&](auto& events) -> bool { return events.empty(); }),
+    possible_files.erase(std::remove_if(possible_files.begin(), possible_files.end(),
+                             [&](auto& events) -> bool { return events.empty(); }),
         possible_files.end());
 
     // restore, this gets cleared by the service outside of the recursion again
