@@ -118,6 +118,7 @@ static std::string profile_log_option = "profiling-log";
 static std::string flush_frequency_option = "flush-frequency";
 static std::string profile_log_no_autostart_option = "pause-profiling";
 static std::string profile_log_include_events_option = "profiling-include-events";
+static std::string power_lpt_option = "power-lpt";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -191,6 +192,11 @@ static void profile_log_autostart_handler(
 static void profile_log_include_events_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.include_graph_events = parsed_options[option_name].as<bool>();
+}
+
+static void power_lpt_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.power_lpt = parsed_options[option_name].as<std::string>();
 }
 
 static void remote_head_handler(
@@ -574,6 +580,10 @@ std::vector<OptionsListEntry> cli_options_list =
         {profile_log_include_events_option, "Include graph events in the profiling log", cxxopts::value<bool>(),
             profile_log_include_events_handler}
 
+#endif
+#ifdef MEGAMOL_USE_POWER
+        ,
+        {power_lpt_option, "Set LPT port for trigger out", cxxopts::value<std::string>(), power_lpt_handler}
 #endif
         ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",

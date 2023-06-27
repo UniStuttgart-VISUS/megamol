@@ -177,6 +177,8 @@ int main(const int argc, const char** argv) {
 
 #ifdef MEGAMOL_USE_POWER
     megamol::frontend::Power_Service power_service;
+    megamol::frontend::Power_Service::Config power_config;
+    power_config.lpt = config.power_lpt;
     power_service.setPriority(1);
 #endif
 
@@ -201,7 +203,7 @@ int main(const int argc, const char** argv) {
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
 #ifdef MEGAMOL_USE_POWER
-    services.add(power_service, nullptr);
+    services.add(power_service, &power_config);
 #endif
     if (with_gl) {
         services.add(gl_service, &openglConfig);

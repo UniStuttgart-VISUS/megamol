@@ -11,6 +11,8 @@
 
 #ifdef MEGAMOL_USE_POWER
 
+#include <regex>
+
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 
@@ -43,11 +45,21 @@ Power_Service::~Power_Service() {
 }
 
 bool Power_Service::init(void* configPtr) {
-    /*if (configPtr == nullptr)
-        return false;*/
+    if (configPtr == nullptr)
+        return false;
+
+    const auto conf = static_cast<Config*>(configPtr);
+    auto const lpt = conf->lpt;
+
+    std::regex p("^(lpt|LPT)(\\d)$");
+    std::smatch m;
+    if (!std::regex_search(lpt, m, p)) {
+        log_error("LPT parameter malformed");
+        return false;
+    }
 
     try {
-        trigger_ = std::make_unique<ParallelPortTrigger>("\\\\.\\LPT1");
+        trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\"+lpt).c_str());
     } catch (...) {
         trigger_ = nullptr;
     }

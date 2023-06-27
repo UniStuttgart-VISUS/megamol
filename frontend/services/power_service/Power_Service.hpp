@@ -22,7 +22,9 @@ class Power_Service final : public AbstractFrontendService {
 public:
     // We encourage you to use a configuration struct
     // that can be passed to your init() function.
-    struct Config {};
+    struct Config {
+        std::string lpt = "lpt1";
+    };
 
     // sometimes somebody wants to know the name of the service
     std::string serviceName() const override {
