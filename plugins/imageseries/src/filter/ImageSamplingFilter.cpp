@@ -86,7 +86,9 @@ ImageSamplingFilter::ImagePtr ImageSamplingFilter::operator()() {
                 for (auto i = ((x > 0) ? -1 : 0); i <= ((x < width - 1) ? 1 : 0); ++i) {
                     const auto neighborIndex = (y + j) * width + (x + i);
 
-                    if (mapOut[neighborIndex] == LabelUnassigned && mapTemp[index] == mapTemp[neighborIndex]) {
+                    if (mapOut[neighborIndex] == LabelUnassigned && mapTemp[index] == mapTemp[neighborIndex] &&
+                        mapTemp[neighborIndex] != LabelSolid && mapTemp[neighborIndex] != LabelEmpty) {
+
                         areas.at(index).pixels.push_back(neighborIndex);
                         mapOut[neighborIndex] = mapTemp[index];
                     } else if (mapTemp[index] != mapTemp[neighborIndex] && mapTemp[neighborIndex] != LabelSolid &&
