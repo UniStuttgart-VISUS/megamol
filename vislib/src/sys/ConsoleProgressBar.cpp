@@ -12,7 +12,7 @@
 #ifdef _WIN32
 #include <Windows.h>
 #else /* _WIN32 */
-#include <curses.h>
+#include <ncurses/curses.h>
 #endif /* _WIN32 */
 
 #define PRINT_MILLISECONDS

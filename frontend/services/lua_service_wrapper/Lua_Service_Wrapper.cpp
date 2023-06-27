@@ -100,13 +100,13 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     };
 
     this->m_requestedResourcesNames = {"FrontendResourcesList",
-        "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
-        "FrameStatistics",                      // for LastFrameTime
-        "optional<WindowManipulation>",         // for Framebuffer resize
-        "optional<GUIState>",                   // propagate GUI state and visibility
-        "MegaMolGraph",                         // LuaAPI manipulates graph
-        "RenderNextFrame",                      // LuaAPI can render one frame
-        "GlobalValueStore",                     // LuaAPI can read and set global values
+        "GLFrontbufferToPNG_ScreenshotTrigger",    // for screenshots
+        "FrameStatistics",                         // for LastFrameTime
+        "optional<WindowManipulation>",            // for Framebuffer resize
+        "optional<GUIState>",                      // propagate GUI state and visibility
+        frontend_resources::MegaMolGraph_Req_Name, // LuaAPI manipulates graph
+        "RenderNextFrame",                         // LuaAPI can render one frame
+        "GlobalValueStore",                        // LuaAPI can read and set global values
         frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
 #ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name

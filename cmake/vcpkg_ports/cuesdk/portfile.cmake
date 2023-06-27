@@ -1,4 +1,3 @@
-set (CUESDK_VERSION "3.0.464")
 vcpkg_check_linkage(ONLY_DYNAMIC_LIBRARY)
 
 if (APPLE)
@@ -12,9 +11,9 @@ else()
   #set(CUESDK_SHA "88f971211f069123a67da7fecdc34ebcf9a04e972928c6d6417c1d0bf4ec5eb3041d3a89df3b241d34cef16f667a9b753b9db4395fca02b75580a34de525a421")
 endif()
 
-set (CUESDK_FILENAME "CUESDK_${CUESDK_VERSION}.${CUESDK_FILE_EXT}")
+set (CUESDK_FILENAME "CUESDK_${VERSION}.${CUESDK_FILE_EXT}")
 
-set(CUESDK_URL "https://github.com/CorsairOfficial/cue-sdk/releases/download/v${CUESDK_VERSION}/${CUESDK_FILENAME}")
+set(CUESDK_URL "https://github.com/CorsairOfficial/cue-sdk/releases/download/v${VERSION}/${CUESDK_FILENAME}")
 
 vcpkg_download_distfile(
   CUESDK_ARCHIVE_PATH

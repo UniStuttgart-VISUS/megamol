@@ -7,12 +7,6 @@
 
 #pragma once
 
-
-#include "gui_utils.h"
-#include "imgui.h"
-#include "mmcore/utility/JSONHelper.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/Input.h"
 #include <functional>
 #include <map>
 #include <string>
@@ -20,6 +14,10 @@
 
 #include "FrontendResource.h"
 #include "FrontendResourcesMap.h"
+#include "gui_utils.h"
+#include "mmcore/utility/JSONHelper.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Input.h"
 
 
 namespace megamol::gui {
@@ -39,7 +37,8 @@ public:
         WINDOW_ID_HOTKEYEDITOR = 4,
         WINDOW_ID_TRANSFER_FUNCTION = 5,
         WINDOW_ID_CONFIGURATOR = 6,
-        WINDOW_ID_LOGCONSOLE = 7
+        WINDOW_ID_LOGCONSOLE = 7,
+        WINDOW_ID_ANIMATIONEDITOR = 8
     };
 
     struct BasicConfig {
@@ -131,6 +130,7 @@ public:
             volatile_draw_callback(this->win_config);
             return true;
         }
+        return false;
     }
 
     virtual void PopUps() {}

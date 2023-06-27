@@ -1,7 +1,6 @@
 {
   "name": "imgui-tex-inspect",
-  "version": "2022-09-02",
-  "port-version": 0,
+  "version-date": "2022-09-15",
   "description": "A texture inspector tool for Dear ImGui",
   "homepage": "https://github.com/andyborrell/imgui_tex_inspect",
   "license": "MIT",

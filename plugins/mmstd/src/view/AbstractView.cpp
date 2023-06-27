@@ -36,6 +36,7 @@ view::AbstractView::AbstractView(ViewDimension dim)
         , _cameraIsMutable(true)
         , _rhsRenderSlot("rendering", "Connects the view to a Renderer")
         , _lhsRenderSlot("render", "Connects modules requesting renderings")
+
         , _cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
         , _storeCameraSettingsSlot("camstore::storecam",
               "Triggers the storage of the camera settings. This only works for "
@@ -43,16 +44,18 @@ view::AbstractView::AbstractView(ViewDimension dim)
         , _restoreCameraSettingsSlot("camstore::restorecam",
               "Triggers the restore of the camera settings. This only works "
               "for multiple cameras if you use .lua project files")
-        , _overrideCamSettingsSlot("camstore::overrideSettings",
-              "When activated, existing camera settings files will be overwritten by this "
-              "module. This only works if you use .lua project files")
-        , _autoSaveCamSettingsSlot("camstore::autoSaveSettings",
-              "When activated, the camera settings will be stored to disk whenever a camera checkpoint is saved or "
-              "MegaMol "
-              "is closed. This only works if you use .lua project files")
-        , _autoLoadCamSettingsSlot("camstore::autoLoadSettings",
-              "When activated, the view will load the camera settings from disk at startup. "
-              "This only works if you use .lua project files")
+
+        , _saveCamSettingsSlot("multicam::saveSettings", "Save camera settings to file immediately.")
+        , _loadCamSettingsSlot(
+              "multicam::loadSettings", "Load camera settings from file, overwriting the current settings in MegaMol.")
+        , _overrideCamSettingsSlot(
+              "multicam::overrideSettings", "When activated, existing camera settings files will be overwritten.")
+        , _autoSaveCamSettingsSlot("multicam::autoSaveSettings",
+              "When activated, the camera settings will be stored to disk "
+              "whenever a camera checkpoint is saved or MegaMol is closed.")
+        , _autoLoadCamSettingsSlot("multicam::autoLoadSettings",
+              "When activated, the view will load the camera settings from disk at startup.")
+
         , _resetViewSlot("view::resetView", "Triggers the reset of the view")
         , _resetViewOnBBoxChangeSlot(
               "resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
@@ -92,6 +95,14 @@ view::AbstractView::AbstractView(ViewDimension dim)
     this->_restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
     this->_restoreCameraSettingsSlot.SetUpdateCallback(&AbstractView::onRestoreCamera);
     this->MakeSlotAvailable(&this->_restoreCameraSettingsSlot);
+
+    this->_saveCamSettingsSlot.SetParameter(new param::ButtonParam());
+    this->_saveCamSettingsSlot.SetUpdateCallback(&AbstractView::onSaveCamera);
+    this->MakeSlotAvailable(&this->_saveCamSettingsSlot);
+
+    this->_loadCamSettingsSlot.SetParameter(new param::ButtonParam());
+    this->_loadCamSettingsSlot.SetUpdateCallback(&AbstractView::onLoadCamera);
+    this->MakeSlotAvailable(&this->_loadCamSettingsSlot);
 
     this->_overrideCamSettingsSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->_overrideCamSettingsSlot);
@@ -266,8 +277,9 @@ void megamol::core::view::AbstractView::beforeRender(double time, double instanc
             this->ResetView();
             this->_firstImg = false;
             if (this->_autoLoadCamSettingsSlot.Param<param::BoolParam>()->Value()) {
-                this->onRestoreCamera(this->_restoreCameraSettingsSlot);
+                this->onLoadCamera(this->_loadCamSettingsSlot);
             }
+            this->onRestoreCamera(this->_restoreCameraSettingsSlot);
             this->_lastFrameTime = std::chrono::high_resolution_clock::now();
         }
 
@@ -390,20 +402,37 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
  * AbstractView::onStoreCamera
  */
 bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
-    // save the current camera, too
-    this->_savedCameras[10].first = _camera;
-    this->_savedCameras[10].second = true;
     this->_cameraSerializer.setPrettyMode(false);
-    std::string camstring = this->_cameraSerializer.serialize(this->_savedCameras[10].first);
+    std::string camstring = this->_cameraSerializer.serialize(_camera);
     this->_cameraSettingsSlot.Param<param::StringParam>()->SetValue(camstring.c_str());
 
-    auto path = this->determineCameraFilePath();
-    if (path.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "The camera output file path could not be determined. This is probably due to the usage of .mmprj project "
-            "files. Please use a .lua project file instead");
-        return false;
+    return true;
+}
+
+/*
+ * AbstractView::onRestoreCamera
+ */
+bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
+    if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().empty()) {
+        std::string camstring(this->_cameraSettingsSlot.Param<param::StringParam>()->Value());
+        Camera cam;
+        if (!this->_cameraSerializer.deserialize(cam, camstring)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "The entered camera string was not valid. No change of the camera has been performed");
+        } else {
+            this->_camera = cam;
+            return true;
+        }
     }
+
+    return true;
+}
+
+/*
+ * AbstractView::onSaveCamera
+ */
+bool view::AbstractView::onSaveCamera(param::ParamSlot& p) {
+    auto path = this->determineCameraFilePath();
 
     if (!this->_overrideCamSettingsSlot.Param<param::BoolParam>()->Value()) {
         // check if the file already exists
@@ -417,7 +446,6 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
             return false;
         }
     }
-
 
     this->_cameraSerializer.setPrettyMode();
     auto outString = this->_cameraSerializer.serialize(this->_savedCameras);
@@ -438,29 +466,10 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
 }
 
 /*
- * AbstractView::onRestoreCamera
+ * AbstractView::onLoadCamera
  */
-bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
-    if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().empty()) {
-        std::string camstring(this->_cameraSettingsSlot.Param<param::StringParam>()->Value());
-        Camera cam;
-        if (!this->_cameraSerializer.deserialize(cam, camstring)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "The entered camera string was not valid. No change of the camera has been performed");
-        } else {
-            this->_camera = cam;
-            return true;
-        }
-    }
-
+bool view::AbstractView::onLoadCamera(param::ParamSlot& p) {
     auto path = this->determineCameraFilePath();
-    if (path.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
-            "files. Please use a .lua project file instead");
-        return false;
-    }
-
     std::ifstream file(path);
     std::string text;
     if (file.is_open()) {
@@ -478,12 +487,6 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
         return false;
     }
     this->_savedCameras = copy;
-    if (this->_savedCameras.back().second) {
-        this->_camera = this->_savedCameras.back().first;
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "The stored default cam was not valid. The old default cam is used");
-    }
     return true;
 }
 

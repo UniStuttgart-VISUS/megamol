@@ -513,13 +513,9 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     std::shared_ptr<megamol::core::param::AbstractParam> in_param_ptr, megamol::gui::Parameter& out_param,
     bool set_default_val, bool set_dirty) {
 
-    // we use a const ptr here to avoid triggering a feedback loop with the graph subscribers mechanism
-    // when looking into the parameters GuiPresentation(), which normally notifies the graph about param changes upon GuiPresentation()
-    // access except when 'GuiPresentation() const' is accessed
-    auto const& in_param_ptr_const = in_param_ptr;
-    out_param.SetGUIVisible(in_param_ptr_const->IsGUIVisible());
-    out_param.SetGUIReadOnly(in_param_ptr_const->IsGUIReadOnly());
-    out_param.SetGUIPresentation(in_param_ptr_const->GetGUIPresentation());
+    out_param.SetGUIVisible(in_param_ptr->IsGUIVisible());
+    out_param.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
+    out_param.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
 
     /// XXX Prioritizing currently changed value from GUI
     /// Do not read param value from core param if gui param has already updated value
@@ -756,7 +752,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                     ImGui::SameLine();
 
                     // Lua
-                    ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullNameProject());
+                    ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullName());
                     this->gui_tooltip.ToolTip("Copy lua command to clipboard.");
 
                     ImGui::SameLine();
@@ -1534,7 +1530,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
 
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
     if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, popup_flags)) {
-        ImGui::Text("Parameter: %s", this->FullNameProject().c_str());
+        ImGui::Text("Parameter: %s", this->FullName().c_str());
         ImGui::TextColored(GUI_COLOR_TEXT_WARN, "Message: %s", this->gui_popup_msg.c_str());
         bool close = false;
         if (ImGui::Button("Ok")) {
@@ -2067,7 +2063,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             ImGui::SameLine();
             gui_utils::PushReadOnly(param_externally_connected);
             if (ImGui::Button("Connect")) {
-                this->tf_editor_external_ptr->SetConnectedParameter(this, this->FullNameProject());
+                this->tf_editor_external_ptr->SetConnectedParameter(this, this->FullName());
                 this->tf_editor_external_ptr->Config().show = true;
                 retval = true;
             }

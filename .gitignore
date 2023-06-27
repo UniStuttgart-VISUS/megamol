@@ -12,6 +12,10 @@ build-*/
 build_*/
 cmake-build-*/
 
+# Bundled vcpkg
+/vcpkg/
+/vcpkg_assets/
+
 # In-source-build artifacts
 /CMakeFiles/
 /CMakeCache.txt
@@ -22,6 +26,7 @@ cmake-build-*/
 /examples/
 /lib/
 /share/
+install/
 
 # Utils
 utils/MMPLD/mmpld.bat

@@ -27,10 +27,10 @@ The full license text is at he end of this file
 ############################################################################
 
 Please send questions and report bugs to the msms mailing list:
-    msms@scripps.edu
+	msms@scripps.edu
 
 You can subscribe to this list at (very low traffic):
-    http://mgldev.scripps.edu/mailman/listinfo/msms
+	http://mgldev.scripps.edu/mailman/listinfo/msms
 
 ############################################################################
 ## INSTALLATION:
@@ -39,11 +39,11 @@ You can subscribe to this list at (very low traffic):
 if you read this file, you already un-tar'ed the file and you got the 
 following files:
 
-  - 1crn.pdb         : example of PDB file
+  - 1crn.pdb  	     : example of PDB file
   - README           : this file
   - atmtypenumbers   : data file used by the pdb_to_xyzr script 
   - msms.1           : unix man page for MSMS. Also available on the WWW
-     http://www.scripps.edu/sanner/html/msms_man.html
+	 http://www.scripps.edu/sanner/html/msms_man.html
   - msms.html        : HTML version of the man page for MSMS.
   - msms."arch"      : Binary version of MSMS compiled for "arch".
   - pdb_to_xyzr      : Script to convert get XYZR coordinates from a PDB file.
@@ -56,9 +56,9 @@ following files:
 ## TEST
 ############################################################################
 TEST MSMS:
-    To test the program type:
+	To test the program type:
 
-    > ./msms."arch" -if 1crn.xyzr
+	> ./msms."arch" -if 1crn.xyzr
 
 this is the output:
 
@@ -168,19 +168,19 @@ THIS IS WHAT YOU AGREED TO BY DOWNLOADING THE SOFTWARE:
 ############################################################################
 The prefered way to get information, ask questions, or find answers is
 to use the (searchable) mailing list 
-    msms@scripps.edu
-    http://mgldev.scripps.edu/mailman/listinfo/msms
+	msms@scripps.edu
+	http://mgldev.scripps.edu/mailman/listinfo/msms
 
-Mail:   Michel F. Sanner
-    The Scripps Research Institute, TPC 26
-    10550 North Torrey Pines Road, 92037 La Jolla
-    CA-92037 USA
+Mail:	Michel F. Sanner
+	The Scripps Research Institute, TPC 26
+	10550 North Torrey Pines Road, 92037 La Jolla
+	CA-92037 USA
 
-E-mail: sanner@scripps.edu
-WWW:    http://www.scripps.edu/~sanner
+E-mail:	sanner@scripps.edu
+WWW:	http://www.scripps.edu/~sanner
 
-Tel.:   (858) 784-2341
-Fax.:   (858) 784-2860
+Tel.:	(858) 784-2341
+Fax.:	(858) 784-2860
 
 
 

@@ -1,16 +1,24 @@
-file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ *)
+# MegaMol
+# Copyright (c) 2018, MegaMol Dev Team
+# All rights reserved.
+#
 
-message("Include utils:")
+option(MEGAMOL_UTILS "Build MegaMol utils." ON)
+set(default_enabled_utils "remoteconsole")
 
-foreach(util ${utils})
-  if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${util}")
-    if("${util}" STREQUAL "tableselection")
-      message("-- Found util: ${util} -- ignored")
-    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${util}/CMakeLists.txt")
-      message("-- Found util: ${util} -- add to build")
-      add_subdirectory(${util})
-    else()
-      message("-- Found util: ${util} -- no CMakeLists.txt")
-    endif()
-  endif()
-endforeach()
+if (MEGAMOL_UTILS)
+  file(GLOB utils RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/" *)
+  foreach (util ${utils})
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${util}/CMakeLists.txt")
+      string(TOUPPER "${util}" util_upper)
+      if ("${util}" IN_LIST default_enabled_utils)
+        option(MEGAMOL_UTIL_${util_upper} "Build util ${util}." ON)
+      else ()
+        option(MEGAMOL_UTIL_${util_upper} "Build util ${util}." OFF)
+      endif ()
+      if (MEGAMOL_UTIL_${util_upper})
+        add_subdirectory(${util})
+      endif ()
+    endif ()
+  endforeach ()
+endif ()

@@ -131,6 +131,13 @@ inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::Get
     }
     cr->SetCamera(this->_camera);
 
+    // get time from incoming call
+    double time = crv->Time();
+    if (time < 0.0f)
+        time = this->DefaultTime(crv->InstanceTime());
+    double instanceTime = crv->InstanceTime();
+    cr->SetTime(time);
+
     if (!(*cr)(AbstractCallRender::FnGetExtents)) {
         return false;
     }
@@ -245,7 +252,7 @@ inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnK
                 this->_savedCameras[index].first = this->_camera;
                 this->_savedCameras[index].second = true;
                 if (this->_autoSaveCamSettingsSlot.template Param<param::BoolParam>()->Value()) {
-                    this->onStoreCamera(this->_storeCameraSettingsSlot); // manually trigger the storing
+                    this->onSaveCamera(this->_saveCamSettingsSlot); // manually trigger the storing
                 }
             } else {
                 if (this->_savedCameras[index].second) {

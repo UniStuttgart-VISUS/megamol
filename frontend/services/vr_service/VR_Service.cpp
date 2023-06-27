@@ -60,7 +60,7 @@ bool VR_Service::init(const Config& config) {
 
     m_requestedResourcesNames = {
         "ImagePresentationEntryPoints",
-        "MegaMolGraph",
+        frontend_resources::MegaMolGraph_Req_Name,
 #ifdef MEGAMOL_USE_VR_INTEROP
         "OpenGL_Context",
 #endif // MEGAMOL_USE_VR_INTEROP

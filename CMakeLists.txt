@@ -2,65 +2,37 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.15...3.24 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15...3.26 FATAL_ERROR)
 
-# vcpkg
-include(FetchContent)
-mark_as_advanced(FORCE
-  FETCHCONTENT_BASE_DIR
-  FETCHCONTENT_FULLY_DISCONNECTED
-  FETCHCONTENT_QUIET
-  FETCHCONTENT_UPDATES_DISCONNECTED)
+# Vcpkg setup
+set(MEGAMOL_VCPKG_VERSION "2023.06.20") # Update default-registry baseline in vcpkg-configuration.json when changing!
 
-# Require git for download
-find_package(Git REQUIRED)
-
-FetchContent_Declare(vcpkg-download
-  GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
-  GIT_TAG 2022.10.19 # Update default-registry baseline in vcpkg-configuration.json when changing!
-  GIT_SHALLOW TRUE)
-FetchContent_GetProperties(vcpkg-download)
-if (NOT vcpkg-download_POPULATED)
-  message(STATUS "Fetch vcpkg ...")
-  FetchContent_Populate(vcpkg-download)
-  mark_as_advanced(FORCE
-    FETCHCONTENT_SOURCE_DIR_VCPKG-DOWNLOAD
-    FETCHCONTENT_UPDATES_DISCONNECTED_VCPKG-DOWNLOAD)
-endif ()
-
+include(cmake/megamol_vcpkg_setup.cmake)
 include(cmake/megamol_feature_option.cmake)
-
-megamol_feature_option(CGAL "Enable CGAL support" OFF)
-megamol_feature_option(CUDA "Enable CUDA support" OFF)
-megamol_feature_option(MPI "Enable MPI support" OFF)
-megamol_feature_option(OPENGL "Enable OpenGL support" ON)
-megamol_feature_option(OSPRAY "Enable OSPRay support" OFF)
-megamol_feature_option(PROFILING "Enable profiling support" OFF)
-megamol_feature_option(TRACY "Enable tracy support" OFF)
-megamol_feature_option(VTKM "Enable VTK-m support" OFF)
-# dependent options
-megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
-megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
-megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
-
 include(cmake/megamol_vcpkg_empty_port.cmake)
 
-# option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
-set(VCPKG_OVERLAY_PORTS "${mm_empty_ports_dir}${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_triplets") # We are using triplets with VCPKG_DISABLE_COMPILER_TRACKING set (on Windows).
-set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
-set(VCPKG_INSTALL_OPTIONS "--clean-after-build" "--no-print-usage") # Build dirs get quite large and are usually only needed for debugging new ports.
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-
-set(ENV{VCPKG_FORCE_DOWNLOADED_BINARIES} ON) # Vcpkg should always download tools (i.e. CMake) to have consistent versions over all systems.
-option(MEGAMOL_DOWNLOAD_VCPKG_CACHE "Download prebuilt dependency binaries if available" OFF)
-if (MEGAMOL_DOWNLOAD_VCPKG_CACHE)
-  set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
-endif ()
+# MegaMol vcpkg features
+megamol_feature_option(CGAL "Enable CGAL support." OFF)
+megamol_feature_option(CUDA "Enable CUDA support." OFF)
+megamol_feature_option(MPI "Enable MPI support." OFF)
+megamol_feature_option(OPENGL "Enable OpenGL support." ON)
+megamol_feature_option(OSPRAY "Enable OSPRay support." OFF)
+megamol_feature_option(POWER "Enable power measurement support." OFF)
+megamol_feature_option(PROFILING "Enable profiling support." OFF)
+megamol_feature_option(STACKTRACE "Enable Boost.Stacktrace support." OFF)
+megamol_feature_option(TRACY "Enable tracy support." OFF)
+megamol_feature_option(VTKM "Enable VTK-m support." OFF)
+# MegaMol vcpkg features (dependent options)
+megamol_feature_option(CUESDK "Enable Corsair CUESDK support." OFF "WIN32")
+megamol_feature_option(OPENGL_DEBUGGROUPS "Inject OpenGL debug groups into calls." OFF "MEGAMOL_USE_OPENGL")
+megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." OFF "WIN32;MEGAMOL_USE_OPENGL")
 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+# Catch deprecated options before project()
+include(cmake/deprecation_warning.cmake)
 
 # Project
 project(megamol
@@ -81,9 +53,9 @@ endif ()
 
 # Default install prefix
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
 endif ()
-set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "default install path" FORCE) # This will replace "\" by "/"
+set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Install path prefix, prepended onto install directories." FORCE) # This will replace "\" by "/"
 
 # Modules
 include(GNUInstallDirs)
@@ -126,9 +98,6 @@ endif ()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/main)
 target_link_libraries(megamol PRIVATE plugins)
 
-# Remoteconsole
-add_subdirectory(remoteconsole)
-
 # Utils
 add_subdirectory(utils)
 
@@ -138,58 +107,21 @@ if (WIN32)
   set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
 endif ()
 
+# Additional downloaded and installed repositories
+include(cmake/megamol_extra_repo.cmake)
+
 # Examples
-option(EXAMPLES "Get the MegaMol example repository" ON)
-if (EXAMPLES)
-  set(EXAMPLES_DIR "${CMAKE_BINARY_DIR}/examples" CACHE PATH "Download directory of the examples")
-  option(EXAMPLES_UPDATE "Pull updates from the examples repo" ON)
-  if (NOT EXISTS "${EXAMPLES_DIR}")
-    message(STATUS "Downloading examples")
-    execute_process(COMMAND
-      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-examples.git "${EXAMPLES_DIR}" --depth 1
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  elseif (EXAMPLES_UPDATE)
-    message(STATUS "Pull example updates")
-    execute_process(COMMAND
-      ${GIT_EXECUTABLE} pull
-      WORKING_DIRECTORY "${EXAMPLES_DIR}"
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endif ()
-  option(EXAMPLES_INSTALL "Install examples" ON)
-  if (EXAMPLES_INSTALL)
-    install(DIRECTORY "${EXAMPLES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/examples" PATTERN ".git" EXCLUDE)
-  endif ()
-endif ()
+megamol_extra_repo(examples
+  GIT_REPO "https://github.com/UniStuttgart-VISUS/megamol-examples.git"
+  DEFAULT_ON)
 
 # Tests
-option(TESTS "Get the MegaMol tests repository" OFF)
-if (TESTS)
-  set(TESTS_DIR "${CMAKE_BINARY_DIR}/tests" CACHE PATH "Download directory of the tests")
-  option(TESTS_UPDATE "Pull updates from the tests repo" ON)
-  if (NOT EXISTS "${TESTS_DIR}")
-    message(STATUS "Downloading tests")
-    execute_process(COMMAND
-      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-tests.git "${TESTS_DIR}" --depth 1
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  elseif (TESTS_UPDATE)
-    message(STATUS "Pull tests updates")
-    execute_process(COMMAND
-      ${GIT_EXECUTABLE} pull
-      WORKING_DIRECTORY "${TESTS_DIR}"
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endif ()
-  install(DIRECTORY "${TESTS_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/tests" PATTERN ".git" EXCLUDE)
-endif ()
+megamol_extra_repo(tests
+  GIT_REPO "https://github.com/UniStuttgart-VISUS/megamol-tests.git")
 
 # Install vcpkg libraries
 # X_VCPKG_APPLOCAL_DEPS_INSTALL currently does only work for windows, in addition only actually used dll's are
-# installed. This is a problem for libraries that load dll's dynamically on runtime (.i.e. ospray).
+# installed. This is a problem for libraries that load dll's dynamically on runtime (i.e. ospray).
 # Therefore, we just copy all vcpkg libraries to our install dir, until vcpkg may has a better option in future.
 if (WIN32)
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-windows/$<$<CONFIG:Debug>:debug/>bin/
