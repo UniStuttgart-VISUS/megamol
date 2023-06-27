@@ -59,7 +59,7 @@ bool Power_Service::init(void* configPtr) {
     }
 
     try {
-        trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\"+lpt).c_str());
+        trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\" + lpt).c_str());
     } catch (...) {
         trigger_ = nullptr;
     }
