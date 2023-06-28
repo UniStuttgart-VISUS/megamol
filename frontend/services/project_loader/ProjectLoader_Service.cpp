@@ -15,6 +15,10 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
 
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
+
 static void log(const char* text) {
     const std::string msg = "ProjectLoader_Service: " + std::string(text);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -58,6 +62,10 @@ bool ProjectLoader_Service::init(const Config& config) {
 }
 
 bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) const {
+#ifdef MEGAMOL_USE_TRACY
+    ZoneScopedNC("ProjectLoadFile", 0xFF0000);
+#endif
+
     // file loaders
     const auto load_lua = [](std::filesystem::path const& filename, std::string& script) -> bool {
         std::ifstream input(filename, std::ios::in);

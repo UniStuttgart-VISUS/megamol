@@ -282,10 +282,6 @@ int main(const int argc, const char** argv) {
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
-#ifdef MEGAMOL_USE_TRACY
-        FrameMark;
-#endif
-
         return true;
     };
 
