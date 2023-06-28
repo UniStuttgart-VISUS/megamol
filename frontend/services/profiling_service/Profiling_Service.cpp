@@ -9,6 +9,10 @@
 #include "LuaCallbacksCollection.h"
 #include "ModuleGraphSubscription.h"
 
+#ifdef MEGAMOL_USE_TRACY
+#include "tracy/Tracy.hpp"
+#endif
+
 namespace megamol::frontend {
 
 bool Profiling_Service::init(void* configPtr) {
@@ -173,13 +177,21 @@ void Profiling_Service::close() {
 #endif
 }
 
+static const char* const sl_innerframe = "InnerFrame";
+
 void Profiling_Service::updateProvidedResources() {
+#ifdef MEGAMOL_USE_TRACY
+    FrameMarkStart(sl_innerframe);
+#endif
     _perf_man.startFrame(
         _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
 }
 
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
+#ifdef MEGAMOL_USE_TRACY
+    FrameMarkEnd(sl_innerframe);
+#endif
 }
 
 void Profiling_Service::fill_lua_callbacks() {
