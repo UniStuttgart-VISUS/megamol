@@ -13,6 +13,10 @@
 #include <tuple>
 #include <type_traits>
 
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
+
 namespace megamol::frontend_resources {
 
 namespace {
@@ -75,6 +79,10 @@ struct LuaCallbacksCollection {
     template<typename FuncType, typename Result, typename... FuncArgs>
     std::function<int(LuaState)> resolve(std::string func_name, FuncType func) {
         return [=](LuaState state) -> int {
+#ifdef MEGAMOL_USE_TRACY
+            ZoneScoped;
+            ZoneName(func_name.c_str(), func_name.size());
+#endif
             if (sizeof...(FuncArgs) != state.stack_size()) {
                 // if no function arguments given, cant expand FuncArgs during compile time - need to catch that case
                 std::string args;
