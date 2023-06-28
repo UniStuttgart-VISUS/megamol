@@ -113,10 +113,12 @@ bool FrontendServiceCollection::assignRequestedResources() {
     return overall_success;
 }
 
+static auto const t_service_color = 0x4DAE59;
+
 void FrontendServiceCollection::updateProvidedResources() {
     for_each_service {
 #ifdef MEGAMOL_USE_TRACY
-        ZoneScoped;
+        ZoneScopedC(t_service_color);
         auto const name = service.get().serviceName() + "::updateProvidedResources";
         ZoneName(name.c_str(), name.size());
 #endif
@@ -127,7 +129,7 @@ void FrontendServiceCollection::updateProvidedResources() {
 void FrontendServiceCollection::digestChangedRequestedResources() {
     for_each_service {
 #ifdef MEGAMOL_USE_TRACY
-        ZoneScoped;
+        ZoneScopedC(t_service_color);
         auto const name = service.get().serviceName() + "::digestChangedRequestedResources";
         ZoneName(name.c_str(), name.size());
 #endif
@@ -138,7 +140,7 @@ void FrontendServiceCollection::digestChangedRequestedResources() {
 void FrontendServiceCollection::resetProvidedResources() {
     for_each_service {
 #ifdef MEGAMOL_USE_TRACY
-        ZoneScoped;
+        ZoneScopedC(t_service_color);
         auto const name = service.get().serviceName() + "::resetProvidedResources";
         ZoneName(name.c_str(), name.size());
 #endif
@@ -149,7 +151,7 @@ void FrontendServiceCollection::resetProvidedResources() {
 void FrontendServiceCollection::preGraphRender() {
     for_each_service {
 #ifdef MEGAMOL_USE_TRACY
-        ZoneScoped;
+        ZoneScopedC(t_service_color);
         auto const name = service.get().serviceName() + "::preGraphRender";
         ZoneName(name.c_str(), name.size());
 #endif
@@ -161,7 +163,7 @@ void FrontendServiceCollection::postGraphRender() {
     // traverse post update in reverse order
     for (auto it = m_services.rbegin(); it != m_services.rend(); it++) {
 #ifdef MEGAMOL_USE_TRACY
-        ZoneScoped;
+        ZoneScopedC(t_service_color);
         auto const name = (*it).get().serviceName() + "::postGraphRender";
         ZoneName(name.c_str(), name.size());
 #endif
