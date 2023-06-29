@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <list>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -73,6 +74,14 @@ struct LuaCallbacksCollection {
 
     template<typename ReturnType, typename FuncType, typename... FuncArgs, size_t... I>
     ReturnType unpack(LuaState state, FuncType func, std::tuple<FuncArgs...> tuple, std::index_sequence<I...>) {
+#ifdef MEGAMOL_USE_TRACY
+        std::ostringstream stream;
+        if constexpr (sizeof...(FuncArgs) > 0) {
+            ((stream << state.read<typename std::tuple_element<I, std::tuple<FuncArgs...>>::type>(I + 1) << ", "), ...);
+        }
+        ZoneScopedC(0xA6963B);
+        ZoneName(stream.str().c_str(), stream.str().size());
+#endif
         return func(state.read<typename std::tuple_element<I, std::tuple<FuncArgs...>>::type>(I + 1)...);
     }
 
