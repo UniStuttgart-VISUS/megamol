@@ -686,6 +686,7 @@ bool megamol::gui::Parameter::WriteCoreParameterGUIState(
     out_param_ptr->SetGUIVisible(in_param.IsGUIVisible());
     out_param_ptr->SetGUIReadOnly(in_param.IsGUIReadOnly());
     out_param_ptr->SetGUIPresentation(in_param.GetGUIPresentation());
+    out_param_ptr->SetGUIHighlight(in_param.IsHighlight());
 
     return true;
 }
