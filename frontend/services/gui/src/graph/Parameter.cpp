@@ -501,6 +501,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
     out_param->SetGUIVisible(parameter_ptr->IsGUIVisible());
     out_param->SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
     out_param->SetGUIPresentation(parameter_ptr->GetGUIPresentation());
+    out_param->SetHighlight(parameter_ptr->IsGUIHighlight());
     if (save_core_param_pointer) {
         out_param->core_param_ptr = parameter_ptr;
     }
@@ -516,6 +517,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     out_param.SetGUIVisible(in_param_ptr->IsGUIVisible());
     out_param.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
     out_param.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
+    out_param.SetHighlight(in_param_ptr->IsGUIHighlight());
 
     /// XXX Prioritizing currently changed value from GUI
     /// Do not read param value from core param if gui param has already updated value
@@ -828,6 +830,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             // Set read only
             gui_utils::PushReadOnly(this->IsGUIReadOnly());
         }
+
+        if (this->IsHighlight())
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(255, 0, 0, 255));
 
         switch (this->GetGUIPresentation()) {
             // BASIC ///////////////////////////////////////////////////
@@ -1228,6 +1233,9 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         default:
             break;
         }
+
+        if (this->IsHighlight())
+            ImGui::PopStyleColor();
 
         // LOCAL -----------------------------------------------------------
         if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {

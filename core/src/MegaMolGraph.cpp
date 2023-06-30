@@ -222,6 +222,17 @@ bool megamol::core::MegaMolGraph::SetParameter(std::string const& paramName, std
     return true;
 }
 
+bool megamol::core::MegaMolGraph::SetParameterHighlight(std::string const& paramName, bool is_highlight) {
+    auto param_slot_ptr = FindParameterSlot(paramName);
+    auto param_ptr = getParameterFromParamSlot(param_slot_ptr);
+
+    if (!param_ptr)
+        return false;
+    param_ptr->SetGUIHighlight(is_highlight);
+
+    return true;
+}
+
 bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes() {
     for (auto& subscriber : graph_subscribers.subscribers) {
 
