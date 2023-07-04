@@ -111,12 +111,12 @@ public:
     }
 
     bool IsGUIHighlight() const {
-        return gui_presentation.IsHighlight();
+        return gui_presentation.IsGUIHighlight();
     }
 
     void SetGUIHighlight(bool highlight) {
-        if (gui_presentation.IsHighlight() != highlight) {
-            gui_presentation.SetHighlight(highlight);
+        if (gui_presentation.IsGUIHighlight() != highlight) {
+            gui_presentation.SetGUIHighlight(highlight);
             indicatePresentationChange();
         }
     }
@@ -130,6 +130,15 @@ public:
             gui_presentation.SetGUIPresentation(presentS);
             indicatePresentationChange();
         }
+    }
+
+    void SetParamPresentation(const AbstractParamPresentation& other) {
+        this->gui_presentation = other;
+        indicatePresentationChange();
+    }
+
+    const AbstractParamPresentation& GetParamPresentation() const {
+        return this->gui_presentation;
     }
 
 protected:

@@ -155,7 +155,7 @@ bool ParameterList::Draw() {
                     auto const& param_vec = module_ptr->Parameters();
                     bool highlight = false;
                     for (auto const& param : param_vec) {
-                        if (param.IsHighlight())
+                        if (param.GetParamPresentation().IsGUIHighlight())
                             highlight = true;
                     }
                     if (highlight)

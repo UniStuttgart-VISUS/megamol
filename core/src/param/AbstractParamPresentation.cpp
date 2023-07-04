@@ -88,10 +88,6 @@ void AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
 
     this->initialised = true;
 
-    this->SetGUIVisible(visible);
-    this->SetGUIReadOnly(read_only);
-    this->SetHighlight(highlight);
-
     // Initialize presentations depending on parameter type
     switch (param_type) {
     case (ParamType::BOOL): {
@@ -207,7 +203,7 @@ bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, con
 
                         bool gui_highlight = false;
                         valid &=
-                            megamol::core::utility::get_json_value<bool>(gui_state, {"gui_highlicht"}, &gui_highlight);
+                            megamol::core::utility::get_json_value<bool>(gui_state, {"gui_highlight"}, &gui_highlight);
 
                         int presentation_mode = 0;
                         valid &= megamol::core::utility::get_json_value<int>(
@@ -217,7 +213,7 @@ bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, con
                         if (valid) {
                             this->SetGUIVisible(gui_visibility);
                             this->SetGUIReadOnly(gui_read_only);
-                            this->SetHighlight(gui_highlight);
+                            this->SetGUIHighlight(gui_highlight);
                             this->SetGUIPresentation(gui_presentation_mode);
                             return true;
                         }
@@ -235,13 +231,13 @@ bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, con
 }
 
 
-bool AbstractParamPresentation::StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname) {
+bool AbstractParamPresentation::StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname) const {
 
     try {
         // Append to given json
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_visibility"] = this->IsGUIVisible();
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_read-only"] = this->IsGUIReadOnly();
-        inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_highlight"] = this->IsHighlight();
+        inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_highlight"] = this->IsGUIHighlight();
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_presentation_mode"] =
             static_cast<int>(this->GetGUIPresentation());
     } catch (...) {

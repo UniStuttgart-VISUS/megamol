@@ -184,9 +184,7 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                         p.stepsize, p.param_name, p.description);
                     parameter.SetParentModuleName(mod_ptr->FullName());
                     parameter.SetValueString(p.default_value, true, true);
-                    parameter.SetGUIVisible(p.gui_visibility);
-                    parameter.SetGUIReadOnly(p.gui_read_only);
-                    parameter.SetGUIPresentation(p.gui_presentation);
+                    parameter.SetParamPresentation(p.GetParamPresentation());
                     mod_ptr->Parameters().emplace_back(parameter);
                 }
 

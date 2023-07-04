@@ -103,11 +103,11 @@ public:
         this->read_only = read_only;
     }
 
-    bool IsHighlight() const {
+    bool IsGUIHighlight() const {
         return highlight;
     }
 
-    void SetHighlight(bool highlight) {
+    void SetGUIHighlight(bool highlight) {
         this->highlight = highlight;
     }
 
@@ -171,7 +171,7 @@ public:
      * De-/Serialization of parameters GUI state.
      */
     bool StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname);
-    bool StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
+    bool StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname) const;
 
     AbstractParamPresentation();
 

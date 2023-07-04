@@ -18,6 +18,9 @@
 #include <variant>
 
 
+using namespace megamol::core::param;
+
+
 namespace megamol::gui {
 
 
@@ -33,14 +36,14 @@ typedef std::shared_ptr<Module> ModulePtr_t;
 // Types
 typedef std::vector<Parameter> ParamVector_t;
 typedef std::map<int, std::string> EnumStorage_t;
-typedef std::pair<megamol::core::param::FilePathParam::Flags_t, megamol::core::param::FilePathParam::Extensions_t>
+typedef std::pair<FilePathParam::Flags_t, FilePathParam::Extensions_t>
     FilePathStorage_t;
 
 
 /** ************************************************************************
  * Defines parameter data structure for graph
  */
-class Parameter : public megamol::core::param::AbstractParamPresentation {
+class Parameter {
 public:
     /*
      * Globally scoped widgets (widget parts) are always called each frame.
@@ -89,7 +92,7 @@ public:
         megamol::core::view::KeyCode,                  // BUTTON
         EnumStorage_t,                                 // ENUM
         FilePathStorage_t,                             // FILEPATH
-        megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
+        FlexEnumParam::Storage_t // FLEXENUM
         >
         Storage_t;
 
@@ -102,35 +105,40 @@ public:
         Max_t maxval;
         Step_t stepsize;
         Storage_t storage;
-        bool gui_visibility;
-        bool gui_read_only;
-        Present_t gui_presentation;
+        AbstractParamPresentation gui_present;
+
+        void SetParamPresentation(const AbstractParamPresentation& other) {
+            this->gui_present = other;
+        }
+        const AbstractParamPresentation& GetParamPresentation() const {
+            return this->gui_present;
+        }
     };
 
     // STATIC ---------------------
 
     static bool ReadNewCoreParameterToStockParameter(
-        megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
+        ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
 
-    static bool ReadNewCoreParameterToNewParameter(megamol::core::param::ParamSlot& in_param_slot,
+    static bool ReadNewCoreParameterToNewParameter(ParamSlot& in_param_slot,
         std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
         bool save_core_param_pointer, const std::string& parent_module_name);
 
-    static bool ReadCoreParameterToParameter(std::shared_ptr<megamol::core::param::AbstractParam> in_param_ptr,
+    static bool ReadCoreParameterToParameter(std::shared_ptr<AbstractParam> in_param_ptr,
         megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty);
 
-    static bool ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
+    static bool ReadNewCoreParameterToExistingParameter(ParamSlot& in_param_slot,
         megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty, bool save_core_param_pointer);
 
     static bool WriteCoreParameterGUIState(
-        megamol::gui::Parameter& in_param, std::shared_ptr<megamol::core::param::AbstractParam> out_param_ptr);
+        megamol::gui::Parameter& in_param, std::shared_ptr<AbstractParam> out_param_ptr);
 
     // ----------------------------
 
     Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval, Step_t step,
         const std::string& param_name, const std::string& description);
 
-    ~Parameter() override;
+    ~Parameter();
 
     bool Draw(WidgetScope scope);
 
@@ -236,11 +244,16 @@ public:
     inline const bool IsExtended() const {
         return this->gui_extended;
     }
-    inline std::shared_ptr<megamol::core::param::AbstractParam> CoreParamPtr() const {
+    inline std::shared_ptr<AbstractParam> CoreParamPtr() const {
         return this->core_param_ptr;
     }
     inline void ResetCoreParamPtr() {
         this->core_param_ptr = nullptr;
+    }
+
+    // Returning cont& is not working since none const access to member functions of AbstractParamPresentation is required
+    const AbstractParamPresentation& GetParamPresentation() const {
+        return this->gui_present;
     }
 
     // SET ----------------------------------------------------------------
@@ -273,6 +286,19 @@ public:
         this->gui_extended = extended;
     }
 
+    inline void SetParamPresentation(const AbstractParamPresentation& other) {
+        this->gui_present = other;
+    }
+
+    // State ----------------------------------------------------------------
+
+    bool StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname) {
+        return this->gui_present.StateFromJSON(in_json, param_fullname);
+    }
+    bool StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname) const {
+        return this->gui_present.StateToJSON(inout_json, param_fullname);
+    }
+
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -282,7 +308,7 @@ private:
     std::string parent_module_name; /// ::<module_group>::<module_name>
     std::string description;
 
-    std::shared_ptr<megamol::core::param::AbstractParam> core_param_ptr;
+    std::shared_ptr<AbstractParam> core_param_ptr;
 
     Min_t minval;
     Max_t maxval;
@@ -294,6 +320,7 @@ private:
     bool default_value_mismatch;
     bool value_dirty;
 
+    AbstractParamPresentation gui_present;
     bool gui_extended;
     const std::string gui_float_format;
     std::string gui_help;
@@ -329,7 +356,7 @@ private:
     bool widget_color(WidgetScope scope, const std::string& label, glm::vec4& val);
     bool widget_enum(WidgetScope scope, const std::string& label, int& val, EnumStorage_t store);
     bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& val,
-        const megamol::core::param::FlexEnumParam::Storage_t& store);
+        const FlexEnumParam::Storage_t& store);
     bool widget_filepath(
         WidgetScope scope, const std::string& label, std::filesystem::path& val, const FilePathStorage_t& store);
     bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& val);
@@ -362,7 +389,7 @@ void Parameter::SetValue(T val, bool set_default_val, bool set_dirty) {
             }
             if (this->type == ParamType_t::FLEXENUM) {
                 // Update storage
-                auto flex_storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
+                auto flex_storage = this->GetStorage<FlexEnumParam::Storage_t>();
                 flex_storage.insert(std::get<std::string>(this->value));
                 this->SetStorage(flex_storage);
             } else if (this->type == ParamType_t::TRANSFERFUNCTION) {
@@ -370,7 +397,7 @@ void Parameter::SetValue(T val, bool set_default_val, bool set_dirty) {
                 if constexpr (std::is_same_v<T, std::string>) {
                     int texture_width, texture_height;
                     std::vector<float> texture_data;
-                    if (megamol::core::param::TransferFunctionParam::GetTextureData(
+                    if (TransferFunctionParam::GetTextureData(
                             val, texture_data, texture_width, texture_height)) {
                         this->TransferFunction_LoadTexture(texture_data, texture_width, texture_height);
                     }

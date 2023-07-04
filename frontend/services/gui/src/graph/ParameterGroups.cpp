@@ -34,7 +34,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
         if (in_scope == Parameter::WidgetScope::LOCAL) {
             param_searched = gui_utils::FindCaseInsensitiveSubstring(param_fullname, in_search);
         }
-        bool visible = (inout_param.IsGUIVisible() || inout_param.IsExtended()) && param_searched;
+        bool visible = (inout_param.GetParamPresentation().IsGUIVisible() || inout_param.IsExtended()) && param_searched;
 
         if (visible) {
             inout_param.Draw(in_scope);
@@ -58,7 +58,7 @@ void megamol::gui::ParameterGroups::DrawGroupedParameters(const std::string& in_
     bool visible = false;
     bool extended = false;
     for (auto& param : params) {
-        visible = visible || param->IsGUIVisible();
+        visible = visible || param->GetParamPresentation().IsGUIVisible();
         extended = extended || param->IsExtended();
     }
     if (!visible && !extended)
@@ -246,7 +246,7 @@ bool megamol::gui::ParameterGroups::StateToJSON(nlohmann::json& inout_json, cons
         }
     }
 
-    return false;
+    return true;
 }
 
 
@@ -260,7 +260,7 @@ bool megamol::gui::ParameterGroups::StateFromJSON(const nlohmann::json& in_json,
         }
     }
 
-    return false;
+    return true;
 }
 
 
@@ -274,7 +274,7 @@ bool megamol::gui::ParameterGroups::ParametersVisible(megamol::gui::ParamVector_
         if (!param_namespace.empty()) {
             group_map[param_namespace].emplace_back(&param);
         } else {
-            if (param.IsGUIVisible()) {
+            if (param.GetParamPresentation().IsGUIVisible()) {
                 params_visisble = true;
             }
         }
@@ -292,7 +292,7 @@ bool megamol::gui::ParameterGroups::ParametersVisible(megamol::gui::ParamVector_
         }
         if (!found_group_widget) {
             for (auto& param_ptr : group.second) {
-                if (param_ptr->IsGUIVisible()) {
+                if (param_ptr->GetParamPresentation().IsGUIVisible()) {
                     params_visisble = true;
                 }
             }

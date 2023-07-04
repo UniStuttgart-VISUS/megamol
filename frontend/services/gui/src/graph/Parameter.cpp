@@ -35,8 +35,7 @@ using namespace megamol::gui;
 
 megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minv, Max_t maxv, Step_t step,
     const std::string& param_name, const std::string& description)
-        : megamol::core::param::AbstractParamPresentation()
-        , uid(uid)
+        : uid(uid)
         , type(type)
         , param_name(param_name)
         , parent_module_name()
@@ -50,6 +49,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , default_value()
         , default_value_mismatch(false)
         , value_dirty(false)
+        , gui_present()
         , gui_extended(false)
         , gui_float_format("%.7f")
         , gui_help()
@@ -73,7 +73,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , tf_editor_hash(0)
         , filepath_scroll_xmax(false) {
 
-    this->InitPresentation(type);
+    this->gui_present.InitPresentation(type);
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -316,10 +316,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
 
     out_param.param_name = std::string(in_param_slot.Name().PeekBuffer());
     out_param.description = std::string(in_param_slot.Description().PeekBuffer());
-
-    out_param.gui_visibility = parameter_ptr->IsGUIVisible();
-    out_param.gui_read_only = parameter_ptr->IsGUIReadOnly();
-    out_param.gui_presentation = static_cast<Present_t>(parameter_ptr->GetGUIPresentation());
+    out_param.SetParamPresentation(parameter_ptr->GetParamPresentation());
 
     if (auto* p_ptr = in_param_slot.Param<core::param::ButtonParam>()) {
         out_param.type = ParamType_t::BUTTON;
@@ -497,11 +494,8 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
     }
 
     out_param->SetParentModuleName(parent_module_name);
+    out_param->SetParamPresentation(parameter_ptr->GetParamPresentation());
 
-    out_param->SetGUIVisible(parameter_ptr->IsGUIVisible());
-    out_param->SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
-    out_param->SetGUIPresentation(parameter_ptr->GetGUIPresentation());
-    out_param->SetHighlight(parameter_ptr->IsGUIHighlight());
     if (save_core_param_pointer) {
         out_param->core_param_ptr = parameter_ptr;
     }
@@ -514,10 +508,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     std::shared_ptr<megamol::core::param::AbstractParam> in_param_ptr, megamol::gui::Parameter& out_param,
     bool set_default_val, bool set_dirty) {
 
-    out_param.SetGUIVisible(in_param_ptr->IsGUIVisible());
-    out_param.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
-    out_param.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
-    out_param.SetHighlight(in_param_ptr->IsGUIHighlight());
+    out_param.SetParamPresentation(in_param_ptr->GetParamPresentation());
 
     /// XXX Prioritizing currently changed value from GUI
     /// Do not read param value from core param if gui param has already updated value
@@ -683,10 +674,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(megamol::c
 bool megamol::gui::Parameter::WriteCoreParameterGUIState(
     megamol::gui::Parameter& in_param, std::shared_ptr<megamol::core::param::AbstractParam> out_param_ptr) {
 
-    out_param_ptr->SetGUIVisible(in_param.IsGUIVisible());
-    out_param_ptr->SetGUIReadOnly(in_param.IsGUIReadOnly());
-    out_param_ptr->SetGUIPresentation(in_param.GetGUIPresentation());
-    out_param_ptr->SetGUIHighlight(in_param.IsHighlight());
+    out_param_ptr->SetParamPresentation(in_param.GetParamPresentation());
 
     return true;
 }
@@ -710,15 +698,15 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
 
         switch (scope) {
         case (WidgetScope::LOCAL): {
-            if (this->IsGUIVisible() || this->gui_extended) {
+            if (this->gui_present.IsGUIVisible() || this->gui_extended) {
 
                 ImGui::BeginGroup();
                 if (this->gui_extended) {
                     /// PREFIX ---------------------------------------------
 
                     // Visibility
-                    if (ImGui::RadioButton("###visible", this->IsGUIVisible())) {
-                        this->SetGUIVisible(!this->IsGUIVisible());
+                    if (ImGui::RadioButton("###visible", this->gui_present.IsGUIVisible())) {
+                        this->gui_present.SetGUIVisible(!this->gui_present.IsGUIVisible());
                         this->ForceSetGUIStateDirty();
                     }
                     this->gui_tooltip.ToolTip("Visibility (Basic Mode)");
@@ -726,9 +714,9 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                     ImGui::SameLine();
 
                     // Read-only option
-                    bool read_only = this->IsGUIReadOnly();
+                    bool read_only = this->gui_present.IsGUIReadOnly();
                     if (ImGui::Checkbox("###readonly", &read_only)) {
-                        this->SetGUIReadOnly(read_only);
+                        this->gui_present.SetGUIReadOnly(read_only);
                         this->ForceSetGUIStateDirty();
                     }
                     this->gui_tooltip.ToolTip("Read-Only");
@@ -737,13 +725,13 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
 
                     // Presentation
                     ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, "param_present_button", "",
-                        (this->GetGUIPresentation() != Present_t::Basic), false);
+                        (this->gui_present.GetGUIPresentation() != Present_t::Basic), false);
                     if (ImGui::BeginPopupContextItem("param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
-                        for (auto& present_name_pair : this->GetPresentationNameMap()) {
-                            if (this->IsPresentationCompatible(present_name_pair.first)) {
+                        for (auto& present_name_pair : this->gui_present.GetPresentationNameMap()) {
+                            if (this->gui_present.IsPresentationCompatible(present_name_pair.first)) {
                                 if (ImGui::MenuItem(present_name_pair.second.c_str(), nullptr,
-                                        (present_name_pair.first == this->GetGUIPresentation()))) {
-                                    this->SetGUIPresentation(present_name_pair.first);
+                                        (present_name_pair.first == this->gui_present.GetGUIPresentation()))) {
+                                    this->gui_present.SetGUIPresentation(present_name_pair.first);
                                     this->ForceSetGUIStateDirty();
                                 }
                             }
@@ -824,18 +812,16 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
         using T = std::decay_t<decltype(arg)>;
 
         // LOCAL -----------------------------------------------------------
+        // Set style of local parameters
         if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-            // Set general proportional item width
             float widget_width = ImGui::GetContentRegionAvail().x * 0.65f;
             ImGui::PushItemWidth(widget_width);
-            // Set read only
-            gui_utils::PushReadOnly(this->IsGUIReadOnly());
+            gui_utils::PushReadOnly(this->gui_present.IsGUIReadOnly());
+            if (this->gui_present.IsGUIHighlight())
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(255, 0, 0, 255));
         }
 
-        if (this->IsHighlight())
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(255, 0, 0, 255));
-
-        switch (this->GetGUIPresentation()) {
+        switch (this->gui_present.GetGUIPresentation()) {
             // BASIC ///////////////////////////////////////////////////
         case (Present_t::Basic): {
             // BOOL ------------------------------------------------
@@ -1235,15 +1221,12 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             break;
         }
 
-        if (this->IsHighlight())
-            ImGui::PopStyleColor();
-
         // LOCAL -----------------------------------------------------------
         if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-            // Reset read only
-            gui_utils::PopReadOnly(this->IsGUIReadOnly());
-            // Reset item width
+            gui_utils::PopReadOnly(this->gui_present.IsGUIReadOnly());
             ImGui::PopItemWidth();
+            if (this->gui_present.IsGUIHighlight())
+                ImGui::PopStyleColor();
         }
     };
 
@@ -1252,7 +1235,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
     if (error) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] No widget presentation '%s' available for '%s' . [%s, %s, line %d]\n",
-            this->GetPresentationName(this->GetGUIPresentation()).c_str(),
+            this->gui_present.GetPresentationName(this->gui_present.GetGUIPresentation()).c_str(),
             megamol::core::param::AbstractParamPresentation::GetTypeName(this->type).c_str(), __FILE__, __FUNCTION__,
             __LINE__);
     }
@@ -1299,7 +1282,7 @@ bool megamol::gui::Parameter::widget_bool(
 
     // LOCAL -----------------------------------------------------------
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
-        auto p = this->GetGUIPresentation();
+        auto p = this->gui_present.GetGUIPresentation();
 
         if (p == Present_t::Checkbox) {
             retval = ImGui::Checkbox(label.c_str(), &val);
@@ -1617,7 +1600,7 @@ bool megamol::gui::Parameter::widget_int(
         ImGui::SameLine();
 
         // Value
-        auto p = this->GetGUIPresentation();
+        auto p = this->gui_present.GetGUIPresentation();
         if (p == Present_t::Slider) {
             const int offset = 2;
             auto slider_min = (minv > INT_MIN) ? (minv) : ((val == 0) ? (-offset) : (val - (offset * val)));
@@ -1686,7 +1669,7 @@ bool megamol::gui::Parameter::widget_float(megamol::gui::Parameter::WidgetScope 
         }
 
         ImGui::BeginGroup();
-        auto p = this->GetGUIPresentation();
+        auto p = this->gui_present.GetGUIPresentation();
 
         // Min Max Step Option
         if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
@@ -1766,7 +1749,7 @@ bool megamol::gui::Parameter::widget_vector2f(megamol::gui::Parameter::WidgetSco
             this->gui_widget_value = val;
         }
 
-        auto p = this->GetGUIPresentation();
+        auto p = this->gui_present.GetGUIPresentation();
         ImGui::BeginGroup();
 
         // Min Max Option
@@ -1844,7 +1827,7 @@ bool megamol::gui::Parameter::widget_vector3f(megamol::gui::Parameter::WidgetSco
             this->gui_widget_value = val;
         }
 
-        auto p = this->GetGUIPresentation();
+        auto p = this->gui_present.GetGUIPresentation();
         ImGui::BeginGroup();
 
         // Min Max Option
@@ -1924,7 +1907,7 @@ bool megamol::gui::Parameter::widget_vector4f(megamol::gui::Parameter::WidgetSco
             this->gui_widget_value = val;
         }
 
-        auto p = this->GetGUIPresentation();
+        auto p = this->gui_present.GetGUIPresentation();
         ImGui::BeginGroup();
 
         // Min Max Option
