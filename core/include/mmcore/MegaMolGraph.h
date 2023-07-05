@@ -67,8 +67,6 @@ public:
 
     bool SetParameter(std::string const& paramName, std::string const& value);
 
-    bool SetParameterHighlight(std::string const& paramName, bool is_highlight);
-
     megamol::core::param::ParamSlot* FindParameterSlot(std::string const& paramName) const;
 
     std::vector<megamol::core::param::AbstractParam*> EnumerateModuleParameters(std::string const& moduleName) const;
