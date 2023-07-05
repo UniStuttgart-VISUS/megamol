@@ -281,6 +281,24 @@ private:
     std::vector<geocalls_gl::CallTriMeshDataGL::Mesh*> triaMesh;
 
     DeferredRenderingProvider deferredProvider_;
+
+    // ico sphere mesh variables/vectors
+    std::vector<float> vertex;
+    std::vector<float> normal;
+    std::vector<float> color;
+    std::vector<unsigned int> face;
+
+    // bools
+    bool isFlatShading;
+    bool isStitching;
+    bool isDebug;
+
+    int curMDChash;
+
+    /**********************************************************************
+    * functions
+    **********************************************************************/
+
     static std::vector<std::vector<unsigned int>> getMultipleVertices(Icosphere* pIcosphere);
 };
 
