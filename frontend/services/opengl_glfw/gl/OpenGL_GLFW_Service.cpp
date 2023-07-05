@@ -41,6 +41,10 @@
 #include <tracy/TracyOpenGL.hpp>
 #endif
 
+#ifdef MEGAMOL_USE_POWER
+#include "PowerCallbacks.h"
+#endif
+
 static const std::string service_name = "OpenGL_GLFW_Service: ";
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
@@ -295,6 +299,10 @@ void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
     glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
 #ifdef MEGAMOL_USE_TRACY
     TracyGpuCollect;
+#endif
+#ifdef MEGAMOL_USE_POWER
+    reinterpret_cast<frontend_resources::PowerCallbacks const*>(power_callbacks)->signal_low();
+    reinterpret_cast<frontend_resources::PowerCallbacks const*>(power_callbacks)->signal_high();
 #endif
 }
 
@@ -582,7 +590,12 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
 
     m_requestedResourcesNames = {
-        "FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
+        "FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name
+#ifdef MEGAMOL_USE_POWER
+        ,
+        frontend_resources::PowerCallbacks_Req_Name
+#endif
+    };
 
     m_pimpl->last_time = std::chrono::system_clock::now();
 
@@ -802,6 +815,11 @@ void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> re
     };
 
     megamolgraph_subscription.subscribe(debug_helper_subscription);
+#endif
+
+#ifdef MEGAMOL_USE_POWER
+    power_callbacks_ = &resources[3].getResource<frontend_resources::PowerCallbacks>();
+    m_windowManipulation.power_callbacks = power_callbacks_;
 #endif
 }
 

@@ -13,6 +13,8 @@
 
 #include "ParallelPortTrigger.h"
 
+#include "PowerCallbacks.h"
+
 namespace megamol {
 namespace frontend {
 
@@ -166,6 +168,8 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 
     std::unique_ptr<ParallelPortTrigger> trigger_;
+
+    frontend_resources::PowerCallbacks callbacks_;
 };
 
 } // namespace frontend

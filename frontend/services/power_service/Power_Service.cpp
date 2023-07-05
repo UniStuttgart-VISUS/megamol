@@ -64,6 +64,11 @@ bool Power_Service::init(void* configPtr) {
         trigger_ = nullptr;
     }
 
+    callbacks_.signal_high = std::bind(&ParallelPortTrigger::WriteHigh, trigger_.get());
+    callbacks_.signal_low = std::bind(&ParallelPortTrigger::WriteLow, trigger_.get());
+
+    m_providedResourceReferences = {{frontend_resources::PowerCallbacks_Req_Name, callbacks_}};
+
     //return init(*static_cast<Config*>(configPtr));
     return true;
 }
@@ -165,8 +170,8 @@ void Power_Service::preGraphRender() {
     // rendering via MegaMol View is called after this function finishes
     // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
     // which leads to view.Render()
-    if (trigger_)
-        trigger_->WriteHigh();
+    /*if (trigger_)
+        trigger_->WriteHigh();*/
 }
 
 void Power_Service::postGraphRender() {
@@ -174,8 +179,8 @@ void Power_Service::postGraphRender() {
     // e.g. end frame timer
     // update window name
     // swap buffers, glClear
-    if (trigger_)
-        trigger_->WriteLow();
+    /*if (trigger_)
+        trigger_->WriteLow();*/
 }
 
 
