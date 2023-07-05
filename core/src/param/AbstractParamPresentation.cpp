@@ -207,7 +207,7 @@ bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, con
 
                         bool gui_highlight = false;
                         valid &=
-                            megamol::core::utility::get_json_value<bool>(gui_state, {"gui_highlicht"}, &gui_highlight);
+                            megamol::core::utility::get_json_value<bool>(gui_state, {"gui_highlight"}, &gui_highlight);
 
                         int presentation_mode = 0;
                         valid &= megamol::core::utility::get_json_value<int>(
