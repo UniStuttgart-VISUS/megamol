@@ -112,6 +112,7 @@ private:
     std::unique_ptr<glowl::Texture2D> m_depth_target;
 
     std::unique_ptr<glowl::Texture3D> m_volume_texture;
+    uint32_t m_volume_handle = 0;
 
     GLuint tf_texture;
 
