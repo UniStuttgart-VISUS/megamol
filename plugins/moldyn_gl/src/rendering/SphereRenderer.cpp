@@ -82,7 +82,7 @@ SphereRenderer::SphereRenderer()
         , old_frame_id_(0)
         , state_invalid_(0)
         , trigger_rebuild_g_buffer_(false)
-        // , timer()
+// , timer()
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         /// This variant should not need the fence (?)
         // ,single_buffer_creation_bits_(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT);

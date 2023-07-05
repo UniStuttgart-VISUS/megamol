@@ -40,8 +40,7 @@ VoxelGenerator::VoxelGenerator(void)
     this->MakeSlotAvailable(&this->get_data_slot_);
 
     this->vol_size_slot_ << (new core::param::IntParam(256, 1, 1024));
-    this->MakeSlotAvailable(&this->vol_size_slot_
-    );
+    this->MakeSlotAvailable(&this->vol_size_slot_);
 }
 
 VoxelGenerator::~VoxelGenerator(void) {
@@ -78,12 +77,13 @@ bool VoxelGenerator::getExtentCallback(core::Call& call) {
         return false;
 
     // set frame id
-    auto frameID = volume_call != nullptr? volume_call->FrameID() : 0;
+    auto frameID = volume_call != nullptr ? volume_call->FrameID() : 0;
     particle_call->SetFrameID(frameID, true);
 
     // get particle call extents
     if (!(*particle_call)(1)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("VoxelGenerator: could not get current frame extents"); //(% u) ", time-1);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "VoxelGenerator: could not get current frame extents"); //(% u) ", time-1);
         return false;
     }
 
@@ -98,7 +98,6 @@ bool VoxelGenerator::getExtentCallback(core::Call& call) {
 
     return true;
 }
-
 
 
 bool VoxelGenerator::getMetadataCallback(core::Call& call) {
@@ -122,7 +121,7 @@ bool VoxelGenerator::getMetadataCallback(core::Call& call) {
 bool VoxelGenerator::getDataCallback(core::Call& call) {
 
     MultiParticleDataCall* particle_call = this->get_data_slot_.CallAs<MultiParticleDataCall>();
-    //geocalls::EllipsoidalParticleDataCall* particle_call2 = this->get_data_slot_.CallAs<geocalls::EllipsoidalParticleDataCall>(); // for glyph renderer 
+    //geocalls::EllipsoidalParticleDataCall* particle_call2 = this->get_data_slot_.CallAs<geocalls::EllipsoidalParticleDataCall>(); // for glyph renderer
 
     if (particle_call == nullptr)
         return false;
@@ -134,7 +133,7 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
         // get frame id
         auto frameID = volume_call->FrameID();
 
-        do { 
+        do {
             particle_call->SetFrameID(frameID, true);
             if (!(*particle_call)(VolumetricDataCall::IDX_GET_EXTENTS)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("VoxelGenerator: Unable to get extents.");
@@ -160,13 +159,15 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
 
 bool VoxelGenerator::initVolumeGenerator() {
 
-    auto shader_options = core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()); //msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto shader_options = core::utility::make_path_shader_options(
+        frontend_resources.get<megamol::frontend_resources::
+                RuntimeConfig>()); //msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     vol_gen_ = new misc::MDAOVolumeGenerator();
     vol_gen_->SetShaderSourceFactory(&shader_options);
 
     shader_options_flags_ = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
     sphere_prgm_ = core::utility::make_glowl_shader("sphere_mdao", *shader_options_flags_,
-            "moldyn_gl/sphere_renderer/sphere_mdao.vert.glsl", "moldyn_gl/sphere_renderer/sphere_mdao.frag.glsl");
+        "moldyn_gl/sphere_renderer/sphere_mdao.vert.glsl", "moldyn_gl/sphere_renderer/sphere_mdao.frag.glsl");
 
     // Init volume generator
     if (!vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
@@ -184,7 +185,7 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, Volume
     if (this->vol_gen_ == nullptr) {
         initVolumeGenerator();
     }
-    
+
     vislib::math::Cuboid<float> cur_clip_box_ = volume_call->AccessBoundingBoxes().ClipBox();
 
     // Fill volume texture
@@ -193,7 +194,7 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, Volume
         int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
 
         float longest_edge = cur_clip_box_.LongestEdge();
-        dims.Scale(static_cast<float>(vol_size)/longest_edge);
+        dims.Scale(static_cast<float>(vol_size) / longest_edge);
         dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
         dims.SetHeight(ceil(dims.GetHeight()));
         dims.SetDepth(ceil(dims.GetDepth()));
@@ -201,18 +202,16 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, Volume
 
         vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
         vol_gen_->ClearVolume();
-        vol_gen_->StartInsertion(
-            cur_clip_box_, glm::vec4(0.0));
+        vol_gen_->StartInsertion(cur_clip_box_, glm::vec4(0.0));
 
         // Insert particle data
-        unsigned int particleListCount = particle_call->GetParticleListCount(); 
+        unsigned int particleListCount = particle_call->GetParticleListCount();
         for (unsigned int i = 0; i < particleListCount; i++) {
             float global_radius = 0.0f;
 
             auto particles = particle_call->AccessParticles(i);
 
-            if (particles.GetVertexDataType() !=
-                MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+            if (particles.GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
                 global_radius = particles.GetGlobalRadius();
 
 
@@ -221,8 +220,7 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, Volume
             fillVAO(particles, vbo_, particles.GetVertexData(), true); // shpererenderer enableBuffersData()
             glBindVertexArray(0);
 
-            vol_gen_->InsertParticles(
-                static_cast<unsigned int>(particles.GetCount()), global_radius, vertex_array_);
+            vol_gen_->InsertParticles(static_cast<unsigned int>(particles.GetCount()), global_radius, vertex_array_);
         }
 
         vol_gen_->EndInsertion();
@@ -239,7 +237,8 @@ bool VoxelGenerator::dummyCallback(core::Call& call) {
     return true;
 }
 
-bool VoxelGenerator::fillVAO(const MultiParticleDataCall::Particles& parts, GLuint vert_buf, const void* vert_ptr, bool create_buffer_data) {
+bool VoxelGenerator::fillVAO(
+    const MultiParticleDataCall::Particles& parts, GLuint vert_buf, const void* vert_ptr, bool create_buffer_data) {
 
     GLuint vert_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inPosition");
 

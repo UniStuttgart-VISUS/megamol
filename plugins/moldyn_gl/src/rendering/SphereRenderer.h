@@ -376,7 +376,7 @@ private:
      */
     MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
 
-        /**
+    /**
      * TODO: Document
      *
      *

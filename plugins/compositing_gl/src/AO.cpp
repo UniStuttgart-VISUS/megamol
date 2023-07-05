@@ -1,8 +1,8 @@
 #include "AO.h"
 
 #include "OpenGL_Context.h"
-#include "mmcore/param/IntParam.h"
 #include "compositing_gl/CompositingCalls.h"
+#include "mmcore/param/IntParam.h"
 #include "mmstd/light/DistantLight.h"
 
 using namespace megamol::core;
@@ -40,8 +40,7 @@ megamol::compositing_gl::AO::AO(void)
         , camera_slot_("Camera", "Connects a (copy of) camera state")
         , depth_tex()
         , normal_tex()
-        , color_tex()
-        {
+        , color_tex() {
 
     // CallTexture2D
     //this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &AO::getDataCallback);
@@ -89,7 +88,6 @@ megamol::compositing_gl::AO::AO(void)
 }
 
 
-
 megamol::compositing_gl::AO::~AO(void) {
 
     this->release();
@@ -97,7 +95,7 @@ megamol::compositing_gl::AO::~AO(void) {
 
 void megamol::compositing_gl::AO::release(void) {}
 
-bool megamol::compositing_gl::AO::create(void){
+bool megamol::compositing_gl::AO::create(void) {
     return recreateResources();
 }
 
@@ -108,13 +106,15 @@ bool megamol::compositing_gl::AO::recreateResources(void) {
     // Check for flag storage availability and get specific shader snippet
     // TODO: test flags!
     // create shader programs
-    auto const shader_options = core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     shader_options_flags_ = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
 
-     // Create the deferred shader
+    // Create the deferred shader
     auto lighting_so = shader_options;
 
-    bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value(); // TODO redo this when enable_lighting_slot_ changed
+    bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()
+                               ->Value(); // TODO redo this when enable_lighting_slot_ changed
     if (enable_lighting) {
         lighting_so.addDefinition("ENABLE_LIGHTING");
     }
@@ -313,10 +313,10 @@ bool megamol::compositing_gl::AO::updateVolumeData(const unsigned int frameID) {
     return true;
 }
 
-void megamol::compositing_gl::AO::renderAmbientOcclusion(){
+void megamol::compositing_gl::AO::renderAmbientOcclusion() {
 
     bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
-    
+
     glActiveTexture(GL_TEXTURE2);
     depth_tex->bindTexture();
     glActiveTexture(GL_TEXTURE1);
@@ -341,11 +341,12 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion(){
     this->lighting_prgm_->setUniform("inNormalsTex", static_cast<int>(1));
     this->lighting_prgm_->setUniform("inDepthTex", static_cast<int>(2));
     this->lighting_prgm_->setUniform("inDensityTex", static_cast<int>(3));
-    
+
 
     this->lighting_prgm_->setUniform("inWidth", static_cast<float>(cur_vp_width_));
     this->lighting_prgm_->setUniform("inHeight", static_cast<float>(cur_vp_height_));
-    glUniformMatrix4fv(this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
+    glUniformMatrix4fv(
+        this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
     if (enable_lighting) {
         this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(cur_light_dir_));
         this->lighting_prgm_->setUniform("inObjCamPos", cur_cam_pos_);

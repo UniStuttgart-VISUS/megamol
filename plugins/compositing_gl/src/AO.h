@@ -5,17 +5,16 @@
 //#include "geometry_calls/VolumetricDataCall.h"
 
 //#include "misc/MDAOVolumeGenerator.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "glowl/glowl.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
-#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
-#include "glowl/glowl.h"
 #include "mmcore/param/FloatParam.h"
-
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 
 #define _USE_MATH_DEFINES
@@ -75,7 +74,7 @@ protected:
      */
     bool create(void);
 
-    
+
     bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
@@ -107,7 +106,7 @@ private:
     std::shared_ptr<glowl::Texture2D> color_tex;
     std::shared_ptr<glowl::Texture2D> depth_tex;
     std::shared_ptr<glowl::Texture2D> normal_tex;
-    
+
     glm::mat4 cur_mvp_inv_;
     glm::vec3 cur_cam_pos_;
     glm::vec4 cur_light_dir_;

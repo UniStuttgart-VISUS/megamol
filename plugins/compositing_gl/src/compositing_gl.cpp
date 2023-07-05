@@ -7,6 +7,7 @@
 #include "mmcore/factories/AbstractPluginInstance.h"
 #include "mmcore/factories/PluginRegister.h"
 
+#include "AO.h"
 #include "AntiAliasing.h"
 #include "DepthDarkening.h"
 #include "DrawToScreen.h"
@@ -15,7 +16,6 @@
 #include "NormalFromDepth.h"
 #include "PNGDataSource.h"
 #include "SSAO.h"
-#include "AO.h"
 #include "ScreenSpaceEdges.h"
 #include "SimpleRenderTarget.h"
 #include "TexInspectModule.h"

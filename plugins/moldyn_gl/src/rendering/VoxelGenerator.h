@@ -4,16 +4,16 @@
 #pragma once
 
 
+#include "geometry_calls/EllipsoidalDataCall.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "geometry_calls/VolumetricDataCall.h"
-#include "geometry_calls/EllipsoidalDataCall.h"
 
+#include "misc/MDAOVolumeGenerator.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmstd_gl/ModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
-#include "misc/MDAOVolumeGenerator.h"
+#include "mmstd_gl/ModuleGL.h"
 
 //#include "mmcore/CoreInstance.h"
 
@@ -34,35 +34,34 @@ public:
     }
 
     /**
-    * Answer a human readable description of this module.
-    *
-    * @return A human readable description of this module.
-    */
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
     static const char* Description(void) {
         return "Generate voxel texture for particle data";
     }
 
     /**
-    * Answers whether this module is available on the current system.
-    *
-    * @return 'true' if the module is available, 'false' otherwise.
-    */
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
     static inline bool IsAvailable(void) {
         return true;
     }
 
     /**
-    * Initialises a new instance.
-    */
+     * Initialises a new instance.
+     */
     VoxelGenerator(void);
 
     /**
-    * Finalises an instance.
-    */
+     * Finalises an instance.
+     */
     virtual ~VoxelGenerator(void);
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -75,7 +74,7 @@ protected:
      */
     virtual void release(void);
 
-     /**
+    /**
      * Generates Voxels.
      *
      * @param caller The calling call.
@@ -91,8 +90,6 @@ protected:
     bool dummyCallback(core::Call& call);
 
 private:
-
-
     ///**
     // * TODO: Document
     // *
