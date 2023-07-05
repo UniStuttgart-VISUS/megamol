@@ -12,10 +12,10 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
+#include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/special/TextureInspector.h"
 
 namespace megamol::compositing_gl {
@@ -70,7 +70,7 @@ struct SMAAConstants {
     }
 };
 
-class AntiAliasing : public core::Module {
+class AntiAliasing : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -107,7 +107,7 @@ public:
 #endif
 
     AntiAliasing();
-    ~AntiAliasing();
+    ~AntiAliasing() override;
 
 protected:
     /**
@@ -115,12 +115,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO

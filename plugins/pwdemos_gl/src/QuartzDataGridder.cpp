@@ -21,14 +21,13 @@
 //#include "vislib/math/Point.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
  * DataGridder::DataGridder
  */
-DataGridder::DataGridder(void)
+DataGridder::DataGridder()
         : core::Module()
         , dataOutSlot("dataout", "The slot providing the gridded data")
         , dataInSlot("datain", "The slot fetching the flat data")
@@ -71,7 +70,7 @@ DataGridder::DataGridder(void)
 /*
  * DataGridder::~DataGridder
  */
-DataGridder::~DataGridder(void) {
+DataGridder::~DataGridder() {
     this->Release();
 }
 
@@ -79,7 +78,7 @@ DataGridder::~DataGridder(void) {
 /*
  * DataGridder::create
  */
-bool DataGridder::create(void) {
+bool DataGridder::create() {
     // intentionally empty
     return true;
 }
@@ -129,7 +128,7 @@ bool DataGridder::getExtent(core::Call& c) {
 /*
  * DataGridder::release
  */
-void DataGridder::release(void) {
+void DataGridder::release() {
     this->clearData();
     this->pdata.Resize(0);
     ASSERT(this->cells == NULL);
@@ -141,7 +140,7 @@ void DataGridder::release(void) {
 /*
  * DataGridder::clearData
  */
-void DataGridder::clearData(void) {
+void DataGridder::clearData() {
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     ARY_SAFE_DELETE(this->cells);
@@ -153,7 +152,7 @@ void DataGridder::clearData(void) {
 /*
  * DataGridder::makeData
  */
-void DataGridder::makeData(void) {
+void DataGridder::makeData() {
     ParticleDataCall* di = this->dataInSlot.CallAs<ParticleDataCall>();
     CrystalDataCall* ci = this->crysInSlot.CallAs<CrystalDataCall>();
     ASSERT((di != NULL) && (ci != NULL));
@@ -319,7 +318,7 @@ void DataGridder::makeData(void) {
 /*
  * DataGridder::needClearData
  */
-bool DataGridder::needClearData(void) {
+bool DataGridder::needClearData() {
     return ((this->dataHash != 0) && ((this->dataInSlot.CallAs<ParticleDataCall>() == NULL) ||
                                          (this->crysInSlot.CallAs<CrystalDataCall>() == NULL)));
 }
@@ -328,7 +327,7 @@ bool DataGridder::needClearData(void) {
 /*
  * DataGridder::needMakeData
  */
-bool DataGridder::needMakeData(void) {
+bool DataGridder::needMakeData() {
     ParticleDataCall* di = this->dataInSlot.CallAs<ParticleDataCall>();
     CrystalDataCall* ci = this->crysInSlot.CallAs<CrystalDataCall>();
     if ((di == NULL) || (ci == NULL))
@@ -342,5 +341,4 @@ bool DataGridder::needMakeData(void) {
            this->gridSizeZSlot.IsDirty();
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef PROBE_BILLBOARD_GLYPH_MATERIAL_H_INCLUDED
-#define PROBE_BILLBOARD_GLYPH_MATERIAL_H_INCLUDED
+#pragma once
 
 #include "mesh_gl/AbstractGPUMaterialDataSource.h"
 
@@ -78,6 +77,3 @@ private:
 
 } // namespace probe_gl
 } // namespace megamol
-
-
-#endif // !PROBE_BILLBOARD_GLYPH_MATERIAL_H_INCLUDED

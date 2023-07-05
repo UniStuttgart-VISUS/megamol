@@ -55,12 +55,12 @@ public:
     /**
      * Dtor.
      */
-    virtual ~ModuleNamespace();
+    ~ModuleNamespace() override;
 
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark();
+    void ClearCleanupMark() override;
 
 protected:
 private:

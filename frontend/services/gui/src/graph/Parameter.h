@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
-#define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 #pragma once
 
 
@@ -20,8 +18,7 @@
 #include <variant>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 // Forward declarations
@@ -194,12 +191,8 @@ public:
         return name_space;
     }
     // ::<module_group>::<module_name> + :: + <param_namespace>::<param_name>
-    inline std::string FullNameProject() const {
+    inline std::string FullName() const {
         return std::string(this->parent_module_name + "::" + this->param_name);
-    }
-    // :: + ::<module_group>::<module_name> + :: + <param_namespace>::<param_name>
-    inline std::string FullNameCore() const {
-        return std::string("::" + this->parent_module_name + "::" + this->param_name);
     }
 
     std::string GetValueString() const;
@@ -449,7 +442,4 @@ void Parameter::SetStorage(T store) {
 }
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
+} // namespace megamol::gui

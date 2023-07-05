@@ -3,8 +3,7 @@
  * Copyright (C) 2020 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef INJECT_CLUSTER_ID_H_INCLUDED
-#define INJECT_CLUSTER_ID_H_INCLUDED
+#pragma once
 
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
@@ -66,5 +65,3 @@ private:
 
 } // namespace probe
 } // namespace megamol
-
-#endif // !TESSELLATE_BOUNDING_BOX_H_INCLUDED

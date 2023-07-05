@@ -6,7 +6,8 @@
 using megamol::core::utility::log::Log;
 
 megamol::compositing_gl::NormalFromDepth::NormalFromDepth()
-        : m_version(0)
+        : mmstd_gl::ModuleGL()
+        , m_version(0)
         , m_output_texture(nullptr)
         , m_output_tex_slot("NormalTexture", "Gives access to resulting output normal texture")
         , m_input_tex_slot("DepthTexture", "Connects the depth input texture")

@@ -27,7 +27,7 @@ using namespace megamol::cinematic_gl;
 using namespace vislib;
 
 
-CinematicView::CinematicView(void)
+CinematicView::CinematicView()
         : mmstd_gl::view::View3DGL()
         , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
         , renderParam("cinematic::renderAnim", "Toggle rendering of complete animation to PNG files.")
@@ -112,7 +112,7 @@ CinematicView::CinematicView(void)
 }
 
 
-CinematicView::~CinematicView(void) {
+CinematicView::~CinematicView() {
 
     this->cinematicFbo.reset();
     this->render_to_file_cleanup();

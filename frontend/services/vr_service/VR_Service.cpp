@@ -43,8 +43,7 @@ static void log_warning(std::string const& text) {
 }
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 VR_Service::VR_Service() {}
 
@@ -61,7 +60,7 @@ bool VR_Service::init(const Config& config) {
 
     m_requestedResourcesNames = {
         "ImagePresentationEntryPoints",
-        "MegaMolGraph",
+        frontend_resources::MegaMolGraph_Req_Name,
 #ifdef MEGAMOL_USE_VR_INTEROP
         "OpenGL_Context",
 #endif // MEGAMOL_USE_VR_INTEROP
@@ -198,8 +197,7 @@ void VR_Service::postGraphRender() {
     vr_device(postGraphRender());
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend
 
 #ifdef MEGAMOL_USE_VR_INTEROP
 namespace {

@@ -221,7 +221,7 @@ void MMPLDDataSource::Frame::SetData(
 /*
  * MMPLDDataSource::MMPLDDataSource
  */
-MMPLDDataSource::MMPLDDataSource(void)
+MMPLDDataSource::MMPLDDataSource()
         : AnimDataModule()
         , filename("filename", "The path to the MMPLD file to load.")
         , limitMemorySlot("limitMemory", "Limits the memory cache size")
@@ -268,7 +268,7 @@ MMPLDDataSource::MMPLDDataSource(void)
 /*
  * MMPLDDataSource::~MMPLDDataSource
  */
-MMPLDDataSource::~MMPLDDataSource(void) {
+MMPLDDataSource::~MMPLDDataSource() {
     this->Release();
 }
 
@@ -276,7 +276,7 @@ MMPLDDataSource::~MMPLDDataSource(void) {
 /*
  * MMPLDDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* MMPLDDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* MMPLDDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<MMPLDDataSource*>(this));
     return f;
 }
@@ -285,7 +285,7 @@ core::view::AnimDataModule::Frame* MMPLDDataSource::constructFrame(void) const {
 /*
  * MMPLDDataSource::create
  */
-bool MMPLDDataSource::create(void) {
+bool MMPLDDataSource::create() {
     return true;
 }
 
@@ -317,7 +317,7 @@ void MMPLDDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int idx) 
 /*
  * MMPLDDataSource::release
  */
-void MMPLDDataSource::release(void) {
+void MMPLDDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;

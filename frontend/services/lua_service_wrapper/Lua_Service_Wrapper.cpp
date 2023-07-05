@@ -1,26 +1,20 @@
-/*
- * Lua_Service_Wrapper.cpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-// TODO: we need this #define because inclusion of LuaHostService.h leads to windows header inclusion errors.
-// this stems from linking ZMQ via CMake now being PUBLIC in the core lib. i dont know how to solve this "the right way".
-#define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
-
-#include "LuaRemoteConnectionsBroker.h"
 
 #include "CommandRegistry.h"
 #include "FrameStatistics.h"
 #include "GUIState.h"
 #include "GlobalValueStore.h"
+#include "LuaRemoteConnectionsBroker.h"
 #include "RuntimeConfig.h"
 #include "Screenshots.h"
 #include "WindowManipulation.h"
 #include "vislib/UTF8Encoder.h"
-
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "GUIRegisterWindow.h"
@@ -57,8 +51,7 @@ struct RecursionGuard {
 } // namespace
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 Lua_Service_Wrapper::Lua_Service_Wrapper() {
     // init members to default states
@@ -77,10 +70,9 @@ bool Lua_Service_Wrapper::init(void* configPtr) {
 }
 
 #define luaAPI (*m_config.lua_api_ptr)
-#define m_network_host \
-    reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(m_network_host_pimpl.get())
 
 bool Lua_Service_Wrapper::init(const Config& config) {
+    using megamol::core::utility::log::Log;
     if (!config.lua_api_ptr) {
         log("failed initialization because LuaAPI is nullptr");
         return false;
@@ -108,13 +100,13 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     };
 
     this->m_requestedResourcesNames = {"FrontendResourcesList",
-        "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
-        "FrameStatistics",                      // for LastFrameTime
-        "optional<WindowManipulation>",         // for Framebuffer resize
-        "optional<GUIState>",                   // propagate GUI state and visibility
-        "MegaMolGraph",                         // LuaAPI manipulates graph
-        "RenderNextFrame",                      // LuaAPI can render one frame
-        "GlobalValueStore",                     // LuaAPI can read and set global values
+        "GLFrontbufferToPNG_ScreenshotTrigger",    // for screenshots
+        "FrameStatistics",                         // for LastFrameTime
+        "optional<WindowManipulation>",            // for Framebuffer resize
+        "optional<GUIState>",                      // propagate GUI state and visibility
+        frontend_resources::MegaMolGraph_Req_Name, // LuaAPI manipulates graph
+        "RenderNextFrame",                         // LuaAPI can render one frame
+        "GlobalValueStore",                        // LuaAPI can read and set global values
         frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
 #ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name
@@ -123,25 +115,22 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     *open_version_notification = false;
 
-    m_network_host_pimpl =
-        std::unique_ptr<void, std::function<void(void*)>>(new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
-            [](void* ptr) { delete reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(ptr); });
-
-    bool host_ok = m_network_host->spawn_connection_broker(m_config.host_address, m_config.retry_socket_port);
-
-    if (host_ok) {
+    try {
+        m_network_host = std::make_unique<megamol::frontend::LuaRemoteConnectionsBroker>(
+            m_config.host_address, m_config.retry_socket_port);
         log("initialized successfully");
-    } else {
-        log("failed to start lua host");
+    } catch (std::exception const& ex) {
+        Log::DefaultLog.WriteError("Failed to start lua host: %s", ex.what());
+        return false;
     }
 
-    return host_ok;
+    return true;
 }
 
 void Lua_Service_Wrapper::close() {
     m_config = {}; // default to nullptr
 
-    m_network_host->close();
+    m_network_host.reset();
 }
 
 std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
@@ -197,14 +186,14 @@ void Lua_Service_Wrapper::updateProvidedResources() {
     bool need_to_shutdown = false; // e.g. mmQuit should set this to true
 
     // fetch Lua requests from ZMQ queue, execute, and give back result
-    if (!m_network_host->request_queue.empty()) {
-        auto lua_requests = std::move(m_network_host->get_request_queue());
+    if (m_network_host != nullptr && !m_network_host->RequestQueueEmpty()) {
+        auto lua_requests = std::move(m_network_host->GetRequestQueue());
         std::string result;
         while (!lua_requests.empty()) {
             auto& request = lua_requests.front();
 
             luaAPI.RunString(request.request, result);
-            request.answer_promise.get().set_value(result);
+            request.answer_promise.set_value(result);
 
             lua_requests.pop();
             result.clear();
@@ -922,5 +911,4 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
 }
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

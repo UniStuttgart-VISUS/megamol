@@ -20,16 +20,16 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SSAO_H_INCLUDED
-#define SSAO_H_INCLUDED
+#pragma once
 
 #include <variant>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+
+#include "mmstd_gl/ModuleGL.h"
 
 #include "glowl/Sampler.hpp"
 #include "glowl/Texture2DView.hpp"
@@ -37,8 +37,7 @@
 
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 typedef std::tuple<std::shared_ptr<glowl::Texture2D>, std::string, std::shared_ptr<glowl::Sampler>> TextureSamplerTuple;
 typedef std::tuple<std::shared_ptr<glowl::Texture2DView>, std::string, std::shared_ptr<glowl::Sampler>>
@@ -182,7 +181,7 @@ struct ASSAO_Constants {
 #endif
 };
 
-class SSAO : public core::Module {
+class SSAO : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -219,7 +218,7 @@ public:
 #endif
 
     SSAO();
-    ~SSAO();
+    ~SSAO() override;
 
 protected:
     /**
@@ -227,12 +226,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO
@@ -571,7 +570,4 @@ void SSAO::fullscreenPassDraw(const std::unique_ptr<glowl::GLSLProgram>& prgm, c
     }
 }
 
-} // namespace compositing_gl
-} // namespace megamol
-
-#endif // !ASSAO_H_INCLUDED
+} // namespace megamol::compositing_gl

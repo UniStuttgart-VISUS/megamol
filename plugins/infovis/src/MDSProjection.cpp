@@ -16,7 +16,7 @@ using namespace megamol::infovis;
 using namespace Eigen;
 
 
-MDSProjection::MDSProjection(void)
+MDSProjection::MDSProjection()
         : megamol::core::Module()
         , dataOutSlot("dataOut", "Ouput")
         , dataInSlot("dataIn", "Input")
@@ -38,15 +38,15 @@ MDSProjection::MDSProjection(void)
     this->MakeSlotAvailable(&reduceToNSlot);
 }
 
-MDSProjection::~MDSProjection(void) {
+MDSProjection::~MDSProjection() {
     this->Release();
 }
 
-bool MDSProjection::create(void) {
+bool MDSProjection::create() {
     return true;
 }
 
-void MDSProjection::release(void) {}
+void MDSProjection::release() {}
 
 bool MDSProjection::getDataCallback(core::Call& c) {
     try {

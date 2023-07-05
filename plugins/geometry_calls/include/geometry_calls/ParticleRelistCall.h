@@ -25,13 +25,13 @@ class ParticleRelistCall : public core::AbstractGetData3DCall {
 public:
     typedef uint16_t ListIDType;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleRelistCall";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get relist information for MultiParticleDataCall reorganization";
     }
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
     static const char* FunctionName(unsigned int idx) {
@@ -44,16 +44,16 @@ public:
         return nullptr;
     }
 
-    ParticleRelistCall(void);
-    virtual ~ParticleRelistCall(void);
+    ParticleRelistCall();
+    ~ParticleRelistCall() override;
 
-    inline ListIDType TargetListCount(void) const {
+    inline ListIDType TargetListCount() const {
         return tarListCount;
     }
-    inline uint64_t SourceParticleCount(void) const {
+    inline uint64_t SourceParticleCount() const {
         return srcPartCount;
     }
-    inline const ListIDType* SourceParticleTargetLists(void) const {
+    inline const ListIDType* SourceParticleTargetLists() const {
         return srcParticleTarLists;
     }
 

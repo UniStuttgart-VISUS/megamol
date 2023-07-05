@@ -7,28 +7,25 @@
 
 #include "OpenGL_GLFW_Service.hpp"
 
-#include "FrameStatistics.h"
-
 #include <array>
 #include <chrono>
+#include <functional>
+#include <iostream>
 #include <vector>
 
-#ifdef MEGAMOL_USE_BOOST_STACKTRACE
+#include "FrameStatistics.h"
+#include "ModuleGraphSubscription.h"
+#include "mmcore/utility/log/Log.h"
+
+#ifdef MEGAMOL_USE_STACKTRACE
 #include <boost/stacktrace.hpp>
 #endif
 
-#include "glad/gl.h"
+#include <glad/gl.h>
 #ifdef _WIN32
-// clang-format off
-#include <Windows.h>
-#include <DbgHelp.h>
-// clang-format on
-#pragma comment(lib, "dbghelp.lib")
-#undef min
-#undef max
-#include "glad/wgl.h"
+#include <glad/wgl.h>
 #else
-#include "glad/glx.h"
+#include <glad/glx.h>
 #endif
 
 #include <GLFW/glfw3.h>
@@ -40,12 +37,9 @@
 #endif
 #endif
 
-#include "ModuleGraphSubscription.h"
-
-#include <functional>
-#include <iostream>
-
-#include "mmcore/utility/log/Log.h"
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/TracyOpenGL.hpp>
+#endif
 
 static const std::string service_name = "OpenGL_GLFW_Service: ";
 static void log(std::string const& text) {
@@ -116,46 +110,6 @@ static std::string get_message_id_name(GLuint id) {
 
     return std::to_string(id);
 }
-
-#ifdef _WIN32
-static std::string GetStack() {
-    unsigned int i;
-    void* stack[100];
-    unsigned short frames;
-    SYMBOL_INFO* symbol;
-    HANDLE process;
-    std::stringstream output;
-
-    process = GetCurrentProcess();
-
-    SymSetOptions(SYMOPT_LOAD_LINES);
-
-    SymInitialize(process, NULL, TRUE);
-
-    frames = CaptureStackBackTrace(0, 200, stack, NULL);
-    symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
-    symbol->MaxNameLen = 255;
-    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-
-    for (i = 0; i < frames; i++) {
-        SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol);
-        DWORD dwDisplacement;
-        IMAGEHLP_LINE64 line;
-
-        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-        if (!strstr(symbol->Name, "khr::getStack") && !strstr(symbol->Name, "khr::DebugCallback") &&
-            SymGetLineFromAddr64(process, (DWORD64)(stack[i]), &dwDisplacement, &line)) {
-
-            output << "function: " << symbol->Name << " - line: " << line.LineNumber << "\n";
-        }
-        if (0 == strcmp(symbol->Name, "main"))
-            break;
-    }
-
-    free(symbol);
-    return output.str();
-}
-#endif
 
 static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
     GLsizei length, const GLchar* message, const void* userParam) {
@@ -275,15 +229,10 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
     output << "[" << sourceText << " " << severityText << "] (" << typeText << " " << id << " ["
            << get_message_id_name(id) << "]) " << message << std::endl
            << "stack trace:" << std::endl;
-#ifdef _WIN32
-    output << GetStack() << std::endl;
-    OutputDebugStringA(output.str().c_str());
-#else
-#ifdef MEGAMOL_USE_BOOST_STACKTRACE
+#ifdef MEGAMOL_USE_STACKTRACE
     output << boost::stacktrace::stacktrace() << std::endl;
 #else
     output << "(disabled)" << std::endl;
-#endif
 #endif
 
     if (type == GL_DEBUG_TYPE_ERROR) {
@@ -344,6 +293,10 @@ void megamol::frontend_resources::WindowManipulation::set_swap_interval(const un
 
 void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
     glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
+#ifdef MEGAMOL_USE_TRACY
+    TracyGpuCollect;
+    FrameMark;
+#endif
 }
 
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
@@ -565,6 +518,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         "\n\tVendor:   " + reinterpret_cast<const char*>(glGetString(GL_VENDOR)) +
         "\n\tRenderer: " + reinterpret_cast<const char*>(glGetString(GL_RENDERER)) +
         "\n\tGLSL:     " + reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+
+#ifdef MEGAMOL_USE_TRACY
+    TracyGpuContext;
+#endif
 
     if (m_pimpl->config.enableKHRDebug) {
         glEnable(GL_DEBUG_OUTPUT);

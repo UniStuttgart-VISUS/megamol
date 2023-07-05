@@ -19,7 +19,7 @@ using namespace megamol;
 
 std::string TableColumnFilter::ModuleName = std::string("TableColumnFilter");
 
-TableColumnFilter::TableColumnFilter(void)
+TableColumnFilter::TableColumnFilter()
         : core::Module()
         , dataOutSlot("dataOut", "Ouput")
         , dataInSlot("dataIn", "Input")
@@ -40,15 +40,15 @@ TableColumnFilter::TableColumnFilter(void)
     this->MakeSlotAvailable(&this->selectionStringSlot);
 }
 
-TableColumnFilter::~TableColumnFilter(void) {
+TableColumnFilter::~TableColumnFilter() {
     this->Release();
 }
 
-bool TableColumnFilter::create(void) {
+bool TableColumnFilter::create() {
     return true;
 }
 
-void TableColumnFilter::release(void) {}
+void TableColumnFilter::release() {}
 
 bool TableColumnFilter::processData(core::Call& c) {
     try {
@@ -66,7 +66,7 @@ bool TableColumnFilter::processData(core::Call& c) {
 
         if (this->datahash != inCall->DataHash() || this->frameID != inCall->GetFrameID() ||
             this->selectionStringSlot.IsDirty()) {
-            this->datahash++;
+            this->datahash = inCall->DataHash();
             this->selectionStringSlot.ResetDirty();
             this->frameID = inCall->GetFrameID();
 

@@ -22,9 +22,7 @@ void gl_download_texture_to_vector(
     unsigned int handle, ImageWrapper::ImageSize size, ImageWrapper::DataChannels channels, std::vector<byte>& target);
 } // namespace gl_wrapper_impl
 
-namespace megamol {
-namespace frontend_resources {
-namespace conversion {
+namespace megamol::frontend_resources::conversion {
 unsigned int to_uint(void* ptr) {
     return static_cast<unsigned int>(reinterpret_cast<long>(ptr));
 }
@@ -32,9 +30,7 @@ unsigned int to_uint(void* ptr) {
 std::vector<byte>* to_vector(void* ptr) {
     return static_cast<std::vector<byte>*>(ptr);
 }
-} // namespace conversion
-} // namespace frontend_resources
-} // namespace megamol
+} // namespace megamol::frontend_resources::conversion
 
 gl_texture::gl_texture(ImageWrapper const& image) {
 #ifdef MEGAMOL_USE_OPENGL

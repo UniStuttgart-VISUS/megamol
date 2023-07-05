@@ -11,8 +11,7 @@
 #include <optional>
 #include <string>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct GlobalValueStore {
     std::map<std::string /*Key*/, std::string /*Value*/> key_values = {}; // mmSetGlobalValue + mmGetGlobalValue
@@ -45,5 +44,4 @@ struct GlobalValueStore {
     }
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

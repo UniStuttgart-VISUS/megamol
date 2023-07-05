@@ -29,7 +29,7 @@ using namespace vislib;
 #define CCTLR_Z_MIDDLE (0.25f)
 #define CCTLR_Z_FRONT (0.75f)
 
-TimeLineRenderer::TimeLineRenderer(void)
+TimeLineRenderer::TimeLineRenderer()
         : mmstd_gl::Renderer2DModuleGL()
         , keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
         , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
@@ -87,13 +87,13 @@ TimeLineRenderer::TimeLineRenderer(void)
 }
 
 
-TimeLineRenderer::~TimeLineRenderer(void) {
+TimeLineRenderer::~TimeLineRenderer() {
 
     this->Release();
 }
 
 
-bool TimeLineRenderer::create(void) {
+bool TimeLineRenderer::create() {
 
     // Initialise render utils
     if (!this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
@@ -127,7 +127,7 @@ bool TimeLineRenderer::create(void) {
 }
 
 
-void TimeLineRenderer::release(void) {}
+void TimeLineRenderer::release() {}
 
 
 bool TimeLineRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
@@ -533,7 +533,7 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
 }
 
 
-bool TimeLineRenderer::recalcAxesData(void) {
+bool TimeLineRenderer::recalcAxesData() {
 
     for (size_t i = 0; i < Axis::COUNT; ++i) {
         if (this->axes[i].maxValue <= 0.0f) {

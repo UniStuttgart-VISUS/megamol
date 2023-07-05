@@ -6,12 +6,12 @@ using namespace megamol::moldyn;
 /*
  * IntSelectionCall:IntSelectionCall
  */
-BrickStatsCall::BrickStatsCall(void) : bricks() {}
+BrickStatsCall::BrickStatsCall() : bricks() {}
 
 /*
  * IntSelectionCall::~IntSelectionCall
  */
-BrickStatsCall::~BrickStatsCall(void) {}
+BrickStatsCall::~BrickStatsCall() {}
 
 
 const SIZE_T BrickStatsCall::GetTypeSize() {

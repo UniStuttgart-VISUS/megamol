@@ -11,19 +11,18 @@
 #include "mmospray/CallOSPRayMaterial.h"
 
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class AbstractOSPRayMaterial : public core::Module {
 protected:
     /** Ctor. */
-    AbstractOSPRayMaterial(void);
+    AbstractOSPRayMaterial();
 
     /** Dtor. */
-    virtual ~AbstractOSPRayMaterial(void);
+    ~AbstractOSPRayMaterial() override;
 
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
     bool getMaterialCallback(core::Call& call);
     virtual bool InterfaceIsDirty() {
         return true;
@@ -37,5 +36,4 @@ private:
 };
 
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

@@ -16,7 +16,7 @@ using namespace megamol;
 /*
  * datatools::ParticleColorChannelSelect::ParticleColorChannelSelect
  */
-datatools::ParticleColorChannelSelect::ParticleColorChannelSelect(void)
+datatools::ParticleColorChannelSelect::ParticleColorChannelSelect()
         : AbstractParticleManipulator("outData", "indata")
         , channelSlot("channel", "The color channel to be selected as new I color channel")
         , dataHash(-1)
@@ -35,7 +35,7 @@ datatools::ParticleColorChannelSelect::ParticleColorChannelSelect(void)
 /*
  * datatools::ParticleColorChannelSelect::~ParticleColorChannelSelect
  */
-datatools::ParticleColorChannelSelect::~ParticleColorChannelSelect(void) {
+datatools::ParticleColorChannelSelect::~ParticleColorChannelSelect() {
     this->Release();
 }
 

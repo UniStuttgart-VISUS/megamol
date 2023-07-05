@@ -12,8 +12,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class SyncedMMPLDProvider : public StaticMMPLDProvider {
 
@@ -23,7 +22,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SyncedMMPLDProvider";
     }
 
@@ -32,7 +31,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Reads a set of static MMPLDs and sychronizes the read process over multiple data sources";
     }
 
@@ -41,15 +40,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    SyncedMMPLDProvider(void);
+    SyncedMMPLDProvider();
 
     /** Dtor. */
-    virtual ~SyncedMMPLDProvider(void) {}
+    ~SyncedMMPLDProvider() override {}
 
 protected:
     bool create() override {
@@ -67,5 +66,4 @@ private:
 
 }; // end class SyncedMMPLDProvider
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

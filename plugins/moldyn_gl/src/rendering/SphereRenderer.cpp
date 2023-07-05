@@ -32,7 +32,7 @@ const GLuint ssbo_flags_binding_point = 2;
 const GLuint ssbo_vertex_binding_point = 3;
 const GLuint ssbo_color_binding_point = 4;
 
-SphereRenderer::SphereRenderer(void)
+SphereRenderer::SphereRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getdata", "Connects to the data source")
         , get_tf_slot_("gettransferfunction", "The slot for the transfer function module")
@@ -219,7 +219,7 @@ SphereRenderer::SphereRenderer(void)
 }
 
 
-SphereRenderer::~SphereRenderer(void) {
+SphereRenderer::~SphereRenderer() {
     this->Release();
 }
 
@@ -264,7 +264,7 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 }
 
 
-bool SphereRenderer::create(void) {
+bool SphereRenderer::create() {
 
     ASSERT(IsAvailable());
 
@@ -359,40 +359,17 @@ bool SphereRenderer::create(void) {
 }
 
 
-void SphereRenderer::release(void) {
+void SphereRenderer::release() {
+
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
-    this->resetResources();
+
+    this->resetOpenGLResources();
 }
 
 
-bool SphereRenderer::resetResources(void) {
-
-    this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
-    this->soft_select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
-
-    // Set all render mode dependent parameter to GUI invisible
-    // SPLAT
-    this->alpha_scaling_param_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->attenuate_subpixel_param_.Param<param::BoolParam>()->SetGUIVisible(false);
-    // SSBO
-    this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(false);
-    // Ambient Occlusion
-    this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
-    this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(false);
-    this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
-    this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_cone_length_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->use_hp_textures_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
-    // Outlining
-    this->outline_width_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-
-    this->flags_enabled_ = false;
-    this->flags_available_ = false;
-
+bool SphereRenderer::resetOpenGLResources() {
     if (this->grey_tf_ != 0) {
         glDeleteTextures(1, &this->grey_tf_);
     }
@@ -466,9 +443,35 @@ bool SphereRenderer::resetResources(void) {
 }
 
 
+void SphereRenderer::resetConditionalParameters() {
+
+    this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
+    this->soft_select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
+
+    // Set all render mode dependent parameter to GUI invisible
+    // SPLAT
+    this->alpha_scaling_param_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->attenuate_subpixel_param_.Param<param::BoolParam>()->SetGUIVisible(false);
+    // SSBO
+    this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(false);
+    // Ambient Occlusion
+    this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
+    this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(false);
+    this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
+    this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->ao_cone_length_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->use_hp_textures_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
+    // Outlining
+    this->outline_width_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+}
+
+
 bool SphereRenderer::createResources() {
 
-    this->resetResources();
+    this->resetConditionalParameters();
+    this->resetOpenGLResources();
 
     this->state_invalid_ = true;
 
@@ -503,7 +506,7 @@ bool SphereRenderer::createResources() {
 
     std::string flags_shader_snippet;
     if (this->flags_available_) {
-        shader_options_flags_->addDefinition("flags_available");
+        shader_options_flags_->addDefinition("FLAGS_AVAILABLE");
     }
 
     try {
@@ -970,6 +973,9 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     const SIZE_T hash = mpdc->DataHash();
     const unsigned int frame_id = mpdc->FrameID();
     this->state_invalid_ = ((hash != this->old_hash_) || (frame_id != this->old_frame_id_));
+
+    // Check for flag storage before render mode because info is needed for resource creation
+    isFlagStorageAvailable();
 
     // Checking for changed render mode
     auto current_render_mode = static_cast<RenderMode>(this->render_mode_param_.Param<param::EnumParam>()->Value());
@@ -2066,7 +2072,7 @@ bool SphereRenderer::enableShaderData(
 }
 
 
-bool SphereRenderer::disableShaderData(void) {
+bool SphereRenderer::disableShaderData() {
 
     return this->disableTransferFunctionTexture();
 }
@@ -2088,7 +2094,7 @@ bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLPr
 }
 
 
-bool SphereRenderer::disableTransferFunctionTexture(void) {
+bool SphereRenderer::disableTransferFunctionTexture() {
 
     mmstd_gl::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (cgtf != nullptr) {

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "ModuleGraphSubscription.h"
+
 #include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/MegaMolGraph.h"
@@ -50,15 +52,6 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable();
-
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart() {
-        return false;
-    }
 
     /**
      * Ctor

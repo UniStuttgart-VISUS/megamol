@@ -76,7 +76,7 @@ public:
         }
         if (this->val != v) {
             this->val = v;
-            this->indicateChange();
+            this->indicateParamChange();
             if (setDirty) {
                 this->setDirty();
             }
@@ -152,12 +152,12 @@ private:
         }
     }
 
-    T val;
+    T val = T();
 
-    T minVal;
+    T minVal = T();
 
-    T maxVal;
+    T maxVal = T();
 
-    T stepSize;
+    T stepSize = T();
 };
 } // namespace megamol::core::param

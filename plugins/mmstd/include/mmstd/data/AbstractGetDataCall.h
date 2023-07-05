@@ -43,7 +43,7 @@ public:
     AbstractGetDataCall();
 
     /** Dtor. */
-    virtual ~AbstractGetDataCall();
+    ~AbstractGetDataCall() override;
 
     /**
      * Answer the unique hash number of the returned data, or zero if such

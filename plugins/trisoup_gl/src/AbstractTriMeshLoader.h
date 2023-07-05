@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_ABSTRACTTRIMESHLOADER_H_INCLUDED
-#define MMTRISOUPPLG_ABSTRACTTRIMESHLOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractTriMeshDataSource.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
@@ -21,8 +17,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -31,10 +26,10 @@ namespace trisoup_gl {
 class AbstractTriMeshLoader : public AbstractTriMeshDataSource {
 public:
     /** Ctor */
-    AbstractTriMeshLoader(void);
+    AbstractTriMeshLoader();
 
     /** Dtor */
-    virtual ~AbstractTriMeshLoader(void);
+    ~AbstractTriMeshLoader() override;
 
 protected:
     /**
@@ -47,14 +42,11 @@ protected:
     virtual bool load(const vislib::TString& filename) = 0;
 
     /** Ensures that the data is loaded */
-    virtual void assertData(void);
+    void assertData() override;
 
 private:
     /** The file name */
     core::param::ParamSlot filenameSlot;
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
-
-#endif /* MMTRISOUPPLG_ABSTRACTTRIMESHLOADER_H_INCLUDED */
+} // namespace megamol::trisoup_gl

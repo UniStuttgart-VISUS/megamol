@@ -37,46 +37,6 @@ public:
     typedef ::std::weak_ptr<AbstractNamedObject> weak_ptr_type;
 
     /**
-     * Utility class
-     */
-    class GraphLocker : public vislib::sys::SyncObject {
-    public:
-        /**
-         * Ctor.
-         *
-         * @param obj Any object from the module graph
-         * @param writelock Flag if a write lock is required
-         */
-        GraphLocker(AbstractNamedObject::const_ptr_type obj, bool writelock);
-
-        /**
-         * Dtor.
-         */
-        virtual ~GraphLocker();
-
-        /**
-         * Acquire the lock.
-         *
-         * @throws SystemException If the lock could not be acquired.
-         */
-        virtual void Lock();
-
-        /**
-         * Release the lock.
-         *
-         * @throw SystemException If the lock could not be released.
-         */
-        virtual void Unlock();
-
-    private:
-        /** Flag if a write lock is required */
-        bool writelock;
-
-        /** The root object of the graph */
-        AbstractNamedObject::const_ptr_type root;
-    };
-
-    /**
      * Dtor.
      */
     virtual ~AbstractNamedObject();
@@ -199,17 +159,6 @@ public:
      * Disconnects calls from all slots which are marked for cleanup.
      */
     virtual void DisconnectCalls();
-
-    /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const;
 
     /**
      * Answer the reader-writer lock to lock the module graph

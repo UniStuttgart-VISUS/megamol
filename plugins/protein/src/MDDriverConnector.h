@@ -5,11 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_MDDRIVERCONNECTOR_H_INCLUDED
-#define MMPROTEINPLUGIN_MDDRIVERCONNECTOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/Array.h"
@@ -20,8 +16,7 @@
 
 #define MDD_VERSION 2 // this value corresponds to MDDriver ver 1.2 2008-06-25
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for atom position arrays from real-time simulations.
@@ -62,10 +57,10 @@ public:
     };
 
     /** Ctor */
-    MDDriverConnector(void);
+    MDDriverConnector();
 
     /** Dtor */
-    virtual ~MDDriverConnector(void);
+    ~MDDriverConnector() override;
 
     /**
      * Startup callback of the thread. The Thread class will call that
@@ -74,7 +69,7 @@ public:
      * @param config A pointer to the Configuration, which specifies the
      *               settings of the connector.
      */
-    virtual void OnThreadStarting(void* config);
+    void OnThreadStarting(void* config) override;
 
     /**
      * Perform the work of a thread.
@@ -85,7 +80,7 @@ public:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* config);
+    DWORD Run(void* config) override;
 
     /**
      * Abort the work of the connector by forcefully closing the underlying
@@ -93,7 +88,7 @@ public:
      *
      * @return true.
      */
-    virtual bool Terminate(void);
+    bool Terminate() override;
 
 
     /**
@@ -101,7 +96,7 @@ public:
      *
      * @return 'true' if valid, 'false' otherwise.
      */
-    bool IsSocketFunctional(void) {
+    bool IsSocketFunctional() {
         return this->socketValidity;
     }
 
@@ -121,7 +116,7 @@ public:
      * is saved. Also, transfer rate, forces, and termination commands can be send
      * while the simulation is paused.
      */
-    inline void RequestPause(void) {
+    inline void RequestPause() {
         this->pauseRequested = true;
     }
 
@@ -129,7 +124,7 @@ public:
      * Requests that the thread start up MDDriver from a paused state.
      * Does nothing if MDDriver is already running.
      */
-    inline void RequestGo(void) {
+    inline void RequestGo() {
         this->goRequested = true;
     }
 
@@ -148,7 +143,7 @@ public:
      * Use IsRunning() to check if the thread has terminated. A new thread may be
      * started after terminating the old thread.
      */
-    inline void RequestTerminate(void) {
+    inline void RequestTerminate() {
         this->terminateRequested = true;
     }
 
@@ -180,7 +175,7 @@ public:
     /**
      * Releases socket resources.
      */
-    void release(void);
+    void release();
 
 private:
     /*
@@ -217,7 +212,7 @@ private:
      *
      * @return True on success.
      */
-    bool getData(void);
+    bool getData();
 
 
     /**
@@ -228,7 +223,7 @@ private:
      *
      * @return True on success.
      */
-    bool sendForces(void);
+    bool sendForces();
 
 
     /**
@@ -236,7 +231,7 @@ private:
      *
      * @return True on success.
      */
-    bool sendPause(void);
+    bool sendPause();
 
 
     /**
@@ -244,7 +239,7 @@ private:
      *
      * @return True on success.
      */
-    bool sendGo(void);
+    bool sendGo();
 
 
     /**
@@ -254,7 +249,7 @@ private:
      *
      * @return True on success.
      */
-    bool sendTransferRate(void);
+    bool sendTransferRate();
 
 
     /**
@@ -262,14 +257,14 @@ private:
      *
      * @return True on success.
      */
-    bool getHeader(void);
+    bool getHeader();
 
     /**
      * Sends header data to MDDriver after byteswapping it.
      *
      * @return True on success.
      */
-    bool sendHeader(void);
+    bool sendHeader();
 
     /**
      * Switches order of bytes in an int so it changes endian
@@ -333,7 +328,4 @@ private:
     int reset;
 };
 
-} // end namespace protein
-} // end namespace megamol
-
-#endif // MMPROTEINPLUGIN_MDDRIVERCONNECTOR_H_INCLUDED
+} // namespace megamol::protein

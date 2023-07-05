@@ -55,7 +55,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~AbstractNamedObjectContainer();
+    ~AbstractNamedObjectContainer() override;
 
     /**
      * Adds a child to the list of children. The child object must not
@@ -137,29 +137,18 @@ public:
     /**
      * Sets the cleanup mark and all marks of all children
      */
-    virtual void SetAllCleanupMarks();
+    void SetAllCleanupMarks() override;
 
     /**
      * Performs the cleanup operation by removing and deleteing of all
      * marked objects.
      */
-    virtual void PerformCleanup();
+    void PerformCleanup() override;
 
     /**
      * Disconnects calls from all slots which are marked for cleanup.
      */
-    virtual void DisconnectCalls();
-
-    /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const override;
+    void DisconnectCalls() override;
 
 protected:
     /**

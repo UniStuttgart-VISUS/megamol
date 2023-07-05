@@ -13,13 +13,11 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct ImagePresentationSink {
     std::string name = "";
     std::function<void(std::vector<ImageWrapper> const&)> present_images;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

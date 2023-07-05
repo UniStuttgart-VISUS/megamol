@@ -46,13 +46,13 @@ datatools::AbstractVolumeManipulator::AbstractVolumeManipulator(const char* outS
 /*
  * datatools::AbstractVolumeManipulator::~AbstractVolumeManipulator
  */
-datatools::AbstractVolumeManipulator::~AbstractVolumeManipulator(void) {}
+datatools::AbstractVolumeManipulator::~AbstractVolumeManipulator() {}
 
 
 /*
  * datatools::AbstractVolumeManipulator::create
  */
-bool datatools::AbstractVolumeManipulator::create(void) {
+bool datatools::AbstractVolumeManipulator::create() {
     return true;
 }
 
@@ -60,7 +60,7 @@ bool datatools::AbstractVolumeManipulator::create(void) {
 /*
  * datatools::AbstractVolumeManipulator::release
  */
-void datatools::AbstractVolumeManipulator::release(void) {}
+void datatools::AbstractVolumeManipulator::release() {}
 
 
 /*

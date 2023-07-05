@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMMOLMAPPLG_MSMSGENUS0GENERATOR_H_INCLUDED
-#define MMMOLMAPPLG_MSMSGENUS0GENERATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "glm/glm.hpp"
@@ -22,8 +18,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 /**
  * Class for loading MSMS mesh data
  */
@@ -34,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MSMSGenus0Generator";
     }
 
@@ -43,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for MSMS mesh data files that always generates a genus 0 mesh";
     }
 
@@ -52,15 +47,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    MSMSGenus0Generator(void);
+    MSMSGenus0Generator();
 
     /** Dtor */
-    virtual ~MSMSGenus0Generator(void);
+    ~MSMSGenus0Generator() override;
 
 protected:
     /**
@@ -68,12 +63,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /** The bounding box */
     vislib::math::Cuboid<float> bbox;
@@ -185,7 +180,4 @@ private:
     int prevTime;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED */
+} // namespace megamol::protein_gl

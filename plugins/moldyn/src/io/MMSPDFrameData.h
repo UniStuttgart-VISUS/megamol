@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMSPDFRAMEDATA_H_INCLUDED
-#define MEGAMOLCORE_MMSPDFRAMEDATA_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/Array.h"
 //#include "vislib/Cuboid.h"
@@ -18,9 +14,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -38,12 +32,12 @@ public:
         /**
          * Ctor
          */
-        Particles(void);
+        Particles();
 
         /**
          * Dtor
          */
-        ~Particles(void);
+        ~Particles();
 
         /**
          * Allocates the field map overwriting any previously stored field map
@@ -61,7 +55,7 @@ public:
          *
          * @return The number of particles
          */
-        inline UINT64 Count(void) const {
+        inline UINT64 Count() const {
             return this->count;
         }
 
@@ -70,7 +64,7 @@ public:
          *
          * @return The particle data
          */
-        inline vislib::RawStorage& Data(void) {
+        inline vislib::RawStorage& Data() {
             return this->data;
         }
 
@@ -79,7 +73,7 @@ public:
          *
          * @return The field map of the particle data
          */
-        inline unsigned int* FieldMap(void) {
+        inline unsigned int* FieldMap() {
             return this->fieldMap;
         }
 
@@ -88,7 +82,7 @@ public:
          *
          * @return The field map of the particle data
          */
-        inline const unsigned int* const FieldMap(void) const {
+        inline const unsigned int* const FieldMap() const {
             return this->fieldMap;
         }
 
@@ -97,7 +91,7 @@ public:
          *
          * @return The particle data
          */
-        inline const vislib::RawStorage& GetData(void) const {
+        inline const vislib::RawStorage& GetData() const {
             return this->data;
         }
 
@@ -153,19 +147,19 @@ public:
      *
      * @param owner The owning data module
      */
-    MMSPDFrameData(void);
+    MMSPDFrameData();
 
     /**
      * Dtor
      */
-    virtual ~MMSPDFrameData(void);
+    virtual ~MMSPDFrameData();
 
     /**
      * Accesses the particle data
      *
      * @return The particle data
      */
-    inline vislib::Array<Particles>& Data(void) {
+    inline vislib::Array<Particles>& Data() {
         return this->data;
     }
 
@@ -174,7 +168,7 @@ public:
      *
      * @return The particle data
      */
-    inline const vislib::Array<Particles>& GetData(void) const {
+    inline const vislib::Array<Particles>& GetData() const {
         return this->data;
     }
 
@@ -183,7 +177,7 @@ public:
      *
      * @return The particle index reconstruction data
      */
-    inline vislib::RawStorage& IndexReconstructionData(void) {
+    inline vislib::RawStorage& IndexReconstructionData() {
         return this->idxRec;
     }
 
@@ -192,7 +186,7 @@ public:
      *
      * @return The particle index reconstruction data
      */
-    inline const vislib::RawStorage& GetIndexReconstructionData(void) const {
+    inline const vislib::RawStorage& GetIndexReconstructionData() const {
         return this->idxRec;
     }
 
@@ -233,8 +227,4 @@ private:
 };
 
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_MMSPDFRAMEDATA_H_INCLUDED */
+} // namespace megamol::moldyn::io

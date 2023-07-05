@@ -145,7 +145,7 @@ void cluster::ClusterController::SendUserMsg(const cluster::ClusterController::P
 /*
  * cluster::ClusterController::create
  */
-bool cluster::ClusterController::create(void) {
+bool cluster::ClusterController::create() {
 
     // TODO core instance was removed
     /*
@@ -204,7 +204,7 @@ bool cluster::ClusterController::create(void) {
 /*
  * cluster::ClusterController::release
  */
-void cluster::ClusterController::release(void) {
+void cluster::ClusterController::release() {
     this->stopDiscoveryService();
 
     this->clientsLock.Lock();
@@ -396,7 +396,7 @@ void cluster::ClusterController::OnUserMessage(vislib::net::cluster::DiscoverySe
 /*
  * cluster::ClusterController::defaultPort
  */
-UINT16 cluster::ClusterController::defaultPort(void) {
+UINT16 cluster::ClusterController::defaultPort() {
     return DiscoveryService::DEFAULT_PORT;
 }
 
@@ -404,7 +404,7 @@ UINT16 cluster::ClusterController::defaultPort(void) {
 /*
  * cluster::ClusterController::stopDiscoveryService
  */
-void cluster::ClusterController::stopDiscoveryService(void) {
+void cluster::ClusterController::stopDiscoveryService() {
     if (this->discoveryService.IsRunning()) {
         if (this->discoveryService.Stop()) {
             Log::DefaultLog.WriteInfo("CDS stopped");

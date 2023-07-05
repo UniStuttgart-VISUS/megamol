@@ -5,11 +5,7 @@
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ASTRACTRECTANGLE_H_INCLUDED
-#define VISLIB_ASTRACTRECTANGLE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -24,8 +20,7 @@
 #include "vislib/utils.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -58,14 +53,14 @@ public:
     static const UINT32 BORDER_TOP;
 
     /** Dtor. */
-    ~AbstractRectangle(void);
+    ~AbstractRectangle();
 
     /**
      * Answer the area covered by the rectangle.
      *
      * @return The area covered by the rectangle.
      */
-    inline T Area(void) const {
+    inline T Area() const {
         return (this->Width() * this->Height());
     }
 
@@ -74,7 +69,7 @@ public:
      *
      * @return The aspect ratio of the rectangle.
      */
-    inline double AspectRatio(void) const {
+    inline double AspectRatio() const {
         if (IsEqual<double>(this->Height(), 0.0)) {
             return 0.0;
         }
@@ -86,7 +81,7 @@ public:
      *
      * @return A reference to the y-coordinate of the left/bottom point.
      */
-    inline const T& Bottom(void) const {
+    inline const T& Bottom() const {
         return this->bounds[IDX_BOTTOM];
     }
 
@@ -95,7 +90,7 @@ public:
      *
      * @return The center point of the rectangle.
      */
-    Point<T, 2> CalcCenter(void) const;
+    Point<T, 2> CalcCenter() const;
 
     /**
      * Answer whether the point 'point' lies within the rectangle.
@@ -118,7 +113,7 @@ public:
      *
      * @return The height of the rectangle.
      */
-    inline T Height(void) const {
+    inline T Height() const {
         return (this->bounds[IDX_TOP] > this->bounds[IDX_BOTTOM]) ? (this->bounds[IDX_TOP] - this->bounds[IDX_BOTTOM])
                                                                   : (this->bounds[IDX_BOTTOM] - this->bounds[IDX_TOP]);
     }
@@ -128,7 +123,7 @@ public:
      *
      * @return The width of the rectangle.
      */
-    inline T Width(void) const {
+    inline T Width() const {
         return (this->bounds[IDX_RIGHT] > this->bounds[IDX_LEFT]) ? (this->bounds[IDX_RIGHT] - this->bounds[IDX_LEFT])
                                                                   : (this->bounds[IDX_LEFT] - this->bounds[IDX_RIGHT]);
     }
@@ -138,14 +133,14 @@ public:
      * swapping the left/right and/or top/bottom sides, if they
      * are in the wrong order.
      */
-    void EnforcePositiveSize(void);
+    void EnforcePositiveSize();
 
     /**
      * Answer the y-coordinate of the left/bottom point.
      *
      * @return The y-coordinate of the left/bottom point.
      */
-    inline const T& GetBottom(void) const {
+    inline const T& GetBottom() const {
         return this->bounds[IDX_BOTTOM];
     }
 
@@ -154,7 +149,7 @@ public:
      *
      * @return The x-coordinate of the left/bottom point.
      */
-    inline const T& GetLeft(void) const {
+    inline const T& GetLeft() const {
         return this->bounds[IDX_LEFT];
     }
 
@@ -163,7 +158,7 @@ public:
      *
      * @return The left/bottom point.
      */
-    inline Point<T, 3> GetLeftBottom(void) const {
+    inline Point<T, 3> GetLeftBottom() const {
         return Point<T, 2>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM]);
     }
 
@@ -172,7 +167,7 @@ public:
      *
      * @return The left/top point.
      */
-    inline Point<T, 2> GetLeftTop(void) const {
+    inline Point<T, 2> GetLeftTop() const {
         return Point<T, 2>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM]);
     }
 
@@ -181,7 +176,7 @@ public:
      *
      * @return The origin point.
      */
-    inline Point<T, 2> GetOrigin(void) const {
+    inline Point<T, 2> GetOrigin() const {
         return Point<T, 2>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM]);
     }
 
@@ -190,7 +185,7 @@ public:
      *
      * @return The y-coordinate of the right/top point.
      */
-    inline const T& GetRight(void) const {
+    inline const T& GetRight() const {
         return this->bounds[IDX_RIGHT];
     }
 
@@ -199,7 +194,7 @@ public:
      *
      * @return The right/bottom point of the rectangle.
      */
-    inline Point<T, 2> GetRightBottom(void) const {
+    inline Point<T, 2> GetRightBottom() const {
         return Point<T, 2>(this->bounds[IDX_RIGHT], this->bounds[IDX_BOTTOM]);
     }
 
@@ -208,7 +203,7 @@ public:
      *
      * @return The right/top point.
      */
-    inline Point<T, 2> GetRightTop(void) const {
+    inline Point<T, 2> GetRightTop() const {
         return Point<T, 2>(this->bounds[IDX_RIGHT], this->bounds[IDX_TOP]);
     }
 
@@ -217,7 +212,7 @@ public:
      *
      * @return The dimensions of the rectangle.
      */
-    inline Dimension<T, 2> GetSize(void) const {
+    inline Dimension<T, 2> GetSize() const {
         return Dimension<T, 2>(this->Width(), this->Height());
     }
 
@@ -226,7 +221,7 @@ public:
      *
      * @return The y-coordinate of the right/top point.
      */
-    inline const T& GetTop(void) const {
+    inline const T& GetTop() const {
         return this->bounds[IDX_TOP];
     }
 
@@ -291,7 +286,7 @@ public:
      *
      * @return true, if the rectangle has no area, false otherwise.
      */
-    inline bool IsEmpty(void) const {
+    inline bool IsEmpty() const {
         return (IsEqual<T>(this->bounds[IDX_LEFT], this->bounds[IDX_RIGHT]) &&
                 IsEqual<T>(this->bounds[IDX_BOTTOM], this->bounds[IDX_TOP]));
     }
@@ -301,7 +296,7 @@ public:
      *
      * @return A reference to the x-coordinate of the left/bottom point.
      */
-    inline const T& Left(void) const {
+    inline const T& Left() const {
         return this->bounds[IDX_LEFT];
     }
 
@@ -377,7 +372,7 @@ public:
      *
      * @return A pointer to the rectangle bounds.
      */
-    inline const T* PeekBounds(void) const {
+    inline const T* PeekBounds() const {
         return this->bounds;
     }
 
@@ -386,7 +381,7 @@ public:
      *
      * @return A pointer to the rectangle bounds.
      */
-    inline T* PeekBounds(void) {
+    inline T* PeekBounds() {
         return this->bounds;
     }
 
@@ -395,7 +390,7 @@ public:
      *
      * @return A reference to the x-coordinate of the right/top point.
      */
-    inline const T& Right(void) const {
+    inline const T& Right() const {
         return this->bounds[IDX_RIGHT];
     }
 
@@ -471,7 +466,7 @@ public:
     /**
      * Make the rectangle an empty rectangle a (0, 0).
      */
-    inline void SetNull(void) {
+    inline void SetNull() {
         this->Set(static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0));
     }
 
@@ -516,14 +511,14 @@ public:
     /**
      * Swap the left and the right x-coordinate.
      */
-    inline void SwapLeftRight(void) {
+    inline void SwapLeftRight() {
         Swap(this->bounds[IDX_LEFT], this->bounds[IDX_RIGHT]);
     }
 
     /**
      * Swap the top and the bottom y-coordinate.
      */
-    inline void SwapTopBottom(void) {
+    inline void SwapTopBottom() {
         Swap(this->bounds[IDX_TOP], this->bounds[IDX_BOTTOM]);
     }
 
@@ -532,7 +527,7 @@ public:
      *
      * @return A reference to the y-coordinate of the right/top point.
      */
-    inline const T& Top(void) const {
+    inline const T& Top() const {
         return this->bounds[IDX_TOP];
     }
 
@@ -606,7 +601,7 @@ protected:
     /**
      * Forbidden default ctor. This does nothing.
      */
-    inline AbstractRectangle(void) {}
+    inline AbstractRectangle() {}
 
     /**
      * The bounds of the rectangle in following order: left, bottom,
@@ -656,14 +651,14 @@ const UINT32 AbstractRectangle<T, S>::BORDER_TOP = 1 << AbstractRectangle<T, S>:
  * vislib::math::AbstractRectangle<T, S>::~AbstractRectangle
  */
 template<class T, class S>
-AbstractRectangle<T, S>::~AbstractRectangle(void) {}
+AbstractRectangle<T, S>::~AbstractRectangle() {}
 
 
 /*
  * vislib::math::AbstractRectangle<T, S>::CalcCenter
  */
 template<class T, class S>
-Point<T, 2> AbstractRectangle<T, S>::CalcCenter(void) const {
+Point<T, 2> AbstractRectangle<T, S>::CalcCenter() const {
     return Point<T, 2>(this->bounds[IDX_LEFT] + this->Width() / static_cast<T>(2),
         this->bounds[IDX_BOTTOM] + this->Height() / static_cast<T>(2));
 }
@@ -708,7 +703,7 @@ bool AbstractRectangle<T, S>::Contains(const AbstractPoint<T, 2, Sp>& point, con
  * vislib::math::AbstractRectangle<T, S>::EnforcePositiveSize
  */
 template<class T, class S>
-void AbstractRectangle<T, S>::EnforcePositiveSize(void) {
+void AbstractRectangle<T, S>::EnforcePositiveSize() {
     if (this->bounds[IDX_BOTTOM] > this->bounds[IDX_TOP]) {
         Swap(this->bounds[IDX_BOTTOM], this->bounds[IDX_TOP]);
     }
@@ -898,10 +893,8 @@ const UINT_PTR AbstractRectangle<T, S>::IDX_LEFT = 0;
 template<class T, class S>
 const UINT_PTR AbstractRectangle<T, S>::IDX_TOP = 3;
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ASTRACTRECTANGLE_H_INCLUDED */

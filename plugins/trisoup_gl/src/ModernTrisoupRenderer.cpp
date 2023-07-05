@@ -19,7 +19,7 @@
 using namespace megamol;
 using namespace megamol::trisoup_gl;
 
-ModernTrisoupRenderer::ModernTrisoupRenderer(void)
+ModernTrisoupRenderer::ModernTrisoupRenderer()
         : getDataSlot_("getData", "Connects the renderer to a data provider to retrieve data")
         , getLightsSlot_("getLights", "")
         , getFramebufferSlot_("getFramebuffer", "Connects the renderer to an external framebuffer object")
@@ -111,11 +111,11 @@ ModernTrisoupRenderer::ModernTrisoupRenderer(void)
     this->MakeSlotAvailable(&lightingParam_);
 }
 
-ModernTrisoupRenderer::~ModernTrisoupRenderer(void) {
+ModernTrisoupRenderer::~ModernTrisoupRenderer() {
     this->Release();
 }
 
-bool ModernTrisoupRenderer::create(void) {
+bool ModernTrisoupRenderer::create() {
 
     try {
         auto const shdr_options = core::utility::make_path_shader_options(
@@ -173,7 +173,7 @@ bool ModernTrisoupRenderer::create(void) {
     return true;
 }
 
-void ModernTrisoupRenderer::release(void) {
+void ModernTrisoupRenderer::release() {
     if (vertexArray_ != 0) {
         glDeleteVertexArrays(1, &vertexArray_);
         vertexArray_ = 0;

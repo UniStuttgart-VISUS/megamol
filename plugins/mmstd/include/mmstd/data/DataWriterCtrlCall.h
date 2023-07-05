@@ -75,7 +75,7 @@ public:
     DataWriterCtrlCall();
 
     /** Dtor. */
-    virtual ~DataWriterCtrlCall();
+    ~DataWriterCtrlCall() override;
 
     /**
      * Answer the abortable capability flag

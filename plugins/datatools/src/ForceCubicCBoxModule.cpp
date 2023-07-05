@@ -12,7 +12,7 @@ using namespace megamol;
 /*
  * datatools::ForceCubicCBoxModule::ForceCubicCBoxModule
  */
-datatools::ForceCubicCBoxModule::ForceCubicCBoxModule(void) : AbstractParticleManipulator("outData", "indata") {
+datatools::ForceCubicCBoxModule::ForceCubicCBoxModule() : AbstractParticleManipulator("outData", "indata") {
     // intentionally empty
 }
 
@@ -20,7 +20,7 @@ datatools::ForceCubicCBoxModule::ForceCubicCBoxModule(void) : AbstractParticleMa
 /*
  * datatools::ForceCubicCBoxModule::~ForceCubicCBoxModule
  */
-datatools::ForceCubicCBoxModule::~ForceCubicCBoxModule(void) {
+datatools::ForceCubicCBoxModule::~ForceCubicCBoxModule() {
     this->Release();
 }
 

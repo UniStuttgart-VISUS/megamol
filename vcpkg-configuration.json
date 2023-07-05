@@ -1,7 +1,7 @@
 {
   "default-registry": {
     "kind": "builtin",
-    "baseline": "94ce0dab56f4d8ba6bd631ba59ed682b02d45c46"
+    "baseline": "f6a5d4e8eb7476b8d7fc12a56dff300c1c986131"
   },
   "registries": [
     {
@@ -9,7 +9,6 @@
       "repository": "https://github.com/UniStuttgart-VISUS/vcpkg-registry.git",
       "baseline": "120ceb7ef887bafc10a3eed04f01bdf35236eb53",
       "packages": [
-        "adios2",
         "embree",
         "ispc",
         "openvkl",

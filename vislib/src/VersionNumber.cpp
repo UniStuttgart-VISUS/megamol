@@ -46,7 +46,7 @@ vislib::VersionNumber::VersionNumber(const wchar_t* ver) : majorNumber(0), minor
 /*
  * vislib::VersionNumber::~VersionNumber
  */
-vislib::VersionNumber::~VersionNumber(void) {}
+vislib::VersionNumber::~VersionNumber() {}
 
 
 /*

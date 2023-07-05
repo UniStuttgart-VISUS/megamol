@@ -11,7 +11,11 @@
 #include "mmcore/utility/log/Log.h"
 
 #ifdef MEGAMOL_USE_TRACY
-#include "Tracy.hpp"
+#include "tracy/Tracy.hpp"
+#ifdef MEGAMOL_USE_OPENGL
+#include "glad/gl.h"
+#include "tracy/TracyOpenGL.hpp"
+#endif
 #endif
 #if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
 #include "mmcore/Module.h"
@@ -22,13 +26,13 @@ using namespace megamol::core;
 /*
  * Call::Call
  */
-Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
+Call::Call() : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
 
 
 /*
  * Call::~Call
  */
-Call::~Call(void) {
+Call::~Call() {
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE
@@ -59,6 +63,9 @@ bool Call::operator()(unsigned int func) {
 #ifdef MEGAMOL_USE_TRACY
         ZoneScoped;
         ZoneName(output.c_str(), output.size());
+#ifdef MEGAMOL_USE_OPENGL
+        TracyGpuZoneTransient(___tracy_gpu_zone, output.c_str(), caps.OpenGLRequired());
+#endif
 #endif
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {

@@ -56,7 +56,7 @@ protected:
     /**
      * Dtor
      */
-    ~AbstractAtomReader(void) {
+    ~AbstractAtomReader() {
         // Do not close, delete, etc. the file
         ARY_SAFE_DELETE(this->buf);
     }
@@ -340,7 +340,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderASCII(void) {
+    ~AtomReaderASCII() {
         // Intentionally empty
     }
 
@@ -419,7 +419,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderFloat(void) {
+    ~AtomReaderFloat() {
         // Intentionally empty
     }
 
@@ -496,7 +496,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderDouble(void) {
+    ~AtomReaderDouble() {
         // Intentionally empty
     }
 
@@ -573,7 +573,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderFloatSwitched(void) {
+    ~AtomReaderFloatSwitched() {
         // Intentionally empty
     }
 
@@ -654,7 +654,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderDoubleSwitched(void) {
+    ~AtomReaderDoubleSwitched() {
         // Intentionally empty
     }
 
@@ -753,7 +753,7 @@ float IMDAtomDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T 
 /*
  * IMDAtomDataSource::IMDAtomDataSource
  */
-IMDAtomDataSource::IMDAtomDataSource(void)
+IMDAtomDataSource::IMDAtomDataSource()
         : core::Module()
         , filenameSlot("filename", "The path of the IMD file to read")
         , bboxEnabledSlot("bbox::enable", "")
@@ -899,7 +899,7 @@ IMDAtomDataSource::IMDAtomDataSource(void)
 /*
  * IMDAtomDataSource::~IMDAtomDataSource
  */
-IMDAtomDataSource::~IMDAtomDataSource(void) {
+IMDAtomDataSource::~IMDAtomDataSource() {
     this->Release();
 }
 
@@ -907,7 +907,7 @@ IMDAtomDataSource::~IMDAtomDataSource(void) {
 /*
  * IMDAtomDataSource::create
  */
-bool IMDAtomDataSource::create(void) {
+bool IMDAtomDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -916,7 +916,7 @@ bool IMDAtomDataSource::create(void) {
 /*
  * IMDAtomDataSource::release
  */
-void IMDAtomDataSource::release(void) {
+void IMDAtomDataSource::release() {
     this->clear();
 }
 
@@ -1097,7 +1097,7 @@ bool IMDAtomDataSource::getExtentCallback(core::Call& caller) {
 /*
  * IMDAtomDataSource::clear
  */
-void IMDAtomDataSource::clear(void) {
+void IMDAtomDataSource::clear() {
     for (int i = 0; i < static_cast<int>(this->posData.Count()); i++) {
         this->posData[i]->EnforceSize(0);
         this->colData[i]->EnforceSize(0);
@@ -1114,7 +1114,7 @@ void IMDAtomDataSource::clear(void) {
 /*
  * IMDAtomDataSource::assertData
  */
-void IMDAtomDataSource::assertData(void) {
+void IMDAtomDataSource::assertData() {
     using megamol::core::utility::log::Log;
     if (!this->filenameSlot.IsDirty() && !this->colourModeSlot.IsDirty() && !this->colourColumnSlot.IsDirty() &&
         !this->splitLoadDiredDataSlot.IsDirty() && !this->dirXColNameSlot.IsDirty() &&

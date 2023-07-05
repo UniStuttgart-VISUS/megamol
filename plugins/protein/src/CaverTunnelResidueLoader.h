@@ -3,11 +3,7 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMPROTEINPLUGIN_CAVERTUNNELRESIDUELOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_CAVERTUNNELRESIDUELOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -20,8 +16,7 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for the tunnel-parallel residue files from the Caver software
@@ -33,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CaverTunnelResidueLoader";
     }
 
@@ -42,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for tunnel-residing residue index files outputted by Caver";
     }
 
@@ -51,15 +46,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    CaverTunnelResidueLoader(void);
+    CaverTunnelResidueLoader();
 
     /** Dtor. */
-    virtual ~CaverTunnelResidueLoader(void);
+    ~CaverTunnelResidueLoader() override;
 
 protected:
     /**
@@ -67,12 +62,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -137,7 +132,4 @@ private:
     vislib::math::Cuboid<float> boundingBox;
 };
 
-} // namespace protein
-} /* end namespace megamol */
-
-#endif
+} // namespace megamol::protein

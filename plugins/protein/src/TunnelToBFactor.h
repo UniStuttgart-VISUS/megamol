@@ -3,11 +3,7 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMPROTEINPLUGIN_TUNNELTOBFACTOR_H_INCLUDED
-#define MMPROTEINPLUGIN_TUNNELTOBFACTOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -18,8 +14,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class TunnelToBFactor : public megamol::core::Module {
 public:
@@ -28,7 +23,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TunnelToBFactor";
     }
 
@@ -37,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module for writing tunnel-information to the B-factor of a MolecularDataCall";
     }
 
@@ -46,15 +41,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TunnelToBFactor(void);
+    TunnelToBFactor();
 
     /** Dtor. */
-    virtual ~TunnelToBFactor(void);
+    ~TunnelToBFactor() override;
 
 protected:
     /**
@@ -62,12 +57,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call for get data.
@@ -99,7 +94,4 @@ private:
     std::vector<float> bFactors;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif
+} // namespace megamol::protein

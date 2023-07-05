@@ -14,7 +14,7 @@ using namespace megamol::mmstd_gl;
 using namespace megamol::core::param;
 
 
-TransferFunctionGL::TransferFunctionGL(void)
+TransferFunctionGL::TransferFunctionGL()
         : ModuleGL()
         , AbstractTransferFunction()
         , texID(0)
@@ -34,13 +34,13 @@ TransferFunctionGL::TransferFunctionGL(void)
 }
 
 
-bool TransferFunctionGL::create(void) {
+bool TransferFunctionGL::create() {
 
     return true;
 }
 
 
-void TransferFunctionGL::release(void) {
+void TransferFunctionGL::release() {
 
     glDeleteTextures(1, &this->texID);
     this->texID = 0;

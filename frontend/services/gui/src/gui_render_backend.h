@@ -5,26 +5,25 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GUIRENDERBACKEND_H_INCLUDED
-#define MEGAMOL_GUI_GUIRENDERBACKEND_H_INCLUDED
 #pragma once
 
+#include <memory>
+
+#include <glm/glm.hpp>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui.h>
+#include <imgui_sw.hpp>
 
 #include "ImageWrapper.h"
-#include "imgui.h"
 #include "imgui_backends/imgui_impl_generic.h"
-#include "imgui_backends/imgui_sw.h"
 #include "mmcore/view/CPUFramebuffer.h"
-#include <glm/glm.hpp>
-#include <memory>
 
 #ifdef MEGAMOL_USE_OPENGL
 #include <glowl/FramebufferObject.hpp>
 #endif // MEGAMOL_USE_OPENGL
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 enum class GUIRenderBackend { NONE, CPU, OPEN_GL };
@@ -89,7 +88,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GUIRENDERBACKEND_H_INCLUDED
+} // namespace megamol::gui

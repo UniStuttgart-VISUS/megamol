@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * trisoup::WavefrontObjWriter::WavefrontObjWriter
  */
-trisoup::WavefrontObjWriter::WavefrontObjWriter(void)
+trisoup::WavefrontObjWriter::WavefrontObjWriter()
         : AbstractDataWriter()
         , filenameSlot("filename", "The path to the .obj file to be written")
         , frameIDSlot("frameID", "The ID of the frame to be written")
@@ -39,7 +39,7 @@ trisoup::WavefrontObjWriter::WavefrontObjWriter(void)
 /*
  * trisoup::WavefrontObjWriter::~WavefrontObjWriter
  */
-trisoup::WavefrontObjWriter::~WavefrontObjWriter(void) {
+trisoup::WavefrontObjWriter::~WavefrontObjWriter() {
     this->Release();
 }
 
@@ -47,7 +47,7 @@ trisoup::WavefrontObjWriter::~WavefrontObjWriter(void) {
 /*
  * trisoup::WavefrontObjWriter::create
  */
-bool trisoup::WavefrontObjWriter::create(void) {
+bool trisoup::WavefrontObjWriter::create() {
     return true;
 }
 
@@ -55,13 +55,13 @@ bool trisoup::WavefrontObjWriter::create(void) {
 /*
  * trisoup::WavefrontObjWriter::release
  */
-void trisoup::WavefrontObjWriter::release(void) {}
+void trisoup::WavefrontObjWriter::release() {}
 
 
 /*
  * trisoup::WavefrontObjWriter::run
  */
-bool trisoup::WavefrontObjWriter::run(void) {
+bool trisoup::WavefrontObjWriter::run() {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
     if (filename.empty()) {

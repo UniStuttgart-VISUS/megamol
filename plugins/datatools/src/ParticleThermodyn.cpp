@@ -27,7 +27,7 @@ using namespace megamol;
 /*
  * datatools::ParticleThermodyn::ParticleThermodyn
  */
-datatools::ParticleThermodyn::ParticleThermodyn(void)
+datatools::ParticleThermodyn::ParticleThermodyn()
         : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
         , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
         , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
@@ -80,6 +80,7 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     this->MakeSlotAvailable(&this->searchTypeSlot);
 
     core::param::EnumParam* mt = new core::param::EnumParam(metricsEnum::TEMPERATURE);
+    mt->SetTypePair(metricsEnum::DRIFT, "Drift Velocity");
     mt->SetTypePair(metricsEnum::TEMPERATURE, "Temperature");
     mt->SetTypePair(metricsEnum::DENSITY, "Density");
     mt->SetTypePair(metricsEnum::FRACTIONAL_ANISOTROPY, "Fractional Anisotropy");
@@ -135,14 +136,14 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 /*
  * datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance
  */
-datatools::ParticleThermodyn::~ParticleThermodyn(void) {
+datatools::ParticleThermodyn::~ParticleThermodyn() {
     this->Release();
 }
 
 /*
  * datatools::ParticleThermodyn::create
  */
-bool datatools::ParticleThermodyn::create(void) {
+bool datatools::ParticleThermodyn::create() {
     return true;
 }
 
@@ -165,6 +166,7 @@ bool hasDir(geocalls::MultiParticleDataCall* in, const unsigned int i) {
 
 bool metricRequiresDir(megamol::datatools::ParticleThermodyn::metricsEnum metric) {
     return metric == megamol::datatools::ParticleThermodyn::metricsEnum::TEMPERATURE ||
+           metric == megamol::datatools::ParticleThermodyn::metricsEnum::DRIFT ||
            metric == megamol::datatools::ParticleThermodyn::metricsEnum::FRACTIONAL_ANISOTROPY;
 }
 
@@ -180,7 +182,7 @@ bool isDirOK(megamol::datatools::ParticleThermodyn::metricsEnum metric, geocalls
 /*
  * datatools::ParticleThermodyn::release
  */
-void datatools::ParticleThermodyn::release(void) {}
+void datatools::ParticleThermodyn::release() {}
 
 
 bool datatools::ParticleThermodyn::assertData(
@@ -278,10 +280,7 @@ bool datatools::ParticleThermodyn::assertData(
         this->radiusSlot.ForceSetDirty();
     }
 
-    if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
-        this->cyclZSlot.IsDirty() || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty() ||
-        this->metricsSlot.IsDirty() || this->removeSelfSlot.IsDirty() || this->findExtremesSlot.IsDirty() ||
-        this->extremeValueSlot.IsDirty() || this->fluidDensitySlot.IsDirty()) {
+    if (this->AnyParameterDirty()) {
         allpartcnt = 0;
         ++myHash;
 
@@ -421,6 +420,9 @@ bool datatools::ParticleThermodyn::assertData(
                     float magnitude = 0.0f;
 
                     switch (theMetrics) {
+                    case metricsEnum::DRIFT:
+                        magnitude = computeDriftVelocity(ret_matches, num_matches, theMass, theFreedom);
+                        break;
                     case metricsEnum::TEMPERATURE:
                         magnitude = computeTemperature(ret_matches, num_matches, theMass, theFreedom);
                         break;
@@ -528,17 +530,7 @@ bool datatools::ParticleThermodyn::assertData(
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "ParticleThermodyn: min metric: %f max metric: %f", theMinTemp, theMaxTemp);
 
-        this->radiusSlot.ResetDirty();
-        this->cyclXSlot.ResetDirty();
-        this->cyclYSlot.ResetDirty();
-        this->cyclZSlot.ResetDirty();
-        this->numNeighborSlot.ResetDirty();
-        this->searchTypeSlot.ResetDirty();
-        this->metricsSlot.ResetDirty();
-        this->removeSelfSlot.ResetDirty();
-        this->findExtremesSlot.ResetDirty();
-        this->extremeValueSlot.ResetDirty();
-        this->fluidDensitySlot.ResetDirty();
+        this->ResetAllDirtyFlags();
     }
 
     // now the colors are known, inject them
@@ -575,6 +567,26 @@ bool datatools::ParticleThermodyn::assertData(
     out->SetUnlocker(in->GetUnlocker());
     in->SetUnlocker(nullptr, false);
     return true;
+}
+
+float megamol::datatools::ParticleThermodyn::computeDriftVelocity(
+    std::vector<std::pair<size_t, float>>& matches, const size_t num_matches, const float mass, const float freedom) {
+    std::array<float, 3> sum = {0, 0, 0};
+    for (size_t i = 0; i < num_matches; ++i) {
+        const float* velo = myPts->get_velocity(matches[i].first);
+        for (int c = 0; c < 3; ++c) {
+            sum[c] += velo[c];
+        }
+    }
+    std::array<float, 3> vd = {0, 0, 0};
+    for (int c = 0; c < 3; ++c) {
+        vd[c] = sum[c] / num_matches;
+    }
+
+    float magnitude = sqrtf(vd[0] * vd[0] + vd[1] * vd[1] + vd[2] * vd[2]);
+    // tempMag /= (num_matches * num_matches * 4.0f) / 9.0f;
+    magnitude *= freedom;
+    return magnitude;
 }
 
 float megamol::datatools::ParticleThermodyn::computeTemperature(

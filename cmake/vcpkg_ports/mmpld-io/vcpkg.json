@@ -1,7 +1,6 @@
 {
   "name": "mmpld-io",
-  "version": "2022-01-31",
-  "port-version": 0,
+  "version-date": "2023-01-09",
   "description": "Small header-only library for MMPLD files.",
   "homepage": "https://github.com/UniStuttgart-VISUS/mmpld_io",
   "license": "BSD-3-Clause",

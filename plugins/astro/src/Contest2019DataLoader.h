@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED
-#define MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "astro/AstroDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -18,8 +14,7 @@
 #include "vislib/math/Cuboid.h"
 #include <map>
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 template<typename T>
 T centralDifference(T valBefore, T valAfter, float stepSize = 1.0f) {
@@ -43,7 +38,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "Contest2019DataLoader";
     }
 
@@ -52,7 +47,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for the data of the SciVis Contest 2019.";
     }
 
@@ -61,28 +56,28 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    Contest2019DataLoader(void);
+    Contest2019DataLoader();
 
     /** Dtor. */
-    virtual ~Contest2019DataLoader(void);
+    ~Contest2019DataLoader() override;
 
 protected:
     /**
      * Constructs a new frame
      */
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Function that is called once upon initialization.
      *
      * @return True on success, false otherwise
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Loads the data of a single frame from disk
@@ -90,12 +85,12 @@ protected:
      * @param frame Pointer to the frame that will contain the data
      * @param idx The index of the frame
      */
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
 
     /**
      * Function that is called once upon destruction
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Frame description
@@ -106,12 +101,12 @@ protected:
         Frame(core::view::AnimDataModule& owner);
 
         /** Frame Dtor. */
-        virtual ~Frame(void);
+        ~Frame() override;
 
         /**
          * Clears the frame data by deleting all contained pointers
          */
-        inline void Clear(void) {
+        inline void Clear() {
             this->positions.reset();
             this->velocities.reset();
             this->temperatures.reset();
@@ -172,11 +167,11 @@ protected:
 
         void CalculateDerivativesForwardDifferences(Frame* frameAfter);
 
-        void ZeroDerivatives(void);
+        void ZeroDerivatives();
 
-        void CalculateAGNDistances(void);
+        void CalculateAGNDistances();
 
-        void ZeroAGNDistances(void);
+        void ZeroAGNDistances();
 
     private:
 #pragma pack(push, 1)
@@ -293,13 +288,13 @@ protected:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == nullptr);
         }
 
         /** Overload of the unlock method */
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->frame != nullptr) {
                 this->frame->Unlock();
                 this->frame = nullptr; // DO NOT DELETE!
@@ -366,7 +361,4 @@ protected:
     std::vector<float> redshiftsForFilename;
 };
 
-} // namespace astro
-} // namespace megamol
-
-#endif /* MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED */
+} // namespace megamol::astro

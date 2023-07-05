@@ -26,8 +26,7 @@
 #include "mmcore/utility/log/Log.h"
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 
 bool GUI_Service::init(void* configPtr) {
@@ -49,7 +48,7 @@ bool GUI_Service::init(const Config& config) {
     this->m_queuedProjectFiles.clear();
     this->m_providedResourceReferences.clear();
     this->m_requestedResourcesNames = {
-        "MegaMolGraph",                                                 // 0 - sync graphs
+        frontend_resources::MegaMolGraph_Req_Name,                      // 0 - sync graphs
         "optional<WindowEvents>",                                       // 1 - time, size, clipboard
         "optional<KeyboardEvents>",                                     // 2 - key press
         "optional<MouseEvents>",                                        // 3 - mouse click
@@ -225,6 +224,10 @@ void GUI_Service::digestChangedRequestedResources() {
         }
         this->m_gui->SetClipboardFunc(window_events._getClipboardString_Func, window_events._setClipboardString_Func,
             window_events._clipboard_user_data);
+        for (auto const& scale_event : window_events.content_scale_events) {
+            auto const scale = std::max(std::get<0>(scale_event), std::get<1>(scale_event));
+            this->m_gui->SetScale(scale);
+        }
     } else {
         // no GL
         this->m_window_size = m_framebuffer_size;
@@ -250,7 +253,7 @@ void GUI_Service::digestChangedRequestedResources() {
     /// Get current FPS and MS frame statistic = resource index 9
     auto& frame_statistics = frontend_resources->get<megamol::frontend_resources::FrameStatistics>();
     this->m_gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf,
-        frame_statistics.rendered_frames_count);
+        frame_statistics.rendered_frames_count, frame_statistics.last_rendered_frame_time_milliseconds);
 
     /// Get window manipulation resource = resource index 11
     auto maybe_window_manipulation = frontend_resources->getOptional<megamol::frontend_resources::WindowManipulation>();
@@ -261,6 +264,10 @@ void GUI_Service::digestChangedRequestedResources() {
         const_cast<megamol::frontend_resources::WindowManipulation&>(window_manipulation)
             .set_mouse_cursor(this->m_gui->GetMouseCursor());
     }
+
+
+    // Set current animation editor data
+    this->m_providedAnimationEditorData = this->m_gui->GetAnimationEditorData();
 }
 
 
@@ -291,9 +298,9 @@ void GUI_Service::postGraphRender() {
 std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
     this->m_providedResourceReferences = {
-        {"GUIState", this->m_providedStateResource},
-        {"GUIRegisterWindow", this->m_providedRegisterWindowResource},
-    };
+        {megamol::frontend_resources::GUIState_Req_Name, this->m_providedStateResource},
+        {megamol::frontend_resources::GUIRegisterWindow_Req_Name, this->m_providedRegisterWindowResource},
+        {megamol::frontend_resources::AnimationEditorData_Req_Name, this->m_providedAnimationEditorData}};
     return this->m_providedResourceReferences;
 }
 
@@ -349,7 +356,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
     /// Image Presentation = resource index 13
     // the image presentation will issue the rendering and provide the view with resources for rendering
-    // probably we dont care or dont check wheter the same view is added as entry point multiple times
+    // probably we don't care or don't check whether the same view is added as entry point multiple times
     auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         frontend_resources->get<megamol::frontend_resources::ImagePresentationEntryPoints>());
     const std::string gui_entry_point_name = "GUI_Service";
@@ -394,6 +401,10 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     gui_subscription.ParameterChanged =
         [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
             std::string const& new_value) { return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, new_value); };
+    gui_subscription.ParameterPresentationChanged =
+        [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot) {
+            return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, "");
+        };
 
     gui_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
         return m_gui->NotifyRunningGraph_AddCall(call_inst);
@@ -528,5 +539,4 @@ void GUI_Service::resource_register_notification(
     }
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

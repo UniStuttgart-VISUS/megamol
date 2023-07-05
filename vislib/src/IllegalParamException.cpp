@@ -36,7 +36,7 @@ vislib::IllegalParamException::IllegalParamException(const IllegalParamException
 /*
  * vislib::IllegalParamException::~IllegalParamException
  */
-vislib::IllegalParamException::~IllegalParamException(void) {}
+vislib::IllegalParamException::~IllegalParamException() {}
 
 
 /*

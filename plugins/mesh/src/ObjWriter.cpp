@@ -21,7 +21,7 @@ megamol::mesh::ObjWriter::ObjWriter()
 
 megamol::mesh::ObjWriter::~ObjWriter() {}
 
-bool megamol::mesh::ObjWriter::create(void) {
+bool megamol::mesh::ObjWriter::create() {
     return true;
 }
 

@@ -15,8 +15,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -34,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DataSetTimeRewriteModule";
     }
 
@@ -43,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "In-Between management module to change time codes of a data set";
     }
 
@@ -52,24 +51,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
     /** Ctor. */
-    DataSetTimeRewriteModule(void);
+    DataSetTimeRewriteModule();
 
     /** Dtor. */
-    virtual ~DataSetTimeRewriteModule(void);
+    ~DataSetTimeRewriteModule() override;
 
 protected:
     /**
@@ -77,12 +67,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -138,5 +128,4 @@ private:
     core::param::ParamSlot frameStepSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

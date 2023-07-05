@@ -19,7 +19,7 @@ namespace megamol::datatools {
 /*
  * ParticleListFilter::ParticleListFilter
  */
-ParticleListFilter::ParticleListFilter(void)
+ParticleListFilter::ParticleListFilter()
         : Module()
         , inParticlesDataSlot("inPartData", "Input for (oriented) particle data")
         , outParticlesDataSlot("outPartData", "Output of (oriented) particle data")
@@ -57,7 +57,7 @@ ParticleListFilter::ParticleListFilter(void)
 /*
  * ParticleListFilter::~ParticleListFilter
  */
-ParticleListFilter::~ParticleListFilter(void) {
+ParticleListFilter::~ParticleListFilter() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -65,7 +65,7 @@ ParticleListFilter::~ParticleListFilter(void) {
 /*
  * ParticleListFilter::create
  */
-bool ParticleListFilter::create(void) {
+bool ParticleListFilter::create() {
     // intentionally empty
     return true;
 }
@@ -74,7 +74,7 @@ bool ParticleListFilter::create(void) {
 /*
  * ParticleListFilter::release
  */
-void ParticleListFilter::release(void) {
+void ParticleListFilter::release() {
     // intentionally empty
 }
 

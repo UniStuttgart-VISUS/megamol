@@ -20,7 +20,7 @@
 /*
  * vislib::graphics::AbstractBitmapCodec::AbstractBitmapCodec
  */
-vislib::graphics::AbstractBitmapCodec::AbstractBitmapCodec(void) : img(NULL) {
+vislib::graphics::AbstractBitmapCodec::AbstractBitmapCodec() : img(NULL) {
     // Intentionally empty
 }
 
@@ -28,7 +28,7 @@ vislib::graphics::AbstractBitmapCodec::AbstractBitmapCodec(void) : img(NULL) {
 /*
  * vislib::graphics::AbstractBitmapCodec::~AbstractBitmapCodec
  */
-vislib::graphics::AbstractBitmapCodec::~AbstractBitmapCodec(void) {
+vislib::graphics::AbstractBitmapCodec::~AbstractBitmapCodec() {
     this->img = NULL; // DO NOT DELETE!
 }
 
@@ -45,7 +45,7 @@ int vislib::graphics::AbstractBitmapCodec::AutoDetect(const void* mem, SIZE_T si
 /*
  * vislib::graphics::AbstractBitmapCodec::CanAutoDetect
  */
-bool vislib::graphics::AbstractBitmapCodec::CanAutoDetect(void) const {
+bool vislib::graphics::AbstractBitmapCodec::CanAutoDetect() const {
     return false; // cannot autodetect
 }
 
@@ -53,7 +53,7 @@ bool vislib::graphics::AbstractBitmapCodec::CanAutoDetect(void) const {
 /*
  * vislib::graphics::AbstractBitmapCodec::FileNameExtsA
  */
-const char* vislib::graphics::AbstractBitmapCodec::FileNameExtsA(void) const {
+const char* vislib::graphics::AbstractBitmapCodec::FileNameExtsA() const {
     return NULL; // no extensions
 }
 
@@ -61,7 +61,7 @@ const char* vislib::graphics::AbstractBitmapCodec::FileNameExtsA(void) const {
 /*
  * vislib::graphics::AbstractBitmapCodec::FileNameExtsW
  */
-const wchar_t* vislib::graphics::AbstractBitmapCodec::FileNameExtsW(void) const {
+const wchar_t* vislib::graphics::AbstractBitmapCodec::FileNameExtsW() const {
     return NULL; // no extensions
 }
 
@@ -534,7 +534,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(vislib::RawStorage& outmem) con
 /*
  * vislib::graphics::AbstractBitmapCodec::image
  */
-vislib::graphics::BitmapImage& vislib::graphics::AbstractBitmapCodec::image(void) {
+vislib::graphics::BitmapImage& vislib::graphics::AbstractBitmapCodec::image() {
     if (this->img == NULL) {
         throw vislib::IllegalStateException("Must set 'Image' member before calling", __FILE__, __LINE__);
     }
@@ -545,7 +545,7 @@ vislib::graphics::BitmapImage& vislib::graphics::AbstractBitmapCodec::image(void
 /*
  * vislib::graphics::AbstractBitmapCodec::image
  */
-const vislib::graphics::BitmapImage& vislib::graphics::AbstractBitmapCodec::image(void) const {
+const vislib::graphics::BitmapImage& vislib::graphics::AbstractBitmapCodec::image() const {
     if (this->img == NULL) {
         throw vislib::IllegalStateException("Must set 'Image' member before calling", __FILE__, __LINE__);
     }
@@ -565,7 +565,7 @@ bool vislib::graphics::AbstractBitmapCodec::loadFromFileA(const char* filename) 
 /*
  * vislib::graphics::AbstractBitmapCodec::loadFromFileAImplemented
  */
-bool vislib::graphics::AbstractBitmapCodec::loadFromFileAImplemented(void) const {
+bool vislib::graphics::AbstractBitmapCodec::loadFromFileAImplemented() const {
     return false;
 }
 
@@ -582,7 +582,7 @@ bool vislib::graphics::AbstractBitmapCodec::loadFromFileW(const wchar_t* filenam
 /*
  * vislib::graphics::AbstractBitmapCodec::loadFromFileWImplemented
  */
-bool vislib::graphics::AbstractBitmapCodec::loadFromFileWImplemented(void) const {
+bool vislib::graphics::AbstractBitmapCodec::loadFromFileWImplemented() const {
     return false;
 }
 
@@ -599,7 +599,7 @@ bool vislib::graphics::AbstractBitmapCodec::loadFromMemory(const void* mem, SIZE
 /*
  * vislib::graphics::AbstractBitmapCodec::loadFromMemoryImplemented
  */
-bool vislib::graphics::AbstractBitmapCodec::loadFromMemoryImplemented(void) const {
+bool vislib::graphics::AbstractBitmapCodec::loadFromMemoryImplemented() const {
     return false;
 }
 
@@ -616,7 +616,7 @@ bool vislib::graphics::AbstractBitmapCodec::loadFromStream(vislib::sys::File& st
 /*
  * vislib::graphics::AbstractBitmapCodec::loadFromStreamImplemented
  */
-bool vislib::graphics::AbstractBitmapCodec::loadFromStreamImplemented(void) const {
+bool vislib::graphics::AbstractBitmapCodec::loadFromStreamImplemented() const {
     return false;
 }
 
@@ -633,7 +633,7 @@ bool vislib::graphics::AbstractBitmapCodec::saveToFileA(const char* filename) co
 /*
  * vislib::graphics::AbstractBitmapCodec::saveToFileAImplemented
  */
-bool vislib::graphics::AbstractBitmapCodec::saveToFileAImplemented(void) const {
+bool vislib::graphics::AbstractBitmapCodec::saveToFileAImplemented() const {
     return false;
 }
 
@@ -650,7 +650,7 @@ bool vislib::graphics::AbstractBitmapCodec::saveToFileW(const wchar_t* filename)
 /*
  * vislib::graphics::AbstractBitmapCodec::saveToFileWImplemented
  */
-bool vislib::graphics::AbstractBitmapCodec::saveToFileWImplemented(void) const {
+bool vislib::graphics::AbstractBitmapCodec::saveToFileWImplemented() const {
     return false;
 }
 
@@ -667,7 +667,7 @@ bool vislib::graphics::AbstractBitmapCodec::saveToMemory(vislib::RawStorage& mem
 /*
  * vislib::graphics::AbstractBitmapCodec::saveToMemoryImplemented
  */
-bool vislib::graphics::AbstractBitmapCodec::saveToMemoryImplemented(void) const {
+bool vislib::graphics::AbstractBitmapCodec::saveToMemoryImplemented() const {
     return false;
 }
 
@@ -684,6 +684,6 @@ bool vislib::graphics::AbstractBitmapCodec::saveToStream(vislib::sys::File& stre
 /*
  * vislib::graphics::AbstractBitmapCodec::saveToStreamImplemented
  */
-bool vislib::graphics::AbstractBitmapCodec::saveToStreamImplemented(void) const {
+bool vislib::graphics::AbstractBitmapCodec::saveToStreamImplemented() const {
     return false;
 }

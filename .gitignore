@@ -11,15 +11,21 @@ build-*/
 build_*/
 cmake-build-*/
 
+# Bundled vcpkg
+/vcpkg/
+/vcpkg_assets/
+
 # In-source-build artifacts
-CMakeFiles/
-CMakeCache.txt
+/CMakeFiles/
+/CMakeCache.txt
+/_deps/
 
 # Install artifacts
 /bin/
 /examples/
 /lib/
 /share/
+install/
 
 # Utils
 utils/MMPLD/mmpld.bat
@@ -29,9 +35,9 @@ utils/MMPLD/test*.lua
 utils/MMPLD/test*.png
 utils/MMPLD/SphereTest.bat
 
+# Intermediate python files
+__pycache__/
+
 # Individual developer settings for local machines
 mmprjs/**/*
 *.orig
-
-# Intermediate python files
-**/__pycache__/

@@ -9,7 +9,7 @@
 using megamol::core::utility::log::Log;
 
 megamol::compositing_gl::TextureDepthCompositing::TextureDepthCompositing()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , m_version(0)
         , m_depthComp_prgm(nullptr)
         , m_output_texture(nullptr)

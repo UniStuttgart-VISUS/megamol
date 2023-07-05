@@ -5,8 +5,7 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINPLUGIN_PROTEINEXPLODER_H_INCLUDED
-#define MMPROTEINPLUGIN_PROTEINEXPLODER_H_INCLUDED
+#pragma once
 
 #include "geometry_calls/LinesDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -16,8 +15,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include <chrono>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class ProteinExploder : public megamol::core::Module {
 public:
@@ -26,7 +24,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ProteinExploder";
     }
 
@@ -35,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Pulls proteins apart to have a better view on single components.";
     }
 
@@ -44,15 +42,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ProteinExploder(void);
+    ProteinExploder();
 
     /** Dtor. */
-    virtual ~ProteinExploder(void);
+    ~ProteinExploder() override;
 
 protected:
     /**
@@ -60,12 +58,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call for get data.
@@ -286,7 +284,4 @@ private:
     /** The middle points of the displaced atom chains */
     std::vector<vislib::math::Vector<float, 3>> displacedMoleculeMiddles;
 };
-} /* namespace protein */
-} /* namespace megamol */
-
-#endif // MMPROTEINPLUGIN_PROTEINEXPLODER_H_INCLUDED
+} // namespace megamol::protein

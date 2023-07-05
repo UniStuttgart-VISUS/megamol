@@ -30,7 +30,7 @@ extern char** environ;
 /*
  * vislib::sys::Environment::Snapshot::Snapshot
  */
-vislib::sys::Environment::Snapshot::Snapshot(void) : data(NULL) {}
+vislib::sys::Environment::Snapshot::Snapshot() : data(NULL) {}
 
 
 /*
@@ -200,7 +200,7 @@ vislib::sys::Environment::Snapshot::Snapshot(const Snapshot& rhs) : data(NULL) {
 /*
  * vislib::sys::Environment::Snapshot::Snapshot
  */
-vislib::sys::Environment::Snapshot::~Snapshot(void) {
+vislib::sys::Environment::Snapshot::~Snapshot() {
     this->Clear();
 }
 
@@ -208,7 +208,7 @@ vislib::sys::Environment::Snapshot::~Snapshot(void) {
 /*
  * vislib::sys::Environment::Snapshot::Clear
  */
-void vislib::sys::Environment::Snapshot::Clear(void) {
+void vislib::sys::Environment::Snapshot::Clear() {
 #ifdef _WIN32
     this->data.Clear();
 
@@ -447,7 +447,7 @@ void vislib::sys::Environment::Snapshot::assign(const char** const data) {
 /*
  * vislib::sys::Environment::CreateSnapshot
  */
-vislib::sys::Environment::Snapshot vislib::sys::Environment::CreateSnapshot(void) {
+vislib::sys::Environment::Snapshot vislib::sys::Environment::CreateSnapshot() {
     Snapshot retval;
 
 #ifdef _WIN32
@@ -604,7 +604,7 @@ void vislib::sys::Environment::SetVariable(const wchar_t* name, const wchar_t* v
 /*
  * vislib::sys::Environment::~Environment
  */
-vislib::sys::Environment::~Environment(void) {
+vislib::sys::Environment::~Environment() {
     /* Nothing to do. */
 }
 
@@ -612,6 +612,6 @@ vislib::sys::Environment::~Environment(void) {
 /*
  * vislib::sys::Environment::Environment
  */
-vislib::sys::Environment::Environment(void) {
+vislib::sys::Environment::Environment() {
     /* Nothing to do. */
 }

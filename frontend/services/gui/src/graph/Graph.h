@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
-#define MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 #pragma once
 
 
@@ -20,8 +18,7 @@
 #include <list>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 // Forward declarations
@@ -161,8 +158,10 @@ public:
     ImGuiID GetSelectedInterfaceSlot() const {
         return this->gui_graph_state.interact.interfaceslot_selected_uid;
     }
-    ImGuiID GetDropSlot() const {
-        return this->gui_graph_state.interact.slot_dropped_uid;
+    UIDPair_t ConsumeDragAndDropSlots() {
+        auto drag_drop_uids = this->gui_graph_state.interact.slot_drag_drop_uids;
+        this->gui_graph_state.interact.slot_drag_drop_uids = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
+        return drag_drop_uids;
     }
     bool IsCanvasHovered() const {
         return this->gui_canvas_hovered;
@@ -258,7 +257,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
+} // namespace megamol::gui

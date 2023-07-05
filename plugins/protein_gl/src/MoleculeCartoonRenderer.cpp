@@ -43,7 +43,7 @@ using namespace megamol::protein_calls;
 /*
  * MoleculeCartoonRenderer::MoleculeCartoonRenderer (CTOR)
  */
-MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
+MoleculeCartoonRenderer::MoleculeCartoonRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , molDataCallerSlot("getdata", "Connects the protein rendering with protein data storage")
         , getLightsSlot("getlights", "Connects the protein rendering with light sources")
@@ -204,7 +204,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
 /*
  * MoleculeCartoonRenderer::~MoleculeCartoonRenderer (DTOR)
  */
-MoleculeCartoonRenderer::~MoleculeCartoonRenderer(void) {
+MoleculeCartoonRenderer::~MoleculeCartoonRenderer() {
     this->Release();
 }
 
@@ -212,13 +212,13 @@ MoleculeCartoonRenderer::~MoleculeCartoonRenderer(void) {
 /*
  * MoleculeCartoonRenderer::release
  */
-void MoleculeCartoonRenderer::release(void) {}
+void MoleculeCartoonRenderer::release() {}
 
 
 /*
  * MoleculeCartoonRenderer::create
  */
-bool MoleculeCartoonRenderer::create(void) {
+bool MoleculeCartoonRenderer::create() {
     using megamol::core::utility::log::Log;
 
     {

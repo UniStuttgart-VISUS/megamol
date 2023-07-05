@@ -16,8 +16,7 @@
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Raycasting-based renderer for bézier curve tubes
@@ -26,17 +25,17 @@ class AbstractBezierRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
 protected:
     /** Ctor. */
-    AbstractBezierRenderer(void);
+    AbstractBezierRenderer();
 
     /** Dtor. */
-    virtual ~AbstractBezierRenderer(void);
+    ~AbstractBezierRenderer() override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -47,12 +46,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -61,7 +60,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The implementation of the render callback
@@ -77,7 +76,7 @@ protected:
      *
      * @return True if the shader is required
      */
-    virtual bool shader_required(void) const {
+    virtual bool shader_required() const {
         // TODO: This is not cool at all
         return true;
     }
@@ -94,5 +93,4 @@ protected:
 private:
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

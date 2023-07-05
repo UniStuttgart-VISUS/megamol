@@ -11,8 +11,7 @@
 #include <tuple>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 //static std::string WindowState_Req_Name = "WindowState";
 static std::string WindowEvents_Req_Name = "WindowEvents";
@@ -92,5 +91,4 @@ struct WindowEvents {
 
 namespace input = frontend_resources;
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

@@ -46,13 +46,13 @@ view::AbstractView::AbstractView(ViewDimension dim)
               "for multiple cameras if you use .lua project files")
 
         , _saveCamSettingsSlot("multicam::saveSettings", "Save camera settings to file immediately.")
-        , _loadCamSettingsSlot("multicam::loadSettings",
-              "Load camera settings from file, overwriting the current settings in MegaMol.")
-        , _overrideCamSettingsSlot("multicam::overrideSettings",
-              "When activated, existing camera settings files will be overwritten.")
-        , _autoSaveCamSettingsSlot(
-              "multicam::autoSaveSettings", "When activated, the camera settings will be stored to disk "
-                                                      "whenever a camera checkpoint is saved or MegaMol is closed.")
+        , _loadCamSettingsSlot(
+              "multicam::loadSettings", "Load camera settings from file, overwriting the current settings in MegaMol.")
+        , _overrideCamSettingsSlot(
+              "multicam::overrideSettings", "When activated, existing camera settings files will be overwritten.")
+        , _autoSaveCamSettingsSlot("multicam::autoSaveSettings",
+              "When activated, the camera settings will be stored to disk "
+              "whenever a camera checkpoint is saved or MegaMol is closed.")
         , _autoLoadCamSettingsSlot("multicam::autoLoadSettings",
               "When activated, the view will load the camera settings from disk at startup.")
 
@@ -147,23 +147,8 @@ view::AbstractView::AbstractView(ViewDimension dim)
 /*
  * view::AbstractView::~AbstractView
  */
-view::AbstractView::~AbstractView(void) {
+view::AbstractView::~AbstractView() {
     this->_hooks.Clear(); // DO NOT DELETE OBJECTS
-}
-
-
-/*
- * view::AbstractView::IsParamRelevant
- */
-bool view::AbstractView::IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const {
-    const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
-    if (ano == NULL)
-        return false;
-    if (param == nullptr)
-        return false;
-
-    vislib::SingleLinkedList<const AbstractNamedObject*> searched;
-    return ano->IsParamRelevant(searched, param);
 }
 
 void megamol::core::view::AbstractView::SetCamera(Camera camera, bool isMutable) {
@@ -508,7 +493,7 @@ bool view::AbstractView::onLoadCamera(param::ParamSlot& p) {
 /*
  * AbstractView::determineCameraFilePath
  */
-std::string view::AbstractView::determineCameraFilePath(void) const {
+std::string view::AbstractView::determineCameraFilePath() const {
     std::string path;
 
     const auto& paths = frontend_resources.get<megamol::frontend_resources::ScriptPaths>().lua_script_paths;

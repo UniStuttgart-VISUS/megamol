@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
-#define MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
 #pragma once
 
 
@@ -20,13 +18,13 @@
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
+#include "windows/AnimationEditor.h"
 #include "windows/Configurator.h"
 #include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -169,13 +167,20 @@ public:
         return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
     }
 
-
     /**
      * Get image data containing rendered image.
      */
     inline megamol::frontend_resources::ImageWrapper GetImage() {
         return this->render_backend.GetImage();
     }
+
+    /**
+     * Get the updated animation editor data.
+     */
+    frontend_resources::AnimationEditorData& GetAnimationEditorData() {
+        return this->win_animation_editor_ptr->GetAnimationEditorData();
+    }
+
 
     ///////// SET ///////////
 
@@ -208,10 +213,12 @@ public:
     /**
      * Set current frame statistics.
      */
-    inline void SetFrameStatistics(double last_averaged_fps, double last_averaged_ms, size_t frame_count) {
+    inline void SetFrameStatistics(
+        double last_averaged_fps, double last_averaged_ms, size_t frame_count, double last_frame_millis) {
         this->gui_state.stat_averaged_fps = static_cast<float>(last_averaged_fps);
         this->gui_state.stat_averaged_ms = static_cast<float>(last_averaged_ms);
         this->gui_state.stat_frame_count = frame_count;
+        this->gui_state.last_frame_ms = static_cast<float>(last_frame_millis);
     }
 
     /**
@@ -257,6 +264,7 @@ public:
             cons->SetLuaFunc(lua_func);
         }
         this->win_configurator_ptr->GetGraphCollection().SetLuaFunc(lua_func);
+        this->win_animation_editor_ptr->SetLuaFunc(lua_func);
     }
 
 #ifdef MEGAMOL_USE_PROFILING
@@ -296,8 +304,10 @@ public:
     bool NotifyRunningGraph_ParameterChanged(
         megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
         std::string const& new_value) {
-        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(
-            param_slot, new_value);
+        bool ret = this->win_animation_editor_ptr->NotifyParamChanged(param_slot, new_value);
+        ret |=
+            this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(param_slot, new_value);
+        return ret;
     }
     bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_AddCall(call_inst);
@@ -351,6 +361,7 @@ private:
         bool open_popup_screenshot;                    // Flag for opening screenshot file pop-up
         bool open_popup_font;                          // Flag for opening font pop-up
         bool menu_visible;                             // Flag indicating menu state
+        bool show_imgui_metrics;                       // Flag indicating ImGui metrics window
         unsigned int graph_fonts_reserved;             // Number of fonts reserved for the configurator graph canvas
         bool shutdown_triggered;                       // Flag indicating user triggered shutdown
         bool screenshot_triggered;                     // Trigger and file name for screenshot
@@ -365,7 +376,8 @@ private:
         std::string request_load_projet_file; // Project file name which should be loaded by fronted service
         float stat_averaged_fps;              // current average fps value
         float stat_averaged_ms;               // current average fps value
-        size_t stat_frame_count;              // current fame count
+        size_t stat_frame_count;              // current frame count
+        float last_frame_ms;                  // last frame time
         bool load_docking_preset;             // Flag indicating docking preset loading
         float window_alpha;                   // Global transparency value for window background
         float scale_input_float_buffer;       // Widget float buffer for scale input
@@ -408,6 +420,7 @@ private:
 
     /** Shortcut pointer to configurator window */
     std::shared_ptr<Configurator> win_configurator_ptr;
+    std::shared_ptr<AnimationEditor> win_animation_editor_ptr;
 
     // Widgets
     FileBrowserWidget file_browser;
@@ -446,7 +459,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
+} // namespace megamol::gui

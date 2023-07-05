@@ -5,11 +5,7 @@
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTVECTOR_H_INCLUDED
-#define VISLIB_ABSTRACTVECTOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/math/AbstractVectorImpl.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -30,7 +25,7 @@ class AbstractVector : public AbstractVectorImpl<T, D, S, AbstractVector> {
 
 public:
     /** Dtor. */
-    ~AbstractVector(void);
+    ~AbstractVector();
 
     /**
      * Assignment.
@@ -73,7 +68,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractVector(void) : Super() {}
+    inline AbstractVector() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -85,7 +80,7 @@ protected:
  * vislib::math::AbstractVector<T, D, S>::~AbstractVector
  */
 template<class T, unsigned int D, class S>
-AbstractVector<T, D, S>::~AbstractVector(void) {}
+AbstractVector<T, D, S>::~AbstractVector() {}
 
 
 /**
@@ -97,14 +92,14 @@ class AbstractVector<T, 2, S> : public AbstractVectorImpl<T, 2, S, AbstractVecto
 
 public:
     /** Behaves like primary class template. */
-    ~AbstractVector(void);
+    ~AbstractVector();
 
     /**
      * Answer the x-component of the vector.
      *
      * @return The x-component of the vector.
      */
-    inline const T& GetX(void) const {
+    inline const T& GetX() const {
         return this->components[0];
     }
 
@@ -113,7 +108,7 @@ public:
      *
      * @return The y-component of the vector.
      */
-    inline const T& GetY(void) const {
+    inline const T& GetY() const {
         return this->components[1];
     }
 
@@ -151,7 +146,7 @@ public:
      *
      * @return The x-component of the vector.
      */
-    inline const T& X(void) const {
+    inline const T& X() const {
         return this->components[0];
     }
 
@@ -160,7 +155,7 @@ public:
      *
      * @return The y-component of the vector.
      */
-    inline const T& Y(void) const {
+    inline const T& Y() const {
         return this->components[1];
     }
 
@@ -184,7 +179,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractVector(void) : Super() {}
+    inline AbstractVector() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -196,7 +191,7 @@ protected:
  * vislib::math::AbstractVector<T, 2, S>::~AbstractVector
  */
 template<class T, class S>
-AbstractVector<T, 2, S>::~AbstractVector(void) {}
+AbstractVector<T, 2, S>::~AbstractVector() {}
 
 
 /**
@@ -209,7 +204,7 @@ class AbstractVector<T, 3, S> : public AbstractVectorImpl<T, 3, S, AbstractVecto
 
 public:
     /** Dtor. */
-    ~AbstractVector(void);
+    ~AbstractVector();
 
     /**
      * Answer the cross product of this vector and 'rhs'.
@@ -240,7 +235,7 @@ public:
      *
      * @return The x-component of the vector.
      */
-    inline const T& GetX(void) const {
+    inline const T& GetX() const {
         return this->components[0];
     }
 
@@ -249,7 +244,7 @@ public:
      *
      * @return The y-component of the vector.
      */
-    inline const T& GetY(void) const {
+    inline const T& GetY() const {
         return this->components[1];
     }
 
@@ -258,7 +253,7 @@ public:
      *
      * @return The z-component of the vector.
      */
-    inline const T& GetZ(void) const {
+    inline const T& GetZ() const {
         return this->components[2];
     }
 
@@ -307,7 +302,7 @@ public:
      *
      * @return The x-component of the vector.
      */
-    inline const T& X(void) const {
+    inline const T& X() const {
         return this->components[0];
     }
 
@@ -316,7 +311,7 @@ public:
      *
      * @return The y-component of the vector.
      */
-    inline const T& Y(void) const {
+    inline const T& Y() const {
         return this->components[1];
     }
 
@@ -325,7 +320,7 @@ public:
      *
      * @return The z-component of the vector.
      */
-    inline const T& Z(void) const {
+    inline const T& Z() const {
         return this->components[2];
     }
 
@@ -350,7 +345,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractVector(void) : Super() {}
+    inline AbstractVector() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -364,7 +359,7 @@ protected:
  * vislib::math::AbstractVector<T, 3, S>::~AbstractVector
  */
 template<class T, class S>
-AbstractVector<T, 3, S>::~AbstractVector(void) {}
+AbstractVector<T, 3, S>::~AbstractVector() {}
 
 
 /*
@@ -390,14 +385,14 @@ class AbstractVector<T, 4, S> : public AbstractVectorImpl<T, 4, S, AbstractVecto
 
 public:
     /** Dtor. */
-    ~AbstractVector(void);
+    ~AbstractVector();
 
     /**
      * Answer the x-component of the vector.
      *
      * @return The x-component of the vector.
      */
-    inline const T& GetX(void) const {
+    inline const T& GetX() const {
         return this->components[0];
     }
 
@@ -406,7 +401,7 @@ public:
      *
      * @return The y-component of the vector.
      */
-    inline const T& GetY(void) const {
+    inline const T& GetY() const {
         return this->components[1];
     }
 
@@ -415,7 +410,7 @@ public:
      *
      * @return The z-component of the vector.
      */
-    inline const T& GetZ(void) const {
+    inline const T& GetZ() const {
         return this->components[2];
     }
 
@@ -424,7 +419,7 @@ public:
      *
      * @return The w-component of the vector.
      */
-    inline const T& GetW(void) const {
+    inline const T& GetW() const {
         return this->components[3];
     }
 
@@ -484,7 +479,7 @@ public:
      *
      * @return The x-component of the vector.
      */
-    inline const T& X(void) const {
+    inline const T& X() const {
         return this->components[0];
     }
 
@@ -493,7 +488,7 @@ public:
      *
      * @return The y-component of the vector.
      */
-    inline const T& Y(void) const {
+    inline const T& Y() const {
         return this->components[1];
     }
 
@@ -502,7 +497,7 @@ public:
      *
      * @return The z-component of the vector.
      */
-    inline const T& Z(void) const {
+    inline const T& Z() const {
         return this->components[2];
     }
 
@@ -511,7 +506,7 @@ public:
      *
      * @return The w-component of the vector.
      */
-    inline const T& W(void) const {
+    inline const T& W() const {
         return this->components[3];
     }
 
@@ -536,7 +531,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractVector(void) : Super() {}
+    inline AbstractVector() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -550,7 +545,7 @@ protected:
  * vislib::math::AbstractVector<T, 4, S>::~AbstractVector
  */
 template<class T, class S>
-AbstractVector<T, 4, S>::~AbstractVector(void) {
+AbstractVector<T, 4, S>::~AbstractVector() {
     // intentionally empty
 }
 
@@ -569,10 +564,8 @@ AbstractVector<T, D, T[D]> operator*(const T lhs, const AbstractVector<T, D, S>&
 }
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTVECTOR_H_INCLUDED */

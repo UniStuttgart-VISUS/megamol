@@ -17,7 +17,7 @@
 using megamol::core::utility::log::Log;
 
 megamol::compositing_gl::LocalLighting::LocalLighting()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , m_version(0)
         , m_output_texture(nullptr)
         , m_point_lights_buffer(nullptr)

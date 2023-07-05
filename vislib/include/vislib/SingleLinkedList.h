@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SINGLELINKEDLIST_H_INCLUDED
-#define VISLIB_SINGLELINKEDLIST_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -50,7 +46,7 @@ public:
         friend class SingleLinkedList<T, L>;
 
         /** default ctor */
-        Iterator(void);
+        Iterator();
 
         /**
          * copy ctor for assignment
@@ -68,17 +64,17 @@ public:
         Iterator(const typename SingleLinkedList<T, Lp>::Iterator& rhs);
 
         /** Dtor. */
-        virtual ~Iterator(void);
+        ~Iterator() override;
 
         /** Behaves like Iterator<T>::HasNext */
-        virtual bool HasNext(void) const;
+        bool HasNext() const override;
 
         /**
          * Behaves like Iterator<T>::Next
          *
          * @throw IllegalStateException if there is no next element
          */
-        virtual T& Next(void);
+        T& Next() override;
 
         /**
          * assignment operator
@@ -111,7 +107,7 @@ public:
     };
 
     /** ctor */
-    SingleLinkedList(void);
+    SingleLinkedList();
 
     /**
      * copy ctor
@@ -131,14 +127,14 @@ public:
     SingleLinkedList(const SingleLinkedList<T, Lp>& rhs);
 
     /** Dtor. */
-    virtual ~SingleLinkedList(void);
+    ~SingleLinkedList() override;
 
     /**
      * Appends an item to the end of the list. Runtime complexity: O(1)
      *
      * @param item The item to be added.
      */
-    virtual inline void Add(const T& element) {
+    inline void Add(const T& element) override {
         this->Append(element);
     }
 
@@ -147,12 +143,12 @@ public:
      *
      * @param item The item to be added.
      */
-    virtual void Append(const T& item);
+    void Append(const T& item) override;
 
     /**
      * Clears the whole list.
      */
-    virtual void Clear(void);
+    void Clear() override;
 
     /**
      * Checks whether an item is contained in the list.
@@ -161,14 +157,14 @@ public:
      *
      * @return true if the item is contained in the list, false otherwise.
      */
-    virtual bool Contains(const T& item) const;
+    bool Contains(const T& item) const override;
 
     /**
      * Answer the number of items in the collection.
      *
      * @return Number of items in the collection.
      */
-    virtual SIZE_T Count(void) const;
+    SIZE_T Count() const override;
 
     /**
      * Answer a pointer to the first copy of 'element' in the collection.
@@ -180,7 +176,7 @@ public:
      * @return A pointer to the local copy of 'element' or NULL, if no such
      *         element is found.
      */
-    virtual const T* Find(const T& element) const;
+    const T* Find(const T& element) const override;
 
     /**
      * Answer a pointer to the first copy of 'element' in the collection.
@@ -192,7 +188,7 @@ public:
      * @return A pointer to the local copy of 'element' or NULL, if no such
      *         element is found.
      */
-    virtual T* Find(const T& element);
+    T* Find(const T& element) override;
 
     /**
      * Answer the first element in the collection. Runtime complexity: O(1)
@@ -201,7 +197,7 @@ public:
      *
      * @throws NoSuchElementException, if the collection is empty.
      */
-    virtual const T& First(void) const;
+    const T& First() const override;
 
     /**
      * Answer the first element in the collection. Runtime complexity: O(1)
@@ -210,7 +206,7 @@ public:
      *
      * @throws NoSuchElementException, if the collection is empty.
      */
-    virtual T& First(void);
+    T& First() override;
 
     /**
      * Answer whether there is no element in the collection. Runtime
@@ -218,7 +214,7 @@ public:
      *
      * @return true, if the collection is empty, false otherwise.
      */
-    virtual inline bool IsEmpty(void) const {
+    inline bool IsEmpty() const override {
         // no need to sync here (this race condition is acceptable)
         return this->first == NULL;
     }
@@ -230,7 +226,7 @@ public:
      *
      * @throws NoSuchElementException, if the collection is empty.
      */
-    virtual const T& Last(void) const;
+    const T& Last() const override;
 
     /**
      * Answer the last element in the collection. Runtime complexity: O(1)
@@ -239,7 +235,7 @@ public:
      *
      * @throws NoSuchElementException, if the collection is empty.
      */
-    virtual T& Last(void);
+    T& Last() override;
 
     /**
      * Merges a second single linked list 'from' into 'this' list. All
@@ -255,7 +251,7 @@ public:
      *
      * @param item The item to be added.
      */
-    virtual void Prepend(const T& item);
+    void Prepend(const T& item) override;
 
     /**
      * Remove the first occurrence of an element that is equal to 'element'
@@ -263,7 +259,7 @@ public:
      *
      * @param item The element to be removed.
      */
-    virtual void Remove(const T& item);
+    void Remove(const T& item) override;
     /**
      * Removes an item from the list.
      * This method removes all items from the list that are equal to the
@@ -271,7 +267,7 @@ public:
      *
      * @param item The item to be removed.
      */
-    virtual void RemoveAll(const T& item);
+    void RemoveAll(const T& item) override;
 
     /**
      * Removes an item from the list.
@@ -290,13 +286,13 @@ public:
      * Remove the first element from the collection. If the collection
      * is empty, this method has no effect. Runtime complexity: O(1)
      */
-    virtual void RemoveFirst(void);
+    void RemoveFirst() override;
 
     /**
      * Remove the last element from the collection. If the collection is
      * empty, this method has no effect. Runtime complexity: O(n)
      */
-    virtual void RemoveLast(void);
+    void RemoveLast() override;
 
     /**
      * Sorts the elements in the collection based on the results of the
@@ -307,7 +303,7 @@ public:
      *
      * @param comparator The compare function defining the sort order.
      */
-    virtual void Sort(int (*comparator)(const T& lhs, const T& rhs));
+    void Sort(int (*comparator)(const T& lhs, const T& rhs)) override;
 
     /**
      * Returns an Iterator to the list, pointing before the first element.
@@ -317,7 +313,7 @@ public:
      *
      * @return An iterator to the list.
      */
-    Iterator GetIterator(void);
+    Iterator GetIterator();
 
     /**
      * Returns a const iterator to the list, pointing before the first
@@ -327,7 +323,7 @@ public:
      *
      * @return A const iterator to the list.
      */
-    ConstIterator<Iterator> GetConstIterator(void) const;
+    ConstIterator<Iterator> GetConstIterator() const;
 
     /**
      * Assignment operator. This list removes all items and then creates
@@ -411,8 +407,8 @@ private:
  * SingleLinkedList<T, L>::Iterator::Iterator
  */
 template<class T, class L>
-SingleLinkedList<T, L>::Iterator::Iterator(void) : next(NULL)
-                                                 , prev(NULL) {
+SingleLinkedList<T, L>::Iterator::Iterator() : next(NULL)
+                                             , prev(NULL) {
     // intentionally empty
 }
 
@@ -444,7 +440,7 @@ SingleLinkedList<T, L>::Iterator::Iterator(const typename SingleLinkedList<T, Lp
  * SingleLinkedList<T, L>::Iterator::~Iterator
  */
 template<class T, class L>
-SingleLinkedList<T, L>::Iterator::~Iterator(void) {
+SingleLinkedList<T, L>::Iterator::~Iterator() {
     // intentionally empty
 }
 
@@ -453,7 +449,7 @@ SingleLinkedList<T, L>::Iterator::~Iterator(void) {
  * SingleLinkedList<T, L>::Iterator::HasNext
  */
 template<class T, class L>
-bool SingleLinkedList<T, L>::Iterator::HasNext(void) const {
+bool SingleLinkedList<T, L>::Iterator::HasNext() const {
     return (this->next != NULL);
 }
 
@@ -462,7 +458,7 @@ bool SingleLinkedList<T, L>::Iterator::HasNext(void) const {
  * SingleLinkedList<T, L>::Iterator::HasNext
  */
 template<class T, class L>
-T& SingleLinkedList<T, L>::Iterator::Next(void) {
+T& SingleLinkedList<T, L>::Iterator::Next() {
     this->prev = this->next;
     if (!this->next) {
         throw IllegalStateException("No next element.", __FILE__, __LINE__);
@@ -511,9 +507,9 @@ SingleLinkedList<T, L>::Iterator::Iterator(SingleLinkedList<T, L>& parent) : nex
  * SingleLinkedList<T, L>::SingleLinkedList
  */
 template<class T, class L>
-SingleLinkedList<T, L>::SingleLinkedList(void) : OrderedCollection<T, L>()
-                                               , first(NULL)
-                                               , last(NULL) {
+SingleLinkedList<T, L>::SingleLinkedList() : OrderedCollection<T, L>()
+                                           , first(NULL)
+                                           , last(NULL) {
     // intentionally empty
 }
 
@@ -547,7 +543,7 @@ SingleLinkedList<T, L>::SingleLinkedList(const SingleLinkedList<T, Lp>& rhs)
  * SingleLinkedList<T, L>::~SingleLinkedList
  */
 template<class T, class L>
-SingleLinkedList<T, L>::~SingleLinkedList(void) {
+SingleLinkedList<T, L>::~SingleLinkedList() {
     this->Clear();
 }
 
@@ -574,7 +570,7 @@ void SingleLinkedList<T, L>::Append(const T& item) {
  * SingleLinkedList<T, L>::Clear
  */
 template<class T, class L>
-void SingleLinkedList<T, L>::Clear(void) {
+void SingleLinkedList<T, L>::Clear() {
     this->Lock();
     while (first) {
         last = first->next;
@@ -608,7 +604,7 @@ bool SingleLinkedList<T, L>::Contains(const T& item) const {
  * SingleLinkedList<T, L>::Count
  */
 template<class T, class L>
-SIZE_T SingleLinkedList<T, L>::Count(void) const {
+SIZE_T SingleLinkedList<T, L>::Count() const {
     unsigned int c = 0;
     this->Lock();
     Item* i = this->first;
@@ -663,7 +659,7 @@ T* SingleLinkedList<T, L>::Find(const T& element) {
  * SingleLinkedList<T, L>::First
  */
 template<class T, class L>
-const T& SingleLinkedList<T, L>::First(void) const {
+const T& SingleLinkedList<T, L>::First() const {
     this->Lock();
     if (this->first == NULL) {
         this->Unlock();
@@ -679,7 +675,7 @@ const T& SingleLinkedList<T, L>::First(void) const {
  * SingleLinkedList<T, L>::First
  */
 template<class T, class L>
-T& SingleLinkedList<T, L>::First(void) {
+T& SingleLinkedList<T, L>::First() {
     this->Lock();
     if (this->first == NULL) {
         this->Unlock();
@@ -695,7 +691,7 @@ T& SingleLinkedList<T, L>::First(void) {
  * SingleLinkedList<T, L>::Last
  */
 template<class T, class L>
-const T& SingleLinkedList<T, L>::Last(void) const {
+const T& SingleLinkedList<T, L>::Last() const {
     this->Lock();
     if (this->last == NULL) {
         this->Unlock();
@@ -711,7 +707,7 @@ const T& SingleLinkedList<T, L>::Last(void) const {
  * SingleLinkedList<T, L>::Last
  */
 template<class T, class L>
-T& SingleLinkedList<T, L>::Last(void) {
+T& SingleLinkedList<T, L>::Last() {
     this->Lock();
     if (this->last == NULL) {
         this->Unlock();
@@ -874,7 +870,7 @@ void SingleLinkedList<T, L>::Remove(typename SingleLinkedList<T, L>::Iterator& i
  * SingleLinkedList<T, L>::RemoveFirst
  */
 template<class T, class L>
-void SingleLinkedList<T, L>::RemoveFirst(void) {
+void SingleLinkedList<T, L>::RemoveFirst() {
     this->Lock();
     if (this->first) {
         Item* i = this->first;
@@ -891,7 +887,7 @@ void SingleLinkedList<T, L>::RemoveFirst(void) {
  * SingleLinkedList<T, L>::RemoveLast
  */
 template<class T, class L>
-void SingleLinkedList<T, L>::RemoveLast(void) {
+void SingleLinkedList<T, L>::RemoveLast() {
     this->Lock();
     if (this->last) {
         Item* newlast = NULL;
@@ -936,7 +932,7 @@ void SingleLinkedList<T, L>::Sort(int (*comparator)(const T& lhs, const T& rhs))
  * SingleLinkedList<T, L>::GetIterator
  */
 template<class T, class L>
-typename SingleLinkedList<T, L>::Iterator SingleLinkedList<T, L>::GetIterator(void) {
+typename SingleLinkedList<T, L>::Iterator SingleLinkedList<T, L>::GetIterator() {
     return Iterator(*this);
 }
 
@@ -945,7 +941,7 @@ typename SingleLinkedList<T, L>::Iterator SingleLinkedList<T, L>::GetIterator(vo
  * SingleLinkedList<T, L>::GetConstIterator
  */
 template<class T, class L>
-ConstIterator<typename SingleLinkedList<T, L>::Iterator> SingleLinkedList<T, L>::GetConstIterator(void) const {
+ConstIterator<typename SingleLinkedList<T, L>::Iterator> SingleLinkedList<T, L>::GetConstIterator() const {
     return ConstIterator<Iterator>(Iterator(*const_cast<SingleLinkedList<T, L>*>(this)));
 }
 
@@ -1211,4 +1207,3 @@ typename SingleLinkedList<T, L>::Item* SingleLinkedList<T, L>::mergeSortMerge(
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SINGLELINKEDLIST_H_INCLUDED */

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTFONT_H_INCLUDED
-#define VISLIB_ABSTRACTFONT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -20,8 +16,7 @@
 #include "vislib/assert.h"
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -78,7 +73,7 @@ public:
     };
 
     /** Dtor. */
-    virtual ~AbstractFont(void);
+    virtual ~AbstractFont();
 
     /**
      * Calculates the height of a text block in number of lines, when
@@ -196,7 +191,7 @@ public:
      * Deinitialises the object if required. Derived classes must call
      * 'Deinitialise' in EACH dtor.
      */
-    void Deinitialise(void);
+    void Deinitialise();
 
     /**
      * Draws a text at the specified position.
@@ -685,7 +680,7 @@ public:
      *
      * @return The default size of the font.
      */
-    inline float GetSize(void) const {
+    inline float GetSize() const {
         return this->size;
     }
 
@@ -695,7 +690,7 @@ public:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool Initialise(void);
+    bool Initialise();
 
     /**
      * Answer the flag 'flipY'. If 'flipY' is true, the direction of the
@@ -703,7 +698,7 @@ public:
      *
      * @return The flag 'flipY'
      */
-    inline bool IsFlipY(void) const {
+    inline bool IsFlipY() const {
         return this->flipY;
     }
 
@@ -714,7 +709,7 @@ public:
      * initialise the font object. You must not use an uninitialised
      * object.
      */
-    inline bool IsInitialised(void) const {
+    inline bool IsInitialised() const {
         return this->initialised;
     }
 
@@ -724,7 +719,7 @@ public:
      *
      * @return The height of a single line in logical units.
      */
-    inline float LineHeight(void) const {
+    inline float LineHeight() const {
         return this->LineHeight(this->size);
     }
 
@@ -855,7 +850,7 @@ public:
 
 protected:
     /** Ctor. */
-    AbstractFont(void);
+    AbstractFont();
 
     /**
      * Initialises the object. You must not call this method directly.
@@ -864,14 +859,14 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool initialise(void) = 0;
+    virtual bool initialise() = 0;
 
     /**
      * Deinitialises the object. You must not call this method directly.
      * Instead call 'Deinitialise'. Derived classes must call
      * 'Deinitialise' in EACH dtor.
      */
-    virtual void deinitialise(void) = 0;
+    virtual void deinitialise() = 0;
 
 private:
     /** flag whether or not this font is initialized. */
@@ -884,10 +879,8 @@ private:
     bool flipY;
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTFONT_H_INCLUDED */

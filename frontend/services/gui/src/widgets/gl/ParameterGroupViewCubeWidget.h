@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED
-#define MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED
 #pragma once
 
 
@@ -16,11 +14,10 @@
 #include "mmcore_gl/utility/RenderUtils.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
-typedef megamol::core::view::Camera3DController::DefaultView DefaultView_t;
-typedef megamol::core::view::Camera3DController::DefaultOrientation DefaultOrientation_t;
+typedef core::utility::DefaultView DefaultView_t;
+typedef core::utility::DefaultOrientation DefaultOrientation_t;
 
 
 /** ***********************************************************************
@@ -86,7 +83,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED
+} // namespace megamol::gui

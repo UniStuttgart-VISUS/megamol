@@ -15,9 +15,7 @@
 using namespace megamol::core;
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /**
  * Named colour
@@ -80,9 +78,7 @@ static NamedColour namedColours[] = {
     /* end of list guard */
     {NULL, 0x00000000}};
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::utility
 
 
 /*
@@ -277,7 +273,7 @@ bool utility::ColourParser::FromString(const vislib::StringA& str, unsigned int 
 /*
  * utility::ColourParser::ColourParser
  */
-utility::ColourParser::ColourParser(void) {
+utility::ColourParser::ColourParser() {
     throw vislib::UnsupportedOperationException("ColourParser::Ctor", __FILE__, __LINE__);
 }
 
@@ -288,7 +284,7 @@ utility::ColourParser::ColourParser(void) {
 #ifdef _WIN32
 #pragma warning(disable : 4722 4297)
 #endif
-utility::ColourParser::~ColourParser(void) {
+utility::ColourParser::~ColourParser() {
     throw vislib::UnsupportedOperationException("ColourParser::Dtor", __FILE__, __LINE__);
 }
 #ifdef _WIN32

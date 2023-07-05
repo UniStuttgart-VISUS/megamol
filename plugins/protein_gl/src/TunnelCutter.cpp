@@ -28,7 +28,7 @@ using namespace megamol::protein_calls;
 /*
  * TunnelCutter::TunnelCutter
  */
-TunnelCutter::TunnelCutter(void)
+TunnelCutter::TunnelCutter()
         : Module()
         , meshInSlot("dataIn", "Receives the input mesh")
         , cavityMeshInSlot("cavityMeshIn", "Receives teh input cavity mesh")
@@ -85,21 +85,21 @@ TunnelCutter::TunnelCutter(void)
 /*
  * TunnelCutter::~TunnelCutter
  */
-TunnelCutter::~TunnelCutter(void) {
+TunnelCutter::~TunnelCutter() {
     this->Release();
 }
 
 /*
  * TunnelCutter::create
  */
-bool TunnelCutter::create(void) {
+bool TunnelCutter::create() {
     return true;
 }
 
 /*
  * TunnelCutter::release
  */
-void TunnelCutter::release(void) {}
+void TunnelCutter::release() {}
 
 /*
  * TunnelCutter::getData

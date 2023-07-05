@@ -12,8 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ADIOStoTable : public core::Module {
 public:
@@ -22,7 +21,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ADIOStoTable";
     }
 
@@ -31,7 +30,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts ADIOS data to table data";
     }
 
@@ -40,19 +39,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ADIOStoTable(void);
+    ADIOStoTable();
 
     /** Dtor. */
-    virtual ~ADIOStoTable(void);
+    ~ADIOStoTable() override;
 
 protected:
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
 
     core::CallerSlot _getDataSlot;
     core::CalleeSlot _deployTableSlot;
@@ -69,5 +68,4 @@ private:
     std::vector<datatools::table::TableDataCall::ColumnInfo> _colinfo;
 };
 
-} // namespace adios
-} // namespace megamol
+} // namespace megamol::adios

@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEJOIN_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEJOIN_H_INCLUDED
+#pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -17,9 +16,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * This module joins two tables by copying the values together into one matrix
@@ -33,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return ModuleName.c_str();
     }
 
@@ -42,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Joins two tables (union of columns)";
     }
 
@@ -51,19 +48,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableJoin(void);
+    TableJoin();
 
     /**
      * Finalises an instance.
      */
-    virtual ~TableJoin(void);
+    ~TableJoin() override;
 
 protected:
     /**
@@ -71,12 +68,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** data callback */
@@ -119,8 +116,4 @@ private:
     std::vector<float> data;
 }; /* end class TableJoin */
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif // end ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEJOIN_H_INCLUDED
+} // namespace megamol::datatools::table

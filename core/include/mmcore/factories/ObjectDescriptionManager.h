@@ -14,12 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace {
-bool strEqualIgnoreCase(const std::string& a, const std::string& b) {
-    return std::equal(a.begin(), a.end(), b.begin(), b.end(),
-        [](const char& a, const char& b) { return std::tolower(a) == std::tolower(b); });
-}
-} // namespace
+#include "mmcore/utility/String.h"
 
 namespace megamol::core::factories {
 
@@ -156,9 +151,10 @@ void ObjectDescriptionManager<T>::Register(description_ptr_type objDesc) {
 template<class T>
 void ObjectDescriptionManager<T>::Unregister(const char* classname) {
     std::string name(classname);
-    descriptions_.erase(
-        std::remove_if(descriptions_.begin(), descriptions_.end(),
-            [&name](const description_ptr_type& d) { return strEqualIgnoreCase(name, d->ClassName()); }),
+    descriptions_.erase(std::remove_if(descriptions_.begin(), descriptions_.end(),
+                            [&name](const description_ptr_type& d) {
+                                return utility::string::EqualAsciiCaseInsensitive(name, d->ClassName());
+                            }),
         descriptions_.end());
 }
 
@@ -185,7 +181,7 @@ template<class T>
 typename ObjectDescriptionManager<T>::description_ptr_type ObjectDescriptionManager<T>::Find(
     const char* classname) const {
     for (auto& desc : descriptions_) {
-        if (strEqualIgnoreCase(std::string(classname), std::string(desc->ClassName()))) {
+        if (utility::string::EqualAsciiCaseInsensitive(std::string(classname), std::string(desc->ClassName()))) {
             return desc;
         }
     }

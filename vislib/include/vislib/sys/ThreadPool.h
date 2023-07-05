@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_THREADPOOL_H_INCLUDED
-#define VISLIB_THREADPOOL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -23,8 +19,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -47,17 +42,17 @@ class ThreadPool {
 
 public:
     /** Ctor. */
-    ThreadPool(void);
+    ThreadPool();
 
     /** Dtor. */
-    ~ThreadPool(void);
+    ~ThreadPool();
 
     /**
      * Remove all pending user work items from the queue.
      *
      * @return The number of items actually removed.
      */
-    SIZE_T AbortPendingUserWorkItems(void);
+    SIZE_T AbortPendingUserWorkItems();
 
     /**
      * Add a new ThreadPoolListener to be informed about user work items
@@ -74,28 +69,28 @@ public:
      *
      * @return The number of threads currently working.
      */
-    SIZE_T GetActiveThreads(void) const;
+    SIZE_T GetActiveThreads() const;
 
     /**
      * Answer the number of threads currently idling.
      *
      * @return The number of threads currently idling.
      */
-    SIZE_T GetAvailableThreads(void) const;
+    SIZE_T GetAvailableThreads() const;
 
     /**
      * Answer the total number of threads available in the pool.
      *
      * @return The total number of threads in the pool.
      */
-    SIZE_T GetTotalThreads(void) const;
+    SIZE_T GetTotalThreads() const;
 
     /**
      * Answer the number of work items which are currently in the queue.
      *
      * @return The number of work items currently in the queue.
      */
-    SIZE_T CountUserWorkItems(void) const;
+    SIZE_T CountUserWorkItems() const;
 
     /**
      * Queue a new work item for execution in a pool thread.
@@ -201,10 +196,10 @@ private:
 
     public:
         /** Ctor. */
-        Worker(void);
+        Worker();
 
         /** Dtor. */
-        virtual ~Worker(void);
+        ~Worker() override;
 
         /**
          * Perform the work of a thread.
@@ -216,7 +211,7 @@ private:
          *
          * @return 0, always.
          */
-        virtual DWORD Run(void* pool);
+        DWORD Run(void* pool) override;
 
     private:
         /** The pool to get the work items from. */
@@ -345,10 +340,8 @@ private:
     Semaphore semBlockWorker;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_THREADPOOL_H_INCLUDED */

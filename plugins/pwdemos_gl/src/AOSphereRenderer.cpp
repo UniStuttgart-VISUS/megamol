@@ -41,12 +41,11 @@
 
 using megamol::core::utility::log::Log;
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 /*
  * AOSphereRenderer::AOSphereRenderer
  */
-AOSphereRenderer::AOSphereRenderer(void)
+AOSphereRenderer::AOSphereRenderer()
         : megamol::mmstd_gl::Renderer3DModuleGL()
         , sphereShaderAOMainAxes()
         , sphereShaderAONormals()
@@ -137,7 +136,7 @@ AOSphereRenderer::AOSphereRenderer(void)
 /*
  * AOSphereRenderer::~AOSphereRenderer
  */
-AOSphereRenderer::~AOSphereRenderer(void) {
+AOSphereRenderer::~AOSphereRenderer() {
     this->Release();
 }
 
@@ -145,7 +144,7 @@ AOSphereRenderer::~AOSphereRenderer(void) {
 /*
  * AOSphereRenderer::create
  */
-bool AOSphereRenderer::create(void) {
+bool AOSphereRenderer::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isExtAvailable("GL_ARB_multitexture") || !ogl_ctx.isExtAvailable("GL_EXT_framebuffer_object") ||
         !ogl_ctx.isVersionGEQ(2, 0)) {
@@ -234,7 +233,7 @@ bool AOSphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 /*
  * AOSphereRenderer::release
  */
-void AOSphereRenderer::release(void) {
+void AOSphereRenderer::release() {
     for (unsigned int i = 0; i < 4; i++) {
         this->sphereShaderAOMainAxes[i].reset();
         this->sphereShaderAONormals[i].reset();
@@ -1508,5 +1507,4 @@ void AOSphereRenderer::createVolumeCPU(protein_calls::MolecularDataCall& mol) {
     delete[] vol;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

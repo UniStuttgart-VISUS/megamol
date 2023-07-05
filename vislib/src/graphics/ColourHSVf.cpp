@@ -12,7 +12,7 @@
 /*
  * vislib::graphics::ColourHSVf::ColourHSVf
  */
-vislib::graphics::ColourHSVf::ColourHSVf(void) {
+vislib::graphics::ColourHSVf::ColourHSVf() {
     this->comp[0] = 0;
     this->comp[1] = 0;
     this->comp[2] = 0;
@@ -70,7 +70,7 @@ vislib::graphics::ColourHSVf::ColourHSVf(const vislib::graphics::ColourRGBAu8& s
 /*
  * vislib::graphics::ColourHSVf::~ColourHSVf
  */
-vislib::graphics::ColourHSVf::~ColourHSVf(void) {
+vislib::graphics::ColourHSVf::~ColourHSVf() {
     // Intentionally empty
 }
 
@@ -88,7 +88,7 @@ bool vislib::graphics::ColourHSVf::operator==(const vislib::graphics::ColourHSVf
 /*
  * vislib::graphics::ColourHSVf::operator ColourRGBAu8
  */
-vislib::graphics::ColourHSVf::operator vislib::graphics::ColourRGBAu8(void) const {
+vislib::graphics::ColourHSVf::operator vislib::graphics::ColourRGBAu8() const {
     unsigned int h = static_cast<unsigned int>(std::floor(comp[0] / 60.0f)) % 6u;
     float f = comp[0] / 60.0f - static_cast<float>(h);
 

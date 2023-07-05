@@ -14,7 +14,7 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 megamol::compositing_gl::DepthDarkening::DepthDarkening()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , outputTexSlot_("OutputTexture", "Gives access to the resulting output texture")
         , inputColorSlot_("ColorTexture", "Connects the color render target texture")
         , inputDepthSlot_("DepthTexture", "Connects the depth render target texture")
@@ -215,7 +215,7 @@ void megamol::compositing_gl::DepthDarkening::fitTextures(std::shared_ptr<glowl:
     }
 }
 
-void megamol::compositing_gl::DepthDarkening::recalcKernel(void) {
+void megamol::compositing_gl::DepthDarkening::recalcKernel() {
     auto radius = kernelRadiusParam_.Param<core::param::IntParam>()->Value();
     auto length = 2 * radius - 1;
     std::vector<float> kernelVec(length, 0.0f);

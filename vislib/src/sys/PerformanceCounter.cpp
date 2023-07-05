@@ -58,7 +58,7 @@ UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 /*
  * vislib::sys::PerformanceCounter::QueryFrequency
  */
-UINT64 vislib::sys::PerformanceCounter::QueryFrequency(void) {
+UINT64 vislib::sys::PerformanceCounter::QueryFrequency() {
 #ifdef _WIN32
     LARGE_INTEGER timerFreq;
 

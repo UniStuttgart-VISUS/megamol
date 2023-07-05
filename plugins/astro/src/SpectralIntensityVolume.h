@@ -15,26 +15,25 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 class SpectralIntensityVolume : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SpectralIntensityVolume";
     }
 
-    static const char* Description(void) {
+    static const char* Description() {
         return "Creates of volume capturing spectral intensity.";
     }
 
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     SpectralIntensityVolume();
 
-    virtual ~SpectralIntensityVolume();
+    ~SpectralIntensityVolume() override;
 
 protected:
     bool create() override;
@@ -150,5 +149,4 @@ private:
     int sz = 0;
 }; // end class SpectralIntensityVolume
 
-} // end namespace astro
-} // end namespace megamol
+} // namespace megamol::astro

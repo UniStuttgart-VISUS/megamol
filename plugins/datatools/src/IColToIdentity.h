@@ -2,31 +2,30 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColToIdentity : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IColToIdentity";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Copies the ICol stream into the Identity stream of MPDC";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    IColToIdentity(void);
+    IColToIdentity();
 
     /** Dtor */
-    virtual ~IColToIdentity(void);
+    ~IColToIdentity() override;
 
 protected:
     /**
@@ -39,11 +38,10 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     std::vector<char> ids;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

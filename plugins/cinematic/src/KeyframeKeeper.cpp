@@ -32,7 +32,7 @@ using namespace vislib;
 using namespace vislib::math;
 
 
-KeyframeKeeper::KeyframeKeeper(void)
+KeyframeKeeper::KeyframeKeeper()
         : core::Module()
         , keyframeCallSlot("keyframeData", "holds keyframe data")
         , applyKeyframeParam("applyKeyframe", "Apply current settings to selected/new keyframe.")
@@ -206,19 +206,19 @@ KeyframeKeeper::KeyframeKeeper(void)
 }
 
 
-KeyframeKeeper::~KeyframeKeeper(void) {
+KeyframeKeeper::~KeyframeKeeper() {
 
     this->Release();
 }
 
 
-bool KeyframeKeeper::create(void) {
+bool KeyframeKeeper::create() {
 
     return true;
 }
 
 
-void KeyframeKeeper::release(void) {}
+void KeyframeKeeper::release() {}
 
 
 bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
@@ -750,7 +750,7 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
 }
 
 
-bool KeyframeKeeper::undoAction(void) {
+bool KeyframeKeeper::undoAction() {
 
     bool retVal = false;
 
@@ -804,7 +804,7 @@ bool KeyframeKeeper::undoAction(void) {
 }
 
 
-bool KeyframeKeeper::redoAction(void) {
+bool KeyframeKeeper::redoAction() {
 
     bool retVal = false;
 

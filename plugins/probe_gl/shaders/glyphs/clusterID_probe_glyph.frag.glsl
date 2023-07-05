@@ -26,7 +26,7 @@ layout(location = 4) out vec4 interactionData_out;
 vec3 projectOntoPlane(vec3 v, vec3 n)
 {
     return ( v - (( dot(v,n) / length(n) ) * n) );
-};
+}
 
 void main() {
 

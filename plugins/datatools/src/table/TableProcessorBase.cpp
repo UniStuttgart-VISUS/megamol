@@ -15,7 +15,7 @@
 /*
  * megamol::datatools::table::TableProcessorBase::TableProcessorBase
  */
-megamol::datatools::table::TableProcessorBase::TableProcessorBase(void)
+megamol::datatools::table::TableProcessorBase::TableProcessorBase()
         : frameID((std::numeric_limits<unsigned int>::max)())
         , inputHash(0)
         , localHash(0)

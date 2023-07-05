@@ -21,7 +21,7 @@ TernaryParam::TernaryParam(const vislib::math::Ternary& initVal) : AbstractParam
 /*
  * TernaryParam::~TernaryParam
  */
-TernaryParam::~TernaryParam(void) {
+TernaryParam::~TernaryParam() {
     // intentionally empty
 }
 
@@ -40,7 +40,7 @@ bool TernaryParam::ParseValue(std::string const& v) {
 void TernaryParam::SetValue(vislib::math::Ternary v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
-        this->indicateChange();
+        this->indicateParamChange();
         if (setDirty)
             this->setDirty();
     }
@@ -50,6 +50,6 @@ void TernaryParam::SetValue(vislib::math::Ternary v, bool setDirty) {
 /*
  * TernaryParam::ValueString
  */
-std::string TernaryParam::ValueString(void) const {
+std::string TernaryParam::ValueString() const {
     return this->val.ToStringA().PeekBuffer();
 }

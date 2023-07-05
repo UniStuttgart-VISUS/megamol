@@ -17,7 +17,7 @@ const unsigned int UncertaintyDataCall::CallForGetData = 0;
 /*
  * UncertaintyDataCall::UncertaintyDataCall
  */
-UncertaintyDataCall::UncertaintyDataCall(void)
+UncertaintyDataCall::UncertaintyDataCall()
         : megamol::core::Call()
         , sortedSecStructAssignment(nullptr)
         , secStructUncertainty(nullptr)
@@ -39,7 +39,7 @@ UncertaintyDataCall::UncertaintyDataCall(void)
 /*
  * UncertaintyDataCall::~UncertaintyDataCall
  */
-UncertaintyDataCall::~UncertaintyDataCall(void) {
+UncertaintyDataCall::~UncertaintyDataCall() {
     this->pdbIndex = nullptr;
     this->chainID = nullptr;
     this->residueFlag = nullptr;

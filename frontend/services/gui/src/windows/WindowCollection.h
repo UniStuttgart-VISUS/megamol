@@ -5,24 +5,21 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
-#define MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
 #pragma once
 
-
-#include "AbstractWindow.h"
-#include "FrontendResource.h"
-#include "imgui.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/Input.h"
 #include <functional>
 #include <map>
 #include <string>
 #include <vector>
 
+#include <imgui.h>
 
-namespace megamol {
-namespace gui {
+#include "AbstractWindow.h"
+#include "FrontendResource.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Input.h"
+
+namespace megamol::gui {
 
 /** ************************************************************************
  * This class hold the GUI windows and controls the placement and appearance
@@ -86,7 +83,4 @@ private:
         ImGuiID initial_module_uid = GUI_INVALID_ID);
 };
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
+} // namespace megamol::gui

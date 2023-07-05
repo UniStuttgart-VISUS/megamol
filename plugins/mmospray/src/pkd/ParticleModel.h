@@ -16,8 +16,7 @@
 #include "rkcommon/math/vec.h"
 
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 /*! complete input data for a particle model */
 struct ParticleModel {
@@ -88,5 +87,4 @@ struct ParticleModel {
     float radius; //!< radius to use (0 if not specified)
 };
 
-} /* end namespace ospray */
-} /* end namespace megamol */
+} // namespace megamol::ospray

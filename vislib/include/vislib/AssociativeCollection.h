@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ASSOCIATIVECOLLECTION_H_INCLUDED
-#define VISLIB_ASSOCIATIVECOLLECTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -29,7 +25,7 @@ template<class K, class V>
 class AssociativeCollection {
 public:
     /** Dtor. */
-    virtual ~AssociativeCollection(void) {}
+    virtual ~AssociativeCollection() {}
 
     /**
      * Sets the value for the key 'key' to 'value'. If there was no entry
@@ -43,7 +39,7 @@ public:
     /**
      * Clears the whole map by removing all entries.
      */
-    virtual void Clear(void) = 0;
+    virtual void Clear() = 0;
 
     /**
      * Checks whether a given key is present in the map.
@@ -60,7 +56,7 @@ public:
      *
      * @return The number of entries in the map.
      */
-    virtual SIZE_T Count(void) const = 0;
+    virtual SIZE_T Count() const = 0;
 
     /**
      * Finds all keys which are associated to a given value. The order of
@@ -99,7 +95,7 @@ public:
      *
      * @return 'true' if the map is empty, 'false' otherwise.
      */
-    virtual bool IsEmpty(void) const = 0;
+    virtual bool IsEmpty() const = 0;
 
     /**
      * Removes the given key from the map.
@@ -128,7 +124,7 @@ public:
 
 protected:
     /** Ctor. */
-    AssociativeCollection(void) {}
+    AssociativeCollection() {}
 };
 
 } /* end namespace vislib */
@@ -136,4 +132,3 @@ protected:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ASSOCIATIVECOLLECTION_H_INCLUDED */

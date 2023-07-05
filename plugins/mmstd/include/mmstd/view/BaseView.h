@@ -16,7 +16,7 @@ template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACT
 class BaseView : public ABSTRACTVIEW_TYPE {
 public:
     explicit BaseView(AbstractView::ViewDimension dim);
-    ~BaseView() = default;
+    ~BaseView() override = default;
 
     void beforeRender(double time, double instanceTime);
 
@@ -31,7 +31,7 @@ public:
         return true;
     }
 
-    virtual bool GetExtents(Call& call) override;
+    bool GetExtents(Call& call) override;
 
     /**
      * Callback requesting a rendering of this view
@@ -40,19 +40,19 @@ public:
      *
      * @return The return value
      */
-    virtual bool OnRenderView(Call& call) override;
+    bool OnRenderView(Call& call) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
      * default values.
      */
-    void ResetView();
+    void ResetView() override;
 
 protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() {
+    void release() override {
         _fbo.reset();
     }
 
@@ -62,17 +62,17 @@ protected:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) override;
+    void Resize(unsigned int width, unsigned int height) override;
 
-    virtual bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
+    bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
 
-    virtual bool OnChar(unsigned int codePoint) override;
+    bool OnChar(unsigned int codePoint) override;
 
-    virtual bool OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) override;
+    bool OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) override;
 
-    virtual bool OnMouseMove(double x, double y) override;
+    bool OnMouseMove(double x, double y) override;
 
-    virtual bool OnMouseScroll(double dx, double dy) override;
+    bool OnMouseScroll(double dx, double dy) override;
 
 protected:
     std::shared_ptr<typename VIEWCALL_TYPE::FBO_TYPE> _fbo;
@@ -130,6 +130,13 @@ inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::Get
         return false;
     }
     cr->SetCamera(this->_camera);
+
+    // get time from incoming call
+    double time = crv->Time();
+    if (time < 0.0f)
+        time = this->DefaultTime(crv->InstanceTime());
+    double instanceTime = crv->InstanceTime();
+    cr->SetTime(time);
 
     if (!(*cr)(AbstractCallRender::FnGetExtents)) {
         return false;

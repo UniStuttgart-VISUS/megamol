@@ -4,8 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef PLACE_PROBES_H_INCLUDED
-#define PLACE_PROBES_H_INCLUDED
+#pragma once
 
 #include "mesh/MeshCalls.h"
 #include "mmadios/CallADIOSData.h"
@@ -121,5 +120,3 @@ private:
 
 } // namespace probe
 } // namespace megamol
-
-#endif //!PLACE_PROBES_H_INCLUDED

@@ -13,7 +13,7 @@ megamol::mesh::WavefrontObjLoader::WavefrontObjLoader()
 
 megamol::mesh::WavefrontObjLoader::~WavefrontObjLoader() {}
 
-bool megamol::mesh::WavefrontObjLoader::create(void) {
+bool megamol::mesh::WavefrontObjLoader::create() {
     AbstractMeshDataSource::create();
     return true;
 }

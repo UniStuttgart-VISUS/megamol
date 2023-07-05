@@ -17,7 +17,7 @@ using namespace megamol;
 using namespace megamol::datatools;
 
 
-io::MMGDDDataSource::MMGDDDataSource(void)
+io::MMGDDDataSource::MMGDDDataSource()
         : core::view::AnimDataModule()
         , filename("filename", "The path to the MMPLD file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -37,16 +37,16 @@ io::MMGDDDataSource::MMGDDDataSource(void)
     this->initFrameCache(1);
 }
 
-io::MMGDDDataSource::~MMGDDDataSource(void) {
+io::MMGDDDataSource::~MMGDDDataSource() {
     Release();
 }
 
-core::view::AnimDataModule::Frame* io::MMGDDDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* io::MMGDDDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<io::MMGDDDataSource*>(this));
     return f;
 }
 
-bool io::MMGDDDataSource::create(void) {
+bool io::MMGDDDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -69,7 +69,7 @@ void io::MMGDDDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, un
     }
 }
 
-void io::MMGDDDataSource::release(void) {
+void io::MMGDDDataSource::release() {
     this->resetFrameCache();
     if (file != nullptr) {
         vislib::sys::File* f = file;

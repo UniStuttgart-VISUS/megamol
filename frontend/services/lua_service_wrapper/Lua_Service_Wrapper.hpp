@@ -1,22 +1,19 @@
-/*
- * Lua_Service_Wrapper.hpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
 #include "AbstractFrontendService.hpp"
-
+#include "CommonTypes.h"
+#include "LuaCallbacksCollection.h"
+#include "LuaRemoteConnectionsBroker.h"
 #include "ScriptPaths.h"
-
 #include "mmcore/LuaAPI.h"
 
-#include "LuaCallbacksCollection.h"
-
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 // the Lua Service Wrapper wraps the LuaAPI for use as a frontend service
 // the main problem this wrapper addresses is the requirement that Lua scripts
@@ -43,7 +40,7 @@ public:
         std::string host_address;
         megamol::core::LuaAPI* lua_api_ptr =
             nullptr; // lua api object that will be used/called by the service wrapper only one level deep
-        bool retry_socket_port = false;
+        int retry_socket_port = 0;
         bool show_version_notification = true;
     };
 
@@ -54,7 +51,7 @@ public:
 
     // constructor should not take arguments, actual object initialization deferred until init()
     Lua_Service_Wrapper();
-    ~Lua_Service_Wrapper();
+    ~Lua_Service_Wrapper() override;
     // your service will be constructed and destructed, but not copy-constructed or move-constructed
     // so no need to worry about copy or move constructors.
 
@@ -84,8 +81,7 @@ private:
 
     int m_service_recursion_depth = 0;
 
-    // auto-deleted opaque ZMQ networking object from LuaHostService.h
-    std::unique_ptr<void, std::function<void(void*)>> m_network_host_pimpl;
+    std::unique_ptr<megamol::frontend::LuaRemoteConnectionsBroker> m_network_host;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
@@ -94,7 +90,7 @@ private:
     std::list<megamol::frontend_resources::LuaCallbacksCollection> m_callbacks;
 
     megamol::frontend_resources::ScriptPaths m_scriptpath_resource;
-    std::function<std::tuple<bool, std::string>(std::string const&)> m_executeLuaScript_resource;
+    frontend_resources::common_types::lua_func_type m_executeLuaScript_resource;
     std::function<void(std::string const&)> m_setScriptPath_resource;
     std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)> m_registerLuaCallbacks_resource;
 
@@ -102,5 +98,4 @@ private:
     void fill_graph_manipulation_callbacks(void* callbacks_collection_ptr);
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

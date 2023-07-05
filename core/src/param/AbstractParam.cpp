@@ -22,7 +22,7 @@ AbstractParam::~AbstractParam() {
 /*
  * AbstractParam::AbstractParam
  */
-AbstractParam::AbstractParam() : slot(nullptr), hash(0), has_changed(false) {
+AbstractParam::AbstractParam() : slot(nullptr), hash(0) {
     // intentionally empty
 }
 

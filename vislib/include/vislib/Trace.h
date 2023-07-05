@@ -5,11 +5,7 @@
  * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_TRACE_H_INCLUDED
-#define VISLIB_TRACE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -36,7 +32,7 @@ public:
      *
      * @return A reference to the only instance of this class.
      */
-    static Trace& GetInstance(void);
+    static Trace& GetInstance();
 
     /**
      * Overrides the currently used 'main-and-most-of-the-time-only'
@@ -106,7 +102,7 @@ public:
     static const UINT LEVEL_WARN;
 
     /** Dtor. */
-    ~Trace(void);
+    ~Trace();
 
     /**
      * Enables the output of the tracer messages to the application or
@@ -140,7 +136,7 @@ public:
      *
      * @return The current tracing level.
      */
-    inline UINT GetLevel(void) const {
+    inline UINT GetLevel() const {
         return this->level;
     }
 
@@ -187,7 +183,7 @@ public: // TODO: Not good! Think of better solution!
     /**
      * Ctor.
      */
-    Trace(void);
+    Trace();
 
 private: // TODO: Not good! Think of better solution!
     /**
@@ -261,4 +257,3 @@ private: // TODO: Not good! Think of better solution!
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_TRACE_H_INCLUDED */

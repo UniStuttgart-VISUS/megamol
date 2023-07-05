@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MOLDYN_GLYPHRENDERER_H_INCLUDED
-#define MOLDYN_GLYPHRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/Call.h"
@@ -21,9 +17,7 @@
 #include "glowl/glowl.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::moldyn_gl::rendering {
 
 
 /**
@@ -36,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "GlyphRenderer";
     }
 
@@ -45,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for data with quaternion orientation and 3 radii";
     }
 
@@ -54,7 +48,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -66,10 +60,10 @@ public:
 #endif
 
     /** Ctor. */
-    GlyphRenderer(void);
+    GlyphRenderer();
 
     /** Dtor. */
-    virtual ~GlyphRenderer(void);
+    ~GlyphRenderer() override;
 
 protected:
     /**
@@ -77,7 +71,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -93,7 +87,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     bool validateData(geocalls::EllipsoidalParticleDataCall* edc);
 
@@ -163,8 +157,4 @@ private:
     GLuint grey_tf_;
 };
 
-} // namespace rendering
-} // namespace moldyn_gl
-} // namespace megamol
-
-#endif /* MOLDYN_GLYPHRENDERER_H_INCLUDED */
+} // namespace megamol::moldyn_gl::rendering

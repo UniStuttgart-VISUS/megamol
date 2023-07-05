@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_DIMENSION_H_INCLUDED
-#define VISLIB_DIMENSION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,8 +13,7 @@
 #include "vislib/math/AbstractDimension.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * This class represents extents in D-dimensional space.
@@ -30,7 +25,7 @@ public:
     /**
      * Create a zero sized dimension.
      */
-    Dimension(void);
+    Dimension();
 
     /**
      * Create a dimension using the data from the 'dimension' array.
@@ -63,7 +58,7 @@ public:
     Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs);
 
     /** Dtor. */
-    ~Dimension(void);
+    ~Dimension();
 
     /**
      * Assignment operator. This operator never creates an alias.
@@ -103,7 +98,7 @@ protected:
  * vislib::math::Dimension<T, D>::Dimension
  */
 template<class T, unsigned int D>
-Dimension<T, D>::Dimension(void) {
+Dimension<T, D>::Dimension() {
     for (unsigned int d = 0; d < D; d++) {
         this->dimension[d] = static_cast<T>(0);
     }
@@ -129,7 +124,7 @@ Dimension<T, D>::Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs) {
  * vislib::math::Dimension<T, D>::~Dimension
  */
 template<class T, unsigned int D>
-Dimension<T, D>::~Dimension(void) {}
+Dimension<T, D>::~Dimension() {}
 
 
 /**
@@ -142,7 +137,7 @@ class Dimension<T, 2> : public AbstractDimension<T, 2, T[2]> {
 
 public:
     /** Behaves like primary class template. */
-    Dimension(void);
+    Dimension();
 
     /** Behaves like primary class template. */
     inline Dimension(const T* dimension) {
@@ -171,7 +166,7 @@ public:
     Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Dimension(void);
+    ~Dimension();
 
     /** Behaves like primary class template. */
     inline Dimension& operator=(const Dimension& rhs) {
@@ -199,7 +194,7 @@ protected:
  * vislib::math::Dimension<T, 2>::Dimension
  */
 template<class T>
-Dimension<T, 2>::Dimension(void) {
+Dimension<T, 2>::Dimension() {
     for (unsigned int d = 0; d < D; d++) {
         this->dimension[d] = static_cast<T>(0);
     }
@@ -225,7 +220,7 @@ Dimension<T, 2>::Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs) {
  * vislib::math::Dimension<T, 2>::~Dimension
  */
 template<class T>
-Dimension<T, 2>::~Dimension(void) {}
+Dimension<T, 2>::~Dimension() {}
 
 
 /*
@@ -245,7 +240,7 @@ class Dimension<T, 3> : public AbstractDimension<T, 3, T[3]> {
 
 public:
     /** Behaves like primary class template. */
-    Dimension(void);
+    Dimension();
 
     /** Behaves like primary class template. */
     inline Dimension(const T* dimension) {
@@ -276,7 +271,7 @@ public:
     Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Dimension(void);
+    ~Dimension();
 
     /** Behaves like primary class template. */
     inline Dimension& operator=(const Dimension& rhs) {
@@ -304,7 +299,7 @@ protected:
  * vislib::math::Dimension<T, 3>::Dimension
  */
 template<class T>
-Dimension<T, 3>::Dimension(void) {
+Dimension<T, 3>::Dimension() {
     for (unsigned int d = 0; d < D; d++) {
         this->dimension[d] = static_cast<T>(0);
     }
@@ -330,7 +325,7 @@ Dimension<T, 3>::Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs) {
  * vislib::math::Dimension<T, 3>::~Dimension
  */
 template<class T>
-Dimension<T, 3>::~Dimension(void) {}
+Dimension<T, 3>::~Dimension() {}
 
 
 /*
@@ -339,10 +334,8 @@ Dimension<T, 3>::~Dimension(void) {}
 template<class T>
 const unsigned int Dimension<T, 3>::D = 3;
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_DIMENSION_H_INCLUDED */

@@ -4,11 +4,7 @@
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_REDUCEDSURFACESIMPLE_H_INCLUDED
-#define MEGAMOL_REDUCEDSURFACESIMPLE_H_INCLUDED
-#if (_MSC_VER > 1000)
 #pragma once
-#endif /* (_MSC_VER > 1000) */
 
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/math/Quaternion.h"
@@ -17,8 +13,7 @@
 #include <set>
 #include <vector>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Molecular Surface Renderer class.
@@ -382,7 +377,7 @@ public:
     ReducedSurfaceSimplified(megamol::protein_calls::MolecularDataCall* prot, float probeRad = 1.4f);
 
     /** dtor */
-    virtual ~ReducedSurfaceSimplified(void);
+    virtual ~ReducedSurfaceSimplified();
 
     /** Get probe radius */
     const float GetProbeRadius() const {
@@ -615,7 +610,4 @@ private:
     unsigned int countCutEdges;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_REDUCEDSURFACESIMPLE_H_INCLUDED */
+} // namespace megamol::protein

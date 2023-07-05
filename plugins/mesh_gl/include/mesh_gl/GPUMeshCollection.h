@@ -5,11 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef GPU_MESH_DATA_STORAGE_H_INCLUDED
-#define GPU_MESH_DATA_STORAGE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <algorithm>
 #include <iostream>
@@ -21,8 +17,7 @@
 
 #include "mesh/MeshDataAccessCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class GPUMeshCollection {
 public:
@@ -395,7 +390,4 @@ inline std::unordered_map<std::string, GPUMeshCollection::SubMeshData> const& GP
     return m_sub_mesh_data;
 }
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !GPU_MESH_DATA_STORAGE_H_INCLUDED
+} // namespace megamol::mesh_gl

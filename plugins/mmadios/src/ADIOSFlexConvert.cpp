@@ -12,8 +12,7 @@
 #include "mmcore/utility/log/Log.h"
 #include <numeric>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 ADIOSFlexConvert::ADIOSFlexConvert()
         : core::Module()
@@ -444,5 +443,4 @@ bool ADIOSFlexConvert::getExtentCallback(core::Call& call) {
     return true;
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

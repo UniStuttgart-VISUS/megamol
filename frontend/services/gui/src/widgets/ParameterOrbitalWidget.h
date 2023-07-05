@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_PARAMETERORBITALWIDGET_INCLUDED
-#define MEGAMOL_GUI_PARAMETERORBITALWIDGET_INCLUDED
 #pragma once
 
 
@@ -15,8 +13,7 @@
 #include "imGuIZMOquat.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -38,7 +35,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_PARAMETERORBITALWIDGET_INCLUDED
+} // namespace megamol::gui

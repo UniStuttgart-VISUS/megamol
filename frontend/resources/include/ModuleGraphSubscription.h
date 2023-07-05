@@ -13,8 +13,7 @@
 #include <mmcore/MegaMolGraphTypes.h>
 #include <mmcore/param/ParamSlot.h>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 static std::string MegaMolGraph_Req_Name = "MegaMolGraph";
 
@@ -76,6 +75,8 @@ public:
     std::function<bool(ParamSlotPtr const& /*param*/, std::string const& /*new_value*/)> ParameterChanged =
         [](auto const&, auto const&) { return true; };
 
+    std::function<bool(ParamSlotPtr const& /*param*/)> ParameterPresentationChanged = [](auto const&) { return true; };
+
     /**
      * Informs about renaming of a module.
      * The module has already been renamed successfully when the callback is executed.
@@ -130,5 +131,4 @@ struct MegaMolGraph_SubscriptionRegistry {
     }
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

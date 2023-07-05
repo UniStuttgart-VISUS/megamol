@@ -5,36 +5,33 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLEINSTANTIATOR_H_INCLUDED
-#define MEGAMOLCORE_PARTICLEINSTANTIATOR_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global colors of multi particle lists
  */
 class ParticleInstantiator : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleInstantiator";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "makes instances of particles by xyz repetition";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    ParticleInstantiator(void);
-    virtual ~ParticleInstantiator(void);
+    ParticleInstantiator();
+    ~ParticleInstantiator() override;
 
 protected:
-    bool InterfaceIsDirty(void);
+    bool InterfaceIsDirty();
     void InterfaceResetDirty();
 
     /**
@@ -47,11 +44,9 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(
-        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
-    virtual bool manipulateExtent(
-        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     megamol::core::param::ParamSlot numInstancesParam;
@@ -69,7 +64,4 @@ private:
     std::vector<bool> has_global_radius;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_PARTICLEINSTANTIATOR_H_INCLUDED */
+} // namespace megamol::datatools

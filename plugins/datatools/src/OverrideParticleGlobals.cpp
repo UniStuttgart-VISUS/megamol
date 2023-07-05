@@ -19,7 +19,7 @@ using namespace megamol;
 /*
  * datatools::OverrideParticleGlobals::OverrideParticleGlobals
  */
-datatools::OverrideParticleGlobals::OverrideParticleGlobals(void)
+datatools::OverrideParticleGlobals::OverrideParticleGlobals()
         : AbstractParticleManipulator("outData", "indata")
         , overrideAllListSlot("overrideAllLists", "Activates overriding the selected values for all particle lists")
         , overrideListSlot("list", "The particle list to override the values of")
@@ -63,7 +63,7 @@ datatools::OverrideParticleGlobals::OverrideParticleGlobals(void)
 /*
  * datatools::OverrideParticleGlobals::~OverrideParticleGlobals
  */
-datatools::OverrideParticleGlobals::~OverrideParticleGlobals(void) {
+datatools::OverrideParticleGlobals::~OverrideParticleGlobals() {
     this->Release();
 }
 

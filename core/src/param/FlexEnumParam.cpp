@@ -20,7 +20,7 @@ FlexEnumParam::FlexEnumParam(const std::string& initVal) : AbstractParam(), val(
 /*
  * FlexEnumParam::~FlexEnumParam
  */
-FlexEnumParam::~FlexEnumParam(void) {
+FlexEnumParam::~FlexEnumParam() {
     // intentionally empty
 }
 
@@ -28,9 +28,11 @@ FlexEnumParam::~FlexEnumParam(void) {
 /*
  * FlexEnumParam::ClearTypePairs
  */
-void megamol::core::param::FlexEnumParam::ClearValues(void) {
+void megamol::core::param::FlexEnumParam::ClearValues() {
     this->SetHash(this->GetHash() + 1);
     this->values.clear();
+
+    this->indicatePresentationChange();
 }
 
 
@@ -61,6 +63,8 @@ FlexEnumParam* FlexEnumParam::AddValue(const std::string& name) {
     if (iter == this->values.end()) {
         this->SetHash(this->GetHash() + 1);
         this->values.insert(name);
+
+        this->indicatePresentationChange();
     }
     return this;
 }
@@ -72,7 +76,7 @@ FlexEnumParam* FlexEnumParam::AddValue(const std::string& name) {
 void FlexEnumParam::SetValue(const std::string& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
-        this->indicateChange();
+        this->indicateParamChange();
         if (setDirty)
             this->setDirty();
     }
@@ -82,6 +86,6 @@ void FlexEnumParam::SetValue(const std::string& v, bool setDirty) {
 /*
  * FlexEnumParam::ValueString
  */
-std::string FlexEnumParam::ValueString(void) const {
+std::string FlexEnumParam::ValueString() const {
     return val;
 }

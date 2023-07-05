@@ -9,9 +9,7 @@
 #include "mmcore/Call.h"
 #include "mmstd/job/TickCall.h"
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 TickSwitch::TickSwitch()
         : incoming_slot("tick_slot", "Tick")
@@ -69,6 +67,4 @@ bool TickSwitch::TickCallback(core::Call& call) {
     return true;
 }
 
-} // namespace job
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::job

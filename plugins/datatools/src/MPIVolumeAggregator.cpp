@@ -17,7 +17,7 @@ using namespace megamol;
 /*
  * datatools::MPIVolumeAggregator::MPIVolumeAggregator
  */
-datatools::MPIVolumeAggregator::MPIVolumeAggregator(void)
+datatools::MPIVolumeAggregator::MPIVolumeAggregator()
         : AbstractVolumeManipulator("outData", "indata")
         , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
         , operatorSlot("operator", "the operator to apply to the volume when aggregating") {
@@ -38,7 +38,7 @@ datatools::MPIVolumeAggregator::MPIVolumeAggregator(void)
 /*
  * datatools::MPIVolumeAggregator::~MPIVolumeAggregator
  */
-datatools::MPIVolumeAggregator::~MPIVolumeAggregator(void) {
+datatools::MPIVolumeAggregator::~MPIVolumeAggregator() {
     this->Release();
 }
 

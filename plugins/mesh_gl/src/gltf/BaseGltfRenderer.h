@@ -5,21 +5,19 @@
  * All rights reserved.
  */
 
-#ifndef BASE_GLTF_RENDERER_H_INCLUDED
-#define BASE_GLTF_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CallerSlot.h"
 
 #include "mesh/MeshCalls.h"
 #include "mesh_gl/BaseMeshRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class BaseGltfRenderer : public BaseMeshRenderer {
 public:
     BaseGltfRenderer();
-    ~BaseGltfRenderer() = default;
+    ~BaseGltfRenderer() override = default;
 
 protected:
     void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
@@ -293,7 +291,4 @@ inline void BaseGltfRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DG
 }
 
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !BASE_GLTF_RENDERER_H_INCLUDED
+} // namespace megamol::mesh_gl

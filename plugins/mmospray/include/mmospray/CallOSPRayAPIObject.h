@@ -10,8 +10,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmospray/CallOSPRayStructure.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class CallOSPRayAPIObject : public core::Call {
 public:
@@ -23,17 +22,17 @@ public:
     class Unlocker {
     public:
         /** ctor. */
-        Unlocker(void) {
+        Unlocker() {
             // intentionally empty
         }
 
         /** dtor. */
-        virtual ~Unlocker(void) {
+        virtual ~Unlocker() {
             // intentionally empty
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) = 0;
+        virtual void Unlock() = 0;
     };
 
 
@@ -42,7 +41,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallOSPRayAPIObject";
     }
 
@@ -51,7 +50,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for an OSPRay API object";
     }
 
@@ -60,7 +59,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 3;
     }
 
@@ -89,7 +88,7 @@ public:
      *
      * @return The bounding box of the data set
      */
-    inline core::BoundingBoxes_2& AccessBoundingBoxes(void) {
+    inline core::BoundingBoxes_2& AccessBoundingBoxes() {
         return this->bboxs;
     }
 
@@ -98,7 +97,7 @@ public:
      *
      * @return The frame count.
      */
-    inline unsigned int FrameCount(void) const {
+    inline unsigned int FrameCount() const {
         return this->frameCnt;
     }
 
@@ -107,7 +106,7 @@ public:
      *
      * @return the frameID
      */
-    inline unsigned int FrameID(void) const {
+    inline unsigned int FrameID() const {
         return this->frameID;
     }
 
@@ -116,7 +115,7 @@ public:
      *
      * @return The bounding box of the data set
      */
-    inline const core::BoundingBoxes_2& GetBoundingBoxes(void) const {
+    inline const core::BoundingBoxes_2& GetBoundingBoxes() const {
         return this->bboxs;
     }
 
@@ -129,7 +128,7 @@ public:
      *
      * @return The flag if the frame is forced
      */
-    inline bool IsFrameForced(void) const {
+    inline bool IsFrameForced() const {
         return this->forceFrame;
     }
 
@@ -206,7 +205,7 @@ public:
      *
      * @return The unique hash number of the returned data
      */
-    inline SIZE_T DataHash(void) const {
+    inline SIZE_T DataHash() const {
         return this->datahash;
     }
 
@@ -215,7 +214,7 @@ public:
      *
      * @return The unlocker
      */
-    inline Unlocker* GetUnlocker(void) const {
+    inline Unlocker* GetUnlocker() const {
         return this->unlocker;
     }
 
@@ -252,7 +251,7 @@ public:
      * This must be called after the data is no longer used to avoid
      * deadlocks in the out-of-core streaming mechanism.
      */
-    inline void Unlock(void) {
+    inline void Unlock() {
         if (this->unlocker != NULL) {
             this->unlocker->Unlock();
             SAFE_DELETE(this->unlocker);
@@ -264,7 +263,7 @@ public:
      *
      * @return The data defined time stamp
      */
-    inline float GetTimeStamp(void) const {
+    inline float GetTimeStamp() const {
         return timeStamp;
     }
 
@@ -281,7 +280,7 @@ public:
     CallOSPRayAPIObject();
 
     /** Dtor. */
-    virtual ~CallOSPRayAPIObject(void);
+    ~CallOSPRayAPIObject() override;
 
     void setAPIObjects(std::vector<void*> api_obj);
     std::vector<void*> getAPIObjects();
@@ -322,5 +321,4 @@ private:
 };
 typedef core::factories::CallAutoDescription<CallOSPRayAPIObject> CallOSPRayAPIObjectDescription;
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

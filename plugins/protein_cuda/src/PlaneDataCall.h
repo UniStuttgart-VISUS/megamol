@@ -5,8 +5,7 @@
  * All rights reserved
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_PLANEDATACALL_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_PLANEDATACALL_H_INCLUDED
+#pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -131,5 +130,3 @@ typedef core::factories::CallAutoDescription<PlaneDataCall> PlaneDataCallDescrip
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif // #ifndef MMPROTEINCUDAPLUGIN_PLANEDATACALL_H_INCLUDED

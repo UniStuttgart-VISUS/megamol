@@ -8,8 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
+#pragma once
 
 #include "cuda_error_check.h"
 #include "cuda_runtime.h"
@@ -140,5 +139,3 @@ private:
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED

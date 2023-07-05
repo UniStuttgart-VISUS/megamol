@@ -383,7 +383,7 @@ ADDRINFOW* vislib::net::DNS::getAddrInfo(const wchar_t* hostNameOrAddress, const
 /*
  * vislib::net::DNS::~DNS
  */
-vislib::net::DNS::~DNS(void) {
+vislib::net::DNS::~DNS() {
     // Nothing to do.
 }
 
@@ -391,7 +391,7 @@ vislib::net::DNS::~DNS(void) {
 /*
  * vislib::net::DNS::DNS
  */
-vislib::net::DNS::DNS(void) {
+vislib::net::DNS::DNS() {
     // Nothing to do.
 }
 

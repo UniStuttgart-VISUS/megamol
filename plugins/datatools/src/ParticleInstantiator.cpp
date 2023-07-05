@@ -12,7 +12,7 @@
 using namespace megamol;
 
 
-datatools::ParticleInstantiator::ParticleInstantiator(void)
+datatools::ParticleInstantiator::ParticleInstantiator()
         : AbstractParticleManipulator("outData", "indata")
         , numInstancesParam("instances", "number of dataset replications in X, Y, Z direction")
         , instanceOffsetParam("instOffset", "offset per instance in X, Y, Z")
@@ -33,7 +33,7 @@ datatools::ParticleInstantiator::ParticleInstantiator(void)
     this->MakeSlotAvailable(&this->setFromBoundingboxParam);
 }
 
-datatools::ParticleInstantiator::~ParticleInstantiator(void) {
+datatools::ParticleInstantiator::~ParticleInstantiator() {
     this->Release();
 }
 

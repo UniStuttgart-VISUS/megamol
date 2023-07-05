@@ -11,8 +11,10 @@ RUN dnf -y update && dnf -y install \
   ninja-build \
   git \
   clang \
-#vcpkg
+# vcpkg
   curl zip unzip tar \
+# ci checks:
+  clang-tools-extra \
 # openssl
   perl-core \
 # glfw
@@ -23,8 +25,4 @@ RUN dnf -y update && dnf -y install \
   autoconf-archive \
 # OpenGL
   mesa-libGL-devel mesa-libGLU-devel \
-# vislib
-  ncurses-devel \
-# image_gl
-  libjpeg-turbo-devel \
   && dnf clean all

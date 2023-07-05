@@ -43,14 +43,14 @@ bool ColorParam::ParseValue(std::string const& v) {
     return false;
 }
 
-std::string ColorParam::ValueString(void) const {
+std::string ColorParam::ValueString() const {
     return core::utility::ColourParser::ToString(this->val[0], this->val[1], this->val[2], this->val[3]).PeekBuffer();
 }
 
 void ColorParam::SetValue(const ColorType& v, bool setDirty) {
     if (v != this->val) {
         this->val = v;
-        this->indicateChange();
+        this->indicateParamChange();
         if (setDirty)
             this->setDirty();
     }

@@ -19,7 +19,7 @@ void megamol::core::view::light::QuadLight::addLight(LightCollection& light_coll
 /*
  * megamol::core::view::light::QuadLight::QuadLight
  */
-QuadLight::QuadLight(void) : AbstractLight(), position("Position", ""), edgeOne("Edge1", ""), edgeTwo("Edge2", "") {
+QuadLight::QuadLight() : AbstractLight(), position("Position", ""), edgeOne("Edge1", ""), edgeTwo("Edge2", "") {
 
     // quad light
     lightsource = std::make_shared<QuadLightType>();
@@ -35,7 +35,7 @@ QuadLight::QuadLight(void) : AbstractLight(), position("Position", ""), edgeOne(
 /*
  * megamol::core::view::light::QuadLight::~QuadLight
  */
-QuadLight::~QuadLight(void) {
+QuadLight::~QuadLight() {
     this->Release();
 }
 

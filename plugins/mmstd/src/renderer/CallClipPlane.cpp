@@ -13,7 +13,7 @@ using namespace megamol::core;
 /*
  * view::CallClipPlane::CallClipPlane
  */
-view::CallClipPlane::CallClipPlane(void) : Call(), plane() {
+view::CallClipPlane::CallClipPlane() : Call(), plane() {
     this->col[0] = 192;
     this->col[1] = 192;
     this->col[2] = 192;
@@ -24,7 +24,7 @@ view::CallClipPlane::CallClipPlane(void) : Call(), plane() {
 /*
  * view::CallClipPlane::~CallClipPlane
  */
-view::CallClipPlane::~CallClipPlane(void) {
+view::CallClipPlane::~CallClipPlane() {
     // intentionally empty
 }
 

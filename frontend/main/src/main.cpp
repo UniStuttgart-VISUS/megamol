@@ -25,7 +25,7 @@
 #include "VR_Service.hpp"
 
 #ifdef MEGAMOL_USE_TRACY
-#include "Tracy.hpp"
+#include "tracy/Tracy.hpp"
 #endif
 
 using megamol::core::utility::log::Log;
@@ -167,7 +167,9 @@ int main(const int argc, const char** argv) {
     megamol::frontend::Profiling_Service profiling_service;
     megamol::frontend::Profiling_Service::Config profiling_config;
     profiling_config.log_file = config.profiling_output_file;
+    profiling_config.flush_frequency = config.flush_frequency;
     profiling_config.autostart_profiling = config.autostart_profiling;
+    profiling_config.include_graph_events = config.include_graph_events;
 
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
@@ -253,6 +255,10 @@ int main(const int argc, const char** argv) {
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
     const auto render_next_frame = [&]() -> bool {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedN("RenderNextFrame", 0x0000FF);
+#endif
+
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();
 
@@ -279,10 +285,6 @@ int main(const int argc, const char** argv) {
             .PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
-
-#ifdef MEGAMOL_USE_TRACY
-        FrameMark;
-#endif
 
         return true;
     };
@@ -345,6 +347,9 @@ int main(const int argc, const char** argv) {
         }
 
     while (run_megamol) {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedNC("MainLoop", 0x0000FF);
+#endif
         run_megamol = render_next_frame();
     }
 

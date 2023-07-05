@@ -25,7 +25,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QRCodeDataCall";
     }
 
@@ -34,7 +34,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to create a QR code Image";
     }
 
@@ -56,7 +56,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 8;
     }
 
@@ -91,7 +91,7 @@ public:
         return "";
     }
 
-    inline std::string* GetTextPointer(void) const {
+    inline std::string* GetTextPointer() const {
         return this->qr_text;
     }
 
@@ -99,7 +99,7 @@ public:
         this->qr_text = p_qr_text;
     }
 
-    inline vislib::math::Vector<float, 3>* GetPointAtPointer(void) const {
+    inline vislib::math::Vector<float, 3>* GetPointAtPointer() const {
         return this->qr_pointer;
     }
 
@@ -107,7 +107,7 @@ public:
         this->qr_pointer = p_qr_pointer;
     }
 
-    inline core::BoundingBoxes* GetBoundingBoxPointer(void) const {
+    inline core::BoundingBoxes* GetBoundingBoxPointer() const {
         return this->bbox;
     }
 
@@ -115,8 +115,8 @@ public:
         this->bbox = p_bbox;
     }
 
-    QRCodeDataCall(void);
-    virtual ~QRCodeDataCall(void);
+    QRCodeDataCall();
+    ~QRCodeDataCall() override;
 
 private:
     std::string* qr_text;

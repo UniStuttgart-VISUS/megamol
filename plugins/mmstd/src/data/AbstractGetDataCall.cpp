@@ -13,7 +13,7 @@ using namespace megamol::core;
 /*
  * AbstractGetDataCall::AbstractGetDataCall
  */
-AbstractGetDataCall::AbstractGetDataCall(void) : datahash(0), unlocker(NULL) {
+AbstractGetDataCall::AbstractGetDataCall() : datahash(0), unlocker(NULL) {
     // intentionally empty
 }
 
@@ -21,7 +21,7 @@ AbstractGetDataCall::AbstractGetDataCall(void) : datahash(0), unlocker(NULL) {
 /*
  * AbstractGetDataCall::~AbstractGetDataCall
  */
-AbstractGetDataCall::~AbstractGetDataCall(void) {
+AbstractGetDataCall::~AbstractGetDataCall() {
     this->Unlock();
 }
 

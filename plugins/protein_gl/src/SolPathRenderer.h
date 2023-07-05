@@ -18,8 +18,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /**
  * Renderer for solvent path raw data
@@ -31,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolPathRenderer";
     }
 
@@ -40,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for solvent path raw data.";
     }
 
@@ -49,15 +48,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    SolPathRenderer(void);
+    SolPathRenderer();
 
     /** dtor */
-    virtual ~SolPathRenderer(void);
+    ~SolPathRenderer() override;
 
 protected:
     /**
@@ -65,7 +64,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -76,12 +75,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -90,7 +89,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** The slot to get the data */
@@ -103,5 +102,4 @@ private:
     std::unique_ptr<glowl::GLSLProgram> dotsShader;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

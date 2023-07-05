@@ -5,16 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_STRINGSEARCHWIDGET_INCLUDED
-#define MEGAMOL_GUI_STRINGSEARCHWIDGET_INCLUDED
 #pragma once
 
 
 #include "HoverToolTip.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -48,7 +45,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_STRINGSEARCHWIDGET_INCLUDED
+} // namespace megamol::gui

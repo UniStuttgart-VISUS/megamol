@@ -47,20 +47,6 @@ public:
         return true;
     }
 
-    /**
-     * Answer whether or not this module supports being used in a
-     * quickstart. Overwrite if you don't want your module to be used in
-     * quickstarts.
-     *
-     * This default implementation returns 'true'
-     *
-     * @return Whether or not this module supports being used in a
-     *         quickstart.
-     */
-    static bool SupportQuickstart() {
-        return false;
-    }
-
     /** Ctor. */
     HeadView();
 
