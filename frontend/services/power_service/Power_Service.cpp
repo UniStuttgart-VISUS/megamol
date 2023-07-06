@@ -11,9 +11,9 @@
 
 #ifdef MEGAMOL_USE_POWER
 
+#include <fstream>
 #include <regex>
 #include <stdexcept>
-#include <fstream>
 
 #include <power_overwhelming/rtx_instrument.h>
 
