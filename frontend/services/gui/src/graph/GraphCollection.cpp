@@ -544,7 +544,7 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                 // First, rename existing modules with same name
                 graph_ptr->UniqueModuleRename(view_full_name);
                 // Add module and set as view instance
-                auto graph_module = 
+                auto graph_module =
                     graph_ptr->AddModule(this->modules_stock, view_class_name, view_name, view_namespace);
                 if (graph_module == nullptr) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -937,7 +937,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
 }
 
 
-bool megamol::gui::GraphCollection::get_module_stock_data(std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const std::string& plugin_name) {
+bool megamol::gui::GraphCollection::get_module_stock_data(
+    std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const std::string& plugin_name) {
 
     if (this->calls_stock.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -972,7 +973,9 @@ bool megamol::gui::GraphCollection::get_module_stock_data(std::shared_ptr<const 
         std::shared_ptr<const core::view::AbstractViewInterface> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractViewInterface>(new_mod);
 
-        Module stock_module(GUI_INVALID_ID, std::string(mod_desc->ClassName()), std::string(mod_desc->Description()), plugin_name, bool(viewptr != nullptr));
+        auto stock_module = Module(GUI_INVALID_ID, std::string(mod_desc->ClassName()),
+            std::string(mod_desc->Description()), plugin_name, bool(viewptr != nullptr));
+        this->modules_stock.emplace_back(stock_module);
 
         std::vector<std::shared_ptr<core::param::ParamSlot>> paramSlots;
         std::vector<std::shared_ptr<core::CallerSlot>> callerSlots;
@@ -996,11 +999,12 @@ bool megamol::gui::GraphCollection::get_module_stock_data(std::shared_ptr<const 
             if (param_slot == nullptr)
                 continue;
             if (param_slot->Parameter() != nullptr) {
-                stock_module.Parameters().emplace_back(
-                    megamol::gui::Parameter::ReadNewCoreParameterToStockParameter((*param_slot)));
+                auto stock_param = megamol::gui::Parameter::ReadNewCoreParameterToStockParameter((*param_slot));
+                this->modules_stock.back().Parameters().emplace_back(stock_param);
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Pointer to core parameter is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] Pointer to core parameter is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                    __LINE__);
             }
         }
 
@@ -1011,9 +1015,10 @@ bool megamol::gui::GraphCollection::get_module_stock_data(std::shared_ptr<const 
             auto compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot.get());
             auto type = CallSlotType::CALLER;
             auto necessity = caller_slot->GetNecessity();
-
-            stock_module.CallSlots(type).emplace_back(std::make_shared<
-                CallSlot>(GUI_INVALID_ID, name, description, compatible_call_idxs, type, necessity));
+ 
+            this->modules_stock.back().AddCallSlot(
+                std::make_shared<CallSlot>(
+                    GUI_INVALID_ID, name, description, compatible_call_idxs, type, necessity));
         }
 
         // CalleeSlots
@@ -1024,7 +1029,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(std::shared_ptr<const 
             auto type = CallSlotType::CALLEE;
             auto necessity = callee_slot->GetNecessity();
 
-            stock_module.CallSlots(type).emplace_back(
+            this->modules_stock.back().AddCallSlot(
                 std::make_shared<CallSlot>(GUI_INVALID_ID, name, description, compatible_call_idxs, type, necessity));
         }
 
@@ -1040,8 +1045,6 @@ bool megamol::gui::GraphCollection::get_module_stock_data(std::shared_ptr<const 
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Removed temporary module '%s'.", mod_desc->ClassName());
 
-        this->modules_stock.emplace_back(stock_module);
-
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -1055,7 +1058,8 @@ bool megamol::gui::GraphCollection::get_module_stock_data(std::shared_ptr<const 
 }
 
 
-bool megamol::gui::GraphCollection::get_call_stock_data(std::shared_ptr<const megamol::core::factories::CallDescription> call_desc, const std::string& plugin_name) {
+bool megamol::gui::GraphCollection::get_call_stock_data(
+    std::shared_ptr<const megamol::core::factories::CallDescription> call_desc, const std::string& plugin_name) {
 
     try {
 

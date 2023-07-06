@@ -63,7 +63,6 @@ public:
     const ModulePtr_t& GetParentModule();
 
     static ImGuiID GetCompatibleCallIndex(const CallSlotPtr_t& callslot_1, const CallSlotPtr_t& callslot_2);
-    static ImGuiID GetCompatibleCallIndex(const CallSlotPtr_t& callslot, const CallSlot& stock_callslot);
 
     bool IsConnectionValid(CallSlot& callslot);
 

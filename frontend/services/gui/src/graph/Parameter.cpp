@@ -311,7 +311,7 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
 }
 
 
-megamol::gui::Parameter& megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(megamol::core::param::ParamSlot& in_param_slot) {
+megamol::gui::Parameter megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(megamol::core::param::ParamSlot& in_param_slot) {
 
     std::string name = std::string(in_param_slot.Name().PeekBuffer());
     std::string description = std::string(in_param_slot.Description().PeekBuffer());

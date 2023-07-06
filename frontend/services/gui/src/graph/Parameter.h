@@ -98,7 +98,7 @@ public:
 
     // STATIC ---------------------
 
-    static megamol::gui::Parameter& ReadNewCoreParameterToStockParameter(ParamSlot& in_param_slot);
+    static megamol::gui::Parameter ReadNewCoreParameterToStockParameter(ParamSlot& in_param_slot);
 
     static bool ReadNewCoreParameterToNewParameter(ParamSlot& in_param_slot,
         std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,

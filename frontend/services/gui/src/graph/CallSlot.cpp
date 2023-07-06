@@ -18,12 +18,10 @@ using namespace megamol::gui;
 
 megamol::gui::CallSlot::CallSlot(ImGuiID uid, const CallSlotPtr_t in_stock_callslot)
         : CallSlot(uid, in_stock_callslot->name, in_stock_callslot->description,
-              in_stock_callslot->compatible_call_idxs,
-              in_stock_callslot->type, in_stock_callslot->necessity) {}
+              in_stock_callslot->compatible_call_idxs, in_stock_callslot->type, in_stock_callslot->necessity) {}
 
 
-megamol::gui::CallSlot::CallSlot(
-    ImGuiID uid, const std::string& name, const std::string& description,
+megamol::gui::CallSlot::CallSlot(ImGuiID uid, const std::string& name, const std::string& description,
     const std::vector<size_t>& compatible_call_idxs, CallSlotType type,
     megamol::core::AbstractCallSlotPresentation::Necessity necessity)
         : uid(uid)
@@ -203,29 +201,16 @@ ImGuiID megamol::gui::CallSlot::GetCompatibleCallIndex(
     const CallSlotPtr_t& callslot_1, const CallSlotPtr_t& callslot_2) {
 
     if ((callslot_1 != nullptr) && (callslot_2 != nullptr)) {
-        if (callslot_1->GetParentModule() != callslot_2->GetParentModule() && (callslot_1->type != callslot_2->type)) {
+        bool different_parents = true;
+        auto pmc1 = callslot_1->IsParentModuleConnected();
+        auto pmc2 = callslot_2->IsParentModuleConnected();
+        if (pmc1 && pmc2) {
+            different_parents = (callslot_1->GetParentModule() != callslot_2->GetParentModule());
+        }
+        if (different_parents  && (callslot_1->type != callslot_2->type)) {
             // Return first found compatible call index
             for (auto& comp_call_idx_1 : callslot_1->compatible_call_idxs) {
                 for (auto& comp_call_idx_2 : callslot_2->compatible_call_idxs) {
-                    if (comp_call_idx_1 == comp_call_idx_2) {
-                        return static_cast<ImGuiID>(comp_call_idx_1);
-                    }
-                }
-            }
-        }
-    }
-    return GUI_INVALID_ID;
-}
-
-
-ImGuiID megamol::gui::CallSlot::GetCompatibleCallIndex(
-    const CallSlotPtr_t& callslot, const CallSlot& stock_callslot) {
-
-    if (callslot != nullptr) {
-        if (callslot->type != stock_callslot.type) {
-            // Return first found compatible call index
-            for (auto& comp_call_idx_1 : callslot->compatible_call_idxs) {
-                for (auto& comp_call_idx_2 : stock_callslot.compatible_call_idxs) {
                     if (comp_call_idx_1 == comp_call_idx_2) {
                         return static_cast<ImGuiID>(comp_call_idx_1);
                     }
