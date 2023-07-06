@@ -4,9 +4,9 @@ using namespace megamol;
 using namespace megamol::trisoup;
 using namespace megamol::trisoup::volumetrics;
 
-MarchingCubeTables::MarchingCubeTables(void) {}
+MarchingCubeTables::MarchingCubeTables() {}
 
-MarchingCubeTables::~MarchingCubeTables(void) {}
+MarchingCubeTables::~MarchingCubeTables() {}
 
 const unsigned int MarchingCubeTables::a2fVertexOffset[8][3] = {
     {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 0, 1}, {1, 0, 1}, {1, 1, 1}, {0, 1, 1}};

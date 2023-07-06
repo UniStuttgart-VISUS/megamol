@@ -23,8 +23,7 @@
 #include "vislib/Array.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /*
  * Protein Renderer class
@@ -43,7 +42,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MoleculeCartoonRenderer";
     }
 
@@ -52,7 +51,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers protein cartoon renderings.";
     }
 
@@ -61,15 +60,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    MoleculeCartoonRenderer(void);
+    MoleculeCartoonRenderer();
 
     /** Dtor. */
-    virtual ~MoleculeCartoonRenderer(void);
+    ~MoleculeCartoonRenderer() override;
 
     enum class CartoonRenderMode {
         CARTOON = 0,
@@ -88,17 +87,17 @@ public:
      **********************************************************************/
 
     /** Get radius for cartoon rendering mode */
-    inline float GetRadiusCartoon(void) const {
+    inline float GetRadiusCartoon() const {
         return radiusCartoon;
     };
 
     /** Get number of spline segments per amino acid for cartoon rendering mode */
-    inline unsigned int GetNumberOfSplineSegments(void) const {
+    inline unsigned int GetNumberOfSplineSegments() const {
         return numberOfSplineSeg;
     };
 
     /** Get number of tube segments per 390 degrees in CPU cartoon rendering mode */
-    inline unsigned int GetNumberOfTubeSegments(void) const {
+    inline unsigned int GetNumberOfTubeSegments() const {
         return numberOfTubeSeg;
     };
 
@@ -122,12 +121,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**********************************************************************
@@ -143,7 +142,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -151,7 +150,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Render protein in hybrid CARTOON mode using the Geometry Shader.
@@ -199,7 +198,7 @@ private:
      * This function has to be called after every change rendering attributes,
      * e.g. coloring or render mode.
      */
-    void RecomputeAll(void);
+    void RecomputeAll();
 
     /**
      *  Update all parameter slots.
@@ -370,5 +369,4 @@ private:
 };
 
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

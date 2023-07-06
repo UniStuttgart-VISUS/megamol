@@ -25,7 +25,7 @@ using namespace megamol::protein;
 /*
  * MDDriverConnector::MDDriverConnector
  */
-MDDriverConnector::MDDriverConnector(void)
+MDDriverConnector::MDDriverConnector()
         : socketValidity(false)
         , pauseRequested(false)
         , goRequested(false)
@@ -54,7 +54,7 @@ MDDriverConnector::MDDriverConnector(void)
 /*
  * MDDriverConnector::~MDDriverConnector
  */
-MDDriverConnector::~MDDriverConnector(void) {
+MDDriverConnector::~MDDriverConnector() {
     this->terminateRequested = true;
     this->release();
 }
@@ -145,7 +145,7 @@ DWORD MDDriverConnector::Run(void* config) {
 /*
  * MDDriverConnector::Terminate
  */
-bool MDDriverConnector::Terminate(void) {
+bool MDDriverConnector::Terminate() {
     using megamol::core::utility::log::Log;
 
     // clear all the requests
@@ -286,7 +286,7 @@ bool MDDriverConnector::startSocket(const vislib::TString& host, int port) {
 /*
  * MDDriverConnector::release
  */
-void MDDriverConnector::release(void) {
+void MDDriverConnector::release() {
     socketValidity = false; // flag the socket as being non-functional
     try {
         vislib::net::Socket::Cleanup();
@@ -298,7 +298,7 @@ void MDDriverConnector::release(void) {
 /*
  * MDDriverConnector::getData
  */
-bool MDDriverConnector::getData(void) {
+bool MDDriverConnector::getData() {
     using megamol::core::utility::log::Log;
 
     bool retval = true;
@@ -375,7 +375,7 @@ bool MDDriverConnector::getData(void) {
 /*
  * MDDriverConnector::sendForces
  */
-bool MDDriverConnector::sendForces(void) {
+bool MDDriverConnector::sendForces() {
     using megamol::core::utility::log::Log;
 
     bool retval = true;
@@ -412,7 +412,7 @@ bool MDDriverConnector::sendForces(void) {
 /*
  * MDDriverConnector::sendPause
  */
-bool MDDriverConnector::sendPause(void) {
+bool MDDriverConnector::sendPause() {
     this->header.type = MDD_PAUSE;
     this->header.length = 0;   // fill the header with the correct data
     return this->sendHeader(); // byteswap the header and send it
@@ -422,7 +422,7 @@ bool MDDriverConnector::sendPause(void) {
 /*
  * MDDriverConnector::sendGo
  */
-bool MDDriverConnector::sendGo(void) {
+bool MDDriverConnector::sendGo() {
     bool retval = true;
     this->header.type = MDD_GO;
     this->header.length = 0;     // fill the header with the correct data
@@ -435,7 +435,7 @@ bool MDDriverConnector::sendGo(void) {
 /*
  * MDDriverConnector::sendTransferRate
  */
-bool MDDriverConnector::sendTransferRate(void) {
+bool MDDriverConnector::sendTransferRate() {
     this->header.type = MDD_TRATE;
     this->header.length = this->rateRequested; // fill the header with the rate and header type
     return this->sendHeader();                 // byteswap the header and send it
@@ -445,7 +445,7 @@ bool MDDriverConnector::sendTransferRate(void) {
 /*
  * MDDriverConnector::getHeader
  */
-bool MDDriverConnector::getHeader(void) {
+bool MDDriverConnector::getHeader() {
     using megamol::core::utility::log::Log;
     try {
         int errorlevel;
@@ -480,7 +480,7 @@ bool MDDriverConnector::getHeader(void) {
 /*
  * MDDriverConnector::sendHeader
  */
-bool MDDriverConnector::sendHeader(void) {
+bool MDDriverConnector::sendHeader() {
     using megamol::core::utility::log::Log;
     try {
         this->header.type = this->byteSwap(

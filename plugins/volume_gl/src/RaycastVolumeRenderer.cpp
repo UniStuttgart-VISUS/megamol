@@ -22,7 +22,6 @@
 
 #include "OpenGL_Context.h"
 #include "geometry_calls/VolumetricDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -117,7 +116,8 @@ bool RaycastVolumeRenderer::create() {
 
     try {
         // create shader program
-        auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shader_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         rvc_dvr_shdr = core::utility::make_glowl_shader(
             "RaycastVolumeRenderer-Compute", shader_options, "volume_gl/RaycastVolumeRenderer-DVR.comp.glsl");

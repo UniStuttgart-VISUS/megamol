@@ -32,7 +32,7 @@ const GLuint ssbo_flags_binding_point = 2;
 const GLuint ssbo_vertex_binding_point = 3;
 const GLuint ssbo_color_binding_point = 4;
 
-SphereRenderer::SphereRenderer(void)
+SphereRenderer::SphereRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getdata", "Connects to the data source")
         , get_tf_slot_("gettransferfunction", "The slot for the transfer function module")
@@ -56,6 +56,7 @@ SphereRenderer::SphereRenderer(void)
         , shader_options_flags_(nullptr)
         , init_resources_(true)
         , render_mode_(RenderMode::SIMPLE)
+        , shading_mode_(ShadingMode::FORWARD)
         , grey_tf_(0)
         , range_()
         , flags_enabled_(false)
@@ -98,6 +99,7 @@ SphereRenderer::SphereRenderer(void)
         , col_buf_array_()
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
         , render_mode_param_("renderMode", "The sphere render mode.")
+        , shading_mode_param_("shaderMode", "The shading mode for selected render modes.")
         , radius_scaling_param_("scaling", "Scaling factor for particle radii.")
         , force_time_slot_(
               "forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
@@ -155,6 +157,15 @@ SphereRenderer::SphereRenderer(void)
     this->MakeSlotAvailable(&this->render_mode_param_);
     rmp = nullptr;
 
+    // Initialising enum param with all possible modes (needed for configurator)
+    // (Removing not available render modes later in create function)
+    param::EnumParam* smp = new param::EnumParam(this->shading_mode_);
+    smp->SetTypePair(ShadingMode::FORWARD, this->getShadingModeString(ShadingMode::FORWARD).c_str());
+    smp->SetTypePair(ShadingMode::DEFERRED, this->getShadingModeString(ShadingMode::DEFERRED).c_str());
+    this->shading_mode_param_ << smp;
+    this->MakeSlotAvailable(&this->shading_mode_param_);
+    smp = nullptr;
+
     this->radius_scaling_param_ << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radius_scaling_param_);
 
@@ -208,7 +219,7 @@ SphereRenderer::SphereRenderer(void)
 }
 
 
-SphereRenderer::~SphereRenderer(void) {
+SphereRenderer::~SphereRenderer() {
     this->Release();
 }
 
@@ -253,7 +264,7 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 }
 
 
-bool SphereRenderer::create(void) {
+bool SphereRenderer::create() {
 
     ASSERT(IsAvailable());
 
@@ -348,40 +359,17 @@ bool SphereRenderer::create(void) {
 }
 
 
-void SphereRenderer::release(void) {
+void SphereRenderer::release() {
+
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
-    this->resetResources();
+
+    this->resetOpenGLResources();
 }
 
 
-bool SphereRenderer::resetResources(void) {
-
-    this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
-    this->soft_select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
-
-    // Set all render mode dependent parameter to GUI invisible
-    // SPLAT
-    this->alpha_scaling_param_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->attenuate_subpixel_param_.Param<param::BoolParam>()->SetGUIVisible(false);
-    // SSBO
-    this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(false);
-    // Ambient Occlusion
-    this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
-    this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(false);
-    this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
-    this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->ao_cone_length_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-    this->use_hp_textures_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
-    // Outlining
-    this->outline_width_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
-
-    this->flags_enabled_ = false;
-    this->flags_available_ = false;
-
+bool SphereRenderer::resetOpenGLResources() {
     if (this->grey_tf_ != 0) {
         glDeleteTextures(1, &this->grey_tf_);
     }
@@ -455,9 +443,35 @@ bool SphereRenderer::resetResources(void) {
 }
 
 
+void SphereRenderer::resetConditionalParameters() {
+
+    this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
+    this->soft_select_color_param_.Param<param::ColorParam>()->SetGUIVisible(false);
+
+    // Set all render mode dependent parameter to GUI invisible
+    // SPLAT
+    this->alpha_scaling_param_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->attenuate_subpixel_param_.Param<param::BoolParam>()->SetGUIVisible(false);
+    // SSBO
+    this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(false);
+    // Ambient Occlusion
+    this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
+    this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(false);
+    this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
+    this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->ao_cone_length_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+    this->use_hp_textures_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
+    // Outlining
+    this->outline_width_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
+}
+
+
 bool SphereRenderer::createResources() {
 
-    this->resetResources();
+    this->resetConditionalParameters();
+    this->resetOpenGLResources();
 
     this->state_invalid_ = true;
 
@@ -486,12 +500,13 @@ bool SphereRenderer::createResources() {
     // Check for flag storage availability and get specific shader snippet
     // TODO: test flags!
     // create shader programs
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     shader_options_flags_ = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
 
     std::string flags_shader_snippet;
     if (this->flags_available_) {
-        shader_options_flags_->addDefinition("flags_available");
+        shader_options_flags_->addDefinition("FLAGS_AVAILABLE");
     }
 
     try {
@@ -499,6 +514,10 @@ bool SphereRenderer::createResources() {
 
         case (RenderMode::SIMPLE):
         case (RenderMode::SIMPLE_CLUSTERED): {
+            if (shading_mode_ == ShadingMode::DEFERRED) {
+                shader_options_flags_->addDefinition("DEFERRED_SHADING");
+            }
+
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_simple", *shader_options_flags_,
                 "moldyn_gl/sphere_renderer/sphere_simple.vert.glsl",
@@ -522,6 +541,10 @@ bool SphereRenderer::createResources() {
         } break;
 
         case (RenderMode::SSBO_STREAM): {
+            if (shading_mode_ == ShadingMode::DEFERRED) {
+                shader_options_flags_->addDefinition("DEFERRED_SHADING");
+            }
+
             this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(true);
 
             glGenVertexArrays(1, &this->vert_array_);
@@ -546,6 +569,10 @@ bool SphereRenderer::createResources() {
         } break;
 
         case (RenderMode::BUFFER_ARRAY): {
+            if (shading_mode_ == ShadingMode::DEFERRED) {
+                shader_options_flags_->addDefinition("DEFERRED_SHADING");
+            }
+
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_bufferarray", *shader_options_flags_,
                 "moldyn_gl/sphere_renderer/sphere_bufferarray.vert.glsl",
@@ -913,6 +940,24 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
     return mode;
 }
 
+std::string megamol::moldyn_gl::rendering::SphereRenderer::getShadingModeString(ShadingMode sm) {
+    std::string mode;
+
+    switch (sm) {
+    case (ShadingMode::FORWARD):
+        mode = "Forward";
+        break;
+    case (ShadingMode::DEFERRED):
+        mode = "Deferred";
+        break;
+    default:
+        mode = "unknown";
+        break;
+    }
+
+    return mode;
+}
+
 
 bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // timer.BeginFrame();
@@ -929,10 +974,16 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     const unsigned int frame_id = mpdc->FrameID();
     this->state_invalid_ = ((hash != this->old_hash_) || (frame_id != this->old_frame_id_));
 
+    // Check for flag storage before render mode because info is needed for resource creation
+    isFlagStorageAvailable();
+
     // Checking for changed render mode
     auto current_render_mode = static_cast<RenderMode>(this->render_mode_param_.Param<param::EnumParam>()->Value());
-    if (this->init_resources_ || (current_render_mode != this->render_mode_)) {
+    auto current_shading_mode = static_cast<ShadingMode>(this->shading_mode_param_.Param<param::EnumParam>()->Value());
+    if (this->init_resources_ || (current_render_mode != this->render_mode_) ||
+        (current_shading_mode != this->shading_mode_)) {
         this->render_mode_ = current_render_mode;
+        this->shading_mode_ = current_shading_mode;
         init_resources_ = false;
         if (!this->createResources()) {
             return false;
@@ -1151,7 +1202,7 @@ bool SphereRenderer::renderSimple(mmstd_gl::CallRender3DGL& call, MultiParticleD
         }
 
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->start_timer(timers_[1], this->GetCoreInstance()->GetFrameID());
+        perf_manager_->start_timer(timers_[1]);
 #endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 #ifdef MEGAMOL_USE_PROFILING
@@ -2021,7 +2072,7 @@ bool SphereRenderer::enableShaderData(
 }
 
 
-bool SphereRenderer::disableShaderData(void) {
+bool SphereRenderer::disableShaderData() {
 
     return this->disableTransferFunctionTexture();
 }
@@ -2043,7 +2094,7 @@ bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLPr
 }
 
 
-bool SphereRenderer::disableTransferFunctionTexture(void) {
+bool SphereRenderer::disableTransferFunctionTexture() {
 
     mmstd_gl::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (cgtf != nullptr) {
@@ -2388,7 +2439,8 @@ void SphereRenderer::rebuildWorkingData(
         }
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     // Check if voxelization is even needed
     if (this->vol_gen_ == nullptr) {
         this->vol_gen_ = new misc::MDAOVolumeGenerator();

@@ -5,6 +5,7 @@
 Many of our styleguide rules are defined in the `.clang-format` file within the source repository.
 In addition, a GitHub Actions job and the script `.ci/check_format.sh` will check (and fix) some of our rules.
 Therefore, in case of conflicts with this document these technical definitions are to be preferred.
+An exception is made to third-party code within the repository (always placed within `3rd` directories), there the original formatting should be kept.
 
 ## Basic Formatting Rules
 

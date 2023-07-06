@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include "PluginsResource.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -14,8 +15,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -25,12 +25,17 @@ namespace datatools {
  */
 class DataFileSequence : public core::Module {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::PluginsResource>();
+    }
+
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DataFileSequence";
     }
 
@@ -39,7 +44,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "This modules is pluged between a data loader and consumer modules. It will change the name of the data "
                "file loaded depending on the requested time. This module only supports time independent data sets.";
     }
@@ -49,24 +54,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
     /** Ctor. */
-    DataFileSequence(void);
+    DataFileSequence();
 
     /** Dtor. */
-    virtual ~DataFileSequence(void);
+    ~DataFileSequence() override;
 
 protected:
     /**
@@ -74,12 +70,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -122,7 +118,7 @@ private:
     /**
      * Checks the module parameters for updates
      */
-    void checkParameters(void);
+    void checkParameters();
 
     /**
      * Update when the file name template changes
@@ -147,12 +143,12 @@ private:
      *
      * @return The parameter slot for the file name or NULL if not found
      */
-    core::param::ParamSlot* findFileNameSlot(void);
+    core::param::ParamSlot* findFileNameSlot();
 
     /**
      * Asserts the data is available blablabla
      */
-    void assertData(void);
+    void assertData();
 
     /** The file name template */
     core::param::ParamSlot fileNameTemplateSlot;
@@ -206,5 +202,4 @@ private:
     unsigned int lastIdxRequested;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

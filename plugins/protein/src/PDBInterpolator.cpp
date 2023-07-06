@@ -27,14 +27,14 @@ PDBInterpolator::~PDBInterpolator() {
 /*
  * PDBInterpolator::create
  */
-bool PDBInterpolator::create(void) {
+bool PDBInterpolator::create() {
     return true;
 }
 
 /*
  * PDBInterpolator::release
  */
-void PDBInterpolator::release(void) {}
+void PDBInterpolator::release() {}
 
 /*
  * PDBInterpolator::getData

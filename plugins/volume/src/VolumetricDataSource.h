@@ -22,11 +22,11 @@
 #include "mmcore/Module.h"
 
 #include "vislib/PtrArray.h"
+#include "vislib/RawStorage.h"
 #include "vislib/sys/Event.h"
 #include "vislib/sys/Thread.h"
 
-namespace megamol {
-namespace volume {
+namespace megamol::volume {
 /**
  * Reads volumetric data from a dat/raw data source.
  */
@@ -38,7 +38,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "VolumetricDataSource";
     }
 
@@ -47,7 +47,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Data source for dat/raw-encoded volumetric data.";
     }
 
@@ -56,19 +56,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    VolumetricDataSource(void);
+    VolumetricDataSource();
 
     /**
      * Finalises an instance.
      */
-    virtual ~VolumetricDataSource(void);
+    ~VolumetricDataSource() override;
 
 protected:
     /** Superclass typedef. */
@@ -82,20 +82,20 @@ protected:
      *
      * @return The size of a single frame stored in the raw file in bytes.
      */
-    size_t calcFrameSize(void) const;
+    size_t calcFrameSize() const;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Gets the requested output data format if any. Otherwise, the
      * format of the input data is returned.
      */
-    DatRawDataFormat getOutputDataFormat(void) const;
+    DatRawDataFormat getOutputDataFormat() const;
 
     /**
      * Handles a change of 'paramFileName'.
@@ -183,15 +183,15 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /** Resume the asynchronous loading thread if it was suspended. */
-    bool resumeAsyncLoad(void);
+    bool resumeAsyncLoad();
 
     /**
      * Start the asynchronous loading thread.
      */
-    bool startAsyncLoad(void);
+    bool startAsyncLoad();
 
     /**
      * Stop the asynchronous loading thread and optionally wait for it to
@@ -236,7 +236,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~BufferSlotUnlocker(void);
+        ~BufferSlotUnlocker() override;
 
         inline void AddBuffer(BufferSlot* buffer) {
             ASSERT(buffer != nullptr);
@@ -244,7 +244,7 @@ private:
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void);
+        void Unlock() override;
 
     private:
         /** Base class. */
@@ -426,5 +426,4 @@ private:
     }
 };
 
-} /* end namespace volume */
-} // namespace megamol
+} // namespace megamol::volume

@@ -5,12 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED
-#define MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED
 #pragma once
 
-
-#include "imgui.h"
+#include <imgui.h>
 
 
 /** ************************************************************************
@@ -63,5 +60,3 @@ inline void DefaultStyle() {
     // Colors
     ImGui::StyleColorsDark();
 }
-
-#endif // MEGAMOL_GUI_DEFAULTSTYLE_INCLUDED

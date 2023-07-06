@@ -6,7 +6,6 @@
  */
 
 #include "mmstd/job/JobThread.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
@@ -31,7 +30,7 @@ job::JobThread::~JobThread() {
 /*
  * job::JobThread::create
  */
-bool job::JobThread::create(void) {
+bool job::JobThread::create() {
     return true; // intentionally empty ATM
 }
 
@@ -39,7 +38,7 @@ bool job::JobThread::create(void) {
 /*
  * job::JobThread::release
  */
-void job::JobThread::release(void) {
+void job::JobThread::release() {
     // intentionally empty ATM
 }
 
@@ -49,8 +48,6 @@ void job::JobThread::release(void) {
  */
 DWORD job::JobThread::Run(void* userData) {
 
-    // this->GetCoreInstance()->Log().WriteInfo(
-    //     "JobThread started (CoreLog)");
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("JobThread started (DefaultLog)");
 
     // TODO: Implement
@@ -62,8 +59,6 @@ DWORD job::JobThread::Run(void* userData) {
         vislib::sys::Thread::Sleep(sleepTime);
     }
 
-    // this->GetCoreInstance()->Log().WriteInfo(
-    //     "JobThread finished (CoreLog)");
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("JobThread finished (DefaultLog)");
 
     this->signalEnd(this->shouldTerminate());

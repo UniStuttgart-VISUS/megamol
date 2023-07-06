@@ -15,8 +15,7 @@
 
 using namespace megamol::geocalls;
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 ADIOSFlexVolume::ADIOSFlexVolume()
         : core::Module()
@@ -89,8 +88,8 @@ bool ADIOSFlexVolume::inquireMetaDataVariables(CallADIOSData* cad) {
 }
 
 bool ADIOSFlexVolume::assertData(geocalls::VolumetricDataCall* vdc, CallADIOSData* cad) {
-    bool dathashChanged = (vdc->DataHash() != cad->getDataHash());
-    if ((vdc->FrameID() != currentFrame) || dathashChanged || this->AnyParameterDirty()) {
+    bool inDataChanged = (oldDataHash != cad->getDataHash());
+    if ((vdc->FrameID() != currentFrame) || inDataChanged || this->AnyParameterDirty()) {
         this->ResetAllDirtyFlags();
 
         // get adios meta data
@@ -159,7 +158,8 @@ bool ADIOSFlexVolume::assertData(geocalls::VolumetricDataCall* vdc, CallADIOSDat
         this->maxes[0] = max;
         this->metadata.MinValues = this->mins.data();
         this->metadata.MaxValues = this->maxes.data();
-
+        oldDataHash = cad->getDataHash();
+        myDataHash++;
         currentFrame = vdc->FrameID();
     }
     return true;
@@ -181,7 +181,7 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
     auto ret = assertData(vdc, cad);
 
     vdc->SetData(VMAG.data(), 1);
-    vdc->SetDataHash(cad->getDataHash());
+    vdc->SetDataHash(myDataHash);
     vdc->SetFrameID(currentFrame);
     vdc->SetMetadata(&this->metadata);
 
@@ -287,5 +287,4 @@ bool ADIOSFlexVolume::onTryGetData(core::Call& call) {
     return true;
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

@@ -14,7 +14,7 @@
 /*
  * megamol::volume::BuckyBall::BuckyBall
  */
-megamol::volume::BuckyBall::BuckyBall(void)
+megamol::volume::BuckyBall::BuckyBall()
         : getDataSlot("getData", "Gets the data")
         , resolution({64, 64, 64})
         , sliceDists({4.0f / (resolution[0] - 1), 4.0f / (resolution[1] - 1), 4.0f / (resolution[2] - 1)})
@@ -48,7 +48,7 @@ megamol::volume::BuckyBall::BuckyBall(void)
 /*
  * megamol::volume::BuckyBall::~BuckyBall
  */
-megamol::volume::BuckyBall::~BuckyBall(void) {
+megamol::volume::BuckyBall::~BuckyBall() {
     this->Release();
 }
 
@@ -56,7 +56,7 @@ megamol::volume::BuckyBall::~BuckyBall(void) {
 /*
  * megamol::volume::BuckyBall::create
  */
-bool megamol::volume::BuckyBall::create(void) {
+bool megamol::volume::BuckyBall::create() {
 
     // Generate distance field for truncated icosahedron
     // The sixty vertices of the truncated icosahedron inside a sphere with radius 1
@@ -113,7 +113,7 @@ bool megamol::volume::BuckyBall::create(void) {
 /*
  * megamol::volume::BuckyBall::release
  */
-void megamol::volume::BuckyBall::release(void) {}
+void megamol::volume::BuckyBall::release() {}
 
 
 /*

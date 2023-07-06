@@ -33,7 +33,7 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(const vislib::sys::ASCIIFil
 /*
  * vislib::sys::ASCIIFileBuffer::LineBuffer::~LineBuffer
  */
-vislib::sys::ASCIIFileBuffer::LineBuffer::~LineBuffer(void) {
+vislib::sys::ASCIIFileBuffer::LineBuffer::~LineBuffer() {
     if ((this->cnt > 0) && (this->ptr.words != NULL)) {
         delete[] this->ptr.words;
         this->ptr.words = NULL;
@@ -142,7 +142,7 @@ vislib::sys::ASCIIFileBuffer::ASCIIFileBuffer(ParsingElement elements) : buffer(
 /*
  * vislib::sys::ASCIIFileBuffer::~ASCIIFileBuffer
  */
-vislib::sys::ASCIIFileBuffer::~ASCIIFileBuffer(void) {
+vislib::sys::ASCIIFileBuffer::~ASCIIFileBuffer() {
     this->Clear();
     ASSERT(this->lines.Count() == 0);
     ASSERT(this->buffer == NULL);
@@ -152,7 +152,7 @@ vislib::sys::ASCIIFileBuffer::~ASCIIFileBuffer(void) {
 /*
  * vislib::sys::ASCIIFileBuffer::Clear
  */
-void vislib::sys::ASCIIFileBuffer::Clear(void) {
+void vislib::sys::ASCIIFileBuffer::Clear() {
     this->lines.Clear(); // DO NOT DELETE individual pointers
     ARY_SAFE_DELETE(this->buffer);
 }

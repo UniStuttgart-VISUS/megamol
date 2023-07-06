@@ -5,16 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED
-#define MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED
 #pragma once
 
 
 #include <string>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** Forward declaration */
@@ -59,7 +56,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED
+} // namespace megamol::gui

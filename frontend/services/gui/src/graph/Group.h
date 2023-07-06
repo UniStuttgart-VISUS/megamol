@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
-#define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 #pragma once
 
 
@@ -16,8 +14,7 @@
 #include "widgets/PopUps.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 // Forward declarations
@@ -37,7 +34,7 @@ public:
     ~Group();
 
     bool AddModule(const ModulePtr_t& module_ptr);
-    bool RemoveModule(ImGuiID module_uid);
+    bool RemoveModule(ImGuiID module_uid, bool retore_interface = true);
     bool ContainsModule(ImGuiID module_uid);
     inline bool Empty() {
         return (this->modules.empty());
@@ -72,10 +69,6 @@ public:
     inline ImVec2 Size() const {
         return this->gui_size;
     }
-    inline void ForceUpdate() {
-        this->gui_update = true;
-    }
-
     inline void SetName(const std::string& group_name) {
         this->name = group_name;
     }
@@ -123,7 +116,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
+} // namespace megamol::gui

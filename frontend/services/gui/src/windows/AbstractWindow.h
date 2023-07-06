@@ -5,24 +5,22 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED
-#define MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED
 #pragma once
 
-
-#include "gui_utils.h"
-#include "imgui.h"
-#include "mmcore/utility/JSONHelper.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/Input.h"
 #include <functional>
 #include <map>
 #include <string>
 #include <vector>
 
+#include "FrontendResource.h"
+#include "FrontendResourcesMap.h"
+#include "gui_utils.h"
+#include "mmcore/utility/JSONHelper.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/Input.h"
 
-namespace megamol {
-namespace gui {
+
+namespace megamol::gui {
 
 /** ************************************************************************
  * This class holds the configuration of a GUI window
@@ -39,7 +37,8 @@ public:
         WINDOW_ID_HOTKEYEDITOR = 4,
         WINDOW_ID_TRANSFER_FUNCTION = 5,
         WINDOW_ID_CONFIGURATOR = 6,
-        WINDOW_ID_LOGCONSOLE = 7
+        WINDOW_ID_LOGCONSOLE = 7,
+        WINDOW_ID_ANIMATIONEDITOR = 8
     };
 
     struct BasicConfig {
@@ -55,6 +54,14 @@ public:
     };
 
     typedef std::function<void(AbstractWindow::BasicConfig&)> VolatileDrawCallback_t;
+
+    virtual std::vector<std::string> requested_lifetime_resources() const {
+        return std::vector<std::string>();
+    }
+
+    virtual void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
+        frontend_resources = resources;
+    };
 
     AbstractWindow(const std::string& name, WindowConfigID window_id)
             : win_config()
@@ -123,6 +130,7 @@ public:
             volatile_draw_callback(this->win_config);
             return true;
         }
+        return false;
     }
 
     virtual void PopUps() {}
@@ -135,6 +143,7 @@ protected:
     BasicConfig win_config;
     megamol::gui::HotkeyMap_t win_hotkeys;
     WindowConfigID window_id; // [SAVED] ID of the predefined callback drawing the window content
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> frontend_resources;
 
 private:
     size_t hash_id;   // unique hash generated from name to omit string comparison
@@ -142,7 +151,4 @@ private:
     VolatileDrawCallback_t volatile_draw_callback;
 };
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED
+} // namespace megamol::gui

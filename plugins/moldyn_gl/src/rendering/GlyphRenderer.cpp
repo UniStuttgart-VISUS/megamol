@@ -11,7 +11,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "inttypes.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -37,7 +36,7 @@ using namespace megamol::moldyn_gl::rendering;
 
 //const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
-GlyphRenderer::GlyphRenderer(void)
+GlyphRenderer::GlyphRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getData", "The slot to fetch the data")
         , get_tf_slot_("getTF", "The slot for the transfer function")
@@ -83,6 +82,13 @@ GlyphRenderer::GlyphRenderer(void)
     this->MakeSlotAvailable(&this->radius_scale_param_);
 
     // currently only needed for arrow
+    // TODO: problem with params being toggled visible or not
+    // if turned from visible to invisible, the paramslot needs
+    // to be triggered to make the change effectiv
+    // this causes trouble when changing from invisible to visible
+    // because you cant trigger it, so it wont ever be visible again
+    // TODO: also, check correct behaviour for all orientation
+    // sometime arrow gets clipped (probably correct, because e.g. cone radius is too large)
     param::EnumParam* op = new param::EnumParam(3);
     op->SetTypePair(0, "x");
     op->SetTypePair(1, "y");
@@ -114,12 +120,12 @@ GlyphRenderer::GlyphRenderer(void)
 }
 
 
-GlyphRenderer::~GlyphRenderer(void) {
+GlyphRenderer::~GlyphRenderer() {
     this->Release();
 }
 
 
-bool GlyphRenderer::create(void) {
+bool GlyphRenderer::create() {
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
@@ -134,7 +140,8 @@ bool GlyphRenderer::create(void) {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
     // create shader programs
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         // TODO: use std::filesystem::path?
@@ -189,7 +196,7 @@ bool GlyphRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-void GlyphRenderer::release(void) {
+void GlyphRenderer::release() {
     glDeleteTextures(1, &this->grey_tf_);
 
 #ifdef MEGAMOL_USE_PROFILING
@@ -360,6 +367,7 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
+
     int w = call.GetFramebuffer()->getWidth();
     int h = call.GetFramebuffer()->getHeight();
     glm::vec4 viewport_stuff;
@@ -416,9 +424,9 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     }
     shader->use();
 
+
     glUniform4fv(shader->getUniformLocation("view_attr"), 1, glm::value_ptr(viewport_stuff));
     glUniformMatrix4fv(shader->getUniformLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
-    glUniformMatrix4fv(shader->getUniformLocation("mv_i"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
     glUniformMatrix4fv(shader->getUniformLocation("mvp_t"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->getUniformLocation("mvp_i"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
     glUniform4fv(shader->getUniformLocation("cam"), 1, glm::value_ptr(cam_pos));
@@ -592,7 +600,7 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             }
 
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+            perf_manager_->start_timer(timers_[0]);
 #endif
 
             switch (this->glyph_param_.Param<core::param::EnumParam>()->Value()) {

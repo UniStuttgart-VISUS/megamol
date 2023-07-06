@@ -18,8 +18,8 @@ megamol::mesh_gl::WavefrontObjRenderer::~WavefrontObjRenderer() {}
 
 void megamol::mesh_gl::WavefrontObjRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<GPUMaterialCollection>();
-    material_collection_->addMaterial(this->instance(), "wavefrontObjMaterial",
-        {"mesh_gl/wavefrontObj_example.vert.glsl", "mesh_gl/wavefrontObj_example.frag.glsl"});
+    material_collection_->addMaterial(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+        "wavefrontObjMaterial", {"mesh_gl/wavefrontObj_example.vert.glsl", "mesh_gl/wavefrontObj_example.frag.glsl"});
 }
 
 void megamol::mesh_gl::WavefrontObjRenderer::updateRenderTaskCollection(
@@ -130,7 +130,10 @@ void megamol::mesh_gl::WavefrontObjRenderer::updateRenderTaskCollection(
                 int point_light_cnt;
                 int directional_light_cnt;
             };
-            std::array<LightMetaInfo, 1> light_meta_info{point_lights_data.size(), distant_lights_data.size()};
+            std::array<LightMetaInfo, 1> light_meta_info{
+                static_cast<int>(point_lights_data.size()),
+                static_cast<int>(distant_lights_data.size()),
+            };
             render_task_collection_->deletePerFrameDataBuffer(1);
             render_task_collection_->addPerFrameDataBuffer("light_meta_info", light_meta_info, 1);
 

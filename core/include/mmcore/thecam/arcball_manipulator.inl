@@ -34,7 +34,7 @@
  * megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator
  */
 template<class T>
-megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator(void) {}
+megamol::core::thecam::arcball_manipulator<T>::~arcball_manipulator() {}
 
 
 /*

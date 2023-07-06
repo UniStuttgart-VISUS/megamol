@@ -12,9 +12,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 /**
  * Module for propagating a tick.
@@ -54,7 +52,7 @@ public:
     /**
      * Dtor.
      */
-    ~TickSwitch();
+    ~TickSwitch() override;
 
 protected:
     /**
@@ -62,14 +60,14 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override {
+    bool create() override {
         return true;
     }
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override {}
+    void release() override {}
 
 private:
     /** Callback for ticks */
@@ -85,6 +83,4 @@ private:
     core::CallerSlot outgoing_slot_4;
 };
 
-} // namespace job
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::job

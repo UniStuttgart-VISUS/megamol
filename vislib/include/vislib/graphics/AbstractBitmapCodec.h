@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTBITMAPCODEC_H_INCLUDED
-#define VISLIB_ABSTRACTBITMAPCODEC_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,8 +18,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -43,10 +38,10 @@ namespace graphics {
 class AbstractBitmapCodec {
 public:
     /** Ctor. */
-    AbstractBitmapCodec(void);
+    AbstractBitmapCodec();
 
     /** Dtor. */
-    virtual ~AbstractBitmapCodec(void);
+    virtual ~AbstractBitmapCodec();
 
     /**
      * Autodetects if an image can be loaded by this codec by checking
@@ -69,14 +64,14 @@ public:
      *
      * @return 'true' if the codec can autodetect image compatibility.
      */
-    virtual bool CanAutoDetect(void) const;
+    virtual bool CanAutoDetect() const;
 
     /**
      * Answers whether this codec can load images.
      *
      * @return 'true' if this codec can load images.
      */
-    inline bool CanLoad(void) const {
+    inline bool CanLoad() const {
         return this->loadFromFileAImplemented() || this->loadFromFileWImplemented() ||
                this->loadFromMemoryImplemented() || this->loadFromStreamImplemented();
     }
@@ -86,7 +81,7 @@ public:
      *
      * @return 'true' if this codec can save images.
      */
-    inline bool CanSave(void) const {
+    inline bool CanSave() const {
         return this->saveToFileAImplemented() || this->saveToFileWImplemented() || this->saveToMemoryImplemented() ||
                this->saveToStreamImplemented();
     }
@@ -100,7 +95,7 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    virtual const char* FileNameExtsA(void) const;
+    virtual const char* FileNameExtsA() const;
 
     /**
      * Answer the file name extensions usually used for image files of
@@ -111,7 +106,7 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    virtual const wchar_t* FileNameExtsW(void) const;
+    virtual const wchar_t* FileNameExtsW() const;
 
     /**
      * Accesses the pointer to the image to be used by the codec. Use this
@@ -123,7 +118,7 @@ public:
      *
      * @return Reference to the image object pointer of the codec.
      */
-    inline BitmapImage*& Image(void) {
+    inline BitmapImage*& Image() {
         return this->img;
     }
 
@@ -132,7 +127,7 @@ public:
      *
      * @return The image object pointer that is used by the codec.
      */
-    inline const BitmapImage* Image(void) const {
+    inline const BitmapImage* Image() const {
         return this->img;
     }
 
@@ -234,14 +229,14 @@ public:
      *
      * @return The human-readable name of the codec.
      */
-    virtual const char* NameA(void) const = 0;
+    virtual const char* NameA() const = 0;
 
     /**
      * Answer the human-readable name of the codec.
      *
      * @return The human-readable name of the codec.
      */
-    virtual const wchar_t* NameW(void) const = 0;
+    virtual const wchar_t* NameW() const = 0;
 
     /**
      * Saves the image to a file.
@@ -348,7 +343,7 @@ protected:
      *
      * @throw IllegalStateException if no image is set
      */
-    BitmapImage& image(void);
+    BitmapImage& image();
 
     /**
      * Gets the image to be used by the codec.
@@ -357,7 +352,7 @@ protected:
      *
      * @throw IllegalStateException if no image is set
      */
-    const BitmapImage& image(void) const;
+    const BitmapImage& image() const;
 
     /**
      * Loads the image from a file
@@ -376,7 +371,7 @@ protected:
      *
      * @return true if 'loadFromFileA' has been implemented
      */
-    virtual bool loadFromFileAImplemented(void) const;
+    virtual bool loadFromFileAImplemented() const;
 
     /**
      * Loads the image from a file
@@ -395,7 +390,7 @@ protected:
      *
      * @return true if 'loadFromFileW' has been implemented
      */
-    virtual bool loadFromFileWImplemented(void) const;
+    virtual bool loadFromFileWImplemented() const;
 
     /**
      * Loads the image from a block of memory
@@ -415,7 +410,7 @@ protected:
      *
      * @return true if 'loadFromMemory' has been implemented
      */
-    virtual bool loadFromMemoryImplemented(void) const;
+    virtual bool loadFromMemoryImplemented() const;
 
     /**
      * Loads the image from a file stream
@@ -434,7 +429,7 @@ protected:
      *
      * @return true if 'loadFromStream' has been implemented
      */
-    virtual bool loadFromStreamImplemented(void) const;
+    virtual bool loadFromStreamImplemented() const;
 
     /**
      * Saves the image to a file
@@ -453,7 +448,7 @@ protected:
      *
      * @return true if 'saveToFileA' has been implemented
      */
-    virtual bool saveToFileAImplemented(void) const;
+    virtual bool saveToFileAImplemented() const;
 
     /**
      * Saves the image to a file
@@ -472,7 +467,7 @@ protected:
      *
      * @return true if 'saveToFileW' has been implemented
      */
-    virtual bool saveToFileWImplemented(void) const;
+    virtual bool saveToFileWImplemented() const;
 
     /**
      * Saves the image to a block of memory
@@ -491,7 +486,7 @@ protected:
      *
      * @return true if 'saveToMemory' has been implemented
      */
-    virtual bool saveToMemoryImplemented(void) const;
+    virtual bool saveToMemoryImplemented() const;
 
     /**
      * Saves the image to a file stream
@@ -510,17 +505,15 @@ protected:
      *
      * @return true if 'saveToStream' has been implemented
      */
-    virtual bool saveToStreamImplemented(void) const;
+    virtual bool saveToStreamImplemented() const;
 
 private:
     /** The bitmap image used by the codec */
     BitmapImage* img;
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTBITMAPCODEC_H_INCLUDED */

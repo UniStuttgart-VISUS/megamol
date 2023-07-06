@@ -1,16 +1,18 @@
 name: Style-Fix
 
-on: issue_comment
+on:
+  issue_comment:
+    types: [created, edited]
 
 jobs:
   style_fix:
     name: Style-Fix
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/format' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Get PR Info
         id: pr-info
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const pr = await github.rest.pulls.get({
@@ -21,15 +23,16 @@ jobs:
             core.setOutput('REPO', pr.data.head.repo.full_name);
             core.setOutput('REF', pr.data.head.ref);
       # Checkout master
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
+          ref: master
           path: master
           token: ${{ secrets.PAT_MEGAMOLSERVICE }}
       # Checkout PR repo/branch
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
-          repository: ${{steps.pr-info.outputs.REPO}}
-          ref: ${{steps.pr-info.outputs.REF}}
+          repository: ${{ steps.pr-info.outputs.REPO }}
+          ref: ${{ steps.pr-info.outputs.REF }}
           path: pr
           token: ${{ secrets.PAT_MEGAMOLSERVICE }}
       - name: Fix style
@@ -37,7 +40,7 @@ jobs:
         run: |
           # Run style fix with script from master branch
           cd pr
-          ../master/.ci/check_format.sh fix
+          ../master/.ci/check_format.sh --fix
 
           # Commit changes
           if ! git diff --quiet --exit-code; then
@@ -49,8 +52,8 @@ jobs:
             echo "Nothing to commit!"
           fi
       - name: Comment
-        if: failure()
-        uses: actions/github-script@v5
+        if: ${{ failure() }}
+        uses: actions/github-script@v6
         with:
           script: |
             await github.rest.issues.createComment({

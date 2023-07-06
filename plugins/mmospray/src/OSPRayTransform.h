@@ -11,8 +11,7 @@
 #include "mmospray/CallOSPRayTransformation.h"
 
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class OSPRayTransform : public core::Module {
 public:
@@ -21,7 +20,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OSPRayTransform";
     }
 
@@ -30,7 +29,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Configuration module for an OSPRay transformation";
     }
 
@@ -39,20 +38,20 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    OSPRayTransform(void);
+    OSPRayTransform();
 
     /** Dtor. */
-    virtual ~OSPRayTransform(void);
+    ~OSPRayTransform() override;
 
-    virtual bool create() {
+    bool create() override {
         return true;
     }
-    virtual void release() {}
+    void release() override {}
     bool getTransformationCallback(core::Call& call);
 
 
@@ -69,5 +68,4 @@ private:
 };
 
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

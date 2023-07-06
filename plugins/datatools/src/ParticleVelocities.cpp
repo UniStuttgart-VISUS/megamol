@@ -50,7 +50,7 @@ inline vislib::math::Vector<float, 3> getDifference(const float p1[3], const flo
 /*
  * datatools::ParticleVelocities::create
  */
-bool datatools::ParticleVelocities::create(void) {
+bool datatools::ParticleVelocities::create() {
     return true;
 }
 
@@ -58,13 +58,13 @@ bool datatools::ParticleVelocities::create(void) {
 /*
  * datatools::ParticleVelocities::release
  */
-void datatools::ParticleVelocities::release(void) {}
+void datatools::ParticleVelocities::release() {}
 
 
 /*
  * datatools::ParticleVelocities::ParticleVelocities
  */
-datatools::ParticleVelocities::ParticleVelocities(void)
+datatools::ParticleVelocities::ParticleVelocities()
         : cyclXSlot("cyclX", "Considers cyclic boundary conditions in X direction")
         , cyclYSlot("cyclY", "Considers cyclic boundary conditions in Y direction")
         , cyclZSlot("cyclZ", "Considers cyclic boundary conditions in Z direction")
@@ -104,7 +104,7 @@ datatools::ParticleVelocities::ParticleVelocities(void)
 /*
  * datatools::ParticleVelocities::~ParticleVelocities
  */
-datatools::ParticleVelocities::~ParticleVelocities(void) {
+datatools::ParticleVelocities::~ParticleVelocities() {
     this->Release();
 }
 

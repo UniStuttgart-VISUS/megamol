@@ -242,7 +242,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 // Button
                 ImGui::SetCursorScreenPos(module_rect_min);
                 ImGui::SetItemAllowOverlap();
-                ImGui::InvisibleButton(button_label.c_str(), module_size);
+                ImGui::InvisibleButton(button_label.c_str(), module_size, ImGuiButtonFlags_NoSetKeyOwner);
                 ImGui::SetItemAllowOverlap();
                 if (this->gui_set_active || ImGui::IsItemActivated()) {
                     state.interact.button_active_uid = this->uid;
@@ -339,7 +339,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 }
 
                 // Rename pop-up
-                std::string new_name;
+                std::string new_name = this->name;
                 std::string last_module_name = this->FullName();
                 if (this->gui_rename_popup.Rename("Rename Module", popup_rename, new_name)) {
                     this->SetName(new_name);
@@ -360,7 +360,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 if (!this->gui_selected &&
                     (active || this->found_uid(state.interact.modules_selected_uids, this->uid))) {
                     if (!this->found_uid(state.interact.modules_selected_uids, this->uid)) {
-                        if (ImGui::IsKeyPressed(ImGuiKey_ModShift)) {
+                        if (ImGui::IsKeyPressed(ImGuiMod_Shift)) {
                             // Multiple Selection
                             this->add_uid(state.interact.modules_selected_uids, this->uid);
                         } else {
@@ -378,8 +378,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 // Deselection
                 else if (this->gui_selected &&
                          ((mouse_clicked_anywhere && (state.interact.module_hovered_uid == GUI_INVALID_ID) &&
-                              !ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
-                             (active && ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
+                              !ImGui::IsKeyPressed(ImGuiMod_Shift)) ||
+                             (active && ImGui::IsKeyPressed(ImGuiMod_Shift)) ||
                              (!this->found_uid(state.interact.modules_selected_uids, this->uid)))) {
                     this->gui_selected = false;
                     this->erase_uid(state.interact.modules_selected_uids, this->uid);
@@ -521,11 +521,14 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
                             ImGui::PopFont();
                         }
-                        ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                     }
 #ifdef MEGAMOL_USE_PROFILING
                     // Profiling Button
                     if (profiling_button) {
+                        if (parameter_button || graph_entry_button) {
+                            ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+                        }
+
                         // Lazy loading of performance button texture
                         if (!this->gui_profiling_button.IsLoaded()) {
                             this->gui_profiling_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_PROFILING_BUTTON);
@@ -683,7 +686,7 @@ bool megamol::gui::Module::StateToJSON(nlohmann::json& inout_json) {
     bool retval = this->gui_param_groups.StateToJSON(inout_json, this->FullName());
     // Parameters
     for (auto& param : this->parameters) {
-        retval &= param.StateToJSON(inout_json, param.FullNameProject());
+        retval &= param.StateToJSON(inout_json, param.FullName());
     }
     return retval;
 }
@@ -695,7 +698,7 @@ bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
     bool retval = this->gui_param_groups.StateFromJSON(in_json, this->FullName());
     // Parameters
     for (auto& param : this->parameters) {
-        retval &= param.StateFromJSON(in_json, param.FullNameProject());
+        retval &= param.StateFromJSON(in_json, param.FullName());
         param.ForceSetGUIStateDirty();
     }
     return retval;
@@ -710,11 +713,11 @@ void megamol::gui::Module::AppendPerformanceData(frontend_resources::Performance
         switch (entry.api) {
         case frontend_resources::PerformanceManager::query_api::CPU:
             this->cpu_perf_history[entry.handle].push_sample(frame, entry.frame_index,
-                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+                std::chrono::duration<double, std::milli>(entry.duration.time_since_epoch()).count());
             break;
         case frontend_resources::PerformanceManager::query_api::OPENGL:
             this->gl_perf_history[entry.handle].push_sample(frame, entry.frame_index,
-                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+                std::chrono::duration<double, std::milli>(entry.duration.time_since_epoch()).count());
             break;
         }
     }

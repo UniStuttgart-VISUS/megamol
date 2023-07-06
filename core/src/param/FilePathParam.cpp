@@ -1,13 +1,12 @@
-/*
- * FilePathParam.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/FilePathParam.h"
-#include "mmcore/utility/FileUtils.h"
 
+#include "mmcore/utility/FileUtils.h"
 
 using namespace megamol::core::param;
 
@@ -29,11 +28,6 @@ FilePathParam::FilePathParam(const std::string& initVal, Flags_t flags, const Ex
 
 FilePathParam::FilePathParam(const char* initVal, Flags_t flags, const Extensions_t& exts)
         : FilePathParam(std::filesystem::u8path(initVal), flags, exts){};
-
-
-std::string FilePathParam::Definition() const {
-    return "MMFILA";
-}
 
 
 bool FilePathParam::ParseValue(std::string const& v) {
@@ -80,7 +74,7 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
             }
             if (error_flags == 0) {
                 this->value = new_value;
-                this->indicateChange();
+                this->indicateParamChange();
                 if (setDirty)
                     this->setDirty();
             }

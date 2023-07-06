@@ -16,14 +16,14 @@ using namespace megamol::ospray;
 /*
  * megamol::ospray::CallOSPRayLight::CallOSPRayLight
  */
-CallOSPRayMaterial::CallOSPRayMaterial(void) : isDirty(false) {
+CallOSPRayMaterial::CallOSPRayMaterial() : isDirty(false) {
     // intentionally empty
 }
 
 /*
  * megamol::ospray::CallOSPRayLight::~CallOSPRayLight
  */
-CallOSPRayMaterial::~CallOSPRayMaterial(void) {
+CallOSPRayMaterial::~CallOSPRayMaterial() {
     //
 }
 

@@ -14,8 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <variant>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ls1ParticleFormat : public core::Module {
 
@@ -25,7 +24,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ls1ParticleFormat";
     }
 
@@ -34,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts ADIOS-based IO into MegaMols MultiParticleDataCall.";
     }
 
@@ -43,20 +42,20 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ls1ParticleFormat(void);
+    ls1ParticleFormat();
 
     /** Dtor. */
-    virtual ~ls1ParticleFormat(void);
+    ~ls1ParticleFormat() override;
 
-    bool create(void);
+    bool create() override;
 
 protected:
-    void release(void);
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -88,6 +87,7 @@ private:
 
     std::vector<std::vector<float>> mix;
     std::vector<std::vector<float>> dirs;
+    std::vector<std::vector<uint64_t>> ids;
     std::vector<uint64_t> plist_count;
     std::vector<float> bbox;
     int num_plists;
@@ -145,5 +145,4 @@ private:
     }
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

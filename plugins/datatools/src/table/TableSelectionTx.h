@@ -9,17 +9,18 @@
 #include <condition_variable>
 #include <thread>
 
+#include <zmq.hpp>
+
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include <zmq.hpp>
 
 namespace megamol::datatools::table {
 
 /*
- * Module to send table selection to an other process.
+ * Module to send table selection to another process.
  */
 class TableSelectionTx : public core::Module {
 public:

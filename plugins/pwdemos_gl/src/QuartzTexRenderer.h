@@ -21,8 +21,7 @@
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module rendering gridded quarts particle data
@@ -34,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzTexRenderer";
     }
 
@@ -43,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module rendering gridded quartz particles using GLSL ray casting shader";
     }
 
@@ -52,15 +51,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    QuartzTexRenderer(void);
+    QuartzTexRenderer();
 
     /** Dtor */
-    virtual ~QuartzTexRenderer(void);
+    ~QuartzTexRenderer() override;
 
 protected:
     /**
@@ -72,7 +71,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -81,19 +80,19 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** The crystalite shader */
@@ -109,5 +108,4 @@ private:
     GLuint vbo;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

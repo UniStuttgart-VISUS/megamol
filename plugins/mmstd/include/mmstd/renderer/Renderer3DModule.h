@@ -20,7 +20,7 @@ public:
     Renderer3DModule();
 
     /** Dtor. */
-    virtual ~Renderer3DModule();
+    ~Renderer3DModule() override;
 
 protected:
     /**
@@ -32,7 +32,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(CallRender3D& call) = 0;
+    bool GetExtents(CallRender3D& call) override = 0;
 
     /**
      * The render callback.
@@ -41,7 +41,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(CallRender3D& call) = 0;
+    bool Render(CallRender3D& call) override = 0;
 
     /**
      * Method that gets called before the rendering is started for all changed modules
@@ -60,7 +60,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtentsChain(CallRender3D& call) override final;
+    bool GetExtentsChain(CallRender3D& call) final;
 
     /**
      * The callback that triggers the rendering of all chained render modules
@@ -70,7 +70,7 @@ private:
      *
      * @return True on success, false otherwise
      */
-    virtual bool RenderChain(CallRender3D& call) override final;
+    bool RenderChain(CallRender3D& call) final;
 
     // TODO events
 };

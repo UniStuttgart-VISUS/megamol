@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MESH_CALLS_H_INCLUDED
-#define MESH_CALLS_H_INCLUDED
+#pragma once
 
 #include "mmstd/generic/CallGeneric.h"
 
@@ -18,20 +17,19 @@
 #include "ImageDataAccessCollection.h"
 #include "MeshDataAccessCollection.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class Call3DInteraction : public core::GenericVersionedCall<std::shared_ptr<ThreeDimensionalInteractionCollection>,
                               core::EmptyMetaData> {
 public:
     inline Call3DInteraction()
             : GenericVersionedCall<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData>() {}
-    ~Call3DInteraction() = default;
+    ~Call3DInteraction() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "Call3DInteraction";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that transports...";
     }
 };
@@ -41,12 +39,12 @@ class CallGlTFData : public core::GenericVersionedCall<std::pair<std::string, st
 public:
     inline CallGlTFData()
             : GenericVersionedCall<std::pair<std::string, std::shared_ptr<tinygltf::Model>>, core::EmptyMetaData>() {}
-    ~CallGlTFData() = default;
+    ~CallGlTFData() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallGlTFData";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that gives access to a loaded gltf model.";
     }
 };
@@ -54,12 +52,12 @@ public:
 class CallMesh : public core::GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
 public:
     CallMesh() : GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
-    ~CallMesh(){};
+    ~CallMesh() override{};
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallMesh";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that gives access to CPU-side mesh data.";
     }
 };
@@ -67,12 +65,12 @@ public:
 class CallImage : public core::GenericVersionedCall<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData> {
 public:
     CallImage() : GenericVersionedCall<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData>() {}
-    ~CallImage(){};
+    ~CallImage() override{};
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallImage";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that gives access to CPU-side image data.";
     }
 };
@@ -83,8 +81,4 @@ typedef megamol::core::factories::CallAutoDescription<CallGlTFData> CallGlTFData
 typedef megamol::core::factories::CallAutoDescription<CallMesh> CallMeshDescription;
 typedef megamol::core::factories::CallAutoDescription<CallImage> CallImageDescription;
 
-} // namespace mesh
-} // namespace megamol
-
-
-#endif // !MESH_CALLS_H_INCLUDED
+} // namespace megamol::mesh

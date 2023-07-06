@@ -9,7 +9,6 @@
 
 #include "MoleculeSESRenderer.h"
 #include "glm/gtx/string_cast.hpp"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -45,7 +44,7 @@ using namespace megamol::core::utility::log;
 /*
  * MoleculeSESRenderer::MoleculeSESRenderer
  */
-MoleculeSESRenderer::MoleculeSESRenderer(void)
+MoleculeSESRenderer::MoleculeSESRenderer()
         : Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the protein SES rendering with protein data storage")
         , getLightsSlot("getLights", "Connects the protein SES rendering with light sources")
@@ -188,7 +187,7 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
 /*
  * MoleculeSESRenderer::~MoleculeSESRenderer
  */
-MoleculeSESRenderer::~MoleculeSESRenderer(void) {
+MoleculeSESRenderer::~MoleculeSESRenderer() {
     // delete singularity texture
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);
@@ -200,13 +199,13 @@ MoleculeSESRenderer::~MoleculeSESRenderer(void) {
 /*
  * protein::MoleculeSESRenderer::release
  */
-void MoleculeSESRenderer::release(void) {}
+void MoleculeSESRenderer::release() {}
 
 
 /*
  * MoleculeSESRenderer::create
  */
-bool MoleculeSESRenderer::create(void) {
+bool MoleculeSESRenderer::create() {
 
     // glEnable( GL_NORMALIZE);
     glEnable(GL_DEPTH_TEST);
@@ -215,12 +214,9 @@ bool MoleculeSESRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
-    CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
-
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(ci->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
             std::filesystem::path("protein_gl/moleculeses/mses_sphere.vert.glsl"),
@@ -357,7 +353,7 @@ bool MoleculeSESRenderer::create(void) {
         glDisableVertexAttribArray(i);
     }
 
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }
@@ -1513,7 +1509,7 @@ void MoleculeSESRenderer::CreateSingularityTexture(unsigned int idxRS) {
 /*
  * MoleculeSESRenderer::deinitialise
  */
-void MoleculeSESRenderer::deinitialise(void) {
+void MoleculeSESRenderer::deinitialise() {
     // delete singularity texture
     for (unsigned int i = 0; i < singularityTexture.size(); ++i)
         glDeleteTextures(1, &singularityTexture[i]);

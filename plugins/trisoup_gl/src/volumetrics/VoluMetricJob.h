@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VOLUMETRICJOB_H_INCLUDED
-#define MEGAMOLCORE_VOLUMETRICJOB_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/LinesDataCall.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
@@ -20,12 +16,11 @@
 #include "mmcore/param/ParamSlot.h"
 #include "trisoup/trisoupVolumetricDataCall.h"
 #include "trisoup/volumetrics/JobStructures.h"
+#include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
 
-namespace megamol {
-namespace trisoup_gl {
-namespace volumetrics {
+namespace megamol::trisoup_gl::volumetrics {
 /**
  * Megamol job that computes metrics about the volume occupied by a number
  * of (spherical) glyphs. Several threaded jobs are generated for a number of
@@ -38,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VoluMetricJob";
     }
 
@@ -47,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes volumetric metrics of a multiparticle dataset, i.e. surface and volume"
                ", assuming a spacefilling spheres geometry";
     }
@@ -57,15 +52,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    VoluMetricJob(void);
+    VoluMetricJob();
 
     /** Dtor. */
-    virtual ~VoluMetricJob(void);
+    ~VoluMetricJob() override;
 
     bool areSurfacesJoinable(int sjdIdx1, int surfIdx1, int sjdIdx2, int surfIdx2);
 
@@ -90,12 +85,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Perform the work of a thread.
@@ -107,7 +102,7 @@ protected:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
 private:
     /**
@@ -194,7 +189,7 @@ private:
     /**
      * Connects the volumes calculated in the subjobs to the volume backbuffer - fpr debug purposes only ...
      */
-    void copyVolumesToBackBuffer(void);
+    void copyVolumesToBackBuffer();
 
     void generateStatistics(vislib::Array<unsigned int>& uniqueIDs, vislib::Array<SIZE_T>& countPerID,
         vislib::Array<trisoup::volumetrics::VoxelizerFloat>& surfPerID,
@@ -276,8 +271,4 @@ private:
     vislib::Array<trisoup::trisoupVolumetricDataCall::Volume> debugVolumes;
 };
 
-} /* end namespace volumetrics */
-} // namespace trisoup_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_VOLUMETRICJOB_H_INCLUDED */
+} // namespace megamol::trisoup_gl::volumetrics

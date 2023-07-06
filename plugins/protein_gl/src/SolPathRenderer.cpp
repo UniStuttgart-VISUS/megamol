@@ -6,7 +6,6 @@
  */
 
 #include "SolPathRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallRender3D.h"
@@ -21,7 +20,7 @@ using namespace megamol::protein_gl;
 /*
  * SolPathRenderer::SolPathRenderer
  */
-SolPathRenderer::SolPathRenderer(void)
+SolPathRenderer::SolPathRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , getdataslot("getdata", "Fetches data")
         , pathlineShader() {
@@ -34,7 +33,7 @@ SolPathRenderer::SolPathRenderer(void)
 /*
  * SolPathRenderer::~SolPathRenderer
  */
-SolPathRenderer::~SolPathRenderer(void) {
+SolPathRenderer::~SolPathRenderer() {
     this->Release();
 }
 
@@ -42,10 +41,11 @@ SolPathRenderer::~SolPathRenderer(void) {
 /*
  * SolPathRenderer::create
  */
-bool SolPathRenderer::create(void) {
+bool SolPathRenderer::create() {
     using megamol::core::utility::log::Log;
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         pathlineShader = core::utility::make_glowl_shader("pathlineShader", shader_options,
@@ -85,7 +85,7 @@ bool SolPathRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 /*
  * SolPathRenderer::release
  */
-void SolPathRenderer::release(void) {}
+void SolPathRenderer::release() {}
 
 
 /*

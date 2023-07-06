@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_TSNE_MODULE_H_INCLUDED
-#define MEGAMOL_TSNE_MODULE_H_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -8,41 +7,40 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 using namespace megamol::core;
 
 class TSNEProjection : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TSNEProjection";
     }
 
     /** Return module class description */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "t-Distributed Stochastic Neighbor Embedding (t-SNE), i.e., a nonlinear dimensionality reduction "
                "technique";
     }
 
     /** Module is always available */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /** Constructor */
-    TSNEProjection(void);
+    TSNEProjection();
 
     /** Destructor */
-    virtual ~TSNEProjection(void);
+    ~TSNEProjection() override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Data callback */
@@ -79,8 +77,4 @@ private:
     std::vector<float> data;
 };
 
-} // namespace infovis
-} // namespace megamol
-
-
-#endif
+} // namespace megamol::infovis

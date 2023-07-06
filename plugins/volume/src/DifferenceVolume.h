@@ -21,8 +21,7 @@
 #include "mmcore/Module.h"
 
 
-namespace megamol {
-namespace volume {
+namespace megamol::volume {
 
 /**
  * Computes the difference between two time steps of a volumetric data
@@ -36,7 +35,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline constexpr const char* ClassName(void) {
+    static inline constexpr const char* ClassName() {
         return "DifferenceVolume";
     }
 
@@ -45,7 +44,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline constexpr const char* Description(void) {
+    static inline constexpr const char* Description() {
         return "Computes the difference between volumes.";
     }
 
@@ -54,19 +53,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline constexpr bool IsAvailable(void) {
+    static inline constexpr bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    DifferenceVolume(void);
+    DifferenceVolume();
 
     /**
      * Finalises an instance.
      */
-    virtual ~DifferenceVolume(void);
+    ~DifferenceVolume() override;
 
 protected:
     /**
@@ -103,14 +102,14 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Computes the hash of 'data'.
      *
      * @return The hash of the currently available data.
      */
-    inline std::size_t getHash(void) {
+    inline std::size_t getHash() {
         auto retval = this->hashData;
         retval ^= this->hashState + 0x9e3779b9 + (retval << 6) + (retval >> 2);
         return retval;
@@ -151,7 +150,7 @@ protected:
     /**
      * Clean up module.
      */
-    virtual void release(void) override;
+    void release() override;
 
 private:
     std::array<std::vector<std::uint8_t>, 2> cache;
@@ -166,7 +165,6 @@ private:
     core::CalleeSlot slotOut;
 };
 
-} /* end namespace volume */
-} /* namespace megamol */
+} // namespace megamol::volume
 
 #include "DifferenceVolume.inl"

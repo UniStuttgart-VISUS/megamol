@@ -10,8 +10,7 @@
 #include "FrontendResource.h"
 #include "ImageWrapper.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 // a way for entry points to get new render input state from outside
 // update of the render input gets called before the entry point is rendered/executed
@@ -41,5 +40,4 @@ struct EntryPoint {
     int priority = 0; // entry points with smaller priority get presented first
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

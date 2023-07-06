@@ -5,7 +5,6 @@
 #include <glm/ext.hpp>
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -15,8 +14,10 @@
 #include "mmstd/light/PointLight.h"
 #include "mmstd/light/TriDirectionalLighting.h"
 
+using megamol::core::utility::log::Log;
+
 megamol::compositing_gl::LocalLighting::LocalLighting()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , m_version(0)
         , m_output_texture(nullptr)
         , m_point_lights_buffer(nullptr)
@@ -104,7 +105,8 @@ megamol::compositing_gl::LocalLighting::~LocalLighting() {
 
 bool megamol::compositing_gl::LocalLighting::create() {
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         m_lambert_prgm =

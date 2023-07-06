@@ -19,10 +19,10 @@ protected:
     AbstractLight();
 
     /** Dtor. */
-    virtual ~AbstractLight();
+    ~AbstractLight() override;
 
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
     bool getLightCallback(core::Call& call);
     bool getMetaDataCallback(core::Call& call);
     virtual bool InterfaceIsDirty() {

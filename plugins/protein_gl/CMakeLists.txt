@@ -4,7 +4,7 @@
 #
 
 megamol_plugin(protein_gl
-  BUILD_DEFAULT OFF
+  BUILD_DEFAULT ON
   DEPENDS_FEATURES
     opengl
   DEPENDS_PLUGINS

@@ -13,12 +13,12 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 
-class ScreenSpaceEdges : public core::Module {
+class ScreenSpaceEdges : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -48,7 +48,7 @@ public:
     }
 
     ScreenSpaceEdges();
-    ~ScreenSpaceEdges();
+    ~ScreenSpaceEdges() override;
 
 protected:
     /**
@@ -56,12 +56,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO

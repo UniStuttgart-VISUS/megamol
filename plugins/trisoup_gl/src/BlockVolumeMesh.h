@@ -6,18 +6,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED
-#define MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractTriMeshDataSource.h"
 #include "mmcore/CallerSlot.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -30,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BlockVolumeMesh";
     }
 
@@ -39,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts a binary volume into a tri mesh showing opaque blocks.";
     }
 
@@ -48,19 +43,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    BlockVolumeMesh(void);
+    BlockVolumeMesh();
 
     /** Dtor */
-    virtual ~BlockVolumeMesh(void);
+    ~BlockVolumeMesh() override;
 
 protected:
     /** Ensures that the data is loaded */
-    virtual void assertData(void);
+    void assertData() override;
 
 private:
     /** The in data slot */
@@ -70,7 +65,4 @@ private:
     SIZE_T inDataHash;
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
-
-#endif /* MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED */
+} // namespace megamol::trisoup_gl

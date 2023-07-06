@@ -16,7 +16,7 @@ using namespace megamol::moldyn;
 /*
  * ParticleGridDataCall::ParticleType::ParticleType
  */
-ParticleGridDataCall::ParticleType::ParticleType(void)
+ParticleGridDataCall::ParticleType::ParticleType()
         : colDataType(geocalls::MultiParticleDataCall::Particles::COLDATA_NONE)
         , maxColI(1.0f)
         , minColI(0.0)
@@ -44,7 +44,7 @@ ParticleGridDataCall::ParticleType::ParticleType(const ParticleGridDataCall::Par
 /*
  * ParticleGridDataCall::ParticleType::~ParticleType
  */
-ParticleGridDataCall::ParticleType::~ParticleType(void) {
+ParticleGridDataCall::ParticleType::~ParticleType() {
     // intentionally empty
 }
 
@@ -81,7 +81,7 @@ bool ParticleGridDataCall::ParticleType::operator==(const ParticleGridDataCall::
 /*
  * ParticleGridDataCall::Particles::Particles
  */
-ParticleGridDataCall::Particles::Particles(void)
+ParticleGridDataCall::Particles::Particles()
         : colPtr(NULL)
         , colStride(0)
         , count(0)
@@ -109,7 +109,7 @@ ParticleGridDataCall::Particles::Particles(const ParticleGridDataCall::Particles
 /*
  * ParticleGridDataCall::Particles::~Particles
  */
-ParticleGridDataCall::Particles::~Particles(void) {
+ParticleGridDataCall::Particles::~Particles() {
     this->colPtr = NULL;  // DO NOT DELETE
     this->vertPtr = NULL; // DO NOT DELETE
 }
@@ -143,7 +143,7 @@ bool ParticleGridDataCall::Particles::operator==(const ParticleGridDataCall::Par
 /*
  * ParticleGridDataCall::GridCell::GridCell
  */
-ParticleGridDataCall::GridCell::GridCell(void) : particles(NULL), bbox() {
+ParticleGridDataCall::GridCell::GridCell() : particles(NULL), bbox() {
     // intentionally empty
 }
 
@@ -159,7 +159,7 @@ ParticleGridDataCall::GridCell::GridCell(const ParticleGridDataCall::GridCell& s
 /*
  * ParticleGridDataCall::GridCell::~GridCell
  */
-ParticleGridDataCall::GridCell::~GridCell(void) {
+ParticleGridDataCall::GridCell::~GridCell() {
     ARY_SAFE_DELETE(this->particles);
 }
 
@@ -186,7 +186,7 @@ bool ParticleGridDataCall::GridCell::operator==(const ParticleGridDataCall::Grid
 /*
  * ParticleGridDataCall::ParticleGridDataCall
  */
-ParticleGridDataCall::ParticleGridDataCall(void)
+ParticleGridDataCall::ParticleGridDataCall()
         : AbstractGetData3DCall()
         , cntCellsX(0)
         , cntCellsY(0)
@@ -204,7 +204,7 @@ ParticleGridDataCall::ParticleGridDataCall(void)
 /*
  * ParticleGridDataCall::~ParticleGridDataCall
  */
-ParticleGridDataCall::~ParticleGridDataCall(void) {
+ParticleGridDataCall::~ParticleGridDataCall() {
     this->Unlock();
     if (this->ownCellMem) {
         delete[] this->cells;

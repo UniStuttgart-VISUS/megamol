@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_PATH_H_INCLUDED
-#define VISLIB_PATH_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -20,8 +16,7 @@
 #pragma comment(lib, "shlwapi")
 #endif /* _MSC_VER */
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -207,7 +202,7 @@ public:
      * @return The fully qualified path to the currently running
      *         application or an empty string in case of an error.
      */
-    static StringA GetApplicationPathA(void);
+    static StringA GetApplicationPathA();
 
     /**
      * Answer the path to the currently running application including the
@@ -216,7 +211,7 @@ public:
      * @return The fully qualified path to the currently running
      *         application or an empty string in case of an error.
      */
-    static StringW GetApplicationPathW(void);
+    static StringW GetApplicationPathW();
 
     /**
      * Answer the current working directory.
@@ -229,7 +224,7 @@ public:
      * @throws std::bad_alloc If there is not enough memory for storing the
      *                        directory.
      */
-    static StringA GetCurrentDirectoryA(void);
+    static StringA GetCurrentDirectoryA();
 
     /**
      * Answer the current working directory.
@@ -242,7 +237,7 @@ public:
      * @throws std::bad_alloc If there is not enough memory for storing the
      *                        directory.
      */
-    static StringW GetCurrentDirectoryW(void);
+    static StringW GetCurrentDirectoryW();
 
     /**
      * Answer the directory path containing the given path.
@@ -282,7 +277,7 @@ public:
      *
      * @throws SystemException if an error occured.
      */
-    static StringA GetTempDirectoryA(void);
+    static StringA GetTempDirectoryA();
 
     /**
      * Answer the current temp directory.
@@ -296,7 +291,7 @@ public:
      *
      * @throws SystemException if an error occured.
      */
-    static StringW GetTempDirectoryW(void);
+    static StringW GetTempDirectoryW();
 
     /**
      * Answer the home directory of the user. On windows the 'My Documents'
@@ -308,7 +303,7 @@ public:
      *
      * @throws SystemException If the directory cannot be retrieved
      */
-    static StringA GetUserHomeDirectoryA(void);
+    static StringA GetUserHomeDirectoryA();
 
     /**
      * Answer the home directory of the user. On windows the 'My Documents'
@@ -320,7 +315,7 @@ public:
      *
      * @throws SystemException If the directory cannot be retrieved
      */
-    static StringW GetUserHomeDirectoryW(void);
+    static StringW GetUserHomeDirectoryW();
 
     /**
      * Answer, whether 'path' is an absolute path.
@@ -529,11 +524,11 @@ public:
     static const wchar_t SEPARATOR_W;
 
     /** Dtor. */
-    ~Path(void);
+    ~Path();
 
 private:
     /** Disallow instances. */
-    Path(void);
+    Path();
 };
 
 
@@ -551,10 +546,8 @@ bool Path::Compare(const String<T>& lhs, const String<T>& rhs) {
 #endif /* _WIN32 */
 }
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_PATH_H_INCLUDED */

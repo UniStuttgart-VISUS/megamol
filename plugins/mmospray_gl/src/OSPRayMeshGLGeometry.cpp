@@ -15,7 +15,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayMeshGLGeometry::OSPRayMeshGLGeometry(void)
+OSPRayMeshGLGeometry::OSPRayMeshGLGeometry()
         : AbstractOSPRayStructure()
         , _getTrimeshDataSlot("getTrimeshData", "Connects to the data source")
         , _getMeshDataSlot("getMeshData", "Connects to the data source") {

@@ -64,7 +64,7 @@ public:
     CallTimeControl();
 
     /** Dtor. */
-    virtual ~CallTimeControl();
+    ~CallTimeControl() override;
 
     /**
      * Answer the master time control

@@ -17,7 +17,6 @@
 #include <omp.h>
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -40,12 +39,13 @@
         }                                                                                     \
     } while (0)
 
-namespace megamol {
-namespace demos_gl {
+using megamol::core::utility::log::Log;
+
+namespace megamol::demos_gl {
 /*
  * AOSphereRenderer::AOSphereRenderer
  */
-AOSphereRenderer::AOSphereRenderer(void)
+AOSphereRenderer::AOSphereRenderer()
         : megamol::mmstd_gl::Renderer3DModuleGL()
         , sphereShaderAOMainAxes()
         , sphereShaderAONormals()
@@ -136,7 +136,7 @@ AOSphereRenderer::AOSphereRenderer(void)
 /*
  * AOSphereRenderer::~AOSphereRenderer
  */
-AOSphereRenderer::~AOSphereRenderer(void) {
+AOSphereRenderer::~AOSphereRenderer() {
     this->Release();
 }
 
@@ -144,14 +144,15 @@ AOSphereRenderer::~AOSphereRenderer(void) {
 /*
  * AOSphereRenderer::create
  */
-bool AOSphereRenderer::create(void) {
+bool AOSphereRenderer::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isExtAvailable("GL_ARB_multitexture") || !ogl_ctx.isExtAvailable("GL_EXT_framebuffer_object") ||
         !ogl_ctx.isVersionGEQ(2, 0)) {
         return false;
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     const char* maFragNames[] = {
         "pwdemos_gl/AOSphere/mainaxes_LightAO.frag.glsl",
@@ -232,7 +233,7 @@ bool AOSphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 /*
  * AOSphereRenderer::release
  */
-void AOSphereRenderer::release(void) {
+void AOSphereRenderer::release() {
     for (unsigned int i = 0; i < 4; i++) {
         this->sphereShaderAOMainAxes[i].reset();
         this->sphereShaderAONormals[i].reset();
@@ -1506,5 +1507,4 @@ void AOSphereRenderer::createVolumeCPU(protein_calls::MolecularDataCall& mol) {
     delete[] vol;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

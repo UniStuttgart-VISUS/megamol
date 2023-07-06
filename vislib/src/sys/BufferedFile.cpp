@@ -37,7 +37,7 @@ vislib::sys::File::FileSize& vislib::sys::BufferedFile::defaultBufferSize(__vl_b
 /*
  * vislib::sys::BufferedFile::BufferedFile
  */
-vislib::sys::BufferedFile::BufferedFile(void)
+vislib::sys::BufferedFile::BufferedFile()
         : File()
         , buffer(NULL)
         , bufferOffset(0)
@@ -53,7 +53,7 @@ vislib::sys::BufferedFile::BufferedFile(void)
 /*
  * vislib::sys::BufferedFile::~BufferedFile
  */
-vislib::sys::BufferedFile::~BufferedFile(void) {
+vislib::sys::BufferedFile::~BufferedFile() {
     ARY_SAFE_DELETE(this->buffer);
 }
 
@@ -61,7 +61,7 @@ vislib::sys::BufferedFile::~BufferedFile(void) {
 /*
  * vislib::sys::BufferedFile::Close
  */
-void vislib::sys::BufferedFile::Close(void) {
+void vislib::sys::BufferedFile::Close() {
     this->Flush(); // flushes if writeable and dirty.
     File::Close();
     this->fileMode = File::READ_WRITE;
@@ -72,7 +72,7 @@ void vislib::sys::BufferedFile::Close(void) {
 /*
  * vislib::sys::BufferedFile::Flush
  */
-void vislib::sys::BufferedFile::Flush(void) {
+void vislib::sys::BufferedFile::Flush() {
     this->flush(true);
 }
 
@@ -80,7 +80,7 @@ void vislib::sys::BufferedFile::Flush(void) {
 /*
  * vislib::sys::BufferedFile::GetSize
  */
-vislib::sys::File::FileSize vislib::sys::BufferedFile::GetSize(void) const {
+vislib::sys::File::FileSize vislib::sys::BufferedFile::GetSize() const {
     FileSize size = File::GetSize();
     if (this->bufferStart + this->validBufferSize > size) {
         size = this->bufferStart + this->validBufferSize;
@@ -262,7 +262,7 @@ void vislib::sys::BufferedFile::SetBufferSize(vislib::sys::File::FileSize newSiz
 /*
  * vislib::sys::BufferedFile::Tell
  */
-vislib::sys::File::FileSize vislib::sys::BufferedFile::Tell(void) const {
+vislib::sys::File::FileSize vislib::sys::BufferedFile::Tell() const {
     return this->bufferStart + this->bufferOffset;
 }
 

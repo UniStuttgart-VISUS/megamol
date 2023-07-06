@@ -6,9 +6,8 @@
  */
 
 #include "CSVFileSequence.h"
+#include "PluginsResource.h"
 #include "datatools/table/TableDataCall.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/MegaMolGraph.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -24,7 +23,7 @@ using namespace megamol;
 /*
  * CSVFileSequence::CSVFileSequence
  */
-datatools::CSVFileSequence::CSVFileSequence(void)
+datatools::CSVFileSequence::CSVFileSequence()
         : core::Module()
         , fileNameTemplateSlot("fileNameTemplate", "The file name template"
                                                    " example: D:\\data\\Kohler\\nial\\nialout50_*5{0..599+2}*.crist "
@@ -34,7 +33,8 @@ datatools::CSVFileSequence::CSVFileSequence(void)
         , fileNumberMinSlot("fileNumberMin", "Slot for the minimum file number")
         , fileNumberMaxSlot("fileNumberMax", "Slot for the maximum file number")
         , fileNumberStepSlot("fileNumberStep", "Slot for the file number increase step")
-        , fileNameSlotNameSlot("fileNameSlotName", "The name of the data source file name parameter slot")
+        , fileNameSlotNameSlot("fileNameSlotName", "The name of the data source file name parameter slot (e.g. "
+                                                   "'filename', not the whole path to module and slot)")
         , useClipBoxAsBBox("useClipBoxAsBBox", "If true will use the all-data clip box as bounding box")
         , outDataSlot("outData", "The slot for publishing data to the writer")
         , inDataSlot("inData", "The slot for requesting data from the source")
@@ -90,7 +90,7 @@ datatools::CSVFileSequence::CSVFileSequence(void)
 /*
  * CSVFileSequence::~CSVFileSequence
  */
-datatools::CSVFileSequence::~CSVFileSequence(void) {
+datatools::CSVFileSequence::~CSVFileSequence() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -98,7 +98,7 @@ datatools::CSVFileSequence::~CSVFileSequence(void) {
 /*
  * CSVFileSequence::create
  */
-bool datatools::CSVFileSequence::create(void) {
+bool datatools::CSVFileSequence::create() {
 
     return true;
 }
@@ -107,7 +107,7 @@ bool datatools::CSVFileSequence::create(void) {
 /*
  * CSVFileSequence::release
  */
-void datatools::CSVFileSequence::release(void) {}
+void datatools::CSVFileSequence::release() {}
 
 
 /*
@@ -166,7 +166,8 @@ bool datatools::CSVFileSequence::getDataCallback(core::Call& caller) {
         if (!(*ggdc)(0)) {
             return false; // unable to get data
         }
-        this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
+        auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+        pluginsRes.all_call_descriptions.AssignmentCrowbar(pgdc, ggdc);
         ggdc->SetUnlocker(nullptr, false);
 
         pgdc->SetFrameID(frameID);
@@ -232,7 +233,7 @@ bool datatools::CSVFileSequence::getExtentCallback(core::Call& caller) {
 /*
  * CSVFileSequence::checkParameters
  */
-void datatools::CSVFileSequence::checkParameters(void) {
+void datatools::CSVFileSequence::checkParameters() {
     if (this->fileNumberMinSlot.IsDirty()) {
         this->fileNumberMinSlot.ResetDirty();
         this->fileNumMin = static_cast<unsigned int>(
@@ -449,20 +450,48 @@ bool datatools::CSVFileSequence::onFileNameSlotNameChanged(core::param::ParamSlo
 /*
  * CSVFileSequence::findFileNameSlot
  */
-core::param::ParamSlot* datatools::CSVFileSequence::findFileNameSlot(void) {
+core::param::ParamSlot* datatools::CSVFileSequence::findFileNameSlot() {
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
-    if (P != NULL) {
-        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
-        return megamolgraph.FindParameterSlot(P->Value());
+
+    // target slot has name
+    if (!P)
+        return nullptr;
+
+    // there is a target module connected via call
+    if (this->inDataSlot.GetStatus() != megamol::core::AbstractSlot::STATUS_CONNECTED)
+        return nullptr;
+
+    auto target_module = this->inDataSlot
+                             .CallAs<megamol::core::Call>() // connected Call
+                             ->PeekCalleeSlotNoConst()      // slot of target Module
+                             ->Parent();                    // target Module
+
+    auto target_module_name = std::string{target_module->FullName().PeekBuffer()};
+
+    auto target_slot_name = P->Value();
+
+    // shorten long slot name which may contain module name: ::module::path::slot_name -> slot_name
+    if (target_slot_name.find(target_module_name) == 0) {
+        auto name_start_pos = target_module_name.length() + 2; // module_path + "::"
+        assert(target_slot_name.length() >= name_start_pos);
+        target_slot_name = target_slot_name.substr(name_start_pos); // truncate long name to only slot name
     }
-    return NULL;
+
+    core::param::ParamSlot* slot = dynamic_cast<core::param::ParamSlot*>(
+        AbstractNamedObjectContainer::dynamic_pointer_cast(
+            target_module->shared_from_this())    // cast to AbstractNamedObjectContainer
+            ->FindChild(target_slot_name.c_str()) // Find target Slot by name in Module
+            .get()                                // get value of smart ptr
+    );
+
+    return slot;
 }
 
 
 /*
  * CSVFileSequence::assertData
  */
-void datatools::CSVFileSequence::assertData(void) {
+void datatools::CSVFileSequence::assertData() {
     using megamol::core::utility::log::Log;
     if (!this->needDataUpdate)
         return;
@@ -478,6 +507,14 @@ void datatools::CSVFileSequence::assertData(void) {
         return;
     }
 
+    // we want to inject our variations of the file name into the referenced file path param
+    auto* fileParam = fnSlot->Param<core::param::FilePathParam>();
+    if (fileParam == NULL) {
+        Log::DefaultLog.WriteMsg(Log::log_level::error, "file name slot is not a FilePathParam");
+        return;
+    }
+    auto curent_file_param_value = fileParam->ValueString();
+
     table::TableDataCall* gdc = this->inDataSlot.CallAs<table::TableDataCall>();
     if (gdc == NULL) {
         Log::DefaultLog.WriteError("Unable to get input data call");
@@ -487,16 +524,23 @@ void datatools::CSVFileSequence::assertData(void) {
     // count really available frames
     for (unsigned int i = this->fileNumMin; i <= this->fileNumMax; i += this->fileNumStep) {
         filename.Format(this->fileNameTemplate, i);
-        if (vislib::sys::File::Exists(filename)) {
+
+        // we need to use the file path param to check for existence of the file
+        fileParam->ParseValue(filename.PeekBuffer());
+
+        if (std::filesystem::exists(fileParam->Value())) {
             this->frameCnt++;
         } else {
             break;
         }
     }
+    fileParam->ParseValue(curent_file_param_value);
+
     if (this->frameCnt == 0) {
         Log::DefaultLog.WriteError("CSVFileSequence: No data files found");
         return;
     }
+
 
     // collect heuristic approach for clipping box
     filename.Format(this->fileNameTemplate, this->fileNumMin);

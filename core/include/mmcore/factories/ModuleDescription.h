@@ -1,11 +1,9 @@
 /**
  * MegaMol
- * Copyright (c) 2008-2021, MegaMol Dev Team
+ * Copyright (c) 2008, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_FACTORIES_MODULEDESCRIPTION_H_INCLUDED
-#define MEGAMOLCORE_FACTORIES_MODULEDESCRIPTION_H_INCLUDED
 #pragma once
 
 #include <memory>
@@ -51,6 +49,8 @@ public:
      */
     virtual bool IsAvailable() const;
 
+    virtual void requested_lifetime_resources(frontend_resources::ResourceRequest& req) const = 0;
+
     /**
      * Answers whether this description is describing the class of
      * 'module'.
@@ -61,13 +61,6 @@ public:
      *         'false' otherwise.
      */
     virtual bool IsDescribing(const Module* module) const = 0;
-
-    /**
-     * Answer whether or not this module can be used in a quickstart
-     *
-     * @return 'true' if the module can be used in a quickstart
-     */
-    virtual bool IsVisibleForQuickstart() const = 0;
 
     /**
      * Creates a new module object from this description.
@@ -91,5 +84,3 @@ protected:
 };
 
 } // namespace megamol::core::factories
-
-#endif // MEGAMOLCORE_FACTORIES_MODULEDESCRIPTION_H_INCLUDED

@@ -28,8 +28,7 @@ static void log(std::string text) {
     log(text.c_str());
 }
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 FrameStatistics_Service::FrameStatistics_Service() {}
 
@@ -48,6 +47,9 @@ bool FrameStatistics_Service::init(const Config& config) {
         "RegisterLuaCallbacks"};
 
     m_program_start_time = std::chrono::steady_clock::time_point::clock::now();
+
+    // the first frame is bogus, sorry.
+    m_frame_start_time = std::chrono::steady_clock::time_point::clock::now();
 
     log("initialized successfully");
     return true;
@@ -86,9 +88,7 @@ void FrameStatistics_Service::postGraphRender() {}
 
 // TODO: maybe port FPS Counter from
 // #include "vislib/graphics/FpsCounter.h"
-void FrameStatistics_Service::start_frame() {
-    m_frame_start_time = std::chrono::steady_clock::time_point::clock::now();
-}
+void FrameStatistics_Service::start_frame() {}
 
 void FrameStatistics_Service::finish_frame() {
     auto now = std::chrono::steady_clock::time_point::clock::now();
@@ -109,6 +109,7 @@ void FrameStatistics_Service::finish_frame() {
     m_statistics.last_averaged_mspf = std::accumulate(m_frame_times_micro.begin(), m_frame_times_micro.end(), 0) /
                                       m_frame_times_micro.size() / static_cast<double>(1000);
     m_statistics.last_averaged_fps = 1000.0 / m_statistics.last_averaged_mspf;
+    m_frame_start_time = now;
 }
 
 void FrameStatistics_Service::fill_lua_callbacks() {
@@ -129,5 +130,4 @@ void FrameStatistics_Service::fill_lua_callbacks() {
     register_callbacks(callbacks);
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

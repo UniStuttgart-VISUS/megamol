@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "MeshBakery.h"
 #include "ObjWriter.h"
@@ -19,12 +19,11 @@
 #include "mesh/TriangleMeshCall.h"
 
 namespace megamol::mesh {
-class MeshPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MeshPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MeshPluginInstance)
 
 public:
-    MeshPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("mesh", "Plugin for rendering meshes."){};
+    MeshPluginInstance() : megamol::core::factories::AbstractPluginInstance("mesh", "Plugin for rendering meshes."){};
 
     ~MeshPluginInstance() override = default;
 

@@ -1,9 +1,9 @@
 #include "BindingSiteDataSource.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/utility/String.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/math/mathfunctions.h"
@@ -20,7 +20,7 @@ using namespace megamol::protein_calls;
 /*
  * BindingSiteDataSource::BindingSiteDataSource (CTOR)
  */
-BindingSiteDataSource::BindingSiteDataSource(void)
+BindingSiteDataSource::BindingSiteDataSource()
         : megamol::core::Module()
         , dataOutSlot_("dataout", "The slot providing the binding site data")
         , pdbFilenameSlot_("pdbFilename", "The PDB file containing the binding site information")
@@ -52,7 +52,7 @@ BindingSiteDataSource::BindingSiteDataSource(void)
 /*
  * BindingSiteDataSource::~BindingSiteDataSource (DTOR)
  */
-BindingSiteDataSource::~BindingSiteDataSource(void) {
+BindingSiteDataSource::~BindingSiteDataSource() {
     this->Release();
 }
 
@@ -144,18 +144,18 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
     if (file.LoadFile(filename.c_str())) {
         // file successfully loaded, read first frame
         lineCnt = 0;
-        while (lineCnt < file.Count() && !strStartsWith(line, "END")) {
+        while (lineCnt < file.Count() && !utility::string::StartsWith(line, "END")) {
             // get the current line from the file
             line = file.Line(lineCnt);
             // store all site entries
-            if (strStartsWith(line, "SITE") || strStartsWith(line, "BSITE")) {
+            if (utility::string::StartsWith(line, "SITE") || utility::string::StartsWith(line, "BSITE")) {
                 // add site entry
                 bsEntries.emplace_back(line);
             }
             // store all remark 800 entries
-            if (strStartsWith(line, "REMARK 800")) {
+            if (utility::string::StartsWith(line, "REMARK 800")) {
                 line = line.substr(10);
-                strTrimSpaces(line);
+                utility::string::Trim(line);
                 // add remark entry
                 if (!line.empty()) {
                     remarkEntries.emplace_back(line);
@@ -170,20 +170,20 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
             // write binding site name (check if this is the first entry)
             if (this->bindingSiteNames_.empty()) {
                 this->bindingSiteNames_.emplace_back(bsEntries[i].substr(11, 4));
-                strTrimSpaces(this->bindingSiteNames_.back());
+                utility::string::Trim(this->bindingSiteNames_.back());
                 this->bindingSites_.emplace_back(std::vector<std::pair<char, unsigned int>>(10));
                 this->bindingSiteResNames_.emplace_back(std::vector<std::string>(10));
                 bsIdx = 0;
             } else {
                 // check if next entry is still the same binding site
                 tmpBSName = bsEntries[i].substr(11, 4);
-                strTrimSpaces(tmpBSName);
+                utility::string::Trim(tmpBSName);
                 if (tmpBSName != bindingSiteNames_.back()) {
                     seqNumString = bsEntries[i].substr(7, 3);
-                    strTrimSpaces(seqNumString);
+                    utility::string::Trim(seqNumString);
                     if (std::stoi(seqNumString) == 1) {
                         this->bindingSiteNames_.emplace_back(bsEntries[i].substr(11, 4));
-                        strTrimSpaces(this->bindingSiteNames_.back());
+                        utility::string::Trim(this->bindingSiteNames_.back());
                         this->bindingSites_.emplace_back(std::vector<std::pair<char, unsigned int>>(10));
                         this->bindingSiteResNames_.emplace_back(std::vector<std::string>(10));
                         bsIdx++;
@@ -210,7 +210,7 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
             for (j = 0; j < 4; j++) {
                 // resName
                 line = bsEntries[i].substr(18 + 11 * cnt, 3);
-                strTrimSpaces(line);
+                utility::string::Trim(line);
                 if (line.empty())
                     break;
                 this->bindingSiteResNames_[bsIdx].emplace_back(line);
@@ -219,7 +219,7 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
                 chainId = line[0];
                 // seq (res seq num)
                 line = bsEntries[i].substr(23 + 11 * cnt, 4);
-                strTrimSpaces(line);
+                utility::string::Trim(line);
                 resId = static_cast<unsigned int>(std::stoi(line));
                 // add binding site information
                 this->bindingSites_[bsIdx].emplace_back(std::pair<char, unsigned int>(chainId, resId));
@@ -248,10 +248,10 @@ std::string BindingSiteDataSource::ExtractBindingSiteDescripton(
     std::string retStr("");
     for (unsigned int i = 0; i < remarkArray.size(); i++) {
         // search for binding site name
-        if (strEndsWith(remarkArray[i], bsName)) {
-            if ((i + 2) < remarkArray.size() && strStartsWith(remarkArray[i + 2], "SITE_DESCRIPTION:")) {
+        if (utility::string::EndsWith(remarkArray[i], bsName)) {
+            if ((i + 2) < remarkArray.size() && utility::string::StartsWith(remarkArray[i + 2], "SITE_DESCRIPTION:")) {
                 retStr = remarkArray[i + 2].substr(17);
-                strTrimSpaces(retStr);
+                utility::string::Trim(retStr);
                 remarkArray.erase(remarkArray.begin() + i);
                 remarkArray.erase(remarkArray.begin() + i);
                 remarkArray.erase(remarkArray.begin() + i);

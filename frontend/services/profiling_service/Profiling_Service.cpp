@@ -1,58 +1,96 @@
 #include "Profiling_Service.hpp"
 
-#include "FrameStatistics.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/SampleCameraScenes.h"
 #include "mmcore/view/AbstractViewInterface.h"
 #include "mmcore/view/CameraSerializer.h"
 
+#include "FrameStatistics.h"
 #include "LuaCallbacksCollection.h"
 #include "ModuleGraphSubscription.h"
 
-namespace megamol {
-namespace frontend {
+#ifdef MEGAMOL_USE_TRACY
+#include "tracy/Tracy.hpp"
+#endif
+
+namespace megamol::frontend {
 
 bool Profiling_Service::init(void* configPtr) {
-    _providedResourceReferences = {
-        {"PerformanceManager", _perf_man},
-    };
-
 #ifdef MEGAMOL_USE_PROFILING
+    _providedResourceReferences = {{frontend_resources::PerformanceManager_Req_Name, _perf_man},
+        {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}};
+
     const auto conf = static_cast<Config*>(configPtr);
+    profiling_logging.active = conf->autostart_profiling;
+    include_graph_events = conf->include_graph_events;
+
+    const auto unit_name = "ns";
+    using timer_ratio = std::nano;
+    //const auto unit_name = "us";
+    //using timer_ratio = std::micro;
+    //const auto unit_name = "ms";
+    //using timer_ratio = std::milli;
+
     if (conf != nullptr && !conf->log_file.empty()) {
-        log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
+        if (!log_file.is_open()) {
+            log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
+            flush_frequency = conf->flush_frequency;
+        }
         // header
-        log_file << "frame;parent;name;comment;frame_index;api;type;time (ms)" << std::endl;
+        log_buffer << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end ("
+                   << unit_name << ");duration (" << unit_name << ")" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
+            if (!profiling_logging.active) {
+                return;
+            }
             auto frame = fi.frame;
             if (frame > 0) {
                 auto& _frame_stats =
                     _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
-                log_file << (frame - 1) << ";MegaMol;FrameTime;;0;CPU;Duration;"
-                         << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
+                log_buffer << (frame - 1) << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
+                           << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
             }
             for (auto& e : fi.entries) {
                 auto conf = _perf_man.lookup_config(e.handle);
                 auto name = conf.name;
                 auto parent = _perf_man.lookup_parent(e.handle);
                 auto comment = conf.comment;
-                std::string time_string;
-                const auto dur = std::chrono::duration<double, std::milli>(e.timestamp.time_since_epoch());
-                time_string = std::to_string(dur.count());
 
-                log_file << frame << ";" << parent << ";" << name << ";" << comment << ";" << e.frame_index << ";"
-                         << megamol::frontend_resources::PerformanceManager::query_api_string(e.api) << ";"
-                         << megamol::frontend_resources::PerformanceManager::entry_type_string(e.type) << ";"
-                         << time_string << std::endl;
+                const auto the_start = std::chrono::duration<double, timer_ratio>(e.start.time_since_epoch()).count();
+                const auto the_end = std::chrono::duration<double, timer_ratio>(e.end.time_since_epoch()).count();
+                const auto the_duration =
+                    std::chrono::duration<double, timer_ratio>(e.duration.time_since_epoch()).count();
+
+                log_buffer << frame << ";" << frontend_resources::PerformanceManager::parent_type_string(e.parent_type)
+                           << ";" << parent << ";" << name << ";" << comment << ";" << e.global_index << ";"
+                           << e.frame_index << ";"
+                           << megamol::frontend_resources::PerformanceManager::query_api_string(e.api) << ";"
+                           << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
+                           << std::to_string(the_duration) << std::endl;
+            }
+            if (frame % flush_frequency == flush_frequency - 1) {
+                log_file << log_buffer.rdbuf();
+                log_buffer.str(std::string());
+                log_buffer.clear();
             }
         });
     }
 #endif
 
-    _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph", "RenderNextFrame",
+    _requestedResourcesNames = {"RegisterLuaCallbacks", frontend_resources::MegaMolGraph_Req_Name, "RenderNextFrame",
         frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, frontend_resources::FrameStatistics_Req_Name};
 
     return true;
+}
+
+void Profiling_Service::log_graph_event(
+    std::string const& parent, std::string const& name, std::string const& comment) {
+    if (this->include_graph_events) {
+        const auto frames_rendered = static_cast<int64_t>(
+            _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
+        log_buffer << frames_rendered - 1 << ";Graph;" << parent << ";" << name << ";" << comment
+                   << ";0;0;GraphEvent;;;" << std::endl;
+    }
 }
 
 void Profiling_Service::setRequestedResources(std::vector<FrontendResource> resources) {
@@ -73,6 +111,8 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
                 _perf_man.add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
         }
         the_call->perf_man = &_perf_man;
+
+        log_graph_event(call_inst.callPtr->ClassName(), call_inst.callPtr->GetDescriptiveText(), "AddCall");
         return true;
     };
 
@@ -82,8 +122,44 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
         if (the_call->GetCapabilities().OpenGLRequired()) {
             _perf_man.remove_timers(the_call->gl_queries);
         }
+
+        log_graph_event("", call_inst.callPtr->GetDescriptiveText(), "DeleteCall");
         return true;
     };
+
+    profiling_manager_subscription.AddModule = [&](core::ModuleInstance_t const& mod_inst) {
+        log_graph_event(mod_inst.modulePtr->ClassName(), mod_inst.modulePtr->FullName().PeekBuffer(), "AddModule");
+        return true;
+    };
+
+    profiling_manager_subscription.DeleteModule = [&](core::ModuleInstance_t const& mod_inst) {
+        log_graph_event("", mod_inst.modulePtr->FullName().PeekBuffer(), "DeleteModule");
+        return true;
+    };
+
+    profiling_manager_subscription.RenameModule = [&](std::string const& old_name, std::string const& new_name,
+                                                      core::ModuleInstance_t const& mod_inst) {
+        log_graph_event(old_name + "->" + new_name, "", "RenameModule");
+        return true;
+    };
+
+    profiling_manager_subscription.ParameterChanged = [&](core::param::ParamSlot* const& param,
+                                                          std::string const& new_value) {
+        log_graph_event(param->Parent()->FullName().PeekBuffer(), param->Name().PeekBuffer(),
+            "'ParamValueChanged=" + new_value + "'");
+        return true;
+    };
+
+    profiling_manager_subscription.DisableEntryPoint = [&](core::ModuleInstance_t const& module_instance) {
+        log_graph_event(module_instance.modulePtr->FullName().PeekBuffer(), "", "DisableEntryPoint");
+        return true;
+    };
+
+    profiling_manager_subscription.EnableEntryPoint = [&](core::ModuleInstance_t const& module_instance) {
+        log_graph_event(module_instance.modulePtr->FullName().PeekBuffer(), "", "EnableEntryPoint");
+        return true;
+    };
+
 
     megamolgraph_subscription.subscribe(profiling_manager_subscription);
 #endif
@@ -94,17 +170,28 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
 void Profiling_Service::close() {
 #ifdef MEGAMOL_USE_PROFILING
     if (log_file.is_open()) {
+        // flush rest of log
+        log_file << log_buffer.rdbuf();
         log_file.close();
     }
 #endif
 }
 
+static const char* const sl_innerframe = "InnerFrame";
+
 void Profiling_Service::updateProvidedResources() {
-    _perf_man.startFrame();
+#ifdef MEGAMOL_USE_TRACY
+    FrameMarkStart(sl_innerframe);
+#endif
+    _perf_man.startFrame(
+        _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
 }
 
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
+#ifdef MEGAMOL_USE_TRACY
+    FrameMarkEnd(sl_innerframe);
+#endif
 }
 
 void Profiling_Service::fill_lua_callbacks() {
@@ -113,6 +200,11 @@ void Profiling_Service::fill_lua_callbacks() {
     auto& graph = const_cast<core::MegaMolGraph&>(_requestedResourcesReferences[1].getResource<core::MegaMolGraph>());
     auto& render_next_frame = _requestedResourcesReferences[2].getResource<std::function<bool()>>();
 
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>(
+        "mmSetProfilingLogging", "(bool on)", {[&](bool on) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            this->profiling_logging.active = on;
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
         "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples)",
@@ -192,5 +284,4 @@ void Profiling_Service::fill_lua_callbacks() {
     register_callbacks(callbacks);
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

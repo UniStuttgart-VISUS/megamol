@@ -21,8 +21,7 @@
 #include "vislib_gl/graphics/gl/Verdana.inc"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 
 class VariantMatchRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
@@ -33,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VariantMatchRenderer";
     }
 
@@ -42,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers matrix-like rendering of variant matchings";
     }
 
@@ -51,15 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Dtor */
-    VariantMatchRenderer(void);
+    VariantMatchRenderer();
 
     /** Ctor */
-    ~VariantMatchRenderer(void);
+    ~VariantMatchRenderer() override;
 
 protected:
     /**
@@ -67,7 +66,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -78,12 +77,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The Open GL Render callback.
@@ -91,7 +90,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender2DGL& call);
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * Update all parameter slots
@@ -135,5 +134,4 @@ private:
     float fontSize;
 };
 
-} // namespace protein_gl
-} // end namespace megamol
+} // namespace megamol::protein_gl

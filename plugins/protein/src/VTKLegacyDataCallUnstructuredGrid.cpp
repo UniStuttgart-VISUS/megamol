@@ -20,12 +20,10 @@ const unsigned int VTKLegacyDataCallUnstructuredGrid::CallForGetExtent = 1;
 /*
  * VTKLegacyDataCallUnstructuredGrid::VTKLegacyDataCallUnstructuredGrid
  */
-VTKLegacyDataCallUnstructuredGrid::VTKLegacyDataCallUnstructuredGrid(void)
-        : core::AbstractGetData3DCall()
-        , calltime(0.0) {}
+VTKLegacyDataCallUnstructuredGrid::VTKLegacyDataCallUnstructuredGrid() : core::AbstractGetData3DCall(), calltime(0.0) {}
 
 
 /*
  * VTKLegacyDataCallUnstructuredGrid::~VTKLegacyDataCallUnstructuredGrid
  */
-VTKLegacyDataCallUnstructuredGrid::~VTKLegacyDataCallUnstructuredGrid(void) {}
+VTKLegacyDataCallUnstructuredGrid::~VTKLegacyDataCallUnstructuredGrid() {}

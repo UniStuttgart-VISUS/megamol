@@ -12,7 +12,6 @@
 #include "ogl_error_check.h"
 #include "protein_calls/VariantMatchDataCall.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -23,6 +22,7 @@
 
 using namespace megamol;
 using namespace megamol::protein_gl;
+using megamol::core::utility::log::Log;
 
 #pragma push_macro("min")
 #undef min
@@ -32,7 +32,7 @@ using namespace megamol::protein_gl;
 /*
  * VariantMatchRenderer::VariantMatchRenderer
  */
-VariantMatchRenderer::VariantMatchRenderer(void)
+VariantMatchRenderer::VariantMatchRenderer()
         : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the rendering with data storage")
         , minColSlot("minCol", "...")
@@ -59,7 +59,7 @@ VariantMatchRenderer::VariantMatchRenderer(void)
 /*
  * VariantMatchRenderer::~VariantMatchRenderer
  */
-VariantMatchRenderer::~VariantMatchRenderer(void) {
+VariantMatchRenderer::~VariantMatchRenderer() {
     this->Release();
 }
 
@@ -67,8 +67,9 @@ VariantMatchRenderer::~VariantMatchRenderer(void) {
 /*
  * VariantMatchRenderer::create
  */
-bool VariantMatchRenderer::create(void) {
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+bool VariantMatchRenderer::create() {
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         matrixTexShader = core::utility::make_glowl_shader("matrixTexShader", shader_options,
@@ -98,7 +99,7 @@ bool VariantMatchRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
 /*
  * VariantMatchRenderer::release
  */
-void VariantMatchRenderer::release(void) {
+void VariantMatchRenderer::release() {
     if (this->matrixTex) {
         glDeleteTextures(1, &this->matrixTex);
     }

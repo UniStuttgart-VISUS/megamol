@@ -309,13 +309,14 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
 bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param) {
 
-    auto parameter_ptr = in_param_slot.Parameter();
-    if (parameter_ptr.IsNull()) {
+    auto const parameter_ptr = in_param_slot.Parameter();
+    if (parameter_ptr == nullptr) {
         return false;
     }
 
     out_param.param_name = std::string(in_param_slot.Name().PeekBuffer());
     out_param.description = std::string(in_param_slot.Description().PeekBuffer());
+
     out_param.gui_visibility = parameter_ptr->IsGUIVisible();
     out_param.gui_read_only = parameter_ptr->IsGUIReadOnly();
     out_param.gui_presentation = static_cast<Present_t>(parameter_ptr->GetGUIPresentation());
@@ -333,11 +334,8 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
         out_param.type = ParamType_t::ENUM;
         out_param.default_value = p_ptr->ValueString();
         EnumStorage_t map;
-        auto psd_map = p_ptr->getMap();
-        auto iter = psd_map.GetConstIterator();
-        while (iter.HasNext()) {
-            auto pair = iter.Next();
-            map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
+        for (auto const& el : p_ptr->getMap()) {
+            map.emplace(el);
         }
         out_param.storage = map;
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
@@ -407,8 +405,8 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
     std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
     bool save_core_param_pointer, const std::string& parent_module_name) {
 
-    auto parameter_ptr = in_param_slot.Parameter();
-    if (parameter_ptr.IsNull()) {
+    auto const parameter_ptr = in_param_slot.Parameter();
+    if (parameter_ptr == nullptr) {
         return false;
     }
 
@@ -435,11 +433,8 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
         out_param->SetValue(p_ptr->Value(), set_default_val, set_dirty);
     } else if (auto* p_ptr = in_param_slot.template Param<core::param::EnumParam>()) {
         EnumStorage_t map;
-        auto param_map = p_ptr->getMap();
-        auto iter = param_map.GetConstIterator();
-        while (iter.HasNext()) {
-            auto pair = iter.Next();
-            map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
+        for (auto const& el : p_ptr->getMap()) {
+            map.emplace(el);
         }
         out_param = std::make_shared<Parameter>(megamol::gui::GenerateUniqueID(), ParamType_t::ENUM, map,
             std::monostate(), std::monostate(), std::monostate(), param_name, description);
@@ -515,7 +510,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
 
 
 bool megamol::gui::Parameter::ReadCoreParameterToParameter(
-    vislib::SmartPtr<megamol::core::param::AbstractParam> in_param_ptr, megamol::gui::Parameter& out_param,
+    std::shared_ptr<megamol::core::param::AbstractParam> in_param_ptr, megamol::gui::Parameter& out_param,
     bool set_default_val, bool set_dirty) {
 
     out_param.SetGUIVisible(in_param_ptr->IsGUIVisible());
@@ -536,40 +531,37 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
 
     bool type_error = false;
 
-    if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::ButtonParam>()) {
+    if (auto* p_ptr = dynamic_cast<core::param::ButtonParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::BUTTON) {
             out_param.SetStorage(p_ptr->GetKeyCode());
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::BoolParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::BoolParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::BOOL) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::ColorParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::ColorParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::COLOR) {
             auto value = p_ptr->Value();
             out_param.SetValue(glm::vec4(value[0], value[1], value[2], value[3]), set_default_val, set_dirty);
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::EnumParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::EnumParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::ENUM) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
             EnumStorage_t map;
-            auto param_map = p_ptr->getMap();
-            auto iter = param_map.GetConstIterator();
-            while (iter.HasNext()) {
-                auto pair = iter.Next();
-                map.emplace(pair.Key(), std::string(pair.Value().PeekBuffer()));
+            for (auto const& el : p_ptr->getMap()) {
+                map.emplace(el);
             }
             out_param.SetStorage(map);
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FilePathParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::FilePathParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::FILEPATH) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
             auto file_storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
@@ -577,14 +569,14 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FlexEnumParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::FlexEnumParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::FLEXENUM) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
             out_param.SetStorage(p_ptr->getStorage());
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FloatParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::FloatParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::FLOAT) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
             out_param.SetMinValue(p_ptr->MinValue());
@@ -593,7 +585,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::IntParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::IntParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::INT) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
             out_param.SetMinValue(p_ptr->MinValue());
@@ -602,25 +594,25 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::StringParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::StringParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::STRING) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::TernaryParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::TernaryParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::TERNARY) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::TransferFunctionParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::TransferFunctionParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::TRANSFERFUNCTION) {
             out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::Vector2fParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::Vector2fParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::VECTOR2F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec2(val.X(), val.Y()), set_default_val, set_dirty);
@@ -631,7 +623,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::Vector3fParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::Vector3fParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::VECTOR3F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec3(val.X(), val.Y(), val.Z()), set_default_val, set_dirty);
@@ -642,7 +634,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         } else {
             type_error = true;
         }
-    } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::Vector4fParam>()) {
+    } else if (auto* p_ptr = dynamic_cast<core::param::Vector4fParam*>(in_param_ptr.get())) {
         if (out_param.type == ParamType_t::VECTOR4F) {
             auto val = p_ptr->Value();
             out_param.SetValue(glm::vec4(val.X(), val.Y(), val.Z(), val.W()), set_default_val, set_dirty);
@@ -674,8 +666,8 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
 bool megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
     megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty, bool save_core_param_pointer) {
 
-    auto parameter_ptr = in_param_slot.Parameter();
-    if (parameter_ptr.IsNull()) {
+    auto const parameter_ptr = in_param_slot.Parameter();
+    if (parameter_ptr == nullptr) {
         return false;
     }
     out_param.SetDescription(std::string(in_param_slot.Description().PeekBuffer()));
@@ -687,7 +679,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(megamol::c
 
 
 bool megamol::gui::Parameter::WriteCoreParameterGUIState(
-    megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr) {
+    megamol::gui::Parameter& in_param, std::shared_ptr<megamol::core::param::AbstractParam> out_param_ptr) {
 
     out_param_ptr->SetGUIVisible(in_param.IsGUIVisible());
     out_param_ptr->SetGUIReadOnly(in_param.IsGUIReadOnly());
@@ -760,7 +752,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                     ImGui::SameLine();
 
                     // Lua
-                    ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullNameProject());
+                    ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullName());
                     this->gui_tooltip.ToolTip("Copy lua command to clipboard.");
 
                     ImGui::SameLine();
@@ -1538,7 +1530,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
 
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
     if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, popup_flags)) {
-        ImGui::Text("Parameter: %s", this->FullNameProject().c_str());
+        ImGui::Text("Parameter: %s", this->FullName().c_str());
         ImGui::TextColored(GUI_COLOR_TEXT_WARN, "Message: %s", this->gui_popup_msg.c_str());
         bool close = false;
         if (ImGui::Button("Ok")) {
@@ -2071,7 +2063,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             ImGui::SameLine();
             gui_utils::PushReadOnly(param_externally_connected);
             if (ImGui::Button("Connect")) {
-                this->tf_editor_external_ptr->SetConnectedParameter(this, this->FullNameProject());
+                this->tf_editor_external_ptr->SetConnectedParameter(this, this->FullName());
                 this->tf_editor_external_ptr->Config().show = true;
                 retval = true;
             }

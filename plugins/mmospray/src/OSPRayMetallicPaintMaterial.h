@@ -7,8 +7,7 @@
 
 #include "AbstractOSPRayMaterial.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class OSPRayMetallicPaintMaterial : public AbstractOSPRayMaterial {
 public:
@@ -17,7 +16,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OSPRayMetallicPaintMaterial";
     }
 
@@ -26,7 +25,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Configuration module for an OSPRay metallic paint material";
     }
 
@@ -35,15 +34,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    OSPRayMetallicPaintMaterial(void);
+    OSPRayMetallicPaintMaterial();
 
     /** Dtor. */
-    virtual ~OSPRayMetallicPaintMaterial(void);
+    ~OSPRayMetallicPaintMaterial() override;
 
 private:
     // METALLICPAINT
@@ -52,10 +51,9 @@ private:
     core::param::ParamSlot metallicGlitterSpread;
     core::param::ParamSlot metallicEta;
 
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    bool InterfaceIsDirty() override;
+    void readParams() override;
 };
 
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

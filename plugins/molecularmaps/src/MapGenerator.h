@@ -17,7 +17,6 @@
 #include "VoronoiChannelCalculator.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"

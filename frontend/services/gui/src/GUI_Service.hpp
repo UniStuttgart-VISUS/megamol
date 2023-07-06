@@ -5,23 +5,20 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_SERVICE_HPP_INCLUDED
-#define MEGAMOL_GUI_SERVICE_HPP_INCLUDED
 #pragma once
 
 
 #include "AbstractFrontendService.hpp"
+#include "AnimationEditorData.h"
 #include "CommonTypes.h"
 #include "GUIRegisterWindow.h"
 #include "GUIState.h"
 #include "PerformanceManager.h"
 #include "gui_render_backend.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 
 class GUIManager;
@@ -32,7 +29,6 @@ class GUI_Service final : public AbstractFrontendService {
 public:
     struct Config {
         megamol::gui::GUIRenderBackend backend = megamol::gui::GUIRenderBackend::CPU;
-        megamol::core::CoreInstance* core_instance = nullptr;
         bool gui_show = true;
         float gui_scale = 1.0f;
     };
@@ -82,20 +78,22 @@ private:
     Config m_config;
     megamol::core::MegaMolGraph* m_megamol_graph;
     megamol::frontend_resources::PerformanceManager* perf_manager = nullptr;
+    frontend_resources::ProfilingLoggingStatus* perf_logging = nullptr;
     std::shared_ptr<megamol::gui::GUIManager> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
 
     std::vector<FrontendResource> m_providedResourceReferences;
-    std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> frontend_resources;
 
     megamol::frontend_resources::GUIState m_providedStateResource;
     megamol::frontend_resources::GUIRegisterWindow m_providedRegisterWindowResource;
+    megamol::frontend_resources::AnimationEditorData m_providedAnimationEditorData;
     megamol::frontend_resources::common_types::lua_func_type* m_exec_lua;
 
     std::string resource_request_gui_state(bool as_lua);
-    bool resource_request_gui_visibility(void);
-    float resource_request_gui_scale(void);
+    bool resource_request_gui_visibility();
+    float resource_request_gui_scale();
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);
@@ -106,7 +104,4 @@ private:
     void resource_register_notification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 };
 
-} // namespace frontend
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_SERVICE_HPP_INCLUDED
+} // namespace megamol::frontend

@@ -6,11 +6,9 @@
 
 in vec4 obj_pos;
 in vec3 cam_pos;
-// TODO: scale radii below radii --> i.e. x * absradii with 0.0 < absradii < 1.0
-// to fit into the box (which is scaled by radii?)
-in flat vec3 radii;
 in vec3 absradii;
-in mat3 rotate_world_into_tensor;
+in vec3 radii;
+in mat3 rotate_tensor_into_world;
 
 in vec4 vert_color;
 
@@ -26,43 +24,30 @@ void main() {
         * vec4(view_attr.z, view_attr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
-    // transform fragment coordinates from view coordinates to object coordinates.
+    // transform fragment coordinates from view coordinates to tensor coordinates.
     coord = mvp_i * coord;
     coord /= coord.w;
+
+    // TODO: early exit check here if fragment is behind camera
+
     coord -= obj_pos; // ... and move
 
-    // ... and rotate with rot_mat transposed
-    vec3 tmp = rotate_world_into_tensor * coord.xyz;
+    // since fragment coordinate is from rotated box
+    // we need to take out the rotation to get the object coordinates
+    vec3 os_coord = rotate_tensor_into_world * coord.xyz;
 
-    // calc the viewing ray
-    vec3 ray_base = normalize(tmp - cam_pos);
-
-    bvec3 discard_frag = bvec3(false);
     vec3 normal;
-    vec3 normals[3] = {
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0)
-    };
     vec3 intersection;
-    vec3 intersections[3] = {
-        vec3(10000.0),
-        vec3(10000.0),
-        vec3(10000.0)
-    };
-    vec3 arrow_dir;
     vec3 arrow_dirs[3] = {
         vec3(1.0, 0.0, 0.0),
         vec3(0.0, 1.0, 0.0),
         vec3(0.0, 0.0, 1.0)
     };
-    vec3 intersection_lengths = vec3(10000.0);
-    vec3 ray = ray_base;
+
+    float shortest_length = 10000.0;
+    int inst = -1;
 
     for(int i = 0; i < 3; ++i) {
-        normal = vec3(0.0);
-        intersection = vec3(0.0);
-
         int orientation = i;
         vec3 aligned_absradii = absradii;
         int alignment = 0;
@@ -79,7 +64,6 @@ void main() {
             aligned_absradii = absradii.zxy;
         }
 
-
         // cylinder length
         float length_cylinder = 0.8 * aligned_absradii.x * radius_scaling;
         float length_cylinder_half = length_cylinder / 2.0;
@@ -87,38 +71,43 @@ void main() {
         float radius_cone = 1.5 * radius_cylinder * radius_scaling;
         float height_cone = 0.2 * aligned_absradii.x * radius_scaling;
 
-        // shift cam, so that end of cylinder = start of cone = (0,0,0)
-        vec3 shift = vec3(0.0);
-        // TODO: maybe not necessary
-        float shift_value = length_cylinder;
-        shift.x = alignment == 0 ? shift_value : 0.0;
-        shift.y = alignment == 1 ? shift_value : 0.0;
-        shift.z = alignment == 2 ? shift_value : 0.0;
-        vec3 cpos = cam_pos - shift;
+        // calc the viewing ray
+        vec3 shift = vec3( (length_cylinder - radius_cylinder), 0.0, 0.0 );
+
+        if(alignment == 1) {
+            shift = shift.yxz; // only matters that x is in middle
+        }
+        else if(alignment == 2) {
+            shift = shift.yzx; // only matters that x is last
+        }
+
+        vec3 shifted_coord = os_coord - shift;
+        vec3 shifted_cam = cam_pos - shift;
+        vec3 ray_base = normalize(shifted_coord - shifted_cam);
+        vec3 ray = ray_base;
+        vec3 aligned_cam = shifted_cam;
 
         // re-assign coordinates to account for the alignment change
         // this way the code below doesn't need to be changed
-        // TODO: maybe not necessary
         if(alignment == 1) {
             ray = ray_base.yxz;
-            cpos = cpos.yxz;
+            aligned_cam = aligned_cam.yxz;
         }
         else if(alignment == 2) {
             ray = ray_base.zxy;
-            cpos = cpos.zxy;
+            aligned_cam = aligned_cam.zxy;
         }
 
         // helpers needed later
         float ray_dot =      dot(ray.yz, ray.yz);
-        float ray_cpos_dot = dot(ray.yz, cpos.yz);
-        float cpos_dot =     dot(cpos.yz, cpos.yz);
+        float ray_cpos_dot = dot(ray.yz, aligned_cam.yz);
+        float cpos_dot =     dot(aligned_cam.yz, aligned_cam.yz);
 
         // early exit check if cam is too close or within arrow
         // (actually just checks if it is within the cylinder)
         if(cpos_dot <= 1.5 * radius_cylinder * radius_cylinder &&
-        cpos.x >= -length_cylinder &&
-        cpos.x <= height_cone) {
-            discard_frag[i] = true;
+        aligned_cam.x >= -length_cylinder &&
+        aligned_cam.x <= height_cone) {
             continue;
             //discard;
         }
@@ -143,7 +132,7 @@ void main() {
         // TODO: which cone height to use? one of the radii of half the length of the cylinder or whatever?
         float k = radius_cone / height_cone;
         k = k * k;
-        float cam_x_minus_height = cpos.x - height_cone;
+        float cam_x_minus_height = aligned_cam.x - height_cone;
         float a_cone = ray_dot - k * ray.x * ray.x;
         float b_cone = 2.0 * (ray_cpos_dot - k * ray.x * cam_x_minus_height);
         float c_cone = cpos_dot - k * cam_x_minus_height * cam_x_minus_height;
@@ -169,40 +158,31 @@ void main() {
             (divisor.x == 0.0) || (radicand.x < 0.0),   // cylinder
             (divisor.y == 0.0) || (radicand.y < 0.0));  // cone
 
-    #define CYL_RAD (radius_cylinder)
-    #define CYL_LEN (length_cylinder)
-    #define CYL_LEN_HALF (length_cylinder_half)
-    #define TIP_RAD (radius_cone)
-    #define TIP_LEN (height_cone)
 
         // ix.x = near cylinder intersection
         // ix.y = far cone intersection
         // ix.z = far cylinder intersection
         // ix.w = near cone intersection
-        vec4 ix = cpos.xxxx + ray.xxxx * lambda;
+        vec4 ix = aligned_cam.xxxx + ray.xxxx * lambda;
 
         // is near cylinder hit in bounds?
-        invalid.x = invalid.x || (ix.x > 0.0) || (ix.x < -CYL_LEN);
+        invalid.x = invalid.x || (ix.x > 0.0) || (ix.x < -length_cylinder);
         // is far cone hit in bounds and do we hit the disk on the cone side?
-        invalid.y = invalid.y || !(((ix.y < TIP_LEN) || (ix.w < 0.0)) && (ix.y > 0.0));
+        invalid.y = invalid.y || !(((ix.y < height_cone) || (ix.w < 0.0)) && (ix.y > 0.0));
         // is far cylinder hit in bounds and do we hit the disk on the left side?
-        invalid.z = invalid.z || !(((ix.z < 0.0) || (ix.x < -CYL_LEN)) && (ix.z > -CYL_LEN));
+        invalid.z = invalid.z || !(((ix.z < 0.0) || (ix.x < -length_cylinder)) && (ix.z > -length_cylinder));
         // is near cone in bounds?
-        invalid.w = invalid.w || (ix.w < 0.0) || (ix.w > TIP_LEN);
+        invalid.w = invalid.w || (ix.w < 0.0) || (ix.w > height_cone);
 
         if (invalid.x && invalid.y && invalid.z && invalid.w) {
-            discard_frag[i] = true;
             continue;
             //discard;
         }
 
         // default disk normal
         // arrow looks in positive axis-direction, therefore normal has to look the opposite way
-        //vec3 normal = vec3(0.0);
-        normal.x = alignment == 0 ? -1.0 : 0.0;
-        normal.y = alignment == 1 ? -1.0 : 0.0;
-        normal.z = alignment == 2 ? -1.0 : 0.0;
-        //vec3 intersection = vec3(0.0);
+        vec3 tmp_normal = vec3(-1.0, 0.0, 0.0);
+        vec3 tmp_int = vec3(10000.0);
 
         // be aware of coordinate order for alignments
         // alignment 0 --> xyz
@@ -212,76 +192,93 @@ void main() {
         // cone
         if (!invalid.w) {
             invalid.xyz = bvec3(true, true, true);
-            intersection = cpos + (ray * lambda.w);
-            vec2 norm_int = normalize(intersection.yz);
-            // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
-            // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;
-            // norm_int = alignment == 2 ? normalize(intersection.xy) : norm_int;
-            normal = alignment == 0 ? normalize(vec3(TIP_RAD / TIP_LEN, norm_int.xy)) : normal;
-            normal = alignment == 1 ? normalize(vec3(norm_int.x, TIP_RAD / TIP_LEN, norm_int.y)) : normal;
-            normal = alignment == 2 ? normalize(vec3(norm_int.xy, TIP_RAD / TIP_LEN)) : normal;
-            //normal = normalize(vec3(-TIP_RAD / TIP_LEN, intersection.yz));
+            tmp_int = aligned_cam + (ray * lambda.w);
+            tmp_normal = normalize(vec3(radius_cone / height_cone, normalize(tmp_int.yz)));
         }
         // cylinder
         if (!invalid.x) {
             invalid.zy = bvec2(true, true);
-            intersection = cpos + (ray * lambda.x);
-            vec2 norm_int = normalize(intersection.yz);
-            // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
-            // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;
-            // norm_int = alignment == 2 ? normalize(intersection.yx) : norm_int;
-            normal = alignment == 0 ? normalize(vec3(0.0, norm_int.xy)) : normal;
-            normal = alignment == 1 ? normalize(vec3(norm_int.x, 0.0, norm_int.y)) : normal;
-            normal = alignment == 2 ? normalize(vec3(norm_int.xy, 0.0)) : normal;
-            //normal = vec3(0.0, normalize(intersection.yz));
+            tmp_int = aligned_cam + (ray * lambda.x);
+            tmp_normal = normalize(vec3(0.0, normalize(tmp_int.yz)));
         }
         // no need for alignment adjustment for disks, since it is already done
         // when normal is initialized
         // left cylinder disk
         if (!invalid.z) {
             invalid.y = true;
-            lambda.z = (CYL_LEN - cpos.x) / ray.x;
-            intersection = cpos + (ray * lambda.z);
+            lambda.z = (-length_cylinder - aligned_cam.x) / ray.x;
+            tmp_int = aligned_cam + (ray * lambda.z);
         }
         // cone disk
         if (!invalid.y) {
-            lambda.w = (0.0 - cpos.x) / ray.x;
-            intersection = cpos + (ray * lambda.w);
-            float pyth = dot(intersection.yz, intersection.yz);
+            lambda.w = (0.0 - aligned_cam.x) / ray.x;
+            tmp_int = aligned_cam + (ray * lambda.w);
+            float pyth = dot(tmp_int.yz, tmp_int.yz);
             if(pyth > radius_cone * radius_cone) {
-                discard_frag[i] = true;
                 continue;
                 //discard;
             }
         }
 
-        normals[i] = normal;
-        intersections[i] = intersection;
-        intersection_lengths[i] = length(intersection - cpos);
+        // re-re-align coordinates
+        if(alignment == 1) {
+            tmp_int = tmp_int.yxz;
+            tmp_normal = tmp_normal.yxz;
+        }
+        else if(alignment == 2) {
+            tmp_int = tmp_int.yzx;
+            tmp_normal = tmp_normal.yzx;
+        }
+
+        // re-shift
+        tmp_int += shift;
+
+        float current_length = length(tmp_int - cam_pos);
+
+        if(current_length < shortest_length) {
+            intersection = tmp_int;
+            normal = tmp_normal;
+
+            shortest_length = current_length;
+            inst = i;
+        }
     }
 
-    if(discard_frag.x == true && discard_frag.y == true && discard_frag.z == true) {
+
+    // 'early' exit
+    if(inst == -1) {
         discard;
     }
 
-    int inst = 0;
-    if(intersection_lengths[1] < intersection_lengths[0] && intersection_lengths[1] < intersection_lengths[2]) {
-        inst = 1;
-    } else if(intersection_lengths[2] < intersection_lengths[0] && intersection_lengths[2] < intersection_lengths[1]) {
-        inst = 2;
-    }
 
-    vec3 dir_color1 = max(vec3(0), arrow_dirs[inst] * sign(radii));
+    // transform normal and intersection point into tensor
+    normal = transpose(rotate_tensor_into_world) * normal;
+    normal = normalize(normal);
+
+    // translate point back to original position
+    intersection = transpose(rotate_tensor_into_world) * intersection;
+    intersection += obj_pos.xyz;
+
+
+    // color stuff
+    vec3 dir_color1 = max( vec3(0), arrow_dirs[inst] * sign(radii) );
     vec3 dir_color2 = vec3(1) + arrow_dirs[inst] * sign(radii);
-    vec3 dir_color = any(lessThan(dir_color2, vec3(0.5))) ? dir_color2 * vec3(0.5) : dir_color1;
+    vec3 dir_color = any( lessThan( dir_color2, vec3(0.5) ) ) ? dir_color2 * vec3(0.5) : dir_color1;
 
-    normal = transpose(rotate_world_into_tensor) * normals[inst];
 
-    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
-    normal_out = normal;
-
-    vec4 ding = vec4(intersections[inst], 1.0);
+    // calc depth
+    float far = gl_DepthRange.far;
+    float near = gl_DepthRange.near;
+    vec4 ding = vec4(intersection, 1.0);
+    // calc non-linear depth
     float depth = dot(mvp_t[2], ding);
     float depth_w = dot(mvp_t[3], ding);
-    depth_out = ((depth / depth_w) + 1.0) * 0.5;
+    float depth_ndc = depth / depth_w;
+    float depth_ss = ((far - near) * depth_ndc + (far + near)) / 2.0;
+
+    // outputs
+    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
+    normal_out = normal;
+    // can probably removed at some point (SimpleRrenderTarget doesn't use it anymore)
+    gl_FragDepth = depth_ss;
 }

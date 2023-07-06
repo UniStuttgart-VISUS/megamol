@@ -7,7 +7,6 @@
 
 #include "io/VTFResDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
@@ -78,7 +77,7 @@ io::VTFResDataSource::Frame::~Frame() {
 /*
  * io::VTFResDataSource::Frame::Clear
  */
-void io::VTFResDataSource::Frame::Clear(void) {
+void io::VTFResDataSource::Frame::Clear() {
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         this->pos[i].EnforceSize(0);
         this->col[i].EnforceSize(0);
@@ -362,7 +361,7 @@ void io::VTFResDataSource::Frame::UpdatePartColor(
 /*
  * io::VTFResDataSource::Frame::SizeOf
  */
-SIZE_T io::VTFResDataSource::Frame::SizeOf(void) const {
+SIZE_T io::VTFResDataSource::Frame::SizeOf() const {
     SIZE_T size = 0;
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         size += this->pos[i].GetSize();
@@ -468,7 +467,7 @@ vislib::Array<int>& io::VTFResDataSource::Frame::particleGridCell(unsigned int N
 /*
  * io::VTFResDataSource::VTFResDataSource
  */
-io::VTFResDataSource::VTFResDataSource(void)
+io::VTFResDataSource::VTFResDataSource()
         : view::AnimDataModule()
         ,
         // TODO scharnkn: this is actually supposed to be the directory
@@ -499,7 +498,7 @@ io::VTFResDataSource::VTFResDataSource(void)
 /*
  * io::VTFResDataSource::~VTFResDataSource
  */
-io::VTFResDataSource::~VTFResDataSource(void) {
+io::VTFResDataSource::~VTFResDataSource() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -507,7 +506,7 @@ io::VTFResDataSource::~VTFResDataSource(void) {
 /*
  * io::VTFResDataSource::constructFrame
  */
-view::AnimDataModule::Frame* io::VTFResDataSource::constructFrame(void) const {
+view::AnimDataModule::Frame* io::VTFResDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<io::VTFResDataSource*>(this));
     f->SetTypeCount((unsigned int)this->types.Count());
     return f;
@@ -516,7 +515,7 @@ view::AnimDataModule::Frame* io::VTFResDataSource::constructFrame(void) const {
 /*
  * io::VTFResDataSource::create
  */
-bool io::VTFResDataSource::create(void) {
+bool io::VTFResDataSource::create() {
     return true;
 }
 
@@ -623,7 +622,7 @@ void io::VTFResDataSource::preprocessFrame(Frame& frame) {
 /*
  * io::VTFResDataSource::release
  */
-void io::VTFResDataSource::release(void) {
+void io::VTFResDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;

@@ -31,7 +31,8 @@ bool megamol::probe_gl::ProbeShellElementsRenderTasks::create() {
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
     std::vector<std::filesystem::path> shaderfiles = {
         "hull/dfr_shell_elements_vertex.glsl", "hull/dfr_shell_elements_fragment.glsl"};
-    m_material_collection->addMaterial(this->instance(), "ProbeShellElements", shaderfiles);
+    m_material_collection->addMaterial(
+        frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ProbeShellElements", shaderfiles);
 
     return true;
 }

@@ -1,9 +1,9 @@
 {
   "name": "bhtsne",
-  "version": "2018-10-15",
-  "port-version": 0,
-  "homepage": "https://github.com/lvdmaaten/bhtsne",
+  "version-date": "2021-04-23",
   "description": "This software package contains a Barnes-Hut implementation of the t-SNE algorithm.",
+  "homepage": "https://github.com/lvdmaaten/bhtsne",
+  "license": "BSD-4-Clause",
   "dependencies": [
     {
       "name": "vcpkg-cmake",

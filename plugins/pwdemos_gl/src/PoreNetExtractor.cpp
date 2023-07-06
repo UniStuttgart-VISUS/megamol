@@ -12,7 +12,6 @@
 #include <cmath>
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -33,14 +32,13 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
  * PoreNetExtractor::PoreNetExtractor
  */
-PoreNetExtractor::PoreNetExtractor(void)
+PoreNetExtractor::PoreNetExtractor()
         : mmstd_gl::Renderer3DModuleGL()
         , AbstractQuartzModule()
         , typeTexture(0)
@@ -124,7 +122,7 @@ PoreNetExtractor::PoreNetExtractor(void)
 /*
  * PoreNetExtractor::~PoreNetExtractor
  */
-PoreNetExtractor::~PoreNetExtractor(void) {
+PoreNetExtractor::~PoreNetExtractor() {
     this->Release();
 }
 
@@ -178,7 +176,7 @@ bool PoreNetExtractor::Render(mmstd_gl::CallRender3DGL& call) {
 /*
  * PoreNetExtractor::create
  */
-bool PoreNetExtractor::create(void) {
+bool PoreNetExtractor::create() {
     using megamol::core::utility::log::Log;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -188,7 +186,8 @@ bool PoreNetExtractor::create(void) {
         return false;
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->cryShader = core::utility::make_glowl_shader("cryShader", shader_options,
@@ -209,7 +208,7 @@ bool PoreNetExtractor::create(void) {
 /*
  * PoreNetExtractor::release
  */
-void PoreNetExtractor::release(void) {
+void PoreNetExtractor::release() {
     if (this->isExtractionRunning()) {
         this->abortExtraction();
     }
@@ -505,7 +504,7 @@ bool PoreNetExtractor::onSaveBtnClicked(core::param::ParamSlot& slot) {
 /*
  * PoreNetExtractor::isExtractionRunning
  */
-bool PoreNetExtractor::isExtractionRunning(void) {
+bool PoreNetExtractor::isExtractionRunning() {
     return (this->tile != NULL) || (this->tileBuffer != NULL) || (this->slice < UINT_MAX) ||
            this->sliceProcessor.IsRunning() || this->meshProcessor.IsRunning();
 }
@@ -514,7 +513,7 @@ bool PoreNetExtractor::isExtractionRunning(void) {
 /*
  * PoreNetExtractor::abortExtraction
  */
-void PoreNetExtractor::abortExtraction(void) {
+void PoreNetExtractor::abortExtraction() {
     using megamol::core::utility::log::Log;
 
     // TODO: Implement
@@ -548,7 +547,7 @@ void PoreNetExtractor::abortExtraction(void) {
 /*
  * PoreNetExtractor::performExtraction
  */
-void PoreNetExtractor::performExtraction(void) {
+void PoreNetExtractor::performExtraction() {
     using megamol::core::utility::log::Log;
 
     if (this->slice == UINT_MAX) {
@@ -875,7 +874,7 @@ void PoreNetExtractor::closeFile(vislib::sys::File& file) {
 /*
  * PoreNetExtractor::clear
  */
-void PoreNetExtractor::clear(void) {
+void PoreNetExtractor::clear() {
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     this->cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     // TODO: Implement
@@ -942,7 +941,7 @@ void PoreNetExtractor::assertTypeTexture(CrystalDataCall& types) {
 /*
  * PoreNetExtractor::releaseTypeTexture
  */
-void PoreNetExtractor::releaseTypeTexture(void) {
+void PoreNetExtractor::releaseTypeTexture() {
     ::glDeleteTextures(1, &this->typeTexture);
     this->typeTexture = 0;
 }
@@ -1115,5 +1114,4 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall* pgdc, CrystalDataCall
     ::glDisableClientState(GL_TEXTURE_COORD_ARRAY); // quart
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

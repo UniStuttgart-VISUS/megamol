@@ -20,7 +20,7 @@ using namespace megamol::volume;
 /*
  * DatRawWriter::DatRawWriter
  */
-DatRawWriter::DatRawWriter(void)
+DatRawWriter::DatRawWriter()
         : AbstractDataWriter()
         , filenameSlot("filepathPrefix", "The path prefix of the folder and file the files will be written to. To this "
                                          "path the ending .dat and .raw will be added")
@@ -41,26 +41,26 @@ DatRawWriter::DatRawWriter(void)
 /*
  * DatRawWriter::~DatRawWriter
  */
-DatRawWriter::~DatRawWriter(void) {
+DatRawWriter::~DatRawWriter() {
     this->Release();
 }
 
 /*
  * DatRawWriter::create
  */
-bool DatRawWriter::create(void) {
+bool DatRawWriter::create() {
     return true;
 }
 
 /*
  * DatRawWriter::release
  */
-void DatRawWriter::release(void) {}
+void DatRawWriter::release() {}
 
 /*
  * DatRawWriter::run
  */
-bool DatRawWriter::run(void) {
+bool DatRawWriter::run() {
     using megamol::core::utility::log::Log;
     std::string filepath(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string());
     if (filepath.empty()) {

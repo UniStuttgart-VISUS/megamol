@@ -6,14 +6,14 @@
  */
 
 #include "cinematic_gl/CinematicUtils.h"
-#include "imgui.h"
-#include "imgui_internal.h"
 
+#include <imgui.h>
+#include <imgui_internal.h>
 
 using namespace megamol::cinematic_gl;
 
 
-CinematicUtils::CinematicUtils(void)
+CinematicUtils::CinematicUtils()
         : core_gl::utility::RenderUtils()
         , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
         , init_once(false)
@@ -23,15 +23,10 @@ CinematicUtils::CinematicUtils(void)
         , hotkey_window_setup_once(true) {}
 
 
-CinematicUtils::~CinematicUtils(void) {}
+CinematicUtils::~CinematicUtils() {}
 
 
-bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
-
-    if (core_instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core isntance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+bool CinematicUtils::Initialise(frontend_resources::RuntimeConfig const& runtimeConf) {
 
     if (this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -39,7 +34,7 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     }
 
     // Initialise font
-    if (!this->font.Initialise(core_instance)) {
+    if (!this->font.Initialise(runtimeConf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -47,7 +42,7 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     this->font.SetBatchDrawMode(true);
 
     // Initialise rendering
-    if (!this->InitPrimitiveRendering(core_instance->GetShaderPaths())) {
+    if (!this->InitPrimitiveRendering(runtimeConf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -269,7 +264,7 @@ void CinematicUtils::DrawAll(const glm::mat4& mvp, glm::vec2 dim_vp) {
 }
 
 
-float CinematicUtils::GetTextLineHeight(void) {
+float CinematicUtils::GetTextLineHeight() {
 
     this->gui_update();
     return this->font.LineHeight(this->menu_font_size);
@@ -288,7 +283,7 @@ void CinematicUtils::SetTextRotation(float a, glm::vec3 vec) {
     this->font.SetRotation(a, vec);
 }
 
-void CinematicUtils::ResetTextRotation(void) {
+void CinematicUtils::ResetTextRotation() {
 
     this->font.ResetRotation();
 }
@@ -302,7 +297,7 @@ const float CinematicUtils::lightness(glm::vec4 background) const {
 }
 
 
-void CinematicUtils::gui_update(void) {
+void CinematicUtils::gui_update() {
 
     this->menu_font_size = ImGui::GetFontSize() * 1.5f;
     if (this->menu_font_size == 0.0f) {

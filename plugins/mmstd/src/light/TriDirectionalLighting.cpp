@@ -21,7 +21,7 @@ void megamol::core::view::light::TriDirectionalLighting::addLight(LightCollectio
 /*
  * megamol::core::view::light::DistantLight::DistantLight
  */
-TriDirectionalLighting::TriDirectionalLighting(void)
+TriDirectionalLighting::TriDirectionalLighting()
         : AbstractLight()
         , m_key_direction("KeyDirection", "Direction of the key light")
         , m_fill_direction("FillDirection", "Direction of the fill light")
@@ -51,7 +51,7 @@ TriDirectionalLighting::TriDirectionalLighting(void)
 /*
  * megamol::core::view::light::DistantLight::~DistantLight
  */
-TriDirectionalLighting::~TriDirectionalLighting(void) {
+TriDirectionalLighting::~TriDirectionalLighting() {
     this->Release();
 }
 

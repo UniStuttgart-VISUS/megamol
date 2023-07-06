@@ -4,13 +4,11 @@
  * All rights reserved.
  */
 
-#ifndef DEFERRED_GLTF_RENDERER_H_INCLUDED
-#define DEFERRED_GLTF_RENDERER_H_INCLUDED
+#pragma once
 
 #include "BaseGltfRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class DeferredGltfRenderer : public BaseGltfRenderer {
 public:
@@ -22,7 +20,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DeferredGltfRenderer";
     }
     /**
@@ -30,23 +28,22 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for gltf files using shaders for deferred rendering.";
     }
 
 protected:
     void createMaterialCollection() override {
         material_collection_ = std::make_shared<GPUMaterialCollection>();
-        material_collection_->addMaterial(this->instance(), "gltfMaterial",
+        material_collection_->addMaterial(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+            "gltfMaterial",
             {"mesh_gl/gltf_example.vert.glsl",
                 /*"mesh_gl/gltf_example_geom.glsl",*/ "mesh_gl/dfr_gltf_example.frag.glsl"});
-        material_collection_->addMaterial(this->instance(), "gltfTexturedMaterial",
+        material_collection_->addMaterial(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+            "gltfTexturedMaterial",
             {"mesh_gl/gltf_textured_example.vert.glsl",
                 /*"mesh_gl/gltf_example_geom.glsl",*/ "mesh_gl/dfr_gltf_textured_example.frag.glsl"});
     }
 };
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !DEFERRED_GLTF_RENDERER_H_INCLUDED
+} // namespace megamol::mesh_gl

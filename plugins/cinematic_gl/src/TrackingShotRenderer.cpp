@@ -26,7 +26,7 @@ using namespace megamol::cinematic_gl;
 using namespace vislib;
 
 
-TrackingShotRenderer::TrackingShotRenderer(void)
+TrackingShotRenderer::TrackingShotRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
         , stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes.")
@@ -60,16 +60,16 @@ TrackingShotRenderer::TrackingShotRenderer(void)
 }
 
 
-TrackingShotRenderer::~TrackingShotRenderer(void) {
+TrackingShotRenderer::~TrackingShotRenderer() {
 
     this->Release();
 }
 
 
-bool TrackingShotRenderer::create(void) {
+bool TrackingShotRenderer::create() {
 
     // Initialise render utils
-    if (!this->utils.Initialise(this->GetCoreInstance())) {
+    if (!this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
@@ -80,7 +80,7 @@ bool TrackingShotRenderer::create(void) {
 }
 
 
-void TrackingShotRenderer::release(void) {}
+void TrackingShotRenderer::release() {}
 
 
 bool TrackingShotRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {

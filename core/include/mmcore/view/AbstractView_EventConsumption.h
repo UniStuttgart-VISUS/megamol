@@ -1,21 +1,17 @@
-/*
- * AbstractView_EventConsumption.h
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
 #include "AbstractViewInterface.h"
 #include "FrontendResource.h"
-
 #include "ImageWrapper.h"
 #include "RenderInput.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 // these functions implement passing rendering resources or events from the frontend to the AbstractView
 // they get called by the MegaMolGraph when a View module got spawned in the graph
@@ -36,6 +32,4 @@ std::vector<std::string> get_view_runtime_resources_requests();
 bool view_rendering_execution(void* module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources,
     megamol::frontend_resources::ImageWrapper& result_image);
 
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

@@ -17,8 +17,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module for loading quartz particle data from binary-fortran files
@@ -30,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzDataGridder";
     }
 
@@ -39,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module for gridding quartz particle data";
     }
 
@@ -48,15 +47,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    DataGridder(void);
+    DataGridder();
 
     /** Dtor */
-    virtual ~DataGridder(void);
+    ~DataGridder() override;
 
 protected:
     /**
@@ -64,7 +63,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Call callback to get the data
@@ -87,20 +86,20 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Clears the data members */
-    void clearData(void);
+    void clearData();
 
     /** Fills the data members */
-    void makeData(void);
+    void makeData();
 
     /** Tests if the data needs to be cleared */
-    bool needClearData(void);
+    bool needClearData();
 
     /** Tests if the data needs to be (re-)made */
-    bool needMakeData(void);
+    bool needMakeData();
 
     /** The data callee slot */
     core::CalleeSlot dataOutSlot;
@@ -145,5 +144,4 @@ private:
     ParticleGridDataCall::List* lists;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_MEGAMOL101_SPHERECOLORINGMODULE_H
-#define MEGAMOL_MEGAMOL101_SPHERECOLORINGMODULE_H
+#pragma once
 
 #include "CallSpheres.h"
 #include "mmcore/CalleeSlot.h"
@@ -139,5 +138,3 @@ private:
 };
 
 } // namespace megamol::megamol101_gl
-
-#endif // MEGAMOL_MEGAMOL101_SPHERECOLORINGMODULE_H

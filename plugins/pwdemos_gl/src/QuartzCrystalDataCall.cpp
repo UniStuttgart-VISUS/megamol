@@ -20,13 +20,12 @@
 #include <cmath>
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * CrystalDataCall::Crystal::Crystal
  */
-CrystalDataCall::Crystal::Crystal(void)
+CrystalDataCall::Crystal::Crystal()
         : baseRad(1.0f)
         , boundRad(1.0f)
         , faces()
@@ -40,7 +39,7 @@ CrystalDataCall::Crystal::Crystal(void)
 /*
  * CrystalDataCall::Crystal::~Crystal
  */
-CrystalDataCall::Crystal::~Crystal(void) {
+CrystalDataCall::Crystal::~Crystal() {
     this->ClearMesh();
 }
 
@@ -48,7 +47,7 @@ CrystalDataCall::Crystal::~Crystal(void) {
 /*
  * CrystalDataCall::Crystal::AssertMesh
  */
-void CrystalDataCall::Crystal::AssertMesh(void) const {
+void CrystalDataCall::Crystal::AssertMesh() const {
     const_cast<CrystalDataCall::Crystal*>(this)->CalculateMesh(true, false);
 }
 
@@ -232,7 +231,7 @@ void CrystalDataCall::Crystal::CalculateMesh(bool setBoundingRad, bool force) {
 /*
  * CrystalDataCall::Crystal::Clear
  */
-void CrystalDataCall::Crystal::Clear(void) {
+void CrystalDataCall::Crystal::Clear() {
     this->ClearMesh();
     this->faces.Clear();
     this->baseRad = 1.0f;
@@ -243,7 +242,7 @@ void CrystalDataCall::Crystal::Clear(void) {
 /*
  * CrystalDataCall::Crystal::ClearMesh
  */
-void CrystalDataCall::Crystal::ClearMesh(void) {
+void CrystalDataCall::Crystal::ClearMesh() {
     ARY_SAFE_DELETE(this->triangleCnt);
     ARY_SAFE_DELETE(this->vertices);
     if (this->triangles != NULL) {
@@ -279,15 +278,14 @@ const unsigned int CrystalDataCall::CallForGetExtent = 1;
 /*
  * CrystalDataCall::CrystalDataCall
  */
-CrystalDataCall::CrystalDataCall(void) : core::AbstractGetData3DCall(), count(0), crystals(NULL) {}
+CrystalDataCall::CrystalDataCall() : core::AbstractGetData3DCall(), count(0), crystals(NULL) {}
 
 
 /*
  * CrystalDataCall::~CrystalDataCall
  */
-CrystalDataCall::~CrystalDataCall(void) {
+CrystalDataCall::~CrystalDataCall() {
     this->count = 0;
     this->crystals = NULL; // DO NOT DELETE
 }
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

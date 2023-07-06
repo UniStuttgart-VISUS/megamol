@@ -6,11 +6,7 @@
  * Copyright (C) 2005 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SEMAPHORE_H_INCLUDED
-#define VISLIB_SEMAPHORE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -28,8 +24,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * A platform-independent semaphore.
@@ -104,7 +99,7 @@ public:
     Semaphore(const wchar_t* name, long initialCount = 1, long maxCount = 1, bool* outIsNew = NULL);
 
     /** Dtor. */
-    virtual ~Semaphore(void);
+    ~Semaphore() override;
 
     /**
      * Acquire a lock on the semaphore. This method blocks until the lock is
@@ -117,7 +112,7 @@ public:
      *
      * @throws SystemException If the lock could not be acquired.
      */
-    virtual void Lock(void);
+    void Lock() override;
 
     /**
      * Try to acquire a lock on the semaphore for the calling thread. If the
@@ -130,7 +125,7 @@ public:
      * @throws SystemException If an error occurred when trying to acquire
      *                         the lock.
      */
-    virtual bool TryLock(void);
+    virtual bool TryLock();
 
     /**
      * Try to acquire a lock on the semaphore for the calling thread for the
@@ -154,7 +149,7 @@ public:
      *
      * @throw SystemException If the lock could not be released.
      */
-    virtual void Unlock(void);
+    void Unlock() override;
 
 protected:
     /**
@@ -210,10 +205,8 @@ protected:
 typedef Lockable<Semaphore> SemaphoreLockable;
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SEMAPHORE_H_INCLUDED */

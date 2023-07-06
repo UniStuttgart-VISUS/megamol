@@ -8,23 +8,31 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#ifdef MEGAMOL_USE_PROFILING
-#include "mmcore/CoreInstance.h"
-#endif
 #include "mmcore/utility/log/Log.h"
+
+#ifdef MEGAMOL_USE_TRACY
+#include "tracy/Tracy.hpp"
+#ifdef MEGAMOL_USE_OPENGL
+#include "glad/gl.h"
+#include "tracy/TracyOpenGL.hpp"
+#endif
+#endif
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
+#include "mmcore/Module.h"
+#endif
 
 using namespace megamol::core;
 
 /*
  * Call::Call
  */
-Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
+Call::Call() : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
 
 
 /*
  * Call::~Call
  */
-Call::~Call(void) {
+Call::~Call() {
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE
@@ -45,22 +53,30 @@ Call::~Call(void) {
 bool Call::operator()(unsigned int func) {
     bool res = false;
     if (this->callee != nullptr) {
-#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
+        std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
+        output += "::";
+        output += f;
+#endif
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScoped;
+        ZoneName(output.c_str(), output.size());
+#ifdef MEGAMOL_USE_OPENGL
+        TracyGpuZoneTransient(___tracy_gpu_zone, output.c_str(), caps.OpenGLRequired());
+#endif
+#endif
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {
-            std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
-            output += "::";
-            output += f;
             // let some service do it!
             gl_helper->PushDebugGroup(1234, -1, output.c_str());
         }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
-        const auto frameID = this->callee->GetCoreInstance()->GetFrameID();
-        perf_man->start_timer(cpu_queries[func], frameID);
+        perf_man->start_timer(cpu_queries[func]);
         if (caps.OpenGLRequired()) {
-            perf_man->start_timer(gl_queries[func], frameID);
+            perf_man->start_timer(gl_queries[func]);
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);

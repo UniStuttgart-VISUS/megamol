@@ -3,12 +3,13 @@
 #include <array>
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
+using megamol::core::utility::log::Log;
+
 megamol::compositing_gl::TextureDepthCompositing::TextureDepthCompositing()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , m_version(0)
         , m_depthComp_prgm(nullptr)
         , m_output_texture(nullptr)
@@ -52,7 +53,8 @@ megamol::compositing_gl::TextureDepthCompositing::~TextureDepthCompositing() {
 
 bool megamol::compositing_gl::TextureDepthCompositing::create() {
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         m_depthComp_prgm = core::utility::make_glowl_shader(

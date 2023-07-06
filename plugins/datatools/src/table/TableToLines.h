@@ -8,8 +8,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <map>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 /**
  * This module converts from a generic table to the LineDataCall.
  */
@@ -21,7 +20,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TableToLines";
     }
 
@@ -30,7 +29,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Converts generic tables to Lines.";
     }
 
@@ -39,19 +38,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableToLines(void);
+    TableToLines();
 
     /**
      * Finalises an instance.
      */
-    virtual ~TableToLines(void);
+    ~TableToLines() override;
 
 protected:
     /**
@@ -59,7 +58,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     bool getLineData(core::Call& call);
 
@@ -68,7 +67,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     bool assertData(table::TableDataCall* ft);
@@ -152,5 +151,4 @@ private:
 
     std::vector<geocalls::LinesDataCall::Lines> lines;
 };
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

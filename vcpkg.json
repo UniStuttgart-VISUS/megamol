@@ -12,12 +12,12 @@
     "bhtsne",
     "blend2d",
     "chemfiles",
+    "cmakerc",
     "cppzmq",
     "curl",
     "cxxopts",
     "delaunator-cpp",
     "eigen3",
-    "expat",
     "glfw3",
     "glm",
     {
@@ -26,13 +26,22 @@
         "docking-experimental"
       ]
     },
+    "imgui-software-renderer",
     "imguizmoquat",
     "implot",
     "libigl",
+    {
+      "name": "libjpeg-turbo",
+      "platform": "!windows"
+    },
     "libpng",
     "lua",
     "mmpld-io",
     "nanoflann",
+    {
+      "name": "ncurses",
+      "platform": "!windows"
+    },
     "nlohmann-json",
     "obj-io",
     "qhull",
@@ -52,22 +61,22 @@
     "zlib"
   ],
   "features": {
-    "use-cgal": {
+    "cgal": {
       "description": "Use CGAL",
       "dependencies": [
         "cgal"
       ]
     },
-    "use-cuda": {
+    "cuda": {
       "description": "Use CUDA"
     },
-    "use-cuesdk": {
+    "cuesdk": {
       "description": "Use Corsair CUE",
       "dependencies": [
         "cuesdk"
       ]
     },
-    "use-mpi": {
+    "mpi": {
       "description": "Use MPI",
       "dependencies": [
         {
@@ -86,15 +95,21 @@
         "mpi"
       ]
     },
-    "use-opengl": {
+    "opengl": {
       "description": "Use OpenGL",
       "dependencies": [
+        "glad",
         {
           "name": "glowl",
           "features": [
-            "glm",
-            "gl-extensions"
+            "gl-extensions",
+            "glm"
           ]
+        },
+        {
+          "$comment": "Workaround for https://github.com/microsoft/vcpkg/issues/31298 to disable glslang default features, is otherwise only required as transitive dependency of megamol-shader-factory.",
+          "name": "glslang",
+          "default-features": false
         },
         {
           "name": "imgui",
@@ -111,32 +126,60 @@
         "megamol-shader-factory"
       ]
     },
-    "use-ospray": {
+    "opengl-debuggroups": {
+      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
+    },
+    "ospray": {
       "description": "Use OSPRay",
       "dependencies": [
         {
           "name": "ospray",
-          "version>=": "2.10.0",
           "features": [
             "avx",
             "avx2"
+          ],
+          "version>=": "2.10.0"
+        }
+      ]
+    },
+    "power": {
+      "description": "Use power consumption measurement",
+      "dependencies": [
+        "power-overwhelming"
+      ]
+    },
+    "profiling": {
+      "description": "Use Profiling"
+    },
+    "stacktrace": {
+      "description": "Use Boost.Stacktrace",
+      "dependencies": [
+        "boost-stacktrace",
+        {
+          "name": "libbacktrace",
+          "platform": "!windows"
+        }
+      ]
+    },
+    "tracy": {
+      "description": "Use Tracy",
+      "dependencies": [
+        {
+          "name": "tracy",
+          "features": [
+            "cli-tools",
+            "gui-tools"
           ]
         }
       ]
     },
-    "use-opengl-debuggroups": {
-      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
-    },
-    "use-profiling": {
-      "description": "Use Profiling"
-    },
-    "use-vr-interop": {
+    "vr-interop": {
       "description": "Use VR Interop",
       "dependencies": [
         "mwk-mint-interop"
       ]
     },
-    "use-vtkm": {
+    "vtkm": {
       "description": "Use VTK-m",
       "dependencies": [
         "vtk-m"

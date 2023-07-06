@@ -32,7 +32,7 @@ vislib::RawStorageWriter::RawStorageWriter(vislib::RawStorage& store, SIZE_T pos
 /*
  * vislib::RawStorageWriter::~RawStorageWriter
  */
-vislib::RawStorageWriter::~RawStorageWriter(void) {
+vislib::RawStorageWriter::~RawStorageWriter() {
     // Intentionally empty
 }
 

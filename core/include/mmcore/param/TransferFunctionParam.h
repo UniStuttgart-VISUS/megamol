@@ -1,8 +1,7 @@
-/*
- * TransferFunctionParam.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -14,15 +13,9 @@
 #include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 
-#include "vislib/String.h"
-
-
 #define TFP_VAL_CNT (6)
 
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /**
  * Class for parameter holding transfer function as JSON string.
@@ -172,20 +165,11 @@ public:
      */
     explicit TransferFunctionParam(const std::string& initVal = "");
     explicit TransferFunctionParam(const char* initVal);
-    explicit TransferFunctionParam(const vislib::StringA& initVal);
 
     /**
      * Dtor.
      */
-    ~TransferFunctionParam(void) override = default;
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    std::string Definition() const override;
+    ~TransferFunctionParam() override = default;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -213,14 +197,14 @@ public:
      *
      * @return The value of the parameter as string.
      */
-    std::string ValueString(void) const override;
+    std::string ValueString() const override;
 
     /**
      * Gets the value of the parameter
      *
      * @return The value of the parameter
      */
-    inline const std::string& Value(void) const {
+    inline const std::string& Value() const {
         return this->val;
     }
 
@@ -229,7 +213,7 @@ public:
      *
      * @return The value of the parameter
      */
-    inline operator const std::string&(void) const {
+    inline operator const std::string&() const {
         return this->val;
     }
 
@@ -238,27 +222,17 @@ public:
      *
      * @return The hash of the parameter value
      */
-    inline size_t ValueHash(void) const {
+    inline size_t ValueHash() const {
         return this->hash;
     }
 
 private:
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
-
     /** The value of the parameter */
     std::string val;
 
     /** Hash of current parameter value. */
     size_t hash;
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
-
 }; /* end class TransferFunctionParam */
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::param

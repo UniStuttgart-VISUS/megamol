@@ -6,11 +6,7 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_RUNNABLETHREAD_H_INCLUDED
-#define VISLIB_RUNNABLETHREAD_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -20,8 +16,7 @@
 #include "vislib/sys/Thread.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -39,10 +34,10 @@ class RunnableThread : public Thread, public T {
 
 public:
     /** Ctor. */
-    RunnableThread(void);
+    RunnableThread();
 
     /** Dtor. */
-    virtual ~RunnableThread(void);
+    ~RunnableThread() override;
 
     /**
      * Ask the runnable to abort as soon as possible.
@@ -50,7 +45,7 @@ public:
      * @return true to acknowledge that the Runnable will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void);
+    bool Terminate() override;
 
     /**
      * Terminate the thread. See documentation of Thread::Terminate
@@ -103,7 +98,7 @@ private:
  * vislib::sys::RunnableThread<T>::RunnableThread
  */
 template<class T>
-RunnableThread<T>::RunnableThread(void)
+RunnableThread<T>::RunnableThread()
 #ifdef _WIN32
 #pragma warning(disable : 4355)
 #endif /* _WIN32 */
@@ -118,7 +113,7 @@ RunnableThread<T>::RunnableThread(void)
  * vislib::sys::RunnableThread<T>::~RunnableThread
  */
 template<class T>
-RunnableThread<T>::~RunnableThread(void) {}
+RunnableThread<T>::~RunnableThread() {}
 
 
 /*
@@ -132,7 +127,7 @@ RunnableThread<T>::RunnableThread(const RunnableThread& rhs) : Thread(rhs)
  * RunnableThread<T>::Terminate
  */
 template<class T>
-bool RunnableThread<T>::Terminate(void) {
+bool RunnableThread<T>::Terminate() {
     return T::Terminate();
 }
 
@@ -156,10 +151,8 @@ RunnableThread<T>& RunnableThread<T>::operator=(const RunnableThread& rhs) {
     return *this;
 }
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_RUNNABLETHREAD_H_INCLUDED */

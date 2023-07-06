@@ -17,8 +17,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module computing velocities from a MultiParticleDataCall.
@@ -31,33 +30,33 @@ namespace datatools {
 class ParticleVelocities : public megamol::core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleVelocities";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes velocities of (sorted, synchronized) particles across frames i and i-1. Reduces the number of "
                "available time steps by 1.";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleVelocities(void);
+    ParticleVelocities();
 
     /** Dtor */
-    virtual ~ParticleVelocities(void);
+    ~ParticleVelocities() override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -104,5 +103,4 @@ private:
     megamol::core::CallerSlot inDataSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

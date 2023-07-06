@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_NULLLOCKABLE_H_INCLUDED
-#define VISLIB_NULLLOCKABLE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -29,10 +25,10 @@ class NullLockable {
 
 public:
     /** Ctor. */
-    NullLockable(void);
+    NullLockable();
 
     /** Dtor. */
-    virtual ~NullLockable(void);
+    virtual ~NullLockable();
 
     /**
      * Aquires the lock of this lockable.
@@ -41,7 +37,7 @@ public:
      * This implementation does nothing and therefore object using this
      * lockable are not threadsafe.
      */
-    VISLIB_FORCEINLINE void Lock(void) {
+    VISLIB_FORCEINLINE void Lock() {
         // intentionally empty
     }
 
@@ -52,7 +48,7 @@ public:
      * This implementation does nothing and therefore object using this
      * lockable are not threadsafe.
      */
-    VISLIB_FORCEINLINE void Unlock(void) {
+    VISLIB_FORCEINLINE void Unlock() {
         // intentionally empty
     }
 };
@@ -62,4 +58,3 @@ public:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_NULLLOCKABLE_H_INCLUDED */

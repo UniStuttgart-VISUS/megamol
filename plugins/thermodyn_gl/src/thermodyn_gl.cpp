@@ -4,18 +4,18 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "rendering/BoxRenderer.h"
 
 namespace megamol::thermodyn_gl {
-class ThermodynGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ThermodynGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ThermodynGLPluginInstance)
 
 public:
     ThermodynGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("thermodyn_gl", "The thermodyn plugin."){};
+            : megamol::core::factories::AbstractPluginInstance("thermodyn_gl", "The thermodyn plugin."){};
 
     ~ThermodynGLPluginInstance() override = default;
 

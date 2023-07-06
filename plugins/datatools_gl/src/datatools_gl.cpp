@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "datatools_gl/io/STLDataSource.h"
 
@@ -21,12 +21,12 @@
 
 
 namespace megamol::datatools_gl {
-class DatatoolsGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class DatatoolsGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(DatatoolsGLPluginInstance)
 
 public:
     DatatoolsGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "datatools_gl", "MegaMol Standard-Plugin containing data manipulation and conversion modules"){};
 
     ~DatatoolsGLPluginInstance() override = default;

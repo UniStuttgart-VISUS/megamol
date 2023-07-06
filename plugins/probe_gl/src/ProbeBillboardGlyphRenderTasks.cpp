@@ -52,7 +52,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
     try {
         std::vector<std::filesystem::path> shaderfiles = {
             "glyphs/textured_probe_glyph.vert.glsl", "glyphs/textured_probe_glyph.frag.glsl"};
-        m_material_collection->addMaterial(this->instance(), "TexturedProbeGlyph", shaderfiles);
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "TexturedProbeGlyph", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -62,7 +63,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
     try {
         std::vector<std::filesystem::path> shaderfiles = {
             "glyphs/scalar_probe_glyph_v2.vert.glsl", "glyphs/scalar_probe_glyph_v2.frag.glsl"};
-        m_material_collection->addMaterial(this->instance(), "ScalarProbeGlyph", shaderfiles);
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ScalarProbeGlyph", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -72,7 +74,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
     try {
         std::vector<std::filesystem::path> shaderfiles = {
             "glyphs/scalar_distribution_probe_glyph_v2.vert.glsl", "glyphs/scalar_distribution_probe_glyph.frag.glsl"};
-        m_material_collection->addMaterial(this->instance(), "ScalarDistributionProbeGlyph", shaderfiles);
+        m_material_collection->addMaterial(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+            "ScalarDistributionProbeGlyph", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -82,7 +85,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
     try {
         std::vector<std::filesystem::path> shaderfiles = {
             "glyphs/vector_probe_glyph.vert.glsl", "glyphs/vector_probe_glyph.frag.glsl"};
-        m_material_collection->addMaterial(this->instance(), "VectorProbeGlyph", shaderfiles);
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "VectorProbeGlyph", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -92,7 +96,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
     try {
         std::vector<std::filesystem::path> shaderfiles = {
             "glyphs/clusterID_probe_glyph.vert.glsl", "glyphs/clusterID_probe_glyph.frag.glsl"};
-        m_material_collection->addMaterial(this->instance(), "ClusterIDProbeGlyph", shaderfiles);
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ClusterIDProbeGlyph", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);

@@ -47,7 +47,7 @@ public:
     TransferFunction();
 
     /** Dtor. */
-    virtual ~TransferFunction() {
+    ~TransferFunction() override {
         this->Release();
     }
 
@@ -59,14 +59,14 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() {
+    bool create() override {
         return true;
     }
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() {}
+    void release() override {}
 
     /**
      * Callback called when the transfer function is requested.
@@ -75,7 +75,7 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool requestTF(core::Call& call);
+    bool requestTF(core::Call& call) override;
 
     /** A flag that signals whether the tf range from the project file should be ignored */
     bool ignore_project_range = true;

@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTMATRIXIMPL_H_INCLUDED
-#define VISLIB_ABSTRACTMATRIXIMPL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -31,8 +27,7 @@
 #include "vislib/memutils.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * Possible matrix memory layouts.
@@ -71,7 +66,7 @@ public:
     typedef C<T, D, L, T[D * D]> DeepStorageMatrix;
 
     /** Dtor. */
-    ~AbstractMatrixImpl(void);
+    ~AbstractMatrixImpl();
 
     /**
      * Dump the matrix to the specified stream.
@@ -141,21 +136,21 @@ public:
      * @return true, if the matrix was inverted, false, if the matrix is not
      *         invertable.
      */
-    bool Invert(void);
+    bool Invert();
 
     /**
      * Answer, whether the matrix is the identity matrix.
      *
      * @return true, if the matrix is the identity matrix, false otherwise.
      */
-    bool IsIdentity(void) const;
+    bool IsIdentity() const;
 
     /**
      * Answer, whether the matrix is the null matrix.
      *
      * @return true, if the matrix is the null matrix, false otherwise.
      */
-    bool IsNull(void) const;
+    bool IsNull() const;
 
     /**
      * Answer, whether the matrix is orthogonal.
@@ -163,14 +158,14 @@ public:
      *
      * @return true, if the matrix is orthogonal, false otherwise.
      */
-    bool IsOrthogonal(void) const;
+    bool IsOrthogonal() const;
 
     /**
      * Answer, whether the matrix is symmetric.
      *
      * @return true, if the matrix is symmetric, false otherwise.
      */
-    bool IsSymmetric(void) const;
+    bool IsSymmetric() const;
 
     /**
      * Direct access to the matrix components. The object remains owner
@@ -181,7 +176,7 @@ public:
      *
      * @return A pointer to the matrix components.
      */
-    inline const T* PeekComponents(void) const {
+    inline const T* PeekComponents() const {
         return this->components;
     }
 
@@ -194,7 +189,7 @@ public:
      *
      * @return A pointer to the matrix components.
      */
-    inline T* PeekComponents(void) {
+    inline T* PeekComponents() {
         return this->components;
     }
 
@@ -212,24 +207,24 @@ public:
     /**
      * Make this matrix the identity matrix.
      */
-    void SetIdentity(void);
+    void SetIdentity();
 
     /**
      * Make this matrix a null matrix.
      */
-    void SetNull(void);
+    void SetNull();
 
     /**
      * Answer the trace (sum over the diagonal) of the matrix.
      *
      * @return The trace of the matrix.
      */
-    T Trace(void) const;
+    T Trace() const;
 
     /**
      * Transposes the matrix.
      */
-    void Transpose(void);
+    void Transpose();
 
     /**
      * Componentwise add of this matrix and 'rhs'. The result is assigned
@@ -545,7 +540,7 @@ protected:
      *
      * @throw Exception if the calculation of the polynom fails.
      */
-    Polynom<T, D> characteristicPolynom(void) const;
+    Polynom<T, D> characteristicPolynom() const;
 
     /**
      * Calculates the determinant of the 2x2 matrix
@@ -645,7 +640,7 @@ protected:
     static const unsigned int CNT_COMPONENTS;
 
     /** Ctor. */
-    inline AbstractMatrixImpl(void){};
+    inline AbstractMatrixImpl(){};
 
     /**
      * Assign the components of 'rhs' to this matrix for the assignment
@@ -717,7 +712,7 @@ private:
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-AbstractMatrixImpl<T, D, L, S, C>::~AbstractMatrixImpl(void) {}
+AbstractMatrixImpl<T, D, L, S, C>::~AbstractMatrixImpl() {}
 
 
 /*
@@ -782,7 +777,7 @@ Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::GetRow(const int row) const {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-bool AbstractMatrixImpl<T, D, L, S, C>::Invert(void) {
+bool AbstractMatrixImpl<T, D, L, S, C>::Invert() {
 #define A(r, c) a[(r)*2 * D + (c)]
     double a[2 * D * D]; // input matrix for algorithm
     double f;            // Multiplication factor.
@@ -865,7 +860,7 @@ bool AbstractMatrixImpl<T, D, L, S, C>::Invert(void) {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-bool AbstractMatrixImpl<T, D, L, S, C>::IsIdentity(void) const {
+bool AbstractMatrixImpl<T, D, L, S, C>::IsIdentity() const {
     for (unsigned int r = 0; r < D; r++) {
         for (unsigned int c = 0; c < D; c++) {
             if (!IsEqual(this->components[indexOf(r, c)], static_cast<T>((r == c) ? 1 : 0))) {
@@ -883,7 +878,7 @@ bool AbstractMatrixImpl<T, D, L, S, C>::IsIdentity(void) const {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-bool AbstractMatrixImpl<T, D, L, S, C>::IsNull(void) const {
+bool AbstractMatrixImpl<T, D, L, S, C>::IsNull() const {
     for (unsigned int c = 0; c < CNT_COMPONENTS; c++) {
         if (!IsEqual(this->components[c], static_cast<T>(0))) {
             return false;
@@ -899,7 +894,7 @@ bool AbstractMatrixImpl<T, D, L, S, C>::IsNull(void) const {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-bool AbstractMatrixImpl<T, D, L, S, C>::IsOrthogonal(void) const {
+bool AbstractMatrixImpl<T, D, L, S, C>::IsOrthogonal() const {
     // Test: A * A^T = I
 
     for (unsigned int r = 0; r < D; r++) {
@@ -923,7 +918,7 @@ bool AbstractMatrixImpl<T, D, L, S, C>::IsOrthogonal(void) const {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-bool AbstractMatrixImpl<T, D, L, S, C>::IsSymmetric(void) const {
+bool AbstractMatrixImpl<T, D, L, S, C>::IsSymmetric() const {
     for (unsigned int r = 1; r < D; r++) {
         for (unsigned int c = 0; c < r; c++) {
             if (!IsEqual(this->components[indexOf(r, c)], this->components[indexOf(c, r)])) {
@@ -958,7 +953,7 @@ void AbstractMatrixImpl<T, D, L, S, C>::SetAt(const int row, const int col, cons
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-void AbstractMatrixImpl<T, D, L, S, C>::SetIdentity(void) {
+void AbstractMatrixImpl<T, D, L, S, C>::SetIdentity() {
     for (unsigned int r = 0; r < D; r++) {
         for (unsigned int c = 0; c < D; c++) {
             this->components[indexOf(r, c)] = static_cast<T>((r == c) ? 1 : 0);
@@ -972,7 +967,7 @@ void AbstractMatrixImpl<T, D, L, S, C>::SetIdentity(void) {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-void AbstractMatrixImpl<T, D, L, S, C>::SetNull(void) {
+void AbstractMatrixImpl<T, D, L, S, C>::SetNull() {
     for (unsigned int i = 0; i < CNT_COMPONENTS; i++) {
         this->components[i] = static_cast<T>(0);
     }
@@ -984,7 +979,7 @@ void AbstractMatrixImpl<T, D, L, S, C>::SetNull(void) {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-T AbstractMatrixImpl<T, D, L, S, C>::Trace(void) const {
+T AbstractMatrixImpl<T, D, L, S, C>::Trace() const {
     T retval = static_cast<T>(0);
 
     for (unsigned int i = 0; i < D; i++) {
@@ -1000,7 +995,7 @@ T AbstractMatrixImpl<T, D, L, S, C>::Trace(void) const {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-void AbstractMatrixImpl<T, D, L, S, C>::Transpose(void) {
+void AbstractMatrixImpl<T, D, L, S, C>::Transpose() {
     T tmp;
     int idx1, idx2;
 
@@ -1300,7 +1295,7 @@ void AbstractMatrixImpl<T, D, L, S, C>::assign(const C<Tp, Dp, Lp, Sp>& rhs) {
  */
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
-Polynom<T, D> AbstractMatrixImpl<T, D, L, S, C>::characteristicPolynom(void) const {
+Polynom<T, D> AbstractMatrixImpl<T, D, L, S, C>::characteristicPolynom() const {
     // method of Faddejew-Leverrier
     // http://de.wikipedia.org/wiki/Algorithmus_von_Faddejew-Leverrier
     Polynom<T, D> c;
@@ -1551,10 +1546,8 @@ unsigned int AbstractMatrixImpl<T, D, L, S, C>::findEigenvaluesSym(
     return Min(D, size);
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTMATRIXIMPL_H_INCLUDED */

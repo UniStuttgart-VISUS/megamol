@@ -30,6 +30,7 @@ GUIManager::GUIManager()
         , win_collection()
         , popup_collection()
         , notification_collection()
+        , win_animation_editor_ptr(nullptr)
         , win_configurator_ptr(nullptr)
         , file_browser()
         , tooltip()
@@ -52,7 +53,14 @@ GUIManager::GUIManager()
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
+    this->win_animation_editor_ptr = this->win_collection.GetWindow<AnimationEditor>();
     assert(this->win_configurator_ptr != nullptr);
+    assert(this->win_animation_editor_ptr != nullptr);
+
+    requested_resources = win_collection.requested_lifetime_resources();
+#ifdef MEGAMOL_USE_PROFILING
+    requested_resources.push_back(frontend_resources::Performance_Logging_Status_Req_Name);
+#endif
 
     this->init_state();
 }
@@ -82,6 +90,7 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.open_popup_screenshot = false;
     this->gui_state.open_popup_font = false;
     this->gui_state.menu_visible = true;
+    this->gui_state.show_imgui_metrics = false;
     this->gui_state.graph_fonts_reserved = 0;
     this->gui_state.shutdown_triggered = false;
     this->gui_state.screenshot_triggered = false;
@@ -224,6 +233,9 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     if (auto win_perfmon_ptr = this->win_collection.GetWindow<PerformanceMonitor>()) {
         win_perfmon_ptr->SetData(
             this->gui_state.stat_averaged_fps, this->gui_state.stat_averaged_ms, this->gui_state.stat_frame_count);
+    }
+    if (win_animation_editor_ptr != nullptr) {
+        win_animation_editor_ptr->SetLastFrameMillis(gui_state.last_frame_ms);
     }
 
     // Update windows
@@ -411,6 +423,8 @@ bool GUIManager::PostDraw() {
     // Assume pending changes in scaling as applied  --------------------------
     megamol::gui::gui_scaling.ConsumePendingChange();
 
+    this->win_animation_editor_ptr->RenderAnimation();
+
     return true;
 }
 
@@ -565,14 +579,13 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::SynchronizeGraphs(
-    megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph) {
 
     // Synchronization is not required when no gui element is visible (?)
     if (!this->gui_state.gui_visible)
         return true;
 
-    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(megamol_graph, core_instance)) {
+    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(megamol_graph)) {
 
         // Check for new GUI state
         if (!this->gui_state.new_gui_state.empty()) {
@@ -1003,6 +1016,11 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Font")) {
             this->gui_state.open_popup_font = true;
         }
+#ifdef MEGAMOL_USE_PROFILING
+        if (ImGui::MenuItem(this->perf_logging->active ? "Pause performance logging" : "Resume performance logging")) {
+            this->perf_logging->active = !this->perf_logging->active;
+        }
+#endif
 
         ImGui::EndMenu();
     }
@@ -1010,6 +1028,11 @@ void GUIManager::draw_menu() {
 
     // HELP -------------------------------------------------------------------
     if (ImGui::BeginMenu("Help")) {
+        if (ImGui::BeginMenu("Debug")) {
+            ImGui::MenuItem("Dear ImGui Metrics", nullptr, &this->gui_state.show_imgui_metrics);
+            ImGui::EndMenu();
+        }
+        ImGui::Separator();
         if (ImGui::MenuItem("About")) {
             this->gui_state.open_popup_about = true;
         }
@@ -1129,8 +1152,7 @@ void megamol::gui::GUIManager::draw_popups() {
             this->gui_state.font_input_string_buffer, std::string("ttf"));
 
         if (!valid_file) {
-            megamol::gui::gui_utils::PushReadOnly();
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::BeginDisabled();
         }
         if (ImGui::Button("Add Font")) {
             this->gui_state.font_load_name = this->gui_state.font_input_string_buffer;
@@ -1140,8 +1162,7 @@ void megamol::gui::GUIManager::draw_popups() {
         std::string help("Same font can be loaded multiple times with different font size.");
         this->tooltip.Marker(help);
         if (!valid_file) {
-            ImGui::PopItemFlag();
-            megamol::gui::gui_utils::PopReadOnly();
+            ImGui::EndDisabled();
             ImGui::SameLine();
             ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
         }
@@ -1236,16 +1257,19 @@ void megamol::gui::GUIManager::draw_popups() {
         this->gui_state.open_popup_save |= this->win_configurator_ptr->ConsumeTriggeredGlobalProjectSave();
 
         auto filename = graph_ptr->GetFilename();
-        auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
+        // Default for saving gui state and parameter values
+        bool save_all_param_values = true;
+        bool save_gui_state = false;
         if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save, {"lua"},
-                megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
+                megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state,
+                save_all_param_values)) {
             std::string state_str;
-            if (save_gui_state.IsTrue()) {
+            if (save_gui_state) {
                 state_str = this->project_to_lua_string(true);
             }
             popup_failed = !this->win_configurator_ptr->GetGraphCollection().SaveProjectToFile(
-                graph_ptr->UID(), filename, state_str);
+                graph_ptr->UID(), filename, state_str, save_all_param_values);
         }
         PopUps::Minimal(
             "Failed to Save Project", popup_failed, "See console log output for more information.", "Cancel");
@@ -1264,11 +1288,16 @@ void megamol::gui::GUIManager::draw_popups() {
     this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed = false;
 
     // File name for screenshot pop-up
-    auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
+    auto dummy = false;
     if (this->file_browser.PopUp_Save("File Name for Screenshot", this->gui_state.screenshot_filepath,
             this->gui_state.open_popup_screenshot, {"png"},
-            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
+            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, dummy, dummy)) {
         this->gui_state.screenshot_filepath_id = 0;
+    }
+
+    // ImGui metrics
+    if (this->gui_state.show_imgui_metrics) {
+        ImGui::ShowMetricsWindow(&this->gui_state.show_imgui_metrics);
     }
 }
 
@@ -1541,4 +1570,10 @@ void GUIManager::RegisterHotkeys(
     if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
         win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &megamolgraph, &this->win_collection, &this->gui_hotkeys);
     }
+}
+
+
+void megamol::gui::GUIManager::setRequestedResources(
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
+    win_collection.setRequestedResources(resources);
 }

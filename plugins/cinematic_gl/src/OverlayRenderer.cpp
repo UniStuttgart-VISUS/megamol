@@ -185,7 +185,7 @@ void OverlayRenderer::release() {
 
 bool OverlayRenderer::create() {
 
-    if (!this->InitPrimitiveRendering(GetCoreInstance()->GetShaderPaths())) {
+    if (!this->InitPrimitiveRendering(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -242,11 +242,9 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             default:
                 break;
             }
-            std::wstring texture_filename(megamol::core::utility::ResourceWrapper::getFileName(
-                this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()))
-                                              .PeekBuffer());
-            if (!this->LoadTextureFromFile(
-                    this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
+            const auto texture_filepath = megamol::core::utility::ResourceWrapper::GetResourcePath(
+                frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), filename);
+            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], texture_filepath)) {
                 return false;
             }
         }
@@ -284,7 +282,7 @@ bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
     auto font_name =
         static_cast<utility::SDFFont::PresetFontName>(this->paramFontName.Param<param::EnumParam>()->Value());
     this->m_font_ptr = std::make_unique<utility::SDFFont>(font_name);
-    if (!this->m_font_ptr->Initialise(this->GetCoreInstance())) {
+    if (!this->m_font_ptr->Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     return true;
@@ -304,13 +302,6 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
     megamol::core::param::AbstractParam* param_ptr = nullptr;
     auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
     param_ptr = megamolgraph.FindParameter(std::string(parameter_name.PeekBuffer()));
-    // Alternatively, check core instance graph for available parameter:
-    if (param_ptr == nullptr) {
-        auto core_parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
-        if (!core_parameter_ptr.IsNull()) {
-            param_ptr = core_parameter_ptr.DynamicCast<megamol::core::param::AbstractParam>();
-        }
-    }
     if (param_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

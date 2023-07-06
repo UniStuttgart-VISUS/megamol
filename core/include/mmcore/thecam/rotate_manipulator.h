@@ -1,8 +1,4 @@
-#ifndef THE_GRAPHICS_CAMERA_ROTATE_MANIPULATOR_H_INCLUDED
-#define THE_GRAPHICS_CAMERA_ROTATE_MANIPULATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -12,9 +8,7 @@
 #include "mmcore/thecam/manipulator_base.h"
 #include "mmcore/view/Camera.h"
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * A manipulator for rotating the camera around its own position
@@ -44,7 +38,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~rotate_manipulator(void);
+    virtual ~rotate_manipulator();
 
     /**
      * Rotates the camera around the right vector
@@ -56,7 +50,7 @@ public:
     /**
      * Rotates the camera around the right vector using the internally stored rotation angle.
      */
-    inline void pitch(void) {
+    inline void pitch() {
         this->pitch(this->rotationAngle);
     }
 
@@ -84,7 +78,7 @@ public:
     /**
      * Rotates the camera around the view vector using the internally stored rotation angle.
      */
-    inline void roll(void) {
+    inline void roll() {
         this->roll(this->rotationAngle);
     }
 
@@ -102,7 +96,7 @@ public:
      *
      * @return The default rotation angle in degrees.
      */
-    inline world_type rotation_angle(void) const {
+    inline world_type rotation_angle() const {
         return this->rotationAngle;
     }
 
@@ -115,7 +109,7 @@ public:
     /**
      * Set manipulator to inactive (usually on mouse button release).
      */
-    inline void setInactive(void) {
+    inline void setInactive() {
         this->end_manipulation();
     }
 
@@ -124,13 +118,10 @@ private:
     world_type rotationAngle;
 };
 
-} // namespace thecam
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::thecam
 
 #include "mmcore/thecam/rotate_manipulator.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif

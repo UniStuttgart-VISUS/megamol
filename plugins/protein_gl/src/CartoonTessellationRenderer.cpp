@@ -7,7 +7,6 @@
 
 #include "CartoonTessellationRenderer.h"
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -32,7 +31,7 @@ const GLuint SSBObindingPoint = 2;
 /*
  * moldyn::CartoonTessellationRenderer::CartoonTessellationRenderer
  */
-CartoonTessellationRenderer::CartoonTessellationRenderer(void)
+CartoonTessellationRenderer::CartoonTessellationRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , getLightsSlot("lights", "Lights are retrieved over this slot.")
@@ -116,7 +115,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
 /*
  * moldyn::CartoonTessellationRenderer::~CartoonTessellationRenderer
  */
-CartoonTessellationRenderer::~CartoonTessellationRenderer(void) {
+CartoonTessellationRenderer::~CartoonTessellationRenderer() {
     this->Release();
 }
 
@@ -142,9 +141,10 @@ void CartoonTessellationRenderer::waitSignal(GLsync& syncObj) {
 /*
  * moldyn::SimpleSphereRenderer::create
  */
-bool CartoonTessellationRenderer::create(void) {
+bool CartoonTessellationRenderer::create() {
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         cartoonShader_ = core::utility::make_shared_glowl_shader("cartoon", shdr_options,
             std::filesystem::path("protein_gl/cartoontessellation/ctess_common.vert.glsl"),
@@ -180,7 +180,7 @@ bool CartoonTessellationRenderer::create(void) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
 
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }
@@ -188,7 +188,7 @@ bool CartoonTessellationRenderer::create(void) {
 /*
  * moldyn::SimpleSphereRenderer::release
  */
-void CartoonTessellationRenderer::release(void) {
+void CartoonTessellationRenderer::release() {
     glUnmapNamedBufferEXT(this->theSingleBuffer);
     for (auto& x : fences) {
         if (x) {

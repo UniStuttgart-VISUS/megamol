@@ -13,7 +13,6 @@
 #include <math.h>
 #include <time.h>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -44,7 +43,7 @@ using namespace megamol::protein_calls;
 /*
  * MoleculeCartoonRenderer::MoleculeCartoonRenderer (CTOR)
  */
-MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
+MoleculeCartoonRenderer::MoleculeCartoonRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , molDataCallerSlot("getdata", "Connects the protein rendering with protein data storage")
         , getLightsSlot("getlights", "Connects the protein rendering with light sources")
@@ -205,7 +204,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
 /*
  * MoleculeCartoonRenderer::~MoleculeCartoonRenderer (DTOR)
  */
-MoleculeCartoonRenderer::~MoleculeCartoonRenderer(void) {
+MoleculeCartoonRenderer::~MoleculeCartoonRenderer() {
     this->Release();
 }
 
@@ -213,13 +212,13 @@ MoleculeCartoonRenderer::~MoleculeCartoonRenderer(void) {
 /*
  * MoleculeCartoonRenderer::release
  */
-void MoleculeCartoonRenderer::release(void) {}
+void MoleculeCartoonRenderer::release() {}
 
 
 /*
  * MoleculeCartoonRenderer::create
  */
-bool MoleculeCartoonRenderer::create(void) {
+bool MoleculeCartoonRenderer::create() {
     using megamol::core::utility::log::Log;
 
     {
@@ -244,7 +243,8 @@ bool MoleculeCartoonRenderer::create(void) {
 
     using namespace vislib_gl::graphics::gl;
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         ////////////////////////////////////////////////////

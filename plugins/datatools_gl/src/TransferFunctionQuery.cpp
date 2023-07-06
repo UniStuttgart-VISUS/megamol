@@ -16,7 +16,7 @@ using namespace megamol::datatools_gl;
 /*
  * TransferFunctionQuery::TransferFunctionQuery
  */
-TransferFunctionQuery::TransferFunctionQuery(void)
+TransferFunctionQuery::TransferFunctionQuery()
         : getTFSlot("gettransferfunction", "Connects to the transfer function module")
         , texDat()
         , texDatSize(0) {
@@ -27,7 +27,7 @@ TransferFunctionQuery::TransferFunctionQuery(void)
 /*
  * TransferFunctionQuery::~TransferFunctionQuery
  */
-TransferFunctionQuery::~TransferFunctionQuery(void) {
+TransferFunctionQuery::~TransferFunctionQuery() {
     this->texDat.EnforceSize(0);
     this->texDatSize = 0;
 }

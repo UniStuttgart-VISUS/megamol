@@ -12,11 +12,11 @@ using namespace megamol::protein_calls;
 /*
  * TunnelResidueDataCall::TunnelResidueDataCall
  */
-TunnelResidueDataCall::TunnelResidueDataCall(void) : AbstractGetData3DCall(), tunnels(nullptr), numTunnels(0) {}
+TunnelResidueDataCall::TunnelResidueDataCall() : AbstractGetData3DCall(), tunnels(nullptr), numTunnels(0) {}
 
 /*
  * TunnelResidueDataCall::TunnelResidueDataCall
  */
-TunnelResidueDataCall::~TunnelResidueDataCall(void) {
+TunnelResidueDataCall::~TunnelResidueDataCall() {
     // intentionally empty
 }

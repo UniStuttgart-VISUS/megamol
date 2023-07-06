@@ -20,7 +20,7 @@ using namespace megamol::protein_calls;
 using namespace megamol::geocalls;
 using namespace megamol::protein_calls;
 
-MoleculeBallifier::MoleculeBallifier(void)
+MoleculeBallifier::MoleculeBallifier()
         : core::Module()
         , outDataSlot("outData", "Sends MultiParticleDataCall data out into the world")
         , inDataSlot("inData", "Fetches MolecularDataCall data")
@@ -91,7 +91,7 @@ MoleculeBallifier::MoleculeBallifier(void)
 /*
  *
  */
-MoleculeBallifier::~MoleculeBallifier(void) {
+MoleculeBallifier::~MoleculeBallifier() {
     this->Release();
 }
 
@@ -99,7 +99,7 @@ MoleculeBallifier::~MoleculeBallifier(void) {
 /*
  *
  */
-bool MoleculeBallifier::create(void) {
+bool MoleculeBallifier::create() {
     // intentionally empty
     return true;
 }
@@ -108,7 +108,7 @@ bool MoleculeBallifier::create(void) {
 /*
  *
  */
-void MoleculeBallifier::release(void) {
+void MoleculeBallifier::release() {
     // intentionally empty
 }
 

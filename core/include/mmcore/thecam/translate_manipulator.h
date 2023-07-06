@@ -28,20 +28,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED
-#define THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "mmcore/thecam/manipulator_base.h"
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * A manipulator for moving the camera around.
@@ -67,7 +61,7 @@ public:
     /**
      * Finalises the instance.
      */
-    virtual ~translate_manipulator(void);
+    virtual ~translate_manipulator();
 
     /**
      * Move the camera in view direction.
@@ -77,7 +71,7 @@ public:
     /**
      * Move the camera in view direction.
      */
-    inline void move_forward(void) {
+    inline void move_forward() {
         this->move_forward(this->stepSize);
     }
 
@@ -89,7 +83,7 @@ public:
     /**
      * Move the camera along its x-axis.
      */
-    inline void move_horizontally(void) {
+    inline void move_horizontally() {
         this->move_horizontally(this->stepSize);
     }
 
@@ -110,7 +104,7 @@ public:
     /**
      * Move the camera along its up vector.
      */
-    inline void move_vertically(void) {
+    inline void move_vertically() {
         this->move_horizontally(this->stepSize);
     }
 
@@ -137,7 +131,7 @@ public:
      *
      * @return The translation step size.
      */
-    inline world_type step_size(void) const {
+    inline world_type step_size() const {
         return this->stepSize;
     }
 
@@ -169,13 +163,10 @@ private:
     screen_type m_last_sy;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::thecam
 
 #include "mmcore/thecam/translate_manipulator.inl"
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED */

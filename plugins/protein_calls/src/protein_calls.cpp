@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/CrystalStructureDataCall.h"
@@ -22,12 +22,12 @@
 #include "protein_calls/VariantMatchDataCall.h"
 
 namespace megamol::protein_calls {
-class ProteinCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ProteinCallsPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ProteinCallsPluginInstance)
 
 public:
     ProteinCallsPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "Protein_Calls", "Plugin containing calls used by Protein and Protein_CUDA"){};
 
     ~ProteinCallsPluginInstance() override = default;

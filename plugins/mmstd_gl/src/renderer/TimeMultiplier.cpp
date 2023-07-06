@@ -10,7 +10,6 @@
 
 #include <glm/glm.hpp>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 
 using namespace megamol::mmstd_gl;

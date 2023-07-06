@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "AddParticleColors.h"
 #include "CSVFileSequence.h"
@@ -90,14 +90,15 @@
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 #include "table/TableWhere.h"
+#include "table/VolumeToTable.h"
 
 namespace megamol::datatools {
-class DatatoolsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class DatatoolsPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(DatatoolsPluginInstance)
 
 public:
     DatatoolsPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "datatools", "MegaMol Standard-Plugin containing data manipulation and conversion modules"){};
 
     ~DatatoolsPluginInstance() override = default;
@@ -181,6 +182,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddParticleColors>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ColorToDir>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToTable>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::VolumeToTable>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::TableInspector>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::SiffCSplineFitter>();

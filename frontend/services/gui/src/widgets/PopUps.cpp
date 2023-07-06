@@ -34,16 +34,14 @@ bool megamol::gui::PopUps::Rename(const std::string& label_id, bool open_popup, 
         bool confirmed_edit = false;
         std::string text_label("New Name");
         auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+        // Set focus on input text once
+        if (open_popup) {
+            ImGui::SetKeyboardFocusHere(0);
+        }
         if (ImGui::InputText(text_label.c_str(), &this->rename_string, flags)) {
             confirmed_edit = true;
         }
         this->rename_tooltip.Marker("Leading '::' is forbidden.");
-
-        // Set focus on input text once (applied next frame)
-        if (open_popup) {
-            ImGuiID id = ImGui::GetID(text_label.c_str());
-            ImGui::ActivateItem(id);
-        }
 
         if (ImGui::Button("OK") || confirmed_edit) {
             // Remove forbidden leading "::"

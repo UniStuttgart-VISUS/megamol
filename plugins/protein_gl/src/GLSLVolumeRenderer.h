@@ -36,8 +36,7 @@
 
 #define NUM 10000
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /**
  * Protein Renderer class
@@ -49,7 +48,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "GLSLVolumeRenderer";
     }
 
@@ -58,7 +57,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers volume renderings.";
     }
 
@@ -67,15 +66,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    GLSLVolumeRenderer(void);
+    GLSLVolumeRenderer();
 
     /** Dtor. */
-    virtual ~GLSLVolumeRenderer(void);
+    ~GLSLVolumeRenderer() override;
 
     /**********************************************************************
      * 'set'-functions
@@ -92,12 +91,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**********************************************************************
@@ -113,7 +112,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -121,7 +120,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Volume rendering using molecular data.
@@ -309,5 +308,4 @@ private:
 };
 
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

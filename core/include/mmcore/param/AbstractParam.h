@@ -1,55 +1,34 @@
-/*
- * AbstractParam.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTPARAM_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
-#include "mmcore/param/AbstractParamPresentation.h"
-
-#include "vislib/RawStorage.h"
-#include "vislib/String.h"
-#include "vislib/tchar.h"
 
 #include <functional>
 
+#include "mmcore/param/AbstractParamPresentation.h"
 
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /** forward declaration of owning class */
 class AbstractParamSlot;
 
-
 /**
  * Abstract base class for all parameter objects
  */
-class AbstractParam : public AbstractParamPresentation {
+class AbstractParam {
 public:
     friend class AbstractParamSlot;
 
     using ParamChangeCallback = std::function<void(AbstractParamSlot*)>;
+    using PresentationChangeCallback = std::function<void(AbstractParamSlot*)>;
 
     /**
      * Dtor.
      */
-    virtual ~AbstractParam(void);
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    virtual std::string Definition() const = 0;
+    virtual ~AbstractParam();
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -67,21 +46,21 @@ public:
      *
      * @return The value of the parameter as string.
      */
-    virtual std::string ValueString(void) const = 0;
+    virtual std::string ValueString() const = 0;
 
     /**
      * Must be public for Button Press - Manuel Graeber
      * Sets the dirty flag of the owning parameter slot and might call the
      * update callback.
      */
-    void setDirty(void);
+    void setDirty();
 
     /**
      * Returns the value of the hash.
      *
      * @return The value of the hash.
      */
-    inline uint64_t GetHash(void) const {
+    inline uint64_t GetHash() const {
         return this->hash;
     }
 
@@ -94,26 +73,59 @@ public:
         this->hash = hash;
     }
 
-    /**
-     * Returns the has_changed flag and resets the flag to false.
-     *
-     * @return has_changed
-     */
-    bool ConsumeHasChanged() {
-        auto val = has_changed;
-        has_changed = false;
-        return val;
+    void SetParamChangeCallback(ParamChangeCallback const& callback) {
+        this->param_change_callback = callback;
     }
 
-    void setChangeCallback(ParamChangeCallback const& callback) {
-        this->change_callback = callback;
+    void SetPresentationChangeCallback(PresentationChangeCallback const& callback) {
+        this->presentation_change_callback = callback;
+    }
+
+    // TODO Temporary add wrappers around GuiPresentation() to avoid breaking changes for modules and merge hotfix
+    //  until we know how this should be solved cleanly.
+    inline void InitPresentation(AbstractParamPresentation::ParamType param_type) {
+        gui_presentation.InitPresentation(param_type);
+        indicatePresentationChange();
+    }
+
+    inline bool IsGUIVisible() const {
+        return gui_presentation.IsGUIVisible();
+    }
+
+    inline void SetGUIVisible(bool visible) {
+        if (gui_presentation.IsGUIVisible() != visible) {
+            gui_presentation.SetGUIVisible(visible);
+            indicatePresentationChange();
+        }
+    }
+
+    inline bool IsGUIReadOnly() const {
+        return gui_presentation.IsGUIReadOnly();
+    }
+
+    inline void SetGUIReadOnly(bool read_only) {
+        if (gui_presentation.IsGUIReadOnly() != read_only) {
+            gui_presentation.SetGUIReadOnly(read_only);
+            indicatePresentationChange();
+        }
+    }
+
+    inline AbstractParamPresentation::Presentation GetGUIPresentation() const {
+        return gui_presentation.GetGUIPresentation();
+    }
+
+    void SetGUIPresentation(AbstractParamPresentation::Presentation presentS) {
+        if (gui_presentation.GetGUIPresentation() != presentS) {
+            gui_presentation.SetGUIPresentation(presentS);
+            indicatePresentationChange();
+        }
     }
 
 protected:
     /**
      * Ctor.
      */
-    AbstractParam(void);
+    AbstractParam();
 
     /**
      * Answers whether this parameter object is assigned to a public slot.
@@ -121,19 +133,19 @@ protected:
      * @return 'true' if this parameter object is assigned to a public
      *         slot, 'false' otherwise.
      */
-    bool isSlotPublic(void) const;
+    bool isSlotPublic() const;
 
-    /**
-     * Set has_changed flag to true.
-     */
-    void indicateChange() {
-        has_changed = true;
-        change_callback(slot);
+    void indicateParamChange() {
+        param_change_callback(slot);
+    }
+
+    void indicatePresentationChange() {
+        presentation_change_callback(slot);
     }
 
 private:
     /** The holding slot */
-    class AbstractParamSlot* slot;
+    class AbstractParamSlot* slot = nullptr;
 
     /**
      * Hash indicating fundamental changes in parameter definition
@@ -142,22 +154,17 @@ private:
     uint64_t hash;
 
     /**
-     * Indicating that the value has changed.
-     */
-    bool has_changed;
-
-    /**
      * The change callback is set by the MegaMol Graph/Frontend as a notification mechanism
      * to be made aware of module-driven or other parameters changes not made via the lua parameter setter function
      */
-    ParamChangeCallback change_callback = [](auto*) {
+    ParamChangeCallback param_change_callback = [](auto*) {
         // needs default init for randomly created modules/params not to crash for default SetValue() calls
     };
+
+    PresentationChangeCallback presentation_change_callback = [](auto*) {};
+
+    AbstractParamPresentation gui_presentation;
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTPARAM_H_INCLUDED */
+} // namespace megamol::core::param

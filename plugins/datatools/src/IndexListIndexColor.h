@@ -11,8 +11,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Creates an ICol data stream holding the index of the first index list
@@ -22,26 +21,26 @@ namespace datatools {
 class IndexListIndexColor : public AbstractParticleManipulator {
 public:
     /** Factory metadata */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IndexListIndexColor";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Creates an ICol data stream holding the index of the "
                "first index list in the connected MultiIndexListDataCall "
                "referencing the corresponding particle.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
     IndexListIndexColor();
     /** dtor */
-    virtual ~IndexListIndexColor();
+    ~IndexListIndexColor() override;
 
 protected:
     /** Create updated particle data */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /** In slot for index lists */
@@ -58,5 +57,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

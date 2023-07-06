@@ -1,0 +1,17 @@
+{
+  "name": "glad",
+  "version-date": "2023-01-28",
+  "description": "Multi-Language Vulkan/GL/GLES/EGL/GLX/WGL Loader-Generator.",
+  "homepage": "https://github.com/Dav1dde/glad",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

@@ -14,13 +14,12 @@
 //#include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowPoint.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * PoreMeshProcessor::PoreMeshProcessor
  */
-PoreMeshProcessor::PoreMeshProcessor(void) : vislib::sys::Runnable(), inputBuffers(NULL), debugoutschlupp(NULL) {
+PoreMeshProcessor::PoreMeshProcessor() : vislib::sys::Runnable(), inputBuffers(NULL), debugoutschlupp(NULL) {
     // TODO: Implement
 }
 
@@ -28,7 +27,7 @@ PoreMeshProcessor::PoreMeshProcessor(void) : vislib::sys::Runnable(), inputBuffe
 /*
  * PoreMeshProcessor::~PoreMeshProcessor
  */
-PoreMeshProcessor::~PoreMeshProcessor(void) {
+PoreMeshProcessor::~PoreMeshProcessor() {
     // TODO: Implement
 }
 
@@ -76,7 +75,7 @@ DWORD PoreMeshProcessor::Run(void* userData) {
 /*
  * PoreMeshProcessor::Terminate
  */
-bool PoreMeshProcessor::Terminate(void) {
+bool PoreMeshProcessor::Terminate() {
     if (this->inputBuffers != NULL)
         this->inputBuffers->AbortClose();
     //if (this->outputBuffers != NULL) this->outputBuffers->AbortClose();
@@ -132,5 +131,4 @@ void PoreMeshProcessor::workOnBuffer(LoopBuffer& buffer /*, LoopBuffer& outBuffe
     this->sliceNum++;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

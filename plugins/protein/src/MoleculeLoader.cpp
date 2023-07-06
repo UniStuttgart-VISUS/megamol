@@ -17,7 +17,7 @@
 using namespace megamol::core;
 using namespace megamol::protein;
 
-MoleculeLoader::MoleculeLoader(void)
+MoleculeLoader::MoleculeLoader()
         : core::Module()
         , data_out_slot_("dataOut", "Connects the loader with the requesting modules")
         , filename_slot_("filename", "Path to the file containing the structure of the molecule(s) to visualize.")
@@ -59,17 +59,17 @@ MoleculeLoader::MoleculeLoader(void)
     local_bounding_box_ = global_bounding_box_;
 }
 
-MoleculeLoader::~MoleculeLoader(void) {
+MoleculeLoader::~MoleculeLoader() {
     this->Release();
 }
 
-bool MoleculeLoader::create(void) {
+bool MoleculeLoader::create() {
     // TODO
 
     return true;
 }
 
-void MoleculeLoader::release(void) {
+void MoleculeLoader::release() {
     // TODO
 }
 

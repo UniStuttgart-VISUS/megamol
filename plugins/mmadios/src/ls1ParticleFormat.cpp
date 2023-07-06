@@ -16,10 +16,9 @@
 #include <numeric>
 
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
-ls1ParticleFormat::ls1ParticleFormat(void)
+ls1ParticleFormat::ls1ParticleFormat()
         : core::Module()
         , mpSlot("mpSlot", "Slot to send multi particle data.")
         , adiosSlot("adiosSlot", "Slot to request ADIOS IO")
@@ -53,15 +52,15 @@ ls1ParticleFormat::ls1ParticleFormat(void)
     this->transferfunctionSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 }
 
-ls1ParticleFormat::~ls1ParticleFormat(void) {
+ls1ParticleFormat::~ls1ParticleFormat() {
     this->Release();
 }
 
-bool ls1ParticleFormat::create(void) {
+bool ls1ParticleFormat::create() {
     return true;
 }
 
-void ls1ParticleFormat::release(void) {}
+void ls1ParticleFormat::release() {}
 
 bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
@@ -78,8 +77,6 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     }
     bool datahashChanged = (datahash != cad->getDataHash());
     if ((mpdc->FrameID() != currentFrame) || datahashChanged || representationDirty) {
-        representationDirty = false;
-
         cad->setFrameIDtoLoad(mpdc->FrameID());
 
         try {
@@ -93,6 +90,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             cad->inquireVar("ry");
             cad->inquireVar("rz");
             cad->inquireVar("component_id");
+            cad->inquireVar("molecule_id");
             cad->inquireVar("vx");
             cad->inquireVar("vy");
             cad->inquireVar("vz");
@@ -124,6 +122,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
 
 
             auto comp_id = cad->getData("component_id")->GetAsUInt64();
+            auto m_id = cad->getData("molecule_id")->GetAsUInt64();
 
             auto X = cad->getData("rx")->GetAsFloat();
             auto Y = cad->getData("ry")->GetAsFloat();
@@ -171,9 +170,20 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 mix.resize(num_plists);
                 dirs.clear();
                 dirs.resize(num_plists);
+                ids.clear();
+                ids.resize(num_plists);
                 list_radii.clear();
                 list_radii.resize(num_plists);
                 plist_count.resize(num_plists, 0);
+
+                for (uint64_t pl_idx = 0; pl_idx < num_plists; ++pl_idx) {
+                    auto const count = std::count(comp_id.begin(), comp_id.end(), pl_idx);
+                    plist_count[pl_idx] = count;
+
+                    mix[pl_idx].reserve(count * 3);
+                    dirs[pl_idx].reserve(count * 3);
+                    ids[pl_idx].reserve(count);
+                }
 
                 for (int i = 0; i < p_count; ++i) {
                     mix[comp_id[i]].push_back(X[i]);
@@ -182,7 +192,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                     dirs[comp_id[i]].push_back(VX[i]);
                     dirs[comp_id[i]].push_back(VY[i]);
                     dirs[comp_id[i]].push_back(VZ[i]);
-                    ++plist_count[comp_id[i]];
+                    ids[comp_id[i]].push_back(m_id[i]);
                 }
 
                 // calc circumsphere
@@ -206,9 +216,20 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 mix.resize(num_plists);
                 dirs.clear();
                 dirs.resize(num_plists);
+                ids.clear();
+                ids.resize(num_plists);
                 list_radii.clear();
                 list_radii.reserve(num_plists);
                 plist_count.resize(num_plists, 0);
+
+                for (uint64_t pl_idx = 0; pl_idx < num_plists; ++pl_idx) {
+                    auto const count = std::count(comp_id.begin(), comp_id.end(), pl_idx);
+                    plist_count[pl_idx] = count;
+
+                    mix[pl_idx].reserve(count * 3);
+                    dirs[pl_idx].reserve(count * 3);
+                    ids[pl_idx].reserve(count);
+                }
 
                 for (int j = 0; j < comp_sigmas.size(); ++j) {
                     for (int k = 0; k < comp_sigmas[j].size(); ++k) {
@@ -234,7 +255,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                         dirs[component_offset[comp_id[i]] + j].push_back(VX[i]);
                         dirs[component_offset[comp_id[i]] + j].push_back(VY[i]);
                         dirs[component_offset[comp_id[i]] + j].push_back(VZ[i]);
-                        ++plist_count[component_offset[comp_id[i]] + j];
+                        ids[component_offset[comp_id[i]] + j].push_back(m_id[i]);
                     }
                 }
             }
@@ -242,7 +263,9 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[ls1ParticleFormat]: exception while trying to use data: %s", ex.what());
         }
-        version++;
+        if (datahashChanged || representationDirty)
+            version++;
+        representationDirty = false;
     }
 
     // set number of particle lists
@@ -298,6 +321,12 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
         } else {
             parts.SetDirData(geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, dirs[k].data());
         }
+
+        if (ids[k].data() == nullptr) {
+            parts.SetIDData(geocalls::SimpleSphericalParticles::IDDATA_NONE, nullptr);
+        } else {
+            parts.SetIDData(geocalls::SimpleSphericalParticles::IDDATA_UINT64, ids[k].data());
+        }
         parts.SetGlobalRadius(list_radii[k]);
 
         // add id and velocity?
@@ -349,5 +378,4 @@ bool ls1ParticleFormat::representationChanged(core::param::ParamSlot& p) {
     return true;
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

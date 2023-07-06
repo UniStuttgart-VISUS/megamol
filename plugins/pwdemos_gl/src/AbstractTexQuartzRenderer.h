@@ -11,8 +11,7 @@
 #include "QuartzCrystalDataCall.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module rendering gridded quarts particle data
@@ -20,10 +19,10 @@ namespace demos_gl {
 class AbstractTexQuartzRenderer : public AbstractQuartzRenderer {
 public:
     /** Ctor */
-    AbstractTexQuartzRenderer(void);
+    AbstractTexQuartzRenderer();
 
     /** Dtor */
-    virtual ~AbstractTexQuartzRenderer(void);
+    ~AbstractTexQuartzRenderer() override;
 
 protected:
     /**
@@ -34,11 +33,10 @@ protected:
     void assertTypeTexture(CrystalDataCall& types);
 
     /** Releases the type texture */
-    void releaseTypeTexture(void);
+    void releaseTypeTexture();
 
     /** The type texture */
     unsigned int typeTexture;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

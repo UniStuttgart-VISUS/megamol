@@ -20,7 +20,7 @@ using namespace megamol::core;
 /*
  * view::TimeControl::TimeControl
  */
-view::TimeControl::TimeControl(void)
+view::TimeControl::TimeControl()
         : animPlaySlot("anim::play", "Bool parameter to play/stop the animation")
         , animSpeedSlot("anim::speed", "Float parameter of animation speed in time frames per second")
         , animTimeSlot("anim::time", "The slot holding the current time to display")
@@ -58,7 +58,7 @@ view::TimeControl::TimeControl(void)
 /*
  * view::TimeControl::~TimeControl
  */
-view::TimeControl::~TimeControl(void) {
+view::TimeControl::~TimeControl() {
     // intentionally empty
 }
 
@@ -193,7 +193,7 @@ bool view::TimeControl::masterCallback(Call& c) {
 /*
  * view::TimeControl::getMaster
  */
-view::TimeControl* view::TimeControl::getMaster(void) const {
+view::TimeControl* view::TimeControl::getMaster() const {
     CallTimeControl* ctc = this->slaveSlot.CallAs<CallTimeControl>();
     if (ctc == NULL)
         return NULL;

@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SYSTEMEXCEPTION_H_INCLUDED
-#define VISLIB_SYSTEMEXCEPTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,8 +15,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * This exception class represents a system error. It is instantiated with
@@ -57,7 +52,7 @@ public:
     SystemException(const SystemException& rhs);
 
     /** Dtor. */
-    virtual ~SystemException(void);
+    ~SystemException() override;
 
     /**
      * Answer the system dependent error code associated with this
@@ -65,7 +60,7 @@ public:
      *
      * @return The system error code.
      */
-    inline DWORD GetErrorCode(void) const {
+    inline DWORD GetErrorCode() const {
         return this->sysMsg.GetErrorCode();
     }
 
@@ -75,7 +70,7 @@ public:
      *
      * @return The exception message.
      */
-    virtual const char* GetMsgA(void) const;
+    const char* GetMsgA() const override;
 
     /**
      * Answer the file the exception description text. Behaves like
@@ -83,7 +78,7 @@ public:
      *
      * @return The exception message.
      */
-    virtual const wchar_t* GetMsgW(void) const;
+    const wchar_t* GetMsgW() const override;
 
     /**
      * Assignment operator.
@@ -102,10 +97,8 @@ private:
     SystemMessage sysMsg;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SYSTEMEXCEPTION_H_INCLUDED */

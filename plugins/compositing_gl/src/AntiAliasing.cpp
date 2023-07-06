@@ -28,7 +28,7 @@
  * @megamol::compositing_gl::AntiAliasing::AntiAliasing
  */
 megamol::compositing_gl::AntiAliasing::AntiAliasing()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , version_(0)
         , tex_inspector_({"Edges", "BlendingWeights", "Output"})
         , output_tx2D_(nullptr)
@@ -166,7 +166,8 @@ bool megamol::compositing_gl::AntiAliasing::create() {
 #endif
 
     // create shader programs
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         copy_prgm_ = core::utility::make_glowl_shader("copy_texture", shader_options, "compositing_gl/copy.comp.glsl");
@@ -555,7 +556,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
 
     if (something_has_changed) {
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+        perf_manager_->start_timer(timers_[0]);
 #endif
 
         // get input

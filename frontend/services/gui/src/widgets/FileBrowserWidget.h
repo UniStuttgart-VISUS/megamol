@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
-#define MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
 #pragma once
 
 
@@ -18,8 +16,7 @@
 using namespace megamol::core::param;
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -43,20 +40,20 @@ public:
      * @return True on success, false otherwise.
      */
     bool PopUp_Save(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
-        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
-        vislib::math::Ternary& inout_save_gui_state) {
-        return this->popup(
-            DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags, inout_save_gui_state);
+        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool& inout_save_gui_state,
+        bool& inout_save_all_param_values) {
+        return this->popup(DIALOGMODE_SAVE, label, inout_filename, inout_open_popup, extensions, flags,
+            inout_save_gui_state, inout_save_all_param_values);
     }
     bool PopUp_Load(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
         const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
-        auto tmp = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-        return this->popup(DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, extensions, flags, tmp);
+        bool dummy = false;
+        return this->popup(DIALOGMODE_LOAD, label, inout_filename, inout_open_popup, extensions, flags, dummy, dummy);
     }
     bool PopUp_Select(const std::string& label, std::string& inout_filename, bool& inout_open_popup,
         const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
-        auto tmp = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
-        return this->popup(DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, extensions, flags, tmp);
+        bool dummy = false;
+        return this->popup(DIALOGMODE_SELECT, label, inout_filename, inout_open_popup, extensions, flags, dummy, dummy);
     }
 
     /**
@@ -93,7 +90,8 @@ private:
 
     // Keeps child paths and flag whether child is directors or not
     std::vector<ChildData_t> child_directories;
-    vislib::math::Ternary save_gui_state;
+    bool save_gui_state;
+    bool save_all_param_values;
     std::map<std::string, std::string> label_uid_map;
 
     StringSearchWidget search_widget;
@@ -102,8 +100,8 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     bool popup(DialogMode mode, const std::string& label, std::string& inout_filename, bool& inout_open_popup,
-        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags,
-        vislib::math::Ternary& inout_save_gui_state);
+        const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, bool& inout_save_gui_state,
+        bool& inout_save_all_param_values);
 
     bool validate_split_path(
         const std::string& in_path, FilePathParam::Flags_t flags, std::string& out_dir, std::string& out_file) const;
@@ -116,7 +114,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_FileBrowserPopUp_INCLUDED
+} // namespace megamol::gui

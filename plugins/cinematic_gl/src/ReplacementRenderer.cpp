@@ -19,7 +19,7 @@ using namespace megamol::cinematic_gl;
 using namespace vislib;
 
 
-ReplacementRenderer::ReplacementRenderer(void)
+ReplacementRenderer::ReplacementRenderer()
         : megamol::core::view::RendererModule<mmstd_gl::CallRender3DGL, mmstd_gl::ModuleGL>()
         , alphaParam("alpha", "The alpha value of the replacement rendering.")
         , replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer.")
@@ -45,19 +45,19 @@ ReplacementRenderer::ReplacementRenderer(void)
 }
 
 
-ReplacementRenderer::~ReplacementRenderer(void) {
+ReplacementRenderer::~ReplacementRenderer() {
 
     this->Release();
 }
 
 
-void ReplacementRenderer::release(void) {}
+void ReplacementRenderer::release() {}
 
 
-bool ReplacementRenderer::create(void) {
+bool ReplacementRenderer::create() {
 
     // Initialise render utils
-    if (!this->utils.Initialise(this->GetCoreInstance())) {
+    if (!this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[REPLACEMENT RENDERER] [create] Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);

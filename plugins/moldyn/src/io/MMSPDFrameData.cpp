@@ -15,7 +15,7 @@ using namespace megamol::moldyn::io;
 /*
  * MMSPDFrameData::Particles::Particles
  */
-MMSPDFrameData::Particles::Particles(void) : count(0), data(), fieldMap(NULL) {
+MMSPDFrameData::Particles::Particles() : count(0), data(), fieldMap(NULL) {
     // Intentionally empty
 }
 
@@ -23,7 +23,7 @@ MMSPDFrameData::Particles::Particles(void) : count(0), data(), fieldMap(NULL) {
 /*
  * MMSPDFrameData::Particles::~Particles
  */
-MMSPDFrameData::Particles::~Particles(void) {
+MMSPDFrameData::Particles::~Particles() {
     delete[] this->fieldMap;
     this->fieldMap = NULL;
 }
@@ -43,7 +43,7 @@ bool MMSPDFrameData::Particles::operator==(const MMSPDFrameData::Particles& rhs)
 /*
  * MMSPDFrameData::MMSPDFrameData
  */
-MMSPDFrameData::MMSPDFrameData(void) : data(), idxRec() {
+MMSPDFrameData::MMSPDFrameData() : data(), idxRec() {
     // Intentionally empty
 }
 
@@ -51,6 +51,6 @@ MMSPDFrameData::MMSPDFrameData(void) : data(), idxRec() {
 /*
  * MMSPDFrameData::~MMSPDFrameData
  */
-MMSPDFrameData::~MMSPDFrameData(void) {
+MMSPDFrameData::~MMSPDFrameData() {
     // Intentionally empty
 }

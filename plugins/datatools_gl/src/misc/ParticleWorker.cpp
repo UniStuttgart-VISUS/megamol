@@ -11,7 +11,6 @@
 #include <climits>
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
@@ -26,7 +25,7 @@ using namespace megamol::datatools_gl::misc;
 /*
  * ParticleWorker::ParticleWorker
  */
-ParticleWorker::ParticleWorker(void)
+ParticleWorker::ParticleWorker()
         : inParticlesDataSlot("inPartData", "Input for particle data")
         , outParticlesDataSlot("outPartData", "Output of particle data")
         , glClusterInfos(0)
@@ -46,7 +45,7 @@ ParticleWorker::ParticleWorker(void)
 /*
  * ParticleWorker::~ParticleWorker
  */
-ParticleWorker::~ParticleWorker(void) {
+ParticleWorker::~ParticleWorker() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -54,7 +53,7 @@ ParticleWorker::~ParticleWorker(void) {
 /*
  * ParticleWorker::create
  */
-bool ParticleWorker::create(void) {
+bool ParticleWorker::create() {
 
     using namespace megamol::core::utility::log;
 
@@ -64,10 +63,8 @@ bool ParticleWorker::create(void) {
     if (!ogl_ctx.isVersionGEQ(4, 3))
         return false;
 
-    if (!this->GetCoreInstance())
-        return false;
-
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->shaderOnClusterComputation = core::utility::make_glowl_shader(
@@ -85,7 +82,7 @@ bool ParticleWorker::create(void) {
 /*
  * ParticleWorker::release
  */
-void ParticleWorker::release(void) {
+void ParticleWorker::release() {
     glDeleteBuffersARB(static_cast<GLsizei>(glVB.Count()), glVB.PeekElements());
     glDeleteVertexArrays(static_cast<GLsizei>(glVAO.Count()), glVAO.PeekElements());
     this->shaderOnClusterComputation.reset();

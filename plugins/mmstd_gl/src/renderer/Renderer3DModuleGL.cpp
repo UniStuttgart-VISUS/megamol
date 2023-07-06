@@ -14,7 +14,7 @@ using namespace megamol::mmstd_gl;
 /*
  * Renderer3DModuleGL::Renderer3DModuleGL
  */
-Renderer3DModuleGL::Renderer3DModuleGL(void) : RendererModule<CallRender3DGL, ModuleGL>() {
+Renderer3DModuleGL::Renderer3DModuleGL() : RendererModule<CallRender3DGL, ModuleGL>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
 
@@ -25,7 +25,7 @@ Renderer3DModuleGL::Renderer3DModuleGL(void) : RendererModule<CallRender3DGL, Mo
 /*
  * Renderer3DModuleGL::~Renderer3DModuleGL
  */
-Renderer3DModuleGL::~Renderer3DModuleGL(void) {
+Renderer3DModuleGL::~Renderer3DModuleGL() {
     // intentionally empty
 }
 

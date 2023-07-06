@@ -182,8 +182,7 @@ bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(
     return write_png_to_file(image, filename);
 }
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 Screenshot_Service::Screenshot_Service() {}
 
@@ -201,7 +200,8 @@ bool Screenshot_Service::init(void* configPtr) {
 bool Screenshot_Service::init(const Config& config) {
 
     m_requestedResourcesNames = {"optional<OpenGL_Context>", // TODO: for GLScreenshoSource. how to kill?
-        "MegaMolGraph", "optional<GUIState>", "RuntimeConfig", "optional<GUIRegisterWindow>"};
+        frontend_resources::MegaMolGraph_Req_Name, "optional<GUIState>", "RuntimeConfig",
+        "optional<GUIRegisterWindow>"};
 
     this->m_frontbufferToPNG_trigger = [&](std::filesystem::path const& filename) -> bool {
         log("write screenshot to " + filename.generic_u8string());
@@ -270,5 +270,4 @@ void Screenshot_Service::preGraphRender() {}
 void Screenshot_Service::postGraphRender() {}
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

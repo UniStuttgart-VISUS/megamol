@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "OSPRayRenderer.h"
 
@@ -34,12 +34,11 @@
 #include "mmospray/CallOSPRayTransformation.h"
 
 namespace megamol::ospray {
-class MMOSPRayPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MMOSPRayPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MMOSPRayPluginInstance)
 
 public:
-    MMOSPRayPluginInstance(void)
-            : megamol::core::utility::plugins::AbstractPluginInstance("mmospray", "CPU Raytracing"){};
+    MMOSPRayPluginInstance() : megamol::core::factories::AbstractPluginInstance("mmospray", "CPU Raytracing"){};
 
     ~MMOSPRayPluginInstance() override = default;
 

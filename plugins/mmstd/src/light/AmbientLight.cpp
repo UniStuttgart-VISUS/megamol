@@ -17,14 +17,14 @@ void megamol::core::view::light::AmbientLight::addLight(LightCollection& light_c
 /*
  * megamol::core::view::light::AmbientLight::AmbientLight
  */
-AmbientLight::AmbientLight(void) : AbstractLight() {
+AmbientLight::AmbientLight() : AbstractLight() {
     lightsource = std::make_shared<AmbientLightType>();
 }
 
 /*
  * megamol::core::view::light::AmbientLight::AmbientLight
  */
-AmbientLight::~AmbientLight(void) {
+AmbientLight::~AmbientLight() {
     this->Release();
 }
 

@@ -21,7 +21,7 @@ using namespace megamol::core;
 /*
  * FilamentFilter::FilamentFilter
  */
-FilamentFilter::FilamentFilter(void)
+FilamentFilter::FilamentFilter()
         : Module()
         , filamentOutSlot("filamentOut", "Output slot for the filament particles")
         , particlesInSlot("particlesIn", "Input slot for the astro particle data")
@@ -66,14 +66,14 @@ FilamentFilter::FilamentFilter(void)
 /*
  * FilamentFilter::~FilamentFilter
  */
-FilamentFilter::~FilamentFilter(void) {
+FilamentFilter::~FilamentFilter() {
     this->Release();
 }
 
 /*
  * FilamentFilter::create
  */
-bool FilamentFilter::create(void) {
+bool FilamentFilter::create() {
     // intentionally empty
     return true;
 }
@@ -81,7 +81,7 @@ bool FilamentFilter::create(void) {
 /*
  * FilamentFilter::release
  */
-void FilamentFilter::release(void) {
+void FilamentFilter::release() {
     // intentionally empty
 }
 
@@ -181,7 +181,7 @@ bool FilamentFilter::copyContentToOutCall(AstroDataCall& outCall) {
 /*
  * FilamentFilter::initFields
  */
-void FilamentFilter::initFields(void) {
+void FilamentFilter::initFields() {
     if (this->positions == nullptr) {
         this->positions = std::make_shared<std::vector<glm::vec3>>();
     }

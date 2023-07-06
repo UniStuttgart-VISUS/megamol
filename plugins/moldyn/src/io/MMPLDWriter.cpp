@@ -23,7 +23,7 @@ namespace megamol::moldyn::io {
 /*
  * :MMPLDWriter::MMPLDWriter
  */
-MMPLDWriter::MMPLDWriter(void)
+MMPLDWriter::MMPLDWriter()
         : AbstractDataWriter()
         , filenameSlot("filename", "The path to the MMPLD file to be written")
         , versionSlot("version", "The file format version to be written")
@@ -61,7 +61,7 @@ MMPLDWriter::MMPLDWriter(void)
 /*
  * MMPLDWriter::~MMPLDWriter
  */
-MMPLDWriter::~MMPLDWriter(void) {
+MMPLDWriter::~MMPLDWriter() {
     this->Release();
 }
 
@@ -69,7 +69,7 @@ MMPLDWriter::~MMPLDWriter(void) {
 /*
  * MMPLDWriter::create
  */
-bool MMPLDWriter::create(void) {
+bool MMPLDWriter::create() {
     return true;
 }
 
@@ -77,13 +77,13 @@ bool MMPLDWriter::create(void) {
 /*
  * MMPLDWriter::release
  */
-void MMPLDWriter::release(void) {}
+void MMPLDWriter::release() {}
 
 
 /*
  * MMPLDWriter::`
  */
-bool MMPLDWriter::run(void) {
+bool MMPLDWriter::run() {
     using megamol::core::utility::log::Log;
     vislib::TString filename(
         this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
@@ -399,7 +399,12 @@ bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDat
             switch (points.GetColourDataType()) {
             case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: {
                 auto col = points.GetGlobalColour();
-                uint16_t colNew[4] = {col[0] * 257, col[1] * 257, col[2] * 257, col[3] * 257};
+                uint16_t colNew[4] = {
+                    static_cast<uint16_t>(col[0] * 257),
+                    static_cast<uint16_t>(col[1] * 257),
+                    static_cast<uint16_t>(col[2] * 257),
+                    static_cast<uint16_t>(col[3] * 257),
+                };
                 for (UINT64 i = 0; i < cnt; ++i) {
                     ASSERT_WRITEOUT(vp, vs);
                     vp += vo;

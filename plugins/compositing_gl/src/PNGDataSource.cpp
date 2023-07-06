@@ -9,15 +9,14 @@
 #include <png.h>
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 
 using namespace megamol;
 using namespace megamol::compositing_gl;
 
-PNGDataSource::PNGDataSource(void)
-        : core::Module()
+PNGDataSource::PNGDataSource()
+        : mmstd_gl::ModuleGL()
         , m_filename_slot("Filename", "Filename to read from")
         , m_image_width_slot("ImageWidth", "Width of the loaded image")
         , m_image_height_slot("ImageHeight", "Height of the loaded image")
@@ -41,18 +40,18 @@ PNGDataSource::PNGDataSource(void)
     this->MakeSlotAvailable(&this->m_output_tex_slot);
 }
 
-PNGDataSource::~PNGDataSource(void) {
+PNGDataSource::~PNGDataSource() {
     this->Release();
 }
 
-bool PNGDataSource::create(void) {
+bool PNGDataSource::create() {
     m_output_layout = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1);
     m_output_texture = std::make_shared<glowl::Texture2D>("png_tx2D", m_output_layout, nullptr);
 
     return true;
 }
 
-void PNGDataSource::release(void) {}
+void PNGDataSource::release() {}
 
 bool PNGDataSource::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<compositing_gl::CallTexture2D*>(&caller);

@@ -9,8 +9,7 @@
 
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 using byte = unsigned char;
 
@@ -21,5 +20,4 @@ unsigned int to_uint(void* ptr);
 std::vector<byte>* to_vector(void* ptr);
 } // namespace conversion
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

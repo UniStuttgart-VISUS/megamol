@@ -56,7 +56,7 @@ protected:
     /**
      * Dtor
      */
-    ~AbstractAtomReader(void) {
+    ~AbstractAtomReader() {
         // Do not close, delete, etc. the file
         ARY_SAFE_DELETE(this->buf);
     }
@@ -248,7 +248,9 @@ private:
             this->pos = 0;
             try {
                 return (this->file.Read(dst, size) == size);
-            } catch (...) { return false; }
+            } catch (...) {
+                return false;
+            }
         }
 
         try {
@@ -286,7 +288,9 @@ private:
             try {
                 this->file.Seek(size, vislib::sys::File::CURRENT);
                 return true;
-            } catch (...) { return false; }
+            } catch (...) {
+                return false;
+            }
         }
 
         try { // read into buffer
@@ -336,7 +340,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderASCII(void) {
+    ~AtomReaderASCII() {
         // Intentionally empty
     }
 
@@ -352,7 +356,9 @@ public:
         const char* c = this->sift(fail);
         try {
             return static_cast<UINT32>(vislib::CharTraitsA::ParseInt(c));
-        } catch (...) { fail = true; }
+        } catch (...) {
+            fail = true;
+        }
         return 0;
     }
 
@@ -368,7 +374,9 @@ public:
         const char* c = this->sift(fail);
         try {
             return static_cast<float>(vislib::CharTraitsA::ParseDouble(c));
-        } catch (...) { fail = true; }
+        } catch (...) {
+            fail = true;
+        }
         return 0.0f;
     }
 
@@ -411,7 +419,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderFloat(void) {
+    ~AtomReaderFloat() {
         // Intentionally empty
     }
 
@@ -488,7 +496,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderDouble(void) {
+    ~AtomReaderDouble() {
         // Intentionally empty
     }
 
@@ -565,7 +573,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderFloatSwitched(void) {
+    ~AtomReaderFloatSwitched() {
         // Intentionally empty
     }
 
@@ -646,7 +654,7 @@ public:
     /**
      * Dtor
      */
-    ~AtomReaderDoubleSwitched(void) {
+    ~AtomReaderDoubleSwitched() {
         // Intentionally empty
     }
 
@@ -745,7 +753,7 @@ float IMDAtomDataSource::FileFormatAutoDetect(const unsigned char* data, SIZE_T 
 /*
  * IMDAtomDataSource::IMDAtomDataSource
  */
-IMDAtomDataSource::IMDAtomDataSource(void)
+IMDAtomDataSource::IMDAtomDataSource()
         : core::Module()
         , filenameSlot("filename", "The path of the IMD file to read")
         , bboxEnabledSlot("bbox::enable", "")
@@ -891,7 +899,7 @@ IMDAtomDataSource::IMDAtomDataSource(void)
 /*
  * IMDAtomDataSource::~IMDAtomDataSource
  */
-IMDAtomDataSource::~IMDAtomDataSource(void) {
+IMDAtomDataSource::~IMDAtomDataSource() {
     this->Release();
 }
 
@@ -899,7 +907,7 @@ IMDAtomDataSource::~IMDAtomDataSource(void) {
 /*
  * IMDAtomDataSource::create
  */
-bool IMDAtomDataSource::create(void) {
+bool IMDAtomDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -908,7 +916,7 @@ bool IMDAtomDataSource::create(void) {
 /*
  * IMDAtomDataSource::release
  */
-void IMDAtomDataSource::release(void) {
+void IMDAtomDataSource::release() {
     this->clear();
 }
 
@@ -1089,7 +1097,7 @@ bool IMDAtomDataSource::getExtentCallback(core::Call& caller) {
 /*
  * IMDAtomDataSource::clear
  */
-void IMDAtomDataSource::clear(void) {
+void IMDAtomDataSource::clear() {
     for (int i = 0; i < static_cast<int>(this->posData.Count()); i++) {
         this->posData[i]->EnforceSize(0);
         this->colData[i]->EnforceSize(0);
@@ -1106,7 +1114,7 @@ void IMDAtomDataSource::clear(void) {
 /*
  * IMDAtomDataSource::assertData
  */
-void IMDAtomDataSource::assertData(void) {
+void IMDAtomDataSource::assertData() {
     using megamol::core::utility::log::Log;
     if (!this->filenameSlot.IsDirty() && !this->colourModeSlot.IsDirty() && !this->colourColumnSlot.IsDirty() &&
         !this->splitLoadDiredDataSlot.IsDirty() && !this->dirXColNameSlot.IsDirty() &&
@@ -1405,7 +1413,9 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
 
     } catch (vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to parse IMD header: %s\n", ex.GetMsgA());
-    } catch (...) { Log::DefaultLog.WriteError("Failed to parse IMD header: unexpected exception\n"); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("Failed to parse IMD header: unexpected exception\n");
+    }
 
     return false;
 }
@@ -1527,7 +1537,9 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     typecolumn = UINT_MAX;
                 }
-            } catch (...) { typecolumn = UINT_MAX; }
+            } catch (...) {
+                typecolumn = UINT_MAX;
+            }
         }
 
         if (typecolumn == UINT_MAX) {
@@ -1568,7 +1580,9 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     colcolumn = UINT_MAX;
                 }
-            } catch (...) { colcolumn = UINT_MAX; }
+            } catch (...) {
+                colcolumn = UINT_MAX;
+            }
         }
 
         if (colcolumn == UINT_MAX) {
@@ -1606,7 +1620,9 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     dircolcolumn = UINT_MAX;
                 }
-            } catch (...) { dircolcolumn = UINT_MAX; }
+            } catch (...) {
+                dircolcolumn = UINT_MAX;
+            }
         }
         if (dircolcolumn == UINT_MAX) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(

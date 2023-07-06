@@ -119,7 +119,7 @@ PDBWriter::~PDBWriter() {
 /*
  * PDBWriter::IsRunning
  */
-bool PDBWriter::IsRunning(void) const {
+bool PDBWriter::IsRunning() const {
     return (!(this->jobDone));
 }
 
@@ -134,7 +134,7 @@ bool PDBWriter::buttonCallback(core::param::ParamSlot& slot) {
 /*
  * PDBWriter::Start
  */
-bool PDBWriter::Start(void) {
+bool PDBWriter::Start() {
 
     uint frameCnt;
 
@@ -226,7 +226,7 @@ bool PDBWriter::Start(void) {
 /*
  * PDBWriter::Terminate
  */
-bool PDBWriter::Terminate(void) {
+bool PDBWriter::Terminate() {
     return true; // TODO What does this do?
 }
 
@@ -234,7 +234,7 @@ bool PDBWriter::Terminate(void) {
 /*
  * PDBWriter::create
  */
-bool PDBWriter::create(void) {
+bool PDBWriter::create() {
     return true;
 }
 
@@ -242,7 +242,7 @@ bool PDBWriter::create(void) {
 /*
  * PDBWriter::release
  */
-void PDBWriter::release(void) {}
+void PDBWriter::release() {}
 
 
 /**

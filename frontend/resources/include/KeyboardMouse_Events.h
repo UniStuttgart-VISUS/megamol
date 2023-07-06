@@ -12,8 +12,7 @@
 
 #include "KeyboardMouseInput.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 static std::string KeyboardEvents_Req_Name = "KeyboardEvents";
 static std::string MouseEvents_Req_Name = "MouseEvents";
@@ -85,5 +84,4 @@ struct MouseEvents {
 
 namespace input = frontend_resources;
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

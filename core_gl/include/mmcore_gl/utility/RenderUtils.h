@@ -20,6 +20,7 @@
 #include <glowl/GLSLProgram.hpp>
 #include <glowl/Texture2D.hpp>
 
+#include "RuntimeConfig.h"
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "vislib/graphics/PngBitmapCodec.h"
@@ -110,7 +111,7 @@ public:
 
     // LOCAL functions -------------------------------------------------------
 
-    bool InitPrimitiveRendering(std::vector<std::filesystem::path> const& shader_paths);
+    bool InitPrimitiveRendering(frontend_resources::RuntimeConfig const& runtimeConf);
 
     // Keeps the texture object in render utils for later access via texture id
     bool LoadTextureFromFile(GLuint& out_texture_id, const std::filesystem::path& filename, bool reload = false);
@@ -170,7 +171,7 @@ public:
     unsigned int GetTextureWidth(GLuint texture_id) const;
     unsigned int GetTextureHeight(GLuint texture_id) const;
 
-    inline void DeleteAllTextures(void) {
+    inline void DeleteAllTextures() {
         this->textures.clear();
     }
 

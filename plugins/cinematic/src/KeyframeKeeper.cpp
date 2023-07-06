@@ -6,6 +6,7 @@
  */
 
 #include "KeyframeKeeper.h"
+#include "FrameStatistics.h"
 #include "cinematic/CallKeyframeKeeper.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -21,8 +22,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include "mmcore/CoreInstance.h"
-
 
 using namespace megamol;
 using namespace megamol::core;
@@ -32,7 +31,7 @@ using namespace vislib;
 using namespace vislib::math;
 
 
-KeyframeKeeper::KeyframeKeeper(void)
+KeyframeKeeper::KeyframeKeeper()
         : core::Module()
         , keyframeCallSlot("keyframeData", "holds keyframe data")
         , applyKeyframeParam("applyKeyframe", "Apply current settings to selected/new keyframe.")
@@ -206,19 +205,19 @@ KeyframeKeeper::KeyframeKeeper(void)
 }
 
 
-KeyframeKeeper::~KeyframeKeeper(void) {
+KeyframeKeeper::~KeyframeKeeper() {
 
     this->Release();
 }
 
 
-bool KeyframeKeeper::create(void) {
+bool KeyframeKeeper::create() {
 
     return true;
 }
 
 
-void KeyframeKeeper::release(void) {}
+void KeyframeKeeper::release() {}
 
 
 bool KeyframeKeeper::CallForSetSimulationData(core::Call& c) {
@@ -702,7 +701,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     ccc->SetFps(this->fps);
 
     // GUI PopUp for total animation time modi
-    this->pendingTotalAnimTimePopUp(this->GetCoreInstance()->GetFrameID());
+    this->pendingTotalAnimTimePopUp(
+        frontend_resources.get<frontend_resources::FrameStatistics>().rendered_frames_count);
 
     return true;
 }
@@ -749,7 +749,7 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
 }
 
 
-bool KeyframeKeeper::undoAction(void) {
+bool KeyframeKeeper::undoAction() {
 
     bool retVal = false;
 
@@ -803,7 +803,7 @@ bool KeyframeKeeper::undoAction(void) {
 }
 
 
-bool KeyframeKeeper::redoAction(void) {
+bool KeyframeKeeper::redoAction() {
 
     bool retVal = false;
 

@@ -32,7 +32,7 @@
 /*
  * vislib::net::Socket::Cleanup
  */
-void vislib::net::Socket::Cleanup(void) {
+void vislib::net::Socket::Cleanup() {
 #ifdef _WIN32
     if (::WSACleanup() != 0) {
         throw SocketException(__FILE__, __LINE__);
@@ -44,7 +44,7 @@ void vislib::net::Socket::Cleanup(void) {
 /*
  * vislib::net::Socket::Startup
  */
-void vislib::net::Socket::Startup(void) {
+void vislib::net::Socket::Startup() {
 #ifdef _WIN32
     WSAData wsaData;
 
@@ -65,7 +65,7 @@ const UINT vislib::net::Socket::TIMEOUT_INFINITE = 0;
 /*
  * vislib::net::Socket::~Socket
  */
-vislib::net::Socket::~Socket(void) {}
+vislib::net::Socket::~Socket() {}
 
 
 /*
@@ -158,7 +158,7 @@ void vislib::net::Socket::BindToDevice(const StringA& name) {
 /*
  * vislib::net::Socket::Close
  */
-void vislib::net::Socket::Close(void) {
+void vislib::net::Socket::Close() {
 
     if (this->IsValid()) {
 
@@ -267,7 +267,7 @@ void vislib::net::Socket::Create(const IPEndPoint& familySpecAddr, const Type ty
 /*
  * vislib::net::Socket::GetLocalEndPoint
  */
-vislib::net::IPEndPoint vislib::net::Socket::GetLocalEndPoint(void) const {
+vislib::net::IPEndPoint vislib::net::Socket::GetLocalEndPoint() const {
     IPEndPoint retval;
 #ifdef _WIN32
     int len = static_cast<int>(sizeof(struct sockaddr_storage));
@@ -360,7 +360,7 @@ void vislib::net::Socket::GetOption(
 /*
  * vislib::net::Socket::GetPeerEndPoint
  */
-vislib::net::IPEndPoint vislib::net::Socket::GetPeerEndPoint(void) const {
+vislib::net::IPEndPoint vislib::net::Socket::GetPeerEndPoint() const {
     IPEndPoint retval;
 #ifdef _WIN32
     int len = static_cast<int>(sizeof(struct sockaddr_storage));

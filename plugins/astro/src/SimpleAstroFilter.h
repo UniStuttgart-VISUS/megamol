@@ -13,41 +13,40 @@
 #include "mmcore/param/ParamSlot.h"
 #include <set>
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 class SimpleAstroFilter : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SimpleAstroFilter";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Filters the filament particles of a AstroParticleDataCall";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    SimpleAstroFilter(void);
+    SimpleAstroFilter();
 
     /** Dtor. */
-    virtual ~SimpleAstroFilter(void);
+    ~SimpleAstroFilter() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
 
 private:
     bool getData(core::Call& call);
     bool getExtent(core::Call& call);
 
-    void initFields(void);
+    void initFields();
     bool filter(const AstroDataCall& call);
     bool copyContentToOutCall(AstroDataCall& outCall);
     bool copyInCallToContent(const AstroDataCall& inCall, const std::set<uint64_t>& indexSet);
-    bool isParamDirty(void);
-    void resetDirtyParams(void);
+    bool isParamDirty();
+    void resetDirtyParams();
     void setDisplayedValues(const AstroDataCall& outCall);
 
     core::CalleeSlot particlesOutSlot;
@@ -166,5 +165,4 @@ private:
     uint32_t lastTimestep;
 };
 
-} // namespace astro
-} // namespace megamol
+} // namespace megamol::astro

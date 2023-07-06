@@ -6,16 +6,12 @@
  */
 
 
-#ifndef MEGAMOL_GUI_GUIUTILS_INCLUDED
-#define MEGAMOL_GUI_GUIUTILS_INCLUDED
 #pragma once
 
+#include <climits>
 
-#define IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-#define IMGUI_DISABLE_OBSOLETE_KEYIO
-#include "imgui.h"
-#include "imgui_internal.h"
+#include <imgui.h>
+#include <imgui_internal.h>
 
 #include "mmcore/param/AbstractParamPresentation.h"
 #include "mmcore/utility/log/Log.h"
@@ -90,8 +86,7 @@
 #endif // MEGAMOL_USE_OPENGL
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /********** Additional Global ImGui Operators ****************************/
@@ -206,7 +201,8 @@ enum HotkeyIndex : size_t {
     HOTKEY_CONFIGURATOR_MODULE_SEARCH,
     HOTKEY_CONFIGURATOR_PARAMETER_SEARCH,
     HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM,
-    HOTKEY_CONFIGURATOR_SAVE_PROJECT
+    HOTKEY_CONFIGURATOR_SAVE_PROJECT,
+    HOTKEY_CONFIGURATOR_LAYOUT_GRAPH
 };
 struct HotkeyData_t {
     std::string name;
@@ -272,7 +268,7 @@ typedef struct _interact_state_ {
     unsigned int call_coloring_mode; // in
     unsigned int call_coloring_map;  // in
 
-    ImGuiID slot_dropped_uid; // in out
+    UIDPair_t slot_drag_drop_uids; // in out
 
     ImGuiID callslot_selected_uid;       // in out
     ImGuiID callslot_hovered_uid;        // in out
@@ -348,15 +344,13 @@ public:
     static void PushReadOnly(bool set = true) {
 
         if (set) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            ImGui::BeginDisabled(set);
         }
     }
     static void PopReadOnly(bool set = true) {
 
         if (set) {
-            ImGui::PopStyleVar();
-            ImGui::PopItemFlag();
+            ImGui::EndDisabled();
         }
     }
 
@@ -460,27 +454,6 @@ public:
         }
         return header_open;
     }
-
-    /*
-     * Convert given string to lower case.
-     */
-    static void StringToLowerCase(std::string& str) {
-
-        for (auto& c : str) {
-            c = static_cast<char>(std::tolower(c));
-        }
-    }
-
-    /*
-     * Convert given string to upper case.
-     */
-    static void StringToUpperCase(std::string& str) {
-
-        for (auto& c : str) {
-            c = static_cast<char>(std::toupper(c));
-        }
-    }
-
 
     static ImGuiKey GlfwKeyToImGuiKey(megamol::frontend_resources::Key key) {
         switch (key) {
@@ -923,7 +896,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GUIUTILS_INCLUDED
+} // namespace megamol::gui

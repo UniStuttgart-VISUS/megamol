@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
-#define MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
 #pragma once
 
 
@@ -18,8 +16,7 @@
 #include "widgets/StringSearchWidget.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /* ************************************************************************
@@ -75,7 +72,6 @@ private:
     ImGuiID module_list_popup_hovered_group_uid;
     bool show_module_list_sidebar;
     bool show_module_list_popup;
-    ImVec2 module_list_popup_pos;
     ImGuiID last_selected_callslot_uid;
     bool open_popup_load;
 
@@ -93,7 +89,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED
+} // namespace megamol::gui

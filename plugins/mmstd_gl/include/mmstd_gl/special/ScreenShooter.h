@@ -6,10 +6,12 @@
 
 #pragma once
 
+#include "ModuleGraphSubscription.h"
+
 #include <glowl/FramebufferObject.hpp>
 
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
-#include "mmcore/ViewInstance.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/view/AbstractView.h"
@@ -21,10 +23,9 @@ namespace megamol::mmstd_gl::special {
  */
 class ScreenShooter : public core::job::AbstractJob, public core::Module, public core::view::AbstractView::Hooks {
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto lifetime_resources = Module::requested_lifetime_resources();
-        lifetime_resources.push_back("MegaMolGraph");
-        return lifetime_resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
     }
 
     /**
@@ -51,15 +52,6 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable();
-
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart() {
-        return false;
-    }
 
     /**
      * Ctor

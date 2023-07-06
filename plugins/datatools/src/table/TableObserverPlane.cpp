@@ -22,7 +22,7 @@ using namespace megamol;
 /*
  * TableToParticles::TableObserverPlane
  */
-TableObserverPlane::TableObserverPlane(void)
+TableObserverPlane::TableObserverPlane()
         : Module()
         , slotCallInputTable("table", "table input call")
         , slotCallClipPlane("clipplabe", "clip plane input call")
@@ -102,7 +102,7 @@ TableObserverPlane::TableObserverPlane(void)
 /*
  * TableToParticles::~TableToParticles
  */
-TableObserverPlane::~TableObserverPlane(void) {
+TableObserverPlane::~TableObserverPlane() {
     this->Release();
 }
 
@@ -110,7 +110,7 @@ TableObserverPlane::~TableObserverPlane(void) {
 /*
  * megamol::pcl::PclDataSource::create
  */
-bool TableObserverPlane::create(void) {
+bool TableObserverPlane::create() {
     bool retval = true;
     return true;
 }
@@ -388,4 +388,4 @@ bool TableObserverPlane::getHash(core::Call& call) {
 /*
  * megamol::pcl::PclDataSource::release
  */
-void TableObserverPlane::release(void) {}
+void TableObserverPlane::release() {}

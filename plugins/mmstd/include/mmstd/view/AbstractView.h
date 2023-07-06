@@ -35,8 +35,12 @@ using megamol::frontend_resources::MouseButtonAction;
  */
 class AbstractView : public AbstractViewInterface {
 
-
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::ScriptPaths>();
+    }
+
     /**
      * Interfaces class for hooking into view processes
      */
@@ -88,18 +92,9 @@ public:
      *
      * @return The default time
      */
-    virtual float DefaultTime(double instTime) const {
+    float DefaultTime(double instTime) const override {
         return this->_timeCtrl.Time(instTime);
     }
-
-    /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    virtual bool IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const;
 
     /**
      * Set the camera for this view externally
@@ -107,12 +102,12 @@ public:
      * @param camera A fully intialized camera to use for rendering the view
      * @param isMutable Tell the view whether it can modify, i.e. control, the camera or not
      */
-    virtual void SetCamera(Camera camera, bool isMutable = true);
+    void SetCamera(Camera camera, bool isMutable = true) override;
 
     /**
      * Return the current camera
      */
-    virtual Camera GetCamera() const;
+    Camera GetCamera() const override;
 
     /**
      * ...
@@ -131,7 +126,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) = 0;
+    void Resize(unsigned int width, unsigned int height) override = 0;
 
     /**
      * Registers a hook
@@ -208,12 +203,6 @@ public:
     bool OnResetView(param::ParamSlot& p);
 
 protected:
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto req = Module::requested_lifetime_resources();
-        req.push_back("LuaScriptPaths");
-        return req;
-    }
-
     /** Typedef alias */
     typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
 
@@ -283,6 +272,24 @@ protected:
     bool onRestoreCamera(param::ParamSlot& p);
 
     /**
+     * Saves the camera settings to file
+     *
+     * @param p Must be saveCamSettingsSlot
+     *
+     * @return true
+     */
+    bool onSaveCamera(param::ParamSlot& p);
+
+    /**
+     * Loads the camera settings from file
+     *
+     * @param p Must be loadCamSettingsSlot
+     *
+     * @return true
+     */
+    bool onLoadCamera(param::ParamSlot& p);
+
+    /**
      * This method determines the file path the camera file should have
      *
      * @return The file path of the camera file as string
@@ -316,6 +323,12 @@ protected:
     /** Triggers the restore of the camera settings */
     param::ParamSlot _restoreCameraSettingsSlot;
 
+    /** Triggers that the camera parameters are saved to disk immediately */
+    param::ParamSlot _saveCamSettingsSlot;
+
+    /** Triggers that the camera parameters are loaded from disk immediately */
+    param::ParamSlot _loadCamSettingsSlot;
+
     /** Slot activating or deactivating the override of already present camera settings */
     param::ParamSlot _overrideCamSettingsSlot;
 
@@ -339,7 +352,7 @@ protected:
     param::ParamSlot _showViewCubeParam;
 
     /** Array that holds the saved camera states */
-    std::array<std::pair<Camera, bool>, 11> _savedCameras;
+    std::array<std::pair<Camera, bool>, 10> _savedCameras;
 
     /** The object responsible for camera serialization */
     CameraSerializer _cameraSerializer;

@@ -17,8 +17,7 @@
 using namespace megamol::gui;
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
 
@@ -146,8 +145,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
     return 0;
 }
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 
 int megamol::gui::LogBuffer::sync() {
@@ -424,7 +422,7 @@ bool megamol::gui::LogConsole::Draw() {
                                            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
     if (ImGui::InputText("###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback,
             (void*)this->input_shared_data.get())) {
-        std::string command = "return " + this->input_buffer;
+        std::string command = this->input_buffer;
         auto result = (*this->input_lua_func)(command);
         if (std::get<0>(result)) {
             // command was fine, no editing required

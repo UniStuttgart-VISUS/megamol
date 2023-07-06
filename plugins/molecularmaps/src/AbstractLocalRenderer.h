@@ -3,11 +3,7 @@
  * Copyright (C) 2006-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_ABSTRACTLOCALRENDERER_H_INCLUDED
-#define MMMOLMAPPLG_ABSTRACTLOCALRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
@@ -54,5 +50,3 @@ protected:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_ABSTRACTLOCALRENDERER_H_INCLUDED */

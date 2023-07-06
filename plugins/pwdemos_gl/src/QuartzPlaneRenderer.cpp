@@ -7,7 +7,6 @@
 #include "QuartzPlaneRenderer.h"
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -16,13 +15,12 @@
 #include "vislib/math/Vector.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * QuartzPlaneRenderer::QuartzPlaneRenderer
  */
-QuartzPlaneRenderer::QuartzPlaneRenderer(void)
+QuartzPlaneRenderer::QuartzPlaneRenderer()
         : mmstd_gl::Renderer2DModuleGL()
         , AbstractMultiShaderQuartzRenderer()
         , useClipColSlot("useClipCol", "Use clipping plane or grain colour for grains") {
@@ -42,7 +40,7 @@ QuartzPlaneRenderer::QuartzPlaneRenderer(void)
 /*
  * QuartzPlaneRenderer::~QuartzPlaneRenderer
  */
-QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
+QuartzPlaneRenderer::~QuartzPlaneRenderer() {
     this->Release();
     ASSERT(this->shaders.empty());
 }
@@ -51,10 +49,11 @@ QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
 /*
  * QuartzPlaneRenderer::create
  */
-bool QuartzPlaneRenderer::create(void) {
+bool QuartzPlaneRenderer::create() {
     using megamol::core::utility::log::Log;
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->errShader = core::utility::make_shared_glowl_shader("errShader", shader_options,
@@ -192,7 +191,7 @@ bool QuartzPlaneRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
 /*
  * QuartzPlaneRenderer::release
  */
-void QuartzPlaneRenderer::release(void) {
+void QuartzPlaneRenderer::release() {
     this->releaseShaders();
     this->errShader.reset();
 }
@@ -466,7 +465,8 @@ std::shared_ptr<glowl::GLSLProgram> QuartzPlaneRenderer::makeShader(const Crysta
     c.AssertMesh();
     const float* v = c.GetMeshVertexData();
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         vislib::StringA str, line;
@@ -500,5 +500,4 @@ std::shared_ptr<glowl::GLSLProgram> QuartzPlaneRenderer::makeShader(const Crysta
     return s;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

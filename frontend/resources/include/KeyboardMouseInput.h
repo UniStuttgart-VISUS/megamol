@@ -15,8 +15,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 // GLFW keyboard keys
 enum class Key : int {
@@ -326,7 +325,7 @@ public:
     Key key;
 
     /** Ctor. */
-    KeyCode(void) {
+    KeyCode() {
         this->key = frontend_resources::Key::KEY_UNKNOWN;
         this->mods = frontend_resources::Modifiers(frontend_resources::Modifier::NONE);
     }
@@ -352,7 +351,7 @@ public:
      *
      * @return A human-readable ASCII String
      */
-    std::string ToString(void) const {
+    std::string ToString() const {
 
         std::string msg;
 
@@ -738,8 +737,7 @@ public:
 
 namespace input = frontend_resources;
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources
 
 namespace std {
 

@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef PROBE_INTERACTION_H_INCLUDED
-#define PROBE_INTERACTION_H_INCLUDED
+#pragma once
 
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
@@ -140,6 +139,3 @@ private:
 
 } // namespace probe_gl
 } // namespace megamol
-
-
-#endif // !PROBE_INTERACTION_H_INCLUDED

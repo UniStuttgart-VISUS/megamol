@@ -320,7 +320,8 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
             // Button
             ImGui::SetCursorScreenPos(slot_position - ImVec2(radius, radius));
             ImGui::SetItemAllowOverlap();
-            ImGui::InvisibleButton(button_label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f));
+            ImGui::InvisibleButton(
+                button_label.c_str(), ImVec2(radius * 2.0f, radius * 2.0f), ImGuiButtonFlags_NoSetKeyOwner);
             ImGui::SetItemAllowOverlap();
             if (ImGui::IsItemActivated()) {
                 state.interact.button_active_uid = this->uid;
@@ -360,8 +361,10 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
 
             // Drag & Drop
             if (ImGui::BeginDragDropTarget()) {
-                if (ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE) != nullptr) {
-                    state.interact.slot_dropped_uid = this->uid;
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE)) {
+                    auto* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
+                    state.interact.slot_drag_drop_uids.first = (*dragged_slot_uid_ptr);
+                    state.interact.slot_drag_drop_uids.second = this->uid;
                 }
                 ImGui::EndDragDropTarget();
             }

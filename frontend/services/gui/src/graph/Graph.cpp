@@ -97,7 +97,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     this->gui_graph_state.interact.call_coloring_map = 0;
     this->gui_graph_state.interact.call_coloring_mode = 0;
 
-    this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
+    this->gui_graph_state.interact.slot_drag_drop_uids = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
 
     this->gui_graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
@@ -263,14 +263,8 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool use_queue) {
                 GroupPtr_t module_group_ptr = nullptr;
                 for (auto& group_ptr : this->groups) {
                     if (group_ptr->ContainsModule(module_uid)) {
-                        group_ptr->RemoveModule(module_uid);
                         module_group_ptr = group_ptr;
-
-                        queue_data.name_id = current_full_name;
-                        queue_data.rename_id = (*iter)->FullName();
-                        if (use_queue) {
-                            this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
-                        }
+                        this->RemoveGroupModule(group_ptr->UID(), module_uid, use_queue, false);
                     }
                 }
 
@@ -296,6 +290,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool use_queue) {
                 if (module_group_ptr != nullptr) {
                     module_group_ptr->RestoreInterfaceslots();
                 }
+
 
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
@@ -803,12 +798,13 @@ ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
         auto group_ptr = std::make_shared<Group>(group_id);
         group_ptr->SetName((group_name.empty()) ? (this->generate_unique_group_name()) : (group_name));
         this->groups.emplace_back(group_ptr);
-        this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added group '%s' (uid %i) to project '%s'.\n",
             group_ptr->Name().c_str(), group_ptr->UID(), this->name.c_str());
 #endif // GUI_VERBOSE
+
+        this->ForceSetDirty();
         return group_id;
 
     } catch (std::exception& e) {
@@ -840,7 +836,6 @@ megamol::gui::GroupPtr_t megamol::gui::Graph::GetGroup(ImGuiID group_uid) {
 
 bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
 
-    // ! No syncronisation of module renaming considered
     try {
         for (auto iter = this->groups.begin(); iter != this->groups.end(); iter++) {
             if ((*iter)->UID() == group_uid) {
@@ -861,8 +856,6 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
                 this->groups.erase(iter);
 
                 this->ForceSetDirty();
-
-                this->ForceUpdate();
                 return true;
             }
         }
@@ -885,32 +878,89 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
 ImGuiID megamol::gui::Graph::AddGroupModule(
     const std::string& group_name, const ModulePtr_t& module_ptr, bool use_queue) {
 
-    try {
-        // Only create new group if given name is not empty
-        if (!group_name.empty()) {
-            // Check if group with given name already exists
-            ImGuiID existing_group_uid = GUI_INVALID_ID;
-            for (auto& group_ptr : this->groups) {
-                if (group_ptr->Name() == group_name) {
-                    existing_group_uid = group_ptr->UID();
+    // Only create new group if given name is not empty
+    if (!group_name.empty()) {
+        // Check if group with given name already exists
+        ImGuiID existing_group_uid = GUI_INVALID_ID;
+        for (auto& group_ptr : this->groups) {
+            if (group_ptr->Name() == group_name) {
+                if (existing_group_uid != GUI_INVALID_ID) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[GUI] Warning: Found groups with same name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                        __LINE__);
+                }
+                existing_group_uid = group_ptr->UID();
+            }
+        }
+        // Create new group if there is no one with given name
+        if (existing_group_uid == GUI_INVALID_ID) {
+            existing_group_uid = this->AddGroup(group_name);
+        }
+        // Add module to group
+        for (auto& group_ptr : this->groups) {
+            if (group_ptr->UID() == existing_group_uid) {
+                if (this->AddGroupModule(existing_group_uid, module_ptr, use_queue) != GUI_INVALID_ID) {
+                    return existing_group_uid;
                 }
             }
-            // Create new group if there is no one with given name
-            if (existing_group_uid == GUI_INVALID_ID) {
-                existing_group_uid = this->AddGroup(group_name);
+        }
+    }
+    return GUI_INVALID_ID;
+}
+
+
+ImGuiID megamol::gui::Graph::AddGroupModule(ImGuiID group_uid, const ModulePtr_t& module_ptr, bool use_queue) {
+
+    try {
+        // Add module to group
+        for (auto& group_ptr : this->groups) {
+            if (group_ptr->UID() == group_uid) {
+                Graph::QueueData queue_data;
+                queue_data.name_id = module_ptr->FullName();
+                if (group_ptr->AddModule(module_ptr)) {
+                    queue_data.rename_id = module_ptr->FullName();
+                    if (use_queue) {
+                        this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                    }
+                    this->ForceSetDirty();
+                    return group_uid;
+                }
             }
-            // Add module to group
-            for (auto& group_ptr : this->groups) {
-                if (group_ptr->UID() == existing_group_uid) {
-                    Graph::QueueData queue_data;
-                    queue_data.name_id = module_ptr->FullName();
-                    if (group_ptr->AddModule(module_ptr)) {
-                        queue_data.rename_id = module_ptr->FullName();
-                        if (use_queue) {
-                            this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+        }
+
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return GUI_INVALID_ID;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return GUI_INVALID_ID;
+    }
+
+    return GUI_INVALID_ID;
+}
+
+
+ImGuiID megamol::gui::Graph::RemoveGroupModule(
+    ImGuiID group_uid, ImGuiID module_uid, bool use_queue, bool reset_interface) {
+
+    try {
+        // Remove module to group
+        for (auto& group_ptr : this->groups) {
+            if (group_ptr->UID() == group_uid) {
+                for (auto module_ptr : this->modules) {
+                    if (module_ptr->UID() == module_uid) {
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = module_ptr->FullName();
+                        if (group_ptr->RemoveModule(module_ptr->UID(), reset_interface)) {
+                            queue_data.rename_id = module_ptr->FullName();
+                            if (use_queue) {
+                                this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                            }
+                            this->ForceSetDirty();
+                            return group_uid;
                         }
-                        this->ForceSetDirty();
-                        return existing_group_uid;
                     }
                 }
             }
@@ -972,8 +1022,6 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name
             queue_data.name_id = module_full_name;
             queue_data.rename_id = mod->FullName();
             this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
-
-            this->ForceUpdate();
 
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] Renamed existing module '%s' while adding module with same name. "
@@ -1542,7 +1590,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 std::pair<ImGuiID, std::string> group_pair(group->UID(), group->Name());
                 this->gui_graph_state.groups.emplace_back(group_pair);
             }
-            this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
+            this->gui_graph_state.interact.slot_drag_drop_uids = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
 
             // Compatible slot pointers
             this->gui_graph_state.interact.callslot_compat_ptr.reset();
@@ -1726,8 +1774,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                         }
                     }
                     if (module_ptr != nullptr) {
-                        std::string current_module_fullname = module_ptr->FullName();
-
                         // Add module to new or already existing group
                         // Create new group for multiple selected modules only once!
                         ImGuiID group_uid = GUI_INVALID_ID;
@@ -1740,25 +1786,12 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                             group_uid = uid_pair.second;
                         }
 
-                        if (auto add_group_ptr = this->GetGroup(group_uid)) {
-                            Graph::QueueData queue_data;
-                            queue_data.name_id = module_ptr->FullName();
-
-                            // Remove module from previous associated group
-                            ImGuiID module_group_uid = module_ptr->GroupUID();
-                            if (auto remove_group_ptr = this->GetGroup(module_group_uid)) {
-                                if (remove_group_ptr->UID() != add_group_ptr->UID()) {
-                                    remove_group_ptr->RemoveModule(module_ptr->UID());
-                                    remove_group_ptr->RestoreInterfaceslots();
-                                }
-                            }
-
-                            // Add module to group
-                            add_group_ptr->AddModule(module_ptr);
-                            queue_data.rename_id = module_ptr->FullName();
-                            this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-                            this->ForceSetDirty();
-                        }
+                        /// Without intermediate renaming via queue!
+                        /// Would trigger megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule for already renamed module!
+                        std::string current_module_groupname = module_ptr->GroupName();
+                        this->RemoveGroupModule(module_ptr->GroupUID(), module_ptr->UID(), false);
+                        module_ptr->SetGroupName(current_module_groupname);
+                        this->AddGroupModule(group_uid, module_ptr, true);
                     }
                 }
                 reset_state = true;
@@ -1766,21 +1799,9 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             // Remove module from group -------------------------------------------
             if (!this->gui_graph_state.interact.modules_remove_group_uids.empty()) {
                 for (auto& module_uid : this->gui_graph_state.interact.modules_remove_group_uids) {
-                    ModulePtr_t module_ptr;
-                    for (auto& mod : this->Modules()) {
-                        if (mod->UID() == module_uid) {
-                            module_ptr = mod;
-                        }
-                    }
                     for (auto& remove_group_ptr : this->GetGroups()) {
                         if (remove_group_ptr->ContainsModule(module_uid)) {
-                            Graph::QueueData queue_data;
-                            queue_data.name_id = module_ptr->FullName();
-                            remove_group_ptr->RemoveModule(module_ptr->UID());
-                            remove_group_ptr->RestoreInterfaceslots();
-                            queue_data.rename_id = module_ptr->FullName();
-                            this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-                            this->ForceSetDirty();
+                            this->RemoveGroupModule(remove_group_ptr->UID(), module_uid, true);
                         }
                     }
                 }
@@ -1866,26 +1887,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     this->DeleteCall(this->gui_graph_state.interact.call_selected_uid);
                 }
                 if (this->gui_graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
-                    // Save old name of modules
-                    std::vector<std::pair<ImGuiID, std::string>> module_uid_name_pair;
-                    if (auto group_ptr = this->GetGroup(this->gui_graph_state.interact.group_selected_uid)) {
-                        for (auto& module_ptr : group_ptr->Modules()) {
-                            module_uid_name_pair.push_back({module_ptr->UID(), module_ptr->FullName()});
-                        }
-                    }
-                    // Delete group
                     this->DeleteGroup(this->gui_graph_state.interact.group_selected_uid);
-                    // Push module renaming to sync queue
-                    for (auto& module_ptr : this->Modules()) {
-                        for (auto& module_pair : module_uid_name_pair) {
-                            if (module_ptr->UID() == module_pair.first) {
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_pair.second;
-                                queue_data.rename_id = module_ptr->FullName();
-                                this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-                            }
-                        }
-                    }
                 }
                 if (this->gui_graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
                     for (auto& group_ptr : this->GetGroups()) {
@@ -1948,7 +1950,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 this->gui_graph_state.interact.callslot_hovered_uid = GUI_INVALID_ID;
                 this->gui_graph_state.interact.callslot_add_group_uid = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
                 this->gui_graph_state.interact.callslot_remove_group_uid = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
-                this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
             }
 
             // Layout graph -------------------------------------------------------
@@ -2404,14 +2405,14 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
         for (auto& group_ptr : this->GetGroups()) {
             group_ptr->Draw(phase, this->gui_graph_state);
 
-            // 3] MODULES and CALL SLOTS (of group) ---------------------------
+            // 2] MODULES and CALL SLOTS (of group) ---------------------------
             for (auto& module_ptr : this->Modules()) {
                 if (module_ptr->GroupUID() == group_ptr->UID()) {
                     module_ptr->Draw(phase, this->gui_graph_state);
                 }
             }
 
-            // 2] CALLS (of group) --------------------------------------------
+            // 3] CALLS (of group) --------------------------------------------
             for (auto& module_ptr : this->Modules()) {
                 if (module_ptr->GroupUID() == group_ptr->UID()) {
                     /// Check only for calls of caller slots for considering each call only once

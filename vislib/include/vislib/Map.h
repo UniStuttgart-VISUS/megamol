@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MAP_H_INCLUDED
-#define VISLIB_MAP_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -50,7 +46,7 @@ public:
         /**
          * Dtor.
          */
-        ~ElementPair(void) {
+        ~ElementPair() {
             // DO NOT DELETE THE ARRAYS!
             this->key = NULL;
             this->value = NULL;
@@ -65,7 +61,7 @@ public:
          *
          * @return The key of this element pair.
          */
-        const K& Key(void) const {
+        const K& Key() const {
             return *this->key;
         }
 
@@ -74,7 +70,7 @@ public:
          *
          * @return The value of this element pair for read write access.
          */
-        V& Value(void) {
+        V& Value() {
             return *this->value;
         }
 
@@ -83,7 +79,7 @@ public:
          *
          * @return The value of this element pair.
          */
-        const V& Value(void) const {
+        const V& Value() const {
             return *this->value;
         }
 
@@ -137,7 +133,7 @@ public:
         friend class Map<K, V>;
 
         /** default ctor */
-        Iterator(void) : owner(NULL), idx(0), retval(NULL, NULL) {
+        Iterator() : owner(NULL), idx(0), retval(NULL, NULL) {
             // intentionally empty
         }
 
@@ -151,12 +147,12 @@ public:
         }
 
         /** Dtor. */
-        virtual ~Iterator(void) {
+        ~Iterator() override {
             this->owner = NULL; // DO NOT DELETE
         }
 
         /** Behaves like Iterator<T>::HasNext */
-        virtual bool HasNext(void) const {
+        bool HasNext() const override {
             if (this->owner == NULL)
                 return false;
             return this->owner->keys.Count() > this->idx;
@@ -167,7 +163,7 @@ public:
          *
          * @throw IllegalStateException if there is no next element
          */
-        virtual ElementPair& Next(void) {
+        ElementPair& Next() override {
             if (!this->HasNext()) {
                 throw IllegalStateException("There is no next element", __FILE__, __LINE__);
             }
@@ -211,10 +207,10 @@ public:
     };
 
     /** Ctor. */
-    Map(void);
+    Map();
 
     /** Dtor. */
-    virtual ~Map(void);
+    ~Map() override;
 
     /**
      * Sets the value for the key 'key' to 'value'. If there was no entry
@@ -223,12 +219,12 @@ public:
      * @param key The 'key' of the entry pair to be set.
      * @param value The 'value' to set the entry to.
      */
-    virtual void Set(const K& key, const V& value);
+    void Set(const K& key, const V& value) override;
 
     /**
      * Clears the whole map by removing all entries.
      */
-    virtual void Clear(void);
+    void Clear() override;
 
     /**
      * Checks whether a given key is present in the map.
@@ -238,14 +234,14 @@ public:
      * @return 'true' if the key 'key' is present in the map, 'false'
      *         otherwise.
      */
-    virtual bool Contains(const K& key) const;
+    bool Contains(const K& key) const override;
 
     /**
      * Answers the number of entries in the map.
      *
      * @return The number of entries in the map.
      */
-    virtual SIZE_T Count(void) const;
+    SIZE_T Count() const override;
 
     /**
      * Finds all keys which are associated to a given value. The order of
@@ -255,7 +251,7 @@ public:
      *
      * @return A single linked list of all keys associated with this value.
      */
-    virtual SingleLinkedList<K> FindKeys(const V& value) const;
+    SingleLinkedList<K> FindKeys(const V& value) const override;
 
     /**
      * Finds a value for the specified key. If the key is not present in
@@ -266,7 +262,7 @@ public:
      * @return The value associated with the key or NULL if the key is not
      *         present in the map.
      */
-    virtual const V* FindValue(const K& key) const;
+    const V* FindValue(const K& key) const override;
 
     /**
      * Finds a value for the specified key. If the key is not present in
@@ -277,14 +273,14 @@ public:
      * @return The value associated with the key or NULL if the key is not
      *         present in the map.
      */
-    virtual V* FindValue(const K& key);
+    V* FindValue(const K& key) override;
 
     /**
      * Gets a const iterator for all entries in the map.
      *
      * @return The const iterator to all entries in the map.
      */
-    virtual ConstIterator<Iterator> GetConstIterator(void) const {
+    virtual ConstIterator<Iterator> GetConstIterator() const {
         return ConstIterator<Iterator>(Iterator(*const_cast<Map*>(this)));
     }
 
@@ -293,7 +289,7 @@ public:
      *
      * @return The iterator to all entries in the map.
      */
-    virtual Iterator GetIterator(void) {
+    virtual Iterator GetIterator() {
         return Iterator(*this);
     }
 
@@ -302,14 +298,14 @@ public:
      *
      * @return 'true' if the map is empty, 'false' otherwise.
      */
-    virtual bool IsEmpty(void) const;
+    bool IsEmpty() const override;
 
     /**
      * Removes the given key from the map.
      *
      * @param key The key to be removed from the map.
      */
-    virtual void Remove(const K& key);
+    void Remove(const K& key) override;
 
 private:
     /** array of keys */
@@ -324,16 +320,16 @@ private:
  * vislib::Map::Map
  */
 template<class K, class V>
-Map<K, V>::Map(void) : AssociativeCollection<K, V>()
-                     , keys()
-                     , values() {}
+Map<K, V>::Map() : AssociativeCollection<K, V>()
+                 , keys()
+                 , values() {}
 
 
 /*
  * vislib::Map::~Map
  */
 template<class K, class V>
-Map<K, V>::~Map(void) {
+Map<K, V>::~Map() {
     this->Clear();
 }
 
@@ -357,7 +353,7 @@ void Map<K, V>::Set(const K& key, const V& value) {
  * vislib::Map::Clear
  */
 template<class K, class V>
-void Map<K, V>::Clear(void) {
+void Map<K, V>::Clear() {
     this->keys.Clear();
     this->values.Clear();
 }
@@ -376,7 +372,7 @@ bool Map<K, V>::Contains(const K& key) const {
  * vislib::Map::Count
  */
 template<class K, class V>
-SIZE_T Map<K, V>::Count(void) const {
+SIZE_T Map<K, V>::Count() const {
     return this->keys.Count();
 }
 
@@ -429,7 +425,7 @@ V* Map<K, V>::FindValue(const K& key) {
  * vislib::Map::IsEmpty
  */
 template<class K, class V>
-bool Map<K, V>::IsEmpty(void) const {
+bool Map<K, V>::IsEmpty() const {
     return this->keys.IsEmpty();
 }
 
@@ -452,4 +448,3 @@ void Map<K, V>::Remove(const K& key) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MAP_H_INCLUDED */

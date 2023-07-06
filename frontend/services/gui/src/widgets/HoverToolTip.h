@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_HOVERTOOLTIP_INCLUDED
-#define MEGAMOL_GUI_HOVERTOOLTIP_INCLUDED
 #pragma once
 
 
@@ -14,8 +12,7 @@
 #include <string>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -58,7 +55,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_HOVERTOOLTIP_INCLUDED
+} // namespace megamol::gui

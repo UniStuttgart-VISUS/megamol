@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
-#define MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -20,8 +18,7 @@
 
 #define MAX_PARAMETER_NUMBER 100
 
-namespace megamol {
-namespace geocalls_gl {
+namespace megamol::geocalls_gl {
 
 /**
  * Call transporting tri soup mesh data
@@ -41,7 +38,7 @@ public:
         };
 
         /** Ctor */
-        Material(void);
+        Material();
 
         /**
          * Copy ctor
@@ -51,7 +48,7 @@ public:
         Material(const Material& src);
 
         /** Dtor */
-        ~Material(void);
+        ~Material();
 
         /**
          * Dyes the current color by multiplying 'r', 'g', and 'b' to all
@@ -68,7 +65,7 @@ public:
          *
          * @return specular component
          */
-        inline float GetNs(void) const {
+        inline float GetNs() const {
             return this->Ns;
         }
 
@@ -77,7 +74,7 @@ public:
          *
          * @return Unknown
          */
-        inline float GetNi(void) const {
+        inline float GetNi() const {
             return this->Ni;
         }
 
@@ -86,7 +83,7 @@ public:
          *
          * @return alpha transparency (?)
          */
-        inline float GetD(void) const {
+        inline float GetD() const {
             return this->d;
         }
 
@@ -95,7 +92,7 @@ public:
          *
          * @return alpha transparency (?)
          */
-        inline float GetTr(void) const {
+        inline float GetTr() const {
             return this->Tr;
         }
 
@@ -104,7 +101,7 @@ public:
          *
          * @return Unknown
          */
-        inline const float* GetTf(void) const {
+        inline const float* GetTf() const {
             return this->Tf;
         }
 
@@ -113,7 +110,7 @@ public:
          *
          * @return illumination model
          */
-        inline IlluminationModel GetIllum(void) const {
+        inline IlluminationModel GetIllum() const {
             return this->illum;
         }
 
@@ -122,7 +119,7 @@ public:
          *
          * @return ambient colour
          */
-        inline const float* GetKa(void) const {
+        inline const float* GetKa() const {
             return this->Ka;
         }
 
@@ -131,7 +128,7 @@ public:
          *
          * @return diffuse colour
          */
-        inline const float* GetKd(void) const {
+        inline const float* GetKd() const {
             return this->Kd;
         }
 
@@ -140,7 +137,7 @@ public:
          *
          * @return specular colour
          */
-        inline const float* GetKs(void) const {
+        inline const float* GetKs() const {
             return this->Ks;
         }
 
@@ -149,7 +146,7 @@ public:
          *
          * @return emissive colour
          */
-        inline const float* GetKe(void) const {
+        inline const float* GetKe() const {
             return this->Ke;
         }
 
@@ -158,7 +155,7 @@ public:
          *
          * @return colour texture map file
          */
-        inline const vislib::TString& GetMapFileName(void) const {
+        inline const vislib::TString& GetMapFileName() const {
             return this->mapFileName;
         }
 
@@ -167,7 +164,7 @@ public:
          *
          * @return bump/normal texture map file
          */
-        inline const vislib::TString& GetBumpMapFileName(void) const {
+        inline const vislib::TString& GetBumpMapFileName() const {
             return this->bumpMapFileName;
         }
 
@@ -176,19 +173,19 @@ public:
          *
          * @return OpenGL texture object ID for colour texture
          */
-        unsigned int GetMapID(void) const;
+        unsigned int GetMapID() const;
 
         /**
          * Gets OpenGL texture object ID for bump/normal texture
          *
          * @return OpenGL texture object ID for bump/normal texture
          */
-        unsigned int GetBumpMapID(void) const;
+        unsigned int GetBumpMapID() const;
 
         /**
          * Resets this colour material to default
          */
-        void MakeDefault(void);
+        void MakeDefault();
 
         /**
          * Sets specular component of the Phong shading model ranges between 0 and 128
@@ -406,7 +403,7 @@ public:
         };
 
         /** Ctor */
-        Mesh(void);
+        Mesh();
 
         /**
          * Copy ctor
@@ -416,14 +413,14 @@ public:
         Mesh(const Mesh& src);
 
         /** Dtor */
-        ~Mesh(void);
+        ~Mesh();
 
         /**
          * Gets Triangle count (ignored if t is NULL)
          *
          * @return Triangle count (ignored if t is NULL)
          */
-        inline unsigned int GetTriCount(void) const {
+        inline unsigned int GetTriCount() const {
             return this->triCnt;
         }
 
@@ -432,7 +429,7 @@ public:
          *
          * @return The data type for triangle vertex index data
          */
-        inline DataType GetTriDataType(void) const {
+        inline DataType GetTriDataType() const {
             return this->triDT;
         }
 
@@ -441,7 +438,7 @@ public:
          *
          * @return True if triangle vertex indices data is present
          */
-        inline bool HasTriIndexPointer(void) const {
+        inline bool HasTriIndexPointer() const {
             return this->tri.dataByte != NULL;
         }
 
@@ -450,7 +447,7 @@ public:
          *
          * @return Triangle vertex indices (3 times tc) or NULL
          */
-        inline const unsigned char* GetTriIndexPointerByte(void) const {
+        inline const unsigned char* GetTriIndexPointerByte() const {
             ASSERT(this->triDT == DT_BYTE);
             return this->tri.dataByte;
         }
@@ -460,7 +457,7 @@ public:
          *
          * @return Triangle vertex indices (3 times tc) or NULL
          */
-        inline const unsigned short* GetTriIndexPointerUInt16(void) const {
+        inline const unsigned short* GetTriIndexPointerUInt16() const {
             ASSERT(this->triDT == DT_UINT16);
             return this->tri.dataUInt16;
         }
@@ -470,7 +467,7 @@ public:
          *
          * @return Triangle vertex indices (3 times tc) or NULL
          */
-        inline const unsigned int* GetTriIndexPointerUInt32(void) const {
+        inline const unsigned int* GetTriIndexPointerUInt32() const {
             ASSERT(this->triDT == DT_UINT32);
             return this->tri.dataUInt32;
         }
@@ -480,7 +477,7 @@ public:
          *
          * @return Vertex count
          */
-        inline unsigned int GetVertexCount(void) const {
+        inline unsigned int GetVertexCount() const {
             return this->vrtCnt;
         }
 
@@ -489,7 +486,7 @@ public:
          *
          * @return The data type for vertices
          */
-        inline DataType GetVertexDataType(void) const {
+        inline DataType GetVertexDataType() const {
             return this->vrtDT;
         }
 
@@ -498,7 +495,7 @@ public:
          *
          * @return Vertices (3 times vc)
          */
-        inline const double* GetVertexPointerDouble(void) const {
+        inline const double* GetVertexPointerDouble() const {
             ASSERT(this->vrtDT == DT_DOUBLE);
             return this->vrt.dataDouble;
         }
@@ -508,7 +505,7 @@ public:
          *
          * @return Vertices (3 times vc)
          */
-        inline const float* GetVertexPointerFloat(void) const {
+        inline const float* GetVertexPointerFloat() const {
             ASSERT(this->vrtDT == DT_FLOAT);
             return this->vrt.dataFloat;
         }
@@ -518,7 +515,7 @@ public:
          *
          * @return The data type for normals
          */
-        inline DataType GetNormalDataType(void) const {
+        inline DataType GetNormalDataType() const {
             return this->nrmDT;
         }
 
@@ -527,7 +524,7 @@ public:
          *
          * @return True if normal data is present
          */
-        inline bool HasNormalPointer(void) const {
+        inline bool HasNormalPointer() const {
             return this->nrm.dataDouble != NULL;
         }
 
@@ -536,7 +533,7 @@ public:
          *
          * @return Normals (3 times vc)
          */
-        inline const double* GetNormalPointerDouble(void) const {
+        inline const double* GetNormalPointerDouble() const {
             ASSERT(this->nrmDT == DT_DOUBLE);
             return this->nrm.dataDouble;
         }
@@ -546,7 +543,7 @@ public:
          *
          * @return Normals (3 times vc)
          */
-        inline const float* GetNormalPointerFloat(void) const {
+        inline const float* GetNormalPointerFloat() const {
             ASSERT(this->nrmDT == DT_FLOAT);
             return this->nrm.dataFloat;
         }
@@ -556,7 +553,7 @@ public:
          *
          * @return True if colours data is present
          */
-        inline bool HasColourPointer(void) const {
+        inline bool HasColourPointer() const {
             return this->col.dataDouble != NULL;
         }
 
@@ -565,7 +562,7 @@ public:
          *
          * @return The data type for colours
          */
-        inline DataType GetColourDataType(void) const {
+        inline DataType GetColourDataType() const {
             return this->colDT;
         }
 
@@ -574,7 +571,7 @@ public:
          *
          * @return Colors (3 times vc)
          */
-        inline const unsigned char* GetColourPointerByte(void) const {
+        inline const unsigned char* GetColourPointerByte() const {
             ASSERT(this->colDT == DT_BYTE);
             return this->col.dataByte;
         }
@@ -584,7 +581,7 @@ public:
          *
          * @return Colors (3 times vc)
          */
-        inline const double* GetColourPointerDouble(void) const {
+        inline const double* GetColourPointerDouble() const {
             ASSERT(this->colDT == DT_DOUBLE);
             return this->col.dataDouble;
         }
@@ -594,7 +591,7 @@ public:
          *
          * @return Colors (3 times vc)
          */
-        inline const float* GetColourPointerFloat(void) const {
+        inline const float* GetColourPointerFloat() const {
             ASSERT(this->colDT == DT_FLOAT);
             return this->col.dataFloat;
         }
@@ -604,7 +601,7 @@ public:
          *
          * @return True if texture coordinates data is present
          */
-        inline bool HasTextureCoordinatePointer(void) const {
+        inline bool HasTextureCoordinatePointer() const {
             return this->tex.dataDouble != NULL;
         }
 
@@ -613,7 +610,7 @@ public:
          *
          * @return The data type for texture coordinates
          */
-        inline DataType GetTextureCoordinateDataType(void) const {
+        inline DataType GetTextureCoordinateDataType() const {
             return this->texDT;
         }
 
@@ -622,7 +619,7 @@ public:
          *
          * @return Texture coordinates (2 times vc)
          */
-        inline const double* GetTextureCoordinatePointerDouble(void) const {
+        inline const double* GetTextureCoordinatePointerDouble() const {
             ASSERT(this->texDT == DT_DOUBLE);
             return this->tex.dataDouble;
         }
@@ -632,7 +629,7 @@ public:
          *
          * @return Texture coordinates (2 times vc)
          */
-        inline const float* GetTextureCoordinatePointerFloat(void) const {
+        inline const float* GetTextureCoordinatePointerFloat() const {
             ASSERT(this->texDT == DT_FLOAT);
             return this->tex.dataFloat;
         }
@@ -759,7 +756,7 @@ public:
          *
          * @return The number of vertex attributes.
          */
-        inline unsigned int GetVertexAttribCount(void) const {
+        inline unsigned int GetVertexAttribCount() const {
             return this->vattCount;
         }
 
@@ -768,7 +765,7 @@ public:
          *
          * @return True if vertex attrib data is present
          */
-        inline bool HasVertexAttribPointer(void) const {
+        inline bool HasVertexAttribPointer() const {
             bool hasPointer = (this->vattCount > 0);
             bool hasData = false;
             if (hasPointer) {
@@ -879,7 +876,7 @@ public:
          *
          * @return The material
          */
-        inline const Material* GetMaterial(void) const {
+        inline const Material* GetMaterial() const {
             return this->mat;
         }
 
@@ -1069,12 +1066,12 @@ public:
         /**
          * Clears all triangle index data
          */
-        void clearTriData(void);
+        void clearTriData();
 
         /**
          * Clears all vertex data
          */
-        void clearVrtData(void);
+        void clearVrtData();
 
         /**
          * Sets the triangle data pointer
@@ -1381,7 +1378,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallTriMeshData";
     }
 
@@ -1390,7 +1387,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting tri soup mesh data";
     }
 
@@ -1399,7 +1396,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -1415,17 +1412,17 @@ public:
     }
 
     /** Ctor */
-    CallTriMeshDataGL(void);
+    CallTriMeshDataGL();
 
     /** Dtor */
-    virtual ~CallTriMeshDataGL(void);
+    ~CallTriMeshDataGL() override;
 
     /**
      * Answer the number of objects
      *
      * @return The number of objects
      */
-    inline unsigned int Count(void) const {
+    inline unsigned int Count() const {
         return this->objCnt;
     }
 
@@ -1434,7 +1431,7 @@ public:
      *
      * @return A pointer to the array of objects
      */
-    inline const Mesh* Objects(void) const {
+    inline const Mesh* Objects() const {
         return this->objs;
     }
 
@@ -1463,7 +1460,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallTriMeshDataGL> CallTriMeshDataGLDescription;
 
-} // namespace geocalls_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED */
+} // namespace megamol::geocalls_gl

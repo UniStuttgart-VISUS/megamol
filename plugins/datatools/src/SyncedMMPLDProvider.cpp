@@ -8,8 +8,7 @@
 #include "SyncedMMPLDProvider.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 SyncedMMPLDProvider::SyncedMMPLDProvider()
@@ -44,5 +43,4 @@ bool SyncedMMPLDProvider::checkDirtyCallback(core::Call& c) {
     return true;
 }
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

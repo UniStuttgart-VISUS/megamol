@@ -85,12 +85,12 @@ megamol::protein::SolventHydroBondGenerator::~SolventHydroBondGenerator() {
     this->Release();
 }
 
-bool megamol::protein::SolventHydroBondGenerator::create(void) {
+bool megamol::protein::SolventHydroBondGenerator::create() {
     // hier alle initialisierungen rein, die fehlschlagen können
     return true;
 }
 
-void megamol::protein::SolventHydroBondGenerator::release(void) {
+void megamol::protein::SolventHydroBondGenerator::release() {
     // hier alles freigeben was in create() initialisiert wird!
 }
 

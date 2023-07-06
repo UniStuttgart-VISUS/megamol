@@ -17,7 +17,7 @@ using namespace megamol::ospray;
 using namespace megamol;
 
 
-OSPRayLineGeometry::OSPRayLineGeometry(void)
+OSPRayLineGeometry::OSPRayLineGeometry()
         : AbstractOSPRayStructure()
         , getDataSlot("getdata", "Connects to the data source")
         , getLineDataSlot("getLineData", "")
