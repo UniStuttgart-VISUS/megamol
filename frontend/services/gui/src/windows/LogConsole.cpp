@@ -467,8 +467,7 @@ bool megamol::gui::LogConsole::Draw() {
             /// Re-implementing behaviour because of globally disabled ImGuiConfigFlags_NavEnableKeyboard
             bool selected_candidate =
                 ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].first.c_str(),
-                    (i == this->selected_candidate_index),
-                    ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_SelectOnNav);
+                    (i == this->selected_candidate_index), ImGuiSelectableFlags_AllowDoubleClick);
             if (selected_candidate || ((i == this->selected_candidate_index) && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
                 this->input_buffer = this->input_shared_data->autocomplete_candidates[i].first;
                 this->input_buffer.append("()");
