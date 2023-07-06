@@ -12,6 +12,11 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <regex>
+#include <stdexcept>
+
+#include <power_overwhelming/rtx_instrument.h>
+
+#include "LuaCallbacksCollection.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -69,6 +74,8 @@ bool Power_Service::init(void* configPtr) {
 
     m_providedResourceReferences = {{frontend_resources::PowerCallbacks_Req_Name, callbacks_}};
 
+    m_requestedResourcesNames = {"RegisterLuaCallbacks"};
+
     //return init(*static_cast<Config*>(configPtr));
     return true;
 }
@@ -123,6 +130,7 @@ const std::vector<std::string> Power_Service::getRequestedResourceNames() const 
 void Power_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     // maybe we want to keep the list of requested resources
     this->m_requestedResourceReferences = resources;
+    fill_lua_callbacks();
 
     // prepare usage of requested resources
     //this->m_externalResource_1_ptr =
@@ -183,6 +191,69 @@ void Power_Service::postGraphRender() {
         trigger_->WriteLow();*/
 }
 
+void Power_Service::start_measurement() {
+    using namespace visus::power_overwhelming;
+    core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting measurement");
+    try {
+        auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+
+        for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+
+            rtx_instrument i(d);
+
+            i.clear();
+            i.clear_status();
+            i.reset();
+            i.synchronise_clock();
+            i.timeout(5000);
+
+            i.reference_position(oscilloscope_reference_point::left);
+            i.time_range(oscilloscope_quantity(500, "ms"));
+
+            i.channel(oscilloscope_channel(1)
+                          .label(oscilloscope_label("shunt1"))
+                          .state(true)
+                          .attenuation(oscilloscope_quantity(10, "V"))
+                          .range(oscilloscope_quantity(7)));
+
+            i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
+
+            i.trigger_position(oscilloscope_quantity(0.f, "ms"));
+            i.trigger(oscilloscope_edge_trigger("EXT")
+                          .level(1, oscilloscope_quantity(2000.0f, "mV"))
+                          .slope(oscilloscope_trigger_slope::rising)
+                          .mode(oscilloscope_trigger_mode::normal));
+
+            std::cout << "RTX interface type: " << i.interface_type() << std::endl
+                      << "RTX status before acquire: " << i.status() << std::endl;
+
+            i.acquisition(oscilloscope_acquisition_state::run);
+
+            i.wait();
+
+            auto segment0 = i.data(1);
+        }
+    } catch (std::exception& ex) {
+        core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
+    }
+}
+
+void Power_Service::fill_lua_callbacks() {
+    frontend_resources::LuaCallbacksCollection callbacks;
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
+        "mmPowerMeasure", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            start_measurement();
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    auto& register_callbacks =
+        m_requestedResourceReferences[0]
+            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
+
+    register_callbacks(callbacks);
+}
 
 } // namespace frontend
 } // namespace megamol

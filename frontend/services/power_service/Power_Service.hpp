@@ -170,6 +170,10 @@ private:
     std::unique_ptr<ParallelPortTrigger> trigger_;
 
     frontend_resources::PowerCallbacks callbacks_;
+
+    void start_measurement();
+
+    void fill_lua_callbacks();
 };
 
 } // namespace frontend
