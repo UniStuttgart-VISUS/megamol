@@ -210,13 +210,19 @@ void Power_Service::start_measurement() {
             i.timeout(5000);
 
             i.reference_position(oscilloscope_reference_point::left);
-            i.time_range(oscilloscope_quantity(500, "ms"));
+            i.time_range(oscilloscope_quantity(50, "ms"));
 
             i.channel(oscilloscope_channel(1)
-                          .label(oscilloscope_label("shunt1"))
+                          .label(oscilloscope_label("voltage"))
                           .state(true)
                           .attenuation(oscilloscope_quantity(10, "V"))
-                          .range(oscilloscope_quantity(7)));
+                          .range(oscilloscope_quantity(26)));
+
+            i.channel(oscilloscope_channel(2)
+                          .label(oscilloscope_label("current"))
+                          .state(true)
+                          .attenuation(oscilloscope_quantity(10, "A"))
+                          .range(oscilloscope_quantity(20)));
 
             i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
 
@@ -233,12 +239,14 @@ void Power_Service::start_measurement() {
 
             i.wait();
 
-            auto segment0 = i.data(1);
+            auto segment0_1 = i.data(1);
+            i.clear();
+            auto segment0_2 = i.data(2);
 
             core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
             std::ofstream out_file("channel_data_0.csv");
-            for (size_t i = 0; i < segment0.record_length(); ++i) {
-                out_file << segment0.begin()[i] << std::endl;
+            for (size_t i = 0; i < segment0_1.record_length(); ++i) {
+                out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << std::endl;
             }
             out_file.close();
         }
