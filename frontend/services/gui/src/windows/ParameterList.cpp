@@ -152,7 +152,7 @@ bool ParameterList::Draw() {
                     std::string module_label = module_ptr->FullName();
                     ImGui::PushID(module_ptr->UID());
 
-                    auto const& param_vec = module_ptr->Parameters();
+                    auto const& param_vec = module_ptr->ConstParameters();
                     bool highlight = false;
                     for (auto const& param : param_vec) {
                         if (param.GetParamPresentation().IsGUIHighlight())

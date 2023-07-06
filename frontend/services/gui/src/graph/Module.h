@@ -28,6 +28,7 @@ typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
 // Types
 typedef std::shared_ptr<Module> ModulePtr_t;
 typedef std::vector<ModulePtr_t> ModulePtrVector_t;
+typedef std::vector<Module> ModuleVector_t;
 
 
 /** ************************************************************************
@@ -35,28 +36,27 @@ typedef std::vector<ModulePtr_t> ModulePtrVector_t;
  */
 class Module {
 public:
-    struct StockModule {
-        std::string class_name;
-        std::string description;
-        std::string plugin_name;
-        bool is_view;
-        std::vector<Parameter::StockParameter> parameters;
-        std::map<CallSlotType, std::vector<CallSlot::StockCallSlot>> callslots;
-    };
 
     static ImVec2 GetDefaultModulePosition(const GraphCanvas_t& canvas);
 
+
+    Module(ImGuiID uid, const Module& in_stock_module);
+
+    // CTOR only for stock modules
     Module(ImGuiID uid, const std::string& class_name, const std::string& description, const std::string& plugin_name,
         bool is_view);
+
     ~Module();
 
     bool AddCallSlot(CallSlotPtr_t callslot);
     bool DeleteCallSlots();
 
     void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
+
     void Update() {
         this->gui_update = true;
     }
+
     void InstantUpdate(const GraphItemsState_t& state) {
         this->update(state);
     }
@@ -78,10 +78,10 @@ public:
     // GET ----------------------------------------------------------------
 
     CallSlotPtr_t CallSlotPtr(ImGuiID callslot_uid);
-    const CallSlotPtrVector_t& CallSlots(CallSlotType type) {
+    CallSlotPtrVector_t& CallSlots(CallSlotType type) {
         return this->callslots[type];
     }
-    const CallSlotPtrMap_t& CallSlots() {
+    const CallSlotPtrMap_t& CallSlots() const {
         return this->callslots;
     }
 
@@ -96,6 +96,9 @@ public:
     }
     inline std::string Name() const {
         return this->name;
+    }
+    inline std::string PluginName() const {
+        return this->plugin_name;
     }
     inline std::string FullName() const {
         std::string fullname = "::" + this->name;
@@ -112,6 +115,9 @@ public:
     }
     inline ImGuiID GroupUID() const {
         return this->group_uid;
+    }
+    inline const ParamVector_t& ConstParameters() const {
+        return this->parameters;
     }
     inline ParamVector_t& Parameters() {
         return this->parameters;
@@ -217,7 +223,6 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     const ImGuiID uid;
-    // TODO place StockModule (Properties?) here instead
     const std::string class_name;
     const std::string description;
     const std::string plugin_name;

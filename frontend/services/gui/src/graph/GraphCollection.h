@@ -48,10 +48,10 @@ public:
     }
     GraphPtr_t GetRunningGraph();
 
-    inline const ModuleStockVector_t& GetModulesStock() {
+    inline const ModuleVector_t& GetModulesStock() {
         return this->modules_stock;
     }
-    inline const CallStockVector_t& GetCallsStock() {
+    inline const CallVector_t& GetCallsStock() {
         return this->calls_stock;
     }
     bool IsCallStockLoaded() const {
@@ -106,8 +106,8 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     GraphPtrVector_t graphs;
-    ModuleStockVector_t modules_stock;
-    CallStockVector_t calls_stock;
+    ModuleVector_t modules_stock;
+    CallVector_t calls_stock;
     unsigned int graph_name_uid;
 
     FileBrowserWidget gui_file_browser;
@@ -125,10 +125,8 @@ private:
 
     std::string get_state(ImGuiID graph_id, const std::string& filename);
 
-    bool get_call_stock_data(Call::StockCall& out_call,
-        std::shared_ptr<const megamol::core::factories::CallDescription> call_desc, const std::string& plugin_name);
-    bool get_module_stock_data(Module::StockModule& out_mod,
-        std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const std::string& plugin_name);
+    bool get_call_stock_data(std::shared_ptr<const megamol::core::factories::CallDescription> call_desc, const std::string& plugin_name);
+    bool get_module_stock_data(std::shared_ptr<const megamol::core::factories::ModuleDescription> mod_desc, const std::string& plugin_name);
 
     bool read_project_command_arguments(
         const std::string& line, size_t arg_count, std::vector<std::string>& out_args) const;

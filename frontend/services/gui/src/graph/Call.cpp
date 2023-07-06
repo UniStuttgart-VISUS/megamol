@@ -22,8 +22,12 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
+megamol::gui::Call::Call(ImGuiID uid, const Call& in_stock_call)
+        : Call(uid, in_stock_call.class_name, in_stock_call.description, in_stock_call.plugin_name,
+              in_stock_call.functions) {}
+
 megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::string& description,
-    const std::string& plugin_name, const std::vector<std::string>& functions)
+        const std::string& plugin_name, const std::vector<std::string>& functions)
         : uid(uid)
         , class_name(class_name)
         , description(description)

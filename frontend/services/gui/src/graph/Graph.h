@@ -24,10 +24,6 @@ namespace megamol::gui {
 // Forward declarations
 class Graph;
 
-// Types
-typedef std::vector<Module::StockModule> ModuleStockVector_t;
-typedef std::vector<Call::StockCall> CallStockVector_t;
-
 
 /** ************************************************************************
  * Defines the graph
@@ -55,7 +51,7 @@ public:
     explicit Graph(const std::string& graph_name);
     ~Graph();
 
-    ModulePtr_t AddModule(const ModuleStockVector_t& stock_ms, const std::string& class_name,
+    ModulePtr_t AddModule(const ModuleVector_t& stock_ms, const std::string& class_name,
         const std::string& module_name, const std::string& group_name);
     ModulePtr_t AddModule(const std::string& class_name, const std::string& module_name, const std::string& group_name,
         const std::string& description, const std::string& plugin_name, bool is_view);
@@ -68,8 +64,8 @@ public:
     bool ModuleExists(const std::string& module_fullname);
     bool UniqueModuleRename(const std::string& module_full_name);
 
-    bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
-    CallPtr_t AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2,
+    bool AddCall(const CallVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
+    CallPtr_t AddCall(const CallVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2,
         bool use_queue = true);
     bool ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2, bool use_queue = true);
     CallPtr_t GetCall(

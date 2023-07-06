@@ -162,36 +162,34 @@ ModulePtr_t megamol::gui::Graph::AddModule(const std::string& class_name, const 
 }
 
 
-ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name,
+ModulePtr_t megamol::gui::Graph::AddModule(const ModuleVector_t& stock_modules, const std::string& class_name,
     const std::string& module_name, const std::string& group_name) {
 
     try {
         for (auto& mod : stock_modules) {
-            if (class_name == mod.class_name) {
+            if (class_name == mod.ClassName()) {
                 ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
                 auto mod_ptr =
-                    std::make_shared<Module>(mod_uid, mod.class_name, mod.description, mod.plugin_name, mod.is_view);
+                    std::make_shared<Module>(mod_uid, mod);
                 if (module_name.empty()) {
-                    mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
+                    mod_ptr->SetName(this->generate_unique_module_name(mod.ClassName()));
                 } else {
                     mod_ptr->SetName(module_name);
                 }
                 mod_ptr->SetGraphEntryName("");
                 this->AddGroupModule(group_name, mod_ptr, false);
 
-                for (auto& p : mod.parameters) {
-                    Parameter parameter(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
-                        p.stepsize, p.param_name, p.description);
+                for (auto& p : mod.ConstParameters()) {
+                    Parameter parameter(megamol::gui::GenerateUniqueID(), p);
                     parameter.SetParentModuleName(mod_ptr->FullName());
-                    parameter.SetValueString(p.default_value, true, true);
+                    parameter.SetValueString(p.GetValueString(), true, true);
                     parameter.SetParamPresentation(p.GetParamPresentation());
                     mod_ptr->Parameters().emplace_back(parameter);
                 }
 
-                for (auto& callslots_type : mod.callslots) {
+                for (auto& callslots_type : mod.CallSlots()) {
                     for (auto& c : callslots_type.second) {
-                        auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID(), c.name,
-                            c.description, c.compatible_call_idxs, c.type, c.necessity);
+                        auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID(), c);
                         callslot_ptr->ConnectParentModule(mod_ptr);
                         mod_ptr->AddCallSlot(callslot_ptr);
                     }
@@ -368,7 +366,7 @@ bool megamol::gui::Graph::ModuleExists(const std::string& module_fullname) {
 }
 
 
-bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid) {
+bool megamol::gui::Graph::AddCall(const CallVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid) {
 
     try {
         if ((slot_1_uid == GUI_INVALID_ID) || (slot_2_uid == GUI_INVALID_ID)) {
@@ -474,7 +472,7 @@ bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID 
 
 
 CallPtr_t megamol::gui::Graph::AddCall(
-    const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2, bool use_queue) {
+    const CallVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2, bool use_queue) {
 
     try {
         if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
@@ -491,10 +489,9 @@ CallPtr_t megamol::gui::Graph::AddCall(
                 "[GUI] Unable to find index of compatible call. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return nullptr;
         }
-        Call::StockCall call_stock_data = stock_calls[compat_idx];
+        Call call_stock_data = stock_calls[compat_idx];
 
-        auto call_ptr = std::make_shared<Call>(megamol::gui::GenerateUniqueID(), call_stock_data.class_name,
-            call_stock_data.description, call_stock_data.plugin_name, call_stock_data.functions);
+        auto call_ptr = std::make_shared<Call>(megamol::gui::GenerateUniqueID(), call_stock_data);
 
         return this->ConnectCall(call_ptr, callslot_1, callslot_2, use_queue) ? call_ptr : nullptr;
 

@@ -37,6 +37,7 @@ typedef std::shared_ptr<Module> ModulePtr_t;
 // Types
 typedef std::shared_ptr<Call> CallPtr_t;
 typedef std::vector<CallPtr_t> CallPtrVector_t;
+typedef std::vector<Call> CallVector_t;
 
 
 /** ************************************************************************
@@ -44,15 +45,13 @@ typedef std::vector<CallPtr_t> CallPtrVector_t;
  */
 class Call {
 public:
-    struct StockCall {
-        std::string class_name;
-        std::string description;
-        std::string plugin_name;
-        std::vector<std::string> functions;
-    };
 
+    Call(ImGuiID uid, const Call& in_stock_call);
+
+    // CTOR only for stock calls
     Call(ImGuiID uid, const std::string& class_name, const std::string& description, const std::string& plugin_name,
         const std::vector<std::string>& functions);
+
     ~Call();
 
     bool IsConnected();
@@ -94,6 +93,10 @@ public:
 
     inline bool IsHidden() const {
         return this->gui_hidden;
+    }
+
+    inline const std::vector<std::string>& Functions() const {
+        return this->functions;
     }
 
 #ifdef MEGAMOL_USE_PROFILING

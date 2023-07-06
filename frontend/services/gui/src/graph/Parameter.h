@@ -96,29 +96,9 @@ public:
         >
         Storage_t;
 
-    struct StockParameter {
-        std::string param_name;
-        std::string description;
-        ParamType_t type;
-        std::string default_value;
-        Min_t minval;
-        Max_t maxval;
-        Step_t stepsize;
-        Storage_t storage;
-        AbstractParamPresentation gui_present;
-
-        void SetParamPresentation(const AbstractParamPresentation& other) {
-            this->gui_present = other;
-        }
-        const AbstractParamPresentation& GetParamPresentation() const {
-            return this->gui_present;
-        }
-    };
-
     // STATIC ---------------------
 
-    static bool ReadNewCoreParameterToStockParameter(
-        ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
+    static megamol::gui::Parameter& ReadNewCoreParameterToStockParameter(ParamSlot& in_param_slot);
 
     static bool ReadNewCoreParameterToNewParameter(ParamSlot& in_param_slot,
         std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
@@ -135,6 +115,9 @@ public:
 
     // ----------------------------
 
+    Parameter(ImGuiID uid, const Parameter& in_stock_param);
+
+    // CTOR only for stock parameters
     Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval, Step_t step,
         const std::string& param_name, const std::string& description);
 
@@ -229,9 +212,10 @@ public:
         return std::get<T>(this->storage);
     }
 
-    inline bool DefaultValueMismatch() {
+    inline bool DefaultValueMismatch() const {
         return this->default_value_mismatch;
     }
+
     inline size_t GetTransferFunctionHash() const {
         return this->tf_string_hash;
     }
@@ -303,7 +287,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     const ImGuiID uid;
-    const ParamType_t type;
+    ParamType_t type;
     std::string param_name;         /// <param_namespace>::<param_name>
     std::string parent_module_name; /// ::<module_group>::<module_name>
     std::string description;

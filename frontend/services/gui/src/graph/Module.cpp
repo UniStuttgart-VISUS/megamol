@@ -22,6 +22,13 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
+
+
+megamol::gui::Module::Module(ImGuiID uid, const Module& in_stock_module) :
+    Module(uid, in_stock_module.class_name, in_stock_module.description, in_stock_module.plugin_name, in_stock_module.is_view) {
+}
+
+
 megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const std::string& description,
     const std::string& plugin_name, bool is_view)
         : uid(uid)

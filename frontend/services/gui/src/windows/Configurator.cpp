@@ -427,22 +427,30 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         }
     }
 
-    ImGuiID id = 1;
+    struct FilteredModule {
+        std::string class_name;
+        std::string plugin_name;
+        std::string description;
+        bool is_view;
+        bool compat_filter;
+    };
+    std::vector<FilteredModule> filtered_modules;
+
     for (auto& mod : this->graph_collection.GetModulesStock()) {
         // Filter module by given search string
         bool search_filter = true;
         if (!search_string.empty()) {
-            search_filter = gui_utils::FindCaseInsensitiveSubstring(mod.class_name, search_string);
+            search_filter = gui_utils::FindCaseInsensitiveSubstring(mod.ClassName(), search_string);
         }
 
         // Filter module by compatible call slots
         bool compat_filter = true;
         if (selected_callslot_ptr != nullptr) {
             compat_filter = false;
-            for (auto& stock_callslot_map : mod.callslots) {
+            for (auto& stock_callslot_map : mod.CallSlots()) {
                 for (auto& stock_callslot : stock_callslot_map.second) {
                     if (CallSlot::GetCompatibleCallIndex(selected_callslot_ptr, stock_callslot) != GUI_INVALID_ID) {
-                        compat_callslot_name = stock_callslot.name;
+                        compat_callslot_name = stock_callslot->Name();
                         compat_filter = true;
                     }
                 }
@@ -450,99 +458,118 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         }
 
         if (search_filter && compat_filter) {
-            ImGui::PushID(static_cast<int>(id));
+            FilteredModule fm;
+            fm.class_name = mod.ClassName();
+            fm.plugin_name = mod.PluginName();
+            fm.description = mod.Description();
+            fm.is_view = mod.IsView();
+            fm.compat_filter = compat_filter;
+            filtered_modules.emplace_back(fm);
+        }
+    }
+    // Sort filtered modules by alphabetically ascending class names.
+    std::sort(filtered_modules.begin(), filtered_modules.end(), [](FilteredModule& mod1, FilteredModule& mod2) {
+            std::string a_str(mod1.class_name);
+            core::utility::string::ToUpperAscii(a_str);
+            std::string b_str(mod2.class_name);
+            core::utility::string::ToUpperAscii(b_str);
+            return (a_str < b_str);
+        });
 
-            std::string label = mod.class_name + " (" + mod.plugin_name + ")";
-            if (mod.is_view) {
-                label += " [View]";
-            }
+    ImGuiID id = 1;
+    for (auto& mod : filtered_modules) {
+        ImGui::PushID(static_cast<int>(id));
 
-            bool add_module = false;
-            if (ImGui::Selectable(label.c_str(), (id == this->selected_list_module_id))) {
-                this->selected_list_module_id = id;
-            }
-            // Left mouse button double click action
-            if ((ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered()) || // Mouse Double Click
-                (!ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused() &&
-                    ImGui::IsItemActivated())) { // Selection via key ('Space')
+        std::string label = mod.class_name + " (" + mod.plugin_name + ")";
+        if (mod.is_view) {
+            label += " [View]";
+        }
+
+        bool add_module = false;
+        if (ImGui::Selectable(label.c_str(), (id == this->selected_list_module_id))) {
+            this->selected_list_module_id = id;
+        }
+        // Left mouse button double click action
+        if ((ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered()) || // Mouse Double Click
+            (!ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused() &&
+                ImGui::IsItemActivated())) { // Selection via key ('Space')
+            add_module = true;
+        }
+        // Context menu
+        if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::MenuItem("Add", "'Double-Click'")) {
                 add_module = true;
             }
-            // Context menu
-            if (ImGui::BeginPopupContextItem()) {
-                if (ImGui::MenuItem("Add", "'Double-Click'")) {
-                    add_module = true;
-                }
-                ImGui::EndPopup();
-            }
+            ImGui::EndPopup();
+        }
 
-            if (add_module) {
-                if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    if (auto module_ptr = selected_graph_ptr->AddModule(
-                            this->graph_collection.GetModulesStock(), mod.class_name, "", "")) {
+        if (add_module) {
+            if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
+                if (auto module_ptr = selected_graph_ptr->AddModule(
+                        this->graph_collection.GetModulesStock(), mod.class_name, "", "")) {
 
-                        // If there is a call slot selected, create call to compatible call slot of new module
-                        bool add_call = compat_filter && (selected_callslot_ptr != nullptr);
+                    // If there is a call slot selected, create call to compatible call slot of new module
+                    bool add_call = mod.compat_filter && (selected_callslot_ptr != nullptr);
 
-                        // If there is a group selected or hovered or the new call is connected to module which is part
-                        // of group, add module to this group
-                        if (!interfaceslot_selected) {
-                            ImGuiID connected_group = GUI_INVALID_ID;
-                            if (add_call && selected_callslot_ptr->IsParentModuleConnected()) {
-                                connected_group = selected_callslot_ptr->GetParentModule()->GroupUID();
-                            }
-                            ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
-                            ImGuiID group_uid = (connected_group != GUI_INVALID_ID)
-                                                    ? (connected_group)
-                                                    : ((selected_group_uid != GUI_INVALID_ID)
-                                                              ? (selected_group_uid)
-                                                              : (this->module_list_popup_hovered_group_uid));
-
-                            if (auto group_ptr = selected_graph_ptr->GetGroup(group_uid)) {
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                selected_graph_ptr->ResetStatePointers();
-                                group_ptr->AddModule(module_ptr);
-                                queue_data.rename_id = module_ptr->FullName();
-                                selected_graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-                            }
+                    // If there is a group selected or hovered or the new call is connected to module which is part
+                    // of group, add module to this group
+                    if (!interfaceslot_selected) {
+                        ImGuiID connected_group = GUI_INVALID_ID;
+                        if (add_call && selected_callslot_ptr->IsParentModuleConnected()) {
+                            connected_group = selected_callslot_ptr->GetParentModule()->GroupUID();
                         }
+                        ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
+                        ImGuiID group_uid = (connected_group != GUI_INVALID_ID)
+                                                ? (connected_group)
+                                                : ((selected_group_uid != GUI_INVALID_ID)
+                                                            ? (selected_group_uid)
+                                                            : (this->module_list_popup_hovered_group_uid));
 
-                        // Add new call after module is created and after possible renaming due to group joining of module!
-                        if (add_call) {
-                            // Get call slots of last added module
-                            for (auto& callslot_map : module_ptr->CallSlots()) {
-                                for (auto& callslot_ptr : callslot_map.second) {
-                                    if (callslot_ptr->Name() == compat_callslot_name) {
-                                        if (selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
-                                                selected_callslot_ptr, callslot_ptr)) {
-                                            module_ptr->SetSelectedSlotPosition();
-                                        }
+                        if (auto group_ptr = selected_graph_ptr->GetGroup(group_uid)) {
+                            Graph::QueueData queue_data;
+                            queue_data.name_id = module_ptr->FullName();
+                            selected_graph_ptr->ResetStatePointers();
+                            group_ptr->AddModule(module_ptr);
+                            queue_data.rename_id = module_ptr->FullName();
+                            selected_graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                        }
+                    }
+
+                    // Add new call after module is created and after possible renaming due to group joining of module!
+                    if (add_call) {
+                        // Get call slots of last added module
+                        for (auto& callslot_map : module_ptr->CallSlots()) {
+                            for (auto& callslot_ptr : callslot_map.second) {
+                                if (callslot_ptr->Name() == compat_callslot_name) {
+                                    if (selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
+                                            selected_callslot_ptr, callslot_ptr)) {
+                                        module_ptr->SetSelectedSlotPosition();
                                     }
                                 }
                             }
                         }
-                        // Place new module at mouse pos if added via separate module list child window.
-                        else if (this->show_module_list_popup) {
-                            module_ptr->SetScreenPosition(ImGui::GetMousePos());
-                        }
                     }
-                    if (this->show_module_list_popup) {
-                        this->show_module_list_popup = false;
-                        // ImGui::CloseCurrentPopup();
+                    // Place new module at mouse pos if added via separate module list child window.
+                    else if (this->show_module_list_popup) {
+                        module_ptr->SetScreenPosition(ImGui::GetMousePos());
                     }
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 }
+                if (this->show_module_list_popup) {
+                    this->show_module_list_popup = false;
+                    // ImGui::CloseCurrentPopup();
+                }
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
-            // Hover tool tip
-            this->tooltip.ToolTip(mod.description, id, 0.5f, 5.0f);
-
-            ImGui::PopID();
         }
+        // Hover tool tip
+        this->tooltip.ToolTip(mod.description, id, 0.5f, 5.0f);
+
+        ImGui::PopID();
         id++;
     }
-
+    
     ImGui::EndChild();
 
     ImGui::EndGroup();

@@ -33,6 +33,11 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
+megamol::gui::Parameter::Parameter(ImGuiID uid, const Parameter& in_stock_param)
+        : Parameter(uid, in_stock_param.type, in_stock_param.storage, in_stock_param.minval, in_stock_param.maxval,
+              in_stock_param.stepsize, in_stock_param.param_name, in_stock_param.description) {}
+
+
 megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minv, Max_t maxv, Step_t step,
     const std::string& param_name, const std::string& description)
         : uid(uid)
@@ -306,95 +311,98 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
 }
 
 
-bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
-    megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param) {
+megamol::gui::Parameter& megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(megamol::core::param::ParamSlot& in_param_slot) {
 
-    auto const parameter_ptr = in_param_slot.Parameter();
-    if (parameter_ptr == nullptr) {
-        return false;
-    }
-
-    out_param.param_name = std::string(in_param_slot.Name().PeekBuffer());
-    out_param.description = std::string(in_param_slot.Description().PeekBuffer());
-    out_param.SetParamPresentation(parameter_ptr->GetParamPresentation());
+    std::string name = std::string(in_param_slot.Name().PeekBuffer());
+    std::string description = std::string(in_param_slot.Description().PeekBuffer());
+    ParamType_t type;
+    std::string value;
+    Min_t minval;
+    Max_t maxval;
+    Step_t stepsize;
+    Storage_t storage;
 
     if (auto* p_ptr = in_param_slot.Param<core::param::ButtonParam>()) {
-        out_param.type = ParamType_t::BUTTON;
-        out_param.storage = p_ptr->GetKeyCode();
+        type = ParamType_t::BUTTON;
+        storage = p_ptr->GetKeyCode();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::BoolParam>()) {
-        out_param.type = ParamType_t::BOOL;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::BOOL;
+        value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::ColorParam>()) {
-        out_param.type = ParamType_t::COLOR;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::COLOR;
+        value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::EnumParam>()) {
-        out_param.type = ParamType_t::ENUM;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::ENUM;
+        value = p_ptr->ValueString();
         EnumStorage_t map;
         for (auto const& el : p_ptr->getMap()) {
             map.emplace(el);
         }
-        out_param.storage = map;
+        storage = map;
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FilePathParam>()) {
-        out_param.type = ParamType_t::FILEPATH;
-        out_param.default_value = p_ptr->ValueString();
-        out_param.storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
+        type = ParamType_t::FILEPATH;
+        value = p_ptr->ValueString();
+        storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FlexEnumParam>()) {
-        out_param.type = ParamType_t::FLEXENUM;
-        out_param.default_value = p_ptr->ValueString();
-        out_param.storage = p_ptr->getStorage();
+        type = ParamType_t::FLEXENUM;
+        value = p_ptr->ValueString();
+        storage = p_ptr->getStorage();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::FloatParam>()) {
-        out_param.type = ParamType_t::FLOAT;
-        out_param.default_value = p_ptr->ValueString();
-        out_param.minval = p_ptr->MinValue();
-        out_param.maxval = p_ptr->MaxValue();
-        out_param.stepsize = p_ptr->StepSize();
+        type = ParamType_t::FLOAT;
+        value = p_ptr->ValueString();
+        minval = p_ptr->MinValue();
+        maxval = p_ptr->MaxValue();
+        stepsize = p_ptr->StepSize();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::IntParam>()) {
-        out_param.type = ParamType_t::INT;
-        out_param.default_value = p_ptr->ValueString();
-        out_param.minval = p_ptr->MinValue();
-        out_param.maxval = p_ptr->MaxValue();
-        out_param.stepsize = p_ptr->StepSize();
+        type = ParamType_t::INT;
+        value = p_ptr->ValueString();
+        minval = p_ptr->MinValue();
+        maxval = p_ptr->MaxValue();
+        stepsize = p_ptr->StepSize();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::StringParam>()) {
-        out_param.type = ParamType_t::STRING;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::STRING;
+        value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::TernaryParam>()) {
-        out_param.type = ParamType_t::TERNARY;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::TERNARY;
+        value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::TransferFunctionParam>()) {
-        out_param.type = ParamType_t::TRANSFERFUNCTION;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::TRANSFERFUNCTION;
+        value = p_ptr->ValueString();
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector2fParam>()) {
-        out_param.type = ParamType_t::VECTOR2F;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::VECTOR2F;
+        value = p_ptr->ValueString();
         auto minv = p_ptr->MinValue();
-        out_param.minval = glm::vec2(minv.X(), minv.Y());
+        minval = glm::vec2(minv.X(), minv.Y());
         auto maxv = p_ptr->MaxValue();
-        out_param.maxval = glm::vec2(maxv.X(), maxv.Y());
+        maxval = glm::vec2(maxv.X(), maxv.Y());
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector3fParam>()) {
-        out_param.type = ParamType_t::VECTOR3F;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::VECTOR3F;
+        value = p_ptr->ValueString();
         auto minv = p_ptr->MinValue();
-        out_param.minval = glm::vec3(minv.X(), minv.Y(), minv.Z());
+        minval = glm::vec3(minv.X(), minv.Y(), minv.Z());
         auto maxv = p_ptr->MaxValue();
-        out_param.maxval = glm::vec3(maxv.X(), maxv.Y(), maxv.Z());
+        maxval = glm::vec3(maxv.X(), maxv.Y(), maxv.Z());
     } else if (auto* p_ptr = in_param_slot.Param<core::param::Vector4fParam>()) {
-        out_param.type = ParamType_t::VECTOR4F;
-        out_param.default_value = p_ptr->ValueString();
+        type = ParamType_t::VECTOR4F;
+        value = p_ptr->ValueString();
         auto minv = p_ptr->MinValue();
-        out_param.minval = glm::vec4(minv.X(), minv.Y(), minv.Z(), minv.W());
+        minval = glm::vec4(minv.X(), minv.Y(), minv.Z(), minv.W());
         auto maxv = p_ptr->MaxValue();
-        out_param.maxval = glm::vec4(maxv.X(), maxv.Y(), maxv.Z(), maxv.W());
+        maxval = glm::vec4(maxv.X(), maxv.Y(), maxv.Z(), maxv.W());
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found unknown parameter type. Please extend parameter types "
             "for the configurator. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
-        out_param.type = ParamType_t::UNKNOWN;
-        return false;
+        type = ParamType_t::UNKNOWN;
     }
 
-    return true;
+    Parameter new_stock_param = Parameter(GUI_INVALID_ID, type, storage, minval, maxval, stepsize, name, description);
+
+    auto const parameter_ptr = in_param_slot.Parameter();
+    new_stock_param.SetParamPresentation(parameter_ptr->GetParamPresentation());
+
+    return new_stock_param;
 }
 
 
@@ -818,6 +826,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
             ImGui::PushItemWidth(widget_width);
             gui_utils::PushReadOnly(this->gui_present.IsGUIReadOnly());
             if (this->gui_present.IsGUIHighlight())
+                /// TODO Other highlighting style: Yellow Frame?
                 ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(255, 0, 0, 255));
         }
 

@@ -41,17 +41,14 @@ typedef std::map<CallSlotType, CallSlotPtrVector_t> CallSlotPtrMap_t;
  */
 class CallSlot {
 public:
-    struct StockCallSlot {
-        std::string name;
-        std::string description;
-        std::vector<size_t> compatible_call_idxs;
-        CallSlotType type;
-        megamol::core::AbstractCallSlotPresentation::Necessity necessity;
-    };
 
+    CallSlot(ImGuiID uid, const CallSlotPtr_t in_stock_callslot);
+
+    // CTOR only for stock callslots
     CallSlot(ImGuiID uid, const std::string& name, const std::string& description,
         const std::vector<size_t>& compatible_call_idxs, CallSlotType type,
         megamol::core::AbstractCallSlotPresentation::Necessity necessity);
+
     ~CallSlot();
 
     bool CallsConnected() const;
@@ -66,7 +63,7 @@ public:
     const ModulePtr_t& GetParentModule();
 
     static ImGuiID GetCompatibleCallIndex(const CallSlotPtr_t& callslot_1, const CallSlotPtr_t& callslot_2);
-    static ImGuiID GetCompatibleCallIndex(const CallSlotPtr_t& callslot, const CallSlot::StockCallSlot& stock_callslot);
+    static ImGuiID GetCompatibleCallIndex(const CallSlotPtr_t& callslot, const CallSlot& stock_callslot);
 
     bool IsConnectionValid(CallSlot& callslot);
 

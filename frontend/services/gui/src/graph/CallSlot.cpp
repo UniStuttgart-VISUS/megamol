@@ -16,7 +16,14 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::CallSlot::CallSlot(ImGuiID uid, const std::string& name, const std::string& description,
+megamol::gui::CallSlot::CallSlot(ImGuiID uid, const CallSlotPtr_t in_stock_callslot)
+        : CallSlot(uid, in_stock_callslot->name, in_stock_callslot->description,
+              in_stock_callslot->compatible_call_idxs,
+              in_stock_callslot->type, in_stock_callslot->necessity) {}
+
+
+megamol::gui::CallSlot::CallSlot(
+    ImGuiID uid, const std::string& name, const std::string& description,
     const std::vector<size_t>& compatible_call_idxs, CallSlotType type,
     megamol::core::AbstractCallSlotPresentation::Necessity necessity)
         : uid(uid)
@@ -212,7 +219,7 @@ ImGuiID megamol::gui::CallSlot::GetCompatibleCallIndex(
 
 
 ImGuiID megamol::gui::CallSlot::GetCompatibleCallIndex(
-    const CallSlotPtr_t& callslot, const CallSlot::StockCallSlot& stock_callslot) {
+    const CallSlotPtr_t& callslot, const CallSlot& stock_callslot) {
 
     if (callslot != nullptr) {
         if (callslot->type != stock_callslot.type) {
