@@ -13,6 +13,7 @@
 
 #include <regex>
 #include <stdexcept>
+#include <fstream>
 
 #include <power_overwhelming/rtx_instrument.h>
 
@@ -233,6 +234,13 @@ void Power_Service::start_measurement() {
             i.wait();
 
             auto segment0 = i.data(1);
+
+            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
+            std::ofstream out_file("channel_data_0.csv");
+            for (size_t i = 0; i < segment0.record_length(); ++i) {
+                out_file << segment0.begin()[i] << std::endl;
+            }
+            out_file.close();
         }
     } catch (std::exception& ex) {
         core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
