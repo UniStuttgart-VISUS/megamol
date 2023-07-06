@@ -299,6 +299,7 @@ void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
     glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
 #ifdef MEGAMOL_USE_TRACY
     TracyGpuCollect;
+    FrameMark;
 #endif
 #ifdef MEGAMOL_USE_POWER
     reinterpret_cast<frontend_resources::PowerCallbacks const*>(power_callbacks)->signal_low();
