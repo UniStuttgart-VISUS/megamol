@@ -73,13 +73,21 @@ static struct {
 }
 datRawDataFormats[] = {
     {"CHAR", DR_FORMAT_CHAR, sizeof(DR_CHAR), "%hhd"},
+    {"INT8", DR_FORMAT_CHAR, sizeof(DR_CHAR), "%hhd"},
     {"UCHAR", DR_FORMAT_UCHAR, sizeof(DR_UCHAR), "%hhu"},
+    {"UINT8", DR_FORMAT_UCHAR, sizeof(DR_UCHAR), "%hhu"},
     {"SHORT", DR_FORMAT_SHORT, sizeof(DR_SHORT), "%hd"},
+    {"INT16", DR_FORMAT_SHORT, sizeof(DR_SHORT), "%hd"},
     {"USHORT", DR_FORMAT_USHORT, sizeof(DR_USHORT), "%hu"},
+    {"UINT16", DR_FORMAT_USHORT, sizeof(DR_USHORT), "%hu"},
     {"INT", DR_FORMAT_INT, sizeof(DR_INT), "%d"},
+    {"INT32", DR_FORMAT_INT, sizeof(DR_INT), "%d"},
     {"UINT", DR_FORMAT_UINT, sizeof(DR_UINT), "%u"},
+    {"UINT32", DR_FORMAT_UINT, sizeof(DR_UINT), "%u"},
     {"LONG", DR_FORMAT_LONG, sizeof(DR_LONG), "%ld"},
+    {"INT64", DR_FORMAT_LONG, sizeof(DR_LONG), "%ld"},
     {"ULONG", DR_FORMAT_ULONG, sizeof(DR_ULONG), "%lu"},
+    {"UINT64", DR_FORMAT_ULONG, sizeof(DR_ULONG), "%lu"},
     {"HALF", DR_FORMAT_HALF, sizeof(DR_HALF), NULL},
     {"FLOAT", DR_FORMAT_FLOAT, sizeof(DR_FLOAT), "%f"},
     {"DOUBLE", DR_FORMAT_DOUBLE, sizeof(DR_DOUBLE), "%lf"}

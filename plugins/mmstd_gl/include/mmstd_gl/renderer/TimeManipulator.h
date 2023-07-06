@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2022, 2023, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -17,7 +17,7 @@ namespace megamol::mmstd_gl {
  * Pseudo-Renderer that manipulates time to quickly synchronize data that has only a subset of timesteps
  * with respect to another.
  */
-class TimeMultiplier : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
+class TimeManipulator : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
 public:
     /**
      * Answer the name of this module.
@@ -25,7 +25,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName() {
-        return "TimeMultiplier";
+        return "TimeManipulator";
     }
 
     /**
@@ -47,10 +47,10 @@ public:
     }
 
     /** Ctor. */
-    TimeMultiplier();
+    TimeManipulator();
 
     /** Dtor. */
-    ~TimeMultiplier() override;
+    ~TimeManipulator() override;
 
 protected:
     /**
@@ -84,5 +84,9 @@ private:
 
     /** Parameter for the time multiplier */
     core::param::ParamSlot multiplierSlot;
+
+    /** Parameters for the length */
+    core::param::ParamSlot overrideLengthSlot;
+    core::param::ParamSlot resultingLengthSlot;
 };
 } // namespace megamol::mmstd_gl
