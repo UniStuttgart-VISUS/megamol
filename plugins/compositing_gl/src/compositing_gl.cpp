@@ -8,6 +8,7 @@
 #include "mmcore/factories/PluginRegister.h"
 
 #include "AntiAliasing.h"
+#include "Contours.h"
 #include "DepthDarkening.h"
 #include "DrawToScreen.h"
 #include "InteractionRenderTarget.h"
@@ -49,6 +50,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::PNGDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TexInspectModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::ScreenSpaceEdges>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::Contours>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::compositing_gl::CallTexture2D>();
