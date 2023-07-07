@@ -192,9 +192,9 @@ void Power_Service::postGraphRender() {
         trigger_->WriteLow();*/
 }
 
-void Power_Service::start_measurement() {
+void Power_Service::setup_measurement() {
     using namespace visus::power_overwhelming;
-    core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting measurement");
+    core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting setup");
     auto m_func = [&]() -> void {
         try {
             auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
@@ -242,10 +242,61 @@ void Power_Service::start_measurement() {
                           << "RTX status before acquire: " << i.status() << std::endl;*/
 
                 i.operation_complete();
-                i.acquisition(oscilloscope_acquisition_state::single);
 
-                trigger_->SetBit(6, true);
-                trigger_->SetBit(6, false);
+                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed setup");
+
+                //i.acquisition(oscilloscope_acquisition_state::single);
+
+                //trigger_->SetBit(6, true);
+                //trigger_->SetBit(6, false);
+
+                //i.operation_complete();
+
+                //auto segment0_1 = i.data(1, oscilloscope_waveform_points::maximum);
+                ////i.clear();
+                //auto segment0_2 = i.data(2, oscilloscope_waveform_points::maximum);
+
+                //auto segment0_3 = i.data(3, oscilloscope_waveform_points::maximum);
+
+                //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
+                //std::ofstream out_file("channel_data_0.csv");
+                //for (size_t i = 0; i < segment0_1.record_length(); ++i) {
+                //    out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << "," << segment0_3.begin()[i]
+                //             << std::endl;
+                //}
+                //out_file.close();
+            }
+        } catch (std::exception& ex) {
+            core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
+        }
+    };
+    auto m_thread = std::thread(m_func);
+    m_thread.detach();
+}
+
+void Power_Service::start_measurement() {
+    using namespace visus::power_overwhelming;
+    core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting measurement");
+    auto m_func = [&]() -> void {
+        try {
+            auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+
+            for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+
+                rtx_instrument i(d);
+
+                auto trigger = [&]() {
+                    for (int i = 0; i < 100; ++i) {
+                        trigger_->SetBit(6, true);
+                        trigger_->SetBit(6, false);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    }
+                };
+                auto t_thread = std::thread(trigger);
+                t_thread.detach();
+
+                i.acquisition(oscilloscope_acquisition_state::single);
 
                 i.operation_complete();
 
@@ -262,6 +313,8 @@ void Power_Service::start_measurement() {
                              << std::endl;
                 }
                 out_file.close();
+
+                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed measurement");
             }
         } catch (std::exception& ex) {
             core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
@@ -273,6 +326,12 @@ void Power_Service::start_measurement() {
 
 void Power_Service::fill_lua_callbacks() {
     frontend_resources::LuaCallbacksCollection callbacks;
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
+        "mmPowerSetup", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            setup_measurement();
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerMeasure", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {

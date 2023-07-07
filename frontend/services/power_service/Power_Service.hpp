@@ -171,6 +171,8 @@ private:
 
     frontend_resources::PowerCallbacks callbacks_;
 
+    void setup_measurement();
+
     void start_measurement();
 
     void fill_lua_callbacks();
