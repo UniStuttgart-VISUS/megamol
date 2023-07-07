@@ -58,8 +58,8 @@ public:
     }
 
 private:
-    using animations =
-        std::variant<animation::FloatAnimation, animation::StringAnimation, animation::FloatVectorAnimation>;
+    using animations = std::variant<animation::FloatAnimation, animation::StringAnimation,
+        animation::FloatVectorAnimation, animation::ScriptedFloatAnimation, animation::ScriptedStringAnimation>;
 
     void WriteValuesToGraph();
     bool SaveToFile(const std::string& file);
@@ -79,6 +79,7 @@ private:
         ImU32 col = ImGui::GetColorU32(ImGuiCol_NavHighlight));
     void DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU32 col = IM_COL32(255, 128, 0, 255),
         animation::VectorKey<animation::FloatKey>* parent = nullptr);
+    void DrawScriptedFloat(ImDrawList* dl, const animation::ScriptedFloatKey& key);
     void DrawPlayhead(ImDrawList* drawList);
     void DrawStringKey(ImDrawList* im_draws, animation::StringKey& key, ImU32 col = IM_COL32(255, 128, 0, 255));
     void DrawCurves();
@@ -93,6 +94,7 @@ private:
 
     std::vector<animations> allAnimations;
     int32_t selectedAnimation = -1;
+    int32_t animationToChange = -1;
     animation::FloatKey* selectedFloatKey = nullptr;
     animation::FloatKey* draggingFloatKey = nullptr;
     animation::StringKey* selectedStringKey = nullptr;
@@ -129,6 +131,7 @@ private:
     bool save_state = false, save_all_params = false;
     std::string animation_file, export_file;
     std::string output_prefix;
+    std::string edit_buffer;
     int32_t pos_source_index = -1, orient_source_index = -1;
 
     frontend_resources::AnimationEditorData animEditorData;

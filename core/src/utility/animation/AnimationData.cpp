@@ -23,6 +23,25 @@ std::ostream& megamol::core::utility::operator<<(
     return outs << ss.str();
 }
 
+float ExpressionInterpreter::EvaluateFloat(const std::string& script, KeyTimeType t) {
+    lua.set("time", t);
+    // I think this makes it too complicated
+    //sol::table in_t = lua["in_tangent"];
+    //in_t.clear();
+    //in_t.add(in_tangent[0], in_tangent[1]);
+    //sol::table out_t = lua["out_tangent"];
+    //out_t.clear();
+    //out_t.add(in_tangent[0], in_tangent[1]);
+    const float res = lua.script(script);
+    return res;
+}
+
+std::string ExpressionInterpreter::EvaluateString(const std::string& script, KeyTimeType t) {
+    lua.set("time", t);
+    std::string res = lua.script(script);
+    return res;
+}
+
 FloatKey::ValueType FloatKey::InterpolateForTime(FloatKey first, FloatKey second, KeyTimeType time) {
     FloatKey my_first = first;
     FloatKey my_second = second;
@@ -293,7 +312,7 @@ template<>
 ImVec2 GenericAnimation<FloatKey>::GetTangent(KeyTimeType time) const {
     if (keys.size() < 2) {
         if (keys.empty()) {
-            return ImVec2();
+            return ImVec2(1.0, 0.0);
         }
         return keys.begin()->second.out_tangent;
     }
@@ -339,7 +358,7 @@ InterpolationType GenericAnimation<FloatKey>::GetInterpolation(KeyTimeType time)
 
 
 template<>
-float GenericAnimation<FloatKey>::GetMinValue() const {
+GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::GetMinValue() const {
     if (!keys.empty()) {
         auto min = std::numeric_limits<float>::max();
         for (auto& k : keys) {
@@ -352,7 +371,7 @@ float GenericAnimation<FloatKey>::GetMinValue() const {
 }
 
 template<>
-float GenericAnimation<FloatKey>::GetMaxValue() const {
+GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::GetMaxValue() const {
     if (!keys.empty()) {
         auto max = std::numeric_limits<float>::lowest();
         for (auto& k : keys) {
@@ -362,4 +381,16 @@ float GenericAnimation<FloatKey>::GetMaxValue() const {
     } else {
         return 1.0f;
     }
+}
+
+template<>
+GenericAnimation<ScriptedStringKey>::ValueType::ValueType GenericAnimation<ScriptedStringKey>::GetValue(
+    KeyTimeType time) const {
+    return ExpressionInterpreter::getInstance().EvaluateString(keys.begin()->second.script, time);
+}
+
+template<>
+GenericAnimation<ScriptedFloatKey>::ValueType::ValueType GenericAnimation<ScriptedFloatKey>::GetValue(
+    KeyTimeType time) const {
+    return ExpressionInterpreter::getInstance().EvaluateFloat(keys.begin()->second.script, time);
 }

@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <imgui.h>
+#include <sol/sol.hpp>
 
 #include "mmcore/MegaMolGraph.h"
 
@@ -20,10 +21,30 @@ using KeyTimeType = int32_t;
 
 enum class InterpolationType : int32_t { Step = 0, Linear = 1, Hermite = 2, CubicBezier = 3, SLERP = 4 };
 
+class ExpressionInterpreter {
+public:
+    static ExpressionInterpreter& getInstance() {
+        static ExpressionInterpreter instance;
+        return instance;
+    }
+    ExpressionInterpreter(ExpressionInterpreter const&) = delete;
+    void operator=(ExpressionInterpreter const&) = delete;
+
+    float EvaluateFloat(
+        const std::string& script, KeyTimeType t);
+
+    std::string EvaluateString(const std::string& script, KeyTimeType t);
+
+private : ExpressionInterpreter() {
+        lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::string);
+    }
+    sol::state lua;
+};
+
 struct FloatKey {
     using ValueType = float;
     KeyTimeType time;
-    ValueType value;
+    ValueType value = ValueType();
     InterpolationType interpolation = InterpolationType::Linear;
     bool tangents_linked = true;
     ImVec2 in_tangent{-1.0f, 0.0f};
@@ -42,6 +63,7 @@ struct FloatKey {
     static float CubicHermiteValue(float value1, float outTangent1, float inTangent2, float value2, float t);
     static float CubicHermiteTangent(float value1, float outTangent1, float inTangent2, float value2, float t);
     //static float FindTForValue()
+
 };
 
 template<class C>
@@ -59,6 +81,20 @@ struct StringKey {
     using ValueType = std::string;
     KeyTimeType time;
     ValueType value;
+};
+
+struct ScriptedStringKey {
+    using ValueType = std::string;
+    KeyTimeType time;
+    ValueType value;
+    std::string script;
+};
+
+struct ScriptedFloatKey {
+    using ValueType = float;
+    KeyTimeType time;
+    ValueType value;
+    std::string script;
 };
 
 template<class KeyType>
@@ -97,6 +133,9 @@ public:
 
     const std::string& GetName() const {
         return param_name;
+    }
+    void SetName(std::string param) {
+        param_name = param;
     }
     typename KeyMap::size_type GetSize() const {
         return keys.size();
@@ -217,6 +256,21 @@ template<>
 float GenericAnimation<FloatKey>::GetMinValue() const;
 template<>
 float GenericAnimation<FloatKey>::GetMaxValue() const;
+
+using ScriptedStringAnimation = GenericAnimation<ScriptedStringKey>;
+
+// Scripted Strings do everything differently
+template<>
+GenericAnimation<ScriptedStringKey>::ValueType::ValueType GenericAnimation<ScriptedStringKey>::GetValue(
+    KeyTimeType time) const;
+
+using ScriptedFloatAnimation = GenericAnimation<ScriptedFloatKey>;
+
+// Scripted Floats as well
+template<>
+GenericAnimation<ScriptedFloatKey>::ValueType::ValueType GenericAnimation<ScriptedFloatKey>::GetValue(
+    KeyTimeType time) const;
+
 
 // same goes for vec keys, plus some more specialization
 template<class C>

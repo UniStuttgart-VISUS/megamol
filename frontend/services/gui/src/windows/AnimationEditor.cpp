@@ -19,6 +19,7 @@
 
 #include "imgui_stdlib.h"
 #include "nlohmann/json.hpp"
+#include "widgets/ButtonWidgets.h"
 
 #include <cmath>
 #include <fstream>
@@ -246,6 +247,8 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
         animation::FloatAnimation f_dummy("dummy");
         animation::StringAnimation s_dummy("dummy");
         animation::FloatVectorAnimation v_dummy("dummy");
+        animation::ScriptedStringAnimation ssa_dummy("dummy");
+        animation::ScriptedFloatAnimation sfa_dummy("dummy");
         if (!in_json.contains("animations")) {
             error_popup_message = "Loading failed: cannot find 'animations'";
             open_popup_error = true;
@@ -261,6 +264,12 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
             } else if (j["type"] == "float_vector") {
                 from_json(j, v_dummy);
                 allAnimations.emplace_back(v_dummy);
+            } else if (j["type"] == "scripted_string") {
+                from_json(j, ssa_dummy);
+                allAnimations.emplace_back(ssa_dummy);
+            } else if (j["type"] == "scripted_float") {
+                from_json(j, sfa_dummy);
+                allAnimations.emplace_back(sfa_dummy);
             } else {
                 error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no known type";
                 open_popup_error = true;
@@ -527,6 +536,46 @@ void AnimationEditor::DrawToolbar() {
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
+
+    ImGui::SameLine();
+    const auto cursor_pos = ImGui::GetCursorScreenPos();
+    if (ImGui::Button("add animation")) {
+        ImGui::OpenPopup("add_animation_button_context");
+        ImGui::SetNextWindowPos(cursor_pos + ImVec2(0.0f, ImGui::GetFrameHeight()));
+    }
+    if (ImGui::BeginPopup("add_animation_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
+        auto any_clicked = false;
+        if (ImGui::MenuItem("Float")) {
+            animation::FloatAnimation fa = {"unnamed"};
+            allAnimations.emplace_back(fa);
+            any_clicked = true;
+        }
+        if (ImGui::MenuItem("String")) {
+            animation::StringAnimation sa = {"unnamed"};
+            allAnimations.emplace_back(sa);
+            any_clicked = true;
+        }
+        if (ImGui::MenuItem("Float Expression")) {
+            animation::ScriptedFloatAnimation sfa = {"unnamed"};
+            animation::ScriptedFloatKey sfk = {0, 0, "return time"};
+            sfa.AddKey(sfk);
+            allAnimations.emplace_back(sfa);
+            any_clicked = true;
+        }
+        if (ImGui::MenuItem("String Expression")) {
+            animation::ScriptedStringAnimation ssa = {"unnamed"};
+            animation::ScriptedStringKey ssk = {0, "", "return tostring(time)"};
+            ssa.AddKey(ssk);
+            allAnimations.emplace_back(ssa);
+            any_clicked = true;
+        }
+        ImGui::EndPopup();
+        if (any_clicked) {
+            selectedFloatKey = nullptr;
+            selectedStringKey = nullptr;
+            selectedAnimation = allAnimations.size() - 1;
+        }
+    }
 
     ImGui::SameLine();
     if (ImGui::Button("delete animation")) {
@@ -991,6 +1040,17 @@ void AnimationEditor::DrawFloatKey(
 }
 
 
+void AnimationEditor::DrawScriptedFloat(ImDrawList* dl, const animation::ScriptedFloatKey& key) {
+    auto& inst = animation::ExpressionInterpreter::getInstance();
+    const auto reference_col = IM_COL32(255, 0, 0, 255);
+    for (auto t = animation_bounds[0]; t < animation_bounds[1]; ++t) {
+        auto v1 = inst.EvaluateFloat(key.script, t);
+        auto v2 = inst.EvaluateFloat(key.script, t + 1);
+        dl->AddLine(ImVec2(t, v1 * -1.0f) * custom_zoom, ImVec2(t + 1, v2 * -1.0f) * custom_zoom, reference_col);
+    }
+}
+
+
 void AnimationEditor::DrawPlayhead(ImDrawList* drawList) {
     const ImVec2 playhead_size = {12.0f, 12.0f};
     auto playhead_color = IM_COL32(255, 128, 0, 255);
@@ -1102,6 +1162,9 @@ void AnimationEditor::DrawCurves() {
                         DrawFloatKey(drawList, k);
                     }
                 }
+            } else if (std::holds_alternative<animation::ScriptedFloatAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::ScriptedFloatAnimation>(allAnimations[selectedAnimation]);
+                DrawScriptedFloat(drawList, anim[0]);
             } else if (std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
                 auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 if (anim.GetSize() > 0) {
@@ -1202,6 +1265,17 @@ void AnimationEditor::DrawProperties() {
         "key_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     if (selectedAnimation > -1) {
         auto& anim = allAnimations[selectedAnimation];
+        std::visit(
+            [&](auto&& arg) -> void {
+                std::string buffer = arg.GetName();
+                if (ImGui::InputText("Parameter", &buffer)) {
+                    if (!buffer.empty()) {
+                        arg.SetName(buffer);
+                    }
+                }
+            },
+            anim);
+
         if ((std::holds_alternative<animation::FloatAnimation>(anim) ||
                 std::holds_alternative<animation::FloatVectorAnimation>(anim)) &&
             selectedFloatKey != nullptr) {
@@ -1297,6 +1371,22 @@ void AnimationEditor::DrawProperties() {
                 }
             }
             ImGui::InputText("Value", &selectedStringKey->value);
+        } else if (std::holds_alternative<animation::ScriptedStringAnimation>(anim)) {
+            auto& ssa = std::get<animation::ScriptedStringAnimation>(anim);
+            ImGui::InputText("Script", &edit_buffer);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                ssa[0].script = edit_buffer;
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                edit_buffer = ssa[0].script;
+            }
+        } else if (std::holds_alternative<animation::ScriptedFloatAnimation>(anim)) {
+            auto& sfa = std::get<animation::ScriptedFloatAnimation>(anim);
+            ImGui::InputText("Script", &edit_buffer);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                sfa[0].script = edit_buffer;
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                edit_buffer = sfa[0].script;
+            }
         }
     }
     ImGui::EndChild();
