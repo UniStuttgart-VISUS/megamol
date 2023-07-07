@@ -20,16 +20,21 @@ public:
 
     void Open(char const* path);
 
-    DWORD Write(const void* data, const DWORD cnt) const;
+    //DWORD Write(const void* data, const DWORD cnt) const;
+    DWORD Write(std::uint8_t data);
 
-    DWORD WriteHigh(void) const;
+    DWORD WriteHigh(void);
 
-    DWORD WriteLow(void) const;
+    DWORD WriteLow(void);
+
+    DWORD SetBit(unsigned char idx, bool state);
 
 private:
 #ifdef WIN32
     wil::unique_hfile handle_;
 #endif
+
+    std::uint8_t data_state_;
 };
 
 } // namespace megamol::frontend

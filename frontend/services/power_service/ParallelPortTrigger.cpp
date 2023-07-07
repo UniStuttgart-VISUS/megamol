@@ -22,28 +22,56 @@ void ParallelPortTrigger::Open(char const* path) {
 }
 
 
-DWORD ParallelPortTrigger::Write(const void* data, const DWORD cnt) const {
+//DWORD ParallelPortTrigger::Write(const void* data, const DWORD cnt) const {
+//    DWORD retval = 0;
+//
+//#ifdef WIN32
+//    if (!::WriteFile(this->handle_.get(), data, cnt, &retval, nullptr)) {
+//        throw std::system_error(::GetLastError(), std::system_category());
+//    }
+//#endif
+//
+//    return retval;
+//}
+
+
+DWORD ParallelPortTrigger::Write(std::uint8_t data) {
     DWORD retval = 0;
 
 #ifdef WIN32
-    if (!::WriteFile(this->handle_.get(), data, cnt, &retval, nullptr)) {
+    if (!::WriteFile(this->handle_.get(), &data, 1, &retval, nullptr)) {
         throw std::system_error(::GetLastError(), std::system_category());
     }
+    data_state_ = data;
 #endif
 
     return retval;
 }
 
 
-DWORD ParallelPortTrigger::WriteHigh(void) const {
+DWORD ParallelPortTrigger::WriteHigh(void) {
     static const auto data = (std::numeric_limits<std::uint8_t>::max)();
-    return this->Write(&data, sizeof(data));
+    //return this->Write(&data, sizeof(data));
+    return Write(data);
 }
 
 
-DWORD ParallelPortTrigger::WriteLow(void) const {
+DWORD ParallelPortTrigger::WriteLow(void) {
     static const char data = 0;
-    return this->Write(&data, sizeof(data));
+    //return this->Write(&data, sizeof(data));
+    return Write(data);
+}
+
+
+DWORD ParallelPortTrigger::SetBit(unsigned char idx, bool state) {
+    if (idx < 8) {
+        auto data = data_state_;
+        std::uint8_t val = state ? 1 : 0;
+        data = (data & ~(1UL << idx)) | (val << idx);
+        return Write(data);
+    }
+
+    return 0;
 }
 
 } // namespace megamol::frontend
