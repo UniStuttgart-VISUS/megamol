@@ -195,64 +195,68 @@ void Power_Service::postGraphRender() {
 void Power_Service::start_measurement() {
     using namespace visus::power_overwhelming;
     core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting measurement");
-    try {
-        auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+    auto m_func = [&]() -> void {
+        try {
+            auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
 
-        for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
-            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+            for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
 
-            rtx_instrument i(d);
+                rtx_instrument i(d);
 
-            i.clear();
-            i.clear_status();
-            i.reset();
-            i.synchronise_clock();
-            i.timeout(5000);
+                i.clear();
+                i.clear_status();
+                i.reset();
+                i.synchronise_clock();
+                i.timeout(5000);
 
-            i.reference_position(oscilloscope_reference_point::left);
-            i.time_range(oscilloscope_quantity(50, "ms"));
+                i.reference_position(oscilloscope_reference_point::left);
+                i.time_range(oscilloscope_quantity(50, "ms"));
 
-            i.channel(oscilloscope_channel(1)
-                          .label(oscilloscope_label("voltage"))
-                          .state(true)
-                          .attenuation(oscilloscope_quantity(10, "V"))
-                          .range(oscilloscope_quantity(26)));
+                i.channel(oscilloscope_channel(1)
+                              .label(oscilloscope_label("voltage"))
+                              .state(true)
+                              .attenuation(oscilloscope_quantity(10, "V"))
+                              .range(oscilloscope_quantity(26)));
 
-            i.channel(oscilloscope_channel(2)
-                          .label(oscilloscope_label("current"))
-                          .state(true)
-                          .attenuation(oscilloscope_quantity(10, "A"))
-                          .range(oscilloscope_quantity(20)));
+                i.channel(oscilloscope_channel(2)
+                              .label(oscilloscope_label("current"))
+                              .state(true)
+                              .attenuation(oscilloscope_quantity(10, "A"))
+                              .range(oscilloscope_quantity(20)));
 
-            i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
+                i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
 
-            i.trigger_position(oscilloscope_quantity(0.f, "ms"));
-            i.trigger(oscilloscope_edge_trigger("EXT")
-                          .level(1, oscilloscope_quantity(2000.0f, "mV"))
-                          .slope(oscilloscope_trigger_slope::rising)
-                          .mode(oscilloscope_trigger_mode::normal));
+                i.trigger_position(oscilloscope_quantity(0.f, "ms"));
+                i.trigger(oscilloscope_edge_trigger("EXT")
+                              .level(1, oscilloscope_quantity(2000.0f, "mV"))
+                              .slope(oscilloscope_trigger_slope::rising)
+                              .mode(oscilloscope_trigger_mode::normal));
 
-            std::cout << "RTX interface type: " << i.interface_type() << std::endl
-                      << "RTX status before acquire: " << i.status() << std::endl;
+                std::cout << "RTX interface type: " << i.interface_type() << std::endl
+                          << "RTX status before acquire: " << i.status() << std::endl;
 
-            i.acquisition(oscilloscope_acquisition_state::run);
+                i.acquisition(oscilloscope_acquisition_state::run);
 
-            i.wait();
+                i.wait();
 
-            auto segment0_1 = i.data(1);
-            i.clear();
-            auto segment0_2 = i.data(2);
+                auto segment0_1 = i.data(1);
+                i.clear();
+                auto segment0_2 = i.data(2);
 
-            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
-            std::ofstream out_file("channel_data_0.csv");
-            for (size_t i = 0; i < segment0_1.record_length(); ++i) {
-                out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << std::endl;
+                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
+                std::ofstream out_file("channel_data_0.csv");
+                for (size_t i = 0; i < segment0_1.record_length(); ++i) {
+                    out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << std::endl;
+                }
+                out_file.close();
             }
-            out_file.close();
+        } catch (std::exception& ex) {
+            core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
         }
-    } catch (std::exception& ex) {
-        core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
-    }
+    };
+    auto m_thread = std::thread(m_func);
+    m_thread.detach();
 }
 
 void Power_Service::fill_lua_callbacks() {
