@@ -70,8 +70,8 @@ bool Power_Service::init(void* configPtr) {
         trigger_ = nullptr;
     }
 
-    callbacks_.signal_high = std::bind(&ParallelPortTrigger::WriteHigh, trigger_.get());
-    callbacks_.signal_low = std::bind(&ParallelPortTrigger::WriteLow, trigger_.get());
+    callbacks_.signal_high = std::bind(&ParallelPortTrigger::SetBit, trigger_.get(), 7, true);
+    callbacks_.signal_low = std::bind(&ParallelPortTrigger::SetBit, trigger_.get(), 7, false);
 
     m_providedResourceReferences = {{frontend_resources::PowerCallbacks_Req_Name, callbacks_}};
 
@@ -204,10 +204,8 @@ void Power_Service::start_measurement() {
 
                 rtx_instrument i(d);
 
-                i.clear();
-                i.clear_status();
-                i.reset();
                 i.synchronise_clock();
+                i.reset(true, true);
                 i.timeout(5000);
 
                 i.reference_position(oscilloscope_reference_point::left);
@@ -223,31 +221,45 @@ void Power_Service::start_measurement() {
                               .label(oscilloscope_label("current"))
                               .state(true)
                               .attenuation(oscilloscope_quantity(10, "A"))
-                              .range(oscilloscope_quantity(20)));
+                              .range(oscilloscope_quantity(40)));
 
-                i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
+                i.channel(oscilloscope_channel(3)
+                              .label(oscilloscope_label("frame"))
+                              .state(true)
+                              .attenuation(oscilloscope_quantity(1, "V"))
+                              .range(oscilloscope_quantity(7)));
+
 
                 i.trigger_position(oscilloscope_quantity(0.f, "ms"));
                 i.trigger(oscilloscope_edge_trigger("EXT")
-                              .level(1, oscilloscope_quantity(2000.0f, "mV"))
+                              .level(5, oscilloscope_quantity(2000.0f, "mV"))
                               .slope(oscilloscope_trigger_slope::rising)
                               .mode(oscilloscope_trigger_mode::normal));
 
-                std::cout << "RTX interface type: " << i.interface_type() << std::endl
-                          << "RTX status before acquire: " << i.status() << std::endl;
+                i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
 
-                i.acquisition(oscilloscope_acquisition_state::run);
+                /*std::cout << "RTX interface type: " << i.interface_type() << std::endl
+                          << "RTX status before acquire: " << i.status() << std::endl;*/
 
-                i.wait();
+                i.operation_complete();
+                i.acquisition(oscilloscope_acquisition_state::single);
 
-                auto segment0_1 = i.data(1);
-                i.clear();
-                auto segment0_2 = i.data(2);
+                trigger_->SetBit(6, true);
+                trigger_->SetBit(6, false);
+
+                i.operation_complete();
+
+                auto segment0_1 = i.data(1, oscilloscope_waveform_points::maximum);
+                //i.clear();
+                auto segment0_2 = i.data(2, oscilloscope_waveform_points::maximum);
+
+                auto segment0_3 = i.data(3, oscilloscope_waveform_points::maximum);
 
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
                 std::ofstream out_file("channel_data_0.csv");
                 for (size_t i = 0; i < segment0_1.record_length(); ++i) {
-                    out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << std::endl;
+                    out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << "," << segment0_3.begin()[i]
+                             << std::endl;
                 }
                 out_file.close();
             }
