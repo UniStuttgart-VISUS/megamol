@@ -4,9 +4,9 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO UniStuttgart-VISUS/power-overwhelming
     #REF "v${VERSION}"
-    REF "master"
+    REF "rtx"
     #SHA512 6e7d7d0057a477b62cc3c038d7707d230f48233e0ce68c479eefc1acf7893b57be8850492b362102008c670250f35f350b1a4780a176db258181cb7ba37ea0b7
-    SHA512 f68ab9918c24781a3a0bfe90e69c1d2b16894bdf18fb742406d4dacdf3f598ceb5f520532c5febaaf8b07da75424eff6fff908268cefdd802b4029dbb4619ea4
+    SHA512 dc9797fced2f581d52377cd191dce1db0a32699128fca4857cd6b680d25ce501febd5de7c4dcb38d7f0ec3c9f96f9b262cf4de38731909ae66f2e5cb74db4a51
     HEAD_REF master
 )
 
