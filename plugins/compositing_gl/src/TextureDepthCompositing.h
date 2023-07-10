@@ -17,6 +17,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "mmstd_gl/ModuleGL.h"
+#include "CompositingOutHandler.h"
 
 namespace megamol::compositing_gl {
 
@@ -48,6 +49,13 @@ public:
     static bool IsAvailable() {
         return true;
     }
+
+    /**
+     * Recompiles relevant shaders and updates relevant output texture formats.
+     *
+     * @return 'true' if updates sucessfull, 'false' otherwise
+     */
+    bool formatUpdates();
 
     TextureDepthCompositing();
     ~TextureDepthCompositing() override;
@@ -111,6 +119,8 @@ private:
 
     /** Slot for querying secondary depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_depth_tex_1_slot;
+
+    CompositingOutHandler out_handler_;
 };
 
 } // namespace megamol::compositing_gl

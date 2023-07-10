@@ -102,7 +102,9 @@ megamol::compositing_gl::SSAO::SSAO()
         , ps_ssao_sample_cnt_("SSAO Samples", "Sets the number of samples used SSAO")
         , settings_have_changed_(false)
         , slot_is_active_(false)
-        , update_caused_by_normal_slot_change_(false) {
+        , update_caused_by_normal_slot_change_(false)
+        , out_format_handler("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::function<bool()>(std::bind(&SSAO::outFormatUpdate, this))) {
     this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &SSAO::getDataCallback);
     this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
     this->MakeSlotAvailable(&this->output_tex_slot_);
@@ -209,6 +211,8 @@ megamol::compositing_gl::SSAO::SSAO()
         core::param::AbstractParamPresentation::Presentation::Drag);
     this->ps_detail_shadow_strength_.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->ps_detail_shadow_strength_);
+
+    this->MakeSlotAvailable(out_format_handler.getFormatSelectorSlot());
 }
 
 
@@ -360,22 +364,11 @@ bool megamol::compositing_gl::SSAO::create() {
         smart_blur_wide_prgm_ = core::utility::make_glowl_shader(
             "smart_blur_wide", shader_options, "compositing_gl/assao/smart_blur_wide.comp.glsl");
 
-        apply_prgm_ = core::utility::make_glowl_shader("apply", shader_options, "compositing_gl/assao/apply.comp.glsl");
-
         non_smart_blur_prgm_ = core::utility::make_glowl_shader(
             "non_smart_blur", shader_options, "compositing_gl/assao/non_smart_blur.comp.glsl");
 
-        non_smart_apply_prgm_ = core::utility::make_glowl_shader(
-            "non_smart_apply", shader_options, "compositing_gl/assao/non_smart_apply.comp.glsl");
-
-        non_smart_half_apply_prgm_ = core::utility::make_glowl_shader(
-            "non_smart_half_apply", shader_options, "compositing_gl/assao/non_smart_half_apply.comp.glsl");
-
         naive_ssao_prgm_ =
             core::utility::make_glowl_shader("naive_ssao", shader_options, "compositing_gl/naive_ssao.comp.glsl");
-
-        simple_blur_prgm_ =
-            core::utility::make_glowl_shader("simple_blur", shader_options, "compositing_gl/simple_blur.comp.glsl");
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("SSAO: " + std::string(e.what())).c_str());
@@ -384,6 +377,8 @@ bool megamol::compositing_gl::SSAO::create() {
     depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
     ao_result_layout_ = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_FLOAT, 1);
     normal_layout_ = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
+
+
     half_depths_[0] =
         std::make_shared<glowl::Texture2D>("half_depths0", depth_buffer_viewspace_linear_layout_, nullptr);
     half_depths_[1] =
@@ -401,7 +396,7 @@ bool megamol::compositing_gl::SSAO::create() {
                     depth_buffer_viewspace_linear_layout_, 0, 1, 0, 1);
         }
     }
-    final_output_ = std::make_shared<glowl::Texture2D>("final_output", depth_buffer_viewspace_linear_layout_, nullptr);
+
     ping_pong_half_result_a_ =
         std::make_shared<glowl::Texture2D>("ping_pong_half_result_a", ao_result_layout_, nullptr);
     ping_pong_half_result_b_ =
@@ -446,10 +441,6 @@ bool megamol::compositing_gl::SSAO::create() {
     sampler_state_viewspace_depth_tap_ =
         std::make_shared<glowl::Sampler>("sampler_state_viewspace_depth_tap", intParams);
 
-
-    // naive ssao stuff
-    intermediate_tx2d_ = std::make_shared<glowl::Texture2D>("screenspace_effect_intermediate", normal_layout_, nullptr);
-
     // quick 'n dirty from https://learnopengl.com/Advanced-Lighting/SSAO
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between 0.0 - 1.0
     std::default_random_engine generator;
@@ -477,9 +468,38 @@ bool megamol::compositing_gl::SSAO::create() {
     glowl::TextureLayout tx_layout2(GL_RGB32F, 4, 4, 1, GL_RGB, GL_FLOAT, 1);
     ssao_kernel_rot_tx2d_ = std::make_shared<glowl::Texture2D>("ssao_kernel_rotation", tx_layout2, ssaoNoise.data());
 
+    outFormatUpdate();
+
     return true;
 }
 
+bool megamol::compositing_gl::SSAO::outFormatUpdate() {
+    glowl::TextureLayout final_out_layout = glowl::TextureLayout(out_format_handler.getInternalFormat(), 1, 1, 1,
+        out_format_handler.getFormat(), out_format_handler.getType(), 1);
+
+    // naive ssao stuff
+    intermediate_tx2d_ =
+        std::make_shared<glowl::Texture2D>("screenspace_effect_intermediate", final_out_layout, nullptr);
+    final_output_ = std::make_shared<glowl::Texture2D>("final_output", final_out_layout, nullptr);
+
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto const shader_options_flags = out_format_handler.handleDefinitions(shader_options);
+
+    try {
+        apply_prgm_ =
+            core::utility::make_glowl_shader("apply", *shader_options_flags, "compositing_gl/assao/apply.comp.glsl");
+        non_smart_half_apply_prgm_ = core::utility::make_glowl_shader(
+            "non_smart_half_apply", *shader_options_flags, "compositing_gl/assao/non_smart_half_apply.comp.glsl");
+        non_smart_apply_prgm_ = core::utility::make_glowl_shader(
+            "non_smart_apply", *shader_options_flags, "compositing_gl/assao/non_smart_apply.comp.glsl");
+        simple_blur_prgm_ = core::utility::make_glowl_shader(
+            "simple_blur", *shader_options_flags, "compositing_gl/simple_blur.comp.glsl");
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(("SSAO: " + std::string(e.what())).c_str());
+    }
+    return true;
+}
 
 /*
  * @megamol::compositing_gl::SSAO::release
@@ -549,14 +569,14 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
             ++version_;
 
             std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
-                setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
+                setupOutputTexture = [this](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
                     // set output texture size to primary input texture
                     std::array<float, 2> texture_res = {
                         static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
 
                     if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
-                        glowl::TextureLayout tx_layout(GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res),
-                            1, GL_RGBA, GL_HALF_FLOAT, 1);
+                        glowl::TextureLayout tx_layout(out_format_handler.getInternalFormat(), std::get<0>(texture_res),
+                            std::get<1>(texture_res), 1, out_format_handler.getFormat(), out_format_handler.getType(), 1);
                         tgt->reload(tx_layout, nullptr);
                     }
                 };

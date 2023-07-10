@@ -36,6 +36,7 @@
 #include "glowl/glowl.h"
 
 #include <glm/glm.hpp>
+#include "CompositingOutHandler.h"
 
 namespace megamol::compositing_gl {
 
@@ -360,6 +361,13 @@ private:
     bool settingsCallback(core::param::ParamSlot& slot);
     bool ssaoModeCallback(core::param::ParamSlot& slot);
 
+    /**
+    * \brief Callback method for CompositingOutHandler to trigger recompiling of relevant shaders and textures.
+    *
+    * @return True, if recompiling and reloading relevant shaders and textures succeeded, else False
+    */
+    bool outFormatUpdate();
+
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timers_;
@@ -504,6 +512,8 @@ private:
 
     /** Parameter for selecting the ssao sample count */
     megamol::core::param::ParamSlot ps_ssao_sample_cnt_;
+
+    CompositingOutHandler out_format_handler;
 
     bool settings_have_changed_;
     bool slot_is_active_;

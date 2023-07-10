@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd_gl/ModuleGL.h"
-#include <gl/GL.h>
-#include <glm/glm.hpp>
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <string>
 #include <vector>
 
