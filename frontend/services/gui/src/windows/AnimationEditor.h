@@ -108,6 +108,7 @@ private:
     animation::KeyTimeType drag_start_time = 0;
     bool auto_capture = false;
     bool write_to_graph = false;
+    bool compact_view = false;
     InteractionType curr_interaction = InteractionType::None;
 
     animation::KeyTimeType current_frame = 0;

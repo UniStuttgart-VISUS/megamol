@@ -104,20 +104,25 @@ bool AnimationEditor::Draw() {
             }
         }
     }
-    DrawToolbar();
-    DrawPopups();
 
-    ImGui::BeginChild("AnimEditorContent");
-    ImGui::Columns(3, "AnimEditorColumns", false);
-    ImGui::SetColumnWidth(0, ImGui::GetWindowSize().x / 5.0f);
-    ImGui::SetColumnWidth(1, ImGui::GetWindowSize().x * (3.0f / 5.0f));
-    ImGui::SetColumnWidth(2, ImGui::GetWindowSize().x / 5.0f);
-    DrawParams();
-    ImGui::NextColumn();
-    DrawCurves();
-    ImGui::NextColumn();
-    DrawProperties();
-    ImGui::EndChild();
+    if (compact_view) {
+       DrawParams();
+    } else {
+        DrawToolbar();
+        DrawPopups();
+
+        ImGui::BeginChild("AnimEditorContent");
+        ImGui::Columns(3, "AnimEditorColumns", false);
+        ImGui::SetColumnWidth(0, ImGui::GetWindowSize().x / 5.0f);
+        ImGui::SetColumnWidth(1, ImGui::GetWindowSize().x * (3.0f / 5.0f));
+        ImGui::SetColumnWidth(2, ImGui::GetWindowSize().x / 5.0f);
+        DrawParams();
+        ImGui::NextColumn();
+        DrawCurves();
+        ImGui::NextColumn();
+        DrawProperties();
+        ImGui::EndChild();
+    }
 
     return true;
 }
@@ -234,6 +239,11 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
         in_json["animation_bounds"].get_to(animation_bounds);
         in_json["current_frame"].get_to(current_frame);
         in_json["output_prefix"].get_to(output_prefix);
+        if (in_json.contains("compact_view")) {
+            in_json["compact_view"].get_to(compact_view);
+        } else {
+            compact_view = false;
+        }
         if (in_json.contains("animation_file")) {
             in_json["animation_file"].get_to(animation_file);
         }
@@ -294,6 +304,7 @@ void AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json_all) {
     inout_json["current_frame"] = current_frame;
     inout_json["animation_file"] = animation_file;
     inout_json["output_prefix"] = output_prefix;
+    inout_json["compact_view"] = compact_view;
     inout_json["pos_source_index"] = pos_source_index;
     inout_json["orient_source_index"] = orient_source_index;
 
@@ -776,57 +787,61 @@ void AnimationEditor::set_as_orientation(int32_t anim_index) {
 }
 
 void AnimationEditor::DrawParams() {
-    ImGui::Text("Available Parameters");
-    bool have_pos = false, have_orient = false;
-    if (selectedAnimation > -1 &&
-        std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
-        const auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
-        have_pos = fva.VectorLength() == 3;
-        have_orient = fva.VectorLength() == 4;
-    }
-    if (!have_pos) {
-        ImGui::BeginDisabled();
-    }
-    if (ImGui::Button("use as 3D position")) {
-        set_as_position(selectedAnimation);
-    }
-    if (!have_pos) {
-        ImGui::EndDisabled();
-    }
-    ImGui::SameLine();
-    if (!have_orient) {
-        ImGui::BeginDisabled();
-    }
-    if (ImGui::Button("use as orientation")) {
-        set_as_orientation(selectedAnimation);
-    }
-    if (!have_orient) {
-        ImGui::EndDisabled();
-    }
-    ImGui::BeginChild(
-        "anim_params", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
-    for (int32_t a = 0; a < allAnimations.size(); ++a) {
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth |
-                                   ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_FramePadding |
-                                   ImGuiTreeNodeFlags_AllowItemOverlap;
-        if (selectedAnimation == a) {
-            flags |= ImGuiTreeNodeFlags_Selected;
+    if (!compact_view) {
+        ImGui::Text("Available Parameters");
+        bool have_pos = false, have_orient = false;
+        if (selectedAnimation > -1 &&
+            std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
+            const auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+            have_pos = fva.VectorLength() == 3;
+            have_orient = fva.VectorLength() == 4;
         }
-        const auto& anim = allAnimations[a];
-        std::visit([&](auto&& arg) -> void { ImGui::TreeNodeEx(arg.GetName().c_str(), flags); }, anim);
-        if (ImGui::IsItemActivated()) {
-            SelectAnimation(a);
-            if (canvas_visible) {
-                CenterAnimation(allAnimations[selectedAnimation]);
+        if (!have_pos) {
+            ImGui::BeginDisabled();
+        }
+        if (ImGui::Button("use as 3D position")) {
+            set_as_position(selectedAnimation);
+        }
+        if (!have_pos) {
+            ImGui::EndDisabled();
+        }
+        ImGui::SameLine();
+        if (!have_orient) {
+            ImGui::BeginDisabled();
+        }
+        if (ImGui::Button("use as orientation")) {
+            set_as_orientation(selectedAnimation);
+        }
+        if (!have_orient) {
+            ImGui::EndDisabled();
+        }
+        ImGui::BeginChild(
+            "anim_params", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
+        for (int32_t a = 0; a < allAnimations.size(); ++a) {
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth |
+                                       ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_FramePadding |
+                                       ImGuiTreeNodeFlags_AllowItemOverlap;
+            if (selectedAnimation == a) {
+                flags |= ImGuiTreeNodeFlags_Selected;
+            }
+            const auto& anim = allAnimations[a];
+            std::visit([&](auto&& arg) -> void { ImGui::TreeNodeEx(arg.GetName().c_str(), flags); }, anim);
+            if (ImGui::IsItemActivated()) {
+                SelectAnimation(a);
+                if (canvas_visible) {
+                    CenterAnimation(allAnimations[selectedAnimation]);
+                }
             }
         }
+        ImGui::EndChild();
     }
-    ImGui::EndChild();
 
     //animation::BeginGroupPanel("Animation", ImVec2(0.0f, 0.0f));
     ImGui::Text("Animation");
+    //ImGui::BeginChild(
+    //    "Animation_SubWin", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     ImGui::BeginChild(
-        "Animation_SubWin", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
+        "Animation_SubWin", ImVec2(0.f,0.f), true);
     if (ImGui::Button("start")) {
         current_frame = animation_bounds[0];
     }
@@ -848,6 +863,8 @@ void AnimationEditor::DrawParams() {
     if (ImGui::Button("end")) {
         current_frame = animation_bounds[1];
     }
+    ImGui::SameLine();
+    ImGui::Checkbox("compact", &compact_view);
     if (ImGui::InputInt("Playback fps target", &playback_fps)) {
         targeted_frame_time = 1000.0f / static_cast<float>(playback_fps);
     }
