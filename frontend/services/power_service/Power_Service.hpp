@@ -15,6 +15,8 @@
 
 #include "PowerCallbacks.h"
 
+#include <power_overwhelming/rtx_instrument.h>
+
 namespace megamol {
 namespace frontend {
 
@@ -170,6 +172,8 @@ private:
     std::unique_ptr<ParallelPortTrigger> trigger_;
 
     frontend_resources::PowerCallbacks callbacks_;
+
+    std::vector<visus::power_overwhelming::rtx_instrument> rtx_instr_;
 
     void setup_measurement();
 

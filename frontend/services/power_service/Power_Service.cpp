@@ -15,8 +15,6 @@
 #include <regex>
 #include <stdexcept>
 
-#include <power_overwhelming/rtx_instrument.h>
-
 #include "LuaCallbacksCollection.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
@@ -91,7 +89,17 @@ bool Power_Service::init(const Config& config) {
         log_error("failed initialization because");
         return false;
     }*/
+    using namespace visus::power_overwhelming;
 
+    auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+
+    for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+        core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+
+        rtx_instr_.emplace_back(d);
+    }
+
+    setup_measurement();
 
     log("initialized successfully");
     return true;
@@ -195,83 +203,84 @@ void Power_Service::postGraphRender() {
 void Power_Service::setup_measurement() {
     using namespace visus::power_overwhelming;
     core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting setup");
-    auto m_func = [&]() -> void {
-        try {
-            auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+    //auto m_func = [&]() -> void {
+    try {
+        //auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
 
-            for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
-                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+        //for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+        for (auto& i : rtx_instr_) {
+            //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
 
-                rtx_instrument i(d);
+            //rtx_instrument i(d);
 
-                i.synchronise_clock();
-                i.reset(true, true);
-                i.timeout(5000);
+            i.synchronise_clock();
+            i.reset(true, true);
+            i.timeout(5000);
 
-                i.reference_position(oscilloscope_reference_point::left);
-                i.time_range(oscilloscope_quantity(50, "ms"));
+            i.reference_position(oscilloscope_reference_point::left);
+            i.time_range(oscilloscope_quantity(50, "ms"));
 
-                i.channel(oscilloscope_channel(1)
-                              .label(oscilloscope_label("voltage"))
-                              .state(true)
-                              .attenuation(oscilloscope_quantity(10, "V"))
-                              .range(oscilloscope_quantity(26)));
+            i.channel(oscilloscope_channel(1)
+                          .label(oscilloscope_label("voltage"))
+                          .state(true)
+                          .attenuation(oscilloscope_quantity(10, "V"))
+                          .range(oscilloscope_quantity(26)));
 
-                i.channel(oscilloscope_channel(2)
-                              .label(oscilloscope_label("current"))
-                              .state(true)
-                              .attenuation(oscilloscope_quantity(10, "A"))
-                              .range(oscilloscope_quantity(40)));
+            i.channel(oscilloscope_channel(2)
+                          .label(oscilloscope_label("current"))
+                          .state(true)
+                          .attenuation(oscilloscope_quantity(10, "A"))
+                          .range(oscilloscope_quantity(40)));
 
-                i.channel(oscilloscope_channel(3)
-                              .label(oscilloscope_label("frame"))
-                              .state(true)
-                              .attenuation(oscilloscope_quantity(1, "V"))
-                              .range(oscilloscope_quantity(7)));
+            i.channel(oscilloscope_channel(3)
+                          .label(oscilloscope_label("frame"))
+                          .state(true)
+                          .attenuation(oscilloscope_quantity(1, "V"))
+                          .range(oscilloscope_quantity(7)));
 
 
-                i.trigger_position(oscilloscope_quantity(0.f, "ms"));
-                i.trigger(oscilloscope_edge_trigger("EXT")
-                              .level(5, oscilloscope_quantity(2000.0f, "mV"))
-                              .slope(oscilloscope_trigger_slope::rising)
-                              .mode(oscilloscope_trigger_mode::normal));
+            i.trigger_position(oscilloscope_quantity(0.f, "ms"));
+            i.trigger(oscilloscope_edge_trigger("EXT")
+                          .level(5, oscilloscope_quantity(2000.0f, "mV"))
+                          .slope(oscilloscope_trigger_slope::rising)
+                          .mode(oscilloscope_trigger_mode::normal));
 
-                i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
+            i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
 
-                /*std::cout << "RTX interface type: " << i.interface_type() << std::endl
-                          << "RTX status before acquire: " << i.status() << std::endl;*/
+            /*std::cout << "RTX interface type: " << i.interface_type() << std::endl
+                      << "RTX status before acquire: " << i.status() << std::endl;*/
 
-                i.operation_complete();
+            i.operation_complete();
 
-                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed setup");
+            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed setup");
 
-                //i.acquisition(oscilloscope_acquisition_state::single);
+            //i.acquisition(oscilloscope_acquisition_state::single);
 
-                //trigger_->SetBit(6, true);
-                //trigger_->SetBit(6, false);
+            //trigger_->SetBit(6, true);
+            //trigger_->SetBit(6, false);
 
-                //i.operation_complete();
+            //i.operation_complete();
 
-                //auto segment0_1 = i.data(1, oscilloscope_waveform_points::maximum);
-                ////i.clear();
-                //auto segment0_2 = i.data(2, oscilloscope_waveform_points::maximum);
+            //auto segment0_1 = i.data(1, oscilloscope_waveform_points::maximum);
+            ////i.clear();
+            //auto segment0_2 = i.data(2, oscilloscope_waveform_points::maximum);
 
-                //auto segment0_3 = i.data(3, oscilloscope_waveform_points::maximum);
+            //auto segment0_3 = i.data(3, oscilloscope_waveform_points::maximum);
 
-                //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
-                //std::ofstream out_file("channel_data_0.csv");
-                //for (size_t i = 0; i < segment0_1.record_length(); ++i) {
-                //    out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << "," << segment0_3.begin()[i]
-                //             << std::endl;
-                //}
-                //out_file.close();
-            }
-        } catch (std::exception& ex) {
-            core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
+            //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
+            //std::ofstream out_file("channel_data_0.csv");
+            //for (size_t i = 0; i < segment0_1.record_length(); ++i) {
+            //    out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << "," << segment0_3.begin()[i]
+            //             << std::endl;
+            //}
+            //out_file.close();
         }
-    };
-    auto m_thread = std::thread(m_func);
-    m_thread.detach();
+    } catch (std::exception& ex) {
+        core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
+    }
+    //};
+    //auto m_thread = std::thread(m_func);
+    //m_thread.detach();
 }
 
 void Power_Service::start_measurement() {
@@ -279,14 +288,17 @@ void Power_Service::start_measurement() {
     core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting measurement");
     auto m_func = [&]() -> void {
         try {
-            auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+            //auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
 
-            for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
-                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+            //for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+            for (auto& i : rtx_instr_) {
+                //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
 
-                rtx_instrument i(d);
+                //rtx_instrument i(d);
+                i.acquisition(oscilloscope_acquisition_state::single);
+            }
 
-                auto trigger = [&]() {
+                /*auto trigger = [&]() {
                     for (int i = 0; i < 100; ++i) {
                         trigger_->SetBit(6, true);
                         trigger_->SetBit(6, false);
@@ -294,9 +306,11 @@ void Power_Service::start_measurement() {
                     }
                 };
                 auto t_thread = std::thread(trigger);
-                t_thread.detach();
+                t_thread.detach();*/
+            trigger_->SetBit(6, true);
+            trigger_->SetBit(6, false);
 
-                i.acquisition(oscilloscope_acquisition_state::single);
+            for (auto& i : rtx_instr_) {
 
                 i.operation_complete();
 
