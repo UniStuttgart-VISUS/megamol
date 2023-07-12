@@ -14,6 +14,11 @@
 #include <fstream>
 #include <regex>
 #include <stdexcept>
+#include <numeric>
+
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
 
 #include "LuaCallbacksCollection.h"
 
@@ -48,6 +53,9 @@ Power_Service::~Power_Service() {
     // clean up raw pointers you allocated with new, which is bad practice and nobody does
 }
 
+static int measure_time_in_ms = 50;
+static int sample_count = 50000;
+
 bool Power_Service::init(void* configPtr) {
     if (configPtr == nullptr)
         return false;
@@ -76,17 +84,50 @@ bool Power_Service::init(void* configPtr) {
     m_requestedResourcesNames = {"RegisterLuaCallbacks"};
 
 
+    int64_t incr = std::chrono::nanoseconds(std::chrono::milliseconds(measure_time_in_ms)).count() / static_cast<int64_t>(sample_count);
+    int64_t start = (measure_time_in_ms / 10) * 1000 * 1000 * (-1);
+    sample_times_.resize(sample_count);
+    std::generate(sample_times_.begin(), sample_times_.end(), [&]() {
+        static int64_t i;
+        auto ret = start + i * incr;
+        ++i;
+        return ret;
+    });
+
+
     using namespace visus::power_overwhelming;
 
-    auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+    //setup_measurement();
 
-    for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
-        core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+    auto sensor_count = nvml_sensor::for_all(nullptr, 0);
+    std::vector<nvml_sensor> tmp_sensors(sensor_count);
+    nvml_sensor::for_all(tmp_sensors.data(), tmp_sensors.size());
 
-        rtx_instr_.emplace_back(d);
+    sensor_count = msr_sensor::for_all(nullptr, 0);
+    std::vector<msr_sensor> tmp_msr_sensors(sensor_count);
+    msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
+
+#ifdef MEGAMOL_USE_TRACY
+    for (auto& sensor : tmp_sensors) {
+        auto sensor_name_w = sensor.name();
+        char* sensor_name = new char[wcslen(sensor_name_w) + 1];
+        wcstombs(sensor_name, sensor_name_w, wcslen(sensor_name_w) + 1);
+        nvml_sensors_[std::string(sensor_name)] = std::move(sensor);
+        TracyPlotConfig(sensor_name, tracy::PlotFormatType::Number, false, true, 0);
+        delete[] sensor_name;
     }
-
-    setup_measurement();
+    for (auto& sensor : tmp_msr_sensors) {
+        auto sensor_name_w = sensor.name();
+        char* sensor_name = new char[wcslen(sensor_name_w) + 1];
+        wcstombs(sensor_name, sensor_name_w, wcslen(sensor_name_w) + 1);
+        msr_sensors_[std::string(sensor_name)] = std::move(sensor);
+        TracyPlotConfig(sensor_name, tracy::PlotFormatType::Number, false, true, 0);
+        delete[] sensor_name;
+    }
+    TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
+    TracyPlotConfig("A", tracy::PlotFormatType::Number, false, true, 0);
+    TracyPlotConfig("W", tracy::PlotFormatType::Number, false, true, 0);
+#endif
 
     //return init(*static_cast<Config*>(configPtr));
     return true;
@@ -199,6 +240,16 @@ void Power_Service::postGraphRender() {
     // swap buffers, glClear
     /*if (trigger_)
         trigger_->WriteLow();*/
+#ifdef MEGAMOL_USE_TRACY
+    for (auto& [name, sensor] : nvml_sensors_) {
+        auto val = sensor.sample_data();
+        TracyPlot(name.data(), val.power());
+    }
+    for (auto& [name, sensor] : msr_sensors_) {
+        auto val = sensor.sample_data();
+        TracyPlot(name.data(), val.power());
+    }
+#endif
 }
 
 void Power_Service::setup_measurement() {
@@ -206,6 +257,13 @@ void Power_Service::setup_measurement() {
     core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting setup");
     //auto m_func = [&]() -> void {
     try {
+        auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+
+        for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+
+            rtx_instr_.emplace_back(d);
+        }
         //auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
 
         //for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
@@ -219,7 +277,7 @@ void Power_Service::setup_measurement() {
             i.timeout(5000);
 
             i.reference_position(oscilloscope_reference_point::left);
-            i.time_range(oscilloscope_quantity(50, "ms"));
+            i.time_range(oscilloscope_quantity(measure_time_in_ms, "ms"));
 
             i.channel(oscilloscope_channel(1)
                           .label(oscilloscope_label("voltage"))
@@ -246,7 +304,7 @@ void Power_Service::setup_measurement() {
                           .slope(oscilloscope_trigger_slope::rising)
                           .mode(oscilloscope_trigger_mode::normal));
 
-            i.acquisition(oscilloscope_single_acquisition().points(50000).count(2).segmented(true));
+            i.acquisition(oscilloscope_single_acquisition().points(sample_count).count(2).segmented(true));
 
             /*std::cout << "RTX interface type: " << i.interface_type() << std::endl
                       << "RTX status before acquire: " << i.status() << std::endl;*/
@@ -320,8 +378,13 @@ void Power_Service::start_measurement() {
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
                 std::ofstream out_file("channel_data_0.csv");
                 for (size_t i = 0; i < segment0_1.record_length(); ++i) {
-                    out_file << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << "," << segment0_3.begin()[i]
+                    out_file << sample_times_[i] << "," << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << ","
+                             << segment0_3.begin()[i]
                              << std::endl;
+                    tracy::Profiler::PlotData("V", segment0_1.begin()[i], sample_times_[i] + trigger_offset_.count());
+                    tracy::Profiler::PlotData("A", segment0_2.begin()[i], sample_times_[i] + trigger_offset_.count());
+                    tracy::Profiler::PlotData(
+                        "W", segment0_1.begin()[i] * segment0_2.begin()[i], sample_times_[i] + trigger_offset_.count());
                 }
                 out_file.close();
 
@@ -336,6 +399,7 @@ void Power_Service::start_measurement() {
 }
 
 void Power_Service::trigger() {
+    trigger_offset_ = std::chrono::nanoseconds(__rdtsc());
     trigger_->SetBit(6, true);
     trigger_->SetBit(6, false);
 }

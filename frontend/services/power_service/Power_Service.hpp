@@ -9,6 +9,9 @@
 
 #ifdef MEGAMOL_USE_POWER
 
+#include <unordered_map>
+#include <chrono>
+
 #include "AbstractFrontendService.hpp"
 
 #include "ParallelPortTrigger.h"
@@ -16,6 +19,8 @@
 #include "PowerCallbacks.h"
 
 #include <power_overwhelming/rtx_instrument.h>
+#include <power_overwhelming/nvml_sensor.h>
+#include <power_overwhelming/msr_sensor.h>
 
 namespace megamol {
 namespace frontend {
@@ -174,6 +179,14 @@ private:
     frontend_resources::PowerCallbacks callbacks_;
 
     std::vector<visus::power_overwhelming::rtx_instrument> rtx_instr_;
+
+    std::unordered_map<std::string, visus::power_overwhelming::nvml_sensor> nvml_sensors_;
+
+    std::unordered_map<std::string, visus::power_overwhelming::msr_sensor> msr_sensors_;
+
+    std::chrono::nanoseconds trigger_offset_;
+
+    std::vector<int64_t> sample_times_;
 
     void setup_measurement();
 
