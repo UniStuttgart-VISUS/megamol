@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <system_error>
 
+#include "mmcore/utility/log/Log.h"
+
 namespace megamol::frontend {
 
 ParallelPortTrigger::ParallelPortTrigger(char const* path) {
@@ -16,7 +18,8 @@ void ParallelPortTrigger::Open(char const* path) {
 #ifdef WIN32
     this->handle_.reset(::CreateFileA(path, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (!this->handle_) {
-        throw std::system_error(::GetLastError(), std::system_category());
+        //throw std::system_error(::GetLastError(), std::system_category());
+        core::utility::log::Log::DefaultLog.WriteWarn("[ParallelPortTriger] Could not open parallel port %s", path);
     }
 #endif
 }
@@ -39,10 +42,12 @@ DWORD ParallelPortTrigger::Write(std::uint8_t data) {
     DWORD retval = 0;
 
 #ifdef WIN32
-    if (!::WriteFile(this->handle_.get(), &data, 1, &retval, nullptr)) {
-        throw std::system_error(::GetLastError(), std::system_category());
+    if (handle_) {
+        if (!::WriteFile(this->handle_.get(), &data, 1, &retval, nullptr)) {
+            throw std::system_error(::GetLastError(), std::system_category());
+        }
+        data_state_ = data;
     }
-    data_state_ = data;
 #endif
 
     return retval;
