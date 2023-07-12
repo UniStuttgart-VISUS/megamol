@@ -75,6 +75,19 @@ bool Power_Service::init(void* configPtr) {
 
     m_requestedResourcesNames = {"RegisterLuaCallbacks"};
 
+
+    using namespace visus::power_overwhelming;
+
+    auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
+
+    for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+        core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+
+        rtx_instr_.emplace_back(d);
+    }
+
+    setup_measurement();
+
     //return init(*static_cast<Config*>(configPtr));
     return true;
 }
@@ -89,18 +102,6 @@ bool Power_Service::init(const Config& config) {
         log_error("failed initialization because");
         return false;
     }*/
-    using namespace visus::power_overwhelming;
-
-    auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
-
-    for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
-        core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
-
-        rtx_instr_.emplace_back(d);
-    }
-
-    setup_measurement();
-
     log("initialized successfully");
     return true;
 }
@@ -223,7 +224,7 @@ void Power_Service::setup_measurement() {
             i.channel(oscilloscope_channel(1)
                           .label(oscilloscope_label("voltage"))
                           .state(true)
-                          .attenuation(oscilloscope_quantity(10, "V"))
+                          .attenuation(oscilloscope_quantity(1, "V"))
                           .range(oscilloscope_quantity(26)));
 
             i.channel(oscilloscope_channel(2)
@@ -296,7 +297,6 @@ void Power_Service::start_measurement() {
 
                 //rtx_instrument i(d);
                 i.acquisition(oscilloscope_acquisition_state::single);
-            }
 
                 /*auto trigger = [&]() {
                     for (int i = 0; i < 100; ++i) {
@@ -307,10 +307,7 @@ void Power_Service::start_measurement() {
                 };
                 auto t_thread = std::thread(trigger);
                 t_thread.detach();*/
-            trigger_->SetBit(6, true);
-            trigger_->SetBit(6, false);
 
-            for (auto& i : rtx_instr_) {
 
                 i.operation_complete();
 
@@ -338,6 +335,11 @@ void Power_Service::start_measurement() {
     m_thread.detach();
 }
 
+void Power_Service::trigger() {
+    trigger_->SetBit(6, true);
+    trigger_->SetBit(6, false);
+}
+
 void Power_Service::fill_lua_callbacks() {
     frontend_resources::LuaCallbacksCollection callbacks;
 
@@ -350,6 +352,12 @@ void Power_Service::fill_lua_callbacks() {
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerMeasure", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             start_measurement();
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
+        "mmPowerTrigger", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            trigger();
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 

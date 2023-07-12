@@ -179,6 +179,8 @@ private:
 
     void start_measurement();
 
+    void trigger();
+
     void fill_lua_callbacks();
 };
 
