@@ -12,9 +12,13 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <fstream>
+#include <numeric>
 #include <regex>
 #include <stdexcept>
-#include <numeric>
+
+#ifdef WIN32
+#include <Windows.h>
+#endif
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
@@ -84,7 +88,8 @@ bool Power_Service::init(void* configPtr) {
     m_requestedResourcesNames = {"RegisterLuaCallbacks"};
 
 
-    int64_t incr = std::chrono::nanoseconds(std::chrono::milliseconds(measure_time_in_ms)).count() / static_cast<int64_t>(sample_count);
+    int64_t incr = std::chrono::nanoseconds(std::chrono::milliseconds(measure_time_in_ms)).count() /
+                   static_cast<int64_t>(sample_count);
     int64_t start = (measure_time_in_ms / 10) * 1000 * 1000 * (-1);
     sample_times_.resize(sample_count);
     std::generate(sample_times_.begin(), sample_times_.end(), [&]() {
@@ -93,6 +98,23 @@ bool Power_Service::init(void* configPtr) {
         ++i;
         return ret;
     });
+
+    // begin tracy::Profiler::CalibrateTimer
+    std::atomic_signal_fence(std::memory_order_acq_rel);
+    const auto t0 = std::chrono::high_resolution_clock::now();
+    const auto r0 = __rdtsc();
+    std::atomic_signal_fence(std::memory_order_acq_rel);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::atomic_signal_fence(std::memory_order_acq_rel);
+    const auto t1 = std::chrono::high_resolution_clock::now();
+    const auto r1 = __rdtsc();
+    std::atomic_signal_fence(std::memory_order_acq_rel);
+
+    const auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+    const auto dr = r1 - r0;
+
+    timer_mul_ = double(dt) / double(dr);
+    // end tracy::Profiler::CalibrateTimer
 
 
     using namespace visus::power_overwhelming;
@@ -274,7 +296,7 @@ void Power_Service::setup_measurement() {
 
             i.synchronise_clock();
             i.reset(true, true);
-            i.timeout(5000);
+            i.timeout(10000);
 
             i.reference_position(oscilloscope_reference_point::left);
             i.time_range(oscilloscope_quantity(measure_time_in_ms, "ms"));
@@ -377,6 +399,8 @@ void Power_Service::start_measurement() {
 
                 auto t_begin = segment0_1.time_begin();
                 auto t_end = segment0_1.time_end();
+                core::utility::log::Log::DefaultLog.WriteInfo(
+                    "[Power_Service] Segment begin %f end %f", t_begin, t_end);
                 auto range = t_end - t_begin;
                 auto incr = range / static_cast<float>(segment0_1.record_length());
                 auto t_b_s = std::chrono::duration<float>(t_begin);
@@ -397,10 +421,12 @@ void Power_Service::start_measurement() {
                 for (size_t i = 0; i < segment0_1.record_length(); ++i) {
                     out_file << sample_times_[i] << "," << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << ","
                              << segment0_3.begin()[i] << std::endl;
-                    tracy::Profiler::PlotData("V", segment0_1.begin()[i], sample_times_[i] + trigger_offset_.count());
-                    tracy::Profiler::PlotData("A", segment0_2.begin()[i], sample_times_[i] + trigger_offset_.count());
-                    tracy::Profiler::PlotData(
-                        "W", segment0_1.begin()[i] * segment0_2.begin()[i], sample_times_[i] + trigger_offset_.count());
+                    tracy::Profiler::PlotData("V", segment0_1.begin()[i],
+                        static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
+                    tracy::Profiler::PlotData("A", segment0_2.begin()[i],
+                        static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
+                    tracy::Profiler::PlotData("W", segment0_1.begin()[i] * segment0_2.begin()[i],
+                        static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
                 }
                 out_file.close();
 
@@ -415,7 +441,19 @@ void Power_Service::start_measurement() {
 }
 
 void Power_Service::trigger() {
-    trigger_offset_ = std::chrono::nanoseconds(__rdtsc());
+#ifdef WIN32
+    trigger_offset_ = std::chrono::nanoseconds(static_cast<int64_t>(static_cast<double>(__rdtsc()) * timer_mul_));
+    /*core::utility::log::Log::DefaultLog.WriteInfo("RDTSC: %f", __rdtsc()*m_timerMul);
+    core::utility::log::Log::DefaultLog.WriteInfo("Tracy: %lld", tracy::Profiler::GetTime());
+    LARGE_INTEGER counter;
+    QueryPerformanceCounter(&counter);
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    auto cnt_ms = counter.QuadPart * 1000000;
+    cnt_ms /= frequency.QuadPart;
+    core::utility::log::Log::DefaultLog.WriteInfo("QPC Counter: %lld", counter.QuadPart);
+    core::utility::log::Log::DefaultLog.WriteInfo("QPC: %lld", cnt_ms*1000);*/
+#endif
     trigger_->SetBit(6, true);
     trigger_->SetBit(6, false);
 }

@@ -188,6 +188,8 @@ private:
 
     std::vector<int64_t> sample_times_;
 
+    double timer_mul_;
+
     void setup_measurement();
 
     void start_measurement();
