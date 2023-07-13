@@ -32,14 +32,22 @@ float ExpressionInterpreter::EvaluateFloat(const std::string& script, KeyTimeTyp
     //sol::table out_t = lua["out_tangent"];
     //out_t.clear();
     //out_t.add(in_tangent[0], in_tangent[1]);
-    const float res = lua.script(script);
-    return res;
+    try {
+        const float res = lua.script(script);
+        return res;
+    } catch (sol::error& e) {
+        return 0.0f;
+    }
 }
 
 std::string ExpressionInterpreter::EvaluateString(const std::string& script, KeyTimeType t) {
     lua.set("time", t);
-    std::string res = lua.script(script);
-    return res;
+    try {
+        std::string res = lua.script(script);
+        return res;
+    } catch (sol::error& e) {
+        return "";
+    }
 }
 
 FloatKey::ValueType FloatKey::InterpolateForTime(FloatKey first, FloatKey second, KeyTimeType time) {
