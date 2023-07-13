@@ -375,12 +375,28 @@ void Power_Service::start_measurement() {
 
                 auto segment0_3 = i.data(3, oscilloscope_waveform_points::maximum);
 
+                auto t_begin = segment0_1.time_begin();
+                auto t_end = segment0_1.time_end();
+                auto range = t_end - t_begin;
+                auto incr = range / static_cast<float>(segment0_1.record_length());
+                auto t_b_s = std::chrono::duration<float>(t_begin);
+                auto t_b_ns = std::chrono::round<std::chrono::nanoseconds>(t_b_s);
+                auto incr_s = std::chrono::duration<float>(incr);
+                auto incr_ns = std::chrono::round<std::chrono::nanoseconds>(incr_s);
+
+                sample_times_.resize(segment0_1.record_length());
+                std::generate(sample_times_.begin(), sample_times_.end(), [&]() {
+                    static int64_t i;
+                    auto ret = t_b_ns.count() + i * incr_ns.count();
+                    ++i;
+                    return ret;
+                });
+
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
                 std::ofstream out_file("channel_data_0.csv");
                 for (size_t i = 0; i < segment0_1.record_length(); ++i) {
                     out_file << sample_times_[i] << "," << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << ","
-                             << segment0_3.begin()[i]
-                             << std::endl;
+                             << segment0_3.begin()[i] << std::endl;
                     tracy::Profiler::PlotData("V", segment0_1.begin()[i], sample_times_[i] + trigger_offset_.count());
                     tracy::Profiler::PlotData("A", segment0_2.begin()[i], sample_times_[i] + trigger_offset_.count());
                     tracy::Profiler::PlotData(
