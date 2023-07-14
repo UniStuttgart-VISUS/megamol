@@ -168,6 +168,7 @@ bool OSPRaySphereGeometry::getExtends(megamol::core::Call& call) {
     (*cd)(1);
     this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
     this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
+    this->extendContainer.boundingBox->SetClipBox(cd->AccessBoundingBoxes().ObjectSpaceClipBox());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 
