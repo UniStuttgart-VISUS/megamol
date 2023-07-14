@@ -261,6 +261,10 @@ int main(const int argc, const char** argv) {
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
     const auto render_next_frame = [&]() -> bool {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedN("RenderNextFrame", 0x0000FF);
+#endif
+
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();
 
@@ -349,6 +353,9 @@ int main(const int argc, const char** argv) {
         }
 
     while (run_megamol) {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedNC("MainLoop", 0x0000FF);
+#endif
         run_megamol = render_next_frame();
     }
 
