@@ -11,6 +11,7 @@
 
 #ifdef MEGAMOL_USE_POWER
 
+#include <codecvt>
 #include <fstream>
 #include <numeric>
 #include <regex>
@@ -55,6 +56,12 @@ Power_Service::Power_Service() {
 
 Power_Service::~Power_Service() {
     // clean up raw pointers you allocated with new, which is bad practice and nobody does
+}
+
+std::string unmueller_string(wchar_t const* name) {
+    std::string no_mueller =
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));
+    return no_mueller;
 }
 
 static int measure_time_in_ms = 50;
@@ -122,7 +129,7 @@ bool Power_Service::init(void* configPtr) {
     //setup_measurement();
 
     auto sensor_count = nvml_sensor::for_all(nullptr, 0);
-    std::vector<nvml_sensor> tmp_sensors(sensor_count);
+    std::vector<visus::power_overwhelming::nvml_sensor> tmp_sensors(sensor_count);
     nvml_sensor::for_all(tmp_sensors.data(), tmp_sensors.size());
 
     sensor_count = msr_sensor::for_all(nullptr, 0);
@@ -131,20 +138,24 @@ bool Power_Service::init(void* configPtr) {
 
 #ifdef MEGAMOL_USE_TRACY
     for (auto& sensor : tmp_sensors) {
-        auto sensor_name_w = sensor.name();
-        char* sensor_name = new char[wcslen(sensor_name_w) + 1];
-        wcstombs(sensor_name, sensor_name_w, wcslen(sensor_name_w) + 1);
-        nvml_sensors_[std::string(sensor_name)] = std::move(sensor);
-        TracyPlotConfig(sensor_name, tracy::PlotFormatType::Number, false, true, 0);
-        delete[] sensor_name;
+        auto sensor_name = unmueller_string(sensor.name());
+        nvml_sensors_[sensor_name] = std::move(sensor);
+        TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+
+        sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+            auto name = unmueller_string(m.sensor());
+            TracyPlot(name.c_str(), m.power());
+        });
     }
     for (auto& sensor : tmp_msr_sensors) {
-        auto sensor_name_w = sensor.name();
-        char* sensor_name = new char[wcslen(sensor_name_w) + 1];
-        wcstombs(sensor_name, sensor_name_w, wcslen(sensor_name_w) + 1);
+        auto sensor_name = unmueller_string(sensor.name());
         msr_sensors_[std::string(sensor_name)] = std::move(sensor);
-        TracyPlotConfig(sensor_name, tracy::PlotFormatType::Number, false, true, 0);
-        delete[] sensor_name;
+        TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+
+        sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+            auto name = unmueller_string(m.sensor());
+            TracyPlot(name.c_str(), m.power());
+        });
     }
     TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("A", tracy::PlotFormatType::Number, false, true, 0);
@@ -263,16 +274,16 @@ void Power_Service::postGraphRender() {
     // swap buffers, glClear
     /*if (trigger_)
         trigger_->WriteLow();*/
-#ifdef MEGAMOL_USE_TRACY
-    for (auto& [name, sensor] : nvml_sensors_) {
-        auto val = sensor.sample_data();
-        TracyPlot(name.data(), val.power());
-    }
-    for (auto& [name, sensor] : msr_sensors_) {
-        auto val = sensor.sample_data();
-        TracyPlot(name.data(), val.power());
-    }
-#endif
+    //#ifdef MEGAMOL_USE_TRACY
+    //    for (auto& [name, sensor] : nvml_sensors_) {
+    //        auto val = sensor.sample_data();
+    //        TracyPlot(name.data(), val.power());
+    //    }
+    //    for (auto& [name, sensor] : msr_sensors_) {
+    //        auto val = sensor.sample_data();
+    //        TracyPlot(name.data(), val.power());
+    //    }
+    //#endif
 }
 
 void Power_Service::setup_measurement() {
