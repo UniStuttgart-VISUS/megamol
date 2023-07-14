@@ -143,6 +143,10 @@ bool Power_Service::init(void* configPtr) {
     std::vector<msr_sensor> tmp_msr_sensors(sensor_count);
     msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
 
+    sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
+    std::vector<tinkerforge_sensor> tmp_tinker_sensors(sensor_count);
+    tinkerforge_sensor::for_all(tmp_tinker_sensors.data(), tmp_tinker_sensors.size());
+
 #ifdef MEGAMOL_USE_TRACY
     for (auto& sensor : tmp_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
@@ -172,19 +176,38 @@ bool Power_Service::init(void* configPtr) {
 
         TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
 
-        sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+        /*sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
             auto name = unmueller_string(m.sensor());
             TracyPlot(name.c_str(), m.power());
-        });
+        });*/
 
         msr_sensors_[std::string(sensor_name)] = std::move(sensor);
+        //sensor_names_.push_back(sensor_name);
+        //msr_sensors_[sensor_name].sample(
+        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+        //        //auto name = unmueller_string(sensor->name());
+        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+        //    },
+        //    10Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
+    }
+    for (auto& sensor : tmp_tinker_sensors) {
+        auto sensor_name = unmueller_string(sensor.name());
+
+        TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
+
+        //sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+        //    auto name = unmueller_string(m.sensor());
+        //    TracyPlot(name.data(), m.power());
+        //});
+
+        tinker_sensors_[sensor_name] = std::move(sensor);
         sensor_names_.push_back(sensor_name);
-        nvml_sensors_[sensor_name].sample(
+        tinker_sensors_[sensor_name].sample(
             [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
                 //auto name = unmueller_string(sensor->name());
                 TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
             },
-            10Ui64, static_cast<void*>(sensor_names_.back().data()));
+            tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
     }
     TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("A", tracy::PlotFormatType::Number, false, true, 0);
@@ -303,16 +326,16 @@ void Power_Service::postGraphRender() {
     // swap buffers, glClear
     /*if (trigger_)
         trigger_->WriteLow();*/
-    /*#ifdef MEGAMOL_USE_TRACY
-        for (auto& [name, sensor] : nvml_sensors_) {
+    #ifdef MEGAMOL_USE_TRACY
+        /*for (auto& [name, sensor] : nvml_sensors_) {
             auto val = sensor.sample_data();
             TracyPlot(name.data(), val.power());
-        }
+        }*/
         for (auto& [name, sensor] : msr_sensors_) {
             auto val = sensor.sample_data();
             TracyPlot(name.data(), val.power());
         }
-    #endif*/
+    #endif
 }
 
 void Power_Service::setup_measurement() {

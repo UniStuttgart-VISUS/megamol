@@ -21,6 +21,7 @@
 #include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/nvml_sensor.h>
 #include <power_overwhelming/msr_sensor.h>
+#include <power_overwhelming/tinkerforge_sensor.h>
 
 namespace megamol {
 namespace frontend {
@@ -183,6 +184,8 @@ private:
     std::unordered_map<std::string, visus::power_overwhelming::nvml_sensor> nvml_sensors_;
 
     std::unordered_map<std::string, visus::power_overwhelming::msr_sensor> msr_sensors_;
+
+    std::unordered_map<std::string, visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
 
     std::chrono::nanoseconds trigger_offset_;
 
