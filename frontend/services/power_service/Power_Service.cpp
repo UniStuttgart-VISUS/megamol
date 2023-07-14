@@ -149,6 +149,11 @@ bool Power_Service::init(void* configPtr) {
     }
     for (auto& sensor : tmp_msr_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
+        if (sensor_name.find("package") != std::string::npos) {
+            if (sensor_name.find("msr/0/") == std::string::npos)
+                continue;
+        }
+
         msr_sensors_[std::string(sensor_name)] = std::move(sensor);
         TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
 
