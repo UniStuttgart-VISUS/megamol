@@ -149,6 +149,7 @@ bool Power_Service::init(void* configPtr) {
     TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("A", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("W", tracy::PlotFormatType::Number, false, true, 0);
+    TracyPlotConfig("Frame", tracy::PlotFormatType::Number, false, true, 0);
 #endif
 
     //return init(*static_cast<Config*>(configPtr));
@@ -426,6 +427,8 @@ void Power_Service::start_measurement() {
                     tracy::Profiler::PlotData("A", segment0_2.begin()[i],
                         static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
                     tracy::Profiler::PlotData("W", segment0_1.begin()[i] * segment0_2.begin()[i],
+                        static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
+                    tracy::Profiler::PlotData("Frame", segment0_3.begin()[i],
                         static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
                 }
                 out_file.close();
