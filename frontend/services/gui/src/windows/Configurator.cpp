@@ -175,8 +175,8 @@ void megamol::gui::Configurator::PopUps() {
     if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
         project_filename = graph_ptr->GetFilename();
     }
-    if (this->file_browser.PopUp_Load("Load Project", project_filename, this->open_popup_load, {"lua"},
-            megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
+    if (this->file_browser.PopUp_Load("Load Project", project_filename, this->open_popup_load,
+            FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_RestrictExtension, {"lua"}})) {
 
         popup_failed = !this->graph_collection.LoadOrAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;

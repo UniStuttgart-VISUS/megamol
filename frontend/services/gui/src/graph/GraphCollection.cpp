@@ -1866,9 +1866,9 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& o
     // Default for saving gui state and parameter values
     bool save_all_param_values = true;
     bool save_gui_state = false;
-    if (this->gui_file_browser.PopUp_Save("Save Configurator Project", project_filename, open_dialog, {"lua"},
-            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state,
-            save_all_param_values)) {
+    if (this->gui_file_browser.PopUp_Save("Save Configurator Project", project_filename, open_dialog,
+            FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"lua"}},
+            save_gui_state, save_all_param_values)) {
 
         std::string gui_state;
         if (save_gui_state) {

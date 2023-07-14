@@ -14,7 +14,9 @@
 #include "FrontendResource.h"
 #include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
+#include "MegaMolProject.h"
 #include "ModuleGraphSubscription.h"
+
 #include "mmcore/MegaMolGraphTypes.h"
 #include "mmcore/MegaMolGraph_Convenience.h"
 #include "mmcore/RootModuleNamespace.h"
@@ -135,6 +137,8 @@ private:
     // poke the rendering, collect the resulting View renderings and present them to the user appropriately
     std::list<Module::ptr_type> graph_entry_points;
     megamol::frontend_resources::ImagePresentationEntryPoints* m_image_presentation = nullptr;
+
+    megamol::frontend_resources::MegaMolProject* m_current_project_path = nullptr;
 
     MegaMolGraph_Convenience convenience_functions;
 

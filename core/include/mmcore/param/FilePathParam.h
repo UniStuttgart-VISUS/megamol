@@ -45,6 +45,8 @@ public:
      * @param flags The flags for the parameter
      * @param exts The required file extensions for the parameter
      */
+    FilePathParam(const std::filesystem::path& initVal, Flags_t flags, const Extensions_t& exts,
+        const std::filesystem::path& project_directory);
     FilePathParam(const std::filesystem::path& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
     FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
     FilePathParam(const char* initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
@@ -83,7 +85,7 @@ public:
      * @return The value of the parameter
      */
     std::filesystem::path Value() const {
-        return this->value;
+        return this->GetAbsolutePathValue(this->value);
     }
 
     /**
@@ -92,7 +94,7 @@ public:
      * @return The value of the parameter as string.
      */
     std::string ValueString() const override {
-        return this->value.generic_u8string();
+        return this->GetRelativePathValueString();
     }
 
     /**
@@ -113,25 +115,66 @@ public:
         return this->extensions;
     }
 
+    inline std::filesystem::path GetProjectDirectory() const {
+        return this->project_directory;
+    }
+
     /**
      * Function checks if path is valid for given flags
      *
      * @return Return 0 for success, flags with failed check otherwise.
      */
-    static Flags_t ValidatePath(const std::filesystem::path& p, const Extensions_t&, Flags_t f);
+    static Flags_t ValidatePath(
+        const std::filesystem::path& p, const Extensions_t&, Flags_t f, const std::filesystem::path& project_dir = "");
+
+
+    /**
+     * Adds absolute path to current project directory to the file path parameter.
+     * This way file paths relative to the project directory can be resolved.
+     */
+    void SetProjectDirectory(const std::filesystem::path& p);
+
+    /**
+     * Returns either the current path value if it is an absolute path,
+     * or concatinates project directory path and current path value if it is a relative path.
+     */
+    std::filesystem::path GetAbsolutePathValue(const std::filesystem::path& p) const;
+
+    /**
+     * Returns the current raw path value, which might be an absolute path in the file system
+     * or a path relative to some project directory
+     */
+    std::filesystem::path GetRelativePathValue() const {
+        return this->value;
+    }
+
+    /**
+     * Returns string of the current raw path value, which might be an absolute path in the file system
+     * or a path relative to some project directory.
+     * This is used by the serialization function of the MegaMolGraph to preserve relative paths of FilePathParams.
+     */
+    std::string GetRelativePathValueString() const {
+        return GetRelativePathValue().generic_u8string();
+    }
 
 private:
     /** The flags of the parameter */
-    const Flags_t flags;
+    Flags_t flags;
 
     /** The accepted file extension(s).
      * Leave empty to allow all extensions.
      * Only considered when Flag_RestrictExtension is set.
      */
-    const Extensions_t extensions;
+    Extensions_t extensions;
 
     /** The file or directory path */
     std::filesystem::path value;
+
+    /**
+     * Absolute path to project directory. If empty, no project path available.
+     * This path is absolute per guarantee of the frontend
+     */
+    std::filesystem::path project_directory;
 };
 
 

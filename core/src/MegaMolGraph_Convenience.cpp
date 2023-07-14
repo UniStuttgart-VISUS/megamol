@@ -74,16 +74,22 @@ std::string megamol::core::MegaMolGraph_Convenience::SerializeCalls() const {
 std::string megamol::core::MegaMolGraph_Convenience::SerializeModuleParameters(std::string const& module_name) const {
     std::string serParams;
 
+    auto parameter_serialization = [](std::string const& name, std::string const& value) {
+        return "mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n";
+    };
+
     for (auto& paramSlot : get(m_graph_ptr).EnumerateModuleParameterSlots(module_name)) {
-        // it seems serialiing button params is illegal
+        // it seems serializing button params is illegal
         if (auto* p_ptr = paramSlot->template Param<core::param::ButtonParam>()) {
             continue;
         }
+
         auto name = std::string{paramSlot->FullName()};
         // as FullName() prepends :: to module names, normalize multiple leading :: in parameter name path
         name = "::" + name.substr(name.find_first_not_of(':'));
+
         auto value = paramSlot->Parameter()->ValueString();
-        serParams.append("mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n");
+        serParams.append(parameter_serialization(name, value));
     }
 
     return serParams + '\n';

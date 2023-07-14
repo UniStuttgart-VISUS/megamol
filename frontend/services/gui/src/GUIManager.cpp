@@ -1142,8 +1142,8 @@ void megamol::gui::GUIManager::draw_popups() {
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
         ImGui::PushItemWidth(widget_width);
 
-        this->file_browser.Button_Select(this->gui_state.font_input_string_buffer, {"ttf"},
-            megamol::core::param::FilePathParam::Flag_File_RestrictExtension);
+        this->file_browser.Button_Select(this->gui_state.font_input_string_buffer,
+            FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_RestrictExtension, {"ttf"}});
         ImGui::SameLine();
         ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_input_string_buffer, ImGuiInputTextFlags_None);
         ImGui::PopItemWidth();
@@ -1261,9 +1261,9 @@ void megamol::gui::GUIManager::draw_popups() {
         // Default for saving gui state and parameter values
         bool save_all_param_values = true;
         bool save_gui_state = false;
-        if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save, {"lua"},
-                megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state,
-                save_all_param_values)) {
+        if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save,
+                FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"lua"}},
+                save_gui_state, save_all_param_values)) {
             std::string state_str;
             if (save_gui_state) {
                 state_str = this->project_to_lua_string(true);
@@ -1279,8 +1279,8 @@ void megamol::gui::GUIManager::draw_popups() {
     // Load project pop-up
     std::string filename;
     this->gui_state.open_popup_load |= this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"},
-            megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
+    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load,
+            FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_RestrictExtension, {"lua", "png"}})) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1290,8 +1290,9 @@ void megamol::gui::GUIManager::draw_popups() {
     // File name for screenshot pop-up
     auto dummy = false;
     if (this->file_browser.PopUp_Save("File Name for Screenshot", this->gui_state.screenshot_filepath,
-            this->gui_state.open_popup_screenshot, {"png"},
-            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, dummy, dummy)) {
+            this->gui_state.open_popup_screenshot,
+            FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"png"}}, dummy,
+            dummy)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 

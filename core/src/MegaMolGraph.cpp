@@ -10,6 +10,7 @@
 #include "ResourceRequest.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/String.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
@@ -476,6 +477,7 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
 
     auto [success, graph_resources] = provided_resources_lookup.get_requested_resources({
         "ImagePresentationEntryPoints",
+        "MegaMolProject",
     });
 
     if (!success)
@@ -483,6 +485,9 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
 
     m_image_presentation = &const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         graph_resources[0].getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+
+    m_current_project_path = &const_cast<megamol::frontend_resources::MegaMolProject&>(
+        graph_resources[1].getResource<megamol::frontend_resources::MegaMolProject>());
 
     return true;
 }
@@ -597,6 +602,23 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
     this->module_list_.push_front({module_ptr, request, false, module_resource_request, module_lifetime_dependencies});
 
     module_ptr->setParent(this->dummy_namespace);
+
+    // we want to enable filename parameters to open file paths relative to the current .lua project file
+    // for this to work we need to manually find FilePathParam parameters in created modules and tell them
+    // the current project directory path
+    if (m_current_project_path->attributes.has_value()) {
+        auto project_directory_path = m_current_project_path->attributes.value().project_directory;
+
+        for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
+            auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
+            if (ps != nullptr) {
+                auto p = ps->Param<param::FilePathParam>();
+                if (p != nullptr) {
+                    p->SetProjectDirectory(project_directory_path);
+                }
+            }
+        }
+    }
 
     const auto create_module = [module_description, module_ptr](auto& module_lifetime_dependencies) {
         const bool init_ok =
