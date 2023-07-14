@@ -61,11 +61,18 @@ Power_Service::~Power_Service() {
 std::string unmueller_string(wchar_t const* name) {
     std::string no_mueller =
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));
+
+    /*char* sensor_name = new char[wcslen(name) + 1];
+    wcstombs(sensor_name, name, wcslen(name) + 1);
+    std::string no_mueller(sensor_name);
+    delete[] sensor_name;*/
     return no_mueller;
 }
 
 static int measure_time_in_ms = 50;
 static int sample_count = 50000;
+
+void test_func(const visus::power_overwhelming::measurement& m, void*, std::string const&) {}
 
 bool Power_Service::init(void* configPtr) {
     if (configPtr == nullptr)
@@ -139,13 +146,22 @@ bool Power_Service::init(void* configPtr) {
 #ifdef MEGAMOL_USE_TRACY
     for (auto& sensor : tmp_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
-        nvml_sensors_[sensor_name] = std::move(sensor);
-        TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
 
-        sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
-            auto name = unmueller_string(m.sensor());
-            TracyPlot(name.c_str(), m.power());
-        });
+        TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
+
+        //sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+        //    auto name = unmueller_string(m.sensor());
+        //    TracyPlot(name.data(), m.power());
+        //});
+
+        nvml_sensors_[sensor_name] = std::move(sensor);
+        sensor_names_.push_back(sensor_name);
+        nvml_sensors_[sensor_name].sample(
+            [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+                //auto name = unmueller_string(sensor->name());
+                TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+            },
+            10Ui64, static_cast<void*>(sensor_names_.back().data()));
     }
     for (auto& sensor : tmp_msr_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
@@ -154,13 +170,21 @@ bool Power_Service::init(void* configPtr) {
                 continue;
         }
 
-        msr_sensors_[std::string(sensor_name)] = std::move(sensor);
         TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
 
         sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
             auto name = unmueller_string(m.sensor());
             TracyPlot(name.c_str(), m.power());
         });
+
+        msr_sensors_[std::string(sensor_name)] = std::move(sensor);
+        sensor_names_.push_back(sensor_name);
+        nvml_sensors_[sensor_name].sample(
+            [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+                //auto name = unmueller_string(sensor->name());
+                TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+            },
+            10Ui64, static_cast<void*>(sensor_names_.back().data()));
     }
     TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("A", tracy::PlotFormatType::Number, false, true, 0);
@@ -279,16 +303,16 @@ void Power_Service::postGraphRender() {
     // swap buffers, glClear
     /*if (trigger_)
         trigger_->WriteLow();*/
-    //#ifdef MEGAMOL_USE_TRACY
-    //    for (auto& [name, sensor] : nvml_sensors_) {
-    //        auto val = sensor.sample_data();
-    //        TracyPlot(name.data(), val.power());
-    //    }
-    //    for (auto& [name, sensor] : msr_sensors_) {
-    //        auto val = sensor.sample_data();
-    //        TracyPlot(name.data(), val.power());
-    //    }
-    //#endif
+    /*#ifdef MEGAMOL_USE_TRACY
+        for (auto& [name, sensor] : nvml_sensors_) {
+            auto val = sensor.sample_data();
+            TracyPlot(name.data(), val.power());
+        }
+        for (auto& [name, sensor] : msr_sensors_) {
+            auto val = sensor.sample_data();
+            TracyPlot(name.data(), val.power());
+        }
+    #endif*/
 }
 
 void Power_Service::setup_measurement() {

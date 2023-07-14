@@ -188,6 +188,8 @@ private:
 
     std::vector<int64_t> sample_times_;
 
+    std::vector<std::string> sensor_names_;
+
     double timer_mul_;
 
     void setup_measurement();
