@@ -46,6 +46,7 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer()
         // scivis renderer parameters
         , _AOsamples("SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion")
         , _AOdistance("SciVis::AOdistance", "Maximum distance to consider for ambient occlusion")
+        , _volumeSamplingRate("SciVis::volumeSamplingRate", "Sampling rate for volumes")
         // pathtracer renderer parameters
         , _rd_ptBackground(
               "PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity")
@@ -66,9 +67,11 @@ AbstractOSPRayRenderer::AbstractOSPRayRenderer()
     // Ambient parameters
     this->_AOsamples << new core::param::IntParam(1);
     this->_AOdistance << new core::param::FloatParam(1e20f);
+    this->_volumeSamplingRate << new core::param::FloatParam(1.f, 0.f);
     this->_accumulateSlot << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->_AOsamples);
     this->MakeSlotAvailable(&this->_AOdistance);
+    this->MakeSlotAvailable(&this->_volumeSamplingRate);
     this->MakeSlotAvailable(&this->_accumulateSlot);
 
 
@@ -233,9 +236,10 @@ void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
 }
 
 bool AbstractOSPRayRenderer::AbstractIsDirty() {
-    if (this->_AOsamples.IsDirty() || this->_AOdistance.IsDirty() || this->_accumulateSlot.IsDirty() ||
-        this->_shadows.IsDirty() || this->_rd_type.IsDirty() || this->_rd_spp.IsDirty() ||
-        this->_rd_maxRecursion.IsDirty() || this->_rd_ptBackground.IsDirty() || this->_useDB.IsDirty()) {
+    if (this->_AOsamples.IsDirty() || this->_AOdistance.IsDirty() || this->_volumeSamplingRate.IsDirty() ||
+        this->_accumulateSlot.IsDirty() || this->_shadows.IsDirty() || this->_rd_type.IsDirty() ||
+        this->_rd_spp.IsDirty() || this->_rd_maxRecursion.IsDirty() || this->_rd_ptBackground.IsDirty() ||
+        this->_useDB.IsDirty()) {
         return true;
     } else {
         return false;
@@ -245,6 +249,7 @@ bool AbstractOSPRayRenderer::AbstractIsDirty() {
 void AbstractOSPRayRenderer::AbstractResetDirty() {
     this->_AOsamples.ResetDirty();
     this->_AOdistance.ResetDirty();
+    this->_volumeSamplingRate.ResetDirty();
     this->_accumulateSlot.ResetDirty();
     this->_shadows.ResetDirty();
     this->_rd_type.ResetDirty();
@@ -367,6 +372,7 @@ void AbstractOSPRayRenderer::RendererSettings(glm::vec4 bg_color) {
         _renderer->setParam("aoSamples", this->_AOsamples.Param<core::param::IntParam>()->Value());
         _renderer->setParam("shadows", this->_shadows.Param<core::param::BoolParam>()->Value());
         _renderer->setParam("aoDistance", this->_AOdistance.Param<core::param::FloatParam>()->Value());
+        _renderer->setParam("volumeSamplingRate", this->_volumeSamplingRate.Param<core::param::FloatParam>()->Value());
         break;
     case PATHTRACER:
         _renderer->setParam("backgroundRefraction", true);
