@@ -237,9 +237,9 @@ void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
 
 bool AbstractOSPRayRenderer::AbstractIsDirty() {
     if (this->_AOsamples.IsDirty() || this->_AOdistance.IsDirty() || this->_volumeSamplingRate.IsDirty() ||
-        this->_accumulateSlot.IsDirty() ||
-        this->_shadows.IsDirty() || this->_rd_type.IsDirty() || this->_rd_spp.IsDirty() ||
-        this->_rd_maxRecursion.IsDirty() || this->_rd_ptBackground.IsDirty() || this->_useDB.IsDirty()) {
+        this->_accumulateSlot.IsDirty() || this->_shadows.IsDirty() || this->_rd_type.IsDirty() ||
+        this->_rd_spp.IsDirty() || this->_rd_maxRecursion.IsDirty() || this->_rd_ptBackground.IsDirty() ||
+        this->_useDB.IsDirty()) {
         return true;
     } else {
         return false;
