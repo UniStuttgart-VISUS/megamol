@@ -5,8 +5,8 @@ layout(location = 1) in float nodeType;
 
 out vec4 fragColor;
 
-bool is_approx(float ref, float val, float margin = 0.1) {
-    return val < ref + margin && val > ref - margin;
+bool is_approx(float ref, float val) {
+    return val < ref + 0.1 && val > ref - 0.1;
 }
 
 void main() {
