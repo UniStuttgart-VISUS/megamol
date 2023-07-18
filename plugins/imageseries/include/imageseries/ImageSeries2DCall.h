@@ -4,8 +4,8 @@
 #include <memory>
 
 #include "imageseries/AsyncImageData2D.h"
-#include "mmstd/data/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 namespace megamol::ImageSeries {
 

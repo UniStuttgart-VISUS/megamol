@@ -150,7 +150,7 @@ ImageSamplingFilter::ImagePtr ImageSamplingFilter::operator()() {
                 neighbor_max = std::numeric_limits<std::uint16_t>::max();
             }
 
-            std::uint16_t newValue = mapOut[representative] + (-mod)/*((mod >= exponent) ? (range - mod) : (-mod))*/;
+            std::uint16_t newValue = mapOut[representative] + (-mod) /*((mod >= exponent) ? (range - mod) : (-mod))*/;
             newValue = std::max(neighbor_min, newValue);
             newValue = std::min(neighbor_max, newValue);
 

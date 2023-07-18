@@ -20,7 +20,7 @@ public:
     ~AsyncFilterRunner();
 
     template<typename Filter, typename... Args>
-        std::shared_ptr<const AsyncImageData> run(Args&&... args) {
+    std::shared_ptr<const AsyncImageData> run(Args&&... args) {
         std::shared_ptr<Filter> filter = std::make_shared<Filter>(std::forward<Args>(args)...);
         return runFunction([filter]() { return (*filter)(); }, filter->getMetadata());
     }

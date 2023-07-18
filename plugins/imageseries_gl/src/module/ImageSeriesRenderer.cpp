@@ -88,13 +88,12 @@ ImageSeriesRenderer::~ImageSeriesRenderer() {
 }
 
 bool ImageSeriesRenderer::create() {
-    auto const shader_options = core::utility::make_path_shader_options(
-        frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         display = std::make_unique<ImageDisplay2D>(msf::ShaderFactoryOptionsOpenGL(shader_options));
-    }
-    catch (const std::exception& ex) {
+    } catch (const std::exception& ex) {
         core::utility::log::Log::DefaultLog.WriteError(ex.what());
 
         return false;

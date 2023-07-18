@@ -1,12 +1,12 @@
 #include "ImageSeriesLabeler.h"
 #include "imageseries/ImageSeries2DCall.h"
 
-#include "vislib/graphics/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 
 #include "../filter/BlobLabelFilter.h"
 #include "imageseries/util/ImageUtils.h"

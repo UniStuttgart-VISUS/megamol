@@ -9,9 +9,9 @@
 #include <cstdint>
 #include <limits>
 #include <map>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
-#include <type_traits>
 #include <vector>
 
 namespace {

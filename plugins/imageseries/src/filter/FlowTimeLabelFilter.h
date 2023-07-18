@@ -106,9 +106,7 @@ private:
 
     void computeVelocities(graph::GraphData2D& nodeGraph, Index domainWidth) const;
 
-    enum class hausdorff_direction {
-        both, forward, backward
-    };
+    enum class hausdorff_direction { both, forward, backward };
 
     float computeHausdorffDistance(const std::vector<Index>& source, const std::vector<Index>& target,
         hausdorff_direction direction, Index domainWidth) const;
@@ -124,7 +122,7 @@ struct hash<std::shared_ptr<const megamol::ImageSeries::graph::GraphData2D>> {
     std::size_t operator()(std::shared_ptr<const megamol::ImageSeries::graph::GraphData2D> graphData) const {
         return graphData
                    ? megamol::ImageSeries::util::computeHash(graphData->getNodes().size(), graphData->getEdges().size())
-                         : 0;
+                   : 0;
     }
 };
 

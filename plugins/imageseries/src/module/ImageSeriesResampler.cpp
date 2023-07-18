@@ -120,9 +120,9 @@ bool ImageSeriesResampler::getDataCallback(core::Call& caller) {
                     if (cachedTransformMatrix != glm::mat3x2(1, 0, 0, 1, 0, 0)) {
                         output.imageData =
                             imageCache.findOrCreate(output.getHash(), [&](typename AsyncImageData2D<>::Hash) {
-                            return filterRunner->run<filter::TransformationFilter>(
-                                output.imageData, cachedTransformMatrix);
-                        });
+                                return filterRunner->run<filter::TransformationFilter>(
+                                    output.imageData, cachedTransformMatrix);
+                            });
                     }
                 }
 

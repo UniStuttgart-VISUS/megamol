@@ -26,15 +26,12 @@ bool exportToGDF(const GraphData2D& graph, const std::string& outfileName, GDFEx
         idToNum[node.getID()] = i;
 
         if (!(meta.stopAtBreakthrough && node.getFrameIndex() > meta.breakthroughTime)) {
-            file << "s" << i++ << ","
-                 << node.getFrameIndex() << ","
-                 << (node.centerOfMass.y == 0.0 ? "true" : "false") << ","
-                 << "'Time: " << node.getFrameIndex() << "',"
-                 << node.centerOfMass.x << "," << -node.centerOfMass.y << "," // original position loaded, e.g., in Gephi
+            file << "s" << i++ << "," << node.getFrameIndex() << "," << (node.centerOfMass.y == 0.0 ? "true" : "false")
+                 << ","
+                 << "'Time: " << node.getFrameIndex() << "'," << node.centerOfMass.x << "," << -node.centerOfMass.y
+                 << "," // original position loaded, e.g., in Gephi
                  << node.centerOfMass.x << "," << -node.centerOfMass.y << "," // same position as "backup"
-                 << node.velocityMagnitude << ","
-                 << node.area << ","
-                 << node.getEdgeCountIn() << ","
+                 << node.velocityMagnitude << "," << node.area << "," << node.getEdgeCountIn() << ","
                  << node.getEdgeCountOut() << "\n";
         }
     }
@@ -42,13 +39,12 @@ bool exportToGDF(const GraphData2D& graph, const std::string& outfileName, GDFEx
     file << "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN,weight DOUBLE,velocity DOUBLE\n";
     for (auto& edge : graph.getEdges()) {
         if (!(meta.stopAtBreakthrough && (graph.getNode(edge.from).getFrameIndex() > meta.breakthroughTime ||
-                graph.getNode(edge.to).getFrameIndex() > meta.breakthroughTime))) {
+                                             graph.getNode(edge.to).getFrameIndex() > meta.breakthroughTime))) {
 
             file << "s" << idToNum.at(edge.from) << ","
                  << "s" << idToNum.at(edge.to) << ","
-                 << "true" << ","
-                 << edge.velocity << "," 
-                 << edge.velocity << "\n";
+                 << "true"
+                 << "," << edge.velocity << "," << edge.velocity << "\n";
         }
     }
 

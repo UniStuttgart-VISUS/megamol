@@ -211,7 +211,8 @@ bool ImageDisplay2D::updateGraph(
                 std::vector{graph_node_vertices.size() * sizeof(glm::vec2)}, node_vertexLayout, node_indices.data(),
                 node_indices.size() * sizeof(uint32_t), GL_UNSIGNED_INT, GL_POINTS, GL_STATIC_DRAW);
         } catch (const std::exception& ex) {
-            core::utility::log::Log::DefaultLog.WriteError("ImageDisplay2D - Error creating buffer for node vertices:\n%s", ex.what());
+            core::utility::log::Log::DefaultLog.WriteError(
+                "ImageDisplay2D - Error creating buffer for node vertices:\n%s", ex.what());
         }
 
         node_mesh->bindVertexArray();

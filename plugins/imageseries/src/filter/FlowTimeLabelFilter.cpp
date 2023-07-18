@@ -7,20 +7,20 @@
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/graphics/PngBitmapCodec.h"
 
-#include "../util/GraphLuaExporter.h"
 #include "../util/GraphGDFExporter.h"
+#include "../util/GraphLuaExporter.h"
 
 #include <glm/gtx/transform.hpp>
 
 #include <array>
+#include <cmath>
 #include <deque>
 #include <filesystem>
 #include <iostream>
 #include <limits>
 #include <list>
-#include <cmath>
-#include <regex>
 #include <map>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <unordered_set>
@@ -155,7 +155,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                         current_region.interfaces[dataIn[neighborIndex]].insert(neighborIndex);
 
                         if (interface_output == interface_t::full) {
-                            interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] = current_region.getFrameIndex();
+                            interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] =
+                                current_region.getFrameIndex();
                         }
                     }
 
@@ -193,7 +194,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     if (next_label > LabelMaximum) {
-        core::utility::log::Log::DefaultLog.WriteError("[FlowTimeLabelFilter]: Too many labels! Consider denoising the input images.");
+        core::utility::log::Log::DefaultLog.WriteError(
+            "[FlowTimeLabelFilter]: Too many labels! Consider denoising the input images.");
 
         // return black image and empty graph
         auto output = std::make_shared<Output>();
@@ -584,8 +586,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                 fixedGraph, (input.outputPath / "graph_1_fixed.lua").string(), luaExportMeta, fixedGraphDistribution);
             graph::util::exportToLua(simplifiedGraph, (input.outputPath / "graph_2_simplified.lua").string(),
                 luaExportMeta, simplifiedGraphDistribution);
-            graph::util::exportToLua(layoutedGraph, (input.outputPath / "graph_3_layouted.lua").string(),
-                luaExportMeta, simplifiedGraphDistribution);
+            graph::util::exportToLua(layoutedGraph, (input.outputPath / "graph_3_layouted.lua").string(), luaExportMeta,
+                simplifiedGraphDistribution);
 
             graph::util::GDFExportMeta gdfExportMeta;
             gdfExportMeta.startTime = startTime;
@@ -955,7 +957,8 @@ void FlowTimeLabelFilter::removeTrivialNodes(graph::GraphData2D& nodeGraph, Labe
 
             graph::GraphData2D::Edge edge(parentID, childID);
             edge.weight = nodeGraph.getEdge(parentID, nodeID).weight + nodeGraph.getEdge(nodeID, childID).weight;
-            edge.velocity = 0.5f * (nodeGraph.getEdge(parentID, nodeID).velocity + nodeGraph.getEdge(nodeID, childID).velocity);
+            edge.velocity =
+                0.5f * (nodeGraph.getEdge(parentID, nodeID).velocity + nodeGraph.getEdge(nodeID, childID).velocity);
 
             nodeGraph.addEdge(edge);
         }
@@ -1201,18 +1204,18 @@ void FlowTimeLabelFilter::layoutMainChannel(
         const std::function<void(graph::GraphData2D::NodeID, graph::GraphData2D::NodeID)> updateSubGraph =
             [&nodeGraph, &currentPos, &translation, &rotationMatrix, &updateSubGraph](
                 const graph::GraphData2D::NodeID currentNodeID, const graph::GraphData2D::NodeID exclude) {
+                auto& currentNode = nodeGraph.getNode(currentNodeID);
+                currentNode.centerOfMass =
+                    glm::vec2(rotationMatrix * (currentNode.centerOfMass - currentPos)) + currentPos;
+                currentNode.centerOfMass += translation;
 
-            auto& currentNode = nodeGraph.getNode(currentNodeID);
-            currentNode.centerOfMass = glm::vec2(rotationMatrix * (currentNode.centerOfMass - currentPos)) + currentPos;
-            currentNode.centerOfMass += translation;
-
-            const auto& children = currentNode.getChildNodes(); // Does not work for cyclic stuff
-            for (const auto child : children) {
-                if (child != exclude) {
-                    updateSubGraph(child, exclude);
+                const auto& children = currentNode.getChildNodes(); // Does not work for cyclic stuff
+                for (const auto child : children) {
+                    if (child != exclude) {
+                        updateSubGraph(child, exclude);
+                    }
                 }
-            }
-        };
+            };
 
         updateSubGraph(mainChannel[i], i > 0 ? mainChannel[i - 1] : -1);
     }

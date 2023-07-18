@@ -3,12 +3,12 @@
 #include "imageseries/graph/GraphData2DCall.h"
 #include "imageseries/util/AsyncData.h"
 
-#include "vislib/graphics/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 
 #include "../filter/FlowTimeLabelFilter.h"
 #include "imageseries/util/ImageUtils.h"

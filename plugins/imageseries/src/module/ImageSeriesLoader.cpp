@@ -4,11 +4,11 @@
 #include "../filter/AsyncFilterRunner.h"
 #include "../filter/ImageLoadFilter.h"
 
-#include "vislib/graphics/PngBitmapCodec.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 
 #include <charconv>
 #include <filesystem>
@@ -213,8 +213,7 @@ double ImageSeriesLoader::frameIndexToTimestamp(std::size_t index) const {
     return outputPrototype.minimumTime + (index / limit) * (outputPrototype.maximumTime - outputPrototype.minimumTime);
 }
 
-std::shared_ptr<vislib::graphics::BitmapImage> ImageSeriesLoader::loadImageFile(
-    const std::string& path) const {
+std::shared_ptr<vislib::graphics::BitmapImage> ImageSeriesLoader::loadImageFile(const std::string& path) const {
 
     const auto* filename = path.c_str();
     try {
@@ -224,8 +223,8 @@ std::shared_ptr<vislib::graphics::BitmapImage> ImageSeriesLoader::loadImageFile(
         }
         return img;
     } catch (vislib::Exception& ex) {
-        Log::DefaultLog.WriteError("Unable to load image '%s': %s (%s, %d)\n", filename, ex.GetMsgA(),
-            ex.GetFile(), ex.GetLine());
+        Log::DefaultLog.WriteError(
+            "Unable to load image '%s': %s (%s, %d)\n", filename, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
     } catch (...) {
         Log::DefaultLog.WriteError("Unable to load image '%s': unexpected exception\n", filename);
     }

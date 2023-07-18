@@ -3,8 +3,8 @@
 
 #include "GraphData2D.h"
 
-#include "mmstd/data/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 #include "glm/mat3x2.hpp"
 

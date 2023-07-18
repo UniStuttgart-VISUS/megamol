@@ -112,8 +112,7 @@ private:
         AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>
         imageCache;
 
-    std::unique_ptr<filter::AsyncFilterRunner<AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>>
-        filterRunner;
+    std::unique_ptr<filter::AsyncFilterRunner<AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>> filterRunner;
 };
 
 } // namespace megamol::ImageSeries

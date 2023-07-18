@@ -2,6 +2,4 @@
 
 #include "vislib/graphics/BitmapImage.h"
 
-namespace megamol::ImageSeries {
-
-} // namespace megamol::ImageSeries
+namespace megamol::ImageSeries {} // namespace megamol::ImageSeries

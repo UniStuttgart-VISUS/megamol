@@ -113,7 +113,7 @@ private:
     core::param::ParamSlot highlightValue;
     core::param::ParamSlot highlightColor;
 
-    core::param::ParamSlot autoSave; 
+    core::param::ParamSlot autoSave;
     core::param::ParamSlot outputPathParam;
 
     ImageSeries2DCall::Output metadata;
