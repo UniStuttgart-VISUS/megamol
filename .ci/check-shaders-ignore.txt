@@ -30,3 +30,4 @@ plugins/probe_gl/shaders/probes/dfr_probeDetailView.frag.glsl
 plugins/protein_cuda/shaders/*
 plugins/protein_gl/shaders/*
 plugins/pwdemos_gl/shaders/*
+plugins/test_gl/shaders/test_gl/srtest/*

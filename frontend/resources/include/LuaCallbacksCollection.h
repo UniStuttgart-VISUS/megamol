@@ -9,9 +9,14 @@
 
 #include <functional>
 #include <list>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <type_traits>
+
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
 
 namespace megamol::frontend_resources {
 
@@ -69,12 +74,24 @@ struct LuaCallbacksCollection {
 
     template<typename ReturnType, typename FuncType, typename... FuncArgs, size_t... I>
     ReturnType unpack(LuaState state, FuncType func, std::tuple<FuncArgs...> tuple, std::index_sequence<I...>) {
+#ifdef MEGAMOL_USE_TRACY
+        std::ostringstream stream;
+        if constexpr (sizeof...(FuncArgs) > 0) {
+            ((stream << state.read<typename std::tuple_element<I, std::tuple<FuncArgs...>>::type>(I + 1) << ", "), ...);
+        }
+        ZoneScopedC(0xA6963B);
+        ZoneName(stream.str().c_str(), stream.str().size());
+#endif
         return func(state.read<typename std::tuple_element<I, std::tuple<FuncArgs...>>::type>(I + 1)...);
     }
 
     template<typename FuncType, typename Result, typename... FuncArgs>
     std::function<int(LuaState)> resolve(std::string func_name, FuncType func) {
         return [=](LuaState state) -> int {
+#ifdef MEGAMOL_USE_TRACY
+            ZoneScopedC(0xA6963B);
+            ZoneName(func_name.c_str(), func_name.size());
+#endif
             if (sizeof...(FuncArgs) != state.stack_size()) {
                 // if no function arguments given, cant expand FuncArgs during compile time - need to catch that case
                 std::string args;

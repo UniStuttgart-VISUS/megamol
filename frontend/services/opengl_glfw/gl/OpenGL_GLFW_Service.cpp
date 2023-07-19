@@ -37,6 +37,10 @@
 #endif
 #endif
 
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/TracyOpenGL.hpp>
+#endif
+
 static const std::string service_name = "OpenGL_GLFW_Service: ";
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
@@ -289,6 +293,10 @@ void megamol::frontend_resources::WindowManipulation::set_swap_interval(const un
 
 void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
     glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
+#ifdef MEGAMOL_USE_TRACY
+    TracyGpuCollect;
+    FrameMark;
+#endif
 }
 
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
@@ -510,6 +518,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         "\n\tVendor:   " + reinterpret_cast<const char*>(glGetString(GL_VENDOR)) +
         "\n\tRenderer: " + reinterpret_cast<const char*>(glGetString(GL_RENDERER)) +
         "\n\tGLSL:     " + reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+
+#ifdef MEGAMOL_USE_TRACY
+    TracyGpuContext;
+#endif
 
     if (m_pimpl->config.enableKHRDebug) {
         glEnable(GL_DEBUG_OUTPUT);

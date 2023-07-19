@@ -158,6 +158,7 @@ protected:
     // Interface Variables
     core::param::ParamSlot _AOsamples;
     core::param::ParamSlot _AOdistance;
+    core::param::ParamSlot _volumeSamplingRate;
     core::param::ParamSlot _accumulateSlot;
 
     core::param::ParamSlot _rd_spp;

@@ -168,6 +168,7 @@
         {
           "name": "tracy",
           "features": [
+            "cli-tools",
             "gui-tools"
           ]
         }
