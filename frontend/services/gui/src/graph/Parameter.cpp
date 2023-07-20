@@ -2025,7 +2025,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
 
     if (this->tf_use_external_editor) {
         if (this->tf_editor_external_ptr != nullptr) {
-            param_externally_connected = this->tf_editor_external_ptr->IsParameterConnected();
+            param_externally_connected = this->tf_editor_external_ptr->IsSpecificParameterConnected(this);
         }
     }
 
@@ -2059,6 +2059,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             this->tf_show_editor = false;
         }
         gui_utils::PopReadOnly((this->tf_editor_external_ptr == nullptr));
+
         if (this->tf_use_external_editor && (this->tf_editor_external_ptr != nullptr)) {
             ImGui::SameLine();
             gui_utils::PushReadOnly(param_externally_connected);

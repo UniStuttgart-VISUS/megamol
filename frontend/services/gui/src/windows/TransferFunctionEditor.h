@@ -86,7 +86,11 @@ public:
         this->flip_legend = vertical;
     }
 
-    bool IsParameterConnected() const {
+    bool IsSpecificParameterConnected(Parameter* calling_param) const {
+        return (this->connected_parameter_ptr == calling_param);
+    }
+
+    bool IsAnyParameterConnected() const {
         return (this->connected_parameter_ptr != nullptr);
     }
 
