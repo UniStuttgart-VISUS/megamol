@@ -111,6 +111,16 @@ bool VoxelGenerator::getMetadataCallback(core::Call& call) {
     int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
     metadata.Resolution[0] = vol_size; // TODO?
     metadata.MemLoc = MemoryLocation::VRAM;
+    if (!(*particle_call)(0)) {
+        return false;
+    }
+    auto cbox = particle_call->AccessBoundingBoxes().ClipBox();
+    auto orig = cbox.GetOrigin();
+    auto size = cbox.GetSize();
+    for (int d = 0; d < 3; ++d) {
+        metadata.Origin[d] = orig[d];
+        metadata.Extents[d] = size[d];
+    }
 
     volume_call->SetMetadata(&metadata);
 
