@@ -110,6 +110,17 @@ public:
         }
     }
 
+    bool IsGUIHighlight() const {
+        return gui_presentation.IsHighlight();
+    }
+
+    void SetGUIHighlight(bool highlight) {
+        if (gui_presentation.IsHighlight() != highlight) {
+            gui_presentation.SetHighlight(highlight);
+            indicatePresentationChange();
+        }
+    }
+
     inline AbstractParamPresentation::Presentation GetGUIPresentation() const {
         return gui_presentation.GetGUIPresentation();
     }

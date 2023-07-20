@@ -152,6 +152,15 @@ bool ParameterList::Draw() {
                     std::string module_label = module_ptr->FullName();
                     ImGui::PushID(module_ptr->UID());
 
+                    auto const& param_vec = module_ptr->Parameters();
+                    bool highlight = false;
+                    for (auto const& param : param_vec) {
+                        if (param.IsHighlight())
+                            highlight = true;
+                    }
+                    if (highlight)
+                        ImGui::SetNextItemOpen(true);
+
                     // Draw module header
                     bool module_header_open = gui_utils::GroupHeader(
                         megamol::gui::HeaderType::MODULE, module_label, module_search_string, override_header_state);
