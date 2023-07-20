@@ -477,35 +477,32 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
 
             if (add_module) {
                 if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    if (auto module_ptr = selected_graph_ptr->AddModule(
-                            this->graph_collection.GetModulesStock(), mod.class_name, "", "")) {
 
-                        // If there is a call slot selected, create call to compatible call slot of new module
-                        bool add_call = compat_filter && (selected_callslot_ptr != nullptr);
+                    // If there is a call slot selected, create call to compatible call slot of new module
+                    bool add_call = compat_filter && (selected_callslot_ptr != nullptr);
 
-                        // If there is a group selected or hovered or the new call is connected to module which is part
-                        // of group, add module to this group
-                        if (!interfaceslot_selected) {
-                            ImGuiID connected_group = GUI_INVALID_ID;
-                            if (add_call && selected_callslot_ptr->IsParentModuleConnected()) {
-                                connected_group = selected_callslot_ptr->GetParentModule()->GroupUID();
-                            }
-                            ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
-                            ImGuiID group_uid = (connected_group != GUI_INVALID_ID)
-                                                    ? (connected_group)
-                                                    : ((selected_group_uid != GUI_INVALID_ID)
-                                                              ? (selected_group_uid)
-                                                              : (this->module_list_popup_hovered_group_uid));
-
-                            if (auto group_ptr = selected_graph_ptr->GetGroup(group_uid)) {
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                selected_graph_ptr->ResetStatePointers();
-                                group_ptr->AddModule(module_ptr);
-                                queue_data.rename_id = module_ptr->FullName();
-                                selected_graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-                            }
+                    // If there is a group selected or hovered or the new call is connected to module which is part
+                    // of group, add module to this group
+                    std::string group_name = "";
+                    if (!interfaceslot_selected) {
+                        ImGuiID connected_group = GUI_INVALID_ID;
+                        if (add_call && selected_callslot_ptr->IsParentModuleConnected()) {
+                            connected_group = selected_callslot_ptr->GetParentModule()->GroupUID();
                         }
+                        ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
+                        ImGuiID group_uid = (connected_group != GUI_INVALID_ID)
+                                                ? (connected_group)
+                                                : ((selected_group_uid != GUI_INVALID_ID)
+                                                          ? (selected_group_uid)
+                                                          : (this->module_list_popup_hovered_group_uid));
+                        if (auto group_ptr = selected_graph_ptr->GetGroup(group_uid)) {
+                            group_name = group_ptr->Name();
+                        }
+                    }
+
+                    // Add new module
+                    if (auto module_ptr = selected_graph_ptr->AddModule(
+                            this->graph_collection.GetModulesStock(), mod.class_name, "", group_name)) {
 
                         // Add new call after module is created and after possible renaming due to group joining of module!
                         if (add_call) {

@@ -88,6 +88,9 @@ public:
     }
     GroupPtr_t GetGroup(ImGuiID group_uid);
     ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr, bool use_queue = true);
+    ImGuiID AddGroupModule(ImGuiID group_uid, const ModulePtr_t& module_ptr, bool use_queue = true);
+    ImGuiID RemoveGroupModule(
+        ImGuiID group_uid, ImGuiID module_uid, bool use_queue = true, bool reset_interface = true);
 
     void Clear();
 
@@ -135,10 +138,6 @@ public:
 
     inline std::string Name() const {
         return this->name;
-    }
-
-    void ForceUpdate() {
-        this->gui_update = true;
     }
 
     void ResetStatePointers() {

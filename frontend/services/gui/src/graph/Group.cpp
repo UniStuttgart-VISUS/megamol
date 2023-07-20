@@ -40,7 +40,7 @@ megamol::gui::Group::~Group() {
         module_uids.emplace_back(module_ptr->UID());
     }
     for (auto& module_uid : module_uids) {
-        this->RemoveModule(module_uid);
+        this->RemoveModule(module_uid, false);
     }
     this->modules.clear();
 
@@ -75,7 +75,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
     module_ptr->SetHidden(this->gui_collapsed_view);
     module_ptr->SetGroupName(this->name);
 
-    this->ForceUpdate();
+    this->gui_update = true;
     this->RestoreInterfaceslots();
 
 #ifdef GUI_VERBOSE
@@ -86,7 +86,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
 }
 
 
-bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
+bool megamol::gui::Group::RemoveModule(ImGuiID module_uid, bool restore_interface) {
 
     try {
         for (auto mod_iter = this->modules.begin(); mod_iter != this->modules.end(); mod_iter++) {
@@ -110,12 +110,12 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
 
-
-                /// Do not restore interface slots here.
-                /// E.g. RestoreInterfaceslots() should only be triggered,
-                /// after connected calls of deleted module are deleted.
-
-                this->ForceUpdate();
+                if (restore_interface) {
+                    /// E.g. RestoreInterfaceslots() should only be triggered,
+                    /// after connected calls of deleted module are deleted.
+                    this->RestoreInterfaceslots();
+                }
+                this->gui_update = true;
 
                 return true;
             }
@@ -191,7 +191,7 @@ InterfaceSlotPtr_t megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& ca
             if (interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr)) {
 
                 interfaceslot_ptr->SetGroupViewCollapsed(this->gui_collapsed_view);
-                this->ForceUpdate();
+                this->gui_update = true;
 
                 return interfaceslot_ptr;
             }
@@ -300,7 +300,7 @@ bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
                     (*iter).reset();
                     interfaceslot_map.second.erase(iter);
 
-                    this->ForceUpdate();
+                    this->gui_update = true;
 
                     return true;
                 }
