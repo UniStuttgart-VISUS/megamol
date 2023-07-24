@@ -21,7 +21,7 @@ jobs:
       run: >-
         cmake -S . -B ${{ github.workspace }}/build -G "Visual Studio 16 2019"
         -DMEGAMOL_STOP_AFTER_VCPKG=ON
-        -DMEGAMOL_USE_CGAL=OFF
+        -DMEGAMOL_USE_CGAL=ON
         -DMEGAMOL_USE_OSPRAY=ON
         -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
       env:
@@ -47,7 +47,7 @@ jobs:
       run: >-
         cmake -S . -B ${{ github.workspace }}/build -G "Unix Makefiles"
         -DMEGAMOL_STOP_AFTER_VCPKG=ON
-        -DMEGAMOL_USE_CGAL=OFF
+        -DMEGAMOL_USE_CGAL=ON
         -DMEGAMOL_USE_OSPRAY=ON
         -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
       env:
