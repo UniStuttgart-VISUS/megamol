@@ -206,9 +206,9 @@ bool datatools::ParticleThermodyn::assertData(
     const auto theFluidDensity = this->fluidDensitySlot.Param<core::param::FloatParam>()->Value();
     size_t allpartcnt = 0;
 
-    if (this->lastTime != time || this->datahash != in->DataHash()) {
-        in->SetFrameID(time, true);
+    if (this->lastTime != time || this->datahash != in->DataHash() || myHash == 0) {
         do {
+            in->SetFrameID(time, true);
             if (!(*in)(1))
                 return false;
             if (!(*in)(0))
