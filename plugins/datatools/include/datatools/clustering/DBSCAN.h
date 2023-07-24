@@ -25,15 +25,15 @@ using cluster_type_ut = index_t;
 enum class cluster_type : cluster_type_ut { UNDEFINED = 0, NOISE = 1 };
 
 template<typename T>
-using search_res_t = std::vector<std::pair<index_t, T>>;
+using search_res_t = std::vector<nanoflann::ResultItem<index_t, T>>;
 
 // see https://de.wikipedia.org/wiki/DBSCAN for algorithm
 
 template<typename T, int DIM>
 inline void expand_cluster(std::shared_ptr<kd_tree_t<T, DIM>> const& D, index_t P, search_res_t<T> Nvec, index_t C,
     T eps, index_t minPts, cluster_result_t& clusters, std::vector<char>& visited,
-    nanoflann::SearchParams const& params) {
-    auto const& data = D->dataset;
+    nanoflann::SearchParameters const& params) {
+    auto const& data = D->dataset_;
 
     clusters[P] = C;
 
@@ -57,11 +57,11 @@ inline void expand_cluster(std::shared_ptr<kd_tree_t<T, DIM>> const& D, index_t 
 
 template<typename T, int DIM>
 inline cluster_result_t DBSCAN(std::shared_ptr<kd_tree_t<T, DIM>> const& D, T eps, index_t minPts) {
-    auto const& data = D->dataset;
+    auto const& data = D->dataset_;
     auto const num_points = data.kdtree_get_point_count();
     cluster_result_t clusters(num_points, static_cast<cluster_type_ut>(cluster_type::UNDEFINED));
     std::vector<char> visited(num_points, 0);
-    nanoflann::SearchParams params;
+    nanoflann::SearchParameters params;
     params.sorted = false;
 
     search_res_t<T> tmp_res(minPts);
@@ -88,7 +88,7 @@ inline cluster_result_t DBSCAN(std::shared_ptr<kd_tree_t<T, DIM>> const& D, T ep
 template<typename T, int DIM>
 inline void expand_cluster_with_similarity(std::shared_ptr<kd_tree_t<T, DIM>> const& D, index_t P, search_res_t<T> Nvec,
     index_t C, T eps, index_t minPts, cluster_result_t& clusters, std::vector<char>& visited,
-    nanoflann::SearchParams const& params, std::function<bool(index_t, index_t)> const& similarity) {
+    nanoflann::SearchParameters const& params, std::function<bool(index_t, index_t)> const& similarity) {
     auto const& data = D->dataset;
 
     clusters[P] = C;
@@ -120,7 +120,7 @@ inline cluster_result_t DBSCAN_with_similarity(std::shared_ptr<kd_tree_t<T, DIM>
     auto const num_points = data.kdtree_get_point_count();
     cluster_result_t clusters(num_points, static_cast<cluster_type_ut>(cluster_type::UNDEFINED));
     std::vector<char> visited(num_points, 0);
-    nanoflann::SearchParams params;
+    nanoflann::SearchParameters params;
     params.sorted = false;
 
     search_res_t<T> tmp_res(minPts);
@@ -150,7 +150,7 @@ inline cluster_result_t DBSCAN_with_similarity(std::shared_ptr<kd_tree_t<T, DIM>
 template<typename T, int DIM>
 inline void expand_cluster_with_similarity_and_score(std::shared_ptr<kd_tree_t<T, DIM>> const& D, index_t P, T P_score,
     search_res_t<T> Nvec, index_t C, T eps, index_t minPts, cluster_result_t& clusters, std::vector<char>& visited,
-    nanoflann::SearchParams const& params, std::function<bool(index_t, index_t)> const& similarity,
+    nanoflann::SearchParameters const& params, std::function<bool(index_t, index_t)> const& similarity,
     std::function<index_t(index_t, std::vector<index_t> const&)> const& score,
     std::unordered_map<index_t, std::vector<index_t>>& cluster_identity) {
     auto const& data = D->dataset;
@@ -208,7 +208,7 @@ inline cluster_result_t DBSCAN_with_similarity_and_score(std::shared_ptr<kd_tree
     auto const num_points = data.kdtree_get_point_count();
     cluster_result_t clusters(num_points, static_cast<cluster_type_ut>(cluster_type::UNDEFINED));
     std::vector<char> visited(num_points, 0);
-    nanoflann::SearchParams params;
+    nanoflann::SearchParameters params;
     params.sorted = false;
 
     search_res_t<T> tmp_res(minPts);
@@ -254,7 +254,7 @@ inline cluster_result_t DBSCAN_with_similarity_and_score(std::shared_ptr<kd_tree
 template<typename T, int DIM>
 inline void expand_GROWING_with_similarity_and_score(std::shared_ptr<kd_tree_t<T, DIM>> const& D, index_t P, T P_score,
     search_res_t<T> Nvec, index_t C, T eps, index_t minPts, cluster_result_t& clusters, std::vector<char>& visited,
-    nanoflann::SearchParams const& params, std::function<bool(index_t, index_t)> const& similarity,
+    nanoflann::SearchParameters const& params, std::function<bool(index_t, index_t)> const& similarity,
     std::function<index_t(index_t, std::vector<index_t> const&)> const& score,
     std::unordered_map<index_t, std::vector<index_t>>& cluster_identity) {
     auto const& data = D->dataset;
@@ -326,7 +326,7 @@ inline void expand_GROWING_with_similarity_and_score(std::shared_ptr<kd_tree_t<T
 template<typename T, int DIM>
 inline void expand_GROWING_with_similarity(std::shared_ptr<kd_tree_t<T, DIM>> const& D, index_t P, T P_score,
     std::list<typename search_res_t<T>::value_type> Nvec, index_t C, T eps, index_t minPts, cluster_result_t& clusters,
-    std::vector<char>& visited, nanoflann::SearchParams const& params,
+    std::vector<char>& visited, nanoflann::SearchParameters const& params,
     std::function<bool(index_t, index_t)> const& similarity,
     std::function<index_t(index_t, std::vector<index_t> const&)> const& score,
     std::unordered_map<index_t, std::vector<index_t>>& cluster_identity) {
@@ -439,7 +439,7 @@ inline cluster_result_t GROWING_with_similarity_and_score(std::shared_ptr<kd_tre
     auto const num_points = data.kdtree_get_point_count();
     cluster_result_t clusters(num_points, static_cast<cluster_type_ut>(cluster_type::UNDEFINED));
     std::vector<char> visited(num_points, 0);
-    nanoflann::SearchParams params;
+    nanoflann::SearchParameters params;
     params.sorted = false;
 
     search_res_t<T> tmp_res(minPts);
