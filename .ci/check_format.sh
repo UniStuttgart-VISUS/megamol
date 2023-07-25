@@ -101,12 +101,17 @@ while read -r file; do
     fi
 
     # Copyright header
-    # TODO Disabled because it cannot replace existing (wrong) copyright headers, yet.
+    # TODO Disabled because simply replacing the first comment may is dangerous and should not happen in an automated script.
     #file_head=$(head -n 5 "$file")
     #if [[ ! "$file_head" =~ $copyright_header_regex ]]; then
     #  if [[ "$_fix" == true ]]; then
     #    year=$(git log --follow --format=%ad --date=format:'%Y' "$file" | tail -1)
     #    file_content=$(<"$file")
+    #    # Remove first comment in file
+    #    start_comment_regex="^\/\*"
+    #    if [[ "$file_content" =~ $start_comment_regex ]]; then
+    #      file_content=${file_content#*\*/}
+    #    fi
     #    file_header="${copyright_header_template/<YYYY>/"$year"}"
     #    echo "$file_header" > "$file"
     #    echo "$file_content" >> "$file"
