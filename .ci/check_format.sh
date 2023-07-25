@@ -59,13 +59,6 @@ while read -r file; do
     continue
   fi
 
-  # ignore vcpkg ports, which are taken from upstream
-  if [[ $file == "cmake/vcpkg_ports/"* ]]; then
-    if [[ $file == *"/implot/"* ]]; then
-      continue
-    fi
-  fi
-
   # ignore 3rd party dirs
   if [[ $file == *"/3rd/"* ]]; then
     continue
