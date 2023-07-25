@@ -107,11 +107,6 @@
           ]
         },
         {
-          "$comment": "Workaround for https://github.com/microsoft/vcpkg/issues/31298 to disable glslang default features, is otherwise only required as transitive dependency of megamol-shader-factory.",
-          "name": "glslang",
-          "default-features": false
-        },
-        {
           "name": "imgui",
           "features": [
             "opengl3-binding"
