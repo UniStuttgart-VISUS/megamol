@@ -33,7 +33,7 @@ if (MEGAMOL_VCPKG_DOWNLOAD)
   FetchContent_Declare(vcpkg-download
     GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
     GIT_TAG ${MEGAMOL_VCPKG_VERSION}
-    #GIT_SHALLOW TRUE
+    #GIT_SHALLOW TRUE # Not supported by vcpkg
     SOURCE_DIR ${MEGAMOL_VCPKG_DIR})
   FetchContent_GetProperties(vcpkg-download)
   if (NOT vcpkg-download_POPULATED)

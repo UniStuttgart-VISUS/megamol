@@ -143,7 +143,7 @@ void datatools::ParticleIColGradientField::compute_colors(geocalls::MultiParticl
 
     double maxLen = 0.0;
 
-    std::vector<std::pair<size_t, float>> res;
+    std::vector<nanoflann::ResultItem<size_t, float>> res;
     res.reserve(100);
 
     //#pragma omp parallel for
@@ -154,11 +154,11 @@ void datatools::ParticleIColGradientField::compute_colors(geocalls::MultiParticl
         const float* query_col = data.get_color(part_i);
 
         res.clear();
-        index.radiusSearch(query_pos.PeekCoordinates(), rad, res, nanoflann::SearchParams(10, 0.01f, false));
+        index.radiusSearch(query_pos.PeekCoordinates(), rad, res, nanoflann::SearchParameters(0.01f, false));
 
         vislib::math::Vector<double, 3> gradient;
 
-        for (std::pair<size_t, float>& p : res) {
+        for (auto const& p : res) {
             vislib::math::Vector<double, 3> dir(
                 vislib::math::ShallowPoint<float, 3>(const_cast<float*>(data.get_position(p.first))) - query_pos);
             dir.Normalise();
