@@ -165,6 +165,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             dirs.clear();
             num_plists = 0;
             if (this->representationSlot.Param<core::param::EnumParam>()->Value() == 0 || qw.empty()) {
+                // Molecules (circumspheres)
                 num_plists = num_components;
                 mix.clear();
                 mix.resize(num_plists);
@@ -211,6 +212,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
 
 
             } else {
+                // Atoms
                 num_plists = num_atoms_total;
                 mix.clear();
                 mix.resize(num_plists);
