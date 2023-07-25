@@ -1,8 +1,7 @@
-/*
- * GUIManager.h
- *
- * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once

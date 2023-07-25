@@ -1,8 +1,7 @@
-/*
- * FrameStatistics_Service.cpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 // search/replace FrameStatistics_Service with your class name

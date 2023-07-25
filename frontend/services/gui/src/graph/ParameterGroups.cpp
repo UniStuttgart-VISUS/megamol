@@ -1,10 +1,8 @@
-/*
- * ParameterGroups.cpp
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #include "ParameterGroups.h"
 #include "widgets/ButtonWidgets.h"

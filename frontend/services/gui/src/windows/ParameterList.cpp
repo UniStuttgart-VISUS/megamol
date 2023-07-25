@@ -1,10 +1,8 @@
-/*
- * ParameterList.cpp
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #include "ParameterList.h"
 #include "graph/Parameter.h"

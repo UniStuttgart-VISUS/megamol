@@ -1,10 +1,8 @@
-/*
- * ImageWrapper_Conversions.cpp
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #include <stdexcept>
 

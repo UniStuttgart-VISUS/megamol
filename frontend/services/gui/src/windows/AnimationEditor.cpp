@@ -1,8 +1,7 @@
-/*
- * AnimationEditor.cpp
- *
- * Copyright (C) 2022 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "AnimationEditor.h"

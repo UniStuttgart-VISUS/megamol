@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "Profiling_Service.hpp"
 
 #include "mmcore/MegaMolGraph.h"

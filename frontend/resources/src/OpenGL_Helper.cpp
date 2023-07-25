@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "OpenGL_Helper.h"
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
 #include "glad/gl.h"
