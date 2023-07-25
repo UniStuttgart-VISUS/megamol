@@ -1,8 +1,7 @@
-/*
- * BoundingBoxes.cpp
- *
- * Copyright (C) 2018-2019 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/BoundingBoxes_2.h"

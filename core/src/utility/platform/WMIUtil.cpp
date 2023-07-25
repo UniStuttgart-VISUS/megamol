@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmcore/utility/platform/WMIUtil.h"
 #include "mmcore/utility/log/Log.h"
 
