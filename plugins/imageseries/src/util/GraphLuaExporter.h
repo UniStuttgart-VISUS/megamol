@@ -1,8 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include "imageseries/graph/GraphData2D.h"
 
 #include <string>
+#include <vector>
 
 namespace megamol::ImageSeries::graph::util {
 

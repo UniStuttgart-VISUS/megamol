@@ -1,14 +1,24 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ImageSeriesResampler.h"
+
+#include "../filter/TransformationFilter.h"
+
 #include "imageseries/ImageSeries2DCall.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
+
 #include "vislib/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/PngBitmapCodec.h"
 
-#include "../filter/TransformationFilter.h"
+#include <memory>
 
 using Log = megamol::core::utility::log::Log;
 using Presentation = megamol::core::param::AbstractParamPresentation::Presentation;

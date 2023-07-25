@@ -1,9 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "BlobLabelFilter.h"
 
 #include "vislib/graphics/BitmapImage.h"
 
-#include <array>
 #include <deque>
+#include <memory>
+#include <utility>
 #include <vector>
 
 namespace megamol::ImageSeries::filter {
@@ -69,10 +76,6 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
 
     Label nextLabel = LabelFirst;
     Label labelLimit = LabelFirst + input.blobCountLimit - 1;
-
-    // TODO: Track number of pixels per blob
-    //std::array<Index, LabelCount> blobSizes;
-    //blobSizes.fill(0);
 
     std::vector<Index> pendingPixels;
     std::vector<Index> pendingFlow;

@@ -1,7 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "GraphGDFExporter.h"
 
+#include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <map>
+#include <string>
 
 namespace megamol::ImageSeries::graph::util {
 

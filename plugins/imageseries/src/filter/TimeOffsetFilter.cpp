@@ -1,6 +1,17 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "TimeOffsetFilter.h"
 
 #include "vislib/graphics/BitmapImage.h"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <utility>
 
 namespace megamol::ImageSeries::filter {
 

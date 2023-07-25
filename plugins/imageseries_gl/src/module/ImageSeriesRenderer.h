@@ -1,10 +1,18 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include "ImageDisplay2D.h"
+
 #include "imageseries/ImageSeries2DCall.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
 #include "vislib/Pair.h"
@@ -13,6 +21,7 @@
 #include "vislib/graphics/AbstractBitmapCodec.h"
 #include "vislib/math/Rectangle.h"
 
+#include <array>
 #include <memory>
 #include <tuple>
 

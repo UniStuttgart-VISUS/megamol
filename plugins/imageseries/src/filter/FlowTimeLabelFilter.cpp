@@ -1,29 +1,37 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "FlowTimeLabelFilter.h"
-
-#include "mmcore/utility/log/Log.h"
-
-#include "imageseries/graph/GraphData2D.h"
-
-#include "vislib/graphics/BitmapImage.h"
-#include "vislib/graphics/PngBitmapCodec.h"
 
 #include "../util/GraphGDFExporter.h"
 #include "../util/GraphLuaExporter.h"
 
+#include "imageseries/graph/GraphData2D.h"
+
+#include "mmcore/utility/log/Log.h"
+
+#include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/PngBitmapCodec.h"
+
 #include <glm/gtx/transform.hpp>
 
-#include <array>
+#include <algorithm>
 #include <cmath>
-#include <deque>
 #include <filesystem>
-#include <iostream>
+#include <functional>
+#include <iterator>
 #include <limits>
 #include <list>
 #include <map>
-#include <regex>
+#include <memory>
 #include <set>
 #include <sstream>
+#include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace megamol::ImageSeries::filter {

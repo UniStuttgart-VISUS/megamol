@@ -1,8 +1,14 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include "imageseries/AsyncImageData2D.h"
 
-#include "glm/mat3x2.hpp"
+#include <glm/mat3x2.hpp>
 
 #include <memory>
 

@@ -1,10 +1,18 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "TransformationFilter.h"
 
 #include "vislib/graphics/BitmapImage.h"
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 
-#include <cmath>
+#include <algorithm>
+#include <memory>
+#include <utility>
 
 namespace megamol::ImageSeries::filter {
 

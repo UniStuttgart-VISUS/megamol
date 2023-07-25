@@ -1,22 +1,34 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ImageDisplay2D.h"
 
 #include "mmcore/utility/log/Log.h"
+
 #include "mmcore_gl/utility/ShaderFactory.h"
+
 #include "mmstd_gl/renderer/CallRender2DGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/graphics/PngBitmapCodec.h"
 
-#include "glowl/VertexLayout.hpp"
+#include <glowl/VertexLayout.hpp>
 
+#include <algorithm>
 #include <array>
+#include <exception>
 #include <filesystem>
+#include <iostream>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
+#include <vector>
 
 namespace megamol::ImageSeries::GL {
 

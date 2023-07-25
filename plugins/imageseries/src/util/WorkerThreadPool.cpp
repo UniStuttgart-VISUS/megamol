@@ -1,4 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "imageseries/util/WorkerThreadPool.h"
+
+#include <chrono>
+#include <memory>
+#include <mutex>
+#include <utility>
 
 namespace megamol::ImageSeries::util {
 

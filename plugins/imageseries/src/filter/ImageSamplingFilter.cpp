@@ -1,10 +1,20 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ImageSamplingFilter.h"
 
 #include "vislib/graphics/BitmapImage.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
+#include <memory>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace megamol::ImageSeries::filter {
 

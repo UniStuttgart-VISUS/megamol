@@ -1,4 +1,18 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
+
+#include "../filter/AsyncFilterRunner.h"
+#include "../registration/AsyncImageRegistrator.h"
+#include "../util/LRUCache.h"
+
+#include "imageseries/AffineTransform2DCall.h"
+#include "imageseries/AsyncImageData2D.h"
+#include "imageseries/ImageSeries2DCall.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -6,13 +20,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "imageseries/AffineTransform2DCall.h"
-#include "imageseries/AsyncImageData2D.h"
-#include "imageseries/ImageSeries2DCall.h"
-
-#include "../filter/AsyncFilterRunner.h"
-#include "../registration/AsyncImageRegistrator.h"
-#include "../util/LRUCache.h"
+#include <memory>
 
 namespace megamol::ImageSeries {
 

@@ -1,8 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include "imageseries/AsyncImageData2D.h"
 
 #include <memory>
+#include <string>
 
 namespace vislib::graphics {
 class BitmapCodecCollection;

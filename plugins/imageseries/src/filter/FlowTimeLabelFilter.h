@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include "imageseries/AsyncImageData2D.h"
@@ -7,8 +13,8 @@
 #include "imageseries/util/ImageUtils.h"
 
 #include <filesystem>
+#include <functional>
 #include <memory>
-#include <utility>
 #include <vector>
 
 namespace megamol::ImageSeries::filter {

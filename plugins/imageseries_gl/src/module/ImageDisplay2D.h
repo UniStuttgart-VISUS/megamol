@@ -1,4 +1,12 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
+
+#include "imageseries/graph/GraphData2D.h"
 
 #include "mmcore_gl/utility/ShaderFactory.h"
 
@@ -7,15 +15,15 @@
 
 #include "vislib/graphics/BitmapImage.h"
 
-#include "imageseries/graph/GraphData2D.h"
+#include <glowl/FramebufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+#include <glowl/Mesh.hpp>
+#include <glowl/Texture2D.hpp>
 
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Mesh.hpp"
-#include "glowl/Texture2D.hpp"
-
+#include <algorithm>
 #include <array>
 #include <filesystem>
+#include <limits>
 #include <memory>
 #include <vector>
 

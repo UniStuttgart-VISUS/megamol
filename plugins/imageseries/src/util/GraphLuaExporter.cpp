@@ -1,7 +1,18 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "GraphLuaExporter.h"
 
+#include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace megamol::ImageSeries::graph::util {
 

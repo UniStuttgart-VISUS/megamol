@@ -1,6 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "AsyncImageRegistrator.h"
 
 #include <chrono>
+#include <memory>
+#include <mutex>
+#include <thread>
 
 using namespace std::chrono_literals;
 

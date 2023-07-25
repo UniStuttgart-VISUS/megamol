@@ -1,8 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "DerivativeFilter.h"
 
 #include "vislib/graphics/BitmapImage.h"
 
-#include <cstring>
+#include <algorithm>
+#include <memory>
+#include <utility>
 
 namespace megamol::ImageSeries::filter {
 

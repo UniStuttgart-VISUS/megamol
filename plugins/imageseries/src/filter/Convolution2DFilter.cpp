@@ -1,9 +1,17 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "Convolution2DFilter.h"
 
 #include "vislib/graphics/BitmapImage.h"
 
+#include <algorithm>
 #include <cmath>
-#include <cstring>
+#include <memory>
+#include <utility>
 #include <vector>
 
 namespace megamol::ImageSeries::filter {

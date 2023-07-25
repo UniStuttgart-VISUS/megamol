@@ -1,6 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "SegmentationFilter.h"
 
 #include "vislib/graphics/BitmapImage.h"
+
+#include <memory>
+#include <utility>
 
 namespace megamol::ImageSeries::filter {
 

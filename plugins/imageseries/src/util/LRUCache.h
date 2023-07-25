@@ -1,13 +1,18 @@
-#pragma once
-
 /**
  * MegaMol
- * Copyright (c) 2021, MegaMol Dev Team
+ * Copyright (c) 2022, MegaMol Dev Team
  * All rights reserved.
  */
 
+#pragma once
+
+#include <algorithm>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace megamol::ImageSeries::util {
 

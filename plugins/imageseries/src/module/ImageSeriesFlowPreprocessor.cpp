@@ -1,18 +1,28 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ImageSeriesFlowPreprocessor.h"
+
+#include "../filter/DeinterlaceFilter.h"
+#include "../filter/MaskFilter.h"
+#include "../filter/SegmentationFilter.h"
+
 #include "imageseries/ImageSeries2DCall.h"
+#include "imageseries/util/ImageUtils.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+
 #include "vislib/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/PngBitmapCodec.h"
 
-#include "../filter/DeinterlaceFilter.h"
-#include "../filter/MaskFilter.h"
-#include "../filter/SegmentationFilter.h"
-#include "imageseries/util/ImageUtils.h"
+#include <memory>
 
 using Log = megamol::core::utility::log::Log;
 using Presentation = megamol::core::param::AbstractParamPresentation::Presentation;

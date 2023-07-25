@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ImageSeriesRenderer.h"
 
 #include "OpenGL_Context.h"
@@ -15,6 +21,14 @@
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 #include <glowl/glowl.h>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <exception>
+#include <memory>
+#include <tuple>
+#include <utility>
 
 using Log = megamol::core::utility::log::Log;
 

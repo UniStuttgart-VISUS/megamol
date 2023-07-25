@@ -1,18 +1,31 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ImageSeriesLoader.h"
-#include "imageseries/ImageSeries2DCall.h"
 
 #include "../filter/AsyncFilterRunner.h"
 #include "../filter/ImageLoadFilter.h"
 
+#include "imageseries/ImageSeries2DCall.h"
+
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
+
 #include "vislib/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/PngBitmapCodec.h"
 
+#include <algorithm>
+#include <cctype>
 #include <charconv>
 #include <filesystem>
+#include <memory>
 #include <regex>
+#include <string>
+#include <utility>
 
 using Log = megamol::core::utility::log::Log;
 

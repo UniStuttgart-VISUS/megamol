@@ -1,6 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ImageLoadFilter.h"
 
 #include "vislib/graphics/BitmapCodecCollection.h"
+
+#include <memory>
+#include <string>
 
 namespace megamol::ImageSeries::filter {
 

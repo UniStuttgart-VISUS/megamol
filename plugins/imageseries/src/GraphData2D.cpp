@@ -1,6 +1,17 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "imageseries/graph/GraphData2D.h"
 
-#include <type_traits>
+#include <algorithm>
+#include <functional>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 using namespace megamol::ImageSeries::graph;
 

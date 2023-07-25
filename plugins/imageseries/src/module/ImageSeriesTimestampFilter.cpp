@@ -1,13 +1,20 @@
-#include "ImageSeriesTimestampFilter.h"
-#include "imageseries/ImageSeries2DCall.h"
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
 
-#include "mmcore/param/IntParam.h"
+#include "ImageSeriesTimestampFilter.h"
 
 #include "../filter/ImageSamplingFilter.h"
 #include "../filter/IndexGenerationFilter.h"
+
+#include "imageseries/ImageSeries2DCall.h"
 #include "imageseries/util/ImageUtils.h"
 
-#include <iostream>
+#include "mmcore/param/IntParam.h"
+
+#include <memory>
 
 using Log = megamol::core::utility::log::Log;
 using Presentation = megamol::core::param::AbstractParamPresentation::Presentation;

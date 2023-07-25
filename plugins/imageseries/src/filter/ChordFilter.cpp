@@ -1,10 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ChordFilter.h"
 
 #include "vislib/graphics/BitmapImage.h"
 
-#include <cmath>
-#include <cstring>
-#include <vector>
+#include <memory>
+#include <utility>
 
 namespace megamol::ImageSeries::filter {
 

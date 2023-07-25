@@ -1,9 +1,18 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ImageRegistrator.h"
 
 #include "../filter/AsyncFilterRunner.h"
 #include "../filter/Convolution2DFilter.h"
 #include "../filter/DerivativeFilter.h"
+
 #include "imageseries/util/ImageUtils.h"
+
+#include <memory>
 
 namespace megamol::ImageSeries::registration {
 
