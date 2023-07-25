@@ -399,10 +399,23 @@ bool datatools::ParticleThermodyn::assertData(
                     }
 
                     // no neighbor should count twice!
+                    // sort by id first, distance second.
+                    std::sort(ret_matches.begin(), ret_matches.end(),
+                        [](const nanoflann::ResultItem<size_t, float>& a,
+                            const nanoflann::ResultItem<size_t, float>& b) -> bool {
+                            if (a.first < b.first) {
+                                return true;
+                            } else if (a.first > b.first) {
+                                return false;
+                            } else {
+                                return a.second < b.second;
+                            }
+                        });
+                    // only closest hit counts. this should return the correct one, but I'm not sure whether this is implementation-dependent :/
                     ret_matches.erase(unique(ret_matches.begin(), ret_matches.end(),
                                           [](const nanoflann::ResultItem<size_t, float>& a,
                                               const nanoflann::ResultItem<size_t, float>& b) -> bool {
-                                              return a.first == b.first && a.second == b.second;
+                                              return a.first == b.first; // && a.second == b.second;
                                           }),
                         ret_matches.end());
 
