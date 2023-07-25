@@ -17,8 +17,7 @@
 
 #include <variant>
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 using namespace core::utility;
 
@@ -131,5 +130,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui

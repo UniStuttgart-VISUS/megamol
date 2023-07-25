@@ -7,8 +7,7 @@
 #include "datatools/table/TableDataCall.h"
 #include "geometry_calls/VolumetricDataCall.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * This module converts from a VolumetricDataCall to a table
@@ -21,7 +20,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "VolumeToTable";
     }
 
@@ -30,7 +29,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Converts a volume to generic tables.";
     }
 
@@ -39,19 +38,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    VolumeToTable(void);
+    VolumeToTable();
 
     /**
      * Finalises an instance.
      */
-    virtual ~VolumeToTable(void);
+    ~VolumeToTable() override;
 
 protected:
     /**
@@ -59,7 +58,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     bool getTableData(core::Call& call);
 
@@ -68,7 +67,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     bool assertVDC(geocalls::VolumetricDataCall* in, table::TableDataCall* tc);
@@ -87,5 +86,4 @@ private:
     std::size_t num_voxels = 0;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
