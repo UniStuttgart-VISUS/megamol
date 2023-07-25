@@ -1,5 +1,10 @@
-#ifndef SRC_IMAGESERIES_UTIL_WORKERTHREADPOOL_HPP_
-#define SRC_IMAGESERIES_UTIL_WORKERTHREADPOOL_HPP_
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include <atomic>
 #include <condition_variable>
@@ -91,5 +96,3 @@ private:
 };
 
 } // namespace megamol::ImageSeries::util
-
-#endif

@@ -1,14 +1,16 @@
-#ifndef INCLUDE_IMAGESERIES_ASYNCDATA_H_
-#define INCLUDE_IMAGESERIES_ASYNCDATA_H_
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
 
-#include <atomic>
-#include <condition_variable>
-#include <functional>
-#include <memory>
-#include <mutex>
-#include <vector>
+#pragma once
 
 #include "WorkerThreadPool.h"
+
+#include <atomic>
+#include <functional>
+#include <memory>
 
 namespace megamol::ImageSeries::util {
 
@@ -87,5 +89,3 @@ private:
 
 
 } // namespace megamol::ImageSeries::util
-
-#endif

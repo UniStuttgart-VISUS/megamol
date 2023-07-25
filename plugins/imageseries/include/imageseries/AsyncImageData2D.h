@@ -1,17 +1,18 @@
-#ifndef INCLUDE_IMAGESERIES_ASYNCIMAGEDATA2D_H_
-#define INCLUDE_IMAGESERIES_ASYNCIMAGEDATA2D_H_
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
 
-#include <atomic>
-#include <condition_variable>
-#include <functional>
-#include <memory>
-#include <mutex>
-#include <utility>
-#include <vector>
+#pragma once
 
 #include "util/ImageUtils.h"
 #include "util/PerfTimer.h"
 #include "util/WorkerThreadPool.h"
+
+#include <functional>
+#include <memory>
+#include <string>
 
 namespace vislib::graphics {
 class BitmapImage;
@@ -176,6 +177,3 @@ struct hash<std::shared_ptr<const vislib::graphics::BitmapImage>> {
 };
 
 } // namespace std
-
-
-#endif

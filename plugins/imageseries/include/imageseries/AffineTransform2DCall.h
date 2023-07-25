@@ -1,10 +1,16 @@
-#ifndef INCLUDE_IMAGESERIES_AFFINETRANSFORM2DCALL_H_
-#define INCLUDE_IMAGESERIES_AFFINETRANSFORM2DCALL_H_
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
+
 #include "mmstd/data/AbstractGetDataCall.h"
 
-#include "glm/mat3x2.hpp"
+#include <glm/mat3x2.hpp>
 
 #include <memory>
 
@@ -23,7 +29,7 @@ public:
      *
      * @return The name of this call.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "AffineTransform2DCall";
     }
 
@@ -32,7 +38,7 @@ public:
      *
      * @return A human readable description of this call.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to transport a 2D affine transformation matrix";
     }
 
@@ -41,7 +47,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -80,5 +86,3 @@ private:
 };
 
 } // namespace megamol::ImageSeries
-
-#endif

@@ -1,17 +1,22 @@
-#ifndef INCLUDE_IMAGESERIES_GRAPHDATA2D_H_
-#define INCLUDE_IMAGESERIES_GRAPHDATA2D_H_
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "../util/AsyncData.h"
 #include "../util/ImageUtils.h"
 
-#include "glm/vec2.hpp"
+#include <glm/vec2.hpp>
 
-#include <cstdint>
-#include <limits>
+#include <algorithm>
 #include <map>
-#include <type_traits>
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -253,5 +258,3 @@ using AsyncGraphData2D = megamol::ImageSeries::util::AsyncData<const GraphData2D
 using AsyncGraphPtr = std::shared_ptr<const AsyncGraphData2D>;
 
 } // namespace megamol::ImageSeries::graph
-
-#endif

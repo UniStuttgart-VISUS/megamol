@@ -1,11 +1,20 @@
-#ifndef SRC_IMAGESERIES_UTIL_IMAGEUTILS_HPP_
-#define SRC_IMAGESERIES_UTIL_IMAGEUTILS_HPP_
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "vislib/graphics/BitmapImage.h"
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 
-#include <utility>
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <stdexcept>
+#include <vector>
 
 namespace megamol::ImageSeries::util {
 
@@ -119,5 +128,3 @@ private:
 };
 
 } // namespace megamol::ImageSeries::util
-
-#endif

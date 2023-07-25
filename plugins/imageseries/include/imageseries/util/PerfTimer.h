@@ -1,15 +1,16 @@
-#ifndef IMAGESERIES_SRC_UTIL_PERFTIMER_H_
-#define IMAGESERIES_SRC_UTIL_PERFTIMER_H_
-
 /**
  * MegaMol
  * Copyright (c) 2022, MegaMol Dev Team
  * All rights reserved.
  */
 
+#pragma once
+
 #include <chrono>
 #include <fstream>
+#include <iostream>
 #include <mutex>
+#include <string>
 
 namespace megamol::ImageSeries::util {
 
@@ -39,5 +40,3 @@ private:
 };
 
 } // namespace megamol::ImageSeries::util
-
-#endif

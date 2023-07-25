@@ -1,11 +1,19 @@
-#ifndef INCLUDE_IMAGESERIES_IMAGESERIES2D_H_
-#define INCLUDE_IMAGESERIES_IMAGESERIES2D_H_
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
 
-#include <memory>
+#pragma once
 
 #include "imageseries/AsyncImageData2D.h"
+
 #include "mmcore/factories/CallAutoDescription.h"
+
 #include "mmstd/data/AbstractGetDataCall.h"
+
+#include <memory>
+#include <string>
 
 namespace megamol::ImageSeries {
 
@@ -25,7 +33,7 @@ public:
      *
      * @return The name of this call.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ImageSeries2DCall";
     }
 
@@ -34,7 +42,7 @@ public:
      *
      * @return A human readable description of this call.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to transport 2D image series data";
     }
 
@@ -43,7 +51,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -134,5 +142,3 @@ private:
 };
 
 } // namespace megamol::ImageSeries
-
-#endif

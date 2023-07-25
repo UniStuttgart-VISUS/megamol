@@ -1,12 +1,18 @@
-#ifndef INCLUDE_IMAGESERIES_GRAPHDATAM2DCALL_H_
-#define INCLUDE_IMAGESERIES_GRAPHDATAM2DCALL_H_
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include "GraphData2D.h"
 
 #include "mmcore/factories/CallAutoDescription.h"
+
 #include "mmstd/data/AbstractGetDataCall.h"
 
-#include "glm/mat3x2.hpp"
+#include <glm/mat3x2.hpp>
 
 #include <memory>
 
@@ -82,5 +88,3 @@ private:
 };
 
 } // namespace megamol::ImageSeries
-
-#endif
