@@ -22,11 +22,10 @@
 namespace {
 using Label_ = std::uint16_t;
 using Timestamp_ = std::uint16_t;
+using TimeLabelPair = std::pair<Timestamp_, Label_>;
 } // namespace
 
 namespace std {
-using TimeLabelPair = std::pair<Timestamp_, Label_>;
-
 template<>
 struct hash<TimeLabelPair> {
     inline std::size_t operator()(const TimeLabelPair& val) const {
