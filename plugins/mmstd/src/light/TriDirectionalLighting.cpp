@@ -1,7 +1,7 @@
-/*
- * TriDirectionalLighting.cpp
- * Copyright (C) 2009-2017 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd/light/TriDirectionalLighting.h"
