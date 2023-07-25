@@ -89,12 +89,12 @@ private:
     bool assertData(geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC);
 
     float computeDriftVelocity(
-        std::vector<std::pair<size_t, float>>& matches, size_t num_matches, float mass, float freedom);
+        std::vector<nanoflann::ResultItem<size_t, float>>& matches, size_t num_matches, float mass, float freedom);
     float computeTemperature(
-        std::vector<std::pair<size_t, float>>& matches, size_t num_matches, float mass, float freedom);
-    float computeFractionalAnisotropy(std::vector<std::pair<size_t, float>>& matches, size_t num_matches);
-    float computeDensity(std::vector<std::pair<size_t, float>>& matches, size_t num_matches, float const curPoint[3],
-        float radius, vislib::math::Cuboid<float> const& bbox);
+        std::vector<nanoflann::ResultItem<size_t, float>>& matches, size_t num_matches, float mass, float freedom);
+    float computeFractionalAnisotropy(std::vector<nanoflann::ResultItem<size_t, float>>& matches, size_t num_matches);
+    float computeDensity(std::vector<nanoflann::ResultItem<size_t, float>>& matches, size_t num_matches,
+        float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox);
 
     core::param::ParamSlot cyclXSlot;
     core::param::ParamSlot cyclYSlot;
