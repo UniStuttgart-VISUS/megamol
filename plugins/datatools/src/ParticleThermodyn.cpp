@@ -209,17 +209,17 @@ bool datatools::ParticleThermodyn::assertData(
     if (this->lastTime != time || this->datahash != in->DataHash() || myHash == 0) {
         do {
             in->SetFrameID(time, true);
-            if (!(*in)(1))
+            if (!(*in)(1)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ParticleThermodyn: could not get frame (%u) extents", time);
                 return false;
-            if (!(*in)(0))
+            }
+            if (!(*in)(0)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ParticleThermodyn: could not get frame (%u) data", time);
                 return false;
+            }
         } while (in->FrameID() != time);
-
-        if (!(*in)(0)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "ParticleThermodyn: could not get frame (%u)", time);
-            return false;
-        }
 
         size_t totalParts = 0;
         plc = in->GetParticleListCount();

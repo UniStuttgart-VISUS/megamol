@@ -140,6 +140,12 @@ bool datatools::OverrideParticleGlobals::manipulateExtent(
     outData = inData;
     inData.SetUnlocker(nullptr, false);
 
+    if (anythingDirty()) {
+        myHash++;
+        resetAllDirty();
+    }
+    outData.SetDataHash(myHash);
+
     // we need to adjust the clip box if we fiddle with the radius
     if (this->overrideRadiusSlot.Param<core::param::BoolParam>()->Value()) {
         float rad = 0.0f;
