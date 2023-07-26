@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "AbstractFrontendService.hpp"
-
 #include <vector>
+
+#include "AbstractFrontendService.hpp"
 
 namespace megamol::frontend {
 

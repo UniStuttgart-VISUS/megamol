@@ -5,6 +5,7 @@
  */
 
 #include "TransferFunctionEditor.h"
+
 #include "graph/Parameter.h"
 #include "gui_utils.h"
 #include "widgets/ButtonWidgets.h"

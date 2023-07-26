@@ -5,6 +5,7 @@
  */
 
 #include "AbstractWindow.h"
+
 #include "gui_utils.h"
 
 

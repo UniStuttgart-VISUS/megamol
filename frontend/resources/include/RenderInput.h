@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
 #include <optional>
+
+#include <glm/glm.hpp>
 
 namespace megamol::frontend_resources {
 

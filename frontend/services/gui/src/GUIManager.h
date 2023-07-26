@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <implot.h>
 
 #include "CommandRegistry.h"
 #include "FrontendResource.h"
 #include "PluginsResource.h"
 #include "gui_render_backend.h"
-#include "implot.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking.h"
 #include "widgets/FileBrowserWidget.h"

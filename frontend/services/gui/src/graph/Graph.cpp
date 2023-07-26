@@ -5,9 +5,12 @@
  */
 
 #include "Graph.h"
-#include "imgui_stdlib.h"
+
+#include <imgui_stdlib.h>
+
 #include "vislib/math/Ternary.h"
 #include "widgets/ButtonWidgets.h"
+
 #ifdef MEGAMOL_USE_PROFILING
 #define GRAPH_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
 #endif // MEGAMOL_USE_PROFILING

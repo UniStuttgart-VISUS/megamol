@@ -6,11 +6,10 @@
 
 #pragma once
 
-#include "AbstractFrontendService.hpp"
-
-#include "ImagePresentationEntryPoints.h"
-
 #include <memory>
+
+#include "AbstractFrontendService.hpp"
+#include "ImagePresentationEntryPoints.h"
 
 namespace megamol::frontend {
 

@@ -6,12 +6,11 @@
 
 #include "FrontendServiceCollection.hpp"
 
-#include "FrontendResourcesLookup.h"
-
 #include <algorithm>
 #include <iostream>
 #include <numeric>
 
+#include "FrontendResourcesLookup.h"
 #include "mmcore/utility/log/Log.h"
 
 #ifdef MEGAMOL_USE_TRACY

@@ -5,6 +5,7 @@
  */
 
 #include "widgets/gl/ParameterGroupViewCubeWidget.h"
+
 #include "graph/ParameterGroups.h"
 
 

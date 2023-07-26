@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <utility>
+
 #include "GlobalValueStore.h"
 #include "RuntimeConfig.h"
-#include "utility"
-
 #include "mmcore/LuaAPI.h"
 
 namespace megamol::frontend {

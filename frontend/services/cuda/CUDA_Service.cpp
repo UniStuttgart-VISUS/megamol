@@ -10,7 +10,7 @@
 
 #include <stdexcept>
 
-#include "cuda.h"
+#include <cuda.h>
 
 #include "mmcore/utility/log/Log.h"
 

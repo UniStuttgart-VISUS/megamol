@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include "ImageWrapper.h"
-
 #include <functional>
 #include <string>
 #include <vector>
+
+#include "ImageWrapper.h"
 
 namespace megamol::frontend_resources {
 

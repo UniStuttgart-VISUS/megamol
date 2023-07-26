@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "FrontendResource.h"
-#include "ResourceRequest.h"
-#include "mmcore/utility/log/Log.h"
-
 #include <algorithm> // std::find_if
 #include <iostream>
 #include <vector>
+
+#include "FrontendResource.h"
+#include "ResourceRequest.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::frontend_resources {
 

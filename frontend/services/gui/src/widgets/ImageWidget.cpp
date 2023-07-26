@@ -5,6 +5,7 @@
  */
 
 #include "ImageWidget.h"
+
 #include "mmcore/utility/FileUtils.h"
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/graphics/PngBitmapCodec.h"

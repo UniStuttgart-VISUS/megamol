@@ -6,16 +6,15 @@
 
 #pragma once
 
-
-#ifdef MEGAMOL_USE_PROFILING
-#include "PerformanceManager.h"
-#include "mmcore/MultiPerformanceHistory.h"
-#endif
 #include "mmcore/Call.h"
 #include "mmcore/CallCapabilities.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget.h"
 
+#ifdef MEGAMOL_USE_PROFILING
+#include "PerformanceManager.h"
+#include "mmcore/MultiPerformanceHistory.h"
+#endif
 
 namespace megamol::gui {
 

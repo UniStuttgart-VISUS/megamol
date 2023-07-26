@@ -5,13 +5,15 @@
  */
 
 #include "Call.h"
+
 #include "InterfaceSlot.h"
 #include "Module.h"
 #include "widgets/ColorPalettes.h"
 
 #ifdef MEGAMOL_USE_PROFILING
+#include <implot.h>
+
 #include "ProfilingUtils.h"
-#include "implot.h"
 #define CALL_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
 #define CALL_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
 #endif // MEGAMOL_USE_PROFILING

@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include "Remote_Service.hpp"
-
-#include "comm/DistributedProto.h"
-
 #include "MPI_Context.h"
+#include "Remote_Service.hpp"
+#include "comm/DistributedProto.h"
 
 struct megamol::frontend::Remote_Service::MpiNode {
     ~MpiNode();

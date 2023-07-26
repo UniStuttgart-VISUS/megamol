@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <vector>
+
 #include "ImageWrapper.h"
 #include "ImageWrapper_Conversion_Helpers.hpp"
-
-#include <vector>
 
 namespace megamol::frontend_resources {
 

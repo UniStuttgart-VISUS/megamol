@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "FrontendResource.h"
-#include "mmcore/utility/log/Log.h"
-
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "FrontendResource.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::frontend_resources {
 

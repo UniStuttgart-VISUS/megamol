@@ -1,6 +1,5 @@
 #include "imgui_impl_generic.h"
 
-
 struct ImGui_ImplGeneric_Data {
     GenericWindow* Window;
     GenericWindow* MouseWindow;

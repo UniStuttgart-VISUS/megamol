@@ -6,17 +6,6 @@
 
 #include "VR_Service.hpp"
 
-#ifdef MEGAMOL_USE_VR_INTEROP
-#include <glm/gtc/matrix_transform.hpp>
-#include <interop.hpp>
-
-#include "ImageWrapper_to_GLTexture.hpp"
-#include "ViewRenderInputs.h"
-
-#include "mmcore/Module.h"
-#include "mmcore/view/AbstractViewInterface.h"
-#endif // MEGAMOL_USE_VR_INTEROP
-
 #include "mmcore/MegaMolGraph.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
@@ -24,6 +13,15 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
 
+#ifdef MEGAMOL_USE_VR_INTEROP
+#include <glm/gtc/matrix_transform.hpp>
+#include <interop.hpp>
+
+#include "ImageWrapper_to_GLTexture.hpp"
+#include "ViewRenderInputs.h"
+#include "mmcore/Module.h"
+#include "mmcore/view/AbstractViewInterface.h"
+#endif // MEGAMOL_USE_VR_INTEROP
 
 static const std::string service_name = "VR_Service: ";
 static void log(std::string const& text) {

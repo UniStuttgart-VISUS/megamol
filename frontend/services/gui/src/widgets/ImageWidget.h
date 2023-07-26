@@ -6,11 +6,11 @@
 
 #pragma once
 
+#include "widgets/HoverToolTip.h"
+
 #ifdef MEGAMOL_USE_OPENGL
 #include "mmcore_gl/utility/RenderUtils.h"
 #endif // MEGAMOL_USE_OPENGL
-#include "widgets/HoverToolTip.h"
-
 
 namespace megamol::gui {
 

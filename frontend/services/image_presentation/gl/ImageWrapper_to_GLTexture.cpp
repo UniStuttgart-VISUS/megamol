@@ -5,12 +5,13 @@
  */
 
 #include "ImageWrapper_to_GLTexture.hpp"
-#include "ImageWrapper_Conversion_Helpers.hpp"
-
-#include "glad/gl.h"
 
 #include <stdexcept>
 #include <tuple>
+
+#include <glad/gl.h>
+
+#include "ImageWrapper_Conversion_Helpers.hpp"
 
 using namespace megamol::frontend_resources;
 

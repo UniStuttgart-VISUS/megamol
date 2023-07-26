@@ -5,8 +5,8 @@
  */
 
 #include "SplitterWidget.h"
-#include "gui_utils.h"
 
+#include "gui_utils.h"
 
 using namespace megamol;
 using namespace megamol::gui;

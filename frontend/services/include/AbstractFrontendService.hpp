@@ -7,9 +7,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "FrontendResource.h"
-#include <vector>
 
 namespace megamol::frontend {
 

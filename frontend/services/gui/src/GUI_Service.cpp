@@ -20,7 +20,6 @@
 #include "ScriptPaths.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
-
 #include "mmcore/utility/log/Log.h"
 
 

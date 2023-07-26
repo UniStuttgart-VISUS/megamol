@@ -5,9 +5,10 @@
  */
 
 #include "PerformanceMonitor.h"
-#include "gui_utils.h"
+
 #include <iomanip>
 
+#include "gui_utils.h"
 
 using namespace megamol;
 using namespace megamol::gui;

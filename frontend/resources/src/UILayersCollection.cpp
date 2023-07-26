@@ -6,9 +6,9 @@
 
 #include "UILayersCollection.hpp"
 
-/// #include "mmcore/utility/log/Log.h"
-
 #include <algorithm>
+
+/// #include "mmcore/utility/log/Log.h"
 
 #define init          \
     bool ret = false; \

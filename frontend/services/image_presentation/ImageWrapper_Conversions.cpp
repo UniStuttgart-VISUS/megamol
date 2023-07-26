@@ -5,12 +5,11 @@
  */
 
 #include <stdexcept>
+#include <tuple>
 
 #include "ImageWrapper_Conversion_Helpers.hpp"
 #include "ImageWrapper_to_ByteArray.hpp"
 #include "ImageWrapper_to_GLTexture.hpp"
-
-#include <tuple>
 
 using namespace megamol::frontend_resources;
 

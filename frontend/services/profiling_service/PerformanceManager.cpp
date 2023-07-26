@@ -6,12 +6,13 @@
 
 #include "PerformanceManager.h"
 
-#include "mmcore/Call.h"
-#include "mmcore/Module.h"
 #include <array>
 
+#include "mmcore/Call.h"
+#include "mmcore/Module.h"
+
 #ifdef MEGAMOL_USE_OPENGL
-#include "glad/gl.h"
+#include <glad/gl.h>
 #endif
 
 namespace megamol::frontend_resources {

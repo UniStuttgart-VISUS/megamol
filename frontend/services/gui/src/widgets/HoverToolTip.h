@@ -6,10 +6,9 @@
 
 #pragma once
 
-
-#include "gui_utils.h"
 #include <string>
 
+#include "gui_utils.h"
 
 namespace megamol::gui {
 

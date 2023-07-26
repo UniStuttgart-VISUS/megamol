@@ -5,7 +5,9 @@
  */
 
 #include "StringSearchWidget.h"
-#include "imgui_stdlib.h"
+
+#include <imgui_stdlib.h>
+
 #include "mmcore/utility/FileUtils.h"
 
 

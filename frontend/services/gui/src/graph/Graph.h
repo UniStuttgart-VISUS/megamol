@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <list>
 
 #include "Call.h"
 #include "Group.h"
@@ -14,8 +15,6 @@
 #include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
-#include <list>
-
 
 namespace megamol::gui {
 

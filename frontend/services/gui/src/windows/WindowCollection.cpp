@@ -5,6 +5,7 @@
  */
 
 #include "WindowCollection.h"
+
 #include "AnimationEditor.h"
 #include "Configurator.h"
 #include "HotkeyEditor.h"

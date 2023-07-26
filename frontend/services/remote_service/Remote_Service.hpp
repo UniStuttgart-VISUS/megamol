@@ -7,11 +7,10 @@
 #pragma once
 #undef None // on linux X.h defines None, crashing this header
 
-#include "AbstractFrontendService.hpp"
-
-#include "RuntimeConfig.h"
-
 #include <memory> // unique_ptr
+
+#include "AbstractFrontendService.hpp"
+#include "RuntimeConfig.h"
 
 namespace megamol::frontend {
 

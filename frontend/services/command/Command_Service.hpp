@@ -7,7 +7,6 @@
 #pragma once
 
 #include "AbstractFrontendService.hpp"
-
 #include "CommandRegistry.h"
 
 namespace megamol::frontend {

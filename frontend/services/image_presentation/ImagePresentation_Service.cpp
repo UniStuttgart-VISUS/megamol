@@ -6,20 +6,18 @@
 
 #include "ImagePresentation_Service.hpp"
 
-#include "GUIState.h"
-#include "WindowManipulation.h"
-
-#include "ImagePresentation_Sinks.hpp"
-#include "ImageWrapper_to_GLTexture.hpp"
-#include "OpenGL_Context.h"
-
-#include "LuaCallbacksCollection.h"
-#include "RenderInput.h"
-#include "ViewRenderInputs.h"
-
 #include <any>
 #include <filesystem>
 #include <utility>
+
+#include "GUIState.h"
+#include "ImagePresentation_Sinks.hpp"
+#include "ImageWrapper_to_GLTexture.hpp"
+#include "LuaCallbacksCollection.h"
+#include "OpenGL_Context.h"
+#include "RenderInput.h"
+#include "ViewRenderInputs.h"
+#include "WindowManipulation.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"

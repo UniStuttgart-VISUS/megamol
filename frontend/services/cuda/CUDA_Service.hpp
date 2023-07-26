@@ -9,7 +9,6 @@
 #ifdef MM_CUDA_ENABLED
 
 #include "AbstractFrontendService.hpp"
-
 #include "CUDA_Context.h"
 
 namespace megamol::frontend {

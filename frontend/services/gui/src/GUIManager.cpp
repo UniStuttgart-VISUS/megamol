@@ -5,7 +5,9 @@
  */
 
 #include "GUIManager.h"
-#include "imgui_stdlib.h"
+
+#include <imgui_stdlib.h>
+
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "widgets/ButtonWidgets.h"

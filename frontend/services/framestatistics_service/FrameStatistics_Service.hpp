@@ -6,12 +6,11 @@
 
 #pragma once
 
-#include "AbstractFrontendService.hpp"
-
-#include "FrameStatistics.h"
-
 #include <array>
 #include <chrono>
+
+#include "AbstractFrontendService.hpp"
+#include "FrameStatistics.h"
 
 namespace megamol::frontend {
 

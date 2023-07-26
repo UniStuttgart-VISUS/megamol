@@ -5,6 +5,7 @@
  */
 
 #include "widgets/ParameterGroupAnimationWidget.h"
+
 #include "graph/ParameterGroups.h"
 #include "widgets/ButtonWidgets.h"
 

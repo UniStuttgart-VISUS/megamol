@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "GL_STUB.h"
-
 #include <filesystem>
 #include <vector>
+
+#include "GL_STUB.h"
 
 namespace megamol::frontend_resources {
 

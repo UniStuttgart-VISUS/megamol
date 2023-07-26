@@ -12,9 +12,8 @@
 #include <numeric>
 #include <sstream>
 
-#include "mmcore/utility/Timestamp.h"
-
 #include "LuaCallbacksCollection.h"
+#include "mmcore/utility/Timestamp.h"
 
 
 // local logging wrapper for your convenience until central MegaMol logger established

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <variant>
 
 #include "AbstractWindow.h"
 #include "AnimationEditorData.h"
@@ -14,8 +15,6 @@
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/animation/AnimationData.h"
 #include "widgets/FileBrowserWidget.h"
-
-#include <variant>
 
 namespace megamol::gui {
 

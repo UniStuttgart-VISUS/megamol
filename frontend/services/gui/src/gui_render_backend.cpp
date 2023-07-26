@@ -5,17 +5,19 @@
  */
 
 #include "gui_render_backend.h"
+
+#include <algorithm>
+
 #include "gui_utils.h"
 #include "mmcore/utility/log/Log.h"
-#include <algorithm>
 
 #ifdef MEGAMOL_USE_OPENGL
 #ifdef _WIN32 // Windows
-#include "glad/wgl.h"
+#include <glad/wgl.h>
 #else // LINUX
-#include "glad/glx.h"
+#include <glad/glx.h>
 #endif // _WIN32
-#include "imgui_impl_opengl3.h"
+#include <imgui_impl_opengl3.h>
 #endif // MEGAMOL_USE_OPENGL
 
 using namespace megamol::gui;

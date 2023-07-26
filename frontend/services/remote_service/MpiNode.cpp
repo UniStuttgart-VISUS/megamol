@@ -10,10 +10,10 @@
 
 #include <chrono>
 
+#include "comm/DistributedProto.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/SystemInformation.h"
 
-#include "comm/DistributedProto.h"
 using namespace megamol::remote;
 
 static const std::string service_name = "Remote_Service::MpiNode: ";

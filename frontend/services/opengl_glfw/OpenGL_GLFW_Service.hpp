@@ -6,18 +6,16 @@
 
 #pragma once
 
-#include "GL_STUB.h"
+#include <memory>
 
 #include "AbstractFrontendService.hpp"
-
 #include "Framebuffer_Events.h"
+#include "GL_STUB.h"
 #include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
 #include "OpenGL_Helper.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
-
-#include <memory>
 
 namespace megamol::frontend {
 

@@ -7,7 +7,6 @@
 #pragma once
 
 #include "AbstractFrontendService.hpp"
-
 #include "ProjectLoader.h"
 
 namespace megamol::frontend {

@@ -7,7 +7,6 @@
 #pragma once
 
 #include "GL_STUB.h"
-
 #include "ImageWrapper.h"
 
 namespace megamol::frontend_resources {

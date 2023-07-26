@@ -6,14 +6,14 @@
 
 #include "CLIConfigParsing.h"
 
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+
 #define CXXOPTS_VECTOR_DELIMITER '\0'
 #include <cxxopts.hpp>
 
-#include <filesystem>
-
 // find user home
-#include <stdio.h>
-#include <stdlib.h>
 static std::filesystem::path getHomeDir() {
 #ifdef _WIN32
     return std::filesystem::absolute(std::string(getenv("HOMEDRIVE")) + std::string(getenv("HOMEPATH")));

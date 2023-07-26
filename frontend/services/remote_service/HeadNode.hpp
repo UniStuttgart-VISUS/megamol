@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <mutex>
+
 #include "Remote_Service.hpp"
+#include "ThreadWorker.h"
 #include "comm/DistributedProto.h"
 #include "comm/FBOCommFabric.h"
-
-#include "ThreadWorker.h"
-#include <mutex>
 
 struct megamol::frontend::Remote_Service::HeadNode {
     HeadNode() = default;

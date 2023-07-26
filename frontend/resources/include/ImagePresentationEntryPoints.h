@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "EntryPoint.h"
-#include "FrontendResource.h"
-
 #include <any>
 #include <functional>
 #include <vector>
+
+#include "EntryPoint.h"
+#include "FrontendResource.h"
 
 namespace megamol::frontend_resources {
 

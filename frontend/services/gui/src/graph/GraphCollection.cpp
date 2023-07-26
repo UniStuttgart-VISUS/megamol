@@ -5,6 +5,7 @@
  */
 
 #include "GraphCollection.h"
+
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/view/AbstractViewInterface.h"

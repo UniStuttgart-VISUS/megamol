@@ -5,7 +5,8 @@
  */
 
 #include "PopUps.h"
-#include "imgui_stdlib.h"
+
+#include <imgui_stdlib.h>
 
 
 using namespace megamol;

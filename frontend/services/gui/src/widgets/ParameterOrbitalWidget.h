@@ -6,11 +6,8 @@
 
 #pragma once
 
-
-#define IMGUIZMO_IMGUI_FOLDER
-#include "glm/glm.hpp"
-#include "imGuIZMOquat.h"
-
+#include <glm/glm.hpp>
+#include <imGuIZMOquat.h>
 
 namespace megamol::gui {
 

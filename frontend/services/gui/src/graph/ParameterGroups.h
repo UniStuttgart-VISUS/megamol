@@ -11,6 +11,7 @@
 #include "vislib/math/Ternary.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterGroupAnimationWidget.h"
+
 #ifdef MEGAMOL_USE_OPENGL
 #include "widgets/gl/ParameterGroupViewCubeWidget.h"
 #endif
