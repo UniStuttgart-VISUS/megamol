@@ -426,7 +426,7 @@ bool TableToLines::assertData(table::TableDataCall* ft) {
 
             resultSet.init(ret_index.data(), out_dist_sqr.data());
 
-            index.findNeighbors(resultSet, query_pt, nanoflann::SearchParams());
+            index.findNeighbors(resultSet, query_pt, nanoflann::SearchParameters());
             for (unsigned int j = 0; j < num_neighbors; ++j) {
                 // Vertices
                 tmpVert[0] = pc.pts[i].x;

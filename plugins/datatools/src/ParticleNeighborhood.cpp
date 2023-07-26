@@ -207,12 +207,12 @@ bool datatools::ParticleNeighborhood::assertData(
             const float* vbase = myPts->get_position(thePart);
             float theVertex[3];
             maxDist = 0.0f;
-            std::vector<std::pair<size_t, float>> ret_matches;
-            std::vector<std::pair<size_t, float>> ret_localMatches;
+            std::vector<nanoflann::ResultItem<size_t, float>> ret_matches;
+            std::vector<nanoflann::ResultItem<size_t, float>> ret_localMatches;
             std::vector<size_t> ret_index(theNumber);
             std::vector<float> out_dist_sqr(theNumber);
             nanoflann::KNNResultSet<float> resultSet(theNumber);
-            nanoflann::SearchParams params;
+            nanoflann::SearchParameters params;
             params.sorted = false;
 
             // final computation
@@ -250,7 +250,8 @@ bool datatools::ParticleNeighborhood::assertData(
                             resultSet.init(ret_index.data(), out_dist_sqr.data());
                             particleTree->findNeighbors(resultSet, theVertex, params);
                             for (size_t i = 0; i < resultSet.size(); ++i) {
-                                ret_matches.push_back(std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
+                                ret_matches.push_back(
+                                    nanoflann::ResultItem<size_t, float>(ret_index[i], out_dist_sqr[i]));
                             }
                         }
                     }

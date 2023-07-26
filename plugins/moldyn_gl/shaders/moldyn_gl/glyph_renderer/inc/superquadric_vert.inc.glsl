@@ -46,10 +46,6 @@ void main() {
         corner_pos = -corner_pos;
     }
 
-    // need to rotate by inverse tensor rotation in order to preserve relative
-    // position between camera and transformed coordinate in fragment shader
-    cam_pos = rotate_tensor_into_world * view_vec;
-
 
     // flags
     uint flag = FLAG_ENABLED;
@@ -76,10 +72,15 @@ void main() {
     absradii = abs(radii) * scaling;
 
 
+    // need to rotate by inverse tensor rotation in order to preserve relative
+    // position between camera and transformed coordinate in fragment shader
+    cam_pos = rotate_tensor_into_world * view_vec;
+    cam_pos /= absradii;
+
+
     // color stuff
     vec4 col = vec4(col_array[inst].x, col_array[inst].y, col_array[inst].z, col_array[inst].w);
 
-    // TODO: what effect does this have to have?
     if( ( options & OPTIONS_USE_PER_AXIS_COLOR ) > 0 ) {
         col.r = face == 0 ? radii.x : face == 1 ? radii.y : radii.z;
     }

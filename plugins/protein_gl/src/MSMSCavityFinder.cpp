@@ -207,7 +207,7 @@ bool MSMSCavityFinder::getData(Call& call) {
         my_kd_tree_t searchIndex(3, pointCloud, nanoflann::KDTreeSingleIndexAdaptorParams(10));
         searchIndex.buildIndex();
 
-        nanoflann::SearchParams searchParams;
+        nanoflann::SearchParameters searchParams;
 
         // search for closest point
         // CAUTION: THIS CODE ONLY USES THE FIRST MESH OF THE CALL!
