@@ -43,11 +43,13 @@ There, the original formatting should be kept.
 ## File Organization
 
 - Use `#pragma once` and do not use include guards. 
-- Split includes into 4 groups, each group is ordered alphabetically, empty line between groups:
-  1. Corresponding Header to the current .cpp file (with `""`).
-  2. System Includes (with `<>`)
-  3. External Library Includes (with `<>`[^6])
-  4. MegaMol internal includes (with `""`)
+- Split includes into groups, each group is ordered alphabetically, empty line between groups:
+  1. Corresponding header to the current .cpp file (with `""`).
+  2. C system headers (with `<>`[^6])
+  3. C++ STL headers (with `<>`[^6])
+  4. External library headers (with `<>`[^6])
+  5. MegaMol internal headers (headers in this repository) (with `""`)
+  6. Conditional includes requiring `#ifdef` after all others
 - Header files use the extension `.h`, source files `.cpp`
 - Files names must match the corresponding class name (also in `UpperCamelCase`).
 - Directory names must match the corresponding namespace (at least for top level categorisation, additional subdirectories may or may not introduce an additional namespace level).
