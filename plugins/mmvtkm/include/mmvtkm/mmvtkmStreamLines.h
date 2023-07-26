@@ -7,7 +7,9 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <vtkm/Bounds.h>
 #include <vtkm/Particle.h>
+#include <vtkm/cont/DataSet.h>
 
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
