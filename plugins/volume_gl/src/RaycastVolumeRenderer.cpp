@@ -373,7 +373,11 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
 
     // bind volume texture
     glActiveTexture(GL_TEXTURE0);
-    m_volume_texture->bindTexture();
+    if (this->m_volume_handle != 0) {
+        glBindTexture(GL_TEXTURE_3D, m_volume_handle);
+    } else {
+        m_volume_texture->bindTexture();
+    }
     compute_shdr->setUniform("volume_tx3D", 0);
 
     // bind the transfer function
@@ -677,27 +681,30 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
         break;
     }
 
-    auto const volumedata = cd->GetData();
+    if (metadata->MemLoc == geocalls::RAM) {
+        auto const volumedata = cd->GetData();
 
-    // TODO if/else data already on GPU
+        glowl::TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
+            metadata->Resolution[2], format, type, 1,
+            {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+                {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+                {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
+            {});
 
-    glowl::TextureLayout volume_layout(internal_format, metadata->Resolution[0], metadata->Resolution[1],
-        metadata->Resolution[2], format, type, 1,
-        {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
-            {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
-        {});
+        GLint unpackAlignmentOrig = 0;
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpackAlignmentOrig);
 
-    GLint unpackAlignmentOrig = 0;
-    glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpackAlignmentOrig);
+        // Pixel data rows must be aligned to 4 bytes by default, this is may not guarantied by all datasets.
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // for upload to GPU
+        //glPixelStorei(GL_PACK_ALIGNMENT, 1); // for download from GPU
 
-    // Pixel data rows must be aligned to 4 bytes by default, this is may not guarantied by all datasets.
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // for upload to GPU
-    //glPixelStorei(GL_PACK_ALIGNMENT, 1); // for download from GPU
+        m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, volumedata);
 
-    m_volume_texture = std::make_unique<glowl::Texture3D>("raycast_volume_texture", volume_layout, volumedata);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignmentOrig);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignmentOrig);
+        m_volume_handle = 0;
+    } else {
+        m_volume_handle = cd->GetVRAMData();
+    }
 
     return true;
 }

@@ -53,7 +53,8 @@ bool megamol::compositing_gl::SimpleRenderTarget::create() {
 
     m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);
     m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
-    m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT);   // normals
+    m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // normals
+    //m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT);   // normals
 
     return true;
 }

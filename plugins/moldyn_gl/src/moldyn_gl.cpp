@@ -11,6 +11,8 @@
 #include "rendering/GlyphRenderer.h"
 #include "rendering/GrimRenderer.h"
 #include "rendering/SphereRenderer.h"
+#include "rendering/VoxelGenerator.h"
+//#include "rendering/AO.h"
 
 namespace megamol::moldyn_gl {
 class MoldynGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
@@ -31,6 +33,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::ArrowRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SphereRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GlyphRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::VoxelGenerator>();
+        //this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::AO>();
     }
 };
 } // namespace megamol::moldyn_gl

@@ -7,6 +7,7 @@
 #include "mmcore/factories/AbstractPluginInstance.h"
 #include "mmcore/factories/PluginRegister.h"
 
+#include "AO.h"
 #include "AntiAliasing.h"
 #include "DepthDarkening.h"
 #include "DrawToScreen.h"
@@ -45,6 +46,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TextureDepthCompositing>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::NormalFromDepth>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::SSAO>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::AO>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::AntiAliasing>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::PNGDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TexInspectModule>();
