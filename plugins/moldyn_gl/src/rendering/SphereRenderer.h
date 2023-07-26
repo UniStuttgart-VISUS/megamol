@@ -27,7 +27,6 @@
 
 // clang-format off
 #include <glowl/glowl.h>
-#include <GL/glu.h>
 #include <vk_platform.h>
 // clang-format on
 
