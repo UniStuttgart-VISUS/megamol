@@ -5,6 +5,7 @@
  */
 
 #include "mmcore/CalleeSlot.h"
+
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CallerSlot.h"

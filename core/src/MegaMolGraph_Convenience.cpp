@@ -5,10 +5,12 @@
  */
 
 #include "mmcore/MegaMolGraph_Convenience.h"
+
+#include <sstream>
+
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
-#include <sstream>
 
 using namespace megamol::core;
 

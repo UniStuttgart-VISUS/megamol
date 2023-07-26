@@ -5,6 +5,7 @@
  */
 
 #include "mmcore/Call.h"
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/utility/log/Log.h"

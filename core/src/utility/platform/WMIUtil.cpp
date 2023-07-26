@@ -5,6 +5,7 @@
  */
 
 #include "mmcore/utility/platform/WMIUtil.h"
+
 #include "mmcore/utility/log/Log.h"
 
 #ifdef _WIN32

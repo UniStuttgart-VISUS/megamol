@@ -5,6 +5,7 @@
  */
 
 #include "mmcore/job/AbstractThreadedJob.h"
+
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;

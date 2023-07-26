@@ -7,13 +7,13 @@
 
 #pragma once
 
-
-#include "GL_STUB.h"
-#include "mmcore/view/InputCall.h"
-#include <glm/glm.hpp>
 #include <map>
 #include <vector>
 
+#include <glm/glm.hpp>
+
+#include "GL_STUB.h"
+#include "mmcore/view/InputCall.h"
 
 // forward declaration
 namespace glowl {

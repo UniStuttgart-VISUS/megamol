@@ -6,9 +6,6 @@
 
 #pragma once
 
-
-#include "mmcore/utility/log/Log.h"
-#include "vislib/UTF8Encoder.h"
 #include <codecvt>
 #include <filesystem>
 #include <fstream>
@@ -18,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "mmcore/utility/log/Log.h"
+#include "vislib/UTF8Encoder.h"
 
 namespace megamol::core::utility {
 

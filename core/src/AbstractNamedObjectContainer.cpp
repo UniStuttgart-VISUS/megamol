@@ -5,12 +5,14 @@
  */
 
 #include "mmcore/AbstractNamedObjectContainer.h"
+
+#include <algorithm>
+#include <cstring>
+
 #include "mmcore/Module.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"
-#include <algorithm>
-#include <cstring>
 
 using namespace megamol::core;
 

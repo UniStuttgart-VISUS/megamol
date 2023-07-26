@@ -5,13 +5,6 @@
  */
 
 #include "mmcore/AbstractWriterParams.h"
-#include "mmcore/AbstractSlot.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ParamSlot.h"
-
-#include "mmcore/utility/log/Log.h"
 
 #include <chrono>
 #include <ctime>
@@ -20,6 +13,13 @@
 #include <sstream>
 #include <string>
 #include <utility>
+
+#include "mmcore/AbstractSlot.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::core {
 

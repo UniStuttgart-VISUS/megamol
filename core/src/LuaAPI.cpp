@@ -4,6 +4,8 @@
  * All rights reserved.
  */
 
+#include "mmcore/LuaAPI.h"
+
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -11,14 +13,10 @@
 #include <sstream>
 #include <string>
 
-#ifndef _WIN32
-#include <sys/types.h>
-#include <unistd.h>
-#endif // _WIN32
+#include <lua.hpp>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/LuaAPI.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
@@ -26,7 +24,10 @@
 #include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 
-#include "lua.hpp"
+#ifndef _WIN32
+#include <sys/types.h>
+#include <unistd.h>
+#endif // _WIN32
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>

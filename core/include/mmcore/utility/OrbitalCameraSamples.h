@@ -9,7 +9,6 @@
 #include <tuple>
 
 #include "SampleSphere.h"
-
 #include "mmcore/BoundingBoxes_2.h"
 
 namespace megamol::core::utility {

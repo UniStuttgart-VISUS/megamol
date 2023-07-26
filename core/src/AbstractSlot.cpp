@@ -5,6 +5,7 @@
  */
 
 #include "mmcore/AbstractSlot.h"
+
 #include "vislib/IllegalStateException.h"
 #include "vislib/UnsupportedOperationException.h"
 

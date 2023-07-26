@@ -5,6 +5,7 @@
  */
 
 #include "mmcore/job/AbstractJob.h"
+
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/utility/log/Log.h"
 
