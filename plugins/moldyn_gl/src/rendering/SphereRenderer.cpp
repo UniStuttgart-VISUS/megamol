@@ -993,9 +993,9 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // Update current state variables -----------------------------------------
 
     // Update data set range_ (if new data set was loaded, or if frame changed)
-    if (hash != this->old_hash_ || frame_id != this->old_frame_id_) {  // or (this->state_invalid_) {
-        this->range_[0] = std::numeric_limits<float>::max(); // min
-        this->range_[1] = std::numeric_limits<float>::lowest(); // max
+    if (hash != this->old_hash_ || frame_id != this->old_frame_id_) { // or (this->state_invalid_) {
+        this->range_[0] = std::numeric_limits<float>::max();          // min
+        this->range_[1] = std::numeric_limits<float>::lowest();       // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
             MultiParticleDataCall::Particles& parts = mpdc->AccessParticles(i);
             this->range_[0] = std::min(parts.GetMinColourIndexValue(), this->range_[0]);

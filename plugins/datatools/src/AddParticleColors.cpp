@@ -61,7 +61,7 @@ bool megamol::datatools::AddParticleColors::manipulateData(
         for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
             auto& parts = outData.AccessParticles(plidx);
             min_i = std::min(min_i, parts.GetMinColourIndexValue());
-            max_i = std::max(max_i,parts.GetMaxColourIndexValue());
+            max_i = std::max(max_i, parts.GetMaxColourIndexValue());
         }
         // Update data set (if new data set was loaded, or if frame changed)
         if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash()) {
