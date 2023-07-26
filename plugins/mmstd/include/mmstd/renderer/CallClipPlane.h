@@ -8,6 +8,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/view/Camera.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Vector.h"
 
@@ -107,6 +108,16 @@ public:
         return this->plane;
     }
 
+
+    /**
+     * Gets the camera
+     *
+     * @return The camera
+     */
+    megamol::core::view::Camera GetCamera() const {
+        return this->camera;
+    }
+
     /**
      * Sets the colour of the clipping plane
      *
@@ -129,6 +140,15 @@ public:
      */
     void SetPlane(const vislib::math::Plane<float>& plane);
 
+    /**
+     * Sets the camera
+     *
+     * @param cam   The 3D renderer's camera.
+     */
+    void SetCamera(megamol::core::view::Camera cam) {
+        this->camera = cam;
+    }
+
 private:
 #ifdef _WIN32
 #pragma warning(disable : 4251)
@@ -141,6 +161,9 @@ private:
 
     /** The colour of the plane */
     unsigned char col[4];
+
+    /** The camera */
+    megamol::core::view::Camera camera;
 };
 
 

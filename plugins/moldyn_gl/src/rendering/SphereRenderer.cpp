@@ -733,9 +733,16 @@ MultiParticleDataCall* SphereRenderer::getData(unsigned int t, float& out_scalin
 }
 
 
-void SphereRenderer::getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col) {
+void SphereRenderer::getClipData(core::view::Camera in_cam, glm::vec4& out_clip_dat, glm::vec4& out_clip_col) {
 
     view::CallClipPlane* ccp = this->get_clip_plane_slot_.CallAs<view::CallClipPlane>();
+
+    // First set current camera ...
+    if (ccp != nullptr) {
+        ccp->SetCamera(in_cam);
+    }
+
+    // ... then call callback and retrieve new values:
     if ((ccp != nullptr) && (*ccp)()) {
         out_clip_dat[0] = ccp->GetPlane().Normal().X();
         out_clip_dat[1] = ccp->GetPlane().Normal().Y();
@@ -1009,9 +1016,6 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     this->old_hash_ = hash;
     this->old_frame_id_ = frame_id;
 
-    // Clipping
-    this->getClipData(this->cur_clip_dat_, this->cur_clip_col_);
-
     // Camera
     core::view::Camera cam = call.GetCamera();
     auto view = cam.getViewMatrix();
@@ -1029,6 +1033,9 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     this->cur_mvp_ = proj * view;
     this->cur_mvp_inv_ = glm::inverse(this->cur_mvp_);
     this->cur_mvp_transp_ = glm::transpose(this->cur_mvp_);
+
+    // Clipping
+    this->getClipData(cam, this->cur_clip_dat_, this->cur_clip_col_);
 
     // Lights
     this->cur_light_dir_ = {0.0f, 0.0f, 0.0f, 1.0f};

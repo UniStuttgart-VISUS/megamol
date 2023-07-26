@@ -396,10 +396,12 @@ private:
     /**
      * Return clipping information.
      *
+     * @param in_cam   The currentcamera. Required for the GUI widget.
      * @param clipDat  Points to four floats ...
      * @param clipCol  Points to four floats ....
      */
-    void getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col);
+    void getClipData(core::view::Camera in_cam, glm::vec4& out_clip_dat, glm::vec4& out_clip_col);
+
 
     /**
      * Check if specified render mode or all render mode are available.

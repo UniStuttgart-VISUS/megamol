@@ -10,6 +10,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(imgui_software_renderer CONFIG REQUIRED)
 find_package(imguizmoquat CONFIG REQUIRED)
+find_package(imguizmo REQUIRED)
 find_package(implot CONFIG REQUIRED)
 find_package(ZeroMQ REQUIRED)
 find_package(cppzmq REQUIRED)
@@ -169,6 +170,7 @@ target_link_libraries(${PROJECT_NAME}
     imgui::imgui
     imgui_software_renderer::imgui_software_renderer
     imguizmoquat::imguizmoquat
+    imguizmo::imguizmo
     implot::implot
     libzmq
     cppzmq)

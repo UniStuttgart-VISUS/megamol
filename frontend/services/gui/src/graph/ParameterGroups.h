@@ -10,11 +10,8 @@
 
 #include "graph/Parameter.h"
 #include "vislib/math/Ternary.h"
+#include "widgets/AbstractParameterGroupWidget.h"
 #include "widgets/HoverToolTip.h"
-#include "widgets/ParameterGroupAnimationWidget.h"
-#ifdef MEGAMOL_USE_OPENGL
-#include "widgets/gl/ParameterGroupViewCubeWidget.h"
-#endif
 
 
 namespace megamol::gui {
@@ -56,12 +53,8 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     HoverToolTip tooltip;
-#ifdef MEGAMOL_USE_OPENGL
-    ParameterGroupViewCubeWidget cube_widget_group;
-#endif
-    ParameterGroupAnimationWidget animation_group;
 
-    std::vector<AbstractParameterGroupWidget*> group_widgets;
+    std::vector<std::shared_ptr<AbstractParameterGroupWidget>> group_widgets;
 };
 
 

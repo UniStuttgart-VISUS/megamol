@@ -67,7 +67,7 @@ public:
     ParameterGroupViewCubeWidget();
     ~ParameterGroupViewCubeWidget() override = default;
 
-    bool Check(bool only_check, ParamPtrVector_t& params) override;
+    bool Check(ParamPtrVector_t& params) override;
 
     bool Draw(ParamPtrVector_t params, const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope,
         megamol::core::utility::PickingBuffer* inout_picking_buffer, ImGuiID in_override_header_state) override;

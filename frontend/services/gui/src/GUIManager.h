@@ -426,6 +426,7 @@ private:
     FileBrowserWidget file_browser;
     HoverToolTip tooltip;
     megamol::core::utility::PickingBuffer picking_buffer;
+    bool imguimo_btn_click_used;
 
     // FUNCTIONS --------------------------------------------------------------
 

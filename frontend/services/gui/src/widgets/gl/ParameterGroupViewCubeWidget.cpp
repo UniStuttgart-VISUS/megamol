@@ -630,7 +630,7 @@ megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget()
 }
 
 
-bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtrVector_t& params) {
+bool megamol::gui::ParameterGroupViewCubeWidget::Check(ParamPtrVector_t& params) {
 
     bool param_cubeOrientation = false;
     bool param_defaultView = false;

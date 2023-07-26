@@ -10,6 +10,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CameraSerializer.h"
 #include "vislib/math/Plane.h"
 
 namespace megamol::core::view {
@@ -83,6 +84,9 @@ private:
     /** The colour of the plane */
     float col[4];
 
+    /** The camera serializer */
+    CameraSerializer cameraSerializer;
+
     /** Disables or enables the clipping plane */
     param::ParamSlot enableSlot;
 
@@ -97,6 +101,9 @@ private:
 
     /** The plane-origin distance */
     param::ParamSlot distSlot;
+
+    /** The serialized camera */
+    param::ParamSlot cameraSlot;
 };
 
 } // namespace megamol::core::view
