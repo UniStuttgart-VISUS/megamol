@@ -7,15 +7,13 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <vtkm/Particle.h>
 
+#include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-
-#include "mesh/MeshCalls.h"
-
-#include "vtkm/Particle.h"
 
 
 typedef vislib::math::Point<float, 3> visPoint3f;

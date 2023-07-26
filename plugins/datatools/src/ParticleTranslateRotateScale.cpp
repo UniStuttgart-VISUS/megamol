@@ -6,12 +6,11 @@
  */
 #include "ParticleTranslateRotateScale.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"

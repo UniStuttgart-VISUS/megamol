@@ -6,9 +6,9 @@
  */
 
 #include "AstroParticleConverter.h"
-#include <glm/gtc/type_ptr.hpp>
 
-#include "simultaneous_sort/simultaneous_sort.h"
+#include <glm/gtc/type_ptr.hpp>
+#include <simultaneous_sort/simultaneous_sort.h>
 
 using namespace megamol;
 using namespace megamol::astro;

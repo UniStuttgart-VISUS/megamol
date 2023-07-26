@@ -5,7 +5,9 @@
  */
 
 #include "OSPRayTransform.h"
-#include "glm/matrix.hpp"
+
+#include <glm/matrix.hpp>
+
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 

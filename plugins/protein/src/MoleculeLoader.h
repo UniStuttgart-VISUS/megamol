@@ -5,17 +5,16 @@
  */
 #pragma once
 
+#include <chemfiles.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-
 #include "protein_calls/MolecularDataCall.h"
-
-#include "chemfiles.hpp"
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace megamol::protein {
 class MoleculeLoader : public core::Module {

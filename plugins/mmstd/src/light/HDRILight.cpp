@@ -5,6 +5,7 @@
  */
 
 #include "mmstd/light/HDRILight.h"
+
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"

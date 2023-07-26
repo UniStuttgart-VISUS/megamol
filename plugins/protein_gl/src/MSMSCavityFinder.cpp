@@ -5,24 +5,24 @@
  */
 #include "MSMSCavityFinder.h"
 
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
-
-#include "geometry_calls_gl/CallTriMeshDataGL.h"
-#include "protein_calls/BindingSiteCall.h"
-#include "protein_calls/MolecularDataCall.h"
-#include "protein_calls/TunnelResidueDataCall.h"
 #include <cfloat>
 #include <chrono>
 #include <climits>
 #include <iostream>
 #include <set>
 
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/TunnelResidueDataCall.h"
+
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4267)
-#include "nanoflann.hpp"
+#include <nanoflann.hpp>
 #pragma warning(pop)
 
 using namespace megamol;

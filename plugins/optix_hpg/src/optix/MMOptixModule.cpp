@@ -4,11 +4,10 @@
 #include <sstream>
 #include <tuple>
 
-#include "optix/Utils.h"
+#include <glm/glm.hpp>
 
 #include "mmcore/utility/log/Log.h"
-
-#include "glm/glm.hpp"
+#include "optix/Utils.h"
 
 // bounds kernel embedded in optix kernel inspired by OWL
 

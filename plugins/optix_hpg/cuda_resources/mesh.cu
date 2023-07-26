@@ -5,7 +5,7 @@
 
 #include "optix/random.h"
 
-#include "cuda.h"
+#include <cuda.h>
 
 namespace megamol {
 namespace optix_hpg {

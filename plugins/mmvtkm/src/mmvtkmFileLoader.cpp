@@ -8,12 +8,11 @@
 
 #include "mmvtkm/mmvtkmFileLoader.h"
 
+#include <vtkm/io/reader/VTKDataSetReader.h>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-
-#include "vtkm/io/reader/VTKDataSetReader.h"
-
 
 using namespace megamol;
 using namespace megamol::mmvtkm;

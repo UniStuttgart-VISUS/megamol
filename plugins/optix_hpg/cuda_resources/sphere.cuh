@@ -1,11 +1,10 @@
 #pragma once
 
-#include "optix/utils_device.h"
+#include <glm/glm.hpp>
+#include <glm/gtx/component_wise.hpp>
 
 #include "optix/random.h"
-
-#include "glm/glm.hpp"
-#include "glm/gtx/component_wise.hpp"
+#include "optix/utils_device.h"
 
 namespace megamol {
 namespace optix_hpg {

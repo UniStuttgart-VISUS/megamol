@@ -11,7 +11,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/data/AnimDataModule.h"
-
 #include "mmvtkm/mmvtkmDataCall.h"
 
 

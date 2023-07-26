@@ -5,8 +5,10 @@
  */
 
 #include "mmstd/light/TriDirectionalLighting.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
