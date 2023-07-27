@@ -135,8 +135,8 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     return true;
 }
 
-bool datatools::OverrideParticleGlobals::manipulateExtent(geocalls::MultiParticleDataCall& outData,
-    geocalls::MultiParticleDataCall& inData) {
+bool datatools::OverrideParticleGlobals::manipulateExtent(
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
     outData = inData;
     inData.SetUnlocker(nullptr, false);
 

@@ -35,6 +35,7 @@
       "platform": "!windows"
     },
     "libpng",
+    "ltla-umappp",
     "lua",
     "mmpld-io",
     "nanoflann",

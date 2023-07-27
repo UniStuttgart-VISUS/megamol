@@ -16,7 +16,7 @@ TSNEProjection::TSNEProjection()
         , dataOutSlot("dataOut", "Ouput")
         , dataInSlot("dataIn", "Input")
         , reduceToNSlot("nComponents", "Number of components (dimensions) to keep")
-        , randomSeedSlot("randomSeed", "Set the random Seed. Set to -1 for time dependant random Seed")
+        , randomSeedSlot("randomSeed", "Set the random Seed. Set to -1 for time dependant random seed")
         , thetaSlot("gradientAccurancy",
               "theta = 0 corresponds to standard, slow t-SNE, while theta = 1 corresponds to very crude approximations")
         , maxIterSlot("maxIter", "Set the maximum Iterations")
@@ -162,8 +162,6 @@ bool megamol::infovis::TSNEProjection::project(megamol::datatools::table::TableD
     }
 
     double* result = (double*)malloc(rowsCount * outputColumnCount * sizeof(double));
-    // void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int rand_seed,
-    // bool skip_random_init, int max_iter = 1000, int stop_lying_iter = 250, int mom_switch_iter = 250);
     TSNE::run(inputData, rowsCount, columnCount, result, outputColumnCount, perplexity, theta, randomSeed, false,
         maxIter, 250, 250);
 

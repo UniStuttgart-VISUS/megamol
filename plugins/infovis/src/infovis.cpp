@@ -13,6 +13,7 @@
 #include "MDSProjection.h"
 #include "PCAProjection.h"
 #include "TSNEProjection.h"
+#include "UMAProjection.h"
 
 namespace megamol::infovis {
 class InfovisPluginInstance : public megamol::core::factories::AbstractPluginInstance {
@@ -28,6 +29,7 @@ public:
     void registerClasses() override {
 
         // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::UMAProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::PCAProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::TSNEProjection>();
         this->module_descriptions.RegisterAutoDescription<megamol::infovis::MDSProjection>();

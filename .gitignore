@@ -1,4 +1,5 @@
 # IDE/CMake settings
+out/
 .vs/
 .vscode/
 .idea/
