@@ -31,6 +31,9 @@ megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." 
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+# NVPerf option
+option(MEGAMOL_USE_NVPERF "Enable NVPerf support" OFF)
+
 # Catch deprecated options before project()
 include(cmake/deprecation_warning.cmake)
 
