@@ -30,12 +30,12 @@ public:
     ExpressionInterpreter(ExpressionInterpreter const&) = delete;
     void operator=(ExpressionInterpreter const&) = delete;
 
-    float EvaluateFloat(
-        const std::string& script, KeyTimeType t);
+    float EvaluateFloat(const std::string& script, KeyTimeType t);
 
     std::string EvaluateString(const std::string& script, KeyTimeType t);
 
-private : ExpressionInterpreter() {
+private:
+    ExpressionInterpreter() {
         lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::string);
     }
     sol::state lua;
@@ -63,7 +63,6 @@ struct FloatKey {
     static float CubicHermiteValue(float value1, float outTangent1, float inTangent2, float value2, float t);
     static float CubicHermiteTangent(float value1, float outTangent1, float inTangent2, float value2, float t);
     //static float FindTForValue()
-
 };
 
 template<class C>

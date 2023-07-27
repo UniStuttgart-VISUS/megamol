@@ -106,7 +106,7 @@ bool AnimationEditor::Draw() {
     }
 
     if (compact_view) {
-       DrawParams();
+        DrawParams();
     } else {
         DrawToolbar();
         DrawPopups();
@@ -840,8 +840,7 @@ void AnimationEditor::DrawParams() {
     ImGui::Text("Animation");
     //ImGui::BeginChild(
     //    "Animation_SubWin", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
-    ImGui::BeginChild(
-        "Animation_SubWin", ImVec2(0.f,0.f), true);
+    ImGui::BeginChild("Animation_SubWin", ImVec2(0.f, 0.f), true);
     if (ImGui::Button("start")) {
         current_frame = animation_bounds[0];
     }
