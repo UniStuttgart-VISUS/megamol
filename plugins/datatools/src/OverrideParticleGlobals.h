@@ -52,6 +52,8 @@ protected:
      */
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+
 private:
     /** Activates overriding the selected values for all particle lists */
     core::param::ParamSlot overrideAllListSlot;

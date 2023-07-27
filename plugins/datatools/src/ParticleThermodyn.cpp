@@ -206,20 +206,20 @@ bool datatools::ParticleThermodyn::assertData(
     const auto theFluidDensity = this->fluidDensitySlot.Param<core::param::FloatParam>()->Value();
     size_t allpartcnt = 0;
 
-    if (this->lastTime != time || this->datahash != in->DataHash()) {
-        in->SetFrameID(time, true);
+    if (this->lastTime != time || this->datahash != in->DataHash() || myHash == 0) {
         do {
-            if (!(*in)(1))
+            in->SetFrameID(time, true);
+            if (!(*in)(1)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ParticleThermodyn: could not get frame (%u) extents", time);
                 return false;
-            if (!(*in)(0))
+            }
+            if (!(*in)(0)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ParticleThermodyn: could not get frame (%u) data", time);
                 return false;
+            }
         } while (in->FrameID() != time);
-
-        if (!(*in)(0)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "ParticleThermodyn: could not get frame (%u)", time);
-            return false;
-        }
 
         size_t totalParts = 0;
         plc = in->GetParticleListCount();
@@ -399,10 +399,23 @@ bool datatools::ParticleThermodyn::assertData(
                     }
 
                     // no neighbor should count twice!
+                    // sort by id first, distance second.
+                    std::sort(ret_matches.begin(), ret_matches.end(),
+                        [](const nanoflann::ResultItem<size_t, float>& a,
+                            const nanoflann::ResultItem<size_t, float>& b) -> bool {
+                            if (a.first < b.first) {
+                                return true;
+                            } else if (a.first > b.first) {
+                                return false;
+                            } else {
+                                return a.second < b.second;
+                            }
+                        });
+                    // only closest hit counts. this should return the correct one, but I'm not sure whether this is implementation-dependent :/
                     ret_matches.erase(unique(ret_matches.begin(), ret_matches.end(),
                                           [](const nanoflann::ResultItem<size_t, float>& a,
                                               const nanoflann::ResultItem<size_t, float>& b) -> bool {
-                                              return a.first == b.first && a.second == b.second;
+                                              return a.first == b.first; // && a.second == b.second;
                                           }),
                         ret_matches.end());
 

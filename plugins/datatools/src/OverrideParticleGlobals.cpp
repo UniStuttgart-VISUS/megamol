@@ -135,6 +135,32 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     return true;
 }
 
+bool datatools::OverrideParticleGlobals::manipulateExtent(
+    geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) {
+    outData = inData;
+    inData.SetUnlocker(nullptr, false);
+
+    if (anythingDirty()) {
+        myHash++;
+        resetAllDirty();
+    }
+    outData.SetDataHash(myHash);
+
+    // we need to adjust the clip box if we fiddle with the radius
+    if (this->overrideRadiusSlot.Param<core::param::BoolParam>()->Value()) {
+        float rad = 0.0f;
+        for (auto i = 0; i < outData.GetParticleListCount(); ++i) {
+            rad = std::max(rad, outData.AccessParticles(i).GetGlobalRadius());
+        }
+        rad = std::max(rad, this->radiusSlot.Param<core::param::FloatParam>()->Value());
+        auto bbox = outData.AccessBoundingBoxes().ObjectSpaceBBox();
+        bbox.Grow(rad);
+        outData.AccessBoundingBoxes().SetObjectSpaceClipBox(bbox);
+    }
+
+    return true;
+}
+
 bool megamol::datatools::OverrideParticleGlobals::anythingDirty() {
     return this->overrideAllListSlot.IsDirty() || this->overrideListSlot.IsDirty() ||
            this->overrideRadiusSlot.IsDirty() || this->radiusSlot.IsDirty() || this->overrideColorSlot.IsDirty() ||

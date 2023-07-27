@@ -90,7 +90,7 @@ public:
         COLOR_ATTACHMENT3 = (COLOR_ATTACHMENT0 + 3), // GL_COLOR_ATTACHMENT3
     };
 
-    void set_read_buffer(ReadBuffer buffer) GL_STUB();
+    void set_read_buffer(ReadBuffer buffer) GL_VSTUB();
 
     ScreenshotImageData const& take_screenshot() const override GL_STUB({});
 

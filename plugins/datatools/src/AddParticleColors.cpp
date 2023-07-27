@@ -56,6 +56,23 @@ bool megamol::datatools::AddParticleColors::manipulateData(
         _colors.clear();
         _colors.resize(pl_count);
 
+        float min_i = std::numeric_limits<float>::max();
+        float max_i = std::numeric_limits<float>::lowest();
+        for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
+            auto& parts = outData.AccessParticles(plidx);
+            min_i = std::min(min_i, parts.GetMinColourIndexValue());
+            max_i = std::max(max_i, parts.GetMaxColourIndexValue());
+        }
+        // Update data set (if new data set was loaded, or if frame changed)
+        if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash()) {
+            cgtf->SetRange(std::array<float, 2>{min_i, max_i});
+            (*cgtf)();
+        }
+        auto actual_range = cgtf->Range();
+        min_i = actual_range[0];
+        max_i = actual_range[1];
+        auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
+
         for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
             auto& parts = outData.AccessParticles(plidx);
             if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&
@@ -66,9 +83,6 @@ bool megamol::datatools::AddParticleColors::manipulateData(
             auto& col_vec = _colors[plidx];
             col_vec.resize(p_count);
 
-            auto const min_i = parts.GetMinColourIndexValue();
-            auto const max_i = parts.GetMaxColourIndexValue();
-            auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
 
             auto const iAcc = parts.GetParticleStore().GetCRAcc();
 
