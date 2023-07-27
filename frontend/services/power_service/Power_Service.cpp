@@ -27,6 +27,8 @@
 
 #include "LuaCallbacksCollection.h"
 
+#include <power_overwhelming/rtx_instrument_configuration.h>
+
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 
@@ -320,22 +322,22 @@ void Power_Service::preGraphRender() {
 }
 
 void Power_Service::postGraphRender() {
-    // the graph finished rendering and you may more stuff here
-    // e.g. end frame timer
-    // update window name
-    // swap buffers, glClear
-    /*if (trigger_)
-        trigger_->WriteLow();*/
-    #ifdef MEGAMOL_USE_TRACY
-        /*for (auto& [name, sensor] : nvml_sensors_) {
-            auto val = sensor.sample_data();
-            TracyPlot(name.data(), val.power());
-        }*/
-        for (auto& [name, sensor] : msr_sensors_) {
-            auto val = sensor.sample_data();
-            TracyPlot(name.data(), val.power());
-        }
-    #endif
+// the graph finished rendering and you may more stuff here
+// e.g. end frame timer
+// update window name
+// swap buffers, glClear
+/*if (trigger_)
+    trigger_->WriteLow();*/
+#ifdef MEGAMOL_USE_TRACY
+    /*for (auto& [name, sensor] : nvml_sensors_) {
+        auto val = sensor.sample_data();
+        TracyPlot(name.data(), val.power());
+    }*/
+    for (auto& [name, sensor] : msr_sensors_) {
+        auto val = sensor.sample_data();
+        TracyPlot(name.data(), val.power());
+    }
+#endif
 }
 
 void Power_Service::setup_measurement() {
@@ -350,51 +352,85 @@ void Power_Service::setup_measurement() {
 
             rtx_instr_.emplace_back(d);
         }
+
+        oscilloscope_edge_trigger trigger = oscilloscope_edge_trigger("EXT");
+        trigger.level(5, oscilloscope_quantity(2000.0f, "mV"))
+            .slope(oscilloscope_trigger_slope::rising)
+            .mode(oscilloscope_trigger_mode::normal);
+
+        auto rtx_conf = rtx_instrument_configuration(oscilloscope_quantity(measure_time_in_ms, "ms"),
+            oscilloscope_single_acquisition().points(sample_count).count(2).segmented(true), trigger,
+            visa_instrument::timeout_type(10000));
+
+        std::vector<rtx_instrument_configuration> rtx_cfg(rtx_instr_.size(), rtx_conf);
+
         //auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
 
         //for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
-        for (auto& i : rtx_instr_) {
+        //for (auto& i : rtx_instr_) {
+        for (int idx = 0; idx < rtx_instr_.size(); ++idx) {
+            auto& i = rtx_instr_[idx];
             //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
 
             //rtx_instrument i(d);
 
             i.synchronise_clock();
             i.reset(true, true);
-            i.timeout(10000);
 
+            auto& cfg = rtx_cfg[idx];
+            if (idx != 0) {
+                cfg.as_slave();
+            }
+
+            //i.timeout(10000);
+            
             i.reference_position(oscilloscope_reference_point::left);
-            i.time_range(oscilloscope_quantity(measure_time_in_ms, "ms"));
+            //i.time_range(oscilloscope_quantity(measure_time_in_ms, "ms"));
 
-            i.channel(oscilloscope_channel(1)
-                          .label(oscilloscope_label("voltage"))
-                          .state(true)
-                          .attenuation(oscilloscope_quantity(1, "V"))
-                          .range(oscilloscope_quantity(26)));
+            if (idx == 0) {
+                i.channel(oscilloscope_channel(1)
+                              .label(oscilloscope_label("voltage"))
+                              .state(true)
+                              .attenuation(oscilloscope_quantity(1, "V"))
+                              .range(oscilloscope_quantity(26)));
 
-            i.channel(oscilloscope_channel(2)
-                          .label(oscilloscope_label("current"))
-                          .state(true)
-                          .attenuation(oscilloscope_quantity(10, "A"))
-                          .range(oscilloscope_quantity(40)));
+                i.channel(oscilloscope_channel(2)
+                              .label(oscilloscope_label("current"))
+                              .state(true)
+                              .attenuation(oscilloscope_quantity(10, "A"))
+                              .range(oscilloscope_quantity(40)));
 
-            i.channel(oscilloscope_channel(3)
-                          .label(oscilloscope_label("frame"))
-                          .state(true)
-                          .attenuation(oscilloscope_quantity(1, "V"))
-                          .range(oscilloscope_quantity(7)));
+                i.channel(oscilloscope_channel(3)
+                              .label(oscilloscope_label("frame"))
+                              .state(true)
+                              .attenuation(oscilloscope_quantity(1, "V"))
+                              .range(oscilloscope_quantity(7)));
+            } else {
+                i.channel(oscilloscope_channel(1)
+                              .label(oscilloscope_label("current#1"))
+                              .state(true)
+                              .attenuation(oscilloscope_quantity(10, "A"))
+                              .range(oscilloscope_quantity(40)));
+                i.channel(oscilloscope_channel(2)
+                              .label(oscilloscope_label("current#2"))
+                              .state(true)
+                              .attenuation(oscilloscope_quantity(10, "A"))
+                              .range(oscilloscope_quantity(40)));
+            }
 
 
             i.trigger_position(oscilloscope_quantity(0.f, "ms"));
-            i.trigger(oscilloscope_edge_trigger("EXT")
+            /*i.trigger(oscilloscope_edge_trigger("EXT")
                           .level(5, oscilloscope_quantity(2000.0f, "mV"))
                           .slope(oscilloscope_trigger_slope::rising)
-                          .mode(oscilloscope_trigger_mode::normal));
+                          .mode(oscilloscope_trigger_mode::normal));*/
 
-            i.acquisition(oscilloscope_single_acquisition().points(sample_count).count(2).segmented(true));
+            //i.acquisition(oscilloscope_single_acquisition().points(sample_count).count(2).segmented(true));
 
             /*std::cout << "RTX interface type: " << i.interface_type() << std::endl
                       << "RTX status before acquire: " << i.status() << std::endl;*/
 
+            cfg.apply(i);
             i.operation_complete();
 
             core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed setup");
@@ -441,6 +477,7 @@ void Power_Service::start_measurement() {
 
                 //rtx_instrument i(d);
                 i.acquisition(oscilloscope_acquisition_state::single);
+            }
 
                 /*auto trigger = [&]() {
                     for (int i = 0; i < 100; ++i) {
@@ -453,48 +490,86 @@ void Power_Service::start_measurement() {
                 t_thread.detach();*/
 
 
+            int counter = 0;
+            for (auto& i : rtx_instr_) {
                 i.operation_complete();
 
-                auto segment0_1 = i.data(1, oscilloscope_waveform_points::maximum);
-                //i.clear();
-                auto segment0_2 = i.data(2, oscilloscope_waveform_points::maximum);
+                if (counter == 0) {
+                    auto segment0_1 = i.data(1, oscilloscope_waveform_points::maximum);
+                    //i.clear();
+                    auto segment0_2 = i.data(2, oscilloscope_waveform_points::maximum);
 
-                auto segment0_3 = i.data(3, oscilloscope_waveform_points::maximum);
+                    auto segment0_3 = i.data(3, oscilloscope_waveform_points::maximum);
 
-                auto t_begin = segment0_1.time_begin();
-                auto t_end = segment0_1.time_end();
-                core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[Power_Service] Segment begin %f end %f", t_begin, t_end);
-                auto range = t_end - t_begin;
-                auto incr = range / static_cast<float>(segment0_1.record_length());
-                auto t_b_s = std::chrono::duration<float>(t_begin);
-                auto t_b_ns = std::chrono::round<std::chrono::nanoseconds>(t_b_s);
-                auto incr_s = std::chrono::duration<float>(incr);
-                auto incr_ns = std::chrono::round<std::chrono::nanoseconds>(incr_s);
+                    auto t_begin = segment0_1.time_begin();
+                    auto t_end = segment0_1.time_end();
+                    core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[Power_Service] Segment begin %f end %f", t_begin, t_end);
+                    auto range = t_end - t_begin;
+                    auto incr = range / static_cast<float>(segment0_1.record_length());
+                    auto t_b_s = std::chrono::duration<float>(t_begin);
+                    auto t_b_ns = std::chrono::round<std::chrono::nanoseconds>(t_b_s);
+                    auto incr_s = std::chrono::duration<float>(incr);
+                    auto incr_ns = std::chrono::round<std::chrono::nanoseconds>(incr_s);
 
-                sample_times_.resize(segment0_1.record_length());
-                std::generate(sample_times_.begin(), sample_times_.end(), [&]() {
-                    static int64_t i;
-                    auto ret = t_b_ns.count() + i * incr_ns.count();
-                    ++i;
-                    return ret;
-                });
+                    sample_times_.resize(segment0_1.record_length());
+                    std::generate(sample_times_.begin(), sample_times_.end(), [&]() {
+                        static int64_t i;
+                        auto ret = t_b_ns.count() + i * incr_ns.count();
+                        ++i;
+                        return ret;
+                    });
 
-                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
-                std::ofstream out_file("channel_data_0.csv");
-                for (size_t i = 0; i < segment0_1.record_length(); ++i) {
-                    out_file << sample_times_[i] << "," << segment0_1.begin()[i] << "," << segment0_2.begin()[i] << ","
-                             << segment0_3.begin()[i] << std::endl;
-                    tracy::Profiler::PlotData("V", segment0_1.begin()[i],
-                        static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
-                    tracy::Profiler::PlotData("A", segment0_2.begin()[i],
-                        static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
-                    tracy::Profiler::PlotData("W", segment0_1.begin()[i] * segment0_2.begin()[i],
-                        static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
-                    tracy::Profiler::PlotData("Frame", segment0_3.begin()[i],
-                        static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
+                    core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
+                    std::ofstream out_file("channel_data_" + std::to_string(counter++) + ".csv");
+                    for (size_t i = 0; i < segment0_1.record_length(); ++i) {
+                        out_file << sample_times_[i] << "," << segment0_1.begin()[i] << "," << segment0_2.begin()[i]
+                                 << "," << segment0_3.begin()[i] << std::endl;
+                        tracy::Profiler::PlotData("V", segment0_1.begin()[i],
+                            static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
+                        tracy::Profiler::PlotData("A", segment0_2.begin()[i],
+                            static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
+                        tracy::Profiler::PlotData("W", segment0_1.begin()[i] * segment0_2.begin()[i],
+                            static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
+                        tracy::Profiler::PlotData("Frame", segment0_3.begin()[i],
+                            static_cast<double>(sample_times_[i] + trigger_offset_.count()) / timer_mul_);
+                    }
+                    out_file.close();
+                } else {
+                    auto segment0_1 = i.data(1, oscilloscope_waveform_points::maximum);
+                    //i.clear();
+                    auto segment0_2 = i.data(2, oscilloscope_waveform_points::maximum);
+
+                    auto t_begin = segment0_1.time_begin();
+                    auto t_end = segment0_1.time_end();
+                    core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[Power_Service] Segment begin %f end %f", t_begin, t_end);
+                    auto range = t_end - t_begin;
+                    auto incr = range / static_cast<float>(segment0_1.record_length());
+                    auto t_b_s = std::chrono::duration<float>(t_begin);
+                    auto t_b_ns = std::chrono::round<std::chrono::nanoseconds>(t_b_s);
+                    auto incr_s = std::chrono::duration<float>(incr);
+                    auto incr_ns = std::chrono::round<std::chrono::nanoseconds>(incr_s);
+
+                    sample_times_.resize(segment0_1.record_length());
+                    std::generate(sample_times_.begin(), sample_times_.end(), [&]() {
+                        static int64_t i;
+                        auto ret = t_b_ns.count() + i * incr_ns.count();
+                        ++i;
+                        return ret;
+                    });
+
+                    core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Started writing");
+                    std::ofstream out_file("channel_data_" + std::to_string(counter++) + ".csv");
+                    for (size_t i = 0; i < segment0_1.record_length(); ++i) {
+                        out_file << sample_times_[i] << "," << segment0_1.begin()[i] << "," << segment0_2.begin()[i]
+                                 << std::endl;
+                    }
+                    out_file.close();
                 }
-                out_file.close();
+
+                
+                
 
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed measurement");
             }
