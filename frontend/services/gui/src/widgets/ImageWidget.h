@@ -118,10 +118,10 @@ private:
         return true;
     }
     ImTextureID getImTextureID() const {
-        return reinterpret_cast<ImTextureID>(static_cast<uint64_t>(this->cpu_tex_ptr->data.data()));
+        return reinterpret_cast<ImTextureID>(this->cpu_tex_ptr->data.data());
     }
     ImTextureID getToggleImTextureID() const {
-        return reinterpret_cast<ImTextureID>(static_cast<uint64_t>(this->cpu_toggle_tex_ptr->data.data()));
+        return reinterpret_cast<ImTextureID>(this->cpu_toggle_tex_ptr->data.data());
     }
 
 #endif
