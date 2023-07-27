@@ -290,45 +290,47 @@ void PerformanceManager::endFrame() {
 #endif
     stop_timer(whole_frame_cpu);
 
-    frame_info this_frame;
-    this_frame.frame = current_frame;
+    if (!subscribers.empty()) {
+        frame_info this_frame;
+        this_frame.frame = current_frame;
 
-    for (auto& [key, timer] : timers) {
-        if (timer->get_start_frame() != this_frame.frame) {
-            // timer did not start this frame
-            continue;
-        } else {
-            if (timer->started) {
-                // timer was not ended this frame, that is not nice
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "PerformanceManager: timer %s was not properly ended in frame %u", timer->get_conf().name.c_str(),
-                    this_frame.frame);
+        for (auto& [key, timer] : timers) {
+            if (timer->get_start_frame() != this_frame.frame) {
+                // timer did not start this frame
                 continue;
+            } else {
+                if (timer->started) {
+                    // timer was not ended this frame, that is not nice
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "PerformanceManager: timer %s was not properly ended in frame %u",
+                        timer->get_conf().name.c_str(), this_frame.frame);
+                    continue;
+                }
+            }
+            timer->collect();
+            auto& tconf = timer->get_conf();
+            timer_entry e;
+            e.handle = timer->get_handle();
+            e.user_index = tconf.user_index;
+            e.parent_type = tconf.parent_type;
+
+            for (uint32_t region = 0; region < timer->get_region_count(); ++region) {
+                e.frame_index = region;
+                e.api = tconf.api;
+
+                e.global_index = timer->get_global_index(region);
+                e.start = timer->get_start(region);
+                e.end = timer->get_end(region);
+                e.duration = time_point{timer->get_end(region) - timer->get_start(region)};
+                this_frame.entries.push_back(e);
             }
         }
-        timer->collect();
-        auto& tconf = timer->get_conf();
-        timer_entry e;
-        e.handle = timer->get_handle();
-        e.user_index = tconf.user_index;
-        e.parent_type = tconf.parent_type;
+        std::sort(this_frame.entries.begin(), this_frame.entries.end(),
+            [](timer_entry& a, timer_entry& b) { return a.global_index < b.global_index; });
 
-        for (uint32_t region = 0; region < timer->get_region_count(); ++region) {
-            e.frame_index = region;
-            e.api = tconf.api;
-
-            e.global_index = timer->get_global_index(region);
-            e.start = timer->get_start(region);
-            e.end = timer->get_end(region);
-            e.duration = time_point{timer->get_end(region) - timer->get_start(region)};
-            this_frame.entries.push_back(e);
+        for (auto& subscriber : subscribers) {
+            subscriber(this_frame);
         }
-    }
-    std::sort(this_frame.entries.begin(), this_frame.entries.end(),
-        [](timer_entry& a, timer_entry& b) { return a.global_index < b.global_index; });
-
-    for (auto& subscriber : subscribers) {
-        subscriber(this_frame);
     }
 }
 } // namespace megamol::frontend_resources
