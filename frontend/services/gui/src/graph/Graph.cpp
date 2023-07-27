@@ -1,15 +1,16 @@
-/*
- * Graph.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "Graph.h"
-#include "imgui_stdlib.h"
+
+#include <imgui_stdlib.h>
+
 #include "vislib/math/Ternary.h"
 #include "widgets/ButtonWidgets.h"
+
 #ifdef MEGAMOL_USE_PROFILING
 #define GRAPH_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
 #endif // MEGAMOL_USE_PROFILING

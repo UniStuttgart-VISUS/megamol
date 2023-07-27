@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include "mmcore/thecam/manipulator_base.h"
 #include <glm/ext.hpp>
+
+#include "mmcore/thecam/manipulator_base.h"
 
 namespace megamol::core::thecam {
 

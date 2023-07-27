@@ -1,13 +1,12 @@
-#include "perraydata.h"
-#include "sphere.h"
-#include "sphere.cuh"
-
-#include "glm/glm.hpp"
-#include "optix/utils_device.h"
+#include <glm/glm.hpp>
+#include <glm/gtx/component_wise.hpp>
 
 #include "optix/random.h"
+#include "optix/utils_device.h"
+#include "perraydata.h"
+#include "sphere.cuh"
+#include "sphere.h"
 
-#include "glm/gtx/component_wise.hpp"
 
 // OptiX SDK and rtxpkd
 

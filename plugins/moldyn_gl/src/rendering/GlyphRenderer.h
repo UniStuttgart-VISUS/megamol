@@ -7,15 +7,15 @@
 
 #pragma once
 
+#include <glowl/glowl.h>
+
 #include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
-#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
-#include "glowl/glowl.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 namespace megamol::moldyn_gl::rendering {
 

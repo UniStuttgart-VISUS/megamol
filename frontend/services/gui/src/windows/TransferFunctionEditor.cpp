@@ -1,12 +1,11 @@
-/*
- * TransferFunctionEditor.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "TransferFunctionEditor.h"
+
 #include "graph/Parameter.h"
 #include "gui_utils.h"
 #include "widgets/ButtonWidgets.h"

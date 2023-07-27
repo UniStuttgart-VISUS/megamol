@@ -8,7 +8,15 @@
 #define _USE_MATH_DEFINES 1
 
 #include "MoleculeSESRenderer.h"
-#include "glm/gtx/string_cast.hpp"
+
+#include <math.h>
+
+#include <ctime>
+#include <fstream>
+#include <iostream>
+
+#include <glm/gtx/string_cast.hpp>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -29,10 +37,6 @@
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <math.h>
 
 using namespace megamol;
 using namespace megamol::core;

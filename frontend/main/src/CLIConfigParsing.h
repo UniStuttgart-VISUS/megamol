@@ -1,9 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
+
+#include <utility>
 
 #include "GlobalValueStore.h"
 #include "RuntimeConfig.h"
-#include "utility"
-
 #include "mmcore/LuaAPI.h"
 
 namespace megamol::frontend {

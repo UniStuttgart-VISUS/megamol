@@ -1,18 +1,16 @@
-/*
- * Remote_Service.hpp
- *
- * Copyright (C) 2021 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 #undef None // on linux X.h defines None, crashing this header
 
-#include "AbstractFrontendService.hpp"
-
-#include "RuntimeConfig.h"
-
 #include <memory> // unique_ptr
+
+#include "AbstractFrontendService.hpp"
+#include "RuntimeConfig.h"
 
 namespace megamol::frontend {
 

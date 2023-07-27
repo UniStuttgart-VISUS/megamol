@@ -1,29 +1,23 @@
-/*
- * Screenshot_Service.cpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "Screenshot_Service.hpp"
 
-#include "GUIState.h"
-#include "OpenGL_Context.h"
-
-#include "ImageWrapper.h"
-#include "ImageWrapper_to_ByteArray.hpp"
-
-#include "mmcore/MegaMolGraph.h"
-
-// to write png files
-#include "mmcore/utility/graphics/ScreenShotComments.h"
-#include "png.h"
-#include "vislib/sys/FastFile.h"
-#include "zlib.h"
-
-#include "mmcore/utility/log/Log.h"
+#include <png.h>
+#include <zlib.h>
 
 #include "GUIRegisterWindow.h"
+#include "GUIState.h"
+#include "ImageWrapper.h"
+#include "ImageWrapper_to_ByteArray.hpp"
+#include "OpenGL_Context.h"
+#include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "mmcore/utility/log/Log.h"
+#include "vislib/sys/FastFile.h"
 
 static std::shared_ptr<bool> service_open_popup = std::make_shared<bool>(false);
 static const std::string service_name = "Screenshot_Service: ";

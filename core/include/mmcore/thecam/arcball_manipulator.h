@@ -33,8 +33,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/thecam/manipulator_base.h"
 #include <glm/glm.hpp>
+
+#include "mmcore/thecam/manipulator_base.h"
 
 namespace megamol::core::thecam {
 

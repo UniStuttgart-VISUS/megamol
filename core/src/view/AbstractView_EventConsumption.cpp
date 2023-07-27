@@ -1,17 +1,16 @@
-/*
- * AbstractView_EventConsumption.cpp
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
+#include <chrono>
+
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
 #include "Window_Events.h"
-
-#include <chrono>
 
 namespace megamol::core::view {
 

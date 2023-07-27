@@ -16,6 +16,18 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+# Constants
+copyright_header_regex="^\/\*\*
+ \* MegaMol
+ \* Copyright \(c\) [0-9]{4}, MegaMol Dev Team
+ \* All rights reserved\.
+ \*\/"
+copyright_header_template="/**
+ * MegaMol
+ * Copyright (c) <YYYY>, MegaMol Dev Team
+ * All rights reserved.
+ */"
+
 EXIT_CODE=0
 
 # Fast mode, only check changed files
@@ -47,13 +59,6 @@ while read -r file; do
     continue
   fi
 
-  # ignore vcpkg ports, which are taken from upstream
-  if [[ $file == "cmake/vcpkg_ports/"* ]]; then
-    if [[ $file == *"/implot/"* ]]; then
-      continue
-    fi
-  fi
-
   # ignore 3rd party dirs
   if [[ $file == *"/3rd/"* ]]; then
     continue
@@ -70,8 +75,9 @@ while read -r file; do
 
   # === File tests ===
 
-  # ClangFormat
+  # C++ checks
   if [[ "$is_cpp" == true ]]; then
+    # ClangFormat
     if [[ "$_fix" == true ]]; then
       clang-format-14 -i "$file"
     else
@@ -86,6 +92,27 @@ while read -r file; do
         clang-format-14 "$file" | diff --color=always -u "$file" - || true
       fi
     fi
+
+    # Copyright header
+    # TODO Disabled because simply replacing the first comment may is dangerous and should not happen in an automated script.
+    #file_head=$(head -n 5 "$file")
+    #if [[ ! "$file_head" =~ $copyright_header_regex ]]; then
+    #  if [[ "$_fix" == true ]]; then
+    #    year=$(git log --follow --format=%ad --date=format:'%Y' "$file" | tail -1)
+    #    file_content=$(<"$file")
+    #    # Remove first comment in file
+    #    start_comment_regex="^\/\*"
+    #    if [[ "$file_content" =~ $start_comment_regex ]]; then
+    #      file_content=${file_content#*\*/}
+    #    fi
+    #    file_header="${copyright_header_template/<YYYY>/"$year"}"
+    #    echo "$file_header" > "$file"
+    #    echo "$file_content" >> "$file"
+    #  else
+    #    EXIT_CODE=1
+    #    echo "::error::Missing or wrong copyright header in $file"
+    #  fi
+    #fi
   fi
 
   # Check if file is UTF-8 (or ASCII)

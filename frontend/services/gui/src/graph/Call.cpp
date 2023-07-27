@@ -1,19 +1,19 @@
-/*
- * Call.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "Call.h"
+
 #include "InterfaceSlot.h"
 #include "Module.h"
 #include "widgets/ColorPalettes.h"
 
 #ifdef MEGAMOL_USE_PROFILING
+#include <implot.h>
+
 #include "ProfilingUtils.h"
-#include "implot.h"
 #define CALL_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
 #define CALL_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
 #endif // MEGAMOL_USE_PROFILING

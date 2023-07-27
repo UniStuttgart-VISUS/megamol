@@ -1,8 +1,7 @@
 #pragma once
 
-#include "glm/glm.hpp"
-
-#include "optix.h"
+#include <glm/glm.hpp>
+#include <optix.h>
 
 namespace megamol {
 namespace optix_hpg {

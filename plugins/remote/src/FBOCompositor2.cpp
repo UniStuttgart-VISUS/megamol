@@ -1,7 +1,10 @@
 #include "FBOCompositor2.h"
 
+#include <exception>
 #include <fstream>
 #include <sstream>
+
+#include <snappy.h>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -13,11 +16,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Camera_2.h"
-
-#include "snappy.h"
-
 #include "vislib/Exception.h"
-#include <exception>
 
 //#define _DEBUG 1
 //#define VERBOSE 1

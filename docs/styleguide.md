@@ -1,11 +1,12 @@
-# MegaMol Coding Styleguide
+# MegaMol Coding Style Guide
 
 ## General Remarks
 
-Many of our styleguide rules are defined in the `.clang-format` file within the source repository.
+Many of our style guide rules are defined in the `.clang-format` file within the source repository.
 In addition, a GitHub Actions job and the script `.ci/check_format.sh` will check (and fix) some of our rules.
-Therefore, in case of conflicts with this document these technical definitions are to be preferred.
-An exception is made to third-party code within the repository (always placed within `3rd` directories), there the original formatting should be kept.
+Therefore, in case of conflicts with this document, these technical definitions are to be preferred.
+An exception is made to third-party code within the repository (always placed within `3rd` directories).
+There, the original formatting should be kept.
 
 ## Basic Formatting Rules
 
@@ -22,12 +23,12 @@ An exception is made to third-party code within the repository (always placed wi
 
 - Space only after a pointer or reference operator (i.e. `int* foobar`, not ~~`int *foobar`~~)[^2].
 - Brace style "Attach".
-- Use "east const" (i.e. `int const& foobar`n not ~~`const int& foobar`~~)[^3].
+- Use "east const" (i.e. `int const& foobar` not ~~`const int& foobar`~~)[^3].
 - Initializer lists must have the line break before the comma, indentation with 8 spaces[^4].
 - Use C++17 style namespaces. No namespace indentation. 
 - Use `nullptr` over `NULL` or `0`.
 - Prefer `enum class` over `enum` wherever possible.
-- May or may not add a comment to a closing preprocessor #endif with the content of the if condition. (This rule is more just a suggestion until we may can add this to automated testing.)
+- May or may not add a comment to a closing preprocessor #endif with the content of the if condition. (This rule is more of a suggestion until we can add this to automated testing.)
 
 ## Object Naming
 
@@ -42,15 +43,26 @@ An exception is made to third-party code within the repository (always placed wi
 ## File Organization
 
 - Use `#pragma once` and do not use include guards. 
-- Split includes into 4 groups, each group is ordered alphabetically, empty line between groups:
-  1. Corresponding Header to the current .cpp file (with `""`).
-  2. System Includes (with `<>`)
-  3. External Library Includes (with `<>`[^6])
-  4. MegaMol internal includes (with `""`)
+- Split includes into groups, each group is ordered alphabetically, empty line between groups:
+  1. Corresponding header to the current .cpp file (with `""`).
+  2. C system headers (with `<>`[^6])
+  3. C++ STL headers (with `<>`[^6])
+  4. External library headers (with `<>`[^6])
+  5. MegaMol internal headers (headers in this repository) (with `""`)
+  6. Conditional includes requiring `#ifdef` after all others
 - Header files use the extension `.h`, source files `.cpp`
 - Files names must match the corresponding class name (also in `UpperCamelCase`).
 - Directory names must match the corresponding namespace (at least for top level categorisation, additional subdirectories may or may not introduce an additional namespace level).
   Directory names are always lowercase, should preferably only be a single word, but may use the `_gl` or `_cuda` suffix.
+- Every C++ file (.h/.cpp) must start with the following copyright header (except code in `3rd` directories, which uses the corresponding copyright notice).
+  Replace `<year>` with the year the file was created (or, in case of file reorganizations, the year when the original code was written).
+  ```
+  /**
+   * MegaMol
+   * Copyright (c) <year>, MegaMol Dev Team
+   * All rights reserved.
+   */
+  ```
 
 ## Best practices
 

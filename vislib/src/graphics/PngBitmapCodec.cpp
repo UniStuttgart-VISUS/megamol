@@ -6,9 +6,11 @@
  * Alle Rechte vorbehalten.
  */
 #include "vislib/graphics/PngBitmapCodec.h"
-#include "png.h"
+
+#include <png.h>
+#include <zlib.h>
+
 #include "vislib/SmartPtr.h"
-#include "zlib.h"
 
 using namespace sg::graphics;
 using namespace vislib::graphics;

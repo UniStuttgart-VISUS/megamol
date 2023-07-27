@@ -1,15 +1,14 @@
-/*
- * UILayersCollection.cpp
- *
- * Copyright (C) 2019 MegaMol Team
- * Alle Rechte vorbehalten. All rights reserved.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "UILayersCollection.hpp"
 
-/// #include "mmcore/utility/log/Log.h"
-
 #include <algorithm>
+
+/// #include "mmcore/utility/log/Log.h"
 
 #define init          \
     bool ret = false; \

@@ -6,8 +6,7 @@
   "license": "BSD-3-Clause",
   "dependencies": [
     {
-      "name": "glslang",
-      "default-features": false
+      "name": "glslang"
     },
     {
       "name": "vcpkg-cmake",

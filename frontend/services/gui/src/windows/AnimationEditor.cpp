@@ -1,11 +1,16 @@
-/*
- * AnimationEditor.cpp
- *
- * Copyright (C) 2022 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "AnimationEditor.h"
+
+#include <cmath>
+#include <fstream>
+
+#include <imgui_stdlib.h>
+#include <nlohmann/json.hpp>
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
@@ -16,12 +21,6 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/animation/AnimationUtils.h"
-
-#include "imgui_stdlib.h"
-#include "nlohmann/json.hpp"
-
-#include <cmath>
-#include <fstream>
 
 using namespace megamol::gui;
 

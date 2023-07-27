@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "cmrc/cmrc.hpp"
+#include <cmrc/cmrc.hpp>
 
 CMRC_DECLARE(megamol_build_info_rc);
 

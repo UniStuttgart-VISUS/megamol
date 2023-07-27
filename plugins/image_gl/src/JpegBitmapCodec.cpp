@@ -5,15 +5,18 @@
  */
 
 #include "JpegBitmapCodec.h"
-#ifndef _WIN32
-#include "jpeglib.h"
-#endif
+
+#include <fstream>
+
 #include "mmcore/utility/log/Log.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/graphics/BitmapImage.h"
-#include <fstream>
+
+#ifndef _WIN32
+#include <jpeglib.h>
+#endif
 
 using namespace sg::graphics;
 using namespace vislib::graphics;

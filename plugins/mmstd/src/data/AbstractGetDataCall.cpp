@@ -1,8 +1,7 @@
-/*
- * AbstractGetDataCall.cpp
- *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd/data/AbstractGetDataCall.h"

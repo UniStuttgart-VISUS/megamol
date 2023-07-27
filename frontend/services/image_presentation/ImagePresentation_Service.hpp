@@ -1,24 +1,20 @@
-/*
- * ImagePresentation_Service.hpp
- *
- * Copyright (C) 2021 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "AbstractFrontendService.hpp"
+#include <list>
 
+#include "AbstractFrontendService.hpp"
 #include "EntryPoint.h"
+#include "Framebuffer_Events.h"
+#include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
 #include "ImagePresentationSink.h"
 #include "ImageWrapper.h"
-
-#include "FrontendResourcesLookup.h"
-
-#include "Framebuffer_Events.h"
-
-#include <list>
 
 namespace megamol::frontend {
 

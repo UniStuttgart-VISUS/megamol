@@ -1,15 +1,14 @@
-/*
- * PerformanceMonitor.cpp
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "PerformanceMonitor.h"
-#include "gui_utils.h"
+
 #include <iomanip>
 
+#include "gui_utils.h"
 
 using namespace megamol;
 using namespace megamol::gui;

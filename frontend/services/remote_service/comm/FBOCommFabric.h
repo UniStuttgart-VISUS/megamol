@@ -1,11 +1,19 @@
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <memory>
 #include <vector>
+
+#include <zmq.hpp>
+
 #ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
 #endif
-#include "zmq.hpp"
 
 namespace megamol::remote {
 

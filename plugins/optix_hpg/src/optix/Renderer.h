@@ -4,35 +4,25 @@
 #include <limits>
 #include <tuple>
 
+#include <cuda.h>
+#include <glowl/FramebufferObject.hpp>
+
+#include "AbstractRenderer.h"
+#include "CUDA_Context.h"
+#include "CallRender3DCUDA.h"
+#include "MMOptixModule.h"
+#include "SBT.h"
+#include "framestate.h"
+#include "miss.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
-
-#include "AbstractRenderer.h"
-
-#include "cuda.h"
-
-#include "framestate.h"
-
-#include "glowl/FramebufferObject.hpp"
-
-#include "miss.h"
-#include "raygen.h"
-
-#include "SBT.h"
-
-#include "MMOptixModule.h"
-
-#include "vislib/math/Rectangle.h"
-
-#include "CUDA_Context.h"
-
 #include "optix/Context.h"
-
-#include "CallRender3DCUDA.h"
+#include "raygen.h"
+#include "vislib/math/Rectangle.h"
 
 namespace megamol::optix_hpg {
 class Renderer : public AbstractRenderer {

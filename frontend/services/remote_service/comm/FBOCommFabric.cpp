@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "FBOCommFabric.h"
 
 #ifdef MEGAMOL_USE_MPI

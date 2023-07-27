@@ -1,11 +1,13 @@
 #pragma once
 
-#include "glm/glm.hpp"
+#include <algorithm>
+#include <string>
+
+#include <glm/glm.hpp>
+
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/math/Vector.h"
-#include <algorithm>
-#include <string>
 
 namespace megamol::protein_calls {
 

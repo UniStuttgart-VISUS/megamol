@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmcore/MegaMolGraph.h"
 
 #include <algorithm>

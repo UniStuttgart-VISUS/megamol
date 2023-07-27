@@ -7,14 +7,15 @@
 
 #pragma once
 
+#include <limits>
+
+#include <obj_io.h>
+
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
-#include "mmstd/data/AbstractDataWriter.h"
-
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-
-#include "obj_io.h"
+#include "mmstd/data/AbstractDataWriter.h"
 
 namespace megamol::mesh {
 

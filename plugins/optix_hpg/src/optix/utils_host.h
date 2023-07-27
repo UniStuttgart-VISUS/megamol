@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 
 #define MM_OPTIX_RAYGEN_ANNOTATION __raygen__
 

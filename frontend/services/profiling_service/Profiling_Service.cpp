@@ -1,16 +1,21 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "Profiling_Service.hpp"
 
+#include "FrameStatistics.h"
+#include "LuaCallbacksCollection.h"
+#include "ModuleGraphSubscription.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/SampleCameraScenes.h"
 #include "mmcore/view/AbstractViewInterface.h"
 #include "mmcore/view/CameraSerializer.h"
 
-#include "FrameStatistics.h"
-#include "LuaCallbacksCollection.h"
-#include "ModuleGraphSubscription.h"
-
 #ifdef MEGAMOL_USE_TRACY
-#include "tracy/Tracy.hpp"
+#include <tracy/Tracy.hpp>
 #endif
 
 namespace megamol::frontend {

@@ -9,6 +9,7 @@
 
 #include <memory>
 
+#include <glad/gl.h>
 #include <glowl/glowl.h>
 
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -18,9 +19,6 @@
 #include "mmstd_gl/ModuleGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
-
-#include "glad/gl.h"
-
 
 namespace megamol::datatools_gl::misc {
 

@@ -6,7 +6,8 @@
 
 #include "mmospray/AbstractOSPRayStructure.h"
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
+
 #include "mmstd/renderer/CallClipPlane.h"
 
 
