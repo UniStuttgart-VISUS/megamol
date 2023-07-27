@@ -1,15 +1,15 @@
-/*
- * AbstractFrontendService.hpp
- *
- * Copyright (C) 2019 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "FrontendResource.h"
-#include <vector>
 
 namespace megamol::frontend {
 

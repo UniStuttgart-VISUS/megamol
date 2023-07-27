@@ -1,19 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "CLIConfigParsing.h"
-#include "mmcore/LuaAPI.h"
-
-#include "mmcore/utility/log/Log.h"
-
-#include "mmcore/MegaMolGraph.h"
-#include "mmcore/factories/PluginRegister.h"
-
-#include "GlobalValueStore.h"
-#include "RuntimeConfig.h"
-
 #include "CUDA_Service.hpp"
 #include "Command_Service.hpp"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
+#include "GlobalValueStore.h"
 #include "ImagePresentation_Service.hpp"
 #include "Lua_Service_Wrapper.hpp"
 #include "OpenGL_GLFW_Service.hpp"
@@ -21,11 +18,16 @@
 #include "Profiling_Service.hpp"
 #include "ProjectLoader_Service.hpp"
 #include "Remote_Service.hpp"
+#include "RuntimeConfig.h"
 #include "Screenshot_Service.hpp"
 #include "VR_Service.hpp"
+#include "mmcore/LuaAPI.h"
+#include "mmcore/MegaMolGraph.h"
+#include "mmcore/factories/PluginRegister.h"
+#include "mmcore/utility/log/Log.h"
 
 #ifdef MEGAMOL_USE_TRACY
-#include "tracy/Tracy.hpp"
+#include <tracy/Tracy.hpp>
 #endif
 
 using megamol::core::utility::log::Log;
@@ -255,6 +257,10 @@ int main(const int argc, const char** argv) {
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
     const auto render_next_frame = [&]() -> bool {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedN("RenderNextFrame", 0x0000FF);
+#endif
+
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();
 
@@ -281,10 +287,6 @@ int main(const int argc, const char** argv) {
             .PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
-
-#ifdef MEGAMOL_USE_TRACY
-        FrameMark;
-#endif
 
         return true;
     };
@@ -347,6 +349,9 @@ int main(const int argc, const char** argv) {
         }
 
     while (run_megamol) {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedNC("MainLoop", 0x0000FF);
+#endif
         run_megamol = render_next_frame();
     }
 

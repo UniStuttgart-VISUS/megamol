@@ -1,14 +1,12 @@
-/*
- * ImageWrapper_to_GLTexture.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
 #include "GL_STUB.h"
-
 #include "ImageWrapper.h"
 
 namespace megamol::frontend_resources {
@@ -23,7 +21,7 @@ struct gl_texture {
 
     gl_texture() = default;
     gl_texture(ImageWrapper const& image);
-    ~gl_texture() GL_STUB(); // frees texture if owned
+    ~gl_texture() GL_VSTUB(); // frees texture if owned
     // rule of five
     gl_texture(gl_texture const& other);
     gl_texture(gl_texture&& other) noexcept;
@@ -35,8 +33,8 @@ struct gl_texture {
     unsigned int as_gl_handle();
 
 private:
-    void assign(gl_texture const& other, bool take_ownership) GL_STUB();
-    void from_image(ImageWrapper const& image) GL_STUB();
+    void assign(gl_texture const& other, bool take_ownership) GL_VSTUB();
+    void from_image(ImageWrapper const& image) GL_VSTUB();
     void clear();
 };
 

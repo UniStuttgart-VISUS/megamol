@@ -6,15 +6,17 @@
 
 #pragma once
 
-#include "glowl/GLSLProgram.hpp"
+#include <map>
+#include <utility>
+
+#include <glowl/GLSLProgram.hpp>
+
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_gl/DeferredRenderingProvider.h"
-#include <map>
-#include <utility>
 
 namespace megamol::protein_gl {
 

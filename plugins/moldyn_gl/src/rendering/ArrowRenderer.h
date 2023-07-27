@@ -7,23 +7,20 @@
 
 #pragma once
 
+#include <glowl/glowl.h>
 
 #include "OpenGL_Context.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
-#include "glowl/glowl.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
-
 #include "vislib/assert.h"
-
 
 namespace megamol::moldyn_gl::rendering {
 

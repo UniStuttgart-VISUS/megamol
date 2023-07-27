@@ -1,12 +1,11 @@
-/*
- * TransferFunctionEditor.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "TransferFunctionEditor.h"
+
 #include "graph/Parameter.h"
 #include "gui_utils.h"
 #include "widgets/ButtonWidgets.h"
@@ -333,7 +332,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
     ImGui::BeginGroup();
     ImGui::PushID("TransferFunctionEditor");
 
-    if (this->windowed_mode && (!this->IsParameterConnected())) {
+    if (this->windowed_mode && (!this->IsAnyParameterConnected())) {
         const char* message = "Changes have no effect.\n"
                               "No transfer function parameter connected for edit.\n";
         ImGui::TextColored(GUI_COLOR_TEXT_ERROR, message);
@@ -632,7 +631,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
 
         if (this->windowed_mode) {
             if (apply_changes) {
-                if (this->IsParameterConnected()) {
+                if (this->IsAnyParameterConnected()) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
                         if (this->connected_parameter_ptr->Type() == ParamType_t::TRANSFERFUNCTION) {

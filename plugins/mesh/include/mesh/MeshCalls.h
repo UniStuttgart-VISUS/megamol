@@ -7,15 +7,15 @@
 
 #pragma once
 
-#include "mmstd/generic/CallGeneric.h"
-
-#include "tiny_gltf.h"
 #include <memory>
 #include <vector>
+
+#include <tiny_gltf.h>
 
 #include "3DInteractionCollection.h"
 #include "ImageDataAccessCollection.h"
 #include "MeshDataAccessCollection.h"
+#include "mmstd/generic/CallGeneric.h"
 
 namespace megamol::mesh {
 

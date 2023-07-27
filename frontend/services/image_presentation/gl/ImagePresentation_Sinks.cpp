@@ -1,15 +1,14 @@
-/*
- * ImagePresentation_Sinks.cpp
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "ImagePresentation_Sinks.hpp"
+
+#include <glad/gl.h>
 #include <glowl/GLSLProgram.hpp>
 
-#include "glad/gl.h"
-//#include <iostream>
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::frontend;

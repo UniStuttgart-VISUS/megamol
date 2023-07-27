@@ -1,16 +1,11 @@
-/*
- * SSBOBufferArray.h
- *
- * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-
-#include "vislib/assert.h"
 #include <algorithm>
 #include <cinttypes>
 #include <functional>
@@ -18,6 +13,8 @@
 #include <sstream>
 #include <vector>
 
+#include "vislib/assert.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol::core::utility {
 

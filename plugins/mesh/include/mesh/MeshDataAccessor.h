@@ -4,9 +4,9 @@
 #include <memory>
 #include <optional>
 
-#include "mesh/MeshDataAccessCollection.h"
+#include <glm/glm.hpp>
 
-#include "glm/glm.hpp"
+#include "mesh/MeshDataAccessCollection.h"
 
 namespace megamol::mesh {
 class ValueAccessorImpl {

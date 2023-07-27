@@ -1,22 +1,20 @@
-/*
- * Remote_Service.cpp
- *
- * Copyright (C) 2021 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "Remote_Service.hpp"
 
+#include <imgui.h>
+#include <imgui_stdlib.h>
+
+#include "GUIRegisterWindow.h" // register UI window for remote control
 #include "HeadNode.hpp"
 #include "MPI_Context.h"
 #include "MpiNode.hpp"
 #include "RenderNode.hpp"
-
 #include "mmcore/MegaMolGraph.h"
-
-#include "GUIRegisterWindow.h" // register UI window for remote control
-#include "imgui_stdlib.h"
-
 #include "mmcore/utility/log/Log.h"
 
 static const std::string service_name = "Remote_Service: ";

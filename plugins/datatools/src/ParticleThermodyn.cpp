@@ -206,20 +206,20 @@ bool datatools::ParticleThermodyn::assertData(
     const auto theFluidDensity = this->fluidDensitySlot.Param<core::param::FloatParam>()->Value();
     size_t allpartcnt = 0;
 
-    if (this->lastTime != time || this->datahash != in->DataHash()) {
-        in->SetFrameID(time, true);
+    if (this->lastTime != time || this->datahash != in->DataHash() || myHash == 0) {
         do {
-            if (!(*in)(1))
+            in->SetFrameID(time, true);
+            if (!(*in)(1)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ParticleThermodyn: could not get frame (%u) extents", time);
                 return false;
-            if (!(*in)(0))
+            }
+            if (!(*in)(0)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ParticleThermodyn: could not get frame (%u) data", time);
                 return false;
+            }
         } while (in->FrameID() != time);
-
-        if (!(*in)(0)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "ParticleThermodyn: could not get frame (%u)", time);
-            return false;
-        }
 
         size_t totalParts = 0;
         plc = in->GetParticleListCount();
@@ -332,12 +332,12 @@ bool datatools::ParticleThermodyn::assertData(
             //#pragma omp parallel num_threads(1)
             {
                 float theVertex[3];
-                std::vector<std::pair<size_t, float>> ret_matches;
-                std::vector<std::pair<size_t, float>> ret_localMatches;
+                std::vector<nanoflann::ResultItem<size_t, float>> ret_matches;
+                std::vector<nanoflann::ResultItem<size_t, float>> ret_localMatches;
                 std::vector<size_t> ret_index(theNumber);
                 std::vector<float> out_dist_sqr(theNumber);
                 nanoflann::KNNResultSet<float> resultSet(theNumber);
-                nanoflann::SearchParams params;
+                nanoflann::SearchParameters params;
                 params.sorted = false;
                 ret_matches.reserve(100);
                 ret_localMatches.reserve(100);
@@ -390,7 +390,7 @@ bool datatools::ParticleThermodyn::assertData(
                                     for (size_t i = 0; i < resultSet.size(); ++i) {
                                         if (!remove_self || ret_index[i] != myIndex) {
                                             ret_matches.push_back(
-                                                std::pair<size_t, float>(ret_index[i], out_dist_sqr[i]));
+                                                nanoflann::ResultItem<size_t, float>(ret_index[i], out_dist_sqr[i]));
                                         }
                                     }
                                 }
@@ -399,7 +399,25 @@ bool datatools::ParticleThermodyn::assertData(
                     }
 
                     // no neighbor should count twice!
-                    ret_matches.erase(unique(ret_matches.begin(), ret_matches.end()), ret_matches.end());
+                    // sort by id first, distance second.
+                    std::sort(ret_matches.begin(), ret_matches.end(),
+                        [](const nanoflann::ResultItem<size_t, float>& a,
+                            const nanoflann::ResultItem<size_t, float>& b) -> bool {
+                            if (a.first < b.first) {
+                                return true;
+                            } else if (a.first > b.first) {
+                                return false;
+                            } else {
+                                return a.second < b.second;
+                            }
+                        });
+                    // only closest hit counts. this should return the correct one, but I'm not sure whether this is implementation-dependent :/
+                    ret_matches.erase(unique(ret_matches.begin(), ret_matches.end(),
+                                          [](const nanoflann::ResultItem<size_t, float>& a,
+                                              const nanoflann::ResultItem<size_t, float>& b) -> bool {
+                                              return a.first == b.first; // && a.second == b.second;
+                                          }),
+                        ret_matches.end());
 
                     size_t num_matches = 0;
                     if (theSearchType == searchTypeEnum::RADIUS) {
@@ -570,7 +588,8 @@ bool datatools::ParticleThermodyn::assertData(
 }
 
 float megamol::datatools::ParticleThermodyn::computeDriftVelocity(
-    std::vector<std::pair<size_t, float>>& matches, const size_t num_matches, const float mass, const float freedom) {
+    std::vector<nanoflann::ResultItem<size_t, float>>& matches, const size_t num_matches, const float mass,
+    const float freedom) {
     std::array<float, 3> sum = {0, 0, 0};
     for (size_t i = 0; i < num_matches; ++i) {
         const float* velo = myPts->get_velocity(matches[i].first);
@@ -590,7 +609,8 @@ float megamol::datatools::ParticleThermodyn::computeDriftVelocity(
 }
 
 float megamol::datatools::ParticleThermodyn::computeTemperature(
-    std::vector<std::pair<size_t, float>>& matches, const size_t num_matches, const float mass, const float freedom) {
+    std::vector<nanoflann::ResultItem<size_t, float>>& matches, const size_t num_matches, const float mass,
+    const float freedom) {
     std::array<float, 3> sum = {0, 0, 0};
     std::array<float, 3> sq_sum = {0, 0, 0};
     std::array<float, 3> the_temperature = {0, 0, 0};
@@ -617,7 +637,7 @@ float megamol::datatools::ParticleThermodyn::computeTemperature(
 }
 
 float megamol::datatools::ParticleThermodyn::computeFractionalAnisotropy(
-    std::vector<std::pair<size_t, float>>& matches, const size_t num_matches) {
+    std::vector<nanoflann::ResultItem<size_t, float>>& matches, const size_t num_matches) {
 
     Eigen::Matrix3f mat;
     mat.fill(0.0f);
@@ -642,7 +662,7 @@ float megamol::datatools::ParticleThermodyn::computeFractionalAnisotropy(
     return FA * scale;
 }
 
-float megamol::datatools::ParticleThermodyn::computeDensity(std::vector<std::pair<size_t, float>>& matches,
+float megamol::datatools::ParticleThermodyn::computeDensity(std::vector<nanoflann::ResultItem<size_t, float>>& matches,
     size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox) {
     bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
     bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();

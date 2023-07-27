@@ -1,12 +1,11 @@
-/*
- * InterfaceSlot.cpp
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "InterfaceSlot.h"
+
 #include "Call.h"
 #include "CallSlot.h"
 #include "Module.h"

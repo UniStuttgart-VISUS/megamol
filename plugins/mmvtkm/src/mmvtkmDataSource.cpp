@@ -8,16 +8,15 @@
 
 #include "mmvtkm/mmvtkmDataSource.h"
 
-#include "mmadios/CallADIOSData.h"
+#include <vtkm/Matrix.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/io/writer/VTKDataSetWriter.h>
 
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-
-#include "vtkm/Matrix.h"
-#include "vtkm/cont/DataSetBuilderExplicit.h"
-#include "vtkm/cont/DataSetFieldAdd.h"
-#include "vtkm/io/writer/VTKDataSetWriter.h"
 
 
 using namespace megamol;

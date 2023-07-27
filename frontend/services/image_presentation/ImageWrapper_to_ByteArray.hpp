@@ -1,16 +1,15 @@
-/*
- * ImageWrapper_to_ByteArray.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include <vector>
+
 #include "ImageWrapper.h"
 #include "ImageWrapper_Conversion_Helpers.hpp"
-
-#include <vector>
 
 namespace megamol::frontend_resources {
 

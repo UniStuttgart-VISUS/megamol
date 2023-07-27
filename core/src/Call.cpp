@@ -1,18 +1,23 @@
-/*
- * Call.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/Call.h"
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/utility/log/Log.h"
 
 #ifdef MEGAMOL_USE_TRACY
-#include "tracy/Tracy.hpp"
+#include <tracy/Tracy.hpp>
+#ifdef MEGAMOL_USE_OPENGL
+#include <glad/gl.h>
+#include <tracy/TracyOpenGL.hpp>
 #endif
+#endif
+
 #if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
 #include "mmcore/Module.h"
 #endif
@@ -59,6 +64,9 @@ bool Call::operator()(unsigned int func) {
 #ifdef MEGAMOL_USE_TRACY
         ZoneScoped;
         ZoneName(output.c_str(), output.size());
+#ifdef MEGAMOL_USE_OPENGL
+        TracyGpuZoneTransient(___tracy_gpu_zone, output.c_str(), caps.OpenGLRequired());
+#endif
 #endif
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {

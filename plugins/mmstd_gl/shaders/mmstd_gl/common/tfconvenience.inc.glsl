@@ -1,6 +1,8 @@
 #ifndef MMSTD_GL_TFCONVENIENCE_INC_GLSL
 #define MMSTD_GL_TFCONVENIENCE_INC_GLSL
 
+#include "tflookup.inc.glsl"
+
 uniform sampler1D tfTexture;
 uniform vec2 tfRange;
 

@@ -1,13 +1,22 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "Profiling_Service.hpp"
 
+#include "FrameStatistics.h"
+#include "LuaCallbacksCollection.h"
+#include "ModuleGraphSubscription.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/SampleCameraScenes.h"
 #include "mmcore/view/AbstractViewInterface.h"
 #include "mmcore/view/CameraSerializer.h"
 
-#include "FrameStatistics.h"
-#include "LuaCallbacksCollection.h"
-#include "ModuleGraphSubscription.h"
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
 
 namespace megamol::frontend {
 
@@ -173,13 +182,21 @@ void Profiling_Service::close() {
 #endif
 }
 
+static const char* const sl_innerframe = "InnerFrame";
+
 void Profiling_Service::updateProvidedResources() {
+#ifdef MEGAMOL_USE_TRACY
+    FrameMarkStart(sl_innerframe);
+#endif
     _perf_man.startFrame(
         _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
 }
 
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
+#ifdef MEGAMOL_USE_TRACY
+    FrameMarkEnd(sl_innerframe);
+#endif
 }
 
 void Profiling_Service::fill_lua_callbacks() {

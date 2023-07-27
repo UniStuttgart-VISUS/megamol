@@ -1,10 +1,11 @@
-/*
- * AbstractNamedObject.cpp
- *
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #include "mmcore/AbstractNamedObject.h"
+
 #include "mmcore/utility/log/Log.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"

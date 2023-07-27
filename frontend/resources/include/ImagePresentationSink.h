@@ -1,17 +1,16 @@
-/*
- * ImagePresentationSink.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "ImageWrapper.h"
-
 #include <functional>
 #include <string>
 #include <vector>
+
+#include "ImageWrapper.h"
 
 namespace megamol::frontend_resources {
 

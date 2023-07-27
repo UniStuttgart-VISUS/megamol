@@ -1,11 +1,18 @@
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
-#include "png.h"
 #include <filesystem>
 #include <map>
 #include <optional>
 #include <string>
 #include <vector>
+
+#include <png.h>
 
 namespace megamol::core::utility::graphics {
 

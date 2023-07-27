@@ -42,10 +42,11 @@
 #ifndef CUDAQUICKSURF_H
 #define CUDAQUICKSURF_H
 
-#include "glm/glm.hpp"
-#include "glowl/BufferObject.hpp"
 #include <memory>
 #include <vector>
+
+#include <glm/glm.hpp>
+#include <glowl/BufferObject.hpp>
 
 namespace megamol::protein_cuda {
 

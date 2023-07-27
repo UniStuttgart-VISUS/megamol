@@ -1,18 +1,17 @@
-/*
- * ImagePresentationEntryPoints.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "EntryPoint.h"
-#include "FrontendResource.h"
-
 #include <any>
 #include <functional>
 #include <vector>
+
+#include "EntryPoint.h"
+#include "FrontendResource.h"
 
 namespace megamol::frontend_resources {
 

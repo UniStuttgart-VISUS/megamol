@@ -2,18 +2,17 @@
 
 #include <vector>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+
+#include "astro/AstroDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-
 #include "mmcore/utility/log/Log.h"
-
-#include "astro/AstroDataCall.h"
-#include "geometry_calls/VolumetricDataCall.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
 
 namespace megamol::astro {
 

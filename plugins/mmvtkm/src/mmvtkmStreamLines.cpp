@@ -4,9 +4,12 @@
  * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "mmvtkm/mmvtkmDataCall.h"
 
 #include "mmvtkm/mmvtkmStreamLines.h"
+
+#include <glm/gtx/transform.hpp>
+#include <vtkm/filter/Streamline.h>
+#include <vtkm/io/writer/VTKDataSetWriter.h>
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -16,12 +19,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
-
-#include "vtkm/filter/Streamline.h"
-#include "vtkm/io/writer/VTKDataSetWriter.h"
-
-#include "glm/gtx/transform.hpp"
-
+#include "mmvtkm/mmvtkmDataCall.h"
 #include "mmvtkm/sobol.h"
 
 using namespace megamol;

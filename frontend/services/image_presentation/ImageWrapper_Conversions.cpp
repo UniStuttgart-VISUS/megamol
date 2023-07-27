@@ -1,18 +1,15 @@
-/*
- * ImageWrapper_Conversions.cpp
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include <stdexcept>
+#include <tuple>
 
 #include "ImageWrapper_Conversion_Helpers.hpp"
 #include "ImageWrapper_to_ByteArray.hpp"
 #include "ImageWrapper_to_GLTexture.hpp"
-
-#include <tuple>
 
 using namespace megamol::frontend_resources;
 

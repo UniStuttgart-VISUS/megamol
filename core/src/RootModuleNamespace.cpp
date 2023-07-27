@@ -1,10 +1,13 @@
-/*
- * RootModuleNamespace.cpp
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #include "mmcore/RootModuleNamespace.h"
+
+#include <memory>
+
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CalleeSlot.h"
@@ -16,18 +19,18 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/Array.h"
-#include "vislib/assert.h"
-#if defined(DEBUG) || defined(_DEBUG)
-#include "vislib/sys/AutoLock.h"
-#endif
 #include "mmcore/utility/log/Log.h"
+#include "vislib/Array.h"
 #include "vislib/Stack.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
+#include "vislib/assert.h"
 #include "vislib/sys/Thread.h"
-#include <memory>
+
+#if defined(DEBUG) || defined(_DEBUG)
+#include "vislib/sys/AutoLock.h"
+#endif
 
 using namespace megamol::core;
 

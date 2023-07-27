@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmcore/MultiPerformanceHistory.h"
 
 #include <cassert>
@@ -47,23 +53,18 @@ MultiPerformanceHistory::perf_type MultiPerformanceHistory::at(int index, metric
     switch (metric) {
     case metric_type::MIN:
         return time_buffer[offset(next_index, index)].min();
-        break;
     case metric_type::MAX:
         return time_buffer[offset(next_index, index)].max();
-        break;
     case metric_type::AVERAGE:
         return time_buffer[offset(next_index, index)].avg();
-        break;
     case metric_type::MEDIAN:
         return time_buffer[offset(next_index, index)].med();
-        break;
     case metric_type::COUNT:
         return time_buffer[offset(next_index, index)].count();
-        break;
     case metric_type::SUM:
         return time_buffer[offset(next_index, index)].sum();
-        break;
     }
+    return perf_type();
 }
 
 MultiPerformanceHistory::perf_type MultiPerformanceHistory::last_value(metric_type metric) const {
@@ -77,23 +78,18 @@ MultiPerformanceHistory::copyHistory(metric_type metric) const {
         switch (metric) {
         case metric_type::MIN:
             return fs.min();
-            break;
         case metric_type::MAX:
             return fs.max();
-            break;
         case metric_type::AVERAGE:
             return fs.avg();
-            break;
         case metric_type::MEDIAN:
             return fs.med();
-            break;
         case metric_type::COUNT:
             return static_cast<MultiPerformanceHistory::perf_type>(fs.count());
-            break;
         case metric_type::SUM:
             return fs.sum();
-            break;
         }
+        return float();
     };
     std::transform(time_buffer.begin() + next_index, time_buffer.end(), ret.begin(), trafo);
     if (next_index > 0) {

@@ -256,8 +256,12 @@ bool TestSpheresDataSource::getExtentCallback(core::Call& caller) {
         return false;
 
     auto frameCount = this->numFramesSlot.Param<core::param::IntParam>()->Value();
+    auto sphereCount = this->numSpheresSlot.Param<core::param::IntParam>()->Value();
 
-    mpdc->SetDataHash(1);
+    // assume that sphere count and frame count are only relevant up to the first two bytes
+    // because who will ever need more than ~2^16 frames or spheres from this test data source?
+    int hash = sphereCount | (frameCount << 16);
+    mpdc->SetDataHash(hash);
     mpdc->SetExtent(frameCount, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
 
     return true;

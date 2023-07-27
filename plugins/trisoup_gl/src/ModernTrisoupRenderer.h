@@ -5,9 +5,10 @@
  */
 #pragma once
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
+#include <glowl/BufferObject.hpp>
+#include <glowl/FramebufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"

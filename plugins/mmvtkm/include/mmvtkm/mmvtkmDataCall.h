@@ -8,13 +8,13 @@
 #pragma once
 
 
+#include <memory>
+
+#include <vtkm/cont/DataSet.h>
+
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/generic/CallGeneric.h"
-#include <memory>
 //#include "mmstd/data/AbstractGetData3DCall.h"
-
-#include "vtkm/cont/DataSet.h"
-
 
 namespace megamol::mmvtkm {
 

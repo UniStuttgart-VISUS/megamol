@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "cuda.h"
-#include "optix.h"
-#include "optix_stubs.h"
+#include <cuda.h>
+#include <optix.h>
+#include <optix_stubs.h>
 
 #include "optix/utils_host.h"
 

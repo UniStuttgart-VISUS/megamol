@@ -1,9 +1,10 @@
-/*
- * LuaAPI.cpp
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
+
+#include "mmcore/LuaAPI.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -12,14 +13,10 @@
 #include <sstream>
 #include <string>
 
-#ifndef _WIN32
-#include <sys/types.h>
-#include <unistd.h>
-#endif // _WIN32
+#include <lua.hpp>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/LuaAPI.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
@@ -27,7 +24,14 @@
 #include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 
-#include "lua.hpp"
+#ifndef _WIN32
+#include <sys/types.h>
+#include <unistd.h>
+#endif // _WIN32
+
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
 
 //#define LUA_FULL_ENVIRONMENT
 
@@ -92,7 +96,14 @@ std::string megamol::core::LuaAPI::GetScriptPath() { return this->currentScriptP
 
 void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) { this->currentScriptPath = scriptPath; }
 
+
+static auto const tc_lua_cmd = 0x65B5E4;
+
+
 bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
+    #ifdef MEGAMOL_USE_TRACY
+    ZoneScopedNC("LuaAPI::RunFile", tc_lua_cmd);
+    #endif
     std::ifstream input(fileName, std::ios::in);
     if (!input.fail()) {
         std::ostringstream buffer;
@@ -106,6 +117,9 @@ bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::strin
 
 
 bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::wstring& fileName, std::string& result) {
+    #ifdef MEGAMOL_USE_TRACY
+    ZoneScopedNC("LuaAPI::RunFile", tc_lua_cmd);
+    #endif
     vislib::sys::File input;
     if (input.Open(fileName.c_str(), vislib::sys::File::AccessMode::READ_ONLY, vislib::sys::File::ShareMode::SHARE_READ,
         vislib::sys::File::CreationMode::OPEN_ONLY)) {
@@ -123,6 +137,9 @@ bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::wstri
 
 bool megamol::core::LuaAPI::RunString(
     const std::string& envName, const std::string& script, std::string& result, std::string scriptPath) {
+    #ifdef MEGAMOL_USE_TRACY
+    ZoneScopedNC("LuaAPI::RunString", tc_lua_cmd);
+    #endif
     // todo: locking!!!
     // no two threads can touch L at the same time
     std::lock_guard<std::mutex> stateGuard(this->stateLock);

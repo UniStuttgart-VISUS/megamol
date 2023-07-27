@@ -5,10 +5,10 @@
  */
 #pragma once
 
-#include "AbstractLocalRenderer.h"
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
+#include <glowl/BufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
 
+#include "AbstractLocalRenderer.h"
 #include "helper_includes/helper_math.h"
 
 namespace megamol {

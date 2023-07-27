@@ -1,8 +1,7 @@
-/*
- * RenderUtils.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -14,7 +13,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include <glowl/BufferObject.hpp>
 #include <glowl/FramebufferObject.hpp>
 #include <glowl/GLSLProgram.hpp>

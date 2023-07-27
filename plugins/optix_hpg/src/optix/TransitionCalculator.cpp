@@ -1,9 +1,8 @@
 #include "TransitionCalculator.h"
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
 
 #include "optix/utils_host.h"
-
 #include "transitioncalculator_device.h"
 
 

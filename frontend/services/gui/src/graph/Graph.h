@@ -1,12 +1,12 @@
-/*
- * Graph.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include <list>
 
 #include "Call.h"
 #include "Group.h"
@@ -15,8 +15,6 @@
 #include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
-#include <list>
-
 
 namespace megamol::gui {
 
@@ -88,6 +86,9 @@ public:
     }
     GroupPtr_t GetGroup(ImGuiID group_uid);
     ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr, bool use_queue = true);
+    ImGuiID AddGroupModule(ImGuiID group_uid, const ModulePtr_t& module_ptr, bool use_queue = true);
+    ImGuiID RemoveGroupModule(
+        ImGuiID group_uid, ImGuiID module_uid, bool use_queue = true, bool reset_interface = true);
 
     void Clear();
 
@@ -135,10 +136,6 @@ public:
 
     inline std::string Name() const {
         return this->name;
-    }
-
-    void ForceUpdate() {
-        this->gui_update = true;
     }
 
     void ResetStatePointers() {

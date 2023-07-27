@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <glowl/BufferObject.hpp>
+#include <glowl/FramebufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/light/CallLight.h"
@@ -16,10 +20,6 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ProteinColor.h"
 #include "protein_gl/DeferredRenderingProvider.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
 
 namespace megamol::protein_gl {
 

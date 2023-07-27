@@ -102,7 +102,7 @@ public:
 
 #ifdef MEGAMOL_USE_PROFILING
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
-        Module::requested_lifetime_resources(req);
+        ModuleGL::requested_lifetime_resources(req);
         req.require<frontend_resources::PerformanceManager>();
     }
 #endif

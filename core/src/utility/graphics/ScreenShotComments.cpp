@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
 #include <cstring>

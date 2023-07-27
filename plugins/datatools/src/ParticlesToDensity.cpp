@@ -8,20 +8,6 @@
 
 #define _USE_MATH_DEFINES
 
-#include "geometry_calls/VolumetricDataCall.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
-
-#include "datatools/table/TableDataCall.h"
-
-#include "mmcore/utility/log/Log.h"
-
-#include "simultaneous_sort/simultaneous_sort.h"
-
-#include "omp.h"
-
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -33,6 +19,17 @@
 #include <numeric>
 #include <utility>
 #include <vector>
+
+#include <omp.h>
+#include <simultaneous_sort/simultaneous_sort.h>
+
+#include "datatools/table/TableDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 

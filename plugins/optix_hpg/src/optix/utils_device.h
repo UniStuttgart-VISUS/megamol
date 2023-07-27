@@ -1,14 +1,12 @@
 #pragma once
 
-#include "cuda.h"
-#include "optix.h"
-
-#include "utils_host.h"
-
-#include "glm/glm.hpp"
+#include <cuda.h>
+#include <glm/glm.hpp>
+#include <optix.h>
 
 #include "perraydata.h"
 #include "random.h"
+#include "utils_host.h"
 
 #ifndef __CUDACC__
 #error "CUDA device-only include"

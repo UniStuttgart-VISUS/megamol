@@ -24,19 +24,17 @@
 
 #include <variant>
 
+#include <glm/glm.hpp>
+#include <glowl/Sampler.hpp>
+#include <glowl/Texture2DView.hpp>
+#include <glowl/glowl.h>
+
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-
 #include "mmstd_gl/ModuleGL.h"
-
-#include "glowl/Sampler.hpp"
-#include "glowl/Texture2DView.hpp"
-#include "glowl/glowl.h"
-
-#include <glm/glm.hpp>
-#include "CompositingOutHandler.h"
 
 namespace megamol::compositing_gl {
 
@@ -213,7 +211,7 @@ public:
 
 #ifdef MEGAMOL_USE_PROFILING
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
-        Module::requested_lifetime_resources(req);
+        ModuleGL::requested_lifetime_resources(req);
         req.require<frontend_resources::PerformanceManager>();
     }
 #endif

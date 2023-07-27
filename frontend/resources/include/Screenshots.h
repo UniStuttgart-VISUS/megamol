@@ -1,16 +1,15 @@
-/*
- * Screenshots.h
- *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "GL_STUB.h"
-
 #include <filesystem>
 #include <vector>
+
+#include "GL_STUB.h"
 
 namespace megamol::frontend_resources {
 
@@ -90,7 +89,7 @@ public:
         COLOR_ATTACHMENT3 = (COLOR_ATTACHMENT0 + 3), // GL_COLOR_ATTACHMENT3
     };
 
-    void set_read_buffer(ReadBuffer buffer) GL_STUB();
+    void set_read_buffer(ReadBuffer buffer) GL_VSTUB();
 
     ScreenshotImageData const& take_screenshot() const override GL_STUB({});
 

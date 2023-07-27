@@ -1,22 +1,10 @@
-/*
- * VR_Service.cpp
- *
- * Copyright (C) 2021 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "VR_Service.hpp"
-
-#ifdef MEGAMOL_USE_VR_INTEROP
-#include <glm/gtc/matrix_transform.hpp>
-#include <interop.hpp>
-
-#include "ImageWrapper_to_GLTexture.hpp"
-#include "ViewRenderInputs.h"
-
-#include "mmcore/Module.h"
-#include "mmcore/view/AbstractViewInterface.h"
-#endif // MEGAMOL_USE_VR_INTEROP
 
 #include "mmcore/MegaMolGraph.h"
 
@@ -25,6 +13,15 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
 
+#ifdef MEGAMOL_USE_VR_INTEROP
+#include <glm/gtc/matrix_transform.hpp>
+#include <interop.hpp>
+
+#include "ImageWrapper_to_GLTexture.hpp"
+#include "ViewRenderInputs.h"
+#include "mmcore/Module.h"
+#include "mmcore/view/AbstractViewInterface.h"
+#endif // MEGAMOL_USE_VR_INTEROP
 
 static const std::string service_name = "VR_Service: ";
 static void log(std::string const& text) {

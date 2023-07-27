@@ -1,10 +1,17 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <array>
 #include <string>
 #include <type_traits>
 
-#include "implot.h"
+#include <implot.h>
+
 #include "mmcore/MultiPerformanceHistory.h"
 
 namespace megamol::gui {

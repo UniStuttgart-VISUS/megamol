@@ -1,8 +1,7 @@
-/*
- * AbstractInputScope.h
- *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once

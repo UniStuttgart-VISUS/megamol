@@ -8,9 +8,10 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"

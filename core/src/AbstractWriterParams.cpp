@@ -1,18 +1,10 @@
-/*
- * AbstractWriterParams.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/AbstractWriterParams.h"
-#include "mmcore/AbstractSlot.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ParamSlot.h"
-
-#include "mmcore/utility/log/Log.h"
 
 #include <chrono>
 #include <ctime>
@@ -21,6 +13,13 @@
 #include <sstream>
 #include <string>
 #include <utility>
+
+#include "mmcore/AbstractSlot.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::core {
 

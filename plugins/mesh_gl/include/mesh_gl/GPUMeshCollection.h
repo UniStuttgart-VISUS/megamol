@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "glowl/Mesh.hpp"
+#include <glowl/Mesh.hpp>
 
 #include "mesh/MeshDataAccessCollection.h"
 

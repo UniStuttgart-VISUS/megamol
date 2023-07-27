@@ -1,10 +1,9 @@
 #pragma once
 
-#include "mmcore/CallerSlot.h"
+#include <glm/glm.hpp>
 
 #include "datatools/AbstractParticleManipulator.h"
-
-#include "glm/glm.hpp"
+#include "mmcore/CallerSlot.h"
 
 namespace megamol::datatools {
 class AddParticleColors : public AbstractParticleManipulator {
