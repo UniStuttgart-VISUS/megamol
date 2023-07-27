@@ -101,6 +101,10 @@ void Profiling_Service::log_graph_event(
 void Profiling_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     _requestedResourcesReferences = resources;
 
+#ifdef MEGAMOL_USE_NVPERF
+    _perf_man.set_nvperf_output("./nvperf");
+#endif
+
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
         resources[3].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
 
@@ -190,12 +194,23 @@ void Profiling_Service::updateProvidedResources() {
 #endif
     _perf_man.startFrame(
         _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
+#ifdef MEGAMOL_USE_NVPERF
+    _perf_man.nvperf_push_range("RenderFrame");
+#endif
 }
 
 void Profiling_Service::resetProvidedResources() {
+#ifdef MEGAMOL_USE_NVPERF
+    _perf_man.nvperf_pop_range();
+#endif
     _perf_man.endFrame();
 #ifdef MEGAMOL_USE_TRACY
     FrameMarkEnd(sl_innerframe);
+#endif
+#ifdef MEGAMOL_USE_NVPERF
+    if (!_perf_man.is_nvperf_collecting()) {
+        setShutdown(true);
+    }
 #endif
 }
 

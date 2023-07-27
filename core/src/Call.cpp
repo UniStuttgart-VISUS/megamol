@@ -18,7 +18,7 @@
 #endif
 #endif
 
-#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS) || defined(MEGAMOL_USE_NVPERF)
 #include "mmcore/Module.h"
 #endif
 
@@ -54,7 +54,7 @@ Call::~Call() {
 bool Call::operator()(unsigned int func) {
     bool res = false;
     if (this->callee != nullptr) {
-#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS) || defined(MEGAMOL_USE_NVPERF)
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
         std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
@@ -74,6 +74,9 @@ bool Call::operator()(unsigned int func) {
             gl_helper->PushDebugGroup(1234, -1, output.c_str());
         }
 #endif
+#ifdef MEGAMOL_USE_NVPERF
+        perf_man->nvperf_push_range(output);
+#endif
 #ifdef MEGAMOL_USE_PROFILING
         perf_man->start_timer(cpu_queries[func]);
         if (caps.OpenGLRequired()) {
@@ -86,6 +89,9 @@ bool Call::operator()(unsigned int func) {
             perf_man->stop_timer(gl_queries[func]);
         }
         perf_man->stop_timer(cpu_queries[func]);
+#endif
+#ifdef MEGAMOL_USE_NVPERF
+        perf_man->nvperf_pop_range();
 #endif
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {

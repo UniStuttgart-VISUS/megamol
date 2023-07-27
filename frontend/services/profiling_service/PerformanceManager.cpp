@@ -17,11 +17,19 @@
 
 namespace megamol::frontend_resources {
 
+bool PerformanceManager::nvperf_init_ = false;
+
 PerformanceManager::PerformanceManager() {
 #ifdef MEGAMOL_USE_OPENGL
     whole_frame_gl = add_timer("FrameTimeGL", query_api::OPENGL);
 #endif
     whole_frame_cpu = add_timer("FrameTime", query_api::CPU);
+}
+
+PerformanceManager::~PerformanceManager() {
+#ifdef MEGAMOL_USE_NVPERF
+    nvperf.Reset();
+#endif
 }
 
 bool PerformanceManager::Itimer::start(frame_type frame) {
@@ -260,6 +268,21 @@ void PerformanceManager::stop_timer(handle_type h) {
     timers[h]->end();
 }
 
+#ifdef MEGAMOL_USE_NVPERF
+void PerformanceManager::set_nvperf_output(std::string const& out_path) {
+    if (!nvperf_init_) {
+        nv::perf::InitializeNvPerf();
+
+        nvperf.InitializeReportGenerator();
+        nvperf.SetFrameLevelRangeName("Frame");
+        nvperf.SetNumNestingLevels(3);
+        nvperf.outputOptions.directoryName = out_path;
+        nvperf.StartCollectionOnNextFrame();
+        nvperf_init_ = true;
+    }
+}
+#endif
+
 PerformanceManager::handle_type PerformanceManager::add_timer(std::unique_ptr<Itimer> t) {
     handle_type my_handle = 0;
     if (!handle_holes.empty()) {
@@ -283,6 +306,9 @@ void PerformanceManager::startFrame(frame_type frame) {
     start_timer(whole_frame_cpu);
 #ifdef MEGAMOL_USE_OPENGL
     start_timer(whole_frame_gl);
+#endif
+#ifdef MEGAMOL_USE_NVPERF
+    nvperf.OnFrameStart();
 #endif
 }
 
@@ -337,5 +363,9 @@ void PerformanceManager::endFrame() {
     for (auto& subscriber : subscribers) {
         subscriber(this_frame);
     }
+
+#ifdef MEGAMOL_USE_NVPERF
+    nvperf.OnFrameEnd();
+#endif
 }
 } // namespace megamol::frontend_resources
