@@ -49,11 +49,15 @@ bool datatools::ParticleThinner::manipulateData(
         UINT64 cnt = p.GetCount();
 
         const void* cd = p.GetColourData();
-        unsigned int cds = p.GetColourDataStride();
+        unsigned int cds = p.GetColourDataStride() == 0
+                               ? geocalls::SimpleSphericalParticles::ColorDataSize[p.GetColourDataType()]
+                               : p.GetColourDataStride();
         MultiParticleDataCall::Particles::ColourDataType cdt = p.GetColourDataType();
 
         const void* vd = p.GetVertexData();
-        unsigned int vds = p.GetVertexDataStride();
+        unsigned int vds = p.GetVertexDataStride() == 0
+                               ? geocalls::SimpleSphericalParticles::VertexDataSize[p.GetVertexDataType()]
+                               : p.GetVertexDataStride();
         MultiParticleDataCall::Particles::VertexDataType vdt = p.GetVertexDataType();
 
         cds *= tf; // lol
