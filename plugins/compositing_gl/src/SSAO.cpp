@@ -569,14 +569,16 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
             ++version_;
 
             std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
-                setupOutputTexture = [this](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
+                setupOutputTexture = [this](
+                                         std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
                     // set output texture size to primary input texture
                     std::array<float, 2> texture_res = {
                         static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
 
                     if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
                         glowl::TextureLayout tx_layout(out_format_handler.getInternalFormat(), std::get<0>(texture_res),
-                            std::get<1>(texture_res), 1, out_format_handler.getFormat(), out_format_handler.getType(), 1);
+                            std::get<1>(texture_res), 1, out_format_handler.getFormat(), out_format_handler.getType(),
+                            1);
                         tgt->reload(tx_layout, nullptr);
                     }
                 };

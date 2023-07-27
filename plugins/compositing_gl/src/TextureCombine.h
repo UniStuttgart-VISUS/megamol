@@ -11,11 +11,11 @@
 
 #include <glowl/glowl.h>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "CompositingOutHandler.h"
 
 #include "mmstd_gl/ModuleGL.h"
 
@@ -51,10 +51,10 @@ public:
     }
 
     /**
-    * Recompiles relevant shaders and updates relevant output texture formats.
-    *
-    * @return 'true' if updates sucessfull, 'false' otherwise
-    */
+     * Recompiles relevant shaders and updates relevant output texture formats.
+     *
+     * @return 'true' if updates sucessfull, 'false' otherwise
+     */
     bool formatUpdates();
 
     TextureCombine();

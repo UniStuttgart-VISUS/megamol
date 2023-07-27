@@ -360,10 +360,10 @@ private:
     bool ssaoModeCallback(core::param::ParamSlot& slot);
 
     /**
-    * \brief Callback method for CompositingOutHandler to trigger recompiling of relevant shaders and textures.
-    *
-    * @return True, if recompiling and reloading relevant shaders and textures succeeded, else False
-    */
+     * \brief Callback method for CompositingOutHandler to trigger recompiling of relevant shaders and textures.
+     *
+     * @return True, if recompiling and reloading relevant shaders and textures succeeded, else False
+     */
     bool outFormatUpdate();
 
     // profiling

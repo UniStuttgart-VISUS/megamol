@@ -22,7 +22,8 @@ PNGDataSource::PNGDataSource()
         , m_image_height_slot("ImageHeight", "Height of the loaded image")
         , m_output_tex_slot("Color", "Slot providing the data as Texture2D (RGBA16F)")
         , m_version(0)
-        , out_format_handler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F}, std::function<bool()>(std::bind(&PNGDataSource::outFormatUpdate, this))) {
+        , out_format_handler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::function<bool()>(std::bind(&PNGDataSource::outFormatUpdate, this))) {
     this->m_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_filename_slot);
 

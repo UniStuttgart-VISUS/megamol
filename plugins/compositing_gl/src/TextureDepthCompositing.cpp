@@ -180,8 +180,8 @@ bool megamol::compositing_gl::TextureDepthCompositing::formatUpdates() {
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     auto const shader_options_flags = out_handler_.handleDefinitions(shader_options);
     try {
-        m_depthComp_prgm = core::utility::make_glowl_shader("Compositing_textureDepthCompositing", *shader_options_flags,
-            "compositing_gl/textureDepthCompositing.comp.glsl");
+        m_depthComp_prgm = core::utility::make_glowl_shader("Compositing_textureDepthCompositing",
+            *shader_options_flags, "compositing_gl/textureDepthCompositing.comp.glsl");
 
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("TextureDepthCompositing: " + std::string(e.what())).c_str());
