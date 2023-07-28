@@ -224,13 +224,18 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
                 list_radii.reserve(num_plists);
                 plist_count.resize(num_plists, 0);
 
-                for (uint64_t pl_idx = 0; pl_idx < num_plists; ++pl_idx) {
-                    auto const count = std::count(comp_id.begin(), comp_id.end(), pl_idx);
-                    plist_count[pl_idx] = count;
 
-                    mix[pl_idx].reserve(count * 3);
-                    dirs[pl_idx].reserve(count * 3);
-                    ids[pl_idx].reserve(count);
+                int32_t plist_offset = 0;
+                for (auto comp_idx = 0; comp_idx < num_components; ++comp_idx) {
+                    auto const comp_instances = std::count(comp_id.begin(), comp_id.end(), comp_idx);
+
+                    for (auto atom_idx = 0; atom_idx < atoms_per_component[comp_id[comp_idx]]; ++atom_idx) {
+                        plist_count[plist_offset] = comp_instances;
+                        mix[plist_offset].reserve(comp_instances * 3);
+                        dirs[plist_offset].reserve(comp_instances * 3);
+                        ids[plist_offset].reserve(comp_instances);
+                        plist_offset++;
+                    }
                 }
 
                 for (int j = 0; j < comp_sigmas.size(); ++j) {
