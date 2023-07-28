@@ -1,8 +1,7 @@
+#include <optix.h>
+
 #include "optix/utils_device.h"
-
 #include "transitioncalculator_device.h"
-
-#include "optix.h"
 
 namespace megamol {
 namespace optix_hpg {

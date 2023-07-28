@@ -1,6 +1,7 @@
 #include "3DUIRenderer.h"
 
-#include "tiny_gltf.h"
+#include <tiny_gltf.h>
+
 #include "vislib/math/Matrix.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 

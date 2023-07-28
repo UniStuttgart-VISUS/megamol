@@ -33,9 +33,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/thecam/utility/config.h"
-
 #include "mmcore/thecam/manipulator_base.h"
+#include "mmcore/thecam/utility/config.h"
 
 
 namespace megamol {

@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmstd_gl/renderer/AnimationRenderer.h"
 
 #include "mmcore/MegaMolGraph.h"

@@ -1,8 +1,7 @@
-/*
- * Renderer3DModule.cpp
- *
- * Copyright (C) 2018, 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd/renderer/Renderer3DModule.h"

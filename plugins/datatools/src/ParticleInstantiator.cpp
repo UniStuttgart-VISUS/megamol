@@ -4,8 +4,11 @@
  * Copyright (C) 2020 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
+
 #include "ParticleInstantiator.h"
-#include "glm/glm.hpp"
+
+#include <glm/glm.hpp>
+
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/Vector3fParam.h"
 

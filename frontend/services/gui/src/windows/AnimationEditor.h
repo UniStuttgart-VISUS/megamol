@@ -1,12 +1,12 @@
-/*
- * AnimationEditor.h
- *
- * Copyright (C) 2022 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include <variant>
 
 #include "AbstractWindow.h"
 #include "AnimationEditorData.h"
@@ -16,10 +16,7 @@
 #include "mmcore/utility/animation/AnimationData.h"
 #include "widgets/FileBrowserWidget.h"
 
-#include <variant>
-
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 using namespace core::utility;
 
@@ -139,5 +136,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui

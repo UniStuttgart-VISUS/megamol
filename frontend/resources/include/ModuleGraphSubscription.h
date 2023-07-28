@@ -1,8 +1,7 @@
-/*
- * ModuleGraphSubscription.h
- *
- * Copyright (C) 2022 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once

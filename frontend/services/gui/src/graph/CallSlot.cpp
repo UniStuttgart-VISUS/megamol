@@ -1,12 +1,11 @@
-/*
- * CallSlot.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "CallSlot.h"
+
 #include "Call.h"
 #include "InterfaceSlot.h"
 #include "Module.h"

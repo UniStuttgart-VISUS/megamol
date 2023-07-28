@@ -1,8 +1,7 @@
-/*
- * TimeControl.cpp
- *
- * Copyright (C) 2011 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2011, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd/renderer/TimeControl.h"

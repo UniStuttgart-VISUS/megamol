@@ -1,10 +1,8 @@
-/*
- * GUI_Service.cpp
- *
- * Copyright (C) 2019 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #include "GUI_Service.hpp"
 
@@ -22,7 +20,6 @@
 #include "ScriptPaths.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
-
 #include "mmcore/utility/log/Log.h"
 
 

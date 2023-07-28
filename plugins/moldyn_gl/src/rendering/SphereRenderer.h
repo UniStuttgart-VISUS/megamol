@@ -5,14 +5,34 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vk_platform.h"
-
 #pragma once
 
-#include "misc/MDAOVolumeGenerator.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <signal.h>
+
+#include <algorithm>
+#include <chrono>
+#include <cinttypes>
+#include <cmath>
+#include <deque>
+#include <fstream>
+#include <iterator>
+#include <map>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+// clang-format off
+#include <glowl/glowl.h>
+#include <vk_platform.h>
+// clang-format on
 
 #include "PerformanceManager.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "misc/MDAOVolumeGenerator.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/BoolParam.h"
@@ -26,41 +46,17 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmcore_gl/utility/SSBOStreamer.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 #include "mmstd_gl/flags/UniFlagStorage.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
 #include "vislib/assert.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/types.h"
-
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-#include <chrono>
-#include <cinttypes>
-#include <cmath>
-#include <iterator>
-#include <map>
-#include <sstream>
-#include <tuple>
-#include <utility>
-
-#include <GL/glu.h>
-#include <algorithm>
-#include <deque>
-#include <fstream>
-#include <signal.h>
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include "glowl/glowl.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
 
 
 // Minimum GLSL version for all render modes

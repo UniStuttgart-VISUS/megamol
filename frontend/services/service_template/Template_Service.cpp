@@ -1,8 +1,7 @@
-/*
- * Template_Service.cpp
- *
- * Copyright (C) 2021 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 // search/replace Template_Service with your class name

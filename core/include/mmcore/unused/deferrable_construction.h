@@ -1,7 +1,12 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Interface for classes that need to defer construction.
@@ -27,5 +32,4 @@ protected:
 
 }; // end class deferrable_construction
 
-} // end namespace core
-} // end namespace megamol
+} // namespace megamol::core

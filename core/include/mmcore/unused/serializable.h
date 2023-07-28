@@ -1,9 +1,14 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <string>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Interface for serializable classes.
@@ -28,5 +33,4 @@ public:
     virtual ~serializable() = default;
 }; // end class serializable
 
-} // end namespace core
-} // end namespace megamol
+} // namespace megamol::core

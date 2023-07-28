@@ -1,16 +1,12 @@
 #pragma once
 
-
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#include "glowl/glowl.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
-
-#include "vislib/math/Cuboid.h"
+#include <glowl/glowl.h>
 
 #include "OpenGL_Context.h"
-
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "vislib/math/Cuboid.h"
 
 namespace megamol::moldyn_gl::misc {
 

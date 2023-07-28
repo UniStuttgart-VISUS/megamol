@@ -1,10 +1,15 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <mutex>
 #include <queue>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 template<typename T>
 class AbstractUpdateQueue {
@@ -50,5 +55,4 @@ private:
     std::queue<T> update_queue_;
 }; // end class AbstractUpdateQueue
 
-} // end namespace core
-} // end namespace megamol
+} // namespace megamol::core

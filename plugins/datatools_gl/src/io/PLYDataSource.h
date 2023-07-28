@@ -7,18 +7,20 @@
 
 #pragma once
 
+#include <cstdint>
+#include <fstream>
+#include <map>
+#include <vector>
+
+#include <tinyply.h>
+
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmstd/data/AnimDataModule.h"
-#include "tinyply.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
-#include <cstdint>
-#include <fstream>
-#include <map>
-#include <vector>
 
 namespace megamol::datatools_gl::io {
 

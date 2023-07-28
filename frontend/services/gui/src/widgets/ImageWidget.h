@@ -1,17 +1,16 @@
-/*
- * ImageWidget_gl.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include "widgets/HoverToolTip.h"
+
 #ifdef MEGAMOL_USE_OPENGL
 #include "mmcore_gl/utility/RenderUtils.h"
 #endif // MEGAMOL_USE_OPENGL
-#include "widgets/HoverToolTip.h"
-
 
 namespace megamol::gui {
 

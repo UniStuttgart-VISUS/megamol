@@ -1,16 +1,14 @@
-/*
- * SplitterWidget.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-
-#include "gui_utils.h"
 #include <string>
 
+#include "gui_utils.h"
 
 namespace megamol::gui {
 

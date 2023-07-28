@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "glm/glm.hpp"
+#include <glm/glm.hpp>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"

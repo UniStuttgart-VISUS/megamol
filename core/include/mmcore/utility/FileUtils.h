@@ -1,15 +1,11 @@
-/*
- * FileUtils.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-
-#include "mmcore/utility/log/Log.h"
-#include "vislib/UTF8Encoder.h"
 #include <codecvt>
 #include <filesystem>
 #include <fstream>
@@ -19,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "mmcore/utility/log/Log.h"
+#include "vislib/UTF8Encoder.h"
 
 namespace megamol::core::utility {
 

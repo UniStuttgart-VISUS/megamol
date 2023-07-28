@@ -1,16 +1,16 @@
 #pragma once
 
-#include "CallRender3DCUDA.h"
-#include "glad/wgl.h"
-#include "mmstd_gl/renderer/ContextToGL.h"
+#include <glad/wgl.h>
 
-#include "cuda.h"
+#include <cuda.h>
 // thank you Nvidia for breaking the typedef of HGPUNV if I do not have a Quadro board!
 #ifdef _WIN32
 #define WGL_NV_gpu_affinity 1
 #endif
-#include "cudaGL.h"
+#include <cudaGL.h>
 
+#include "CallRender3DCUDA.h"
+#include "mmstd_gl/renderer/ContextToGL.h"
 #include "optix/Utils.h"
 
 namespace megamol::optix_hpg {

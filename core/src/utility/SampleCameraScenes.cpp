@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmcore/utility/SampleCameraScenes.h"
 
 #include "mmcore/BoundingBoxes_2.h"

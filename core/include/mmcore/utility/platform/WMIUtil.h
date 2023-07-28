@@ -1,11 +1,18 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #ifdef _WIN32
 
+#include <iostream>
+
 #define _WIN32_DCOM
 #include <Wbemidl.h>
 #include <comdef.h>
-#include <iostream>
 
 #pragma comment(lib, "wbemuuid.lib")
 

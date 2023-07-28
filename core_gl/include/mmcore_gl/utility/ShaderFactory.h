@@ -1,8 +1,9 @@
-/*
- * ShaderFactory.h
- *
- * Copyright (C) 2020-2021 by Universitaet Stuttgart (VISUS). Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include <algorithm>

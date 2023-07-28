@@ -1,8 +1,7 @@
-/*
- * Screenshot_Service.hpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once

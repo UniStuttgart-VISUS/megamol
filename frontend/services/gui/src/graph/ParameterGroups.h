@@ -1,8 +1,7 @@
-/*
- * ParameterGroups.h
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -12,6 +11,7 @@
 #include "vislib/math/Ternary.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterGroupAnimationWidget.h"
+
 #ifdef MEGAMOL_USE_OPENGL
 #include "widgets/gl/ParameterGroupViewCubeWidget.h"
 #endif

@@ -1,8 +1,7 @@
-/*
- * FrameStatistics_Service.cpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 // search/replace FrameStatistics_Service with your class name
@@ -13,9 +12,8 @@
 #include <numeric>
 #include <sstream>
 
-#include "mmcore/utility/Timestamp.h"
-
 #include "LuaCallbacksCollection.h"
+#include "mmcore/utility/Timestamp.h"
 
 
 // local logging wrapper for your convenience until central MegaMol logger established

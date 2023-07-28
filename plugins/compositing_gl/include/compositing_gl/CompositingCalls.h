@@ -9,11 +9,11 @@
 
 #include <memory>
 
+#include <glowl/FramebufferObject.hpp>
+#include <glowl/Texture2D.hpp>
+
 #include "mmcore/view/Camera.h"
 #include "mmstd/generic/CallGeneric.h"
-
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/Texture2D.hpp"
 
 namespace megamol::compositing_gl {
 

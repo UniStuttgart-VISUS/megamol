@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmcore/utility/graphics/CameraUtils.h"
 
 #define _USE_MATH_DEFINES

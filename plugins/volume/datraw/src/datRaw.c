@@ -24,7 +24,8 @@
 #include <fcntl.h>
 #include <math.h>
 
-#include "zlib.h"
+#include <zlib.h>
+
 #include "datRaw.h"
 #include "datRaw_log.h"
 #include "datRaw_half.h"

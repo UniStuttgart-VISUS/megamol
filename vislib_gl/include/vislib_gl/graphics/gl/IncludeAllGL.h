@@ -3,15 +3,15 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "glad/gl.h"
+#include <glad/gl.h>
 
 #ifdef _WIN32
 #include <Windows.h>
 #undef min
 #undef max
-#include "glad/wgl.h"
+#include <glad/wgl.h>
 #else
-#include "glad/glx.h"
+#include <glad/glx.h>
 #undef Status
 #endif
 

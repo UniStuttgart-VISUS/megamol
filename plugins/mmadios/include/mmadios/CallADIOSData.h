@@ -7,16 +7,17 @@
 
 #pragma once
 
-#include "adios2/common/ADIOSTypes.h"
-#include "mmcore/Call.h"
-#include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/utility/ConvertingIterator.h"
-#include "mmcore/utility/log/Log.h"
-
 #include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
+
+#include <adios2/common/ADIOSTypes.h>
+
+#include "mmcore/Call.h"
+#include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/utility/ConvertingIterator.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::adios {
 

@@ -1,10 +1,8 @@
-/*
- * Picking_gl.cpp
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #include "mmcore/utility/Picking.h"
 #include "mmcore/utility/log/Log.h"

@@ -7,15 +7,13 @@
 #include <fstream>
 #include <random>
 
+#include <omp.h>
+#include <simultaneous_sort/simultaneous_sort.h>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-
 #include "vislib/sys/ConsoleProgressBar.h"
-
-#include "omp.h"
-
-#include "simultaneous_sort/simultaneous_sort.h"
 
 megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
         : volume_in_slot_("volumeIn", "Input of volume containing optical depth")

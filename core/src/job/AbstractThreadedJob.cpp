@@ -1,11 +1,11 @@
-/*
- * AbstractThreadedJob.cpp
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/job/AbstractThreadedJob.h"
+
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;

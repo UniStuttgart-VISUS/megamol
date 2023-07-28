@@ -1,8 +1,7 @@
-/*
- * CallTimeControl.cpp
- *
- * Copyright (C) 2012 by CGV (TU Dresden)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2012, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd/renderer/CallTimeControl.h"

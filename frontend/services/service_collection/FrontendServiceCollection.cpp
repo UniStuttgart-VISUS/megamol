@@ -1,18 +1,16 @@
-/*
- * OpenGL_GLFW_Service.cpp
- *
- * Copyright (C) 2019 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "FrontendServiceCollection.hpp"
-
-#include "FrontendResourcesLookup.h"
 
 #include <algorithm>
 #include <iostream>
 #include <numeric>
 
+#include "FrontendResourcesLookup.h"
 #include "mmcore/utility/log/Log.h"
 
 #ifdef MEGAMOL_USE_TRACY

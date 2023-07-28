@@ -2,7 +2,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#include "cuda.h"
+#include <cuda.h>
 
 #include "optix.h"
 #include "optix_stubs.h"

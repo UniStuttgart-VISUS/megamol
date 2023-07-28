@@ -1,22 +1,22 @@
 #include "ParticlesToTable.h"
 
+#define GLM_FORCE_SWIZZLE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
+
 #include "geometry_calls//EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-
-#define GLM_FORCE_SWIZZLE
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/quaternion.hpp"
-#include "glm/gtc/type_ptr.hpp"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/PerformanceCounter.h"
-#include <glm/gtx/string_cast.hpp>
 
 using namespace megamol::datatools;
 using namespace megamol;

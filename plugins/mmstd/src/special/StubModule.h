@@ -1,7 +1,7 @@
-/*
- * StubModule.h
- * Copyright (C) 2017 by MegaMol Team
- * All rights reserved. Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once

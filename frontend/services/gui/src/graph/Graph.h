@@ -1,12 +1,12 @@
-/*
- * Graph.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include <list>
 
 #include "Call.h"
 #include "Group.h"
@@ -15,8 +15,6 @@
 #include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
-#include <list>
-
 
 namespace megamol::gui {
 

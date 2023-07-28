@@ -6,16 +6,18 @@
 
 #pragma once
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Texture2D.hpp"
+#include <memory>
+#include <vector>
+
+#include <glowl/BufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+#include <glowl/Texture2D.hpp>
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include <memory>
-#include <vector>
 
 #include "cuda_runtime_api.h"
 #include "particles_kernel.cuh"

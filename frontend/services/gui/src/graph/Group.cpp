@@ -1,10 +1,8 @@
-/*
- * Group.cpp
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #include "Group.h"
 

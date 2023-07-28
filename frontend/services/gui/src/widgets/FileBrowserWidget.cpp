@@ -1,14 +1,14 @@
-/*
- * FileBrowserWidget.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "FileBrowserWidget.h"
+
+#include <imgui_stdlib.h>
+
 #include "gui_utils.h"
-#include "imgui_stdlib.h"
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/String.h"
 #include "widgets/ButtonWidgets.h"

@@ -1,11 +1,18 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "PerformanceManager.h"
+
+#include <array>
 
 #include "mmcore/Call.h"
 #include "mmcore/Module.h"
-#include <array>
 
 #ifdef MEGAMOL_USE_OPENGL
-#include "glad/gl.h"
+#include <glad/gl.h>
 #endif
 
 namespace megamol::frontend_resources {

@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmcore/utility/OrbitalCameraSamples.h"
 
 std::tuple<std::vector<glm::vec3>, std::vector<glm::vec3>> megamol::core::utility::orbital_camera_samples(

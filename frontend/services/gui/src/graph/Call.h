@@ -1,22 +1,20 @@
-/*
- * Call.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-
-#ifdef MEGAMOL_USE_PROFILING
-#include "PerformanceManager.h"
-#include "mmcore/MultiPerformanceHistory.h"
-#endif
 #include "mmcore/Call.h"
 #include "mmcore/CallCapabilities.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget.h"
 
+#ifdef MEGAMOL_USE_PROFILING
+#include "PerformanceManager.h"
+#include "mmcore/MultiPerformanceHistory.h"
+#endif
 
 namespace megamol::gui {
 
