@@ -16,11 +16,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef MEGAMOL_USE_NVPERF
-#include <glad/gl.h>
-#include <NvPerfReportGeneratorOpenGL.h>
-#endif
-
 namespace megamol {
 namespace core {
 class Call;
@@ -46,7 +41,7 @@ class PerformanceManager {
 public:
     PerformanceManager();
 
-    ~PerformanceManager();
+    ~PerformanceManager() = default;
 
     using handle_type = uint32_t;
     using timer_index = uint32_t;
@@ -240,20 +235,6 @@ public:
 
     void start_timer(handle_type h);
     void stop_timer(handle_type h);
-
-#ifdef MEGAMOL_USE_NVPERF
-    void set_nvperf_output(std::string const& out_path);
-    bool is_nvperf_collecting() const {
-        return nvperf.IsCollectingReport();
-    }
-    void nvperf_push_range(std::string const& name) {
-        nvperf.PushRange(name.c_str());
-    }
-    void nvperf_pop_range() {
-        nvperf.PopRange();
-    }
-#endif
-
 private:
     friend class frontend::Profiling_Service;
 
@@ -275,11 +256,6 @@ private:
     handle_type whole_frame_gl;
 #endif
     handle_type whole_frame_cpu;
-
-#ifdef MEGAMOL_USE_NVPERF
-    static bool nvperf_init_;
-    nv::perf::profiler::ReportGeneratorOpenGL nvperf;
-#endif
 };
 
 } // namespace megamol::frontend_resources

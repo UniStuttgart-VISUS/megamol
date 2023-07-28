@@ -21,6 +21,9 @@
 namespace megamol::frontend {
 
 bool Profiling_Service::init(void* configPtr) {
+#ifdef MEGAMOL_USE_NVPERF
+    nv::perf::InitializeNvPerf();
+#endif
 #ifdef MEGAMOL_USE_PROFILING
     _providedResourceReferences = {{frontend_resources::PerformanceManager_Req_Name, _perf_man},
         {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}};
@@ -101,10 +104,6 @@ void Profiling_Service::log_graph_event(
 void Profiling_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     _requestedResourcesReferences = resources;
 
-#ifdef MEGAMOL_USE_NVPERF
-    _perf_man.set_nvperf_output("./nvperf");
-#endif
-
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
         resources[3].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
 
@@ -184,6 +183,9 @@ void Profiling_Service::close() {
         log_file.close();
     }
 #endif
+#ifdef MEGAMOL_USE_NVPERF
+    nvperf.Reset();
+#endif
 }
 
 static const char* const sl_innerframe = "InnerFrame";
@@ -195,22 +197,17 @@ void Profiling_Service::updateProvidedResources() {
     _perf_man.startFrame(
         _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
 #ifdef MEGAMOL_USE_NVPERF
-    _perf_man.nvperf_push_range("RenderFrame");
+    nvperf.OnFrameStart();
 #endif
 }
 
 void Profiling_Service::resetProvidedResources() {
-#ifdef MEGAMOL_USE_NVPERF
-    _perf_man.nvperf_pop_range();
-#endif
     _perf_man.endFrame();
 #ifdef MEGAMOL_USE_TRACY
     FrameMarkEnd(sl_innerframe);
 #endif
 #ifdef MEGAMOL_USE_NVPERF
-    if (!_perf_man.is_nvperf_collecting()) {
-        setShutdown(true);
-    }
+    nvperf.OnFrameEnd();
 #endif
 }
 
@@ -295,6 +292,25 @@ void Profiling_Service::fill_lua_callbacks() {
 
             return frontend_resources::LuaCallbacksCollection::StringResult{sstr.str()};
         }});
+
+
+#ifdef MEGAMOL_USE_NVPERF
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>(
+        "mmNVPerfInit", "(string outpath)", {[&](std::string const& outpath) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            if (!nvperf.IsCollectingReport()) {
+                nvperf.Reset();
+                nvperf.InitializeReportGenerator();
+                nvperf.SetFrameLevelRangeName("Frame");
+                // nvperf.SetNumNestingLevels(3);
+                nvperf.outputOptions.directoryName = outpath;
+                nvperf.StartCollectionOnNextFrame();
+            }
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>("mmNVPerfIsCollecting", "()",
+        {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult { return nvperf.IsCollectingReport(); }});
+#endif
 
 
     auto& register_callbacks =
