@@ -235,6 +235,7 @@ public:
 
     void start_timer(handle_type h);
     void stop_timer(handle_type h);
+
 private:
     friend class frontend::Profiling_Service;
 

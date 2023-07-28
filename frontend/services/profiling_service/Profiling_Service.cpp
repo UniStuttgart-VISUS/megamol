@@ -295,8 +295,8 @@ void Profiling_Service::fill_lua_callbacks() {
 
 
 #ifdef MEGAMOL_USE_NVPERF
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>(
-        "mmNVPerfInit", "(string outpath)", {[&](std::string const& outpath) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>("mmNVPerfInit",
+        "(string outpath)", {[&](std::string const& outpath) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             if (!nvperf.IsCollectingReport()) {
                 nvperf.Reset();
                 nvperf.InitializeReportGenerator();
