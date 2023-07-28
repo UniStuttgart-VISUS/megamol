@@ -24,6 +24,15 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC core vislib_gl glowl::glowl msf::msf_static frontend_resources OpenMP::OpenMP_CXX
   PRIVATE abstract_frontend_service) # abstract render api used by MegaMolGraph
 
+# NVPerf
+if (MEGAMOL_USE_NVPERF)
+  find_package(NvPerf REQUIRED)
+  find_package(NvPerfUtility REQUIRED)
+  target_link_libraries(${PROJECT_NAME} PUBLIC NvPerf-shared NvPerfUtility NvPerfUtilityImportsRyml)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC MEGAMOL_USE_NVPERF)
+  install(FILES ${NvPerf_SHARED_LIBRARY} DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
 # Install shaders
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
 

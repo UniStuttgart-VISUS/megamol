@@ -65,14 +65,6 @@ if (MEGAMOL_USE_TRACY)
   target_link_libraries(${PROJECT_NAME} PUBLIC Tracy::TracyClient)
 endif ()
 
-# NVPerf
-if (MEGAMOL_USE_NVPERF)
-  find_package(NvPerf REQUIRED)
-  find_package(NvPerfUtility REQUIRED)
-  target_link_libraries(${PROJECT_NAME} PUBLIC NvPerf-shared NvPerfUtility NvPerfUtilityImportsRyml)
-  target_compile_definitions(${PROJECT_NAME} PUBLIC MEGAMOL_USE_NVPERF)
-endif()
-
 # Install resources
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
 
