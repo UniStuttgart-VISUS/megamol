@@ -21,6 +21,9 @@
 namespace megamol::frontend {
 
 bool Profiling_Service::init(void* configPtr) {
+#ifdef MEGAMOL_USE_NVPERF
+    nv::perf::InitializeNvPerf();
+#endif
 #ifdef MEGAMOL_USE_PROFILING
     _providedResourceReferences = {{frontend_resources::PerformanceManager_Req_Name, _perf_man},
         {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}};
@@ -180,6 +183,9 @@ void Profiling_Service::close() {
         log_file.close();
     }
 #endif
+#ifdef MEGAMOL_USE_NVPERF
+    nvperf.Reset();
+#endif
 }
 
 static const char* const sl_innerframe = "InnerFrame";
@@ -190,12 +196,18 @@ void Profiling_Service::updateProvidedResources() {
 #endif
     _perf_man.startFrame(
         _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
+#ifdef MEGAMOL_USE_NVPERF
+    nvperf.OnFrameStart();
+#endif
 }
 
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
 #ifdef MEGAMOL_USE_TRACY
     FrameMarkEnd(sl_innerframe);
+#endif
+#ifdef MEGAMOL_USE_NVPERF
+    nvperf.OnFrameEnd();
 #endif
 }
 
@@ -280,6 +292,25 @@ void Profiling_Service::fill_lua_callbacks() {
 
             return frontend_resources::LuaCallbacksCollection::StringResult{sstr.str()};
         }});
+
+
+#ifdef MEGAMOL_USE_NVPERF
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>("mmNVPerfInit",
+        "(string outpath)", {[&](std::string const& outpath) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            if (!nvperf.IsCollectingReport()) {
+                nvperf.Reset();
+                nvperf.InitializeReportGenerator();
+                nvperf.SetFrameLevelRangeName("Frame");
+                // nvperf.SetNumNestingLevels(3);
+                nvperf.outputOptions.directoryName = outpath;
+                nvperf.StartCollectionOnNextFrame();
+            }
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>("mmNVPerfIsCollecting", "()",
+        {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult { return nvperf.IsCollectingReport(); }});
+#endif
 
 
     auto& register_callbacks =
