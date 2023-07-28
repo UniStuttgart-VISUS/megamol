@@ -15,6 +15,7 @@ include(cmake/megamol_vcpkg_empty_port.cmake)
 megamol_feature_option(CGAL "Enable CGAL support." OFF)
 megamol_feature_option(CUDA "Enable CUDA support." OFF)
 megamol_feature_option(MPI "Enable MPI support." OFF)
+megamol_feature_option(NVPERF "Enable NVPerf support." OFF)
 megamol_feature_option(OPENGL "Enable OpenGL support." ON)
 megamol_feature_option(OSPRAY "Enable OSPRay support." OFF)
 megamol_feature_option(POWER "Enable power measurement support." OFF)
@@ -30,9 +31,6 @@ megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-
-# NVPerf option
-option(MEGAMOL_USE_NVPERF "Enable NVPerf support" OFF)
 
 # Catch deprecated options before project()
 include(cmake/deprecation_warning.cmake)

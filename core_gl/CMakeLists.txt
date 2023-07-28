@@ -29,7 +29,6 @@ if (MEGAMOL_USE_NVPERF)
   find_package(NvPerf REQUIRED)
   find_package(NvPerfUtility REQUIRED)
   target_link_libraries(${PROJECT_NAME} PUBLIC NvPerf-shared NvPerfUtility)
-  target_compile_definitions(${PROJECT_NAME} PUBLIC MEGAMOL_USE_NVPERF)
   install(FILES ${NvPerf_SHARED_LIBRARY} DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
