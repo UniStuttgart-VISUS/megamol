@@ -29,7 +29,11 @@ if (MEGAMOL_USE_NVPERF)
   find_package(NvPerf REQUIRED)
   find_package(NvPerfUtility REQUIRED)
   target_link_libraries(${PROJECT_NAME} PUBLIC NvPerf-shared NvPerfUtility)
-  install(FILES ${NvPerf_SHARED_LIBRARY} DESTINATION ${CMAKE_INSTALL_BINDIR})
+  if (WIN32)
+    install(FILES ${NvPerf_SHARED_LIBRARY} DESTINATION ${CMAKE_INSTALL_BINDIR})
+  else()
+    install(FILES ${NvPerf_SHARED_LIBRARY} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  endif()
 endif()
 
 # Install shaders
