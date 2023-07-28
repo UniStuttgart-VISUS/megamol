@@ -30,9 +30,11 @@ if (MEGAMOL_USE_NVPERF)
   find_package(NvPerfUtility REQUIRED)
   target_link_libraries(${PROJECT_NAME} PUBLIC NvPerf-shared NvPerfUtility)
   if (WIN32)
-    install(FILES ${NvPerf_SHARED_LIBRARY} DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(FILES "${NvPerf_SHARED_LIBRARY}" DESTINATION "${CMAKE_INSTALL_BINDIR}")
   else()
-    install(FILES ${NvPerf_SHARED_LIBRARY} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    # ${NvPerf_SHARED_LIBRARY} is a soft-link, also copy the actual file.
+    get_filename_component(mm_NvPerf_LibFile "${NvPerf_SHARED_LIBRARY}" REALPATH)
+    install(FILES "${NvPerf_SHARED_LIBRARY}" "${mm_NvPerf_LibFile}" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
   endif()
 endif()
 
