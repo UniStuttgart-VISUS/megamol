@@ -1,21 +1,19 @@
-/*
- * RenderNode.hpp
- *
- * Copyright (C) 2021 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "Remote_Service.hpp"
-#include "comm/DistributedProto.h"
-#include "comm/FBOCommFabric.h"
-
-#include "ThreadWorker.h"
-
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+
+#include "Remote_Service.hpp"
+#include "ThreadWorker.h"
+#include "comm/DistributedProto.h"
+#include "comm/FBOCommFabric.h"
 
 struct megamol::frontend::Remote_Service::RenderNode {
     RenderNode() = default;

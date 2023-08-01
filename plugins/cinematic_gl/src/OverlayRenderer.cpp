@@ -52,7 +52,7 @@ OverlayRenderer::OverlayRenderer()
         , paramSuffix("parameter::suffix", "The parameter value suffix.")
         , paramParameterName("parameter::name",
               "The full parameter name, e.g. '::Project_1::View3D_21::cam::position'. "
-              "Supprted parameter types: float, int, Vector2f/3f/4f")
+              "Supported parameter types: float, int, Vector2f/3f/4f")
         , paramText("label::text", "The displayed text.")
         , paramFontName("font::name", "The font name.")
         , paramFontSize("font::size", "The font size.")

@@ -103,6 +103,14 @@ public:
         this->read_only = read_only;
     }
 
+    bool IsHighlight() const {
+        return highlight;
+    }
+
+    void SetHighlight(bool highlight) {
+        this->highlight = highlight;
+    }
+
     /**
      * Set presentation of parameter in GUI.
      *
@@ -178,6 +186,9 @@ private:
 
     /* Make parameter read-only in the GUI. */
     bool read_only;
+
+    /* Highlight the parameter in the GUI */
+    bool highlight;
 
     /* Presentation (= widget representation) of parameter in the GUI. */
     AbstractParamPresentation::Presentation presentation;

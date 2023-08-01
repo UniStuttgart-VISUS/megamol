@@ -1,8 +1,14 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
+
 #include <mutex>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class lockable {
 public:
@@ -28,5 +34,4 @@ private:
     mutable std::mutex lock_;
 }; // end class lockable
 
-} // end namespace core
-} // end namespace megamol
+} // namespace megamol::core

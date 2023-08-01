@@ -5,8 +5,9 @@
  */
 #include "protein_calls/RMSD.h"
 
-#include "Eigen/Eigen"
-#include "glm/gtc/type_ptr.hpp"
+#include <Eigen/Eigen>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "mmcore/utility/log/Log.h"
 
 megamol::protein_calls::RMSDReturn megamol::protein_calls::CalculateRMSD(std::vector<glm::vec3>& toFit,

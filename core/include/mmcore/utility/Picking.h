@@ -1,20 +1,19 @@
-/*
- * Picking.h
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 /// Implementation see mmcore/utility/Picking.cpp and mmcore_gl/utility/Picking_gl.cpp
 
 #pragma once
 
-
-#include "GL_STUB.h"
-#include "mmcore/view/InputCall.h"
-#include <glm/glm.hpp>
 #include <map>
 #include <vector>
 
+#include <glm/glm.hpp>
+
+#include "GL_STUB.h"
+#include "mmcore/view/InputCall.h"
 
 // forward declaration
 namespace glowl {
@@ -69,7 +68,7 @@ typedef std::vector<Manipulation> ManipVector_t;
 class PickingBuffer {
 public:
     PickingBuffer();
-    ~PickingBuffer() GL_STUB();
+    ~PickingBuffer() GL_VSTUB();
 
     // Call only once per frame
     bool EnableInteraction(glm::vec2 vp_dim) GL_STUB(true);

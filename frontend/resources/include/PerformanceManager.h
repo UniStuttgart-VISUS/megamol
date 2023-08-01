@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <chrono>
@@ -53,6 +59,7 @@ public:
         case query_api::OPENGL:
             return "OpenGL";
         }
+        return "unknown";
     }
 
     enum class parent_type { CALL, USER_REGION, BUILTIN };
@@ -66,6 +73,7 @@ public:
         case parent_type::BUILTIN:
             return "BuiltIn";
         }
+        return "unknown";
     }
 
     struct basic_timer_config {

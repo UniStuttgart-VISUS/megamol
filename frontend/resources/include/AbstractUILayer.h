@@ -1,9 +1,9 @@
-/*
- * AbstractUILayer.cpp
- *
- * Copyright (C) 2016 MegaMol Team
- * Alle Rechte vorbehalten. All rights reserved.
+/**
+ * MegaMol
+ * Copyright (c) 2016, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include "AbstractInputScope.h"

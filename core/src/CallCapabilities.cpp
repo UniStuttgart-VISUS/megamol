@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "mmcore/CallCapabilities.h"
 
 using namespace megamol::core;

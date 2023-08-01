@@ -1,8 +1,7 @@
-/*
- * MpiNode.cpp
- *
- * Copyright (C) 2021 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -11,10 +10,10 @@
 
 #include <chrono>
 
+#include "comm/DistributedProto.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/SystemInformation.h"
 
-#include "comm/DistributedProto.h"
 using namespace megamol::remote;
 
 static const std::string service_name = "Remote_Service::MpiNode: ";

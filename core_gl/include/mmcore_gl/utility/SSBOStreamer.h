@@ -1,19 +1,20 @@
-/*
- * SSBOStreamer.h
- *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <algorithm>
 #include <cinttypes>
 #include <functional>
-#include <omp.h>
 #include <string>
 #include <vector>
+
+#include <omp.h>
+
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol::core::utility {
 

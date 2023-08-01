@@ -7,17 +7,21 @@
 
 #pragma once
 
-#include "moldyn/ParticleGridDataCall.h"
+#include <climits>
+
+#include <glm/glm.hpp>
+#include <glowl/glowl.h>
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
+#include "moldyn/ParticleGridDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
@@ -31,14 +35,7 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/mathtypes.h"
 #include "vislib/sys/sysfunctions.h"
-
-#include "glowl/glowl.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
-
-#include <climits>
-
-#include <glm/glm.hpp>
 
 
 namespace megamol::moldyn_gl::rendering {

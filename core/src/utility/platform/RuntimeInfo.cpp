@@ -12,10 +12,11 @@
 #include <vector>
 
 #ifdef _WIN32
-#include "mmcore/utility/platform/WMIUtil.h"
 #include <tchar.h>
 #include <tlhelp32.h>
 #include <windows.h>
+
+#include "mmcore/utility/platform/WMIUtil.h"
 #define the_popen _popen
 #define the_pclose _pclose
 #else

@@ -1,11 +1,8 @@
-/*
- * Log.cpp
- *
- * Copyright (C) 2006 - 2010 by Universitaet Stuttgart (VIS).
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2006, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #include "mmcore/utility/log/Log.h"
 

@@ -165,6 +165,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
             dirs.clear();
             num_plists = 0;
             if (this->representationSlot.Param<core::param::EnumParam>()->Value() == 0 || qw.empty()) {
+                // Molecules (circumspheres)
                 num_plists = num_components;
                 mix.clear();
                 mix.resize(num_plists);
@@ -211,6 +212,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
 
 
             } else {
+                // Atoms
                 num_plists = num_atoms_total;
                 mix.clear();
                 mix.resize(num_plists);
@@ -273,7 +275,9 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     // Set bounding box
     const vislib::math::Cuboid<float> cubo(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
     mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(cubo);
-    mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cubo);
+    auto clipo = cubo;
+    clipo.Grow(*std::max_element(list_radii.begin(), list_radii.end()));
+    mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(clipo);
 
     // transferfunction stuff
     core::view::CallGetTransferFunction* ctf = transferfunctionSlot.CallAs<core::view::CallGetTransferFunction>();

@@ -1,12 +1,14 @@
-/*
- * TriDirectionalLighting.cpp
- * Copyright (C) 2009-2017 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd/light/TriDirectionalLighting.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"

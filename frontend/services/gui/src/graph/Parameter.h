@@ -1,12 +1,12 @@
-/*
- * Parameter.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include <variant>
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
@@ -15,8 +15,6 @@
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterOrbitalWidget.h"
 #include "windows/TransferFunctionEditor.h"
-#include <variant>
-
 
 namespace megamol::gui {
 

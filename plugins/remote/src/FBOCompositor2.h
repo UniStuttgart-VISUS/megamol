@@ -8,7 +8,7 @@
 #include <thread>
 #include <vector>
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 //#include "mmcore/utility/gl/FramebufferObject.h"
 #include "mmcore/view/Renderer3DModuleGL.h"

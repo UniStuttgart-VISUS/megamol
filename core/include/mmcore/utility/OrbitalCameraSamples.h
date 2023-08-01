@@ -1,9 +1,14 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <tuple>
 
 #include "SampleSphere.h"
-
 #include "mmcore/BoundingBoxes_2.h"
 
 namespace megamol::core::utility {

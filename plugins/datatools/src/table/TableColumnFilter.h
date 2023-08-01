@@ -71,6 +71,9 @@ private:
     /** ID of the current frame */
     int frameID;
 
+    /** Hash of the incoming data */
+    size_t inDatahash;
+
     /** Hash of the current data */
     size_t datahash;
 

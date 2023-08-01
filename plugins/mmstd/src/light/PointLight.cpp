@@ -1,10 +1,11 @@
-/*
- * PointLight.cpp
- * Copyright (C) 2009-2017 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd/light/PointLight.h"
+
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"

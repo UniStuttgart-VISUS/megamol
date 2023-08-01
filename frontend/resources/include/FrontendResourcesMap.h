@@ -1,19 +1,18 @@
-/*
- * FrontendResourcesMap.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
-
-#include "FrontendResource.h"
-#include "mmcore/utility/log/Log.h"
 
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "FrontendResource.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::frontend_resources {
 

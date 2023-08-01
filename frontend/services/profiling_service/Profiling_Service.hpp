@@ -1,8 +1,7 @@
-/*
- * Screenshot_Service.hpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -13,6 +12,10 @@
 #include "AbstractFrontendService.hpp"
 #include "FrameStatistics.h"
 #include "PerformanceManager.h"
+
+#ifdef MEGAMOL_USE_NVPERF
+#include <NvPerfReportGeneratorOpenGL.h>
+#endif
 
 namespace megamol::frontend {
 
@@ -59,6 +62,10 @@ private:
     std::stringstream log_buffer;
     bool include_graph_events = false;
     frontend_resources::ProfilingLoggingStatus profiling_logging;
+
+#ifdef MEGAMOL_USE_NVPERF
+    nv::perf::profiler::ReportGeneratorOpenGL nvperf;
+#endif
 };
 
 } // namespace megamol::frontend

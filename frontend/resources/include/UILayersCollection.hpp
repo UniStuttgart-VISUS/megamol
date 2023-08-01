@@ -1,9 +1,9 @@
-/*
- * UILayersCollection.hpp
- *
- * Copyright (C) 2019 MegaMol Team
- * Alle Rechte vorbehalten. All rights reserved.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include <memory>

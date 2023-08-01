@@ -8,7 +8,8 @@
 
 #include <sstream>
 
-#include "delaunator.hpp"
+#include <delaunator.hpp>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"

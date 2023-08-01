@@ -1,10 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "CUDA_Service.hpp"
 
 #ifdef MM_CUDA_ENABLED
 
 #include <stdexcept>
 
-#include "cuda.h"
+#include <cuda.h>
 
 #include "mmcore/utility/log/Log.h"
 

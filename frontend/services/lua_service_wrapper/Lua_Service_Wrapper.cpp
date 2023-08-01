@@ -597,6 +597,21 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             return VoidResult{};
         }});
 
+    callbacks.add<VoidResult, std::string, bool>("mmSetParamHighlight",
+        "(string name, bool is_highlight)\n\tHighlight parameter slot.",
+        {[&](std::string paramName, bool is_highlight) -> VoidResult {
+            auto param_ptr = graph.FindParameter(paramName);
+
+            if (param_ptr == nullptr) {
+                return Error{
+                    "parameter highlight could not be set: " + paramName + " : " + std::to_string(is_highlight)};
+            }
+
+            param_ptr->SetGUIHighlight(is_highlight);
+
+            return VoidResult{};
+        }});
+
     callbacks.add<VoidResult, std::string>("mmCreateParamGroup",
         "(string name, string size)\n\tGenerate a param group that can only be set at once. Sets are queued until size "
         "is reached.",

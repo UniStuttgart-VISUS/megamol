@@ -355,9 +355,9 @@ bool FilamentFilter::filterFilaments(const AstroDataCall& call) {
     std::vector<std::set<uint64_t>> setVec;
     std::vector<bool> calculatedFlags(call.GetPositions()->size(), false);
 
-    nanoflann::SearchParams searchParams;
+    nanoflann::SearchParameters searchParams;
     float searchRadius = this->radiusSlot.Param<param::FloatParam>()->Value();
-    std::vector<std::pair<size_t, float>> searchResults;
+    std::vector<nanoflann::ResultItem<size_t, float>> searchResults;
     std::set<uint64_t> toProcessSet;
 
     while (!candidateSet.empty()) {

@@ -1,8 +1,7 @@
-/*
- * AbstractDataWriter.cpp
- *
- * Copyright (C) 2010 by Universitaet Stuttgart (VISUS)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd/data/AbstractDataWriter.h"

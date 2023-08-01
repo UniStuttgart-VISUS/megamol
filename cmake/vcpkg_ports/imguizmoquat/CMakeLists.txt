@@ -17,7 +17,7 @@ set(IMGUIZMOQUAT_SOURCES
 
 add_library(imguizmoquat STATIC ${IMGUIZMOQUAT_SOURCES} ${IMGUIZMOQUAT_HEADERS})
 set_target_properties(imguizmoquat PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_compile_definitions(imguizmoquat PRIVATE IMGUIZMO_IMGUI_FOLDER=./)
+target_compile_definitions(imguizmoquat PUBLIC IMGUIZMO_IMGUI_FOLDER=./)
 target_include_directories(imguizmoquat PRIVATE imGuIZMO.quat)
 target_link_libraries(imguizmoquat PRIVATE imgui::imgui)
 

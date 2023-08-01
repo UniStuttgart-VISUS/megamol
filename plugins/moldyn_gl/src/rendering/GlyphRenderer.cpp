@@ -6,11 +6,17 @@
  */
 
 #include "GlyphRenderer.h"
+
+#include <inttypes.h>
+
+#include <cstring>
+#include <iostream>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "OpenGL_Context.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "inttypes.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -21,8 +27,6 @@
 #include "vislib/String.h"
 #include "vislib/assert.h"
 #include "vislib/math/Quaternion.h"
-#include <cstring>
-#include <iostream>
 
 
 #ifdef MEGAMOL_USE_PROFILING

@@ -1,19 +1,18 @@
-/*
- * FrontendResourcesLookup.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "FrontendResource.h"
-#include "ResourceRequest.h"
-#include "mmcore/utility/log/Log.h"
-
 #include <algorithm> // std::find_if
 #include <iostream>
 #include <vector>
+
+#include "FrontendResource.h"
+#include "ResourceRequest.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol::frontend_resources {
 

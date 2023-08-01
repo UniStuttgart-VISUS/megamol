@@ -1,17 +1,13 @@
-/*
- * ParameterOrbitalWidget.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-
-#define IMGUIZMO_IMGUI_FOLDER
-#include "glm/glm.hpp"
-#include "imGuIZMOquat.h"
-
+#include <glm/glm.hpp>
+#include <imGuIZMOquat.h>
 
 namespace megamol::gui {
 

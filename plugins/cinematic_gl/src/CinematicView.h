@@ -7,22 +7,18 @@
 
 #pragma once
 
+#include <glm/gtx/quaternion.hpp>
+#include <glowl/FramebufferObject.hpp>
+#include <png.h>
 
 #include "ModuleGraphSubscription.h"
+#include "cinematic/Keyframe.h"
+#include "cinematic_gl/CinematicUtils.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "mmstd_gl/view/View3DGL.h"
-
-#include "cinematic/Keyframe.h"
-#include "cinematic_gl/CinematicUtils.h"
-
-#include <glm/gtx/quaternion.hpp>
-#include <png.h>
-
-#include "glowl/FramebufferObject.hpp"
-
 #include "vislib/sys/FastFile.h"
 
 

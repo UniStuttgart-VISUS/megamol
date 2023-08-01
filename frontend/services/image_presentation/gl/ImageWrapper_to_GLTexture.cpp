@@ -1,17 +1,17 @@
-/*
- * ImageWrapper_to_GLTexture.cpp
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "ImageWrapper_to_GLTexture.hpp"
-#include "ImageWrapper_Conversion_Helpers.hpp"
-
-#include "glad/gl.h"
 
 #include <stdexcept>
 #include <tuple>
+
+#include <glad/gl.h>
+
+#include "ImageWrapper_Conversion_Helpers.hpp"
 
 using namespace megamol::frontend_resources;
 

@@ -1,12 +1,11 @@
-/*
- * ParameterList.cpp
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-
 #include "ParameterList.h"
+
 #include "graph/Parameter.h"
 #include "widgets/ButtonWidgets.h"
 
@@ -151,6 +150,15 @@ bool ParameterList::Draw() {
                     std::string module_search_string = group_search_string;
                     std::string module_label = module_ptr->FullName();
                     ImGui::PushID(module_ptr->UID());
+
+                    auto const& param_vec = module_ptr->Parameters();
+                    bool highlight = false;
+                    for (auto const& param : param_vec) {
+                        if (param.IsHighlight())
+                            highlight = true;
+                    }
+                    if (highlight)
+                        ImGui::SetNextItemOpen(true);
 
                     // Draw module header
                     bool module_header_open = gui_utils::GroupHeader(

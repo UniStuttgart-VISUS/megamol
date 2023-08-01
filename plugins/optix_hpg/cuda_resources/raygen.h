@@ -1,13 +1,11 @@
 #pragma once
 
-#include "optix.h"
+#include <cuda.h>
+#include <glm/glm.hpp>
+#include <optix.h>
 
 #include "framestate.h"
 #include "perraydata.h"
-
-#include "glm/glm.hpp"
-
-#include "cuda.h"
 
 namespace megamol {
 namespace optix_hpg {

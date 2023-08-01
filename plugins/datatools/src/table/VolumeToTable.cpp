@@ -8,7 +8,7 @@ using namespace megamol;
 /*
  * VolumeToTable::VolumeToTable
  */
-VolumeToTable::VolumeToTable(void)
+VolumeToTable::VolumeToTable()
         : Module()
         , slotTableOut("floattable", "Provides the data as table.")
         , slotVolumeIn("particles", "Volume input call") {
@@ -29,7 +29,7 @@ VolumeToTable::VolumeToTable(void)
 /*
  * VolumeToTable::~VolumeToTable
  */
-VolumeToTable::~VolumeToTable(void) {
+VolumeToTable::~VolumeToTable() {
     this->Release();
 }
 
@@ -37,7 +37,7 @@ VolumeToTable::~VolumeToTable(void) {
 /*
  * VolumeToTable::create
  */
-bool VolumeToTable::create(void) {
+bool VolumeToTable::create() {
     return true;
 }
 
@@ -136,4 +136,4 @@ bool VolumeToTable::getTableHash(core::Call& call) {
 /*
  * VolumeToTable::release
  */
-void VolumeToTable::release(void) {}
+void VolumeToTable::release() {}

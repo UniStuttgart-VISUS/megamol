@@ -2,11 +2,8 @@
 
 #include <array>
 
-#include "glad/glad.h"
-
-#include "snappy.h"
-
-#include "mmcore/utility/log/Log.h"
+#include <glad/glad.h>
+#include <snappy.h>
 
 #include "cluster/mpi/MpiCall.h"
 #include "mmcore/CallerSlot.h"
@@ -16,6 +13,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "vislib/Trace.h"

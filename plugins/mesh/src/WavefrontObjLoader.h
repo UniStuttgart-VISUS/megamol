@@ -7,14 +7,13 @@
 
 #pragma once
 
+#include <tiny_obj_loader.h>
+
 #include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
-
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-
-#include "tiny_obj_loader.h"
 
 namespace megamol::mesh {
 
