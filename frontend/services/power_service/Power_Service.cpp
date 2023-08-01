@@ -579,6 +579,7 @@ void Power_Service::start_measurement() {
             //auto devices = visa_instrument::find_resources("0x0AAD", "0x01D6");
 
             //for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+            pending_measurement_ = true;
             for (auto& i : rtx_instr_) {
                 //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
 
@@ -734,6 +735,7 @@ void Power_Service::start_measurement() {
 
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed measurement");
             }
+            pending_measurement_ = false;
         } catch (std::exception& ex) {
             core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
         }
@@ -781,9 +783,10 @@ void Power_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string, int, int, int, int>("mmPowerConfig",
-        "(string name, string path, int points, int count, int range, int timeout)",
-        {[&](std::string name, std::string path, int points, int count, int range, int timeout) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string, int, int, int, int>(
+        "mmPowerConfig", "(string name, string path, int points, int count, int range, int timeout)",
+        {[&](std::string name, std::string path, int points, int count, int range,
+             int timeout) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             sol_state_["points"] = points;
             sol_state_["count"] = count;
             sol_state_["range"] = range;
@@ -792,10 +795,15 @@ void Power_Service::fill_lua_callbacks() {
             sol_state_.script_file(path);
 
             visus::power_overwhelming::rtx_instrument_configuration config = sol_state_[name];
-            
+
             config_map_[name] = config;
 
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
+        "mmPowerIsPending", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
+            return frontend_resources::LuaCallbacksCollection::BoolResult{is_measurement_pending()};
         }});
 
     auto& register_callbacks =

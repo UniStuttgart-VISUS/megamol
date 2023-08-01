@@ -202,6 +202,10 @@ private:
 
     void start_measurement();
 
+    bool is_measurement_pending() const {
+        return pending_measurement_;
+    }
+
     void trigger();
 
     void fill_lua_callbacks();
@@ -213,6 +217,8 @@ private:
     sol::state sol_state_;
 
     std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument_configuration> config_map_;
+
+    bool pending_measurement_ = false;
 };
 
 } // namespace frontend
