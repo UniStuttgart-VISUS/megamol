@@ -13,6 +13,7 @@ find_package(imguizmoquat CONFIG REQUIRED)
 find_package(implot CONFIG REQUIRED)
 find_package(ZeroMQ REQUIRED)
 find_package(cppzmq REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
 
 file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
   "include/*.h"
@@ -121,6 +122,10 @@ target_include_directories(abstract_frontend_service INTERFACE
   $<INSTALL_INTERFACE:include/>
 )
 target_link_libraries(abstract_frontend_service INTERFACE frontend_resources)
+
+# sol2
+target_link_libraries(${PROJECT_NAME} INTERFACE sol2)
+target_compile_definitions(${PROJECT_NAME} PUBLIC SOL_ALL_SAFETIES_ON=1)
 
 if (MEGAMOL_USE_CUDA)
   find_package(CUDAToolkit)
