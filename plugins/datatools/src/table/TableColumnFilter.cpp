@@ -37,7 +37,7 @@ TableColumnFilter::TableColumnFilter()
         TableDataCall::ClassName(), TableDataCall::FunctionName(1), &TableColumnFilter::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
-    this->selectionStringSlot << new core::param::StringParam("x; y; z");
+    this->selectionStringSlot << new core::param::StringParam("x;y;z");
     this->MakeSlotAvailable(&this->selectionStringSlot);
 }
 
