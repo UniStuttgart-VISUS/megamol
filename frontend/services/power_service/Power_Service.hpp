@@ -9,8 +9,8 @@
 
 #ifdef MEGAMOL_USE_POWER
 
-#include <unordered_map>
 #include <chrono>
+#include <unordered_map>
 
 #include "AbstractFrontendService.hpp"
 
@@ -18,10 +18,10 @@
 
 #include "PowerCallbacks.h"
 
+#include <power_overwhelming/msr_sensor.h>
+#include <power_overwhelming/nvml_sensor.h>
 #include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/rtx_instrument_configuration.h>
-#include <power_overwhelming/nvml_sensor.h>
-#include <power_overwhelming/msr_sensor.h>
 #include <power_overwhelming/tinkerforge_sensor.h>
 
 #include <sol/sol.hpp>

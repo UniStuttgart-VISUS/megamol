@@ -139,7 +139,8 @@ void visus::power_overwhelming::sol_oscilloscope_label(sol::state& lua) {
 void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua) {
     auto config_table = lua.new_usertype<rtx_instrument_configuration>("rtx_instrument_configuration",
         sol::constructors<rtx_instrument_configuration(),
-            rtx_instrument_configuration(const oscilloscope_quantity, std::reference_wrapper<const oscilloscope_single_acquisition>,
+            rtx_instrument_configuration(const oscilloscope_quantity,
+                std::reference_wrapper<const oscilloscope_single_acquisition>,
                 std::reference_wrapper<const oscilloscope_edge_trigger>, std::uint32_t)>());
 
     config_table["channel"] = &rtx_instrument_configuration::channel;
