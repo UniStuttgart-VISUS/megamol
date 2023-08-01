@@ -73,6 +73,17 @@ std::string unmueller_string(wchar_t const* name) {
     return no_mueller;
 }
 
+std::string get_device_name(visus::power_overwhelming::rtx_instrument const& i) {
+    auto name_size = i.name(nullptr, 0);
+    std::string name;
+    name.resize(name_size);
+    i.name(name.data(), name_size);
+    if (name_size != 0) {
+        name.resize(name_size - 1);
+    }
+    return name;
+}
+
 static int measure_time_in_ms = 50;
 static int sample_count = 50000;
 
@@ -428,13 +439,7 @@ void Power_Service::setup_measurement() {
             i.synchronise_clock();
             i.reset(true, true);
 
-            auto name_size = i.name(nullptr, 0);
-            std::string name;
-            name.resize(name_size);
-            i.name(name.data(), name_size);
-            if (name_size != 0) {
-                name.resize(name_size - 1);
-            }
+            auto name = get_device_name(i);
 
             auto fit = config_map_.find(name);
             if (fit == config_map_.end()) {
@@ -602,13 +607,7 @@ void Power_Service::start_measurement() {
             for (auto& i : rtx_instr_) {
                 i.operation_complete();
 
-                auto name_size = i.name(nullptr, 0);
-                std::string name;
-                name.resize(name_size);
-                i.name(name.data(), name_size);
-                if (name_size != 0) {
-                    name.resize(name_size - 1);
-                }
+                auto name = get_device_name(i);
 
                 auto fit = config_map_.find(name);
                 if (fit == config_map_.end()) {
