@@ -507,15 +507,15 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
 #ifdef MEGAMOL_USE_PROFILING
 
-void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
-    const frontend_resources::PerformanceManager::timer_entry& entry) {
+void megamol::gui::Call::AppendPerformanceData(frontend_resources::performance::frame_type frame,
+    const frontend_resources::performance::timer_entry& entry) {
     if (!this->pause_profiling_history_update) {
         switch (entry.api) {
-        case frontend_resources::PerformanceManager::query_api::CPU:
+        case frontend_resources::performance::query_api::CPU:
             this->cpu_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
                 std::chrono::duration<double, std::milli>(entry.duration.time_since_epoch()).count());
             break;
-        case frontend_resources::PerformanceManager::query_api::OPENGL:
+        case frontend_resources::performance::query_api::OPENGL:
             this->gl_perf_history[entry.user_index].push_sample(frame, entry.frame_index,
                 std::chrono::duration<double, std::milli>(entry.duration.time_since_epoch()).count());
             break;

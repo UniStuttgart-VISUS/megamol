@@ -52,12 +52,13 @@ private:
     std::vector<std::string> _requestedResourcesNames;
     std::vector<FrontendResource> _requestedResourcesReferences;
 
-    frontend_resources::PerformanceManager _perf_man;
+    frontend_resources::performance::PerformanceManager _perf_man;
     uint32_t flush_frequency = 0;
     std::ofstream log_file;
     std::stringstream log_buffer;
     bool include_graph_events = false;
-    frontend_resources::ProfilingLoggingStatus profiling_logging;
+    bool first_frame = true;
+    frontend_resources::performance::ProfilingLoggingStatus profiling_logging;
 };
 
 } // namespace megamol::frontend

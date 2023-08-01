@@ -63,7 +63,7 @@ bool GUI_Service::init(const Config& config) {
         frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, // 15 MegaMol Graph subscription
         "PluginsResource",                                              // 16 - Plugins
 #ifdef MEGAMOL_USE_PROFILING
-        frontend_resources::PerformanceManager_Req_Name // 17 - Performance Manager
+        frontend_resources::performance::PerformanceManager_Req_Name // 17 - Performance Manager
 #endif
     };
 
@@ -420,15 +420,16 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
 #ifdef MEGAMOL_USE_PROFILING
     // PerformanceManager
-    perf_manager = const_cast<frontend_resources::PerformanceManager*>(
-        &frontend_resources->get<frontend_resources::PerformanceManager>());
-    perf_logging = const_cast<frontend_resources::ProfilingLoggingStatus*>(
-        &frontend_resources->get<frontend_resources::ProfilingLoggingStatus>());
+    perf_manager = const_cast<frontend_resources::performance::PerformanceManager*>(
+        &frontend_resources->get<frontend_resources::performance::PerformanceManager>());
+    perf_logging = const_cast<frontend_resources::performance::ProfilingLoggingStatus*>(
+        &frontend_resources->get<frontend_resources::performance::ProfilingLoggingStatus>());
     m_gui->SetProfilingLoggingStatus(perf_logging);
     // this needs to happen before the first (gui) module is spawned to help it look up the timers
     m_gui->SetPerformanceManager(perf_manager);
-    perf_manager->subscribe_to_updates(
-        [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
+    perf_manager->subscribe_to_updates([&](const frontend_resources::performance::frame_info& fi) {
+        m_gui->AppendPerformanceData(fi);
+    });
 #endif
 
     // now come the resources for the gui windows

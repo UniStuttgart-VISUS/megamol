@@ -1434,18 +1434,18 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
 #ifdef MEGAMOL_USE_PROFILING
 
 void megamol::gui::GraphCollection::AppendPerformanceData(
-    const frontend_resources::PerformanceManager::frame_info& fi) {
+    const frontend_resources::performance::frame_info& fi) {
     auto frame = fi.frame;
     for (auto& e : fi.entries) {
         auto p = perf_manager->lookup_parent_pointer(e.handle);
         auto t = perf_manager->lookup_parent_type(e.handle);
-        if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
+        if (t == frontend_resources::performance::parent_type::CALL) {
             auto c = static_cast<megamol::core::Call*>(p);
             // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
             if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
                 call_to_call[p].lock()->AppendPerformanceData(frame, e);
             }
-        } else if (t == frontend_resources::PerformanceManager::parent_type::USER_REGION) {
+        } else if (t == frontend_resources::performance::parent_type::USER_REGION) {
             // Region in a Module
             if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
                 module_to_module[p].lock()->AppendPerformanceData(frame, e);

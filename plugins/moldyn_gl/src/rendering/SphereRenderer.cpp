@@ -342,13 +342,13 @@ bool SphereRenderer::create() {
     // timer_.SetMaximumFrames(20, 100);
 
 #ifdef MEGAMOL_USE_PROFILING
-    perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
-        &frontend_resources.get<frontend_resources::PerformanceManager>());
-    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+    perf_manager_ = const_cast<frontend_resources::performance::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::performance::PerformanceManager>());
+    frontend_resources::performance::basic_timer_config upload_timer, render_timer;
     upload_timer.name = "upload";
-    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    upload_timer.api = frontend_resources::performance::query_api::OPENGL;
     render_timer.name = "render";
-    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.api = frontend_resources::performance::query_api::OPENGL;
     timers_ = perf_manager_->add_timers(this, {upload_timer, render_timer});
 #endif
 

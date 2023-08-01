@@ -171,7 +171,7 @@ public:
 #ifdef MEGAMOL_USE_PROFILING
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         ModuleGL::requested_lifetime_resources(req);
-        req.require<frontend_resources::PerformanceManager>();
+        req.require<frontend_resources::performance::PerformanceManager>();
     }
 #endif
 
@@ -305,8 +305,8 @@ private:
     bool trigger_rebuild_g_buffer_;
 
 #ifdef MEGAMOL_USE_PROFILING
-    frontend_resources::PerformanceManager::handle_vector timers_;
-    frontend_resources::PerformanceManager* perf_manager_ = nullptr;
+    frontend_resources::performance::handle_vector timers_;
+    frontend_resources::performance::PerformanceManager* perf_manager_ = nullptr;
 #endif
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
