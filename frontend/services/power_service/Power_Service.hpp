@@ -19,9 +19,12 @@
 #include "PowerCallbacks.h"
 
 #include <power_overwhelming/rtx_instrument.h>
+#include <power_overwhelming/rtx_instrument_configuration.h>
 #include <power_overwhelming/nvml_sensor.h>
 #include <power_overwhelming/msr_sensor.h>
 #include <power_overwhelming/tinkerforge_sensor.h>
+
+#include <sol/sol.hpp>
 
 namespace megamol {
 namespace frontend {
@@ -202,6 +205,14 @@ private:
     void trigger();
 
     void fill_lua_callbacks();
+
+    static bool init_sol_commands_;
+
+    //std::shared_ptr<sol::state_view> sol_state_;
+
+    sol::state sol_state_;
+
+    std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument_configuration> config_map_;
 };
 
 } // namespace frontend
