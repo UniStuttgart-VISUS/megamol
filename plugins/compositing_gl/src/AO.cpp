@@ -326,7 +326,7 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion() {
 
     // voxel texture
     VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
-    int vol_size = c_voxel->GetMetadata()->Resolution[0]; // TODO access correct value
+    int vol_size = c_voxel->GetMetadata()->Resolution[0]; // TODO access correct value (through UI parameter)
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
     glActiveTexture(GL_TEXTURE0);
