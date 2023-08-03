@@ -24,11 +24,12 @@
 #include <fcntl.h>
 #include <math.h>
 
-#include <zlib.h>
-
 #include "datRaw.h"
 #include "datRaw_log.h"
 #include "datRaw_half.h"
+
+#include <stdint.h>
+#include <limits.h>
 
 #define DATRAW_MAX(x, y)  ((x) > (y) ? (x) : (y))
 
@@ -137,6 +138,26 @@ datRawGridTypes[] = {
 
 DATRAW_GET_TAG_FROM_VALUE_FUNC(DataFormat)
 DATRAW_GET_TAG_FROM_VALUE_FUNC(GridType)
+
+// workaround for larger volumes
+// I still could not find the fact in the documentation that you can only read up to INT_MAX bytes
+// but it stands to reason since the returned count is signed. I hate this.
+int64_t gzread_like_you_mean_it (gzFile file, voidp buf, uint64_t len) {
+    unsigned char* mem_loc = buf;
+    const int32_t chunk_size = INT_MAX;
+    uint64_t rest = len;
+    while (rest > 0) {
+        const uint32_t todo = min(rest, chunk_size);
+        const uint32_t count = gzread(file, mem_loc, todo);
+        if (count != todo) {
+            // that should be an error
+            return count;
+        }
+        rest -= count;
+        mem_loc += count;
+    }
+    return (int64_t)(len - rest);
+}
 
 static int datRaw_getByteOrder()
 {
@@ -1488,7 +1509,7 @@ int datRaw_load(const char *datfile,
 
         }
 
-        if (gzread(info->fd_dataFile, buf, storageSize) != storageSize) {
+        if (gzread_like_you_mean_it(info->fd_dataFile, buf, storageSize) != storageSize) {
             if (gzeof(info->fd_dataFile)) {
                 datRaw_logError("DatRaw: Error reading data file %s (EOF reached)!\n", info->dataFileName);
             } 
@@ -1647,7 +1668,7 @@ int datRaw_getNext(DatRawFileInfo *info, void **buffer, int format)
         }
     }
 
-    if (gzread(info->fd_dataFile, buf, storageSize) != storageSize) {
+    if (gzread_like_you_mean_it(info->fd_dataFile, buf, storageSize) != storageSize) {
         if (gzeof(info->fd_dataFile)) {
             datRaw_logError("DatRaw: Error reading data file %s (EOF reached)!\n", info->dataFileName);
         } 
@@ -1809,7 +1830,7 @@ int datRaw_getPrevious(DatRawFileInfo *info, void **buffer, int format)
         }
     }
 
-    if (gzread(info->fd_dataFile, buf, storageSize) != storageSize) {
+    if (gzread_like_you_mean_it(info->fd_dataFile, buf, storageSize) != storageSize) {
         if (gzeof(info->fd_dataFile)) {
             datRaw_logError("DatRaw: Error reading data file %s (EOF reached)!\n", info->dataFileName);
         } else {
@@ -1879,7 +1900,8 @@ int datRaw_loadStep(DatRawFileInfo *info, int n, void **buffer, int format)
 
     if (!info->multiDataFiles) {
         if (info->fd_dataFile == NULL && info->currentStep == -1) {
-            if (!(info->fd_dataFile = gzopen(info->dataFileName, "rb"))) {
+            info->fd_dataFile = gzopen(info->dataFileName, "rb");
+            if (info->fd_dataFile == Z_NULL) {
                 datRaw_logError("DatRaw: Error opening data file \"%s\"!\n",
                     info->dataFileName);
                 return 0;
@@ -1966,17 +1988,21 @@ int datRaw_loadStep(DatRawFileInfo *info, int n, void **buffer, int format)
             return 0;
         }
     }
-
-    if (gzread(info->fd_dataFile, buf, storageSize) != storageSize) {
-        if (gzeof(info->fd_dataFile)) {
-            datRaw_logError("DatRaw: Error reading data file %s (EOF reached)!\n", info->dataFileName);
+    const int64_t res = gzread_like_you_mean_it(info->fd_dataFile, buf, storageSize);
+    if (res != storageSize) {
+        if (res == Z_ERRNO) {
+            datRaw_logError("DatRaw: Error reading data: %s\n", strerror(errno));
         } else {
-            int err;
-            gzerror(info->fd_dataFile, &err);
-            if (err) {
-                datRaw_logError("DatRaw: Error reading data file %s\n", info->dataFileName);
+            if (gzeof(info->fd_dataFile)) {
+                datRaw_logError("DatRaw: Error reading data file %s (EOF reached)!\n", info->dataFileName);
             } else {
-                datRaw_logError("DateRaw: Error reading data (too few bytes in file?)\n");
+                int err;
+                const char* errstr = gzerror(info->fd_dataFile, &err);
+                if (err) {
+                    datRaw_logError("DatRaw: Error reading data file %s: %s\n", info->dataFileName, errstr);
+                } else {
+                    datRaw_logError("DateRaw: Error reading data (too few bytes in file?)\n");
+                }
             }
         }
         gzclearerr(info->fd_dataFile);
