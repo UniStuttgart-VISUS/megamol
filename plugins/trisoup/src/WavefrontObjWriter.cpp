@@ -78,7 +78,7 @@ bool trisoup::WavefrontObjWriter::run() {
     /*if (vislib::sys::File::Exists(filename.native().c_str())) {
         Log::DefaultLog.WriteWarn(
             "File %s already exists and will be overwritten.",
-            filename.generic_u8string().c_str());
+            filename.generic_string().c_str());
     }*/
 
     return writeLines(ldc);
@@ -96,7 +96,7 @@ bool trisoup::WavefrontObjWriter::getCapabilities(DataWriterCtrlCall& call) {
 
 bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* ldc) {
     using megamol::core::utility::log::Log;
-    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+    vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_string().c_str());
     vislib::math::Cuboid<float> bbox;
     vislib::math::Cuboid<float> cbox;
     UINT32 frameCnt = 1;

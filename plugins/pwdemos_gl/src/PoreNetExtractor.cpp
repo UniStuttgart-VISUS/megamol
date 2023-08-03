@@ -336,7 +336,7 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
 
     bool streamSave = this->streamSaveSlot.Param<core::param::BoolParam>()->Value();
     if (streamSave) {
-        val = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+        val = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str();
         if (val.IsEmpty()) {
             Log::DefaultLog.WriteWarn("Cannot stream-save extracted data: no data file path was specified");
         } else {

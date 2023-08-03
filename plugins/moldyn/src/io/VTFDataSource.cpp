@@ -477,7 +477,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open VTF-File \"%s\": %s",
-            this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
+            this->filename.Param<param::FilePathParam>()->Value().generic_string().c_str(),
             static_cast<const char*>(err));
 
         SAFE_DELETE(this->file);
@@ -488,10 +488,10 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
     if (!this->parseHeaderAndFrameIndices(
-            this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str())) {
+            this->filename.Param<param::FilePathParam>()->Value().generic_string().c_str())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to read VTF-Header from file \"%s\". Wrong format?",
-            this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+            this->filename.Param<param::FilePathParam>()->Value().generic_string().c_str());
 
         this->file->Close();
         SAFE_DELETE(this->file);

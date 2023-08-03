@@ -60,12 +60,12 @@ bool MMFTDataWriter::run() {
 
     if (std::filesystem::exists(filename)) {
         Log::DefaultLog.WriteWarn(
-            "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
+            "File %s already exists and will be overwritten.", filename.generic_string().c_str());
     }
 
     std::ofstream file(filename, std::ios::binary);
     if (!file.is_open()) {
-        Log::DefaultLog.WriteError("Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Unable to create output file \"%s\". Abort.", filename.generic_string().c_str());
         cftd->Unlock();
         return false;
     }
@@ -103,7 +103,7 @@ bool MMFTDataWriter::run() {
         file.write(reinterpret_cast<const char*>(cftd->GetData()), rowCnt * colCnt * sizeof(float));
 
     } catch (...) {
-        Log::DefaultLog.WriteError("Write error \"%s\".", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Write error \"%s\".", filename.generic_string().c_str());
         cftd->Unlock();
         return false;
     }

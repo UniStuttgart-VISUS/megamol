@@ -66,7 +66,7 @@ bool STLDataSource::get_input() {
 
         // Read data
         const auto& filepath = this->filename_slot.Param<core::param::FilePathParam>()->Value();
-        const std::string filename(filepath.generic_u8string());
+        const std::string filename(filepath.generic_string());
 
         try {
             read(filename);
