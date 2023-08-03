@@ -110,3 +110,24 @@ std::string const& megamol::core::utility::buildinfo::MEGAMOL_CMAKE_CACHE() {
     static const auto res = loadStringResource("MEGAMOL_CMAKE_CACHE");
     return res;
 }
+
+std::vector<std::pair<std::string, std::string>> const& megamol::core::utility::buildinfo::AllKeyValues() {
+    static const std::vector<std::pair<std::string, std::string>> build_info{
+        {"MEGAMOL_VERSION_MAJOR", std::to_string(MEGAMOL_VERSION_MAJOR())},
+        {"MEGAMOL_VERSION_MINOR", std::to_string(MEGAMOL_VERSION_MINOR())},
+        {"MEGAMOL_VERSION_PATCH", std::to_string(MEGAMOL_VERSION_PATCH())},
+        {"MEGAMOL_VERSION", MEGAMOL_VERSION()},
+        {"MEGAMOL_GIT_HASH", MEGAMOL_GIT_HASH()},
+        {"MEGAMOL_GIT_BRANCH_NAME", MEGAMOL_GIT_BRANCH_NAME()},
+        {"MEGAMOL_GIT_BRANCH_NAME_FULL", MEGAMOL_GIT_BRANCH_NAME_FULL()},
+        {"MEGAMOL_GIT_REMOTE_NAME", MEGAMOL_GIT_REMOTE_NAME()},
+        {"MEGAMOL_GIT_REMOTE_URL", MEGAMOL_GIT_REMOTE_URL()},
+        {"MEGAMOL_GIT_DIFF", MEGAMOL_GIT_DIFF()},
+        {"MEGAMOL_GIT_IS_DIRTY", std::to_string(MEGAMOL_GIT_IS_DIRTY())},
+        {"MEGAMOL_GIT_LAST_COMMIT_DATE", MEGAMOL_GIT_LAST_COMMIT_DATE()},
+        {"MEGAMOL_BUILD_CONFIG", MEGAMOL_BUILD_CONFIG()},
+        {"MEGAMOL_LICENSE", MEGAMOL_LICENSE()},
+        {"MEGAMOL_CMAKE_CACHE", MEGAMOL_CMAKE_CACHE()},
+    };
+    return build_info;
+}
