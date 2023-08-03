@@ -96,6 +96,11 @@ std::string const& megamol::core::utility::buildinfo::MEGAMOL_GIT_LAST_COMMIT_DA
     return res;
 }
 
+std::string const& megamol::core::utility::buildinfo::MEGAMOL_BUILD_CONFIG() {
+    static const auto res = loadStringResource("MEGAMOL_BUILD_CONFIG");
+    return res;
+}
+
 std::string const& megamol::core::utility::buildinfo::MEGAMOL_LICENSE() {
     static const auto res = loadStringResource("MEGAMOL_LICENSE");
     return res;
