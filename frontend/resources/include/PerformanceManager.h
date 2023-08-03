@@ -89,7 +89,7 @@ private:
     handle_type add_timer(std::unique_ptr<Itimer> t);
 
     void startFrame(frame_type frame);
-    static void collect_timer_and_append(Itimer* timer, frame_info& this_frame);
+    static void collect_timer_and_append(Itimer* timer, frame_info& the_frame);
 
     void endFrame(frame_type frame);
 

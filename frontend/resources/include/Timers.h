@@ -122,7 +122,7 @@ protected:
 
     virtual void end();
 
-    virtual void collect() = 0;
+    virtual void collect(frame_type frame) = 0;
 
     timer_config conf;
     //time_point last_start;
@@ -143,7 +143,7 @@ public:
     void end() override;
 
 protected:
-    void collect() override {}
+    void collect(frame_type frame) override {}
 };
 
 class gl_timer : public Itimer {
@@ -161,14 +161,14 @@ public:
     static void wait_for_frame_end(frame_type frame);
 
 protected:
-    void collect() override;
+    void collect(frame_type frame) override;
 
 private:
     static void new_frame(frame_type frame);
     static uint32_t get_last_query(int32_t chosen_frame_buffer);
 
-    static int32_t choose_launch_frame(frame_type frame);
-    static int32_t choose_collect_frame(frame_type frame);
+    static int32_t choose_launch_buffer(frame_type frame);
+    static int32_t choose_collect_buffer(frame_type frame);
 
 
     std::pair<uint32_t, uint32_t> assert_query(uint32_t index);

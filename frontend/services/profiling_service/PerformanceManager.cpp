@@ -170,9 +170,9 @@ void PerformanceManager::startFrame(frame_type frame) {
 #endif
 }
 
-void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& this_frame) {
+void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the_frame) {
     //timer->Itimer::collect();
-    timer->collect();
+    timer->collect(the_frame.frame);
     auto& tconf = timer->Itimer::get_conf();
     timer_entry e;
     e.handle = timer->Itimer::get_handle();
@@ -187,7 +187,7 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& thi
         e.start = timer->Itimer::get_start(region);
         e.end = timer->Itimer::get_end(region);
         e.duration = time_point{timer->Itimer::get_end(region) - timer->Itimer::get_start(region)};
-        this_frame.entries.push_back(e);
+        the_frame.entries.push_back(e);
     }
 }
 
@@ -201,13 +201,11 @@ void PerformanceManager::endFrame(frame_type frame) {
 #endif
     stop_timer(whole_frame_cpu);
 
-    // TODO
-    // consistency checks every frame
-    // collect cpu from current frame
-    // collect gpu from (potentially) previous frame according to chooser.
-    // delay reporting by one frame
-
-    // 1st collect leftovers from last frame and opengl
+    if (current_frame != frame) {
+        throw std::runtime_error(("PerformanceManager: ending frame " + std::to_string(frame) +
+                                  " does not fit the frame we are in: " + std::to_string(current_frame))
+                                     .c_str());
+    }
 
     if (!subscribers.empty()) {
         // consistency check for current frame
