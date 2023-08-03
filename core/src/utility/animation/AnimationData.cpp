@@ -291,13 +291,13 @@ GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::Get
         if (keys.empty()) {
             return ValueType::ValueType();
         }
-        return keys.begin()->second.value;
+        return FloatKey::InterpolateForTime(keys.begin()->second, keys.begin()->second, time);
     }
     FloatKey before_key = keys.begin()->second, after_key = keys.begin()->second;
     bool ok = false;
     for (auto it = keys.begin(); it != keys.end(); ++it) {
         if (it->second.time == time) {
-            return it->second.value;
+            return FloatKey::InterpolateForTime(it->second, it->second, time);
         }
         if (it->second.time < time) {
             before_key = it->second;
@@ -311,7 +311,7 @@ GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::Get
     if (ok) {
         return FloatKey::InterpolateForTime(before_key, after_key, time);
     } else {
-        return before_key.value;
+        return FloatKey::InterpolateForTime(before_key, before_key, time);
     }
 }
 
