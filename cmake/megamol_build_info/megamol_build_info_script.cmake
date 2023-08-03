@@ -2,7 +2,7 @@
 # Copyright (c) 2021, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15...3.26 FATAL_ERROR)
 
 # Functions
 function(write_file_if_changed filename content)
@@ -86,6 +86,9 @@ execute_process(COMMAND
   OUTPUT_VARIABLE GIT_LAST_COMMIT_DATE
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_GIT_LAST_COMMIT_DATE "${GIT_LAST_COMMIT_DATE}")
+
+# Build config
+write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_CONFIG "${BUILD_CONFIG}")
 
 # License
 configure_file(${PROJECT_DIR}/LICENSE ${INFO_RESOURCES_DIR}/MEGAMOL_LICENSE COPYONLY)
