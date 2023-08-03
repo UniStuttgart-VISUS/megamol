@@ -210,6 +210,8 @@ private:
 
     void fill_lua_callbacks();
 
+    bool waiting_on_trigger() const;
+
     static bool init_sol_commands_;
 
     //std::shared_ptr<sol::state_view> sol_state_;
@@ -219,6 +221,10 @@ private:
     std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument_configuration> config_map_;
 
     bool pending_measurement_ = false;
+
+    bool pending_read_ = false;
+
+    bool enforce_software_trigger_ = false;
 };
 
 } // namespace frontend

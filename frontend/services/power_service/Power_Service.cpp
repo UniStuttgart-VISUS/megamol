@@ -576,6 +576,19 @@ void Power_Service::setup_measurement() {
     //m_thread.detach();
 }
 
+bool Power_Service::waiting_on_trigger() const {
+    for (auto& i : rtx_instr_) {
+        auto res = i.query("STAT:OPER:COND?\n");
+        *strchr(res.as<char>(), '\n') = 0;
+        auto val = std::atoi(res.as<char>());
+        //core::utility::log::Log::DefaultLog.WriteInfo("WTR is %d", val);
+        if ((val & 8)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Power_Service::start_measurement() {
     using namespace visus::power_overwhelming;
     core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting measurement");
@@ -585,11 +598,16 @@ void Power_Service::start_measurement() {
 
             //for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
             pending_measurement_ = true;
+            core::utility::log::Log::DefaultLog.WriteWarn("STARTING SING");
+            int counter = 0;
             for (auto& i : rtx_instr_) {
                 //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
 
                 //rtx_instrument i(d);
+                i.on_operation_complete(
+                    [](visa_instrument&, void* counter_ptr) { ++(*static_cast<int*>(counter_ptr)); }, &counter);
                 i.acquisition(oscilloscope_acquisition_state::single);
+                i.operation_complete_async();
             }
 
             /*auto trigger = [&]() {
@@ -602,10 +620,59 @@ void Power_Service::start_measurement() {
             auto t_thread = std::thread(trigger);
             t_thread.detach();*/
 
+            //auto hurz = [&]() {
+            //    for (auto& i : rtx_instr_) {
+            //        auto res = i.query("STAT:OPER:COND?\n");
+            //        *strchr(res.as<char>(), '\n') = 0;
+            //        auto val = std::atoi(res.as<char>());
+            //        core::utility::log::Log::DefaultLog.WriteInfo("WTR is %d", val);
+            //        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            //        if (val == 0) {
+            //            return true;
+            //        }
+            //    }
+            //    return false;
+            //};
 
-            int counter = 0;
+            //auto wtr = [&]() {
+            //    for (auto& i : rtx_instr_) {
+            //        auto res = i.query("STAT:OPER:COND?\n");
+            //        *strchr(res.as<char>(), '\n') = 0;
+            //        auto val = std::atoi(res.as<char>());
+            //        core::utility::log::Log::DefaultLog.WriteInfo("WTR is %d", val);
+            //        if ((val & 8)) {
+            //            return true;
+            //        }
+            //    }
+            //    return false;
+            //};
+
+            //int counter = 0;
+            //pending_measurement_ = true;
+            std::chrono::high_resolution_clock::time_point last;
+            bool first = true;
+            while (counter < rtx_instr_.size()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                core::utility::log::Log::DefaultLog.WriteInfo("We are still waiting");
+                //if (!hurz()) {
+                if (waiting_on_trigger()) {
+                    core::utility::log::Log::DefaultLog.WriteWarn("Do trigger");
+                    auto now = std::chrono::high_resolution_clock::now();
+                    trigger();
+                    if (!first) {
+                        auto d = now - last;
+                        core::utility::log::Log::DefaultLog.WriteWarn(
+                            "Trigger offset: %d", std::chrono::duration_cast<std::chrono::milliseconds>(d).count());
+                    } else {
+                        last = now;
+                        first = false;
+                    }
+                }
+            }
+            pending_read_ = true;
+            core::utility::log::Log::DefaultLog.WriteInfo("Not waiting anymore");
             for (auto& i : rtx_instr_) {
-                i.operation_complete();
+                //i.operation_complete();
 
                 auto name = get_device_name(i);
 
@@ -734,6 +801,7 @@ void Power_Service::start_measurement() {
 
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed measurement");
             }
+            pending_read_ = false;
             pending_measurement_ = false;
         } catch (std::exception& ex) {
             core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
@@ -757,8 +825,14 @@ void Power_Service::trigger() {
     core::utility::log::Log::DefaultLog.WriteInfo("QPC Counter: %lld", counter.QuadPart);
     core::utility::log::Log::DefaultLog.WriteInfo("QPC: %lld", cnt_ms*1000);*/
 #endif
-    trigger_->SetBit(6, true);
-    trigger_->SetBit(6, false);
+    if (enforce_software_trigger_) {
+        for (auto& i : rtx_instr_) {
+            i.trigger();
+        }
+    } else {
+        trigger_->SetBit(6, true);
+        trigger_->SetBit(6, false);
+    }
 }
 
 void Power_Service::fill_lua_callbacks() {
@@ -802,8 +876,56 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
         "mmPowerIsPending", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
-            return frontend_resources::LuaCallbacksCollection::BoolResult{is_measurement_pending()};
+            //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            //if (pending_read_)
+            //    return false;
+            //for (auto& i : rtx_instr_) {
+            //    auto res = i.query("STAT:OPER:COND?\n");
+            //    *strchr(res.as<char>(), '\n') = 0;
+            //    auto val = std::atoi(res.as<char>());
+            //    core::utility::log::Log::DefaultLog.WriteInfo("Pending WTR is %d", val);
+            //    //core::utility::log::Log::DefaultLog.WriteInfo("Pending WTR sleep over %d", val);
+            //    if (val == 8) {
+            //        core::utility::log::Log::DefaultLog.WriteInfo("Pending WTR returns");
+            //        return !pending_read_;
+            //    }
+            //}
+            ///*if (pending_measurement_)
+            //    return true;*/
+            ////return frontend_resources::LuaCallbacksCollection::BoolResult{is_measurement_pending()};
+            //return false;
+            return frontend_resources::LuaCallbacksCollection::BoolResult{pending_measurement_};
         }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
+        "mmPowerForceTrigger", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            for (auto& i : rtx_instr_) {
+                i.trigger();
+            }
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>("mmPowerSoftwareTrigger", "(bool set)",
+        {[&](bool set) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            enforce_software_trigger_ = set;
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    //callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
+    //    "mmHurz", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
+    //        for (auto& i : rtx_instr_) {
+    //            auto res = i.query("STAT:OPER:COND?\n");
+    //            *strchr(res.as<char>(), '\n') = 0;
+    //            auto val = std::atoi(res.as<char>());
+    //            core::utility::log::Log::DefaultLog.WriteInfo("WTR is %d", val);
+    //            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    //            if (val == 0) {
+    //                return true;
+    //            }
+    //        }
+    //        return false;
+    //        //return frontend_resources::LuaCallbacksCollection::BoolResult{pending_measurement_};
+    //    }});
 
     auto& register_callbacks =
         m_requestedResourceReferences[0]
