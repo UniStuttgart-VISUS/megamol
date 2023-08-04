@@ -97,6 +97,9 @@
         "mpi"
       ]
     },
+    "nvperf": {
+      "description": "Use NVPerf Profiling"
+    },
     "opengl": {
       "description": "Use OpenGL",
       "dependencies": [

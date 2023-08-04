@@ -13,6 +13,10 @@
 #include "FrameStatistics.h"
 #include "PerformanceManager.h"
 
+#ifdef MEGAMOL_USE_NVPERF
+#include <NvPerfReportGeneratorOpenGL.h>
+#endif
+
 namespace megamol::frontend {
 
 class Profiling_Service final : public AbstractFrontendService {
@@ -59,6 +63,9 @@ private:
     bool include_graph_events = false;
     bool first_frame = true;
     frontend_resources::performance::ProfilingLoggingStatus profiling_logging;
+#ifdef MEGAMOL_USE_NVPERF
+    nv::perf::profiler::ReportGeneratorOpenGL nvperf;
+#endif
 };
 
 } // namespace megamol::frontend
