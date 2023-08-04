@@ -272,7 +272,7 @@ int main(const int argc, const char** argv) {
 
     const auto render_next_frame = [&]() -> bool {
 #ifdef MEGAMOL_USE_TRACY
-        ZoneScopedN("RenderNextFrame", 0x0000FF);
+        ZoneScopedNC("RenderNextFrame", 0x0000FF);
 #endif
 
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
