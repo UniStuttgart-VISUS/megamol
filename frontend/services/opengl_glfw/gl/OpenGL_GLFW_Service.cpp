@@ -304,8 +304,9 @@ void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
     FrameMark;
 #endif
 #ifdef MEGAMOL_USE_POWER
-    reinterpret_cast<frontend_resources::PowerCallbacks const*>(power_callbacks)->signal_high();
-    reinterpret_cast<frontend_resources::PowerCallbacks const*>(power_callbacks)->signal_low();
+    /*reinterpret_cast<frontend_resources::PowerCallbacks const*>(power_callbacks)->signal_high();
+    reinterpret_cast<frontend_resources::PowerCallbacks const*>(power_callbacks)->signal_low();*/
+    reinterpret_cast<frontend_resources::PowerCallbacks const*>(power_callbacks)->signal_frame();
 #endif
 }
 
