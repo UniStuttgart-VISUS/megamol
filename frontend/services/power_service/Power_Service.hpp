@@ -229,6 +229,12 @@ private:
     std::chrono::high_resolution_clock::time_point last_trigger_;
 
     int64_t tracy_last_trigger_;
+
+    bool have_triggered_ = false;
+
+    std::unordered_map<std::string, std::string> exp_map_;
+    float examine_expression(
+        std::string const& name, std::string const& exp_path, std::vector<std::pair<std::string, float>> const& values);
 };
 
 } // namespace frontend

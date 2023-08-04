@@ -117,6 +117,18 @@ bool Power_Service::init(void* configPtr) {
 
     callbacks_.signal_high = std::bind(&ParallelPortTrigger::SetBit, trigger_.get(), 7, true);
     callbacks_.signal_low = std::bind(&ParallelPortTrigger::SetBit, trigger_.get(), 7, false);
+    callbacks_.signal_frame = [&]() -> void {
+        auto m_func = [&]() {
+            trigger_->SetBit(7, true);
+            if (have_triggered_) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                have_triggered_ = false;
+            }
+            trigger_->SetBit(7, false);
+        };
+        auto t = std::thread(m_func);
+        t.detach();
+    };
 
     m_providedResourceReferences = {{frontend_resources::PowerCallbacks_Req_Name, callbacks_}};
 
@@ -164,13 +176,19 @@ bool Power_Service::init(void* configPtr) {
     std::vector<msr_sensor> tmp_msr_sensors(sensor_count);
     msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
 
-    //#define TINKER
+    //std::vector<tinkerforge_sensor> tmp_tinker_sensors;
+    //try {
+    //    sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
+    //    tmp_tinker_sensors.resize(sensor_count);
+    //    tinkerforge_sensor::for_all(tmp_tinker_sensors.data(), tmp_tinker_sensors.size());
+    //}
+    //catch (std::exception& ex) {
+    //    core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] Failed to find tinkerforge sensors: %s", ex.what());
+    //}
 
-#ifdef TINKER
     sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
     std::vector<tinkerforge_sensor> tmp_tinker_sensors(sensor_count);
     tinkerforge_sensor::for_all(tmp_tinker_sensors.data(), tmp_tinker_sensors.size());
-#endif
 
 #ifdef MEGAMOL_USE_TRACY
     for (auto& sensor : tmp_sensors) {
@@ -215,7 +233,7 @@ bool Power_Service::init(void* configPtr) {
         //    },
         //    10Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
     }
-#ifdef TINKER
+
     for (auto& sensor : tmp_tinker_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
 
@@ -235,11 +253,11 @@ bool Power_Service::init(void* configPtr) {
             },
             tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
     }
-#endif
-    TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
+
+    /*TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("A", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("W", tracy::PlotFormatType::Number, false, true, 0);
-    TracyPlotConfig("Frame", tracy::PlotFormatType::Number, false, true, 0);
+    TracyPlotConfig("Frame", tracy::PlotFormatType::Number, false, true, 0);*/
 #endif
 
     //return init(*static_cast<Config*>(configPtr));
@@ -421,11 +439,15 @@ void Power_Service::postGraphRender() {
 /*if (trigger_)
     trigger_->WriteLow();*/
 #ifdef MEGAMOL_USE_TRACY
-    /*for (auto& [name, sensor] : nvml_sensors_) {
+    for (auto& [name, sensor] : nvml_sensors_) {
         auto val = sensor.sample_data();
         TracyPlot(name.data(), val.power());
-    }*/
+    }
     for (auto& [name, sensor] : msr_sensors_) {
+        auto val = sensor.sample_data();
+        TracyPlot(name.data(), val.power());
+    }
+    for (auto& [name, sensor] : tinker_sensors_) {
         auto val = sensor.sample_data();
         TracyPlot(name.data(), val.power());
     }
@@ -622,6 +644,17 @@ int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) {
     return base_ticks + tracy_offset + seg_off_ticks;
 }
 
+
+float Power_Service::examine_expression(
+    std::string const& name, std::string const& exp_path, std::vector<std::pair<std::string, float>> const& values) {
+    for (auto const& [v_name, v_val] : values) {
+        sol_state_[v_name] = v_val;
+    }
+    sol_state_.script_file(exp_path);
+    return sol_state_[name];
+}
+
+
 void Power_Service::start_measurement() {
     using namespace visus::power_overwhelming;
     core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting measurement");
@@ -708,6 +741,11 @@ void Power_Service::start_measurement() {
             }
             pending_read_ = true;
             core::utility::log::Log::DefaultLog.WriteInfo("Not waiting anymore");
+#ifdef MEGAMOL_USE_TRACY
+            for (auto const& [name, path] : exp_map_) {
+                TracyPlotConfig(name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+            }
+#endif
             for (auto& i : rtx_instr_) {
                 //i.operation_complete();
 
@@ -745,7 +783,6 @@ void Power_Service::start_measurement() {
 
                         auto t_off = waveforms[0].segment_offset();
 
-                        
 
                         core::utility::log::Log::DefaultLog.WriteInfo(
                             "[Power_Service] Segment %d begin %f end %f dis %e with offset %e",
@@ -785,14 +822,27 @@ void Power_Service::start_measurement() {
                         out_file.seekp(-1, std::ios_base::end);
                         out_file << "\n";
                         for (size_t i = 0; i < waveforms[0].record_length(); ++i) {
+#ifdef MEGAMOL_USE_TRACY
+                            std::vector<std::pair<std::string, float>> t_vals;
+                            t_vals.reserve(waveforms.size());
+#endif
                             out_file << sample_times[i];
                             for (int w_idx = 0; w_idx < waveforms.size(); ++w_idx) {
                                 out_file << "," << waveforms[w_idx].begin()[i];
 #ifdef MEGAMOL_USE_TRACY
                                 tracy::Profiler::PlotData(tpns[w_idx].c_str(), waveforms[w_idx].begin()[i],
                                     get_tracy_time(sample_times[i], tracy_last_trigger_, t_off));
+
+                                t_vals.emplace_back(tpns[w_idx], waveforms[w_idx].begin()[i]);
 #endif
                             }
+#ifdef MEGAMOL_USE_TRACY
+                            for (auto const& [name, exp_path] : exp_map_) {
+                                auto val = examine_expression(name, exp_path, t_vals);
+                                tracy::Profiler::PlotData(
+                                    name.c_str(), val, get_tracy_time(sample_times[i], tracy_last_trigger_, t_off));
+                            }
+#endif
                             out_file << std::endl;
                         }
                         out_file.close();
@@ -890,6 +940,7 @@ void Power_Service::trigger() {
 #ifdef MEGAMOL_USE_TRACY
     ZoneScopedNC("Power_Service::trigger", 0xDB0ABF);
 #endif
+    have_triggered_ = true;
     last_trigger_ = std::chrono::high_resolution_clock::now();
 #ifdef WIN32
     LARGE_INTEGER t;
@@ -990,6 +1041,13 @@ void Power_Service::fill_lua_callbacks() {
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>("mmPowerSoftwareTrigger", "(bool set)",
         {[&](bool set) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             enforce_software_trigger_ = set;
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string>(
+        "mmPowerRegisterTracyExp", "(string name, string path)",
+        {[&](std::string name, std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            exp_map_[name] = path;
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
