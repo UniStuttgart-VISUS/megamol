@@ -326,7 +326,12 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion() {
 
     // voxel texture
     VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
-    int vol_size = c_voxel->GetMetadata()->Resolution[0]; // TODO access correct value (through UI parameter)
+    const auto meta = c_voxel->GetMetadata();
+    if (meta->Resolution[0] != meta->Resolution[1] || meta->Resolution[0] != meta->Resolution[2]) {
+        utility::log::Log::DefaultLog.WriteError(
+            "AO: Incoming volume does not have uniform resolution. This is not supported.");
+    }
+    int vol_size = c_voxel->GetMetadata()->Resolution[0];
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
     glActiveTexture(GL_TEXTURE0);

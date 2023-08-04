@@ -109,9 +109,9 @@ bool VoxelGenerator::getMetadataCallback(core::Call& call) {
 
     // set metadata
     int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
-    metadata.Resolution[0] = vol_size; // TODO?
-    metadata.Resolution[1] = vol_size; // TODO?
-    metadata.Resolution[2] = vol_size; // TODO?
+    metadata.Resolution[0] = vol_size;
+    metadata.Resolution[1] = vol_size;
+    metadata.Resolution[2] = vol_size;
     metadata.MemLoc = MemoryLocation::VRAM;
     if (!(*particle_call)(0)) {
         return false;
