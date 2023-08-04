@@ -736,8 +736,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 for (auto& t : timers) {
                     auto& timer = perf_manager->lookup_config(t);
                     output << t << ": " << timer.name << " ("
-                           << megamol::frontend_resources::performance::query_api_string(timer.api) << ")"
-                           << std::endl;
+                           << megamol::frontend_resources::performance::query_api_string(timer.api) << ")" << std::endl;
                 }
             }
             return StringResult{output.str()};

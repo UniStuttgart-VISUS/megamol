@@ -1433,8 +1433,7 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
 
 #ifdef MEGAMOL_USE_PROFILING
 
-void megamol::gui::GraphCollection::AppendPerformanceData(
-    const frontend_resources::performance::frame_info& fi) {
+void megamol::gui::GraphCollection::AppendPerformanceData(const frontend_resources::performance::frame_info& fi) {
     auto frame = fi.frame;
     for (auto& e : fi.entries) {
         auto p = perf_manager->lookup_parent_pointer(e.handle);

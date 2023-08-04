@@ -427,9 +427,8 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     m_gui->SetProfilingLoggingStatus(perf_logging);
     // this needs to happen before the first (gui) module is spawned to help it look up the timers
     m_gui->SetPerformanceManager(perf_manager);
-    perf_manager->subscribe_to_updates([&](const frontend_resources::performance::frame_info& fi) {
-        m_gui->AppendPerformanceData(fi);
-    });
+    perf_manager->subscribe_to_updates(
+        [&](const frontend_resources::performance::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
 #endif
 
     // now come the resources for the gui windows

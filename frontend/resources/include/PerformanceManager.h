@@ -107,4 +107,4 @@ private:
     handle_type whole_frame_cpu;
 };
 
-} // namespace megamol::frontend_resources
+} // namespace megamol::frontend_resources::performance

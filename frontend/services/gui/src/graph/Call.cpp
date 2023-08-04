@@ -507,8 +507,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
 #ifdef MEGAMOL_USE_PROFILING
 
-void megamol::gui::Call::AppendPerformanceData(frontend_resources::performance::frame_type frame,
-    const frontend_resources::performance::timer_entry& entry) {
+void megamol::gui::Call::AppendPerformanceData(
+    frontend_resources::performance::frame_type frame, const frontend_resources::performance::timer_entry& entry) {
     if (!this->pause_profiling_history_update) {
         switch (entry.api) {
         case frontend_resources::performance::query_api::CPU:

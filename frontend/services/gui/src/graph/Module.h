@@ -197,8 +197,8 @@ public:
         return this->profiling_parent_pointer;
     }
 
-    void AppendPerformanceData(frontend_resources::performance::frame_type frame,
-        const frontend_resources::performance::timer_entry& entry);
+    void AppendPerformanceData(
+        frontend_resources::performance::frame_type frame, const frontend_resources::performance::timer_entry& entry);
 
     bool ShowProfiling() {
         return this->show_profiling_data;
@@ -250,10 +250,8 @@ private:
 
 #ifdef MEGAMOL_USE_PROFILING
 
-    std::unordered_map<frontend_resources::performance::handle_type, core::MultiPerformanceHistory>
-        cpu_perf_history;
-    std::unordered_map<frontend_resources::performance::handle_type, core::MultiPerformanceHistory>
-        gl_perf_history;
+    std::unordered_map<frontend_resources::performance::handle_type, core::MultiPerformanceHistory> cpu_perf_history;
+    std::unordered_map<frontend_resources::performance::handle_type, core::MultiPerformanceHistory> gl_perf_history;
     void* profiling_parent_pointer;
     float profiling_window_height; // determine dynamically
     bool show_profiling_data;

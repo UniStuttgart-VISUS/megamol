@@ -120,8 +120,8 @@ int32_t gl_timer::choose_launch_buffer(frame_type frame) {
     // the "one" frame
     return frame % 2;
 #else
-        // this should be identical to the basic implementation
-        return 0;
+    // this should be identical to the basic implementation
+    return 0;
 #endif
 }
 
@@ -130,7 +130,7 @@ int32_t gl_timer::choose_collect_buffer(frame_type frame) {
     // the "other" frame (see above)
     return (frame + 1) % 2;
 #else
-        return 0;
+    return 0;
 #endif
 }
 
@@ -176,4 +176,4 @@ uint32_t gl_timer::get_last_query(int32_t chosen_frame_buffer) {
     return last_query[chosen_frame_buffer];
 }
 
-} // namespace megamol::frontend_resources
+} // namespace megamol::frontend_resources::performance

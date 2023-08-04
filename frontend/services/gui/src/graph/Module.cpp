@@ -707,8 +707,8 @@ bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
 
 #ifdef MEGAMOL_USE_PROFILING
 
-void megamol::gui::Module::AppendPerformanceData(frontend_resources::performance::frame_type frame,
-    const frontend_resources::performance::timer_entry& entry) {
+void megamol::gui::Module::AppendPerformanceData(
+    frontend_resources::performance::frame_type frame, const frontend_resources::performance::timer_entry& entry) {
     if (!this->pause_profiling_history_update) {
         switch (entry.api) {
         case frontend_resources::performance::query_api::CPU:

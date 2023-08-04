@@ -24,8 +24,7 @@ PerformanceManager::PerformanceManager() {
     whole_frame_cpu = add_timer("FrameTime", query_api::CPU);
 }
 
-handle_vector PerformanceManager::add_timers(
-    megamol::core::Module* m, std::vector<basic_timer_config> timer_list) {
+handle_vector PerformanceManager::add_timers(megamol::core::Module* m, std::vector<basic_timer_config> timer_list) {
     handle_vector ret;
     timer_config conf;
     conf.parent_pointer = m;
@@ -254,4 +253,4 @@ void PerformanceManager::endFrame(frame_type frame) {
         }
     }
 }
-} // namespace megamol::frontend_resources
+} // namespace megamol::frontend_resources::performance
