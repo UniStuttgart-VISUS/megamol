@@ -225,6 +225,10 @@ private:
     bool pending_read_ = false;
 
     bool enforce_software_trigger_ = false;
+
+    std::chrono::high_resolution_clock::time_point last_trigger_;
+
+    int64_t tracy_last_trigger_;
 };
 
 } // namespace frontend

@@ -13,6 +13,7 @@
 
 #include <codecvt>
 #include <fstream>
+#include <iomanip>
 #include <numeric>
 #include <regex>
 #include <stdexcept>
@@ -26,6 +27,7 @@
 #endif
 
 #include "LuaCallbacksCollection.h"
+#include <power_overwhelming/timestamp_resolution.h>
 
 #include "sol_rtx_instrument.h"
 
@@ -438,6 +440,7 @@ void Power_Service::setup_measurement() {
         for (auto& i : rtx_instr_) {
             i.synchronise_clock();
             i.reset(true, true);
+            //i.operation_complete();
 
             auto name = get_device_name(i);
 
@@ -589,6 +592,36 @@ bool Power_Service::waiting_on_trigger() const {
     return false;
 }
 
+std::vector<int64_t> generate_timestamps_ns(float begin, float end, float dis, size_t length) {
+    std::vector<int64_t> ret(length);
+
+    /*auto range = end - begin;
+    auto incr = range / static_cast<float>(length);*/
+    auto t_b_s = std::chrono::duration<float>(begin);
+    auto t_b_ns = std::chrono::round<std::chrono::nanoseconds>(t_b_s);
+    auto incr_s = std::chrono::duration<float>(dis);
+    auto incr_ns = std::chrono::round<std::chrono::nanoseconds>(incr_s);
+
+    int64_t iter = 0;
+    std::generate(ret.begin(), ret.end(), [&iter, &t_b_ns, &incr_ns]() {
+        auto ret = t_b_ns.count() + iter * incr_ns.count();
+        ++iter;
+        return ret;
+    });
+
+    return ret;
+}
+
+int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) {
+    //std::chrono::duration<float>(seg_off);
+    LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    auto seg_off_ticks = static_cast<int64_t>(static_cast<double>(seg_off) * static_cast<double>(f.QuadPart));
+    auto base_ticks =
+        static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(f.QuadPart));
+    return base_ticks + tracy_offset + seg_off_ticks;
+}
+
 void Power_Service::start_measurement() {
     using namespace visus::power_overwhelming;
     core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Starting measurement");
@@ -598,14 +631,18 @@ void Power_Service::start_measurement() {
 
             //for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
             pending_measurement_ = true;
-            core::utility::log::Log::DefaultLog.WriteWarn("STARTING SING");
             int counter = 0;
             for (auto& i : rtx_instr_) {
                 //core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
 
                 //rtx_instrument i(d);
-                i.on_operation_complete(
-                    [](visa_instrument&, void* counter_ptr) { ++(*static_cast<int*>(counter_ptr)); }, &counter);
+                /*i.on_operation_complete(
+                    [](visa_instrument&, void* counter_ptr) {
+                        printf("Counting!");
+                        ++(*static_cast<int*>(counter_ptr));
+                    },
+                    &counter);*/
+                i.on_operation_complete_ex([&counter](visa_instrument&) { ++counter; });
                 i.acquisition(oscilloscope_acquisition_state::single);
                 i.operation_complete_async();
             }
@@ -685,43 +722,81 @@ void Power_Service::start_measurement() {
 
                 auto config = fit->second;
                 auto num_channels = config.channels();
+                std::vector<oscilloscope_channel> channels(num_channels);
+                config.channels(channels.data(), num_channels);
 
-                std::vector<oscilloscope_waveform> waveforms;
-                waveforms.reserve(num_channels);
+                auto const num_segments = i.history_segments();
+                core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Number of segments %d", num_segments);
 
-                for (auto w_idx = 0; w_idx < num_channels; ++w_idx) {
-                    waveforms.push_back(i.data(w_idx + 1, oscilloscope_waveform_points::maximum));
-                }
+                for (size_t s_idx = 0; s_idx < num_segments; ++s_idx) {
+                    i.history_segment(s_idx + 1);
 
-                if (!waveforms.empty()) {
-                    auto t_begin = waveforms[0].time_begin();
-                    auto t_end = waveforms[0].time_end();
-                    core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[Power_Service] Segment begin %f end %f", t_begin, t_end);
-                    auto range = t_end - t_begin;
-                    auto incr = range / static_cast<float>(waveforms[0].record_length());
-                    auto t_b_s = std::chrono::duration<float>(t_begin);
-                    auto t_b_ns = std::chrono::round<std::chrono::nanoseconds>(t_b_s);
-                    auto incr_s = std::chrono::duration<float>(incr);
-                    auto incr_ns = std::chrono::round<std::chrono::nanoseconds>(incr_s);
+                    std::vector<oscilloscope_waveform> waveforms;
+                    waveforms.reserve(num_channels);
 
-                    sample_times_.resize(waveforms[0].record_length());
-                    std::generate(sample_times_.begin(), sample_times_.end(), [&]() {
-                        static int64_t i;
-                        auto ret = t_b_ns.count() + i * incr_ns.count();
-                        ++i;
-                        return ret;
-                    });
-
-                    std::ofstream out_file("channel_data_" + name + ".csv");
-                    for (size_t i = 0; i < waveforms[0].record_length(); ++i) {
-                        out_file << sample_times_[i];
-                        for (auto const& wave : waveforms) {
-                            out_file << "," << wave.begin()[i];
-                        }
-                        out_file << std::endl;
+                    for (auto w_idx = 0; w_idx < num_channels; ++w_idx) {
+                        waveforms.push_back(i.data(w_idx + 1, oscilloscope_waveform_points::maximum));
                     }
-                    out_file.close();
+
+                    if (!waveforms.empty()) {
+                        auto t_begin = waveforms[0].time_begin();
+                        auto t_end = waveforms[0].time_end();
+                        auto t_dis = waveforms[0].sample_distance();
+
+                        auto t_off = waveforms[0].segment_offset();
+
+                        
+
+                        core::utility::log::Log::DefaultLog.WriteInfo(
+                            "[Power_Service] Segment %d begin %f end %f dis %e with offset %e",
+                            static_cast<int64_t>(s_idx + 1) - num_segments, t_begin, t_end, t_dis, t_off);
+
+                        /*auto range = t_end - t_begin;
+                        auto incr = range / static_cast<float>(waveforms[0].record_length());
+                        auto t_b_s = std::chrono::duration<float>(t_begin);
+                        auto t_b_ns = std::chrono::round<std::chrono::nanoseconds>(t_b_s);
+                        auto incr_s = std::chrono::duration<float>(incr);
+                        auto incr_ns = std::chrono::round<std::chrono::nanoseconds>(incr_s);
+
+                        sample_times_.resize(waveforms[0].record_length());
+                        std::generate(sample_times_.begin(), sample_times_.end(), [&]() {
+                            static int64_t i;
+                            auto ret = t_b_ns.count() + i * incr_ns.count();
+                            ++i;
+                            return ret;
+                        });*/
+                        auto sample_times = generate_timestamps_ns(t_begin, t_end, t_dis, waveforms[0].record_length());
+
+                        std::vector<std::string> tpns;
+                        tpns.reserve(num_channels);
+
+                        std::ofstream out_file("channel_data_" + name + "_s" + std::to_string(s_idx + 1) + ".csv");
+                        out_file << "time,";
+                        for (auto const& chan : channels) {
+                            core::utility::log::Log::DefaultLog.WriteInfo(
+                                "[Power_Service] Channel label: %s", chan.label().text());
+                            out_file << chan.label().text() << ",";
+#ifdef MEGAMOL_USE_TRACY
+                            auto tpn = name + "#" + chan.label().text();
+                            TracyPlotConfig(tpn.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+                            tpns.push_back(tpn);
+#endif
+                        }
+                        out_file.seekp(-1, std::ios_base::end);
+                        out_file << "\n";
+                        for (size_t i = 0; i < waveforms[0].record_length(); ++i) {
+                            out_file << sample_times[i];
+                            for (int w_idx = 0; w_idx < waveforms.size(); ++w_idx) {
+                                out_file << "," << waveforms[w_idx].begin()[i];
+#ifdef MEGAMOL_USE_TRACY
+                                tracy::Profiler::PlotData(tpns[w_idx].c_str(), waveforms[w_idx].begin()[i],
+                                    get_tracy_time(sample_times[i], tracy_last_trigger_, t_off));
+#endif
+                            }
+                            out_file << std::endl;
+                        }
+                        out_file.close();
+                    }
                 }
 
                 //if (counter == 0) {
@@ -812,8 +887,15 @@ void Power_Service::start_measurement() {
 }
 
 void Power_Service::trigger() {
+#ifdef MEGAMOL_USE_TRACY
+    ZoneScopedNC("Power_Service::trigger", 0xDB0ABF);
+#endif
+    last_trigger_ = std::chrono::high_resolution_clock::now();
 #ifdef WIN32
-    trigger_offset_ = std::chrono::nanoseconds(static_cast<int64_t>(static_cast<double>(__rdtsc()) * timer_mul_));
+    LARGE_INTEGER t;
+    QueryPerformanceCounter(&t);
+    tracy_last_trigger_ = t.QuadPart;
+    //trigger_offset_ = std::chrono::nanoseconds(static_cast<int64_t>(static_cast<double>(__rdtsc()) * timer_mul_));
     /*core::utility::log::Log::DefaultLog.WriteInfo("RDTSC: %f", __rdtsc()*m_timerMul);
     core::utility::log::Log::DefaultLog.WriteInfo("Tracy: %lld", tracy::Profiler::GetTime());
     LARGE_INTEGER counter;
