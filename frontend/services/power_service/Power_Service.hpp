@@ -196,15 +196,15 @@ private:
 
     std::vector<std::string> sensor_names_;
 
-    double timer_mul_;
+    //double timer_mul_;
 
     void setup_measurement();
 
     void start_measurement();
 
-    bool is_measurement_pending() const {
-        return pending_measurement_;
-    }
+    //bool is_measurement_pending() const {
+    //    return pending_measurement_;
+    //}
 
     void trigger();
 
@@ -222,17 +222,18 @@ private:
 
     bool pending_measurement_ = false;
 
-    bool pending_read_ = false;
+    //bool pending_read_ = false;
 
     bool enforce_software_trigger_ = false;
 
-    std::chrono::high_resolution_clock::time_point last_trigger_;
+    std::chrono::system_clock::time_point last_trigger_;
 
     int64_t tracy_last_trigger_;
 
     bool have_triggered_ = false;
 
     std::unordered_map<std::string, std::string> exp_map_;
+
     float examine_expression(
         std::string const& name, std::string const& exp_path, std::vector<std::pair<std::string, float>> const& values);
 };

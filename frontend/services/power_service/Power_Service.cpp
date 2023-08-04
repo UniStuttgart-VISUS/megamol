@@ -135,7 +135,7 @@ bool Power_Service::init(void* configPtr) {
     m_requestedResourcesNames = {"RegisterLuaCallbacks"};
 
 
-    int64_t incr = std::chrono::nanoseconds(std::chrono::milliseconds(measure_time_in_ms)).count() /
+    /*int64_t incr = std::chrono::nanoseconds(std::chrono::milliseconds(measure_time_in_ms)).count() /
                    static_cast<int64_t>(sample_count);
     int64_t start = (measure_time_in_ms / 10) * 1000 * 1000 * (-1);
     sample_times_.resize(sample_count);
@@ -144,10 +144,10 @@ bool Power_Service::init(void* configPtr) {
         auto ret = start + i * incr;
         ++i;
         return ret;
-    });
+    });*/
 
     // begin tracy::Profiler::CalibrateTimer
-    std::atomic_signal_fence(std::memory_order_acq_rel);
+    /*std::atomic_signal_fence(std::memory_order_acq_rel);
     const auto t0 = std::chrono::high_resolution_clock::now();
     const auto r0 = __rdtsc();
     std::atomic_signal_fence(std::memory_order_acq_rel);
@@ -160,7 +160,7 @@ bool Power_Service::init(void* configPtr) {
     const auto dt = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
     const auto dr = r1 - r0;
 
-    timer_mul_ = double(dt) / double(dr);
+    timer_mul_ = double(dt) / double(dr);*/
     // end tracy::Profiler::CalibrateTimer
 
 
@@ -208,7 +208,7 @@ bool Power_Service::init(void* configPtr) {
                 //auto name = unmueller_string(sensor->name());
                 TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
             },
-            10Ui64, static_cast<void*>(sensor_names_.back().data()));
+            1000Ui64, static_cast<void*>(sensor_names_.back().data()));
     }
     for (auto& sensor : tmp_msr_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
@@ -225,13 +225,13 @@ bool Power_Service::init(void* configPtr) {
         });*/
 
         msr_sensors_[std::string(sensor_name)] = std::move(sensor);
-        //sensor_names_.push_back(sensor_name);
-        //msr_sensors_[sensor_name].sample(
-        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
-        //        //auto name = unmueller_string(sensor->name());
-        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
-        //    },
-        //    10Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
+        sensor_names_.push_back(sensor_name);
+        msr_sensors_[sensor_name].sample(
+            [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+                //auto name = unmueller_string(sensor->name());
+                TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+            },
+            1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
     }
 
     for (auto& sensor : tmp_tinker_sensors) {
@@ -379,26 +379,26 @@ void Power_Service::preGraphRender() {
 }
 
 void Power_Service::postGraphRender() {
-// the graph finished rendering and you may more stuff here
-// e.g. end frame timer
-// update window name
-// swap buffers, glClear
-/*if (trigger_)
-    trigger_->WriteLow();*/
-#ifdef MEGAMOL_USE_TRACY
-    for (auto& [name, sensor] : nvml_sensors_) {
-        auto val = sensor.sample_data();
-        TracyPlot(name.data(), val.power());
-    }
-    for (auto& [name, sensor] : msr_sensors_) {
-        auto val = sensor.sample_data();
-        TracyPlot(name.data(), val.power());
-    }
-    for (auto& [name, sensor] : tinker_sensors_) {
-        auto val = sensor.sample_data();
-        TracyPlot(name.data(), val.power());
-    }
-#endif
+    // the graph finished rendering and you may more stuff here
+    // e.g. end frame timer
+    // update window name
+    // swap buffers, glClear
+    /*if (trigger_)
+        trigger_->WriteLow();*/
+    //#ifdef MEGAMOL_USE_TRACY
+    //    for (auto& [name, sensor] : nvml_sensors_) {
+    //        auto val = sensor.sample_data();
+    //        TracyPlot(name.data(), val.power());
+    //    }
+    //    for (auto& [name, sensor] : msr_sensors_) {
+    //        auto val = sensor.sample_data();
+    //        TracyPlot(name.data(), val.power());
+    //    }
+    //    for (auto& [name, sensor] : tinker_sensors_) {
+    //        auto val = sensor.sample_data();
+    //        TracyPlot(name.data(), val.power());
+    //    }
+    //#endif
 }
 
 void Power_Service::setup_measurement() {
@@ -523,7 +523,7 @@ void Power_Service::start_measurement() {
                     }
                 }
             }
-            pending_read_ = true;
+            //pending_read_ = true;
             core::utility::log::Log::DefaultLog.WriteInfo("Not waiting anymore");
 #ifdef MEGAMOL_USE_TRACY
             for (auto const& [name, path] : exp_map_) {
@@ -621,7 +621,7 @@ void Power_Service::start_measurement() {
 
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed measurement");
             }
-            pending_read_ = false;
+            //pending_read_ = false;
             pending_measurement_ = false;
         } catch (std::exception& ex) {
             core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: %s", ex.what());
@@ -636,7 +636,7 @@ void Power_Service::trigger() {
     ZoneScopedNC("Power_Service::trigger", 0xDB0ABF);
 #endif
     have_triggered_ = true;
-    last_trigger_ = std::chrono::high_resolution_clock::now();
+    last_trigger_ = std::chrono::system_clock::now();
 #ifdef WIN32
     LARGE_INTEGER t;
     QueryPerformanceCounter(&t);
@@ -693,24 +693,6 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
         "mmPowerIsPending", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
-            //std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            //if (pending_read_)
-            //    return false;
-            //for (auto& i : rtx_instr_) {
-            //    auto res = i.query("STAT:OPER:COND?\n");
-            //    *strchr(res.as<char>(), '\n') = 0;
-            //    auto val = std::atoi(res.as<char>());
-            //    core::utility::log::Log::DefaultLog.WriteInfo("Pending WTR is %d", val);
-            //    //core::utility::log::Log::DefaultLog.WriteInfo("Pending WTR sleep over %d", val);
-            //    if (val == 8) {
-            //        core::utility::log::Log::DefaultLog.WriteInfo("Pending WTR returns");
-            //        return !pending_read_;
-            //    }
-            //}
-            ///*if (pending_measurement_)
-            //    return true;*/
-            ////return frontend_resources::LuaCallbacksCollection::BoolResult{is_measurement_pending()};
-            //return false;
             return frontend_resources::LuaCallbacksCollection::BoolResult{pending_measurement_};
         }});
 
