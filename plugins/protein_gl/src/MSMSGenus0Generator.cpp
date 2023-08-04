@@ -181,8 +181,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         uint32_t genus = 1;
         uint32_t step = 1;
         while (genus != 0 && step <= maxSteps) {
-            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(),
-                probeRadius);
+            this->load(
+                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(), probeRadius);
             this->isGenus0(0, &genus);
             core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
@@ -573,8 +573,8 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
         uint32_t genus = 1;
         uint32_t step = 1;
         while (genus != 0 && step <= maxSteps) {
-            this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(),
-                probeRadius);
+            this->load(
+                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(), probeRadius);
             this->isGenus0(0, &genus);
             core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);

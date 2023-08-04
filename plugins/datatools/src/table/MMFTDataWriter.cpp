@@ -59,8 +59,7 @@ bool MMFTDataWriter::run() {
     }
 
     if (std::filesystem::exists(filename)) {
-        Log::DefaultLog.WriteWarn(
-            "File %s already exists and will be overwritten.", filename.generic_string().c_str());
+        Log::DefaultLog.WriteWarn("File %s already exists and will be overwritten.", filename.generic_string().c_str());
     }
 
     std::ofstream file(filename, std::ios::binary);

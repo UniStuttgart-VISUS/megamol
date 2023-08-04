@@ -76,8 +76,7 @@ bool MMPGDWriter::run() {
     }
 
     if (vislib::sys::File::Exists(filename.native().c_str())) {
-        Log::DefaultLog.WriteWarn(
-            "File %s already exists and will be overwritten.", filename.generic_string().c_str());
+        Log::DefaultLog.WriteWarn("File %s already exists and will be overwritten.", filename.generic_string().c_str());
     }
 
     vislib::math::Cuboid<float> bbox;
