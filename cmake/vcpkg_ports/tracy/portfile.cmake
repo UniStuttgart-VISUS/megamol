@@ -8,7 +8,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO gralkapk/tracy
     REF plot_time
-    SHA512 4f17e31b3263e81f29fcfadde8254ad1949d909567b858ae06a9645dbc7e975b947407f9576b60887a8a5a373fc4b6cefba093023a36e2c3d71b678529203d8c
+    SHA512 288aca7e662d8da6cd18b752ecefb2ee155b3de1337baae3be5e55f465a74b3c55a0b75b0e2e782a17192ae0efb3caf78a6d3e9ce85782ff7ab7bf843920b375
     HEAD_REF master
     PATCHES
         001-fix-vcxproj-vcpkg.patch
@@ -28,6 +28,7 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
 vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}
     OPTIONS ${FEATURE_OPTIONS}
+      -DTRACY_TIMER_QPC=ON
 )
 vcpkg_cmake_install()
 
