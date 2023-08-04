@@ -99,6 +99,10 @@ bool Power_Service::init(void* configPtr) {
 
     visus::power_overwhelming::sol_register_all(sol_state_);
 
+    LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    qpc_frequency_ = f.QuadPart;
+
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
 
@@ -175,16 +179,6 @@ bool Power_Service::init(void* configPtr) {
     sensor_count = msr_sensor::for_all(nullptr, 0);
     std::vector<msr_sensor> tmp_msr_sensors(sensor_count);
     msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
-
-    //std::vector<tinkerforge_sensor> tmp_tinker_sensors;
-    //try {
-    //    sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
-    //    tmp_tinker_sensors.resize(sensor_count);
-    //    tinkerforge_sensor::for_all(tmp_tinker_sensors.data(), tmp_tinker_sensors.size());
-    //}
-    //catch (std::exception& ex) {
-    //    core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] Failed to find tinkerforge sensors: %s", ex.what());
-    //}
 
     sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
     std::vector<tinkerforge_sensor> tmp_tinker_sensors(sensor_count);
@@ -469,13 +463,10 @@ std::vector<int64_t> generate_timestamps_ns(float begin, float end, float dis, s
     return ret;
 }
 
-int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) {
-    //std::chrono::duration<float>(seg_off);
-    LARGE_INTEGER f;
-    QueryPerformanceFrequency(&f);
-    auto seg_off_ticks = static_cast<int64_t>(static_cast<double>(seg_off) * static_cast<double>(f.QuadPart));
+int64_t Power_Service::get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) const {
+    auto seg_off_ticks = static_cast<int64_t>(static_cast<double>(seg_off) * static_cast<double>(qpc_frequency_));
     auto base_ticks =
-        static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(f.QuadPart));
+        static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(qpc_frequency_));
     return base_ticks + tracy_offset + seg_off_ticks;
 }
 
@@ -498,7 +489,6 @@ void Power_Service::start_measurement() {
             pending_measurement_ = true;
             int counter = 0;
             for (auto& i : rtx_instr_) {
-
                 i.on_operation_complete_ex([&counter](visa_instrument&) { ++counter; });
                 i.acquisition(oscilloscope_acquisition_state::single);
                 i.operation_complete_async();

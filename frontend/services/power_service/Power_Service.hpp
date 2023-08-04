@@ -236,6 +236,10 @@ private:
 
     float examine_expression(
         std::string const& name, std::string const& exp_path, std::vector<std::pair<std::string, float>> const& values);
+
+    int64_t qpc_frequency_;
+
+    int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) const;
 };
 
 } // namespace frontend
