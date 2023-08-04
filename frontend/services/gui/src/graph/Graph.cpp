@@ -257,15 +257,16 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool use_queue) {
             if ((*iter)->UID() == module_uid) {
 
                 this->ResetStatePointers();
+
                 QueueData queue_data;
+                queue_data.name_id = (*iter)->FullName();
 
                 // 1) Reset module and call slot pointers in groups
-                auto current_full_name = (*iter)->FullName();
                 GroupPtr_t module_group_ptr = nullptr;
                 for (auto& group_ptr : this->groups) {
                     if (group_ptr->ContainsModule(module_uid)) {
                         module_group_ptr = group_ptr;
-                        this->RemoveGroupModule(group_ptr->UID(), module_uid, use_queue, false);
+                        this->RemoveGroupModule(group_ptr->UID(), module_uid, false, false);
                     }
                 }
 
