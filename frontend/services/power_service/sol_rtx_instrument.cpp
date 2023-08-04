@@ -14,7 +14,7 @@ void visus::power_overwhelming::sol_rtx_instrument(sol::state& lua) {
             rtx_instrument(std::reference_wrapper<bool>, const char*, const visa_instrument::timeout_type)>());
 #if 0
     rtx_instrument_table["acquisition"] =
-        sol::overload(static_cast<rtx_instrument& (rtx_instrument::*)(_In_ const oscilloscope_single_acquisition&,
+        sol::overload(static_cast<rtx_instrument& (rtx_instrument::*)(_In_ const oscilloscope_acquisition&,
                           _In_ const bool, _In_ const bool)>(&rtx_instrument::acquisition),
             static_cast<oscilloscope_acquisition_state (rtx_instrument::*)() const>(&rtx_instrument::acquisition)/*,
             static_cast<const rtx_instrument& (rtx_instrument::*)(_In_ const oscilloscope_acquisition_state,
@@ -22,8 +22,8 @@ void visus::power_overwhelming::sol_rtx_instrument(sol::state& lua) {
 #endif
 
     rtx_instrument_table["acquisition"] =
-        static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_single_acquisition&, const bool,
-            const bool)>(&rtx_instrument::acquisition);
+        static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_acquisition&, const bool)>(
+            &rtx_instrument::acquisition);
 
     rtx_instrument_table["channel"] =
         static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_channel&)>(&rtx_instrument::channel);
@@ -52,20 +52,17 @@ void visus::power_overwhelming::sol_rtx_instrument(sol::state& lua) {
 
 
 void visus::power_overwhelming::sol_oscilloscope_single_acquisition(sol::state& lua) {
-    auto acq_table = lua.new_usertype<oscilloscope_single_acquisition>(
-        "oscilloscope_single_acquisition", sol::constructors<oscilloscope_single_acquisition()>());
+    auto acq_table = lua.new_usertype<oscilloscope_acquisition>(
+        "oscilloscope_single_acquisition", sol::constructors<oscilloscope_acquisition()>());
 
-    acq_table["count"] =
-        static_cast<oscilloscope_single_acquisition& (oscilloscope_single_acquisition::*)(const unsigned int)>(
-            &oscilloscope_single_acquisition::count);
+    acq_table["count"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*)(const unsigned int)>(
+        &oscilloscope_acquisition::count);
 
-    acq_table["points"] =
-        static_cast<oscilloscope_single_acquisition& (oscilloscope_single_acquisition::*)(const unsigned int)>(
-            &oscilloscope_single_acquisition::points);
+    acq_table["points"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*)(const unsigned int)>(
+        &oscilloscope_acquisition::points);
 
-    acq_table["segmented"] =
-        static_cast<oscilloscope_single_acquisition& (oscilloscope_single_acquisition::*)(const bool)>(
-            &oscilloscope_single_acquisition::segmented);
+    acq_table["segmented"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*)(const bool)>(
+        &oscilloscope_acquisition::segmented);
 }
 
 
@@ -140,7 +137,7 @@ void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua
     auto config_table = lua.new_usertype<rtx_instrument_configuration>("rtx_instrument_configuration",
         sol::constructors<rtx_instrument_configuration(),
             rtx_instrument_configuration(const oscilloscope_quantity,
-                std::reference_wrapper<const oscilloscope_single_acquisition>,
+                std::reference_wrapper<const oscilloscope_acquisition>,
                 std::reference_wrapper<const oscilloscope_edge_trigger>, std::uint32_t)>());
 
     config_table["channel"] = &rtx_instrument_configuration::channel;
@@ -150,7 +147,7 @@ void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua
         [](const rtx_instrument_configuration& config) -> rtx_instrument_configuration { return config.as_slave(); });
 
     //lua->set_function("get_config",
-    //    [](const oscilloscope_quantity quant, const oscilloscope_single_acquisition& acq) -> rtx_instrument_configuration {
+    //    [](const oscilloscope_quantity quant, const oscilloscope_acquisition& acq) -> rtx_instrument_configuration {
     //        /*oscilloscope_edge_trigger trigger = oscilloscope_edge_trigger("EXT");
     //        trigger.level(5, oscilloscope_quantity(2000.0f, "mV"))
     //            .slope(oscilloscope_trigger_slope::rising)
