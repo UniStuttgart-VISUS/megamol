@@ -172,6 +172,52 @@ void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua
     //    });
 }
 
+void visus::power_overwhelming::sol_expressions(
+    sol::state& lua, std::vector<std::unordered_map<std::string, std::vector<float>>> const& val_map) {
+    lua.set_function("rtx_plus", [&val_map](int idx, sol::variadic_args va) -> std::vector<float> {
+        std::vector<float> ret;
+        auto const& curr_map = val_map.at(idx);
+        for (auto v : va) {
+            std::string name = v;
+            auto const& values = curr_map.at(name);
+            if (ret.empty()) {
+                ret = values;
+            } else {
+                std::transform(values.begin(), values.end(), ret.begin(), ret.begin(), std::plus<float>());
+            }
+        }
+        return ret;
+    });
+    auto m_func_1 = [&val_map](int idx, sol::variadic_args va) -> std::vector<float> {
+        std::vector<float> ret;
+        auto const& curr_map = val_map.at(idx);
+        for (auto v : va) {
+            std::string name = v;
+            auto const& values = curr_map.at(name);
+            if (ret.empty()) {
+                ret = values;
+            } else {
+                std::transform(values.begin(), values.end(), ret.begin(), ret.begin(), std::multiplies<float>());
+            }
+        }
+        return ret;
+    };
+    auto m_func_2 = [&val_map](int idx, std::vector<float> const& lhs, std::string rhs) -> std::vector<float> {
+        auto ret = lhs;
+        auto const& values = val_map.at(idx).at(rhs);
+        std::transform(values.begin(), values.end(), ret.begin(), ret.begin(), std::multiplies<float>());
+        return ret;
+    };
+    auto m_func_3 = [&val_map](int idx, std::string lhs, std::vector<float> const& rhs) -> std::vector<float> {
+        auto ret = rhs;
+        auto const& values = val_map.at(idx).at(lhs);
+        std::transform(values.begin(), values.end(), ret.begin(), ret.begin(), std::multiplies<float>());
+        return ret;
+    };
+
+    lua.set_function("rtx_multiplies", sol::overload(m_func_1, m_func_2, m_func_3));
+}
+
 
 struct simple {
     void do_stuff() {

@@ -234,12 +234,13 @@ private:
 
     std::unordered_map<std::string, std::string> exp_map_;
 
-    float examine_expression(
-        std::string const& name, std::string const& exp_path, std::vector<std::pair<std::string, float>> const& values);
+    std::vector<float> examine_expression(std::string const& name, std::string const& exp_path, int s_idx);
 
     int64_t qpc_frequency_;
 
     int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) const;
+
+    std::vector<std::unordered_map<std::string, std::vector<float>>> values_map_;
 };
 
 } // namespace frontend

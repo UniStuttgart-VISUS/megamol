@@ -99,6 +99,8 @@ bool Power_Service::init(void* configPtr) {
 
     visus::power_overwhelming::sol_register_all(sol_state_);
 
+    visus::power_overwhelming::sol_expressions(sol_state_, values_map_);
+
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
     qpc_frequency_ = f.QuadPart;
@@ -471,13 +473,17 @@ int64_t Power_Service::get_tracy_time(int64_t base, int64_t tracy_offset, float 
 }
 
 
-float Power_Service::examine_expression(
-    std::string const& name, std::string const& exp_path, std::vector<std::pair<std::string, float>> const& values) {
-    for (auto const& [v_name, v_val] : values) {
-        sol_state_[v_name] = v_val;
-    }
+std::vector<float> Power_Service::examine_expression(std::string const& name, std::string const& exp_path, int s_idx) {
+    sol_state_["s_idx"] = s_idx;
     sol_state_.script_file(exp_path);
     return sol_state_[name];
+}
+
+
+std::vector<float> transform_waveform(visus::power_overwhelming::oscilloscope_waveform& wave) {
+    std::vector<float> ret(wave.record_length());
+    std::copy(wave.begin(), wave.end(), ret.begin());
+    return ret;
 }
 
 
@@ -520,6 +526,11 @@ void Power_Service::start_measurement() {
                 TracyPlotConfig(name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
             }
 #endif
+
+            values_map_.clear();
+            std::vector<std::vector<int64_t>> sample_times;
+            std::vector<float> seg_off;
+
             for (auto& i : rtx_instr_) {
                 //i.operation_complete();
 
@@ -540,6 +551,10 @@ void Power_Service::start_measurement() {
                 auto const num_segments = i.history_segments();
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Number of segments %d", num_segments);
 
+                values_map_.resize(num_segments);
+                sample_times.resize(num_segments);
+                seg_off.resize(num_segments);
+
                 for (size_t s_idx = 0; s_idx < num_segments; ++s_idx) {
                     i.history_segment(s_idx + 1);
 
@@ -556,13 +571,14 @@ void Power_Service::start_measurement() {
                         auto t_dis = waveforms[0].sample_distance();
 
                         auto t_off = waveforms[0].segment_offset();
-
+                        seg_off[s_idx] = t_off;
 
                         core::utility::log::Log::DefaultLog.WriteInfo(
                             "[Power_Service] Segment %d begin %f end %f dis %e with offset %e",
                             static_cast<int64_t>(s_idx + 1) - num_segments, t_begin, t_end, t_dis, t_off);
 
-                        auto sample_times = generate_timestamps_ns(t_begin, t_end, t_dis, waveforms[0].record_length());
+                        sample_times[s_idx] =
+                            generate_timestamps_ns(t_begin, t_end, t_dis, waveforms[0].record_length());
 
                         std::vector<std::string> tpns;
                         tpns.reserve(num_channels);
@@ -574,11 +590,16 @@ void Power_Service::start_measurement() {
                                 "[Power_Service] Channel label: %s", chan.label().text());
                             out_file << chan.label().text() << ",";
 #ifdef MEGAMOL_USE_TRACY
-                            auto tpn = name + "#" + chan.label().text();
+                            auto tpn = name + "_" + chan.label().text();
                             TracyPlotConfig(tpn.c_str(), tracy::PlotFormatType::Number, false, true, 0);
                             tpns.push_back(tpn);
 #endif
                         }
+
+                        for (int vm = 0; vm < num_channels; ++vm) {
+                            values_map_[s_idx][tpns[vm]] = transform_waveform(waveforms[vm]);
+                        }
+
                         out_file.seekp(-1, std::ios_base::end);
                         out_file << "\n";
                         for (size_t i = 0; i < waveforms[0].record_length(); ++i) {
@@ -586,31 +607,36 @@ void Power_Service::start_measurement() {
                             std::vector<std::pair<std::string, float>> t_vals;
                             t_vals.reserve(waveforms.size());
 #endif
-                            out_file << sample_times[i];
+                            out_file << sample_times[s_idx][i];
                             for (int w_idx = 0; w_idx < waveforms.size(); ++w_idx) {
                                 out_file << "," << waveforms[w_idx].begin()[i];
 #ifdef MEGAMOL_USE_TRACY
                                 tracy::Profiler::PlotData(tpns[w_idx].c_str(), waveforms[w_idx].begin()[i],
-                                    get_tracy_time(sample_times[i], tracy_last_trigger_, t_off));
+                                    get_tracy_time(sample_times[s_idx][i], tracy_last_trigger_, t_off));
 
                                 t_vals.emplace_back(tpns[w_idx], waveforms[w_idx].begin()[i]);
 #endif
                             }
-#ifdef MEGAMOL_USE_TRACY
-                            for (auto const& [name, exp_path] : exp_map_) {
-                                auto val = examine_expression(name, exp_path, t_vals);
-                                tracy::Profiler::PlotData(
-                                    name.c_str(), val, get_tracy_time(sample_times[i], tracy_last_trigger_, t_off));
-                            }
-#endif
                             out_file << std::endl;
                         }
                         out_file.close();
                     }
                 }
-
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed measurement");
             }
+
+#ifdef MEGAMOL_USE_TRACY
+            for (int s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
+                for (auto const& [name, exp_path] : exp_map_) {
+                    auto val = examine_expression(name, exp_path, s_idx);
+                    for (size_t i = 0; i < val.size(); ++i) {
+                        tracy::Profiler::PlotData(name.c_str(), val[i],
+                            get_tracy_time(sample_times[s_idx][i], tracy_last_trigger_, seg_off[s_idx]));
+                    }
+                }
+            }
+#endif
+
             //pending_read_ = false;
             pending_measurement_ = false;
         } catch (std::exception& ex) {
