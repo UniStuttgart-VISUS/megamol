@@ -1,10 +1,5 @@
 #pragma once
 
-
-//#include "geometry_calls/MultiParticleDataCall.h"
-//#include "geometry_calls/VolumetricDataCall.h"
-
-//#include "misc/MDAOVolumeGenerator.h"
 #include "geometry_calls/VolumetricDataCall.h"
 #include "glowl/glowl.h"
 #include "mmcore/Call.h"
@@ -21,8 +16,6 @@
 #include <math.h>
 
 #include <vector>
-
-//#include "mmcore/CoreInstance.h"
 
 namespace megamol::compositing_gl {
 
@@ -85,27 +78,34 @@ protected:
     bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
-    ///**
-    // * TODO: Document
-    // *
-    // * @param t           ...
-    // * @param outScaling  ...
-    // *
-    // * @return Pointer to MultiParticleDataCall ...
-    // */
-    //MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
-
-    /** The slot that requests the data. */
+    
     core::CalleeSlot output_tex_slot_; // Ambient occlusion texture (left slot)
 
     core::CallerSlot voxels_tex_slot_; // VolumetricDataCall (right slot)
 
-    GLuint texture_handle;
-    GLuint voxel_handle;
+    core::CallerSlot get_lights_slot_;
 
-    std::shared_ptr<glowl::Texture2D> color_tex;
-    std::shared_ptr<glowl::Texture2D> depth_tex;
-    std::shared_ptr<glowl::Texture2D> normal_tex;
+    /** Slot for querying normals render target texture, i.e. a rhs connection */
+    core::CallerSlot normals_tex_slot_;
+
+    /** Slot for querying depth render target texture, i.e. a rhs connection */
+    core::CallerSlot depth_tex_slot_;
+
+    /** Slot for querying color render target texture, i.e. a rhs connection */
+    core::CallerSlot color_tex_slot_;
+
+    /** Slot for querying camera, i.e. a rhs connection */
+    core::CallerSlot camera_slot_;
+
+
+    GLuint texture_handle_;
+    GLuint voxel_handle_;
+    GLuint vertex_array_;
+    GLuint vbo_;
+
+    std::shared_ptr<glowl::Texture2D> color_tex_;
+    std::shared_ptr<glowl::Texture2D> depth_tex_;
+    std::shared_ptr<glowl::Texture2D> normal_tex_;
 
     glm::mat4 cur_mvp_inv_;
     glm::vec3 cur_cam_pos_;
@@ -116,47 +116,37 @@ private:
     int cur_vp_width_;
     int cur_vp_height_;
 
-    //geocalls::VolumetricDataCall::Metadata metadata;
-
-    core::param::ParamSlot vol_size_slot_;
-
-    //misc::MDAOVolumeGenerator* vol_gen_;
-
-    GLuint vertex_array_;
-
-    GLuint vbo_;
-
     std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shader_options_flags_;
 
     std::shared_ptr<glowl::GLSLProgram> lighting_prgm_;
 
     std::unique_ptr<glowl::BufferObject> ao_dir_ubo_;
 
-    megamol::core::param::ParamSlot ao_cone_apex_slot_;
-    megamol::core::param::ParamSlot enable_lighting_slot_;
-    megamol::core::param::ParamSlot ao_offset_slot_;
-    megamol::core::param::ParamSlot ao_strength_slot_;
-    megamol::core::param::ParamSlot ao_cone_length_slot_;
-    megamol::core::CallerSlot get_lights_slot_;
+    core::param::ParamSlot vol_size_slot_;
+    core::param::ParamSlot ao_cone_apex_slot_;
+    core::param::ParamSlot enable_lighting_slot_;
+    core::param::ParamSlot ao_offset_slot_;
+    core::param::ParamSlot ao_strength_slot_;
+    core::param::ParamSlot ao_cone_length_slot_;
 
-    /** Slot for querying normals render target texture, i.e. a rhs connection */
-    megamol::core::CallerSlot normals_tex_slot_;
-
-    /** Slot for querying depth render target texture, i.e. a rhs connection */
-    megamol::core::CallerSlot depth_tex_slot_;
-
-    /** Slot for querying color render target texture, i.e. a rhs connection */
-    megamol::core::CallerSlot color_tex_slot_;
-
-    /** Slot for querying camera, i.e. a rhs connection */
-    megamol::core::CallerSlot camera_slot_;
-
+    /**
+    * render deferreded pass with volume, depth, normal and color texture
+    */
     void renderAmbientOcclusion();
 
+    /**
+    * generate cone directions to be used in AO shader
+    */
     void generate3ConeDirections(std::vector<glm::vec4>& directions, float apex);
 
+    /**
+    * get volume data from volumetric data call
+    */
     bool updateVolumeData(const unsigned int frameID);
 
+    /**
+    * recreate resources like shaders and buffers
+    */
     bool recreateResources(void);
 };
 

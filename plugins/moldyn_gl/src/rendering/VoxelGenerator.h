@@ -90,22 +90,15 @@ protected:
     bool dummyCallback(core::Call& call);
 
 private:
-    ///**
-    // * TODO: Document
-    // *
-    // * @param t           ...
-    // * @param outScaling  ...
-    // *
-    // * @return Pointer to MultiParticleDataCall ...
-    // */
-    //MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
-
-    /** The slot that requests the data. */
+    
     core::CalleeSlot generate_voxels_slot_; // VolumetricDataCall (left slot)
 
     core::CallerSlot get_data_slot_; // MultiParticleDataCall (right slot)
 
+
     GLuint texture_handle;
+    GLuint vertex_array_;
+    GLuint vbo_;
 
     geocalls::VolumetricDataCall::Metadata metadata;
 
@@ -113,18 +106,23 @@ private:
 
     misc::MDAOVolumeGenerator* vol_gen_;
 
-    GLuint vertex_array_;
-
-    GLuint vbo_;
-
     std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shader_options_flags_;
 
     std::shared_ptr<glowl::GLSLProgram> sphere_prgm_;
 
+    /**
+    * fill volume texture with particle data
+    */
     bool generateVoxels(geocalls::MultiParticleDataCall* particle_call, geocalls::VolumetricDataCall* volume_call);
 
+    /**
+    * initialize volume generator
+    */
     bool initVolumeGenerator();
 
+    /**
+    * fill VAO with particle data
+    */
     bool fillVAO(const geocalls::MultiParticleDataCall::Particles& parts, GLuint vert_buf, const void* vert_ptr,
         bool create_buffer_data);
 };

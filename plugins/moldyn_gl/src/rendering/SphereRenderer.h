@@ -377,14 +377,6 @@ private:
     MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
 
     /**
-     * TODO: Document
-     *
-     *
-     * @return Pointer to VolumetricDataCall ...
-     */
-    //VolumetricDataCall* getVoxelData();
-
-    /**
      * Return clipping information.
      *
      * @param clipDat  Points to four floats ...

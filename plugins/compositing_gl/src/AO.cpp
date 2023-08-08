@@ -17,8 +17,8 @@ megamol::compositing_gl::AO::AO(void)
         , voxels_tex_slot_("getVoxelData", "Connects to the voxel data source")
         , get_lights_slot_("lights", "Lights are retrieved over this slot.")
         , vol_size_slot_("volumeSize", "Longest volume edge")
-        , texture_handle()
-        , voxel_handle()
+        , texture_handle_()
+        , voxel_handle_()
         , vertex_array_()
         , shader_options_flags_(nullptr)
         , lighting_prgm_()
@@ -38,24 +38,16 @@ megamol::compositing_gl::AO::AO(void)
         , depth_tex_slot_("DepthTexture", "Connects the depth render target texture")
         , color_tex_slot_("ColorTexture", "Connects the color render target texture")
         , camera_slot_("Camera", "Connects a (copy of) camera state")
-        , depth_tex()
-        , normal_tex()
-        , color_tex() {
-
-    // CallTexture2D
-    //this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &AO::getDataCallback);
-    //this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &AO::getMetadataCallback);
-    //this->MakeSlotAvailable(&this->output_tex_slot_);
+        , depth_tex_()
+        , normal_tex_()
+        , color_tex_() {
 
     // VolumetricDataCall slot (get voxel texture)
     this->voxels_tex_slot_.SetCompatibleCall<VolumetricDataCallDescription>();
     this->voxels_tex_slot_.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->voxels_tex_slot_);
 
-    //this->vol_size_slot_ << (new core::param::IntParam(256, 1, 1024));
-    //this->MakeSlotAvailable(&this->vol_size_slot_);
-
-    this->enable_lighting_slot_ << (new param::BoolParam(false)); // TODO necessary?
+    this->enable_lighting_slot_ << (new param::BoolParam(false));
     this->MakeSlotAvailable(&this->enable_lighting_slot_);
 
     this->get_lights_slot_.SetCompatibleCall<core::view::light::CallLightDescription>();
@@ -113,8 +105,7 @@ bool megamol::compositing_gl::AO::recreateResources(void) {
     // Create the deferred shader
     auto lighting_so = shader_options;
 
-    bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()
-                               ->Value(); // TODO redo this when enable_lighting_slot_ changed
+    bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
     if (enable_lighting) {
         lighting_so.addDefinition("ENABLE_LIGHTING");
     }
@@ -197,9 +188,9 @@ bool megamol::compositing_gl::AO::Render(mmstd_gl::CallRender3DGL& call) {
     if (normalUpdate || depthUpdate || colorUpdate || cameraUpdate) {
 
         // get textures
-        normal_tex = callNormal->getData();
-        depth_tex = callDepth->getData();
-        color_tex = callColor->getData();
+        normal_tex_ = callNormal->getData();
+        depth_tex_ = callDepth->getData();
+        color_tex_ = callColor->getData();
 
         // update volume texture
         updateVolumeData(call.Time());
@@ -306,7 +297,6 @@ bool megamol::compositing_gl::AO::updateVolumeData(const unsigned int frameID) {
                 return false;
             }
 
-            // TODO get datahash and frameId
         } while (c_voxel->FrameID() != frameID);
     }
 
@@ -318,11 +308,11 @@ void megamol::compositing_gl::AO::renderAmbientOcclusion() {
     bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
 
     glActiveTexture(GL_TEXTURE2);
-    depth_tex->bindTexture();
+    depth_tex_->bindTexture();
     glActiveTexture(GL_TEXTURE1);
-    normal_tex->bindTexture();
+    normal_tex_->bindTexture();
     glActiveTexture(GL_TEXTURE0);
-    color_tex->bindTexture();
+    color_tex_->bindTexture();
 
     // voxel texture
     VolumetricDataCall* c_voxel = this->voxels_tex_slot_.CallAs<VolumetricDataCall>();
