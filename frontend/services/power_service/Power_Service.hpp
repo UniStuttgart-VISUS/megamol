@@ -37,6 +37,7 @@ public:
     // that can be passed to your init() function.
     struct Config {
         std::string lpt = "lpt1";
+        bool write_to_files = false;
     };
 
     // sometimes somebody wants to know the name of the service
@@ -194,7 +195,7 @@ private:
 
     std::vector<int64_t> sample_times_;
 
-    std::vector<std::string> sensor_names_;
+    //std::vector<std::string> sensor_names_;
 
     //double timer_mul_;
 
@@ -241,6 +242,8 @@ private:
     int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) const;
 
     std::vector<std::unordered_map<std::string, std::vector<float>>> values_map_;
+
+    bool write_to_files_ = false;
 };
 
 } // namespace frontend

@@ -91,6 +91,14 @@ static int sample_count = 50000;
 
 void test_func(const visus::power_overwhelming::measurement& m, void*, std::string const&) {}
 
+void tracy_sample(
+    wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* name_ptr) {
+    auto name = static_cast<std::string*>(name_ptr);
+    for (std::size_t i = 0; i < n; ++i) {
+        TracyPlot(name->data(), m[i].power());
+    }
+}
+
 bool Power_Service::init(void* configPtr) {
     if (configPtr == nullptr)
         return false;
@@ -107,6 +115,7 @@ bool Power_Service::init(void* configPtr) {
 
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
+    write_to_files_ = conf->write_to_files;
 
     std::regex p("^(lpt|LPT)(\\d)$");
     std::smatch m;
@@ -124,7 +133,7 @@ bool Power_Service::init(void* configPtr) {
     callbacks_.signal_high = std::bind(&ParallelPortTrigger::SetBit, trigger_.get(), 7, true);
     callbacks_.signal_low = std::bind(&ParallelPortTrigger::SetBit, trigger_.get(), 7, false);
     callbacks_.signal_frame = [&]() -> void {
-        auto m_func = [&]() {
+        /*auto m_func = [&]() {
             trigger_->SetBit(7, true);
             if (have_triggered_) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -133,7 +142,9 @@ bool Power_Service::init(void* configPtr) {
             trigger_->SetBit(7, false);
         };
         auto t = std::thread(m_func);
-        t.detach();
+        t.detach();*/
+        trigger_->SetBit(7, true);
+        trigger_->SetBit(7, false);
     };
 
     m_providedResourceReferences = {{frontend_resources::PowerCallbacks_Req_Name, callbacks_}};
@@ -198,19 +209,23 @@ bool Power_Service::init(void* configPtr) {
         //});
 
         nvml_sensors_[sensor_name] = std::move(sensor);
-        sensor_names_.push_back(sensor_name);
-        nvml_sensors_[sensor_name].sample(
-            [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
-                //auto name = unmueller_string(sensor->name());
-                TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
-            },
-            1000Ui64, static_cast<void*>(sensor_names_.back().data()));
+        //sensor_names_.push_back(sensor_name);
+        //nvml_sensors_[sensor_name].sample(
+        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+        //        //auto name = unmueller_string(sensor->name());
+        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+        //    },
+        //    1000Ui64, static_cast<void*>(sensor_names_.back().data()));
+        nvml_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
+                                                        .delivers_measurement_data_to(&tracy_sample)
+                                                        .stores_and_passes_context(std::move(sensor_name))
+                                                        .samples_every(1000Ui64)
+                                                        .using_resolution(timestamp_resolution::microseconds)));
     }
     for (auto& sensor : tmp_msr_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
-        if (sensor_name.find("package") != std::string::npos) {
-            if (sensor_name.find("msr/0/") == std::string::npos)
-                continue;
+        if (sensor_name.find("package") == std::string::npos || sensor_name.find("msr/0/") == std::string::npos) {
+            continue;
         }
 
         TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
@@ -221,13 +236,18 @@ bool Power_Service::init(void* configPtr) {
         });*/
 
         msr_sensors_[std::string(sensor_name)] = std::move(sensor);
-        sensor_names_.push_back(sensor_name);
-        msr_sensors_[sensor_name].sample(
-            [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
-                //auto name = unmueller_string(sensor->name());
-                TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
-            },
-            1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
+        //sensor_names_.push_back(sensor_name);
+        //msr_sensors_[sensor_name].sample(
+        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+        //        //auto name = unmueller_string(sensor->name());
+        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+        //    },
+        //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
+        msr_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
+                                                       .delivers_measurement_data_to(&tracy_sample)
+                                                       .stores_and_passes_context(std::move(sensor_name))
+                                                       .samples_every(1000Ui64)
+                                                       .using_resolution(timestamp_resolution::microseconds)));
     }
 
     for (auto& sensor : tmp_tinker_sensors) {
@@ -241,13 +261,22 @@ bool Power_Service::init(void* configPtr) {
         //});
 
         tinker_sensors_[sensor_name] = std::move(sensor);
-        sensor_names_.push_back(sensor_name);
-        tinker_sensors_[sensor_name].sample(
-            [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
-                //auto name = unmueller_string(sensor->name());
-                TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
-            },
-            tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
+        //sensor_names_.push_back(sensor_name);
+        tinker_sensors_[sensor_name].reset();
+        tinker_sensors_[sensor_name].configure(
+            sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
+        //tinker_sensors_[sensor_name].sample(
+        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+        //        //auto name = unmueller_string(sensor->name());
+        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+        //    },
+        //    tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
+        tinker_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
+                                                          .delivers_measurement_data_to(&tracy_sample)
+                                                          .stores_and_passes_context(std::move(sensor_name))
+                                                          .samples_every(5000Ui64)
+                                                          .using_resolution(timestamp_resolution::microseconds)
+                                                          .from_source(tinkerforge_sensor_source::power)));
     }
 
     /*TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
