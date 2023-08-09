@@ -69,6 +69,10 @@ void cpu_timer::end() {
     regions.back().end = time_point::clock::now();
 }
 
+void cpu_timer::clear(frame_type frame) {
+    this->regions.clear();
+}
+
 gl_timer::~gl_timer() {
 #ifdef MEGAMOL_USE_OPENGL
     for (auto i = 0; i < frame_data.size(); ++i) {
@@ -150,6 +154,11 @@ void gl_timer::collect(frame_type frame) {
         regions.emplace_back(r);
     }
 #endif
+}
+
+void gl_timer::clear(frame_type frame) {
+    this->regions.clear();
+    frame_data[choose_launch_buffer(frame)].query_index = 0;
 }
 
 std::pair<uint32_t, uint32_t> gl_timer::assert_query(uint32_t index) {

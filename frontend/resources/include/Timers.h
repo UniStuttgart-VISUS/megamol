@@ -124,6 +124,8 @@ protected:
 
     virtual void collect(frame_type frame) = 0;
 
+    virtual void clear(frame_type frame) = 0;
+
     timer_config conf;
     //time_point last_start;
     std::vector<timer_region> regions;
@@ -144,6 +146,7 @@ public:
 
 protected:
     void collect(frame_type frame) override {}
+    void clear(frame_type frame) override;
 };
 
 class gl_timer : public Itimer {
@@ -162,6 +165,7 @@ public:
 
 protected:
     void collect(frame_type frame) override;
+    void clear(frame_type frame) override;
 
 private:
     static void new_frame(frame_type frame);

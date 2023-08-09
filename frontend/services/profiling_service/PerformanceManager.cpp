@@ -190,7 +190,7 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
     }
     // we cannot wait for a timer to be re-started to remove the regions lying around there:
     // if it does not start, the regions will persist...
-    timer->regions.clear();
+    timer->clear(the_frame.frame);
 }
 
 void PerformanceManager::endFrame(frame_type frame) {
