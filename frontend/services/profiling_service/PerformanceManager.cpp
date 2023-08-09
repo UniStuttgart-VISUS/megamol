@@ -188,6 +188,9 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
         e.duration = time_point{timer->Itimer::get_end(region) - timer->Itimer::get_start(region)};
         the_frame.entries.push_back(e);
     }
+    // we cannot wait for a timer to be re-started to remove the regions lying around there:
+    // if it does not start, the regions will persist...
+    timer->regions.clear();
 }
 
 void PerformanceManager::endFrame(frame_type frame) {
@@ -226,19 +229,16 @@ void PerformanceManager::endFrame(frame_type frame) {
         frame_info& previous_frame = frame_double_buffer[(current_frame + 1) % 2];
         frame_info& this_frame = frame_double_buffer[current_frame % 2];
 
-        // get GPU stuff from previous frame
-        for (auto& [key, timer] : timers) {
-            if (timer->conf.api == query_api::OPENGL) {
-                collect_timer_and_append(timer.get(), previous_frame);
-            }
-        }
-
-        // get CPU stuff from current frame
         this_frame.frame = current_frame;
         this_frame.entries.clear();
 
         for (auto& [key, timer] : timers) {
-            if (timer->conf.api == query_api::CPU) {
+            if (timer->conf.api == query_api::OPENGL) {
+                // get GPU stuff from previous frame
+                collect_timer_and_append(timer.get(), previous_frame);
+            } else {
+                // currently equivalent to if (timer->conf.api == query_api::CPU)
+                // get CPU stuff from current frame
                 collect_timer_and_append(timer.get(), this_frame);
             }
         }

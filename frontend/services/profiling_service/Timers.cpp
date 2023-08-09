@@ -34,7 +34,7 @@ bool Itimer::start(frame_type frame) {
     auto new_frame = false;
     if (frame != start_frame) {
         new_frame = true;
-        regions.clear();
+        //regions.clear();
     }
     if (!started) {
         started = true;
