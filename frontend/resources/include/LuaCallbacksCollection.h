@@ -79,7 +79,7 @@ struct LuaCallbacksCollection {
             ((stream << state.read<typename std::tuple_element<I, std::tuple<FuncArgs...>>::type>(I + 1) << ", "), ...);
         }
         ZoneScopedC(0xA6963B);
-        ZoneName(stream.str().c_str(), stream.str().size());
+        ZoneName(stream.str().c_str(), std::max<uint16_t>(stream.str().size(), 1000));
 #endif
         return func(state.read<typename std::tuple_element<I, std::tuple<FuncArgs...>>::type>(I + 1)...);
     }
