@@ -203,22 +203,10 @@ bool Power_Service::init(void* configPtr) {
 
         TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
 
-        //sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
-        //    auto name = unmueller_string(m.sensor());
-        //    TracyPlot(name.data(), m.power());
-        //});
-
         nvml_sensors_[sensor_name] = std::move(sensor);
-        //sensor_names_.push_back(sensor_name);
-        //nvml_sensors_[sensor_name].sample(
-        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
-        //        //auto name = unmueller_string(sensor->name());
-        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
-        //    },
-        //    1000Ui64, static_cast<void*>(sensor_names_.back().data()));
         nvml_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
                                                         .delivers_measurement_data_to(&tracy_sample)
-                                                        .stores_and_passes_context(std::move(sensor_name))
+                                                        .stores_and_passes_context(sensor_name)
                                                         .samples_every(1000Ui64)
                                                         .using_resolution(timestamp_resolution::microseconds)));
     }
@@ -245,7 +233,7 @@ bool Power_Service::init(void* configPtr) {
         //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
         msr_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
                                                        .delivers_measurement_data_to(&tracy_sample)
-                                                       .stores_and_passes_context(std::move(sensor_name))
+                                                       .stores_and_passes_context(sensor_name)
                                                        .samples_every(1000Ui64)
                                                        .using_resolution(timestamp_resolution::microseconds)));
     }
@@ -273,7 +261,7 @@ bool Power_Service::init(void* configPtr) {
         //    tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
         tinker_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
                                                           .delivers_measurement_data_to(&tracy_sample)
-                                                          .stores_and_passes_context(std::move(sensor_name))
+                                                          .stores_and_passes_context(sensor_name)
                                                           .samples_every(5000Ui64)
                                                           .using_resolution(timestamp_resolution::microseconds)
                                                           .from_source(tinkerforge_sensor_source::power)));
@@ -509,7 +497,7 @@ std::vector<float> Power_Service::examine_expression(std::string const& name, st
 }
 
 
-std::vector<float> transform_waveform(visus::power_overwhelming::oscilloscope_waveform& wave) {
+std::vector<float> transform_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
     std::vector<float> ret(wave.record_length());
     std::copy(wave.begin(), wave.end(), ret.begin());
     return ret;
@@ -584,6 +572,31 @@ void Power_Service::start_measurement() {
                 sample_times.resize(num_segments);
                 seg_off.resize(num_segments);
 
+                // collecting waveforms
+                for (size_t s_idx = 0; s_idx < num_segments; ++s_idx) {
+                    i.history_segment(s_idx + 1);
+                    for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
+                        auto tpn = name + "_" + channels[c_idx].label().text();
+                        auto waveform = i.data(c_idx + 1, oscilloscope_waveform_points::maximum);
+                        values_map_[s_idx][tpn] =
+                            transform_waveform(waveform);
+                        if (c_idx == 0) {
+                            auto t_begin = waveform.time_begin();
+                            auto t_end = waveform.time_end();
+                            auto t_dis = waveform.sample_distance();
+                            auto t_off = waveform.segment_offset();
+                            auto r_length = waveform.record_length();
+
+                            sample_times[s_idx] = generate_timestamps_ns(t_begin, t_end, t_dis, r_length);
+
+                            seg_off[s_idx] = t_off;
+                        }
+                    }
+                }
+
+                
+ #if 0
+
                 for (size_t s_idx = 0; s_idx < num_segments; ++s_idx) {
                     i.history_segment(s_idx + 1);
 
@@ -651,9 +664,26 @@ void Power_Service::start_measurement() {
                         out_file.close();
                     }
                 }
+#endif
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed measurement");
             }
 
+            // writing data
+#ifdef MEGAMOL_USE_TRACY
+            for (size_t s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
+                auto const& values_map = values_map_[s_idx];
+                for (auto const& [name, values] : values_map) {
+                    auto c_name = name.c_str();
+                    TracyPlotConfig(c_name, tracy::PlotFormatType::Number, false, true, 0);
+                    for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
+                        tracy::Profiler::PlotData(c_name, values[v_idx],
+                            get_tracy_time(sample_times[s_idx][v_idx], tracy_last_trigger_, seg_off[s_idx]));
+                    }
+                }
+            }
+#endif
+
+            // evaluate expressions
 #ifdef MEGAMOL_USE_TRACY
             for (int s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
                 for (auto const& [name, exp_path] : exp_map_) {
