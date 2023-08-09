@@ -5,7 +5,8 @@
 cmake_minimum_required(VERSION 3.15...3.26 FATAL_ERROR)
 
 # Vcpkg setup
-set(MEGAMOL_VCPKG_VERSION "2023.07.21") # Update default-registry baseline in vcpkg-configuration.json when changing!
+set(MEGAMOL_VCPKG_VERSION "247662ef304453c72acd6b520fa7ff7656e7347c") # Update default-registry baseline in vcpkg-configuration.json when changing!
+# use vcpkg master on 2023-08-09, need hotfix from https://github.com/microsoft/vcpkg/pull/33020
 
 include(cmake/megamol_vcpkg_setup.cmake)
 include(cmake/megamol_feature_option.cmake)
