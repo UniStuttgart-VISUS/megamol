@@ -320,6 +320,7 @@ private:
     megamol::core::utility::SSBOStreamer col_streamer_;
     std::vector<megamol::core::utility::SSBOBufferArray> buf_array_;
     std::vector<megamol::core::utility::SSBOBufferArray> col_buf_array_;
+    GLint max_shader_storage_size_ = 0;
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
 
     /*********************************************************************/

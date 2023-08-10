@@ -355,6 +355,10 @@ bool SphereRenderer::create() {
     std::vector<float> dummy = {0};
     ao_dir_ubo_ = std::make_unique<glowl::BufferObject>(GL_UNIFORM_BUFFER, dummy);
 
+#ifdef SPHERE_MIN_OGL_SSBO_STREAM
+    glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &max_shader_storage_size_);
+#endif
+
     return true;
 }
 
@@ -1295,7 +1299,7 @@ bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDat
                 auto& buf_a = this->buf_array_[i];
                 if (this->state_invalid_ || (buf_a.GetNumChunks() == 0)) {
                     buf_a.SetDataWithSize(parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(),
-                        (GLuint)(2 * 1024 * 1024 * 1024 - 1));
+                        std::min((GLuint)(2 * 1024 * 1024 * 1024 - 1), (GLuint)max_shader_storage_size_));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint num_chunks = buf_a.GetNumChunks();
@@ -1311,8 +1315,9 @@ bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDat
                     //bufA.SignalCompletion();
                 }
             } else {
-                const GLuint num_chunks = this->streamer_.SetDataWithSize(
-                    parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024));
+                const GLuint num_chunks =
+                    this->streamer_.SetDataWithSize(parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(),
+                        3, std::min((GLuint)(32 * 1024 * 1024), (GLuint)max_shader_storage_size_));
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer_.GetHandle());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle());
 
@@ -1338,7 +1343,7 @@ bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDat
                 auto& col_a = this->col_buf_array_[i];
                 if (this->state_invalid_ || (buf_a.GetNumChunks() == 0)) {
                     buf_a.SetDataWithSize(parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(),
-                        (GLuint)(2 * 1024 * 1024 * 1024 - 1));
+                        std::min((GLuint)(2 * 1024 * 1024 * 1024 - 1), (GLuint)max_shader_storage_size_));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                     col_a.SetDataWithItems(parts.GetColourData(), col_stride, col_stride, parts.GetCount(),
                         buf_a.GetMaxNumItemsPerChunk());
@@ -1361,8 +1366,9 @@ bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDat
                     //colA.SignalCompletion();
                 }
             } else {
-                const GLuint num_chunks = this->streamer_.SetDataWithSize(
-                    parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024));
+                const GLuint num_chunks =
+                    this->streamer_.SetDataWithSize(parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(),
+                        3, std::min((GLuint)(32 * 1024 * 1024), (GLuint)max_shader_storage_size_));
                 const GLuint col_size = this->col_streamer_.SetDataWithItems(parts.GetColourData(), col_stride,
                     col_stride, parts.GetCount(), 3, this->streamer_.GetMaxNumItemsPerChunk());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer_.GetHandle());
