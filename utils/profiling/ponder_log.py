@@ -128,7 +128,7 @@ def process_fullframe(dataframe, stack_start, stack_end):
                     dur = dur - d2
                     verbose_print(f"I called {p2} : {c2}, subtracting, remaining cost = {dur}")
                 else:
-                    verbose_print(f"stray call to {c2} from nowhere detected")
+                    verbose_print(f"stray call to {p2} : {c2} from nowhere detected")
         
         if dur < 0:
             print(f"duration should be positive, but is {dur} for {parent};{callback} in frame {row['frame']} and api {row['api']}")
