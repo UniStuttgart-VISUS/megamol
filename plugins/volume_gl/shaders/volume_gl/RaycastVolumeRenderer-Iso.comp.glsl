@@ -7,6 +7,8 @@
 
 /* isovalue used for isosurface reconstruction */
 uniform float isoValue;
+uniform float minStepFactor;
+uniform float minRefinementRatio;
 
 /* opacity */
 uniform float opacity;
@@ -94,10 +96,10 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
         old_value = vol_sample;
 
         // Adaptive step size
-        if (vol_sample / isoValue < 0.5f) {
+        if (vol_sample / isoValue < minRefinementRatio) {
             t += rayStep;
         } else {
-            t += rayStep * (1.0f + (rayStep / 10.0f) - vol_sample / isoValue);
+            t += rayStep * max(1.0f - vol_sample / isoValue, minStepFactor);
         }
     }
 

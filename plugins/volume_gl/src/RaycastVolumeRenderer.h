@@ -128,6 +128,9 @@ private:
     core::param::ParamSlot m_ray_step_ratio_param;
     core::param::ParamSlot m_opacity_threshold;
     core::param::ParamSlot m_iso_value;
+    core::param::ParamSlot m_adaptive_sampling;
+    core::param::ParamSlot m_min_step_factor;
+    core::param::ParamSlot m_min_refinement_ratio;
     core::param::ParamSlot m_opacity;
 
     core::param::ParamSlot m_use_lighting_slot;
