@@ -34,6 +34,7 @@ bool Profiling_Service::init(void* configPtr) {
 
     const auto unit_name = "ns";
     using timer_ratio = std::nano;
+    using timer_datatype = uint64_t;
     //const auto unit_name = "us";
     //using timer_ratio = std::micro;
     //const auto unit_name = "ms";
@@ -64,10 +65,12 @@ bool Profiling_Service::init(void* configPtr) {
                 auto parent = _perf_man.lookup_parent(e.handle);
                 auto comment = conf.comment;
 
-                const auto the_start = std::chrono::duration<double, timer_ratio>(e.start.time_since_epoch()).count();
-                const auto the_end = std::chrono::duration<double, timer_ratio>(e.end.time_since_epoch()).count();
+                const auto the_start =
+                    std::chrono::duration<timer_datatype, timer_ratio>(e.start.time_since_epoch()).count();
+                const auto the_end =
+                    std::chrono::duration<timer_datatype, timer_ratio>(e.end.time_since_epoch()).count();
                 const auto the_duration =
-                    std::chrono::duration<double, timer_ratio>(e.duration.time_since_epoch()).count();
+                    std::chrono::duration<timer_datatype, timer_ratio>(e.duration.time_since_epoch()).count();
 
                 log_buffer << frame << ";" << parent_type_string(e.parent_type) << ";" << parent << ";" << name << ";"
                            << comment << ";" << e.global_index << ";" << e.frame_index << ";" << query_api_string(e.api)

@@ -74,7 +74,7 @@ def process_stack(dataframe, stack_start, stack_end):
     verbose_print("stopping.\n")
     #assert dur >= 0, f"duration should be positive, but is {dur} for {parent} in frame {row['frame']}"
     if dur < 0:
-        print(f"duration should be positive, but is {dur} for {parent} in frame {row['frame']} and api {row['api']}")
+        print(f"duration should be positive, but is {dur} for {parent};{callback} in frame {row['frame']} and api {row['api']}")
     #show_stack_frame(dataframe, stack_start + 1, valid_end, "children")
     #print(f"name {row.name} vs. stack_start {stack_start}")
     df.iat[row.name, self_time_col] = dur
@@ -128,7 +128,7 @@ def process_fullframe(dataframe, stack_start, stack_end):
                 verbose_print(f"I called {p2} : {c2}, subtracting, remaining cost = {dur}")
         
         if dur < 0:
-            print(f"duration should be positive, but is {dur} for {parent} in frame {row['frame']} and api {row['api']}")
+            print(f"duration should be positive, but is {dur} for {parent};{callback} in frame {row['frame']} and api {row['api']}")
         df.iat[row.name, self_time_col] = dur
 
 
