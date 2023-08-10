@@ -94,23 +94,22 @@ void visus::power_overwhelming::sol_oscilloscope_channel(sol::state& lua) {
 
 
 void visus::power_overwhelming::sol_oscilloscope_edge_trigger(sol::state& lua) {
-    auto trigger_table = lua.new_usertype<oscilloscope_edge_trigger>(
-        "oscilloscope_edge_trigger", sol::constructors<oscilloscope_edge_trigger(const char*)>());
+    auto trigger_table = lua.new_usertype<oscilloscope_trigger>(
+        "oscilloscope_trigger", sol::constructors<oscilloscope_trigger(const char*, const char*)>());
 
     trigger_table["level"] = sol::overload(
-        static_cast<oscilloscope_edge_trigger& (
-            oscilloscope_edge_trigger::*)(const oscilloscope_edge_trigger::input_type, const oscilloscope_quantity&)>(
-            &oscilloscope_edge_trigger::level),
-        static_cast<oscilloscope_edge_trigger& (oscilloscope_edge_trigger::*)(const oscilloscope_quantity&)>(
-            &oscilloscope_edge_trigger::level));
+        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*)(const oscilloscope_trigger::input_type,
+            const oscilloscope_quantity&)>(&oscilloscope_trigger::level),
+        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*)(const oscilloscope_quantity&)>(
+            &oscilloscope_trigger::level));
 
     trigger_table["slope"] =
-        static_cast<oscilloscope_edge_trigger& (oscilloscope_edge_trigger::*)(const oscilloscope_trigger_slope)>(
-            &oscilloscope_edge_trigger::slope);
+        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*)(const oscilloscope_trigger_slope)>(
+            &oscilloscope_trigger::slope);
 
     trigger_table["mode"] =
-        static_cast<oscilloscope_trigger& (oscilloscope_edge_trigger::*)(const oscilloscope_trigger_mode)>(
-            &oscilloscope_edge_trigger::mode);
+        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*)(const oscilloscope_trigger_mode)>(
+            &oscilloscope_trigger::mode);
 
     lua.new_enum<oscilloscope_trigger_slope>("oscilloscope_trigger_slope",
         {{"both", oscilloscope_trigger_slope::both}, {"rising", oscilloscope_trigger_slope::rising},
@@ -134,11 +133,11 @@ void visus::power_overwhelming::sol_oscilloscope_label(sol::state& lua) {
 
 
 void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua) {
-    auto config_table = lua.new_usertype<rtx_instrument_configuration>("rtx_instrument_configuration",
-        sol::constructors<rtx_instrument_configuration(),
-            rtx_instrument_configuration(const oscilloscope_quantity,
-                std::reference_wrapper<const oscilloscope_acquisition>,
-                std::reference_wrapper<const oscilloscope_edge_trigger>, std::uint32_t)>());
+    auto config_table = lua.new_usertype<rtx_instrument_configuration>(
+        "rtx_instrument_configuration", sol::constructors<rtx_instrument_configuration(),
+                                            rtx_instrument_configuration(const oscilloscope_quantity,
+                                                std::reference_wrapper<const oscilloscope_acquisition>,
+                                                std::reference_wrapper<const oscilloscope_trigger>, std::uint32_t)>());
 
     config_table["channel"] = &rtx_instrument_configuration::channel;
 
@@ -219,16 +218,7 @@ void visus::power_overwhelming::sol_expressions(
 }
 
 
-struct simple {
-    void do_stuff() {
-        std::cout << "invoked do_stuff" << std::endl;
-    }
-};
-
-
 void visus::power_overwhelming::sol_register_all(sol::state& lua) {
-    lua.new_usertype<simple>("simple", "do_stuff", &simple::do_stuff);
-
     sol_rtx_instrument(lua);
 
     sol_rtx_instrument_configuration(lua);

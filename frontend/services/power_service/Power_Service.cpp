@@ -668,6 +668,7 @@ void Power_Service::start_measurement() {
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed measurement");
             }
 
+            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Start writing");
             // writing data
 #ifdef MEGAMOL_USE_TRACY
             for (size_t s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
@@ -695,6 +696,7 @@ void Power_Service::start_measurement() {
                 }
             }
 #endif
+            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed writing");
 
             //pending_read_ = false;
             pending_measurement_ = false;
@@ -719,7 +721,7 @@ void Power_Service::trigger() {
 #endif
     if (enforce_software_trigger_) {
         for (auto& i : rtx_instr_) {
-            i.trigger();
+            i.trigger_manually();
         }
     } else {
         trigger_->SetBit(6, true);

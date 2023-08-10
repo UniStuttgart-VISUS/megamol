@@ -1,5 +1,5 @@
 acq = oscilloscope_single_acquisition:new():points(points):count(count):segmented(true)
-trigger = oscilloscope_edge_trigger:new("EXT")
+trigger = oscilloscope_trigger:new("EXT", "EDGE")
 trigger:level(5, oscilloscope_quantity:new(2000.0, "mV")):slope(oscilloscope_trigger_slope.rising):mode(oscilloscope_trigger_mode.normal)
 quant = oscilloscope_quantity:new(range, "ms")
 rtb03 = rtx_instrument_configuration:new(quant, acq, trigger, timeout);
