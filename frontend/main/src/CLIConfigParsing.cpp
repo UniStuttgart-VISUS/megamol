@@ -124,6 +124,7 @@ static std::string flush_frequency_option = "flush-frequency";
 static std::string profile_log_no_autostart_option = "pause-profiling";
 static std::string profile_log_include_events_option = "profiling-include-events";
 static std::string power_lpt_option = "power-lpt";
+static std::string power_write_file_option = "power-write-file";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -202,6 +203,11 @@ static void profile_log_include_events_handler(
 static void power_lpt_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.power_lpt = parsed_options[option_name].as<std::string>();
+}
+
+static void power_write_file_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.power_write_file = parsed_options[option_name].as<bool>();
 }
 
 static void remote_head_handler(
@@ -588,7 +594,8 @@ std::vector<OptionsListEntry> cli_options_list =
 #endif
 #ifdef MEGAMOL_USE_POWER
         ,
-        {power_lpt_option, "Set LPT port for trigger out", cxxopts::value<std::string>(), power_lpt_handler}
+        {power_lpt_option, "Set LPT port for trigger out", cxxopts::value<std::string>(), power_lpt_handler},
+        {power_write_file_option, "Set on if power service should write files to disk", cxxopts::value<bool>(), power_write_file_handler}
 #endif
         ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",
