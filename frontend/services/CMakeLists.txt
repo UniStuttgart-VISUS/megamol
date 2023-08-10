@@ -144,6 +144,8 @@ if (MEGAMOL_USE_OPENGL)
 endif ()
 
 if (MEGAMOL_USE_POWER)
+  find_package(Parquet CONFIG REQUIRED)
+  target_link_libraries(${PROJECT_NAME} PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>")
   find_package(power_overwhelming CONFIG REQUIRED)
   target_link_libraries(${PROJECT_NAME} PUBLIC power_overwhelming::power_overwhelming)
   if (WIN32)
