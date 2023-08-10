@@ -244,6 +244,13 @@ private:
     std::vector<std::unordered_map<std::string, std::vector<float>>> values_map_;
 
     bool write_to_files_ = false;
+
+    enum class file_type {
+        RAW,
+        CSV
+    };
+
+    void write_to_files(std::string const& folder_path, file_type ft) const;
 };
 
 } // namespace frontend

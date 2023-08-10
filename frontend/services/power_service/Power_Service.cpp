@@ -17,6 +17,7 @@
 #include <numeric>
 #include <regex>
 #include <stdexcept>
+#include <filesystem>
 
 #ifdef WIN32
 #include <Windows.h>
@@ -30,6 +31,7 @@
 #include <power_overwhelming/timestamp_resolution.h>
 
 #include "sol_rtx_instrument.h"
+#include "ParquetWriter.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -490,6 +492,39 @@ int64_t Power_Service::get_tracy_time(int64_t base, int64_t tracy_offset, float 
 }
 
 
+void Power_Service::write_to_files(std::string const& folder_path, file_type ft) const {
+    std::filesystem::path path_to_folder(folder_path);
+    if (!std::filesystem::exists(path_to_folder)) {
+        core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: Target folder does not exist");
+        return;
+    }
+
+    if (!std::filesystem::is_directory(path_to_folder)) {
+        core::utility::log::Log::DefaultLog.WriteError("[Power_Service]: Target path is not a folder");
+        return;
+    }
+
+    for (size_t s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
+        auto const& values_map = values_map_[s_idx];
+
+        auto full_path = path_to_folder /
+                         (std::string("pwr_") + std::string("s") + std::to_string(s_idx) + std::string(".parquet"));
+
+        ParquetWriter(full_path, values_map);
+
+        /*for (auto const& [name, values] : values_map) {
+            
+            std::stringstream stream;
+            for (auto const& v : values) {
+                
+            }
+            auto file = std::ofstream(full_path);
+            file.close();
+        }*/
+    }
+}
+
+
 std::vector<float> Power_Service::examine_expression(std::string const& name, std::string const& exp_path, int s_idx) {
     sol_state_["s_idx"] = s_idx;
     sol_state_.script_file(exp_path);
@@ -696,6 +731,11 @@ void Power_Service::start_measurement() {
                 }
             }
 #endif
+
+            if (write_to_files_) {
+                write_to_files("./", file_type::RAW);
+            }
+
             core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed writing");
 
             //pending_read_ = false;
