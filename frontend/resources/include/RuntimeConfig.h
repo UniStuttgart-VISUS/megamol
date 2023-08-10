@@ -85,6 +85,7 @@ struct RuntimeConfig {
 
     std::string power_lpt = "lpt1";
     bool power_write_file = false;
+    std::string power_folder = "./";
 
     struct Tile {
         UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling

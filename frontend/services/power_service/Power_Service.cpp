@@ -118,6 +118,7 @@ bool Power_Service::init(void* configPtr) {
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
     write_to_files_ = conf->write_to_files;
+    write_folder_ = conf->folder;
 
     std::regex p("^(lpt|LPT)(\\d)$");
     std::smatch m;
@@ -733,7 +734,7 @@ void Power_Service::start_measurement() {
 #endif
 
             if (write_to_files_) {
-                write_to_files("./", file_type::RAW);
+                write_to_files(write_folder_, file_type::RAW);
             }
 
             core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Completed writing");

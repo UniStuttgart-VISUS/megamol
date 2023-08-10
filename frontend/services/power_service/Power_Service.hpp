@@ -38,6 +38,7 @@ public:
     struct Config {
         std::string lpt = "lpt1";
         bool write_to_files = false;
+        std::string folder = "./";
     };
 
     // sometimes somebody wants to know the name of the service
@@ -244,6 +245,8 @@ private:
     std::vector<std::unordered_map<std::string, std::vector<float>>> values_map_;
 
     bool write_to_files_ = false;
+
+    std::string write_folder_ = "./";
 
     enum class file_type {
         RAW,

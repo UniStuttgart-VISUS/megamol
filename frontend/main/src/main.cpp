@@ -182,6 +182,7 @@ int main(const int argc, const char** argv) {
     megamol::frontend::Power_Service::Config power_config;
     power_config.lpt = config.power_lpt;
     power_config.write_to_files = config.power_write_file;
+    power_config.folder = config.power_folder;
     power_service.setPriority(1);
 #endif
 
