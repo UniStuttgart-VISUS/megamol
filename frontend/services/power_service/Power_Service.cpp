@@ -816,7 +816,7 @@ void Power_Service::fill_lua_callbacks() {
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerForceTrigger", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             for (auto& i : rtx_instr_) {
-                i.trigger();
+                i.trigger_manually();
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
