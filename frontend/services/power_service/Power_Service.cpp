@@ -95,6 +95,7 @@ static int sample_count = 50000;
 
 void test_func(const visus::power_overwhelming::measurement& m, void*, std::string const&) {}
 
+#ifdef MEGAMOL_USE_TRACY
 void tracy_sample(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* name_ptr) {
     auto name = static_cast<std::string*>(name_ptr);
@@ -102,6 +103,7 @@ void tracy_sample(
         TracyPlot(name->data(), m[i].power());
     }
 }
+#endif
 
 bool Power_Service::init(void* configPtr) {
     if (configPtr == nullptr)
@@ -197,7 +199,7 @@ bool Power_Service::init(void* configPtr) {
     //setup_measurement();
 
     auto sensor_count = nvml_sensor::for_all(nullptr, 0);
-    std::vector<visus::power_overwhelming::nvml_sensor> tmp_sensors(sensor_count);
+    std::vector<nvml_sensor> tmp_sensors(sensor_count);
     nvml_sensor::for_all(tmp_sensors.data(), tmp_sensors.size());
 
     sensor_count = msr_sensor::for_all(nullptr, 0);
@@ -215,7 +217,7 @@ bool Power_Service::init(void* configPtr) {
         TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
 
         nvml_sensors_[sensor_name] = std::move(sensor);
-        nvml_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
+        nvml_sensors_[sensor_name].sample(std::move(async_sampling()
                                                         .delivers_measurement_data_to(&tracy_sample)
                                                         .stores_and_passes_context(sensor_name)
                                                         .samples_every(1000Ui64)
@@ -242,7 +244,7 @@ bool Power_Service::init(void* configPtr) {
         //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
         //    },
         //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
-        msr_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
+        msr_sensors_[sensor_name].sample(std::move(async_sampling()
                                                        .delivers_measurement_data_to(&tracy_sample)
                                                        .stores_and_passes_context(sensor_name)
                                                        .samples_every(1000Ui64)
@@ -270,7 +272,7 @@ bool Power_Service::init(void* configPtr) {
         //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
         //    },
         //    tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
-        tinker_sensors_[sensor_name].sample(std::move(visus::power_overwhelming::async_sampling()
+        tinker_sensors_[sensor_name].sample(std::move(async_sampling()
                                                           .delivers_measurement_data_to(&tracy_sample)
                                                           .stores_and_passes_context(sensor_name)
                                                           .samples_every(5000Ui64)
