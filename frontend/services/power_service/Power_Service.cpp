@@ -595,8 +595,8 @@ void Power_Service::start_measurement() {
 #endif
 
             values_map_.clear();
-            std::vector<std::vector<int64_t>> sample_times;
-            std::vector<float> seg_off;
+            //std::vector<std::vector<int64_t>> sample_times;
+            //std::vector<float> seg_off;
 
             for (auto& i : rtx_instr_) {
                 //i.operation_complete();
@@ -619,8 +619,8 @@ void Power_Service::start_measurement() {
                 core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service] Number of segments %d", num_segments);
 
                 values_map_.resize(num_segments);
-                sample_times.resize(num_segments);
-                seg_off.resize(num_segments);
+                //sample_times.resize(num_segments);
+                //seg_off.resize(num_segments);
 
                 // collecting waveforms
                 auto all_waveforms = i.data(oscilloscope_waveform_points::maximum);
@@ -638,13 +638,13 @@ void Power_Service::start_measurement() {
                             auto t_off = waveform.segment_offset();
                             auto r_length = waveform.record_length();
 
-                            sample_times[s_idx] = generate_timestamps_ns(t_begin, t_end, t_dis, r_length);
-                            values_map_[s_idx]["rel_time"] = sample_times[s_idx];
-                            std::vector<int64_t> abs_times(sample_times[s_idx].size());
+                            auto sample_times = generate_timestamps_ns(t_begin, t_end, t_dis, r_length);
+                            values_map_[s_idx]["rel_time"] = sample_times;
+                            std::vector<int64_t> abs_times(sample_times.size());
                             auto const t_off_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                 std::chrono::duration<float>(t_off))
                                                       .count();
-                            std::transform(sample_times[s_idx].begin(), sample_times[s_idx].end(), abs_times.begin(),
+                            std::transform(sample_times.begin(), sample_times.end(), abs_times.begin(),
                                 [&t_off_ns](int64_t s_time) { return s_time + t_off_ns; });
                             values_map_[s_idx]["abs_time"] = abs_times;
                             std::vector<int64_t> wall_times(abs_times.size());
@@ -656,7 +656,7 @@ void Power_Service::start_measurement() {
                                 [&ltrg_ns](int64_t a_time) { return a_time + ltrg_ns; });
                             values_map_[s_idx]["wall_time"] = wall_times;
 
-                            seg_off[s_idx] = t_off;
+                            //seg_off[s_idx] = t_off;
                         }
                     }
                 }

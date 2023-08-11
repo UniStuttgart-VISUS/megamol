@@ -193,9 +193,9 @@ private:
 
     std::unordered_map<std::string, visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
 
-    std::chrono::nanoseconds trigger_offset_;
+    //std::chrono::nanoseconds trigger_offset_;
 
-    std::vector<int64_t> sample_times_;
+    //std::vector<int64_t> sample_times_;
 
     //std::vector<std::string> sensor_names_;
 
