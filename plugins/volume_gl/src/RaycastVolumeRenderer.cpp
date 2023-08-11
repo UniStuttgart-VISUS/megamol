@@ -82,7 +82,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_opacity_threshold << new megamol::core::param::FloatParam(1.0f, 0.0f, 1.0f, 0.1f);
     this->MakeSlotAvailable(&this->m_opacity_threshold);
 
-    this->m_iso_value << new megamol::core::param::FloatParam(0.5f, 0.0f, 1.0f, 0.1f);
+    this->m_iso_value << new megamol::core::param::FloatParam(0.5f, 0.0f, std::numeric_limits<float>::max(), 0.1f);
     this->MakeSlotAvailable(&this->m_iso_value);
 
     this->m_adaptive_sampling << new megamol::core::param::BoolParam(false);
