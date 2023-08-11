@@ -7,6 +7,7 @@
 
 /* isovalue used for isosurface reconstruction */
 uniform float isoValue;
+uniform bool adaptiveSampling;
 uniform float minStepFactor;
 uniform float minRefinementRatio;
 
@@ -96,7 +97,7 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
         old_value = vol_sample;
 
         // Adaptive step size
-        if (vol_sample / isoValue < minRefinementRatio) {
+        if (!adaptiveSampling || isoValue < 0.00001f || vol_sample / isoValue < minRefinementRatio) {
             t += rayStep;
         } else {
             t += rayStep * max(1.0f - vol_sample / isoValue, minStepFactor);

@@ -75,25 +75,27 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_mode.Param<core::param::EnumParam>()->SetTypePair(2, "Aggregate");
     this->MakeSlotAvailable(&this->m_mode);
 
-    this->m_ray_step_ratio_param << new megamol::core::param::FloatParam(1.0f, std::numeric_limits<float>::min());
+    this->m_ray_step_ratio_param << new megamol::core::param::FloatParam(
+        1.0f, std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), 0.1f);
     this->MakeSlotAvailable(&this->m_ray_step_ratio_param);
 
-    this->m_opacity_threshold << new megamol::core::param::FloatParam(1.0f, 0.0f, 1.0f);
+    this->m_opacity_threshold << new megamol::core::param::FloatParam(1.0f, 0.0f, 1.0f, 0.1f);
     this->MakeSlotAvailable(&this->m_opacity_threshold);
 
-    this->m_iso_value << new megamol::core::param::FloatParam(0.5f, std::numeric_limits<float>::min());
+    this->m_iso_value << new megamol::core::param::FloatParam(0.5f, 0.0f, 1.0f, 0.1f);
     this->MakeSlotAvailable(&this->m_iso_value);
 
     this->m_adaptive_sampling << new megamol::core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->m_adaptive_sampling);
 
-    this->m_min_step_factor << new megamol::core::param::FloatParam(0.01f, std::numeric_limits<float>::min(), 1.0f);
+    this->m_min_step_factor << new megamol::core::param::FloatParam(
+        0.01f, std::numeric_limits<float>::min(), 1.0f, 0.01f);
     this->MakeSlotAvailable(&this->m_min_step_factor);
 
-    this->m_min_refinement_ratio << new megamol::core::param::FloatParam(0.5f, 0.0f, 1.0f);
+    this->m_min_refinement_ratio << new megamol::core::param::FloatParam(0.5f, 0.0f, 1.0f, 0.1f);
     this->MakeSlotAvailable(&this->m_min_refinement_ratio);
 
-    this->m_opacity << new megamol::core::param::FloatParam(1.0f, 0.0f, 1.0f);
+    this->m_opacity << new megamol::core::param::FloatParam(1.0f, 0.0f, 1.0f, 0.1f);
     this->MakeSlotAvailable(&this->m_opacity);
 
     this->m_use_lighting_slot << new core::param::BoolParam(false);
@@ -378,17 +380,11 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
             "opacityThreshold", this->m_opacity_threshold.Param<core::param::FloatParam>()->Value());
     } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         compute_shdr->setUniform("isoValue", this->m_iso_value.Param<core::param::FloatParam>()->Value());
-
-        if (this->m_adaptive_sampling.Param<core::param::BoolParam>()->Value()) {
-            compute_shdr->setUniform(
-                "minStepFactor", this->m_min_step_factor.Param<core::param::FloatParam>()->Value());
-            compute_shdr->setUniform(
-                "minRefinementRatio", this->m_min_refinement_ratio.Param<core::param::FloatParam>()->Value());
-        } else {
-            compute_shdr->setUniform("minRefinementRatio", 1.1f); // a value >1 ensures that adaptive sampling
-                                                                  // is effectively turned off
-        }
-
+        compute_shdr->setUniform(
+            "adaptiveSampling", static_cast<int>(this->m_adaptive_sampling.Param<core::param::BoolParam>()->Value()));
+        compute_shdr->setUniform("minStepFactor", this->m_min_step_factor.Param<core::param::FloatParam>()->Value());
+        compute_shdr->setUniform(
+            "minRefinementRatio", this->m_min_refinement_ratio.Param<core::param::FloatParam>()->Value());
         compute_shdr->setUniform("opacity", this->m_opacity.Param<core::param::FloatParam>()->Value());
     }
 
