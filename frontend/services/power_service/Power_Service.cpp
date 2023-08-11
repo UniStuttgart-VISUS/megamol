@@ -12,15 +12,17 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <codecvt>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <numeric>
 #include <regex>
 #include <stdexcept>
-#include <filesystem>
 
 #ifdef WIN32
 #include <Windows.h>
+#else
+#include <time.h>
 #endif
 
 #ifdef MEGAMOL_USE_TRACY
@@ -30,8 +32,8 @@
 #include "LuaCallbacksCollection.h"
 #include <power_overwhelming/timestamp_resolution.h>
 
-#include "sol_rtx_instrument.h"
 #include "ParquetWriter.h"
+#include "sol_rtx_instrument.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -111,9 +113,15 @@ bool Power_Service::init(void* configPtr) {
 
     visus::power_overwhelming::sol_expressions(sol_state_, values_map_);
 
+#ifdef WIN32
     LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
     qpc_frequency_ = f.QuadPart;
+#else
+    timespec tp;
+    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
+    qpc_frequency_ = tp.tv_nsec;
+#endif
 
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
@@ -492,6 +500,12 @@ int64_t Power_Service::get_tracy_time(int64_t base, int64_t tracy_offset, float 
     return base_ticks + tracy_offset + seg_off_ticks;
 }
 
+int64_t Power_Service::get_tracy_time(int64_t base, int64_t tracy_offset) const {
+    auto base_ticks =
+        static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(qpc_frequency_));
+    return base_ticks + tracy_offset;
+}
+
 
 void Power_Service::write_to_files(std::string const& folder_path, file_type ft) const {
     std::filesystem::path path_to_folder(folder_path);
@@ -508,16 +522,16 @@ void Power_Service::write_to_files(std::string const& folder_path, file_type ft)
     for (size_t s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
         auto const& values_map = values_map_[s_idx];
 
-        auto full_path = path_to_folder /
-                         (std::string("pwr_") + std::string("s") + std::to_string(s_idx) + std::string(".parquet"));
+        auto full_path =
+            path_to_folder / (std::string("pwr_") + std::string("s") + std::to_string(s_idx) + std::string(".parquet"));
 
         ParquetWriter(full_path, values_map);
 
         /*for (auto const& [name, values] : values_map) {
-            
+
             std::stringstream stream;
             for (auto const& v : values) {
-                
+
             }
             auto file = std::ofstream(full_path);
             file.close();
@@ -627,19 +641,17 @@ void Power_Service::start_measurement() {
                             sample_times[s_idx] = generate_timestamps_ns(t_begin, t_end, t_dis, r_length);
                             values_map_[s_idx]["rel_time"] = sample_times[s_idx];
                             std::vector<int64_t> abs_times(sample_times[s_idx].size());
-                            /*auto test = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                std::chrono::duration<float>(t_off))
-                                            .count();*/
                             auto const t_off_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                 std::chrono::duration<float>(t_off))
                                                       .count();
                             std::transform(sample_times[s_idx].begin(), sample_times[s_idx].end(), abs_times.begin(),
-                                [&t_off_ns](int64_t s_time) {
-                                    return s_time + t_off_ns;
-                                });
+                                [&t_off_ns](int64_t s_time) { return s_time + t_off_ns; });
                             values_map_[s_idx]["abs_time"] = abs_times;
                             std::vector<int64_t> wall_times(abs_times.size());
-                            auto const ltrg_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(last_trigger_.time_since_epoch()).count();
+                            auto const ltrg_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                std::chrono::time_point_cast<std::chrono::system_clock::duration>(last_trigger_) -
+                                std::chrono::system_clock::from_time_t(0))
+                                                     .count();
                             std::transform(abs_times.begin(), abs_times.end(), wall_times.begin(),
                                 [&ltrg_ns](int64_t a_time) { return a_time + ltrg_ns; });
                             values_map_[s_idx]["wall_time"] = wall_times;
@@ -649,8 +661,8 @@ void Power_Service::start_measurement() {
                     }
                 }
 
-                
- #if 0
+
+#if 0
 
                 for (size_t s_idx = 0; s_idx < num_segments; ++s_idx) {
                     i.history_segment(s_idx + 1);
@@ -729,14 +741,15 @@ void Power_Service::start_measurement() {
 #ifdef MEGAMOL_USE_TRACY
             for (size_t s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
                 auto const& values_map = values_map_[s_idx];
+                auto const& samples_time = std::get<std::vector<int64_t>>(values_map.at("abs_time"));
                 for (auto const& [name, v_values] : values_map) {
                     if (std::holds_alternative<std::vector<float>>(v_values)) {
                         auto c_name = name.c_str();
                         auto const& values = std::get<std::vector<float>>(v_values);
                         TracyPlotConfig(c_name, tracy::PlotFormatType::Number, false, true, 0);
                         for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
-                            tracy::Profiler::PlotData(c_name, values[v_idx],
-                                get_tracy_time(sample_times[s_idx][v_idx], tracy_last_trigger_, seg_off[s_idx]));
+                            tracy::Profiler::PlotData(
+                                c_name, values[v_idx], get_tracy_time(samples_time[v_idx], tracy_last_trigger_));
                         }
                     }
                 }
@@ -746,11 +759,12 @@ void Power_Service::start_measurement() {
             // evaluate expressions
 #ifdef MEGAMOL_USE_TRACY
             for (int s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
+                auto const& samples_time = std::get<std::vector<int64_t>>(values_map_[s_idx].at("abs_time"));
                 for (auto const& [name, exp_path] : exp_map_) {
                     auto val = examine_expression(name, exp_path, s_idx);
                     for (size_t i = 0; i < val.size(); ++i) {
-                        tracy::Profiler::PlotData(name.c_str(), val[i],
-                            get_tracy_time(sample_times[s_idx][i], tracy_last_trigger_, seg_off[s_idx]));
+                        tracy::Profiler::PlotData(
+                            name.c_str(), val[i], get_tracy_time(samples_time[i], tracy_last_trigger_));
                     }
                 }
             }
@@ -782,6 +796,10 @@ void Power_Service::trigger() {
     LARGE_INTEGER t;
     QueryPerformanceCounter(&t);
     tracy_last_trigger_ = t.QuadPart;
+#else
+    timespec tp;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &tp);
+    tracy_last_trigger_ = tp.tv_nsec;
 #endif
     if (enforce_software_trigger_) {
         for (auto& i : rtx_instr_) {
