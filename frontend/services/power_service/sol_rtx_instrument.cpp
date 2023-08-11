@@ -172,13 +172,17 @@ void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua
 }
 
 void visus::power_overwhelming::sol_expressions(
-    sol::state& lua, std::vector<std::unordered_map<std::string, std::vector<float>>> const& val_map) {
+    sol::state& lua, std::vector<std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>>> const& val_map) {
     lua.set_function("rtx_plus", [&val_map](int idx, sol::variadic_args va) -> std::vector<float> {
         std::vector<float> ret;
         auto const& curr_map = val_map.at(idx);
         for (auto v : va) {
             std::string name = v;
-            auto const& values = curr_map.at(name);
+            auto const& v_values = curr_map.at(name);
+            if (!std::holds_alternative<std::vector<float>>(v_values)) {
+                throw std::runtime_error("Unexpected type");
+            }
+            auto const& values = std::get<std::vector<float>>(v_values);
             if (ret.empty()) {
                 ret = values;
             } else {
@@ -192,7 +196,11 @@ void visus::power_overwhelming::sol_expressions(
         auto const& curr_map = val_map.at(idx);
         for (auto v : va) {
             std::string name = v;
-            auto const& values = curr_map.at(name);
+            auto const& v_values = curr_map.at(name);
+            if (!std::holds_alternative<std::vector<float>>(v_values)) {
+                throw std::runtime_error("Unexpected type");
+            }
+            auto const& values = std::get<std::vector<float>>(v_values);
             if (ret.empty()) {
                 ret = values;
             } else {
@@ -203,13 +211,21 @@ void visus::power_overwhelming::sol_expressions(
     };
     auto m_func_2 = [&val_map](int idx, std::vector<float> const& lhs, std::string rhs) -> std::vector<float> {
         auto ret = lhs;
-        auto const& values = val_map.at(idx).at(rhs);
+        auto const& v_values = val_map.at(idx).at(rhs);
+        if (!std::holds_alternative<std::vector<float>>(v_values)) {
+            throw std::runtime_error("Unexpected type");
+        }
+        auto const& values = std::get<std::vector<float>>(v_values);
         std::transform(values.begin(), values.end(), ret.begin(), ret.begin(), std::multiplies<float>());
         return ret;
     };
     auto m_func_3 = [&val_map](int idx, std::string lhs, std::vector<float> const& rhs) -> std::vector<float> {
         auto ret = rhs;
-        auto const& values = val_map.at(idx).at(lhs);
+        auto const& v_values = val_map.at(idx).at(lhs);
+        if (!std::holds_alternative<std::vector<float>>(v_values)) {
+            throw std::runtime_error("Unexpected type");
+        }
+        auto const& values = std::get<std::vector<float>>(v_values);
         std::transform(values.begin(), values.end(), ret.begin(), ret.begin(), std::multiplies<float>());
         return ret;
     };

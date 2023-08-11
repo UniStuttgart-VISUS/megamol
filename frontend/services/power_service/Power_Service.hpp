@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <unordered_map>
+#include <variant>
 
 #include "AbstractFrontendService.hpp"
 
@@ -242,7 +243,7 @@ private:
 
     int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) const;
 
-    std::vector<std::unordered_map<std::string, std::vector<float>>> values_map_;
+    std::vector<std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>>> values_map_;
 
     bool write_to_files_ = false;
 

@@ -24,7 +24,7 @@ void sol_oscilloscope_label(sol::state& lua);
 
 void sol_rtx_instrument_configuration(sol::state& lua);
 
-void sol_expressions(sol::state& lua, std::vector<std::unordered_map<std::string, std::vector<float>>> const& val_map);
+void sol_expressions(sol::state& lua, std::vector<std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>>> const& val_map);
 
 void sol_register_all(sol::state& lua);
 

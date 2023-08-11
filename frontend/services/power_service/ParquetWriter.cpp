@@ -5,12 +5,12 @@
 #include "mmcore/utility/log/Log.h"
 
 #include <arrow/io/file.h>
-#include <parquet/api/writer.h>
 #include <parquet/api/reader.h>
+#include <parquet/api/writer.h>
 
 namespace megamol::frontend {
-void ParquetWriter(
-    std::filesystem::path const& file_path, std::unordered_map<std::string, std::vector<float>> const& values_map) {
+void ParquetWriter(std::filesystem::path const& file_path,
+    std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>> const& values_map) {
     using namespace parquet;
     using namespace parquet::schema;
 
@@ -18,8 +18,14 @@ void ParquetWriter(
         // create scheme
         NodeVector fields;
         fields.reserve(values_map.size());
-        for (auto const& [name, values] : values_map) {
-            fields.push_back(PrimitiveNode::Make(name, Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
+        for (auto const& [name, v_values] : values_map) {
+            if (std::holds_alternative<std::vector<float>>(v_values)) {
+                fields.push_back(PrimitiveNode::Make(name, Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
+            } else if (std::holds_alternative<std::vector<int64_t>>(v_values)) {
+                fields.push_back(PrimitiveNode::Make(name, Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
+            } else {
+                throw std::runtime_error("Unexpected type");
+            }
         }
         auto schema = std::static_pointer_cast<GroupNode>(GroupNode::Make("schema", Repetition::REQUIRED, fields));
 
@@ -39,9 +45,18 @@ void ParquetWriter(
         auto rg_writer = file_writer->AppendBufferedRowGroup();
 
         int c_idx = 0;
-        for (auto const& [name, values] : values_map) {
-            auto float_writer = static_cast<FloatWriter*>(rg_writer->column(c_idx++));
-            float_writer->WriteBatch(values.size(), nullptr, nullptr, values.data());
+        for (auto const& [name, v_values] : values_map) {
+            if (std::holds_alternative<std::vector<float>>(v_values)) {
+                auto const& values = std::get<std::vector<float>>(v_values);
+                auto float_writer = static_cast<FloatWriter*>(rg_writer->column(c_idx++));
+                float_writer->WriteBatch(values.size(), nullptr, nullptr, values.data());
+            } else if (std::holds_alternative<std::vector<int64_t>>(v_values)) {
+                auto const& values = std::get<std::vector<int64_t>>(v_values);
+                auto int_writer = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
+                int_writer->WriteBatch(values.size(), nullptr, nullptr, values.data());
+            } else {
+                throw std::runtime_error("Unexpected type");
+            }
         }
 
         // close

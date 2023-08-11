@@ -609,13 +609,14 @@ void Power_Service::start_measurement() {
                 seg_off.resize(num_segments);
 
                 // collecting waveforms
+                auto all_waveforms = i.data(oscilloscope_waveform_points::maximum);
                 for (size_t s_idx = 0; s_idx < num_segments; ++s_idx) {
-                    i.history_segment(s_idx + 1);
+                    //i.history_segment(s_idx + 1);
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
                         auto tpn = name + "_" + channels[c_idx].label().text();
-                        auto waveform = i.data(c_idx + 1, oscilloscope_waveform_points::maximum);
-                        values_map_[s_idx][tpn] =
-                            transform_waveform(waveform);
+                        auto const& waveform = all_waveforms[c_idx + s_idx * num_channels].waveform();
+                        //auto waveform = i.data(c_idx + 1, oscilloscope_waveform_points::maximum);
+                        values_map_[s_idx][tpn] = transform_waveform(waveform);
                         if (c_idx == 0) {
                             auto t_begin = waveform.time_begin();
                             auto t_end = waveform.time_end();
@@ -624,6 +625,24 @@ void Power_Service::start_measurement() {
                             auto r_length = waveform.record_length();
 
                             sample_times[s_idx] = generate_timestamps_ns(t_begin, t_end, t_dis, r_length);
+                            values_map_[s_idx]["rel_time"] = sample_times[s_idx];
+                            std::vector<int64_t> abs_times(sample_times[s_idx].size());
+                            /*auto test = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                std::chrono::duration<float>(t_off))
+                                            .count();*/
+                            auto const t_off_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                std::chrono::duration<float>(t_off))
+                                                      .count();
+                            std::transform(sample_times[s_idx].begin(), sample_times[s_idx].end(), abs_times.begin(),
+                                [&t_off_ns](int64_t s_time) {
+                                    return s_time + t_off_ns;
+                                });
+                            values_map_[s_idx]["abs_time"] = abs_times;
+                            std::vector<int64_t> wall_times(abs_times.size());
+                            auto const ltrg_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(last_trigger_.time_since_epoch()).count();
+                            std::transform(abs_times.begin(), abs_times.end(), wall_times.begin(),
+                                [&ltrg_ns](int64_t a_time) { return a_time + ltrg_ns; });
+                            values_map_[s_idx]["wall_time"] = wall_times;
 
                             seg_off[s_idx] = t_off;
                         }
@@ -705,16 +724,20 @@ void Power_Service::start_measurement() {
             }
 
             core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Start writing");
+
             // writing data
 #ifdef MEGAMOL_USE_TRACY
             for (size_t s_idx = 0; s_idx < values_map_.size(); ++s_idx) {
                 auto const& values_map = values_map_[s_idx];
-                for (auto const& [name, values] : values_map) {
-                    auto c_name = name.c_str();
-                    TracyPlotConfig(c_name, tracy::PlotFormatType::Number, false, true, 0);
-                    for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
-                        tracy::Profiler::PlotData(c_name, values[v_idx],
-                            get_tracy_time(sample_times[s_idx][v_idx], tracy_last_trigger_, seg_off[s_idx]));
+                for (auto const& [name, v_values] : values_map) {
+                    if (std::holds_alternative<std::vector<float>>(v_values)) {
+                        auto c_name = name.c_str();
+                        auto const& values = std::get<std::vector<float>>(v_values);
+                        TracyPlotConfig(c_name, tracy::PlotFormatType::Number, false, true, 0);
+                        for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
+                            tracy::Profiler::PlotData(c_name, values[v_idx],
+                                get_tracy_time(sample_times[s_idx][v_idx], tracy_last_trigger_, seg_off[s_idx]));
+                        }
                     }
                 }
             }
