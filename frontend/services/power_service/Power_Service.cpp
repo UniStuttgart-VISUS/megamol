@@ -90,10 +90,10 @@ std::string get_device_name(visus::power_overwhelming::rtx_instrument const& i) 
     return name;
 }
 
-static int measure_time_in_ms = 50;
-static int sample_count = 50000;
+//static int measure_time_in_ms = 50;
+//static int sample_count = 50000;
 
-void test_func(const visus::power_overwhelming::measurement& m, void*, std::string const&) {}
+//void test_func(const visus::power_overwhelming::measurement& m, void*, std::string const&) {}
 
 #ifdef MEGAMOL_USE_TRACY
 void tracy_sample(
