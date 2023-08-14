@@ -3,8 +3,8 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <algorithm>
-#include <stdexcept>
 #include <numeric>
+#include <stdexcept>
 #include <thread>
 
 #include <mmcore/utility/log/Log.h>
@@ -71,7 +71,8 @@ void RTXInstrument::ApplyConfigs() {
     });
 }
 
-void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder) {
+void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder,
+    std::vector<std::function<void(std::filesystem::path const&, segments_t const&)>> const& writer_funcs) {
     if (!std::filesystem::is_directory(output_folder)) {
         core::utility::log::Log::DefaultLog.WriteError("[RTXInstrument]: Path {} is not a directory", output_folder);
         return;
@@ -112,8 +113,7 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder)
             auto const& config = fit->second;
             auto const num_channels = config.channels();
             if (num_channels == 0) {
-                core::utility::log::Log::DefaultLog.WriteError(
-                    "[RTXInstrument]: No configured channels");
+                core::utility::log::Log::DefaultLog.WriteError("[RTXInstrument]: No configured channels");
                 return;
             }
             std::vector<oscilloscope_channel> channels(num_channels);
@@ -126,15 +126,13 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder)
             std::vector<std::unordered_map<std::string, std::variant<samples_t, timeline_t>>> values_map(num_segments);
 
             for (std::decay_t<decltype(num_segments)> s_idx = 0; s_idx < num_segments; ++s_idx) {
-                auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
+                //auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
                 auto const& waveform = all_waveforms[s_idx * num_channels].waveform();
                 auto const sample_times = generate_timestamps_ns(waveform);
                 auto const abs_times =
                     offset_timeline(sample_times, std::chrono::duration_cast<std::chrono::nanoseconds>(
                                                       std::chrono::duration<float>(waveform.segment_offset())));
-                auto const ltrg_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::time_point_cast<std::chrono::system_clock::duration>(last_trigger) -
-                    std::chrono::system_clock::from_time_t(0));
+                auto const ltrg_ns = tp_dur_to_epoch_ns(last_trigger);
                 auto const wall_times = offset_timeline(abs_times, ltrg_ns);
 
                 values_map[s_idx]["sample_times"] = sample_times;
@@ -146,9 +144,11 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder)
                     values_map[s_idx][tpn] = transform_waveform(waveform);
                 }
 
-                ParquetWriter(fullpath, values_map[s_idx]);
+                //ParquetWriter(fullpath, values_map[s_idx]);
             }
 
+            std::for_each(writer_funcs.begin(), writer_funcs.end(),
+                [&output_folder, &values_map](auto const& writer_func) { writer_func(output_folder, values_map); });
         });
     };
 
@@ -169,9 +169,9 @@ bool RTXInstrument::waiting_on_trigger() const {
     });
 }
 
-std::chrono::system_clock::time_point RTXInstrument::trigger() {}
-
-void RTXInstrument::write_data(std::filesystem::path const& output_folder, oscilloscope_sample const& data) const {}
+std::chrono::system_clock::time_point RTXInstrument::trigger() {
+    return std::chrono::system_clock::now();
+}
 
 RTXInstrument::timeline_t RTXInstrument::generate_timestamps_ns(
     visus::power_overwhelming::oscilloscope_waveform const& waveform) const {
@@ -195,7 +195,8 @@ RTXInstrument::timeline_t RTXInstrument::generate_timestamps_ns(
     return ret;
 }
 
-RTXInstrument::timeline_t RTXInstrument::offset_timeline(timeline_t const& timeline, std::chrono::nanoseconds offset) const {
+RTXInstrument::timeline_t RTXInstrument::offset_timeline(
+    timeline_t const& timeline, std::chrono::nanoseconds offset) const {
     timeline_t ret(timeline.begin(), timeline.end());
 
     std::transform(ret.begin(), ret.end(), ret.begin(), [o = offset.count()](auto const& val) { return val + o; });
