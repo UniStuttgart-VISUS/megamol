@@ -119,15 +119,14 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder)
             std::vector<oscilloscope_channel> channels(num_channels);
             config.channels(channels.data(), channels.size());
 
-            auto const fullpath = output_folder / (instr.first + ".parquet");
-
             auto const all_waveforms = i.data(oscilloscope_waveform_points::maximum);
 
             auto const num_segments = i.history_segments();
 
-            std::unordered_map<std::string, std::variant<samples_t, timeline_t>> values_map;
+            std::vector<std::unordered_map<std::string, std::variant<samples_t, timeline_t>>> values_map(num_segments);
 
             for (std::decay_t<decltype(num_segments)> s_idx = 0; s_idx < num_segments; ++s_idx) {
+                auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
                 auto const& waveform = all_waveforms[s_idx * num_channels].waveform();
                 auto const sample_times = generate_timestamps_ns(waveform);
                 auto const abs_times =
@@ -138,17 +137,18 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder)
                     std::chrono::system_clock::from_time_t(0));
                 auto const wall_times = offset_timeline(abs_times, ltrg_ns);
 
-                values_map["sample_times_s" + std::to_string(s_idx)] = sample_times;
-                values_map["abs_times_s" + std::to_string(s_idx)] = abs_times;
-                values_map["wall_times_s" + std::to_string(s_idx)] = wall_times;
+                values_map[s_idx]["sample_times"] = sample_times;
+                values_map[s_idx]["abs_times"] = abs_times;
+                values_map[s_idx]["wall_times"] = wall_times;
 
                 for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
-                    auto const tpn = name + "_" + channels[c_idx].label().text() + "_s" + std::to_string(s_idx);
-                    values_map[tpn] = transform_waveform(waveform);
+                    auto const tpn = name + "_" + channels[c_idx].label().text();
+                    values_map[s_idx][tpn] = transform_waveform(waveform);
                 }
+
+                ParquetWriter(fullpath, values_map[s_idx]);
             }
 
-            ParquetWriter(fullpath, values_map);
         });
     };
 
