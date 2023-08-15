@@ -8,11 +8,13 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 #include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/rtx_instrument_configuration.h>
 
+#include "ParallelPortTrigger.h"
 #include "ParquetWriter.h"
 
 #include <sol/sol.hpp>
@@ -23,7 +25,6 @@
 
 #ifdef WIN32
 #include <Windows.h>
-#include <time.h>
 #else
 #include <time.h>
 #endif
@@ -47,10 +48,26 @@ public:
     void StartMeasurement(std::filesystem::path const& output_folder,
         std::vector<std::function<void(std::filesystem::path const&, segments_t const&)>> const& writer_funcs);
 
+    void SetLPTTrigger(std::string const& address);
+
+    void SetSoftwareTrigger(bool set) {
+        enforce_software_trigger_ = set;
+    }
+
 private:
     bool waiting_on_trigger() const;
 
-    std::chrono::system_clock::time_point trigger();
+    std::chrono::system_clock::time_point trigger() {
+        if (enforce_software_trigger_) {
+            std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [](auto& instr) { instr.second.trigger_manually(); });
+        } else {
+            if (lpt_trigger_) {
+                lpt_trigger_->SetBit(6, true);
+                lpt_trigger_->SetBit(6, false);
+            }
+        }
+        return std::chrono::system_clock::now();
+    }
 
     timeline_t generate_timestamps_ns(visus::power_overwhelming::oscilloscope_waveform const& waveform) const;
 
@@ -63,6 +80,10 @@ private:
     sol::state sol_state_;
 
     std::chrono::milliseconds config_range_;
+
+    std::unique_ptr<ParallelPortTrigger> lpt_trigger_ = nullptr;
+
+    bool enforce_software_trigger_ = false;
 };
 
 inline std::string get_name(visus::power_overwhelming::rtx_instrument const& i) {

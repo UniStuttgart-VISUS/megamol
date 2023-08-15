@@ -4,12 +4,11 @@
 
 #include <algorithm>
 #include <numeric>
+#include <regex>
 #include <stdexcept>
 #include <thread>
 
 #include <mmcore/utility/log/Log.h>
-
-#include <ParquetWriter.h>
 
 using namespace visus::power_overwhelming;
 
@@ -156,6 +155,22 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder,
     t_thread.detach();
 }
 
+void RTXInstrument::SetLPTTrigger(std::string const& address) {
+    std::regex p("^(lpt|LPT)(\\d)$");
+    std::smatch m;
+    if (!std::regex_search(address, m, p)) {
+        core::utility::log::Log::DefaultLog.WriteError("LPT parameter malformed");
+        lpt_trigger_ = nullptr;
+        return;
+    }
+
+    try {
+        lpt_trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\" + address).c_str());
+    } catch (...) {
+        lpt_trigger_ = nullptr;
+    }
+}
+
 bool RTXInstrument::waiting_on_trigger() const {
     return std::any_of(rtx_instr_.begin(), rtx_instr_.end(), [](auto const& instr) {
         auto const& i = instr.second;
@@ -169,17 +184,13 @@ bool RTXInstrument::waiting_on_trigger() const {
     });
 }
 
-std::chrono::system_clock::time_point RTXInstrument::trigger() {
-    return std::chrono::system_clock::now();
-}
-
 RTXInstrument::timeline_t RTXInstrument::generate_timestamps_ns(
     visus::power_overwhelming::oscilloscope_waveform const& waveform) const {
 
     auto const t_begin = waveform.time_begin();
-    auto const t_end = waveform.time_end();
+    //auto const t_end = waveform.time_end();
     auto const t_dis = waveform.sample_distance();
-    auto const t_off = waveform.segment_offset();
+    //auto const t_off = waveform.segment_offset();
     auto const r_length = waveform.record_length();
 
     auto const t_b_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<float>(t_begin));
