@@ -27,6 +27,8 @@
 
 #include <sol/sol.hpp>
 
+#include "RTXInstrument.h"
+
 namespace megamol {
 namespace frontend {
 
@@ -257,6 +259,8 @@ private:
     };
 
     void write_to_files(std::string const& folder_path, file_type ft) const;
+
+    RTXInstrument rtx_;
 };
 
 } // namespace frontend

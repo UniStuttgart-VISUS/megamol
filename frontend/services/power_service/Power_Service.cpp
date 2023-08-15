@@ -109,6 +109,11 @@ bool Power_Service::init(void* configPtr) {
     if (configPtr == nullptr)
         return false;
 
+    /*rtx_.UpdateConfigs("C:/dev/hpgmol/frontend/services/power_service/config/", 500000, 3,
+        std::chrono::milliseconds(600), std::chrono::milliseconds(20000));
+    rtx_.SetSoftwareTrigger(true);
+    rtx_.ApplyConfigs();*/
+
     sol_state_.open_libraries(sol::lib::base);
 
     visus::power_overwhelming::sol_register_all(sol_state_);
@@ -347,18 +352,18 @@ void Power_Service::setRequestedResources(std::vector<FrontendResource> resource
     //         .getResource<
     //             namspace::to::resource::ExternalResource_2>(); // ptr will be not null or program terminates by design
 
-    try {
-        auto devices = visus::power_overwhelming::visa_instrument::find_resources("0x0AAD", "0x01D6");
+    //try {
+    //    auto devices = visus::power_overwhelming::visa_instrument::find_resources("0x0AAD", "0x01D6");
 
-        for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
-            core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
+    //    for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
+    //        core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
 
-            rtx_instr_.emplace_back(d);
-        }
-    } catch (std::exception& ex) {
-        core::utility::log::Log::DefaultLog.WriteError(
-            "[Power_Service]: Error during instrument discovery: %s", ex.what());
-    }
+    //        rtx_instr_.emplace_back(d);
+    //    }
+    //} catch (std::exception& ex) {
+    //    core::utility::log::Log::DefaultLog.WriteError(
+    //        "[Power_Service]: Error during instrument discovery: %s", ex.what());
+    //}
 
     fill_lua_callbacks();
 }
@@ -549,11 +554,11 @@ std::vector<float> Power_Service::examine_expression(std::string const& name, st
 }
 
 
-std::vector<float> transform_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
-    std::vector<float> ret(wave.record_length());
-    std::copy(wave.begin(), wave.end(), ret.begin());
-    return ret;
-}
+//std::vector<float> transform_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
+//    std::vector<float> ret(wave.record_length());
+//    std::copy(wave.begin(), wave.end(), ret.begin());
+//    return ret;
+//}
 
 
 void Power_Service::start_measurement() {
@@ -818,13 +823,15 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerSetup", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            setup_measurement();
+            //setup_measurement();
+            rtx_.ApplyConfigs();
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
-        "mmPowerMeasure", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            start_measurement();
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>(
+        "mmPowerMeasure", "(string path)", {[&](std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            //start_measurement();
+            rtx_.StartMeasurement(path, {&wf_parquet});
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
@@ -834,11 +841,11 @@ void Power_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string, int, int, int, int>(
-        "mmPowerConfig", "(string name, string path, int points, int count, int range, int timeout)",
-        {[&](std::string name, std::string path, int points, int count, int range,
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, int, int, int, int>(
+        "mmPowerConfig", "(string path, int points, int count, int range_ms, int timeout_ms)",
+        {[&](std::string path, int points, int count, int range,
              int timeout) -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            sol_state_["points"] = points;
+            /*sol_state_["points"] = points;
             sol_state_["count"] = count;
             sol_state_["range"] = range;
             sol_state_["timeout"] = timeout;
@@ -847,7 +854,10 @@ void Power_Service::fill_lua_callbacks() {
 
             visus::power_overwhelming::rtx_instrument_configuration config = sol_state_[name];
 
-            config_map_[name] = config;
+            config_map_[name] = config;*/
+
+            rtx_.UpdateConfigs(
+                path, points, count, std::chrono::milliseconds(range), std::chrono::milliseconds(timeout));
 
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
@@ -867,7 +877,7 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>("mmPowerSoftwareTrigger", "(bool set)",
         {[&](bool set) -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            enforce_software_trigger_ = set;
+            rtx_.SetSoftwareTrigger(set);
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
