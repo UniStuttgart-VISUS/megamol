@@ -10,6 +10,8 @@
 
 #include <mmcore/utility/log/Log.h>
 
+#include "sol_rtx_instrument.h"
+
 using namespace visus::power_overwhelming;
 
 namespace megamol::frontend {
@@ -30,6 +32,8 @@ RTXInstrument::RTXInstrument() {
     });
 
     sol_state_.open_libraries(sol::lib::base);
+
+    sol_register_all(sol_state_);
 }
 
 void RTXInstrument::UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,
@@ -43,8 +47,8 @@ void RTXInstrument::UpdateConfigs(std::filesystem::path const& config_folder, in
                 sol_state_["count"] = count;
                 sol_state_["range"] = range.count();
                 sol_state_["timeout"] = timeout.count();
-                sol_state_.script(fullpath.string());
-                rtx_config_["name"] = sol_state_[name];
+                sol_state_.script_file(fullpath.string());
+                rtx_config_[name] = sol_state_[name];
             }
         });
         config_range_ = range;
@@ -77,20 +81,27 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder,
         return;
     }
 
-    int global_device_counter = 0;
-    std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [&global_device_counter](auto& instr) {
-        auto& i = instr.second;
-        i.on_operation_complete_ex([&global_device_counter](visa_instrument&) { ++global_device_counter; });
-        i.acquisition(oscilloscope_acquisition_state::single);
-        i.operation_complete_async();
-    });
-
-    // hammer trigger
-    auto t_func = [&]() {
+    auto t_func = [&](std::filesystem::path const& output_folder,
+                      std::vector<std::function<void(std::filesystem::path const&, segments_t const&)>> const&
+                          writer_funcs) {
         std::chrono::system_clock::time_point last_trigger;
 
+        int global_device_counter = 0;
+        for (auto& [name, i] : rtx_instr_) {
+            i.on_operation_complete_ex([&global_device_counter](visa_instrument&) {
+                ++global_device_counter;
+            });
+            i.acquisition(oscilloscope_acquisition_state::single);
+            i.operation_complete_async();
+        }
+
+        // magic sleep to wait until devices are ready to recieve other requests
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
         while (global_device_counter < rtx_instr_.size()) {
+            core::utility::log::Log::DefaultLog.WriteInfo("Waiting on trigger %d", global_device_counter);
             if (waiting_on_trigger()) {
+                core::utility::log::Log::DefaultLog.WriteInfo("Trigger!");
                 last_trigger = trigger();
             } else {
                 break;
@@ -118,6 +129,8 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder,
             std::vector<oscilloscope_channel> channels(num_channels);
             config.channels(channels.data(), channels.size());
 
+            core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Start reading data");
+            auto const start_read = std::chrono::steady_clock::now();
             auto const all_waveforms = i.data(oscilloscope_waveform_points::maximum);
 
             auto const num_segments = i.history_segments();
@@ -145,13 +158,20 @@ void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder,
 
                 //ParquetWriter(fullpath, values_map[s_idx]);
             }
-
+            auto const stop_read = std::chrono::steady_clock::now();
+            core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished reading data in %dms",
+                std::chrono::duration_cast<std::chrono::milliseconds>(stop_read - start_read).count());
+            core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Start writing data");
+            auto const start_write = std::chrono::steady_clock::now();
             std::for_each(writer_funcs.begin(), writer_funcs.end(),
                 [&output_folder, &values_map](auto const& writer_func) { writer_func(output_folder, values_map); });
+            auto const stop_write = std::chrono::steady_clock::now();
+            core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished writing data in %dms",
+                std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());
         });
     };
 
-    auto t_thread = std::thread(t_func);
+    auto t_thread = std::thread(t_func, output_folder, writer_funcs);
     t_thread.detach();
 }
 
@@ -172,16 +192,15 @@ void RTXInstrument::SetLPTTrigger(std::string const& address) {
 }
 
 bool RTXInstrument::waiting_on_trigger() const {
-    return std::any_of(rtx_instr_.begin(), rtx_instr_.end(), [](auto const& instr) {
-        auto const& i = instr.second;
+    for (auto& [name, i] : rtx_instr_) {
         auto res = i.query("STAT:OPER:COND?\n");
         *strchr(res.as<char>(), '\n') = 0;
         auto const val = std::atoi(res.as<char>());
         if (val & 8) {
             return true;
         }
-        return false;
-    });
+    }
+    return false;
 }
 
 RTXInstrument::timeline_t RTXInstrument::generate_timestamps_ns(

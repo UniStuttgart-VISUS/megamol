@@ -59,7 +59,9 @@ private:
 
     std::chrono::system_clock::time_point trigger() {
         if (enforce_software_trigger_) {
-            std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [](auto& instr) { instr.second.trigger_manually(); });
+            for (auto& [name, i] : rtx_instr_) {
+                i.trigger_manually();
+            }
         } else {
             if (lpt_trigger_) {
                 lpt_trigger_->SetBit(6, true);
@@ -91,6 +93,9 @@ inline std::string get_name(visus::power_overwhelming::rtx_instrument const& i) 
     std::string name;
     name.resize(name_size);
     i.name(name.data(), name.size());
+    if (!name.empty()) {
+        name.resize(name.size() - 1);
+    }
     return name;
 }
 
@@ -99,6 +104,9 @@ inline std::string get_identity(visus::power_overwhelming::rtx_instrument& i) {
     std::string id;
     id.resize(id_size);
     i.identify(id.data(), id.size());
+    if (!id.empty()) {
+        id.resize(id.size() - 1);
+    }
     return id;
 }
 
