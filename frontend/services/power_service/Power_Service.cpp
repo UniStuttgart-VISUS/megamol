@@ -207,9 +207,16 @@ bool Power_Service::init(void* configPtr) {
     std::vector<nvml_sensor> tmp_sensors(sensor_count);
     nvml_sensor::for_all(tmp_sensors.data(), tmp_sensors.size());
 
-    sensor_count = msr_sensor::for_all(nullptr, 0);
-    std::vector<msr_sensor> tmp_msr_sensors(sensor_count);
-    msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
+    sensor_count = emi_sensor::for_all(nullptr, 0);
+    std::vector<emi_sensor> tmp_emi_sensors(sensor_count);
+    emi_sensor::for_all(tmp_emi_sensors.data(), tmp_emi_sensors.size());
+
+    std::vector<msr_sensor> tmp_msr_sensors;
+    if (sensor_count == 0) {
+        sensor_count = msr_sensor::for_all(nullptr, 0);
+        tmp_msr_sensors.resize(sensor_count);
+        msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
+    }
 
     sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
     std::vector<tinkerforge_sensor> tmp_tinker_sensors(sensor_count);
@@ -228,6 +235,35 @@ bool Power_Service::init(void* configPtr) {
                                                         .samples_every(1000Ui64)
                                                         .using_resolution(timestamp_resolution::microseconds)));
     }
+
+    for (auto& sensor : tmp_emi_sensors) {
+        auto sensor_name = unmueller_string(sensor.name());
+        /*if (sensor_name.find("package") == std::string::npos || sensor_name.find("msr/0/") == std::string::npos) {
+            continue;
+        }*/
+
+        TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+
+        /*sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+            auto name = unmueller_string(m.sensor());
+            TracyPlot(name.c_str(), m.power());
+        });*/
+
+        emi_sensors_[std::string(sensor_name)] = std::move(sensor);
+        //sensor_names_.push_back(sensor_name);
+        //msr_sensors_[sensor_name].sample(
+        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+        //        //auto name = unmueller_string(sensor->name());
+        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+        //    },
+        //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
+        emi_sensors_[sensor_name].sample(std::move(async_sampling()
+                                                       .delivers_measurement_data_to(&tracy_sample)
+                                                       .stores_and_passes_context(sensor_name)
+                                                       .samples_every(1000Ui64)
+                                                       .using_resolution(timestamp_resolution::microseconds)));
+    }
+
     for (auto& sensor : tmp_msr_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
         if (sensor_name.find("package") == std::string::npos || sensor_name.find("msr/0/") == std::string::npos) {

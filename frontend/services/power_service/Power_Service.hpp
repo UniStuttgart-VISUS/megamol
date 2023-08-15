@@ -19,6 +19,7 @@
 
 #include "PowerCallbacks.h"
 
+#include <power_overwhelming/emi_sensor.h>
 #include <power_overwhelming/msr_sensor.h>
 #include <power_overwhelming/nvml_sensor.h>
 #include <power_overwhelming/rtx_instrument.h>
@@ -191,6 +192,8 @@ private:
 
     std::unordered_map<std::string, visus::power_overwhelming::nvml_sensor> nvml_sensors_;
 
+    std::unordered_map<std::string, visus::power_overwhelming::emi_sensor> emi_sensors_;
+
     std::unordered_map<std::string, visus::power_overwhelming::msr_sensor> msr_sensors_;
 
     std::unordered_map<std::string, visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
@@ -253,10 +256,7 @@ private:
 
     std::string write_folder_ = "./";
 
-    enum class file_type {
-        RAW,
-        CSV
-    };
+    enum class file_type { RAW, CSV };
 
     void write_to_files(std::string const& folder_path, file_type ft) const;
 
