@@ -71,6 +71,63 @@ void ParquetWriter(std::filesystem::path const& file_path,
         core::utility::log::Log::DefaultLog.WriteError("[ParquetWriter]: %s", ex.what());
     }
 }
+
+void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuffer> const& buffers) {
+    using namespace parquet;
+    using namespace parquet::schema;
+
+    if (buffers.empty())
+        return;
+
+    try {
+        // create scheme
+        NodeVector fields;
+        fields.reserve(buffers.size()*2);
+        for (auto const& b : buffers) {
+            fields.push_back(
+                PrimitiveNode::Make(b.Name() + "_samples", Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
+            fields.push_back(
+                PrimitiveNode::Make(b.Name() + "_ts", Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
+        }
+        auto schema = std::static_pointer_cast<GroupNode>(GroupNode::Make("schema", Repetition::REQUIRED, fields));
+
+        // open file
+        std::shared_ptr<::arrow::io::FileOutputStream> file;
+        PARQUET_ASSIGN_OR_THROW(file, ::arrow::io::FileOutputStream::Open(file_path.string()));
+
+        // configure
+        WriterProperties::Builder builder;
+        builder.compression(Compression::BROTLI);
+        auto props = builder.build();
+
+        // create instance
+        auto file_writer = ParquetFileWriter::Open(file, schema, props);
+
+        // write data
+        auto rg_writer = file_writer->AppendBufferedRowGroup();
+
+        int c_idx = 0;
+        for (auto const& b : buffers) {
+            auto const& s_values = b.ReadSamples();
+            auto float_writer = static_cast<FloatWriter*>(rg_writer->column(c_idx++));
+            float_writer->WriteBatch(s_values.size(), nullptr, nullptr, s_values.data());
+            auto const& t_values = b.ReadTimestamps();
+            auto int_writer = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
+            int_writer->WriteBatch(t_values.size(), nullptr, nullptr, t_values.data());
+        }
+
+        // close
+        rg_writer->Close();
+        file_writer->Close();
+
+#ifdef _DEBUG
+        std::unique_ptr<parquet::ParquetFileReader> reader = parquet::ParquetFileReader::OpenFile(file_path.string());
+        PrintSchema(reader->metadata()->schema()->schema_root().get(), std::cout);
+#endif
+    } catch (std::exception const& ex) {
+        core::utility::log::Log::DefaultLog.WriteError("[ParquetWriter]: %s", ex.what());
+    }
+}
 } // namespace megamol::frontend
 
 #endif
