@@ -79,107 +79,105 @@ void RTXInstrument::ApplyConfigs() {
     }
 }
 
-void RTXInstrument::StartMeasurement(std::filesystem::path const& output_folder,
-    std::vector<std::function<void(std::filesystem::path const&, segments_t const&)>> const& writer_funcs) {
+void RTXInstrument::StartMeasurement(
+    std::filesystem::path const& output_folder, std::vector<writer_func_t> const& writer_funcs) {
     if (!std::filesystem::is_directory(output_folder)) {
         core::utility::log::Log::DefaultLog.WriteError("[RTXInstrument]: Path {} is not a directory", output_folder);
         return;
     }
 
-    auto t_func = [&](std::filesystem::path const& output_folder,
-                      std::vector<std::function<void(std::filesystem::path const&, segments_t const&)>> const&
-                          writer_funcs) {
-            try {
-                std::chrono::system_clock::time_point last_trigger;
+    auto t_func = [&](std::filesystem::path const& output_folder, std::vector<writer_func_t> const& writer_funcs) {
+        try {
+            std::chrono::system_clock::time_point last_trigger;
+            int64_t last_trigger_qpc;
 
-                int global_device_counter = 0;
-                for (auto& [name, i] : rtx_instr_) {
-                    i.on_operation_complete_ex([&global_device_counter](visa_instrument&) { ++global_device_counter; });
-                    i.acquisition(oscilloscope_acquisition_state::single);
-                    i.operation_complete_async();
+            int global_device_counter = 0;
+            for (auto& [name, i] : rtx_instr_) {
+                i.on_operation_complete_ex([&global_device_counter](visa_instrument&) { ++global_device_counter; });
+                i.acquisition(oscilloscope_acquisition_state::single);
+                i.operation_complete_async();
+            }
+
+            // magic sleep to wait until devices are ready to recieve other requests
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+            while (global_device_counter < rtx_instr_.size()) {
+                core::utility::log::Log::DefaultLog.WriteInfo("Waiting on trigger %d", global_device_counter);
+                if (waiting_on_trigger()) {
+                    core::utility::log::Log::DefaultLog.WriteInfo("Trigger!");
+                    std::tie(last_trigger, last_trigger_qpc) = trigger();
+                } else {
+                    break;
+                }
+                std::this_thread::sleep_for(config_range_ * 1.1f);
+            }
+
+            std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [&](auto& instr) {
+                auto const& name = instr.first;
+                auto& i = instr.second;
+
+                auto fit = rtx_config_.find(name);
+                if (fit == rtx_config_.end()) {
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        "[RTXInstrument]: Could not find config for device {}", name);
+                    return;
                 }
 
-                // magic sleep to wait until devices are ready to recieve other requests
-                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
-                while (global_device_counter < rtx_instr_.size()) {
-                    core::utility::log::Log::DefaultLog.WriteInfo("Waiting on trigger %d", global_device_counter);
-                    if (waiting_on_trigger()) {
-                        core::utility::log::Log::DefaultLog.WriteInfo("Trigger!");
-                        last_trigger = trigger();
-                    } else {
-                        break;
-                    }
-                    std::this_thread::sleep_for(config_range_ * 1.1f);
+                auto const& config = fit->second;
+                auto const num_channels = config.channels();
+                if (num_channels == 0) {
+                    core::utility::log::Log::DefaultLog.WriteError("[RTXInstrument]: No configured channels");
+                    return;
                 }
+                std::vector<oscilloscope_channel> channels(num_channels);
+                config.channels(channels.data(), channels.size());
 
-                std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [&](auto& instr) {
-                    auto const& name = instr.first;
-                    auto& i = instr.second;
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Start reading data");
+                auto const start_read = std::chrono::steady_clock::now();
+                auto const all_waveforms = i.data(oscilloscope_waveform_points::maximum);
 
-                    auto fit = rtx_config_.find(name);
-                    if (fit == rtx_config_.end()) {
-                        core::utility::log::Log::DefaultLog.WriteError(
-                            "[RTXInstrument]: Could not find config for device {}", name);
-                        return;
+                auto const num_segments = i.history_segments();
+
+                std::vector<std::unordered_map<std::string, std::variant<samples_t, timeline_t>>> values_map(
+                    num_segments);
+
+                for (std::decay_t<decltype(num_segments)> s_idx = 0; s_idx < num_segments; ++s_idx) {
+                    //auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
+                    auto const& waveform = all_waveforms[s_idx * num_channels].waveform();
+                    auto const sample_times = generate_timestamps_ns(waveform);
+                    auto const abs_times =
+                        offset_timeline(sample_times, std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                                          std::chrono::duration<float>(waveform.segment_offset())));
+                    auto const ltrg_ns = tp_dur_to_epoch_ns(last_trigger);
+                    auto const wall_times = offset_timeline(abs_times, ltrg_ns);
+
+                    values_map[s_idx]["sample_times"] = sample_times;
+                    values_map[s_idx]["abs_times"] = abs_times;
+                    values_map[s_idx]["wall_times"] = wall_times;
+
+                    for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
+                        auto const tpn = name + "_" + channels[c_idx].label().text();
+                        values_map[s_idx][tpn] = transform_waveform(waveform);
                     }
 
-                    auto const& config = fit->second;
-                    auto const num_channels = config.channels();
-                    if (num_channels == 0) {
-                        core::utility::log::Log::DefaultLog.WriteError("[RTXInstrument]: No configured channels");
-                        return;
-                    }
-                    std::vector<oscilloscope_channel> channels(num_channels);
-                    config.channels(channels.data(), channels.size());
-
-                    core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Start reading data");
-                    auto const start_read = std::chrono::steady_clock::now();
-                    auto const all_waveforms = i.data(oscilloscope_waveform_points::maximum);
-
-                    auto const num_segments = i.history_segments();
-
-                    std::vector<std::unordered_map<std::string, std::variant<samples_t, timeline_t>>> values_map(
-                        num_segments);
-
-                    for (std::decay_t<decltype(num_segments)> s_idx = 0; s_idx < num_segments; ++s_idx) {
-                        //auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
-                        auto const& waveform = all_waveforms[s_idx * num_channels].waveform();
-                        auto const sample_times = generate_timestamps_ns(waveform);
-                        auto const abs_times =
-                            offset_timeline(sample_times, std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                                              std::chrono::duration<float>(waveform.segment_offset())));
-                        auto const ltrg_ns = tp_dur_to_epoch_ns(last_trigger);
-                        auto const wall_times = offset_timeline(abs_times, ltrg_ns);
-
-                        values_map[s_idx]["sample_times"] = sample_times;
-                        values_map[s_idx]["abs_times"] = abs_times;
-                        values_map[s_idx]["wall_times"] = wall_times;
-
-                        for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
-                            auto const tpn = name + "_" + channels[c_idx].label().text();
-                            values_map[s_idx][tpn] = transform_waveform(waveform);
-                        }
-
-                        //ParquetWriter(fullpath, values_map[s_idx]);
-                    }
-                    auto const stop_read = std::chrono::steady_clock::now();
-                    core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished reading data in %dms",
-                        std::chrono::duration_cast<std::chrono::milliseconds>(stop_read - start_read).count());
-                    core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Start writing data");
-                    auto const start_write = std::chrono::steady_clock::now();
-                    std::for_each(writer_funcs.begin(), writer_funcs.end(),
-                        [&output_folder, &values_map](
-                            auto const& writer_func) { writer_func(output_folder, values_map); });
-                    auto const stop_write = std::chrono::steady_clock::now();
-                    core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished writing data in %dms",
-                        std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());
-                });
-            }
-            catch (std::exception& ex) {
-                core::utility::log::Log::DefaultLog.WriteError(
-                    "[RTXInstrument]: Failed to take measurement.\n%s", ex.what());
-            }
+                    //ParquetWriter(fullpath, values_map[s_idx]);
+                }
+                auto const stop_read = std::chrono::steady_clock::now();
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished reading data in %dms",
+                    std::chrono::duration_cast<std::chrono::milliseconds>(stop_read - start_read).count());
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Start writing data");
+                auto const start_write = std::chrono::steady_clock::now();
+                std::for_each(writer_funcs.begin(), writer_funcs.end(),
+                    [&last_trigger_qpc, &output_folder, &values_map](
+                        auto const& writer_func) { writer_func(last_trigger_qpc, output_folder, values_map); });
+                auto const stop_write = std::chrono::steady_clock::now();
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished writing data in %dms",
+                    std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());
+            });
+        } catch (std::exception& ex) {
+            core::utility::log::Log::DefaultLog.WriteError(
+                "[RTXInstrument]: Failed to take measurement.\n%s", ex.what());
+        }
     };
 
     auto t_thread = std::thread(t_func, output_folder, writer_funcs);
