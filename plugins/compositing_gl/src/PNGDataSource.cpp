@@ -23,7 +23,7 @@ PNGDataSource::PNGDataSource()
         , m_output_tex_slot("Color", "Slot providing the data as Texture2D (RGBA16F)")
         , m_version(0)
         , out_format_handler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
-              std::function<bool()>(std::bind(&PNGDataSource::outFormatUpdate, this))) {
+              std::function<bool()>(std::bind(&PNGDataSource::textureFormatUpdate, this))) {
     this->m_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_filename_slot);
 
@@ -47,7 +47,7 @@ PNGDataSource::~PNGDataSource() {
 }
 
 bool PNGDataSource::create() {
-    return outFormatUpdate();
+    return textureFormatUpdate();
 }
 
 void PNGDataSource::release() {}
@@ -125,7 +125,7 @@ bool PNGDataSource::getMetaDataCallback(core::Call& caller) {
     return true;
 }
 
-bool PNGDataSource::outFormatUpdate() {
+bool PNGDataSource::textureFormatUpdate() {
     m_output_layout = glowl::TextureLayout(out_format_handler_.getInternalFormat(), 1, 1, 1,
         out_format_handler_.getFormat(), out_format_handler_.getType(), 1);
     m_output_texture = std::make_shared<glowl::Texture2D>("png_tx2D", m_output_layout, nullptr);

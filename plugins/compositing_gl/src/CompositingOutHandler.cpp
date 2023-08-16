@@ -83,12 +83,9 @@ bool CompositingOutHandler::recentlyChanged() {
     }
 }
 
-
-//TODO: make slot names unique
 CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedInternalFormats,
     std::string slotName, std::string slotDesc)
-        : outSlot_("outSlot", "slot for tex outs")
-        , formatSlot_(slotName.c_str(), slotDesc.c_str())
+        : formatSlot_(slotName.c_str(), slotDesc.c_str())
         , defineName_(defineName)
         , availableInternalFormats_(allowedInternalFormats)
         , selectedInternal_(allowedInternalFormats[0]) {
@@ -102,12 +99,11 @@ CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector
 
 /**
     Constructor with update function reference parameter.
-    Funciton from parameter is executed after selected paramaters are updated.
+    Function from parameter is executed after selected paramaters are updated.
 */
 CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedInternalFormats,
     std::function<bool()> externalUpdateFunc, std::string slotName, std::string slotDesc)
-        : outSlot_("outSlot", "slot for tex outs")
-        , formatSlot_(slotName.c_str(), slotDesc.c_str())
+        : formatSlot_(slotName.c_str(), slotDesc.c_str())
         , defineName_(defineName)
         , availableInternalFormats_(allowedInternalFormats)
         , selectedInternal_(allowedInternalFormats[0])
@@ -120,9 +116,6 @@ CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector
     formatSlot_.SetUpdateCallback(this, &CompositingOutHandler::updateSelectionsExternally);
 }
 
-megamol::core::AbstractSlot* CompositingOutHandler::getOutSlot() {
-    return &outSlot_;
-}
 megamol::core::AbstractSlot* CompositingOutHandler::getFormatSelectorSlot() {
     return &formatSlot_;
 }
@@ -186,14 +179,14 @@ std::string CompositingOutHandler::enumToDefinition(unsigned int e) {
 }
 
 
-std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> CompositingOutHandler::handleDefinitions(
+std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> CompositingOutHandler::addDefinitions(
     msf::ShaderFactoryOptionsOpenGL shdr_options) {
     auto shader_options_flags = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shdr_options);
     shader_options_flags->addDefinition(defineName_, enumToDefinition(this->selectedInternal_));
     return shader_options_flags;
 }
 
-void CompositingOutHandler::handleDefinitions(std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shdr_options) {
+void CompositingOutHandler::addDefinitions(std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shdr_options) {
     shdr_options->addDefinition(defineName_, enumToDefinition(this->selectedInternal_));
 }
 } // namespace megamol::compositing_gl

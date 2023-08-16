@@ -55,7 +55,7 @@ public:
      *
      * @return 'true' if updates sucessfull, 'false' otherwise
      */
-    bool formatUpdates();
+    bool textureFormatUpdate();
 
     TextureCombine();
     ~TextureCombine() override;

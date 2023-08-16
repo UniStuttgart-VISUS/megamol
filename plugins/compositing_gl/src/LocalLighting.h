@@ -76,7 +76,7 @@ protected:
      */
     bool getMetaDataCallback(core::Call& caller);
 
-    bool updateFormats();
+    bool textureFormatUpdate();
 
 private:
     uint32_t m_version;

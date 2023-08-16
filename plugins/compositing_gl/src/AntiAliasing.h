@@ -150,9 +150,11 @@ private:
     bool visibilityCallback(core::param::ParamSlot& slot);
 
     /**
-     * \brief Sets Texture format variables and recompiles shaders.
+     * \brief Sets texture format variables and recompiles shaders.
+     *
+     *  @return 'true' if updates sucessfull, 'false' otherwise
      */
-    bool setTextureFormatCallback();
+    bool textureFormatUpdate();
 
     /**
      * \brief Sets the setting parameter values of the SMAAConstants struct depending
@@ -318,7 +320,7 @@ private:
     /** Slot for optionally querying a depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot depth_tex_slot_;
 
-    CompositingOutHandler outHandler_;
+    CompositingOutHandler out_format_handler_;
 
     bool settings_have_changed_;
 };

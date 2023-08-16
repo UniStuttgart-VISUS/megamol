@@ -103,10 +103,12 @@ private:
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot camera_slot_;
 
-    /**
-     * \brief Sets Texture format variables and recompiles shaders.
+     /**
+     * \brief Updates texture format variables and recompiles shaders.
+     *
+     * @return 'true' if successfully updated, 'false' otherwise
      */
-    bool textureFormatCallback();
+    bool textureFormatUpdate();
 
     CompositingOutHandler outHandler_;
 };

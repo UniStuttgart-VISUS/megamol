@@ -13,11 +13,16 @@ megamol::compositing_gl::SimpleRenderTarget::SimpleRenderTarget()
         , m_depth_buffer("Depth", "Access the depth render target texture")
         , m_camera("Camera", "Access the latest camera snapshot")
         , m_framebuffer_slot("Framebuffer", "Access the framebuffer used by this render target")
-        , colorOutHandler_("COLORFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM},
-              std::function<bool()>(std::bind(&SimpleRenderTarget::textureFormatCallback, this)), "color Out Format",
+        , colorOutHandler_("COLORFORMAT",
+              {
+                  GL_RGBA8_SNORM,
+                  GL_RGBA16F,
+                  GL_RGBA32F,
+              },
+              std::function<bool()>(std::bind(&SimpleRenderTarget::textureFormatUpdate, this)), "color Out Format",
               "color format")
-        , normalsOutHandler_("NORMALSFORMAT", {GL_RGB32F, GL_RGB16F, GL_RGB8_SNORM},
-              std::function<bool()>(std::bind(&SimpleRenderTarget::textureFormatCallback, this)), "normals Out Format",
+        , normalsOutHandler_("NORMALSFORMAT", {GL_RGB16F, GL_RGBA32F, GL_RGB8_SNORM},
+              std::function<bool()>(std::bind(&SimpleRenderTarget::textureFormatUpdate, this)), "normals Out Format",
               "normal Format") {
     this->m_color_render_target.SetCallback(
         CallTexture2D::ClassName(), "GetData", &SimpleRenderTarget::getColorRenderTarget);
@@ -174,7 +179,7 @@ bool megamol::compositing_gl::SimpleRenderTarget::getMetaDataCallback(core::Call
     return true;
 }
 
-bool megamol::compositing_gl::SimpleRenderTarget::textureFormatCallback() {
+bool megamol::compositing_gl::SimpleRenderTarget::textureFormatUpdate() {
     /*
     if (m_GBuffer == NULL) {
         m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);

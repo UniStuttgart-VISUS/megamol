@@ -103,8 +103,8 @@ megamol::compositing_gl::SSAO::SSAO()
         , settings_have_changed_(false)
         , slot_is_active_(false)
         , update_caused_by_normal_slot_change_(false)
-        , out_format_handler("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
-              std::function<bool()>(std::bind(&SSAO::outFormatUpdate, this))) {
+        , out_format_handler_("OUTFORMAT", {GL_R8_SNORM, GL_R16F, GL_R32F},
+              std::function<bool()>(std::bind(&SSAO::textureFormatUpdate, this))) {
     this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &SSAO::getDataCallback);
     this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
     this->MakeSlotAvailable(&this->output_tex_slot_);
@@ -212,7 +212,7 @@ megamol::compositing_gl::SSAO::SSAO()
     this->ps_detail_shadow_strength_.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->ps_detail_shadow_strength_);
 
-    this->MakeSlotAvailable(out_format_handler.getFormatSelectorSlot());
+    this->MakeSlotAvailable(out_format_handler_.getFormatSelectorSlot());
 }
 
 
@@ -468,14 +468,14 @@ bool megamol::compositing_gl::SSAO::create() {
     glowl::TextureLayout tx_layout2(GL_RGB32F, 4, 4, 1, GL_RGB, GL_FLOAT, 1);
     ssao_kernel_rot_tx2d_ = std::make_shared<glowl::Texture2D>("ssao_kernel_rotation", tx_layout2, ssaoNoise.data());
 
-    outFormatUpdate();
+    textureFormatUpdate();
 
     return true;
 }
 
-bool megamol::compositing_gl::SSAO::outFormatUpdate() {
-    glowl::TextureLayout final_out_layout = glowl::TextureLayout(out_format_handler.getInternalFormat(), 1, 1, 1,
-        out_format_handler.getFormat(), out_format_handler.getType(), 1);
+bool megamol::compositing_gl::SSAO::textureFormatUpdate() {
+    glowl::TextureLayout final_out_layout = glowl::TextureLayout(out_format_handler_.getInternalFormat(), 1, 1, 1,
+        out_format_handler_.getFormat(), out_format_handler_.getType(), 1);
 
     // naive ssao stuff
     intermediate_tx2d_ =
@@ -484,7 +484,7 @@ bool megamol::compositing_gl::SSAO::outFormatUpdate() {
 
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto const shader_options_flags = out_format_handler.handleDefinitions(shader_options);
+    auto const shader_options_flags = out_format_handler_.addDefinitions(shader_options);
 
     try {
         apply_prgm_ =
@@ -497,6 +497,7 @@ bool megamol::compositing_gl::SSAO::outFormatUpdate() {
             "simple_blur", *shader_options_flags, "compositing_gl/simple_blur.comp.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("SSAO: " + std::string(e.what())).c_str());
+        return false;
     }
     return true;
 }
@@ -576,8 +577,8 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
                         static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
 
                     if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
-                        glowl::TextureLayout tx_layout(out_format_handler.getInternalFormat(), std::get<0>(texture_res),
-                            std::get<1>(texture_res), 1, out_format_handler.getFormat(), out_format_handler.getType(),
+                        glowl::TextureLayout tx_layout(out_format_handler_.getInternalFormat(), std::get<0>(texture_res),
+                            std::get<1>(texture_res), 1, out_format_handler_.getFormat(), out_format_handler_.getType(),
                             1);
                         tgt->reload(tx_layout, nullptr);
                     }

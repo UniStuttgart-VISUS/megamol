@@ -30,6 +30,33 @@ public:
     }
 };
 
+class CallTextureFormatData {
+public:
+    int internalFormat;
+    int format;
+    int type;
+    inline CallTextureFormatData(int internalFormatP, int formatP, int typeP) :
+        internalFormat(internalFormatP),
+        format (formatP),
+        type (typeP)
+        {}
+    ~CallTextureFormatData() = default;
+};
+
+class CallTextureFormat
+        : public core::GenericVersionedCall<std::shared_ptr<CallTextureFormatData>, core::EmptyMetaData> {
+ public:
+    inline CallTextureFormat() : GenericVersionedCall<std::shared_ptr<CallTextureFormatData>, core::EmptyMetaData>() {}
+     ~CallTextureFormat() override = default;
+
+    static const char* ClassName() {
+        return "CallTextureFormat";
+    }
+    static const char* Description() {
+        return "Transports texture formats for use in compositing output textures";
+    }
+};
+
 class CallCamera : public core::GenericVersionedCall<core::view::Camera, core::EmptyMetaData> {
 public:
     inline CallCamera() : GenericVersionedCall<core::view::Camera, core::EmptyMetaData>() {}
@@ -62,5 +89,6 @@ public:
 typedef megamol::core::factories::CallAutoDescription<CallTexture2D> CallTexture2DDescription;
 typedef megamol::core::factories::CallAutoDescription<CallCamera> CallCameraDescription;
 typedef megamol::core::factories::CallAutoDescription<CallFramebufferGL> CallFramebufferGLDescription;
+typedef megamol::core::factories::CallAutoDescription<CallTextureFormat> CallTextureFormatDescription;
 
 } // namespace megamol::compositing_gl

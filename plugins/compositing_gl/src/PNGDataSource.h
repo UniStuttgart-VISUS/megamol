@@ -32,7 +32,12 @@ public:
     PNGDataSource();
     ~PNGDataSource() override;
 
-    bool outFormatUpdate();
+    /**
+     * \brief Updates texture format variables.
+     *
+     * @return 'true' if successfully updated, 'false' otherwise
+     */
+    bool textureFormatUpdate();
 
 protected:
     bool create() override;
@@ -58,7 +63,7 @@ private:
     /** Texture that holds the data from the loaded .png file */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
     glowl::TextureLayout m_output_layout;
-
+    
     CompositingOutHandler out_format_handler_;
 
     uint32_t m_version;

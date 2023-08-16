@@ -22,7 +22,7 @@ megamol::compositing_gl::TextureDepthCompositing::TextureDepthCompositing()
         , m_depth_tex_0_slot("DepthTexture0", "Connects the primary depth texture")
         , m_depth_tex_1_slot("DepthTexture1", "Connects the secondary depth texture")
         , out_handler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
-              std::function<bool()>(std::bind(&TextureDepthCompositing::formatUpdates, this))) {
+              std::function<bool()>(std::bind(&TextureDepthCompositing::textureFormatUpdate, this))) {
 
     this->m_output_tex_slot.SetCallback(
         CallTexture2D::ClassName(), "GetData", &TextureDepthCompositing::getOutputImageCallback);
@@ -57,7 +57,7 @@ bool megamol::compositing_gl::TextureDepthCompositing::create() {
     glowl::TextureLayout depth_tx_layout(GL_R32F, 1, 1, 1, GL_R, GL_FLOAT, 1);
     m_output_depth_texture = std::make_shared<glowl::Texture2D>("textureDepthCombine_output", depth_tx_layout, nullptr);
 
-    return formatUpdates();
+    return textureFormatUpdate();
 }
 
 void megamol::compositing_gl::TextureDepthCompositing::release() {}
@@ -175,10 +175,10 @@ bool megamol::compositing_gl::TextureDepthCompositing::computeDepthCompositing()
     return true;
 }
 
-bool megamol::compositing_gl::TextureDepthCompositing::formatUpdates() {
+bool megamol::compositing_gl::TextureDepthCompositing::textureFormatUpdate() {
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto const shader_options_flags = out_handler_.handleDefinitions(shader_options);
+    auto const shader_options_flags = out_handler_.addDefinitions(shader_options);
     try {
         m_depthComp_prgm = core::utility::make_glowl_shader("Compositing_textureDepthCompositing",
             *shader_options_flags, "compositing_gl/textureDepthCompositing.comp.glsl");

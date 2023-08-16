@@ -46,7 +46,7 @@ megamol::compositing_gl::LocalLighting::LocalLighting()
         , m_lightSlot("lights", "Lights are retrieved over this slot")
         , m_camera_slot("Camera", "Connects a (copy of) camera state")
         , outHandler_(
-              "OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM}, std::bind(&LocalLighting::updateFormats, this)) {
+              "OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F}, std::bind(&LocalLighting::textureFormatUpdate, this)) {
     this->m_illuminationmode << new megamol::core::param::EnumParam(0);
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Lambert");
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Blinn-Phong");
@@ -111,7 +111,7 @@ bool megamol::compositing_gl::LocalLighting::create() {
 
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto const shader_options_flags = outHandler_.handleDefinitions(shader_options);
+    auto const shader_options_flags = outHandler_.addDefinitions(shader_options);
 
     try {
         m_lambert_prgm = core::utility::make_glowl_shader(
@@ -442,10 +442,10 @@ bool megamol::compositing_gl::LocalLighting::getMetaDataCallback(core::Call& cal
     return true;
 }
 
-bool megamol::compositing_gl::LocalLighting::updateFormats() {
+bool megamol::compositing_gl::LocalLighting::textureFormatUpdate() {
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto const shader_options_flags = outHandler_.handleDefinitions(shader_options);
+    auto const shader_options_flags = outHandler_.addDefinitions(shader_options);
 
     try {
         m_lambert_prgm = core::utility::make_glowl_shader(

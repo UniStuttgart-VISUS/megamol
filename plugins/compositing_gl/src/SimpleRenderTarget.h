@@ -120,9 +120,11 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
     /**
+     * \brief Sets texture format variables.
      *
+     *  @return 'true' if updates sucessfull, 'false' otherwise
      */
-    bool textureFormatCallback();
+    bool textureFormatUpdate();
 
     /**
      * G-Buffer for deferred rendering. By default if uses three color attachments (and a depth renderbuffer):

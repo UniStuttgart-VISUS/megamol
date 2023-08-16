@@ -19,8 +19,8 @@ megamol::compositing_gl::ScreenSpaceEdges::ScreenSpaceEdges()
         , m_depth_tex_slot("Depth", "Connects the depth texture that")
         , m_normal_tex_slot("Normal", "Connects the normal texture")
         , camera_slot_("Camera", "Connects a (copy of) camera state")
-        , outHandler_("OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM},
-              std::function<bool()>(std::bind(&ScreenSpaceEdges::textureFormatCallback, this))) {
+        , outHandler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::function<bool()>(std::bind(&ScreenSpaceEdges::textureFormatUpdate, this))) {
     this->m_depth_threshold << new megamol::core::param::FloatParam(0.5);
     this->MakeSlotAvailable(&this->m_depth_threshold);
 
@@ -49,7 +49,7 @@ megamol::compositing_gl::ScreenSpaceEdges::~ScreenSpaceEdges() {
 }
 
 bool megamol::compositing_gl::ScreenSpaceEdges::create() {
-    return textureFormatCallback();
+    return textureFormatUpdate();
 }
 
 void megamol::compositing_gl::ScreenSpaceEdges::release() {}
@@ -144,7 +144,7 @@ bool megamol::compositing_gl::ScreenSpaceEdges::getMetaDataCallback(core::Call& 
     return true;
 }
 
-bool megamol::compositing_gl::ScreenSpaceEdges::textureFormatCallback() {
+bool megamol::compositing_gl::ScreenSpaceEdges::textureFormatUpdate() {
     // reinit all textures
     glowl::TextureLayout tx_layout(
         outHandler_.getInternalFormat(), 1, 1, 1, outHandler_.getFormat(), outHandler_.getType(), 1);
@@ -152,7 +152,7 @@ bool megamol::compositing_gl::ScreenSpaceEdges::textureFormatCallback() {
 
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto shader_options_flags = outHandler_.handleDefinitions(shader_options);
+    auto shader_options_flags = outHandler_.addDefinitions(shader_options);
 
     try {
         m_edge_outline_prgm = core::utility::make_glowl_shader(

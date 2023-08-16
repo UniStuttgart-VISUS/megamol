@@ -13,8 +13,8 @@ megamol::compositing_gl::NormalFromDepth::NormalFromDepth()
         , m_output_tex_slot("NormalTexture", "Gives access to resulting output normal texture")
         , m_input_tex_slot("DepthTexture", "Connects the depth input texture")
         , m_camera_slot("Camera", "Connects a (copy of) camera state")
-        , outHandler_("OUTFORMAT", {GL_RGBA32F, GL_RGBA16F, GL_RGBA8_SNORM},
-              std::function<bool()>(std::bind(&NormalFromDepth::textureFormatCallback, this))) {
+        , outHandler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::function<bool()>(std::bind(&NormalFromDepth::textureFormatUpdate, this))) {
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &NormalFromDepth::getDataCallback);
     this->m_output_tex_slot.SetCallback(
         CallTexture2D::ClassName(), "GetMetaData", &NormalFromDepth::getMetaDataCallback);
@@ -34,7 +34,7 @@ megamol::compositing_gl::NormalFromDepth::~NormalFromDepth() {
 }
 
 bool megamol::compositing_gl::NormalFromDepth::create() {
-    return textureFormatCallback();
+    return textureFormatUpdate();
 }
 
 void megamol::compositing_gl::NormalFromDepth::release() {}
@@ -124,7 +124,7 @@ bool megamol::compositing_gl::NormalFromDepth::getMetaDataCallback(core::Call& c
     return true;
 }
 
-bool megamol::compositing_gl::NormalFromDepth::textureFormatCallback() {
+bool megamol::compositing_gl::NormalFromDepth::textureFormatUpdate() {
     // reinit all textures
     glowl::TextureLayout tx_layout(
         outHandler_.getInternalFormat(), 1, 1, 1, outHandler_.getFormat(), outHandler_.getType(), 1);
@@ -132,7 +132,7 @@ bool megamol::compositing_gl::NormalFromDepth::textureFormatCallback() {
 
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto shader_options_flags = outHandler_.handleDefinitions(shader_options);
+    auto shader_options_flags = outHandler_.addDefinitions(shader_options);
 
     try {
         m_normal_from_depth_prgm = core::utility::make_glowl_shader(

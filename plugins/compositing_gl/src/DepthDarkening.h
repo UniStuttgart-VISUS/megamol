@@ -97,7 +97,9 @@ private:
     void fitTextures(std::shared_ptr<glowl::Texture2D> source);
 
     /**
-     * \brief Sets Texture format variables and recompiles shaders.
+     * \brief Updates texture format variables and recompiles shaders.
+     *
+     * @return 'true' if successfully updated, 'false' otherwise
      */
     bool textureFormatUpdate();
 
@@ -140,7 +142,7 @@ private:
     /** buffer for the gauss kernel */
     std::unique_ptr<glowl::BufferObject> gaussValues_;
 
-    CompositingOutHandler outHandler;
+    CompositingOutHandler outFormatHandler_;
 
     /** Texture Format variables*/
     int out_tex_internal_format_ = GL_RGBA32F;

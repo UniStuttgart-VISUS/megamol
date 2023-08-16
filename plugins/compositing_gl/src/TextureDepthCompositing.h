@@ -51,11 +51,11 @@ public:
     }
 
     /**
-     * Recompiles relevant shaders and updates relevant output texture formats.
+     * \brief Updates texture format variables and recompiles shaders.
      *
-     * @return 'true' if updates sucessfull, 'false' otherwise
+     * @return 'true' if successfully updated, 'false' otherwise
      */
-    bool formatUpdates();
+    bool textureFormatUpdate();
 
     TextureDepthCompositing();
     ~TextureDepthCompositing() override;

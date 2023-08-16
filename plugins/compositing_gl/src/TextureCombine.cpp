@@ -21,7 +21,7 @@ megamol::compositing_gl::TextureCombine::TextureCombine()
               "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
         , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture")
         , out_handler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
-              std::function<bool()>(std::bind(&TextureCombine::formatUpdates, this))) {
+              std::function<bool()>(std::bind(&TextureCombine::textureFormatUpdate, this))) {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Add");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Multiply");
@@ -54,7 +54,7 @@ megamol::compositing_gl::TextureCombine::~TextureCombine() {
 }
 
 bool megamol::compositing_gl::TextureCombine::create() {
-    return formatUpdates();
+    return textureFormatUpdate();
 }
 
 void megamol::compositing_gl::TextureCombine::release() {}
@@ -184,10 +184,10 @@ bool megamol::compositing_gl::TextureCombine::modeCallback(core::param::ParamSlo
     return true;
 }
 
-bool megamol::compositing_gl::TextureCombine::formatUpdates() {
+bool megamol::compositing_gl::TextureCombine::textureFormatUpdate() {
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto shader_options_flags = out_handler_.handleDefinitions(shader_options);
+    auto shader_options_flags = out_handler_.addDefinitions(shader_options);
     try {
         m_add_prgm = core::utility::make_glowl_shader(
             "Compositing_textureAdd", *shader_options_flags, "compositing_gl/textureAdd.comp.glsl");
