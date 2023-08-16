@@ -10,8 +10,9 @@ namespace optix_hpg {
             PerRayData& prd = getPerRayData<PerRayData>();
             const auto& self = getProgramData<MissData>();
 
-            prd.radiance = glm::vec3(self.bg);
-            prd.done = true;
+            /*prd.radiance = glm::vec3(self.bg);
+            prd.done = true;*/
+            prd.albedo = glm::vec3(self.bg);
         }
     } // namespace device
 } // namespace optix_hpg

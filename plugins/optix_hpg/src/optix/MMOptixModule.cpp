@@ -253,10 +253,15 @@ void megamol::optix_hpg::MMOptixModule::ComputeBounds(
     glm::vec3 blockDims(32, 32, 1);
     uint32_t threadsPerBlock = blockDims.x * blockDims.y * blockDims.z;
 
-    uint32_t numBlocks = (num_elements + threadsPerBlock - 1) / threadsPerBlock;
+    /*uint32_t numBlocks = (num_elements + threadsPerBlock - 1) / threadsPerBlock;
     uint32_t numBlocks_x = 1 + uint32_t(powf((float)numBlocks, 1.f / 3.f));
     uint32_t numBlocks_y = 1 + uint32_t(sqrtf((float)(numBlocks / numBlocks_x)));
-    uint32_t numBlocks_z = (numBlocks + numBlocks_x * numBlocks_y - 1) / numBlocks_x * numBlocks_y;
+    uint32_t numBlocks_z = (numBlocks + numBlocks_x * numBlocks_y - 1) / numBlocks_x * numBlocks_y;*/
+
+    uint32_t numBlocks = std::ceilf(static_cast<float>(num_elements) / static_cast<float>(threadsPerBlock));
+    uint32_t numBlocks_x = 1 + uint32_t(powf((float)numBlocks, 1.f / 3.f));
+    uint32_t numBlocks_y = 1 + uint32_t(sqrtf((float)(numBlocks / numBlocks_x)));
+    uint32_t numBlocks_z = std::ceilf(static_cast<float>(numBlocks) / static_cast<float>(numBlocks_x * numBlocks_y));
 
     glm::uvec3 gridDims(numBlocks_x, numBlocks_y, numBlocks_z);
 
