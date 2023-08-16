@@ -29,6 +29,7 @@
 #include <sol/sol.hpp>
 
 #include "RTXInstrument.h"
+#include "SampleBuffer.h"
 
 namespace megamol {
 namespace frontend {
@@ -191,12 +192,16 @@ private:
     std::vector<visus::power_overwhelming::rtx_instrument> rtx_instr_;
 
     std::unordered_map<std::string, visus::power_overwhelming::nvml_sensor> nvml_sensors_;
+    std::vector<SampleBuffer> nvml_buffers_;
 
     std::unordered_map<std::string, visus::power_overwhelming::emi_sensor> emi_sensors_;
+    std::vector<SampleBuffer> emi_buffers_;
 
     std::unordered_map<std::string, visus::power_overwhelming::msr_sensor> msr_sensors_;
+    std::vector<SampleBuffer> msr_buffers_;
 
     std::unordered_map<std::string, visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
+    std::vector<SampleBuffer> tinker_buffers_;
 
     //std::chrono::nanoseconds trigger_offset_;
 

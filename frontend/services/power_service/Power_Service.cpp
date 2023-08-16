@@ -97,10 +97,13 @@ std::string get_device_name(visus::power_overwhelming::rtx_instrument const& i) 
 
 #ifdef MEGAMOL_USE_TRACY
 void tracy_sample(
-    wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* name_ptr) {
-    auto name = static_cast<std::string*>(name_ptr);
+    wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
+    auto usr_data = static_cast<std::pair<std::string, SampleBuffer*>*>(usr_ptr);
+    auto const& name = usr_data->first;
+    auto buffer = usr_data->second;
     for (std::size_t i = 0; i < n; ++i) {
-        TracyPlot(name->data(), m[i].power());
+        TracyPlot(name.data(), m[i].power());
+        buffer->Add(m[i].power(), m[i].timestamp());
     }
 }
 #endif
@@ -206,21 +209,25 @@ bool Power_Service::init(void* configPtr) {
     auto sensor_count = nvml_sensor::for_all(nullptr, 0);
     std::vector<nvml_sensor> tmp_sensors(sensor_count);
     nvml_sensor::for_all(tmp_sensors.data(), tmp_sensors.size());
+    nvml_buffers_.reserve(sensor_count);
 
     sensor_count = emi_sensor::for_all(nullptr, 0);
     std::vector<emi_sensor> tmp_emi_sensors(sensor_count);
     emi_sensor::for_all(tmp_emi_sensors.data(), tmp_emi_sensors.size());
+    emi_buffers_.reserve(sensor_count);
 
     std::vector<msr_sensor> tmp_msr_sensors;
     if (sensor_count == 0) {
         sensor_count = msr_sensor::for_all(nullptr, 0);
         tmp_msr_sensors.resize(sensor_count);
         msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
+        msr_buffers_.reserve(sensor_count);
     }
 
     sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
     std::vector<tinkerforge_sensor> tmp_tinker_sensors(sensor_count);
     tinkerforge_sensor::for_all(tmp_tinker_sensors.data(), tmp_tinker_sensors.size());
+    tinker_buffers_.reserve(sensor_count);
 
 #ifdef MEGAMOL_USE_TRACY
     for (auto& sensor : tmp_sensors) {
@@ -228,12 +235,16 @@ bool Power_Service::init(void* configPtr) {
 
         TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
 
+        nvml_buffers_.push_back(
+            SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
+
         nvml_sensors_[sensor_name] = std::move(sensor);
-        nvml_sensors_[sensor_name].sample(std::move(async_sampling()
-                                                        .delivers_measurement_data_to(&tracy_sample)
-                                                        .stores_and_passes_context(sensor_name)
-                                                        .samples_every(1000Ui64)
-                                                        .using_resolution(timestamp_resolution::microseconds)));
+        nvml_sensors_[sensor_name].sample(
+            std::move(async_sampling()
+                          .delivers_measurement_data_to(&tracy_sample)
+                          .stores_and_passes_context(std::make_pair(sensor_name, &nvml_buffers_.back()))
+                          .samples_every(1000Ui64)
+                          .using_resolution(timestamp_resolution::microseconds)));
     }
 
     for (auto& sensor : tmp_emi_sensors) {
@@ -249,6 +260,8 @@ bool Power_Service::init(void* configPtr) {
             TracyPlot(name.c_str(), m.power());
         });*/
 
+        emi_buffers_.push_back(SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
+
         emi_sensors_[std::string(sensor_name)] = std::move(sensor);
         //sensor_names_.push_back(sensor_name);
         //msr_sensors_[sensor_name].sample(
@@ -257,11 +270,12 @@ bool Power_Service::init(void* configPtr) {
         //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
         //    },
         //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
-        emi_sensors_[sensor_name].sample(std::move(async_sampling()
-                                                       .delivers_measurement_data_to(&tracy_sample)
-                                                       .stores_and_passes_context(sensor_name)
-                                                       .samples_every(1000Ui64)
-                                                       .using_resolution(timestamp_resolution::microseconds)));
+        emi_sensors_[sensor_name].sample(
+            std::move(async_sampling()
+                          .delivers_measurement_data_to(&tracy_sample)
+                          .stores_and_passes_context(std::make_pair(sensor_name, &emi_buffers_.back()))
+                          .samples_every(1000Ui64)
+                          .using_resolution(timestamp_resolution::microseconds)));
     }
 
     for (auto& sensor : tmp_msr_sensors) {
@@ -277,6 +291,8 @@ bool Power_Service::init(void* configPtr) {
             TracyPlot(name.c_str(), m.power());
         });*/
 
+        msr_buffers_.push_back(SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
+
         msr_sensors_[std::string(sensor_name)] = std::move(sensor);
         //sensor_names_.push_back(sensor_name);
         //msr_sensors_[sensor_name].sample(
@@ -285,11 +301,12 @@ bool Power_Service::init(void* configPtr) {
         //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
         //    },
         //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
-        msr_sensors_[sensor_name].sample(std::move(async_sampling()
-                                                       .delivers_measurement_data_to(&tracy_sample)
-                                                       .stores_and_passes_context(sensor_name)
-                                                       .samples_every(1000Ui64)
-                                                       .using_resolution(timestamp_resolution::microseconds)));
+        msr_sensors_[sensor_name].sample(
+            std::move(async_sampling()
+                          .delivers_measurement_data_to(&tracy_sample)
+                          .stores_and_passes_context(std::make_pair(sensor_name, &msr_buffers_.back()))
+                          .samples_every(1000Ui64)
+                          .using_resolution(timestamp_resolution::microseconds)));
     }
 
     for (auto& sensor : tmp_tinker_sensors) {
@@ -302,6 +319,10 @@ bool Power_Service::init(void* configPtr) {
         //    TracyPlot(name.data(), m.power());
         //});
 
+
+        tinker_buffers_.push_back(
+            SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(5)));
+
         tinker_sensors_[sensor_name] = std::move(sensor);
         //sensor_names_.push_back(sensor_name);
         tinker_sensors_[sensor_name].reset();
@@ -313,12 +334,13 @@ bool Power_Service::init(void* configPtr) {
         //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
         //    },
         //    tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
-        tinker_sensors_[sensor_name].sample(std::move(async_sampling()
-                                                          .delivers_measurement_data_to(&tracy_sample)
-                                                          .stores_and_passes_context(sensor_name)
-                                                          .samples_every(5000Ui64)
-                                                          .using_resolution(timestamp_resolution::microseconds)
-                                                          .from_source(tinkerforge_sensor_source::power)));
+        tinker_sensors_[sensor_name].sample(
+            std::move(async_sampling()
+                          .delivers_measurement_data_to(&tracy_sample)
+                          .stores_and_passes_context(std::make_pair(sensor_name, &tinker_buffers_.back()))
+                          .samples_every(5000Ui64)
+                          .using_resolution(timestamp_resolution::microseconds)
+                          .from_source(tinkerforge_sensor_source::power)));
     }
 
     /*TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
@@ -349,6 +371,16 @@ void Power_Service::close() {
     // close libraries or APIs you manage
     // wrap up resources your service provides, but don not depend on outside resources to be available here
     // after this, at some point only the destructor of your service gets called
+
+    nvml_sensors_.clear();
+    emi_sensors_.clear();
+    msr_sensors_.clear();
+    tinker_sensors_.clear();
+
+    ParquetWriter("./nvml.parquet", nvml_buffers_);
+    ParquetWriter("./emi.parquet", emi_buffers_);
+    ParquetWriter("./msr.parquet", msr_buffers_);
+    ParquetWriter("./tinker.parquet", tinker_buffers_);
 }
 
 std::vector<FrontendResource>& Power_Service::getProvidedResources() {
@@ -864,10 +896,10 @@ void Power_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>(
-        "mmPowerMeasure", "(string path)", {[&](std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>("mmPowerMeasure",
+        "(string path)", {[&](std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             //start_measurement();
-            rtx_.StartMeasurement(path, {&wf_parquet});
+            rtx_.StartMeasurement(path, {&wf_parquet, &wf_tracy});
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
