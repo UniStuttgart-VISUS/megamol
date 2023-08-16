@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sphere.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtx/component_wise.hpp>
 
