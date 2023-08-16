@@ -32,7 +32,7 @@
 #include "LuaCallbacksCollection.h"
 #include <power_overwhelming/timestamp_resolution.h>
 
-#include "ParquetWriter.h"
+#include "WriterUtility.h"
 #include "sol_rtx_instrument.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established

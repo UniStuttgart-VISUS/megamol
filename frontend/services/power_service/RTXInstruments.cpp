@@ -80,13 +80,14 @@ void RTXInstruments::ApplyConfigs() {
 }
 
 void RTXInstruments::StartMeasurement(
-    std::filesystem::path const& output_folder, std::vector<writer_func_t> const& writer_funcs) {
+    std::filesystem::path const& output_folder, std::vector<power::writer_func_t> const& writer_funcs) {
     if (!std::filesystem::is_directory(output_folder)) {
         core::utility::log::Log::DefaultLog.WriteError("[RTXInstruments]: Path {} is not a directory", output_folder);
         return;
     }
 
-    auto t_func = [&](std::filesystem::path const& output_folder, std::vector<writer_func_t> const& writer_funcs) {
+    auto t_func = [&](std::filesystem::path const& output_folder,
+                      std::vector<power::writer_func_t> const& writer_funcs) {
         try {
             pending_measurement_ = true;
             std::chrono::system_clock::time_point last_trigger;
@@ -139,8 +140,7 @@ void RTXInstruments::StartMeasurement(
 
                 auto const num_segments = i.history_segments();
 
-                std::vector<std::unordered_map<std::string, std::variant<samples_t, timeline_t>>> values_map(
-                    num_segments);
+                power::segments_t values_map(num_segments);
 
                 for (std::decay_t<decltype(num_segments)> s_idx = 0; s_idx < num_segments; ++s_idx) {
                     //auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
@@ -212,37 +212,6 @@ bool RTXInstruments::waiting_on_trigger() const {
         }
     }
     return false;
-}
-
-RTXInstruments::timeline_t RTXInstruments::generate_timestamps_ns(
-    visus::power_overwhelming::oscilloscope_waveform const& waveform) const {
-
-    auto const t_begin = waveform.time_begin();
-    //auto const t_end = waveform.time_end();
-    auto const t_dis = waveform.sample_distance();
-    //auto const t_off = waveform.segment_offset();
-    auto const r_length = waveform.record_length();
-
-    auto const t_b_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<float>(t_begin));
-    auto const t_d_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<float>(t_dis));
-
-    timeline_t ret(r_length, t_b_ns.count());
-
-    auto const t_d_ns_c = t_d_ns.count();
-
-    std::inclusive_scan(
-        ret.begin(), ret.end(), ret.begin(), [&t_d_ns_c](auto const& lhs, auto const& rhs) { return lhs + t_d_ns_c; });
-
-    return ret;
-}
-
-RTXInstruments::timeline_t RTXInstruments::offset_timeline(
-    timeline_t const& timeline, std::chrono::nanoseconds offset) const {
-    timeline_t ret(timeline.begin(), timeline.end());
-
-    std::transform(ret.begin(), ret.end(), ret.begin(), [o = offset.count()](auto const& val) { return val + o; });
-
-    return ret;
 }
 
 } // namespace megamol::frontend
