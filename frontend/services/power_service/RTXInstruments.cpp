@@ -1,4 +1,4 @@
-#include "RTXInstrument.h"
+#include "RTXInstruments.h"
 
 #ifdef MEGAMOL_USE_POWER
 

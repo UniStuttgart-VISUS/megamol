@@ -28,7 +28,7 @@
 
 #include <sol/sol.hpp>
 
-#include "RTXInstrument.h"
+#include "RTXInstruments.h"
 #include "SampleBuffer.h"
 
 namespace megamol {
