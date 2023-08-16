@@ -16,7 +16,7 @@ using namespace visus::power_overwhelming;
 
 namespace megamol::frontend {
 
-RTXInstrument::RTXInstrument() {
+RTXInstruments::RTXInstruments() {
     auto num_devices = rtx_instrument::all(nullptr, 0);
     if (num_devices == 0)
         throw std::runtime_error("No RTX devices attached");
@@ -27,7 +27,7 @@ RTXInstrument::RTXInstrument() {
 
     std::for_each(rtx_instr.begin(), rtx_instr.end(), [&](rtx_instrument& i) {
         auto name = get_name(i);
-        core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Found %s as %s", name, get_identity(i));
+        core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Found %s as %s", name, get_identity(i));
         rtx_instr_[get_name(i)] = std::move(i);
     });
 
@@ -36,7 +36,7 @@ RTXInstrument::RTXInstrument() {
     sol_register_all(sol_state_);
 }
 
-void RTXInstrument::UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,
+void RTXInstruments::UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,
     std::chrono::milliseconds range, std::chrono::milliseconds timeout) {
     if (std::filesystem::is_directory(config_folder)) {
         std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [&](auto const& instr) {
@@ -55,14 +55,14 @@ void RTXInstrument::UpdateConfigs(std::filesystem::path const& config_folder, in
     }
 }
 
-void RTXInstrument::ApplyConfigs() {
+void RTXInstruments::ApplyConfigs() {
     try {
         std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [&](auto& instr) {
             auto const& name = instr.first;
             auto& i = instr.second;
             auto fit = rtx_config_.find(name);
             if (fit == rtx_config_.end()) {
-                core::utility::log::Log::DefaultLog.WriteWarn("[RTXInstrument]: No config found for device %s", name);
+                core::utility::log::Log::DefaultLog.WriteWarn("[RTXInstruments]: No config found for device %s", name);
             } else {
                 i.synchronise_clock();
                 i.reset(true, true);
@@ -70,19 +70,19 @@ void RTXInstrument::ApplyConfigs() {
                 i.reference_position(oscilloscope_reference_point::left);
                 i.trigger_position(oscilloscope_quantity(0, "ms"));
                 i.operation_complete();
-                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Configured device %s", name);
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Configured device %s", name);
             }
         });
     } catch (std::exception& ex) {
         core::utility::log::Log::DefaultLog.WriteError(
-            "[RTXInstrument]: Failed to apply configurations.\n%s", ex.what());
+            "[RTXInstruments]: Failed to apply configurations.\n%s", ex.what());
     }
 }
 
-void RTXInstrument::StartMeasurement(
+void RTXInstruments::StartMeasurement(
     std::filesystem::path const& output_folder, std::vector<writer_func_t> const& writer_funcs) {
     if (!std::filesystem::is_directory(output_folder)) {
-        core::utility::log::Log::DefaultLog.WriteError("[RTXInstrument]: Path {} is not a directory", output_folder);
+        core::utility::log::Log::DefaultLog.WriteError("[RTXInstruments]: Path {} is not a directory", output_folder);
         return;
     }
 
@@ -120,20 +120,20 @@ void RTXInstrument::StartMeasurement(
                 auto fit = rtx_config_.find(name);
                 if (fit == rtx_config_.end()) {
                     core::utility::log::Log::DefaultLog.WriteError(
-                        "[RTXInstrument]: Could not find config for device {}", name);
+                        "[RTXInstruments]: Could not find config for device {}", name);
                     return;
                 }
 
                 auto const& config = fit->second;
                 auto const num_channels = config.channels();
                 if (num_channels == 0) {
-                    core::utility::log::Log::DefaultLog.WriteError("[RTXInstrument]: No configured channels");
+                    core::utility::log::Log::DefaultLog.WriteError("[RTXInstruments]: No configured channels");
                     return;
                 }
                 std::vector<oscilloscope_channel> channels(num_channels);
                 config.channels(channels.data(), channels.size());
 
-                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Start reading data");
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start reading data");
                 auto const start_read = std::chrono::steady_clock::now();
                 auto const all_waveforms = i.data(oscilloscope_waveform_points::maximum);
 
@@ -164,21 +164,21 @@ void RTXInstrument::StartMeasurement(
                     //ParquetWriter(fullpath, values_map[s_idx]);
                 }
                 auto const stop_read = std::chrono::steady_clock::now();
-                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished reading data in %dms",
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Finished reading data in %dms",
                     std::chrono::duration_cast<std::chrono::milliseconds>(stop_read - start_read).count());
-                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Start writing data");
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start writing data");
                 auto const start_write = std::chrono::steady_clock::now();
                 std::for_each(writer_funcs.begin(), writer_funcs.end(),
                     [&last_trigger_qpc, &output_folder, &values_map](
                         auto const& writer_func) { writer_func(last_trigger_qpc, output_folder, values_map); });
                 auto const stop_write = std::chrono::steady_clock::now();
-                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished writing data in %dms",
+                core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Finished writing data in %dms",
                     std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());
             });
             pending_measurement_ = false;
         } catch (std::exception& ex) {
             core::utility::log::Log::DefaultLog.WriteError(
-                "[RTXInstrument]: Failed to take measurement.\n%s", ex.what());
+                "[RTXInstruments]: Failed to take measurement.\n%s", ex.what());
         }
     };
 
@@ -186,7 +186,7 @@ void RTXInstrument::StartMeasurement(
     t_thread.detach();
 }
 
-void RTXInstrument::SetLPTTrigger(std::string const& address) {
+void RTXInstruments::SetLPTTrigger(std::string const& address) {
     std::regex p("^(lpt|LPT)(\\d)$");
     std::smatch m;
     if (!std::regex_search(address, m, p)) {
@@ -202,7 +202,7 @@ void RTXInstrument::SetLPTTrigger(std::string const& address) {
     }
 }
 
-bool RTXInstrument::waiting_on_trigger() const {
+bool RTXInstruments::waiting_on_trigger() const {
     for (auto& [name, i] : rtx_instr_) {
         auto res = i.query("STAT:OPER:COND?\n");
         *strchr(res.as<char>(), '\n') = 0;
@@ -214,7 +214,7 @@ bool RTXInstrument::waiting_on_trigger() const {
     return false;
 }
 
-RTXInstrument::timeline_t RTXInstrument::generate_timestamps_ns(
+RTXInstruments::timeline_t RTXInstruments::generate_timestamps_ns(
     visus::power_overwhelming::oscilloscope_waveform const& waveform) const {
 
     auto const t_begin = waveform.time_begin();
@@ -236,7 +236,7 @@ RTXInstrument::timeline_t RTXInstrument::generate_timestamps_ns(
     return ret;
 }
 
-RTXInstrument::timeline_t RTXInstrument::offset_timeline(
+RTXInstruments::timeline_t RTXInstruments::offset_timeline(
     timeline_t const& timeline, std::chrono::nanoseconds offset) const {
     timeline_t ret(timeline.begin(), timeline.end());
 

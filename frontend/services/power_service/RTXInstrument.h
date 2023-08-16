@@ -43,7 +43,7 @@ inline int64_t get_highres_timer() {
 #endif
 }
 
-class RTXInstrument {
+class RTXInstruments {
 public:
     using timeline_t = std::vector<int64_t>;
     using samples_t = std::vector<float>;
@@ -51,7 +51,7 @@ public:
     using segments_t = std::vector<value_map_t>;
     using writer_func_t = std::function<void(int64_t, std::filesystem::path const&, segments_t const&)>;
 
-    RTXInstrument();
+    RTXInstruments();
 
     void UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,
         std::chrono::milliseconds range, std::chrono::milliseconds timeout);
@@ -75,7 +75,7 @@ private:
 
     std::tuple<std::chrono::system_clock::time_point, int64_t> trigger() {
 #ifdef MEGAMOL_USE_TRACY
-        ZoneScopedNC("RTXInstrument::trigger", 0xDB0ABF);
+        ZoneScopedNC("RTXInstruments::trigger", 0xDB0ABF);
 #endif
         if (enforce_software_trigger_) {
             for (auto& [name, i] : rtx_instr_) {
@@ -144,7 +144,7 @@ inline std::vector<float> transform_waveform(visus::power_overwhelming::oscillos
 }
 
 inline void wf_parquet(
-    int64_t, std::filesystem::path const& output_folder, RTXInstrument::segments_t const& values_map) {
+    int64_t, std::filesystem::path const& output_folder, RTXInstruments::segments_t const& values_map) {
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {
         auto const fullpath = output_folder / ("rtx_s" + std::to_string(s_idx) + ".parquet");
         ParquetWriter(fullpath, values_map[s_idx]);
@@ -171,19 +171,19 @@ inline int64_t get_tracy_time(int64_t base, int64_t tracy_offset) {
 }
 
 inline void wf_tracy(
-    int64_t qpc_last_trigger, std::filesystem::path const& output_folder, RTXInstrument::segments_t const& values_map) {
+    int64_t qpc_last_trigger, std::filesystem::path const& output_folder, RTXInstruments::segments_t const& values_map) {
 #ifdef MEGAMOL_USE_TRACY
     static std::set<std::string> tpn_library;
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {
         auto const& vm = values_map[s_idx];
-        auto const& samples_time = std::get<RTXInstrument::timeline_t>(vm.at("abs_times"));
+        auto const& samples_time = std::get<RTXInstruments::timeline_t>(vm.at("abs_times"));
         for (auto const& [name, v_values] : vm) {
-            if (std::holds_alternative<RTXInstrument::samples_t>(v_values)) {
+            if (std::holds_alternative<RTXInstruments::samples_t>(v_values)) {
                 auto const c_name = name + "\0";
                 tpn_library.insert(c_name);
                 auto t_name_it = tpn_library.find(name.c_str());
                 if (t_name_it != tpn_library.end()) {
-                    auto const& values = std::get<RTXInstrument::samples_t>(v_values);
+                    auto const& values = std::get<RTXInstruments::samples_t>(v_values);
                     TracyPlotConfig(t_name_it->data(), tracy::PlotFormatType::Number, false, true, 0);
                     for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
                         tracy::Profiler::PlotData(

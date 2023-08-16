@@ -265,7 +265,7 @@ private:
 
     void write_to_files(std::string const& folder_path, file_type ft) const;
 
-    RTXInstrument rtx_;
+    RTXInstruments rtx_;
 };
 
 } // namespace frontend
