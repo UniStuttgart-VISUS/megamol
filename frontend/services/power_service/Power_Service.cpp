@@ -68,16 +68,16 @@ Power_Service::~Power_Service() {
     // clean up raw pointers you allocated with new, which is bad practice and nobody does
 }
 
-std::string unmueller_string(wchar_t const* name) {
-    std::string no_mueller =
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));
-
-    /*char* sensor_name = new char[wcslen(name) + 1];
-    wcstombs(sensor_name, name, wcslen(name) + 1);
-    std::string no_mueller(sensor_name);
-    delete[] sensor_name;*/
-    return no_mueller;
-}
+//std::string unmueller_string(wchar_t const* name) {
+//    std::string no_mueller =
+//        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));
+//
+//    /*char* sensor_name = new char[wcslen(name) + 1];
+//    wcstombs(sensor_name, name, wcslen(name) + 1);
+//    std::string no_mueller(sensor_name);
+//    delete[] sensor_name;*/
+//    return no_mueller;
+//}
 
 //std::string get_device_name(visus::power_overwhelming::rtx_instrument const& i) {
 //    auto name_size = i.name(nullptr, 0);
@@ -95,18 +95,20 @@ std::string unmueller_string(wchar_t const* name) {
 
 //void test_func(const visus::power_overwhelming::measurement& m, void*, std::string const&) {}
 
-#ifdef MEGAMOL_USE_TRACY
-void tracy_sample(
-    wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
-    auto usr_data = static_cast<std::pair<std::string, SampleBuffer*>*>(usr_ptr);
-    auto const& name = usr_data->first;
-    auto buffer = usr_data->second;
-    for (std::size_t i = 0; i < n; ++i) {
-        TracyPlot(name.data(), m[i].power());
-        buffer->Add(m[i].power(), m[i].timestamp());
-    }
-}
-#endif
+//void tracy_sample(
+//    wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
+//    auto usr_data = static_cast<std::pair<std::string, SampleBuffer*>*>(usr_ptr);
+//    auto const& name = usr_data->first;
+//    auto buffer = usr_data->second;
+//#ifdef MEGAMOL_USE_TRACY
+//    for (std::size_t i = 0; i < n; ++i) {
+//        TracyPlot(name.data(), m[i].power());
+//    }
+//#endif
+//    for (std::size_t i = 0; i < n; ++i) {
+//        buffer->Add(m[i].power(), m[i].timestamp());
+//    }
+//}
 
 bool Power_Service::init(void* configPtr) {
     if (configPtr == nullptr)
@@ -123,20 +125,22 @@ bool Power_Service::init(void* configPtr) {
 
     //visus::power_overwhelming::sol_expressions(sol_state_, values_map_);
 
-//#ifdef WIN32
-//    LARGE_INTEGER f;
-//    QueryPerformanceFrequency(&f);
-//    qpc_frequency_ = f.QuadPart;
-//#else
-//    timespec tp;
-//    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
-//    qpc_frequency_ = tp.tv_nsec;
-//#endif
+    //#ifdef WIN32
+    //    LARGE_INTEGER f;
+    //    QueryPerformanceFrequency(&f);
+    //    qpc_frequency_ = f.QuadPart;
+    //#else
+    //    timespec tp;
+    //    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
+    //    qpc_frequency_ = tp.tv_nsec;
+    //#endif
 
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
     write_to_files_ = conf->write_to_files;
     write_folder_ = conf->folder;
+
+    rtx_.SetLPTTrigger(lpt);
 
     std::regex p("^(lpt|LPT)(\\d)$");
     std::smatch m;
@@ -204,150 +208,161 @@ bool Power_Service::init(void* configPtr) {
 
     using namespace visus::power_overwhelming;
 
+    std::tie(nvml_sensors_, nvml_buffers_) =
+        InitSampler<nvml_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+    std::tie(emi_sensors_, emi_buffers_) =
+        InitSampler<emi_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+    if (emi_sensors_.empty()) {
+        std::tie(msr_sensors_, msr_buffers_) =
+            InitSampler<msr_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+    }
+    std::tie(tinker_sensors_, tinker_buffers_) =
+        InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5));
+
     //setup_measurement();
 
-    auto sensor_count = nvml_sensor::for_all(nullptr, 0);
-    std::vector<nvml_sensor> tmp_sensors(sensor_count);
-    nvml_sensor::for_all(tmp_sensors.data(), tmp_sensors.size());
-    nvml_buffers_.reserve(sensor_count);
-
-    sensor_count = emi_sensor::for_all(nullptr, 0);
-    std::vector<emi_sensor> tmp_emi_sensors(sensor_count);
-    emi_sensor::for_all(tmp_emi_sensors.data(), tmp_emi_sensors.size());
-    emi_buffers_.reserve(sensor_count);
-
-    std::vector<msr_sensor> tmp_msr_sensors;
-    if (sensor_count == 0) {
-        sensor_count = msr_sensor::for_all(nullptr, 0);
-        tmp_msr_sensors.resize(sensor_count);
-        msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
-        msr_buffers_.reserve(sensor_count);
-    }
-
-    sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
-    std::vector<tinkerforge_sensor> tmp_tinker_sensors(sensor_count);
-    tinkerforge_sensor::for_all(tmp_tinker_sensors.data(), tmp_tinker_sensors.size());
-    tinker_buffers_.reserve(sensor_count);
-
-#ifdef MEGAMOL_USE_TRACY
-    for (auto& sensor : tmp_sensors) {
-        auto sensor_name = unmueller_string(sensor.name());
-
-        TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
-
-        nvml_buffers_.push_back(
-            SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
-
-        nvml_sensors_[sensor_name] = std::move(sensor);
-        nvml_sensors_[sensor_name].sample(
-            std::move(async_sampling()
-                          .delivers_measurement_data_to(&tracy_sample)
-                          .stores_and_passes_context(std::make_pair(sensor_name, &nvml_buffers_.back()))
-                          .samples_every(1000Ui64)
-                          .using_resolution(timestamp_resolution::microseconds)));
-    }
-
-    for (auto& sensor : tmp_emi_sensors) {
-        auto sensor_name = unmueller_string(sensor.name());
-        /*if (sensor_name.find("package") == std::string::npos || sensor_name.find("msr/0/") == std::string::npos) {
-            continue;
-        }*/
-
-        TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
-
-        /*sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
-            auto name = unmueller_string(m.sensor());
-            TracyPlot(name.c_str(), m.power());
-        });*/
-
-        emi_buffers_.push_back(SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
-
-        emi_sensors_[std::string(sensor_name)] = std::move(sensor);
-        //sensor_names_.push_back(sensor_name);
-        //msr_sensors_[sensor_name].sample(
-        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
-        //        //auto name = unmueller_string(sensor->name());
-        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
-        //    },
-        //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
-        emi_sensors_[sensor_name].sample(
-            std::move(async_sampling()
-                          .delivers_measurement_data_to(&tracy_sample)
-                          .stores_and_passes_context(std::make_pair(sensor_name, &emi_buffers_.back()))
-                          .samples_every(1000Ui64)
-                          .using_resolution(timestamp_resolution::microseconds)));
-    }
-
-    for (auto& sensor : tmp_msr_sensors) {
-        auto sensor_name = unmueller_string(sensor.name());
-        if (sensor_name.find("package") == std::string::npos || sensor_name.find("msr/0/") == std::string::npos) {
-            continue;
-        }
-
-        TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
-
-        /*sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
-            auto name = unmueller_string(m.sensor());
-            TracyPlot(name.c_str(), m.power());
-        });*/
-
-        msr_buffers_.push_back(SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
-
-        msr_sensors_[std::string(sensor_name)] = std::move(sensor);
-        //sensor_names_.push_back(sensor_name);
-        //msr_sensors_[sensor_name].sample(
-        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
-        //        //auto name = unmueller_string(sensor->name());
-        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
-        //    },
-        //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
-        msr_sensors_[sensor_name].sample(
-            std::move(async_sampling()
-                          .delivers_measurement_data_to(&tracy_sample)
-                          .stores_and_passes_context(std::make_pair(sensor_name, &msr_buffers_.back()))
-                          .samples_every(1000Ui64)
-                          .using_resolution(timestamp_resolution::microseconds)));
-    }
-
-    for (auto& sensor : tmp_tinker_sensors) {
-        auto sensor_name = unmueller_string(sensor.name());
-
-        TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
-
-        //sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
-        //    auto name = unmueller_string(m.sensor());
-        //    TracyPlot(name.data(), m.power());
-        //});
-
-
-        tinker_buffers_.push_back(
-            SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(5)));
-
-        tinker_sensors_[sensor_name] = std::move(sensor);
-        //sensor_names_.push_back(sensor_name);
-        tinker_sensors_[sensor_name].reset();
-        tinker_sensors_[sensor_name].configure(
-            sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
-        //tinker_sensors_[sensor_name].sample(
-        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
-        //        //auto name = unmueller_string(sensor->name());
-        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
-        //    },
-        //    tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
-        tinker_sensors_[sensor_name].sample(
-            std::move(async_sampling()
-                          .delivers_measurement_data_to(&tracy_sample)
-                          .stores_and_passes_context(std::make_pair(sensor_name, &tinker_buffers_.back()))
-                          .samples_every(5000Ui64)
-                          .using_resolution(timestamp_resolution::microseconds)
-                          .from_source(tinkerforge_sensor_source::power)));
-    }
+//    auto sensor_count = nvml_sensor::for_all(nullptr, 0);
+//    std::vector<nvml_sensor> tmp_sensors(sensor_count);
+//    nvml_sensor::for_all(tmp_sensors.data(), tmp_sensors.size());
+//    nvml_buffers_.reserve(sensor_count);
+//
+//    sensor_count = emi_sensor::for_all(nullptr, 0);
+//    std::vector<emi_sensor> tmp_emi_sensors(sensor_count);
+//    emi_sensor::for_all(tmp_emi_sensors.data(), tmp_emi_sensors.size());
+//    emi_buffers_.reserve(sensor_count);
+//
+//    std::vector<msr_sensor> tmp_msr_sensors;
+//    if (sensor_count == 0) {
+//        sensor_count = msr_sensor::for_all(nullptr, 0);
+//        tmp_msr_sensors.resize(sensor_count);
+//        msr_sensor::for_all(tmp_msr_sensors.data(), tmp_msr_sensors.size());
+//        msr_buffers_.reserve(sensor_count);
+//    }
+//
+//    sensor_count = tinkerforge_sensor::for_all(nullptr, 0);
+//    std::vector<tinkerforge_sensor> tmp_tinker_sensors(sensor_count);
+//    tinkerforge_sensor::for_all(tmp_tinker_sensors.data(), tmp_tinker_sensors.size());
+//    tinker_buffers_.reserve(sensor_count);
+//
+//#ifdef MEGAMOL_USE_TRACY
+//    for (auto& sensor : tmp_sensors) {
+//        auto sensor_name = unmueller_string(sensor.name());
+//
+//        TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
+//
+//        nvml_buffers_.push_back(
+//            SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
+//
+//        nvml_sensors_[sensor_name] = std::move(sensor);
+//        nvml_sensors_[sensor_name].sample(
+//            std::move(async_sampling()
+//                          .delivers_measurement_data_to(&tracy_sample)
+//                          .stores_and_passes_context(std::make_pair(sensor_name, &nvml_buffers_.back()))
+//                          .samples_every(1000Ui64)
+//                          .using_resolution(timestamp_resolution::microseconds)));
+//    }
+//
+//    for (auto& sensor : tmp_emi_sensors) {
+//        auto sensor_name = unmueller_string(sensor.name());
+//        /*if (sensor_name.find("package") == std::string::npos || sensor_name.find("msr/0/") == std::string::npos) {
+//            continue;
+//        }*/
+//
+//        TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+//
+//        /*sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+//            auto name = unmueller_string(m.sensor());
+//            TracyPlot(name.c_str(), m.power());
+//        });*/
+//
+//        emi_buffers_.push_back(SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
+//
+//        emi_sensors_[std::string(sensor_name)] = std::move(sensor);
+//        //sensor_names_.push_back(sensor_name);
+//        //msr_sensors_[sensor_name].sample(
+//        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+//        //        //auto name = unmueller_string(sensor->name());
+//        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+//        //    },
+//        //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
+//        emi_sensors_[sensor_name].sample(
+//            std::move(async_sampling()
+//                          .delivers_measurement_data_to(&tracy_sample)
+//                          .stores_and_passes_context(std::make_pair(sensor_name, &emi_buffers_.back()))
+//                          .samples_every(1000Ui64)
+//                          .using_resolution(timestamp_resolution::microseconds)));
+//    }
+//
+//    for (auto& sensor : tmp_msr_sensors) {
+//        auto sensor_name = unmueller_string(sensor.name());
+//        if (sensor_name.find("package") == std::string::npos || sensor_name.find("msr/0/") == std::string::npos) {
+//            continue;
+//        }
+//
+//        TracyPlotConfig(sensor_name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+//
+//        /*sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+//            auto name = unmueller_string(m.sensor());
+//            TracyPlot(name.c_str(), m.power());
+//        });*/
+//
+//        msr_buffers_.push_back(SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(1)));
+//
+//        msr_sensors_[std::string(sensor_name)] = std::move(sensor);
+//        //sensor_names_.push_back(sensor_name);
+//        //msr_sensors_[sensor_name].sample(
+//        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+//        //        //auto name = unmueller_string(sensor->name());
+//        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+//        //    },
+//        //    1000Ui64, timestamp_resolution::microseconds, static_cast<void*>(sensor_names_.back().data()));
+//        msr_sensors_[sensor_name].sample(
+//            std::move(async_sampling()
+//                          .delivers_measurement_data_to(&tracy_sample)
+//                          .stores_and_passes_context(std::make_pair(sensor_name, &msr_buffers_.back()))
+//                          .samples_every(1000Ui64)
+//                          .using_resolution(timestamp_resolution::microseconds)));
+//    }
+//
+//    for (auto& sensor : tmp_tinker_sensors) {
+//        auto sensor_name = unmueller_string(sensor.name());
+//
+//        TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
+//
+//        //sensor.sample([](const visus::power_overwhelming::measurement& m, void*) {
+//        //    auto name = unmueller_string(m.sensor());
+//        //    TracyPlot(name.data(), m.power());
+//        //});
+//
+//
+//        tinker_buffers_.push_back(
+//            SampleBuffer(sensor_name, std::chrono::milliseconds(600), std::chrono::milliseconds(5)));
+//
+//        tinker_sensors_[sensor_name] = std::move(sensor);
+//        //sensor_names_.push_back(sensor_name);
+//        tinker_sensors_[sensor_name].reset();
+//        tinker_sensors_[sensor_name].configure(
+//            sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
+//        //tinker_sensors_[sensor_name].sample(
+//        //    [](const visus::power_overwhelming::measurement& m, void* sensor_name) {
+//        //        //auto name = unmueller_string(sensor->name());
+//        //        TracyPlot(reinterpret_cast<char const*>(sensor_name), m.power());
+//        //    },
+//        //    tinkerforge_sensor_source::power, 1000Ui64, static_cast<void*>(sensor_names_.back().data()));
+//        tinker_sensors_[sensor_name].sample(
+//            std::move(async_sampling()
+//                          .delivers_measurement_data_to(&tracy_sample)
+//                          .stores_and_passes_context(std::make_pair(sensor_name, &tinker_buffers_.back()))
+//                          .samples_every(5000Ui64)
+//                          .using_resolution(timestamp_resolution::microseconds)
+//                          .from_source(tinkerforge_sensor_source::power)));
+//    }
 
     /*TracyPlotConfig("V", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("A", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("W", tracy::PlotFormatType::Number, false, true, 0);
     TracyPlotConfig("Frame", tracy::PlotFormatType::Number, false, true, 0);*/
-#endif
+//#endif
 
     //return init(*static_cast<Config*>(configPtr));
     return true;

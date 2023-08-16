@@ -19,17 +19,18 @@
 
 #include "PowerCallbacks.h"
 
-#include <power_overwhelming/emi_sensor.h>
-#include <power_overwhelming/msr_sensor.h>
-#include <power_overwhelming/nvml_sensor.h>
+//#include <power_overwhelming/emi_sensor.h>
+//#include <power_overwhelming/msr_sensor.h>
+//#include <power_overwhelming/nvml_sensor.h>
 #include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/rtx_instrument_configuration.h>
-#include <power_overwhelming/tinkerforge_sensor.h>
+//#include <power_overwhelming/tinkerforge_sensor.h>
 
 #include <sol/sol.hpp>
 
 #include "RTXInstruments.h"
 #include "SampleBuffer.h"
+#include "Samplers.h"
 
 namespace megamol {
 namespace frontend {
@@ -191,17 +192,17 @@ private:
 
     std::vector<visus::power_overwhelming::rtx_instrument> rtx_instr_;
 
-    std::unordered_map<std::string, visus::power_overwhelming::nvml_sensor> nvml_sensors_;
-    std::vector<SampleBuffer> nvml_buffers_;
+    power::samplers_t<visus::power_overwhelming::nvml_sensor> nvml_sensors_;
+    power::buffers_t nvml_buffers_;
 
-    std::unordered_map<std::string, visus::power_overwhelming::emi_sensor> emi_sensors_;
-    std::vector<SampleBuffer> emi_buffers_;
+    power::samplers_t<visus::power_overwhelming::emi_sensor> emi_sensors_;
+    power::buffers_t emi_buffers_;
 
-    std::unordered_map<std::string, visus::power_overwhelming::msr_sensor> msr_sensors_;
-    std::vector<SampleBuffer> msr_buffers_;
+    power::samplers_t<visus::power_overwhelming::msr_sensor> msr_sensors_;
+    power::buffers_t msr_buffers_;
 
-    std::unordered_map<std::string, visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
-    std::vector<SampleBuffer> tinker_buffers_;
+    power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
+    power::buffers_t tinker_buffers_;
 
     void fill_lua_callbacks();
 
