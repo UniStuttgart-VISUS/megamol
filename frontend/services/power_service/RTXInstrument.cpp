@@ -88,6 +88,7 @@ void RTXInstrument::StartMeasurement(
 
     auto t_func = [&](std::filesystem::path const& output_folder, std::vector<writer_func_t> const& writer_funcs) {
         try {
+            pending_measurement_ = true;
             std::chrono::system_clock::time_point last_trigger;
             int64_t last_trigger_qpc;
 
@@ -174,6 +175,7 @@ void RTXInstrument::StartMeasurement(
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Finished writing data in %dms",
                     std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());
             });
+            pending_measurement_ = false;
         } catch (std::exception& ex) {
             core::utility::log::Log::DefaultLog.WriteError(
                 "[RTXInstrument]: Failed to take measurement.\n%s", ex.what());

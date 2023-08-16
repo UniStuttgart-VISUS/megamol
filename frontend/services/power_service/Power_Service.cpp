@@ -377,10 +377,10 @@ void Power_Service::close() {
     msr_sensors_.clear();
     tinker_sensors_.clear();
 
-    ParquetWriter("./nvml.parquet", nvml_buffers_);
-    ParquetWriter("./emi.parquet", emi_buffers_);
-    ParquetWriter("./msr.parquet", msr_buffers_);
-    ParquetWriter("./tinker.parquet", tinker_buffers_);
+    ParquetWriter(std::filesystem::path(write_folder_) / "nvml.parquet", nvml_buffers_);
+    ParquetWriter(std::filesystem::path(write_folder_) / "emi.parquet", emi_buffers_);
+    ParquetWriter(std::filesystem::path(write_folder_) / "msr.parquet", msr_buffers_);
+    ParquetWriter(std::filesystem::path(write_folder_) / "tinker.parquet", tinker_buffers_);
 }
 
 std::vector<FrontendResource>& Power_Service::getProvidedResources() {
@@ -903,11 +903,11 @@ void Power_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
+    /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerTrigger", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             trigger();
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});
+        }});*/
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, int, int, int, int>(
         "mmPowerConfig", "(string path, int points, int count, int range_ms, int timeout_ms)",
@@ -932,16 +932,16 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
         "mmPowerIsPending", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
-            return frontend_resources::LuaCallbacksCollection::BoolResult{pending_measurement_};
+            return frontend_resources::LuaCallbacksCollection::BoolResult{rtx_.IsMeasurementPending()};
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
+    /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerForceTrigger", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             for (auto& i : rtx_instr_) {
                 i.trigger_manually();
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});
+        }});*/
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>("mmPowerSoftwareTrigger", "(bool set)",
         {[&](bool set) -> frontend_resources::LuaCallbacksCollection::VoidResult {

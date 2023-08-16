@@ -66,6 +66,10 @@ public:
         enforce_software_trigger_ = set;
     }
 
+    bool IsMeasurementPending() const {
+        return pending_measurement_;
+    }
+
 private:
     bool waiting_on_trigger() const;
 
@@ -102,6 +106,8 @@ private:
     std::unique_ptr<ParallelPortTrigger> lpt_trigger_ = nullptr;
 
     bool enforce_software_trigger_ = false;
+
+    bool pending_measurement_ = false;
 };
 
 inline std::string get_name(visus::power_overwhelming::rtx_instrument const& i) {
