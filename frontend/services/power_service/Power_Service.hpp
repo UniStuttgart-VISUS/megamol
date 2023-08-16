@@ -211,59 +211,59 @@ private:
 
     //double timer_mul_;
 
-    void setup_measurement();
+    //void setup_measurement();
 
-    void start_measurement();
+    //void start_measurement();
 
     //bool is_measurement_pending() const {
     //    return pending_measurement_;
     //}
 
-    void trigger();
+    //void trigger();
 
     void fill_lua_callbacks();
 
-    bool waiting_on_trigger() const;
+    //bool waiting_on_trigger() const;
 
-    static bool init_sol_commands_;
+    //static bool init_sol_commands_;
 
     //std::shared_ptr<sol::state_view> sol_state_;
 
-    sol::state sol_state_;
+    //sol::state sol_state_;
 
-    std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument_configuration> config_map_;
+    //std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument_configuration> config_map_;
 
-    bool pending_measurement_ = false;
+    //bool pending_measurement_ = false;
 
     //bool pending_read_ = false;
 
-    bool enforce_software_trigger_ = false;
+    //bool enforce_software_trigger_ = false;
 
-    std::chrono::system_clock::time_point last_trigger_;
+    //std::chrono::system_clock::time_point last_trigger_;
 
-    int64_t tracy_last_trigger_;
+    //int64_t tracy_last_trigger_;
 
-    bool have_triggered_ = false;
+    //bool have_triggered_ = false;
 
-    std::unordered_map<std::string, std::string> exp_map_;
+    //std::unordered_map<std::string, std::string> exp_map_;
 
-    std::vector<float> examine_expression(std::string const& name, std::string const& exp_path, int s_idx);
+    //std::vector<float> examine_expression(std::string const& name, std::string const& exp_path, int s_idx);
 
-    int64_t qpc_frequency_;
+    //int64_t qpc_frequency_;
 
-    int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) const;
+    //int64_t get_tracy_time(int64_t base, int64_t tracy_offset, float seg_off) const;
 
-    int64_t get_tracy_time(int64_t base, int64_t tracy_offset) const;
+    //int64_t get_tracy_time(int64_t base, int64_t tracy_offset) const;
 
-    std::vector<std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>>> values_map_;
+    //std::vector<std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>>> values_map_;
 
     bool write_to_files_ = false;
 
     std::string write_folder_ = "./";
 
-    enum class file_type { RAW, CSV };
+    //enum class file_type { RAW, CSV };
 
-    void write_to_files(std::string const& folder_path, file_type ft) const;
+    //void write_to_files(std::string const& folder_path, file_type ft) const;
 
     RTXInstruments rtx_;
 };
