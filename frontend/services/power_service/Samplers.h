@@ -14,6 +14,7 @@
 #include <power_overwhelming/tinkerforge_sensor.h>
 
 #include "SampleBuffer.h"
+#include "Utility.h"
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
@@ -29,16 +30,20 @@ using buffers_t = std::vector<SampleBuffer>;
 
 inline void tracy_sample(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
-    auto usr_data = static_cast<std::pair<std::string, SampleBuffer*>*>(usr_ptr);
-    auto const& name = usr_data->first;
-    auto buffer = usr_data->second;
+    auto usr_data = static_cast<std::tuple<std::string, SampleBuffer*, bool const&>*>(usr_ptr);
+    auto const& name = std::get<0>(*usr_data);
+    auto buffer = std::get<1>(*usr_data);
+    auto const& do_buffer = std::get<2>(*usr_data);
 #ifdef MEGAMOL_USE_TRACY
     for (std::size_t i = 0; i < n; ++i) {
         TracyPlot(name.data(), m[i].power());
     }
 #endif
-    for (std::size_t i = 0; i < n; ++i) {
-        buffer->Add(m[i].power(), m[i].timestamp());
+    if (do_buffer) {
+        for (std::size_t i = 0; i < n; ++i) {
+            //buffer->Add(m[i].power(), m[i].timestamp());
+            buffer->Add(m[i].power(), get_highres_timer());
+        }
     }
 }
 
@@ -55,7 +60,7 @@ inline std::string unmueller_string(wchar_t const* name) {
 
 template<typename T>
 inline std::tuple<samplers_t<T>, buffers_t> InitSampler(
-    std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis) {
+    std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis, bool const& do_buffer) {
     using namespace visus::power_overwhelming;
     auto sensor_count = T::for_all(nullptr, 0);
     std::vector<T> tmp_sensors(sensor_count);
@@ -80,7 +85,7 @@ inline std::tuple<samplers_t<T>, buffers_t> InitSampler(
         sensors[sensor_name].sample(
             std::move(async_sampling()
                           .delivers_measurement_data_to(&tracy_sample)
-                          .stores_and_passes_context(std::make_pair(sensor_name, &buffers.back()))
+                          .stores_and_passes_context(std::make_tuple(sensor_name, &buffers.back(), std::cref(do_buffer)))
                           .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
                           .using_resolution(timestamp_resolution::microseconds)));
     }

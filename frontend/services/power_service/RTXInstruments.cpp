@@ -17,7 +17,7 @@ using namespace visus::power_overwhelming;
 
 namespace megamol::power {
 
-RTXInstruments::RTXInstruments() {
+RTXInstruments::RTXInstruments(std::shared_ptr<Trigger> trigger) : trigger_(trigger) {
     auto num_devices = rtx_instrument::all(nullptr, 0);
     if (num_devices == 0)
         throw std::runtime_error("No RTX devices attached");
@@ -35,8 +35,6 @@ RTXInstruments::RTXInstruments() {
     sol_state_.open_libraries(sol::lib::base);
 
     sol_register_all(sol_state_);
-
-    trigger_ = std::make_unique<Trigger>("lpt1");
 }
 
 void RTXInstruments::UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,

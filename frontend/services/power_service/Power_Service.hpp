@@ -10,12 +10,15 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <chrono>
+#include <thread>
 #include <unordered_map>
 #include <variant>
 
 #include "AbstractFrontendService.hpp"
 
 #include "ParallelPortTrigger.h"
+#include "ParquetWriter.h"
+#include "Trigger.h"
 
 #include "PowerCallbacks.h"
 
@@ -214,7 +217,26 @@ private:
 
     std::string write_folder_ = "./";
 
-    megamol::power::RTXInstruments rtx_;
+    std::unique_ptr<megamol::power::RTXInstruments> rtx_;
+
+    bool do_buffer_ = false;
+
+    std::size_t seg_cnt_ = 0;
+
+    void sb_pre_trg() {
+        do_buffer_ = true;
+    }
+
+    void sb_post_trg() {
+        do_buffer_ = false;
+        auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this));
+        t.detach();
+        ++seg_cnt_;
+    }
+
+    void write_sample_buffers() const;
+
+    std::shared_ptr<megamol::power::Trigger> main_trigger_;
 };
 
 } // namespace frontend

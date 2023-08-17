@@ -28,7 +28,7 @@ namespace megamol::power {
 
 class RTXInstruments {
 public:
-    RTXInstruments();
+    RTXInstruments(std::shared_ptr<Trigger> trigger);
 
     void UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,
         std::chrono::milliseconds range, std::chrono::milliseconds timeout);
@@ -90,7 +90,8 @@ private:
 
     bool pending_measurement_ = false;
 
-    std::unique_ptr<Trigger> trigger_;
+    std::shared_ptr<Trigger> trigger_;
+    //std::unique_ptr<Trigger> trigger_;
 };
 
 } // namespace megamol::frontend

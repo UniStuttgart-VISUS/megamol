@@ -155,6 +155,12 @@ bool Power_Service::init(void* configPtr) {
         trigger_ = nullptr;
     }
 
+    main_trigger_ = std::make_shared<megamol::power::Trigger>(lpt);
+    main_trigger_->RegisterPreTrigger("Power_Service", std::bind(&Power_Service::sb_pre_trg, this));
+    main_trigger_->RegisterPostTrigger("Power_Service", std::bind(&Power_Service::sb_post_trg, this));
+
+    rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);
+
     callbacks_.signal_high = std::bind(&megamol::power::ParallelPortTrigger::SetBit, trigger_.get(), 7, true);
     callbacks_.signal_low = std::bind(&megamol::power::ParallelPortTrigger::SetBit, trigger_.get(), 7, false);
     callbacks_.signal_frame = [&]() -> void {
@@ -209,15 +215,15 @@ bool Power_Service::init(void* configPtr) {
     using namespace visus::power_overwhelming;
 
     std::tie(nvml_sensors_, nvml_buffers_) =
-        megamol::power::InitSampler<nvml_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+        megamol::power::InitSampler<nvml_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
     std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
-                           std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+                           std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
     if (emi_sensors_.empty()) {
         std::tie(msr_sensors_, msr_buffers_) =
-            megamol::power::InitSampler<msr_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+            megamol::power::InitSampler<msr_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
     }
     std::tie(tinker_sensors_, tinker_buffers_) =
-        megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5));
+        megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5), do_buffer_);
 
     //setup_measurement();
 
@@ -387,7 +393,7 @@ void Power_Service::close() {
     // wrap up resources your service provides, but don not depend on outside resources to be available here
     // after this, at some point only the destructor of your service gets called
 
-    nvml_sensors_.clear();
+    /*nvml_sensors_.clear();
     emi_sensors_.clear();
     msr_sensors_.clear();
     tinker_sensors_.clear();
@@ -395,7 +401,7 @@ void Power_Service::close() {
     ParquetWriter(std::filesystem::path(write_folder_) / "nvml.parquet", nvml_buffers_);
     ParquetWriter(std::filesystem::path(write_folder_) / "emi.parquet", emi_buffers_);
     ParquetWriter(std::filesystem::path(write_folder_) / "msr.parquet", msr_buffers_);
-    ParquetWriter(std::filesystem::path(write_folder_) / "tinker.parquet", tinker_buffers_);
+    ParquetWriter(std::filesystem::path(write_folder_) / "tinker.parquet", tinker_buffers_);*/
 }
 
 std::vector<FrontendResource>& Power_Service::getProvidedResources() {
@@ -527,17 +533,18 @@ void Power_Service::fill_lua_callbacks() {
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerSetup", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             //setup_measurement();
-            rtx_.ApplyConfigs();
+            rtx_->ApplyConfigs();
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>("mmPowerMeasure",
         "(string path)", {[&](std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             //start_measurement();
+            seg_cnt_ = 0;
             if (write_to_files_) {
-                rtx_.StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy});
+                rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy});
             } else {
-                rtx_.StartMeasurement(path, {&megamol::power::wf_tracy});
+                rtx_->StartMeasurement(path, {&megamol::power::wf_tracy});
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
@@ -563,7 +570,7 @@ void Power_Service::fill_lua_callbacks() {
 
             config_map_[name] = config;*/
 
-            rtx_.UpdateConfigs(
+            rtx_->UpdateConfigs(
                 path, points, count, std::chrono::milliseconds(range), std::chrono::milliseconds(timeout));
 
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
@@ -571,7 +578,7 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
         "mmPowerIsPending", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
-            return frontend_resources::LuaCallbacksCollection::BoolResult{rtx_.IsMeasurementPending()};
+            return frontend_resources::LuaCallbacksCollection::BoolResult{rtx_->IsMeasurementPending()};
         }});
 
     /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
@@ -584,7 +591,7 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>("mmPowerSoftwareTrigger", "(bool set)",
         {[&](bool set) -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            rtx_.SetSoftwareTrigger(set);
+            rtx_->SetSoftwareTrigger(set);
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
@@ -600,6 +607,29 @@ void Power_Service::fill_lua_callbacks() {
             .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
 
     register_callbacks(callbacks);
+}
+
+void Power_Service::write_sample_buffers() const {
+    ParquetWriter(
+        std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt_) + ".parquet"), nvml_buffers_);
+    ParquetWriter(
+        std::filesystem::path(write_folder_) / ("emi_s" + std::to_string(seg_cnt_) + ".parquet"), emi_buffers_);
+    ParquetWriter(
+        std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt_) + ".parquet"), msr_buffers_);
+    ParquetWriter(
+        std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt_) + ".parquet"), tinker_buffers_);
+
+#if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
+    static std::string name = "nvml_debug";
+    for (auto const& b : nvml_buffers_) {
+        TracyPlotConfig(name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+        auto const& values = b.ReadSamples();
+        auto const& ts = b.ReadTimestamps();
+        for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
+            tracy::Profiler::PlotData(name.c_str(), values[v_idx], ts[v_idx]);
+        }
+    }
+#endif
 }
 
 } // namespace frontend
