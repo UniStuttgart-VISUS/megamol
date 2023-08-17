@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <regex>
+#include <thread>
 
 #include "ParallelPortTrigger.h"
 #include "Utility.h"
@@ -38,7 +39,9 @@ public:
             fire_pre_trigger();
             std::this_thread::sleep_for(prefix);
             trg_tp = fire_trigger();
-            std::this_thread::sleep_for(postfix + wait + prefix);
+            std::this_thread::sleep_for(postfix);
+            fire_post_trigger();
+            std::this_thread::sleep_for(wait + prefix);
         }
         return trg_tp;
     }
@@ -53,6 +56,10 @@ public:
 
     void RegisterPreTrigger(std::string const& name, std::function<void()> const& pre_trigger) {
         pre_trigger_[name] = pre_trigger;
+    }
+
+    void RegisterPostTrigger(std::string const& name, std::function<void()> const& post_trigger) {
+        post_trigger_[name] = post_trigger;
     }
 
     void SetLPTAddress(std::string const& address) {
@@ -98,13 +105,28 @@ private:
     }
 
     void fire_sub_trigger() const {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedN("Trigger::fire_sub_trigger");
+#endif
         for (auto const& [n, t] : sub_trigger_) {
             t();
         }
     }
 
     void fire_pre_trigger() const {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedN("Trigger::fire_pre_trigger");
+#endif
         for (auto const& [n, p] : pre_trigger_) {
+            p();
+        }
+    }
+
+    void fire_post_trigger() const {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedN("Trigger::fire_post_trigger");
+#endif
+        for (auto const& [n, p] : post_trigger_) {
             p();
         }
     }
@@ -116,6 +138,8 @@ private:
     std::unordered_map<std::string, std::function<void()>> sub_trigger_;
 
     std::unordered_map<std::string, std::function<void()>> pre_trigger_;
+
+    std::unordered_map<std::string, std::function<void()>> post_trigger_;
 
     bool armed_ = false;
 
