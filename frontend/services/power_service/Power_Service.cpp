@@ -69,21 +69,6 @@ bool Power_Service::init(void* configPtr) {
     write_to_files_ = conf->write_to_files;
     write_folder_ = conf->folder;
 
-    //rtx_.SetLPTTrigger(lpt);
-
-    /*std::regex p("^(lpt|LPT)(\\d)$");
-    std::smatch m;
-    if (!std::regex_search(lpt, m, p)) {
-        log_error("LPT parameter malformed");
-        return false;
-    }
-
-    try {
-        trigger_ = std::make_unique<megamol::power::ParallelPortTrigger>(("\\\\.\\" + lpt).c_str());
-    } catch (...) {
-        trigger_ = nullptr;
-    }*/
-
     main_trigger_ = std::make_shared<megamol::power::Trigger>(lpt);
     main_trigger_->RegisterPreTrigger("Power_Service", std::bind(&Power_Service::sb_pre_trg, this));
     main_trigger_->RegisterPostTrigger("Power_Service", std::bind(&Power_Service::sb_post_trg, this));

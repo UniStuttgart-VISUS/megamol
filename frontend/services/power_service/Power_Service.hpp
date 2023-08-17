@@ -15,10 +15,10 @@
 #include "AbstractFrontendService.hpp"
 
 #include "power/ParallelPortTrigger.h"
-#include "power/Trigger.h"
-#include "power/Utility.h"
 #include "power/RTXInstruments.h"
 #include "power/Samplers.h"
+#include "power/Trigger.h"
+#include "power/Utility.h"
 
 #include "PowerCallbacks.h"
 
@@ -179,8 +179,6 @@ private:
     // (or else std::any will throw a bad type cast exception that should terminate program execution.
     // you do NOT catch or check for that exception or need to care for it in any way!)
     std::vector<FrontendResource> m_requestedResourceReferences;
-
-    //std::unique_ptr<megamol::power::ParallelPortTrigger> trigger_;
 
     frontend_resources::PowerCallbacks callbacks_;
 
