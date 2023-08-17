@@ -171,8 +171,9 @@ void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua
     //    });
 }
 
-void visus::power_overwhelming::sol_expressions(
-    sol::state& lua, std::vector<std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>>> const& val_map) {
+void visus::power_overwhelming::sol_expressions(sol::state& lua,
+    std::vector<std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>>> const&
+        val_map) {
     lua.set_function("rtx_plus", [&val_map](int idx, sol::variadic_args va) -> std::vector<float> {
         std::vector<float> ret;
         auto const& curr_map = val_map.at(idx);

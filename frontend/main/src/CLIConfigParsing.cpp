@@ -601,8 +601,10 @@ std::vector<OptionsListEntry> cli_options_list =
 #ifdef MEGAMOL_USE_POWER
         ,
         {power_lpt_option, "Set LPT port for trigger out", cxxopts::value<std::string>(), power_lpt_handler},
-        {power_write_file_option, "Set on if power service should write files to disk", cxxopts::value<bool>(), power_write_file_handler},
-        {power_folder_option, "Set output folder for power service", cxxopts::value<std::string>(), power_folder_handler}
+        {power_write_file_option, "Set on if power service should write files to disk", cxxopts::value<bool>(),
+            power_write_file_handler},
+        {power_folder_option, "Set output folder for power service", cxxopts::value<std::string>(),
+            power_folder_handler}
 #endif
         ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",

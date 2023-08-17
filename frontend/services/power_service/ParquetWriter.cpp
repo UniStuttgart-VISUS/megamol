@@ -82,7 +82,7 @@ void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuf
     try {
         // create scheme
         NodeVector fields;
-        fields.reserve(buffers.size()*2);
+        fields.reserve(buffers.size() * 2);
         for (auto const& b : buffers) {
             fields.push_back(
                 PrimitiveNode::Make(b.Name() + "_samples", Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <chrono>
+#include <vector>
 
 namespace megamol::frontend {
 
@@ -9,7 +9,8 @@ class SampleBuffer {
 public:
     SampleBuffer() = default;
 
-    explicit SampleBuffer(std::string const& name, std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis);
+    explicit SampleBuffer(std::string const& name, std::chrono::milliseconds const& sample_range,
+        std::chrono::milliseconds const& sample_dis);
 
     void Add(float const sample, int64_t const timestamp);
 
