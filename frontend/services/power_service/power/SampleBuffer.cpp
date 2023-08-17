@@ -1,12 +1,15 @@
 #include "SampleBuffer.h"
 
-megamol::power::SampleBuffer::SampleBuffer(
+namespace megamol::power {
+
+SampleBuffer::SampleBuffer(
     std::string const& name, std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis)
-        : name_(name), sample_dis_(sample_dis) {
+        : name_(name)
+        , sample_dis_(sample_dis) {
     SetSampleRange(sample_range);
 }
 
-void megamol::power::SampleBuffer::Add(float const sample, int64_t const timestamp, int64_t const walltime) {
+void SampleBuffer::Add(float const sample, int64_t const timestamp, int64_t const walltime) {
     samples_.push_back(sample);
     timestamps_.push_back(timestamp);
     walltimes_.push_back(walltime);
@@ -17,7 +20,7 @@ void megamol::power::SampleBuffer::Add(float const sample, int64_t const timesta
     }
 }
 
-void megamol::power::SampleBuffer::Clear() {
+void SampleBuffer::Clear() {
     samples_.clear();
     timestamps_.clear();
     walltimes_.clear();
@@ -26,10 +29,12 @@ void megamol::power::SampleBuffer::Clear() {
     walltimes_.reserve(cap_incr_);
 }
 
-void megamol::power::SampleBuffer::SetSampleRange(std::chrono::milliseconds const& sample_range) {
+void SampleBuffer::SetSampleRange(std::chrono::milliseconds const& sample_range) {
     auto const total_samples = sample_range / sample_dis_;
     cap_incr_ = total_samples * 1.1f;
     samples_.reserve(cap_incr_);
     timestamps_.reserve(cap_incr_);
     walltimes_.reserve(cap_incr_);
 }
+
+} // namespace megamol::power

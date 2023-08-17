@@ -4,9 +4,7 @@
 
 #include <sol/sol.hpp>
 
-#include <power_overwhelming/oscilloscope_waveform.h>
-
-namespace visus::power_overwhelming {
+namespace megamol::power {
 
 void sol_rtx_instrument(sol::state& lua);
 

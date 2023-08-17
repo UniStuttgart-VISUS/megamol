@@ -1,13 +1,17 @@
 #include "sol_rtx_instrument.h"
 
-#define SOL_ALL_SAFETIES_ON 1
+#ifdef MEGAMOL_USE_POWER
+
 #include <sol/sol.hpp>
 
 #include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/rtx_instrument_configuration.h>
 
+namespace megamol::power {
 
-void visus::power_overwhelming::sol_rtx_instrument(sol::state& lua) {
+using namespace visus::power_overwhelming;
+
+void sol_rtx_instrument(sol::state& lua) {
     auto rtx_instrument_table = lua.new_usertype<rtx_instrument>("rtx_instrument",
         sol::constructors<rtx_instrument(),
             rtx_instrument(const char* path, const visa_instrument::timeout_type timeout),
@@ -51,7 +55,7 @@ void visus::power_overwhelming::sol_rtx_instrument(sol::state& lua) {
 }
 
 
-void visus::power_overwhelming::sol_oscilloscope_single_acquisition(sol::state& lua) {
+void sol_oscilloscope_single_acquisition(sol::state& lua) {
     auto acq_table = lua.new_usertype<oscilloscope_acquisition>(
         "oscilloscope_single_acquisition", sol::constructors<oscilloscope_acquisition()>());
 
@@ -66,14 +70,14 @@ void visus::power_overwhelming::sol_oscilloscope_single_acquisition(sol::state& 
 }
 
 
-void visus::power_overwhelming::sol_oscilloscope_reference_point(sol::state& lua) {
+void sol_oscilloscope_reference_point(sol::state& lua) {
     lua.new_enum<oscilloscope_reference_point>("oscilloscope_reference_point",
         {{"left", oscilloscope_reference_point::left}, {"middle", oscilloscope_reference_point::middle},
             {"right", oscilloscope_reference_point::right}});
 }
 
 
-void visus::power_overwhelming::sol_oscilloscope_channel(sol::state& lua) {
+void sol_oscilloscope_channel(sol::state& lua) {
     auto channel_table = lua.new_usertype<oscilloscope_channel>(
         "oscilloscope_channel", sol::constructors<oscilloscope_channel(const std::uint32_t),
                                     oscilloscope_channel(const std::uint32_t, const oscilloscope_channel&)>());
@@ -93,7 +97,7 @@ void visus::power_overwhelming::sol_oscilloscope_channel(sol::state& lua) {
 }
 
 
-void visus::power_overwhelming::sol_oscilloscope_edge_trigger(sol::state& lua) {
+void sol_oscilloscope_edge_trigger(sol::state& lua) {
     auto trigger_table = lua.new_usertype<oscilloscope_trigger>(
         "oscilloscope_trigger", sol::constructors<oscilloscope_trigger(const char*, const char*)>());
 
@@ -120,19 +124,19 @@ void visus::power_overwhelming::sol_oscilloscope_edge_trigger(sol::state& lua) {
 }
 
 
-void visus::power_overwhelming::sol_oscilloscope_quantity(sol::state& lua) {
+void sol_oscilloscope_quantity(sol::state& lua) {
     auto quant_table = lua.new_usertype<oscilloscope_quantity>(
         "oscilloscope_quantity", sol::constructors<oscilloscope_quantity(const float, const char* unit)>());
 }
 
 
-void visus::power_overwhelming::sol_oscilloscope_label(sol::state& lua) {
+void sol_oscilloscope_label(sol::state& lua) {
     auto label_table = lua.new_usertype<oscilloscope_label>(
         "oscilloscope_label", sol::constructors<oscilloscope_label(), oscilloscope_label(const char*, const bool)>());
 }
 
 
-void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua) {
+void sol_rtx_instrument_configuration(sol::state& lua) {
     auto config_table = lua.new_usertype<rtx_instrument_configuration>(
         "rtx_instrument_configuration", sol::constructors<rtx_instrument_configuration(),
                                             rtx_instrument_configuration(const oscilloscope_quantity,
@@ -171,7 +175,7 @@ void visus::power_overwhelming::sol_rtx_instrument_configuration(sol::state& lua
     //    });
 }
 
-void visus::power_overwhelming::sol_expressions(sol::state& lua,
+void sol_expressions(sol::state& lua,
     std::vector<std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>>> const&
         val_map) {
     lua.set_function("rtx_plus", [&val_map](int idx, sol::variadic_args va) -> std::vector<float> {
@@ -235,7 +239,7 @@ void visus::power_overwhelming::sol_expressions(sol::state& lua,
 }
 
 
-void visus::power_overwhelming::sol_register_all(sol::state& lua) {
+void sol_register_all(sol::state& lua) {
     sol_rtx_instrument(lua);
 
     sol_rtx_instrument_configuration(lua);
@@ -252,3 +256,7 @@ void visus::power_overwhelming::sol_register_all(sol::state& lua) {
 
     sol_oscilloscope_label(lua);
 }
+
+} // namespace megamol::power
+
+#endif
