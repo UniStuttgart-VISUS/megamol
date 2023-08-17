@@ -138,7 +138,26 @@ void RTXInstruments::StartMeasurement(
             tp_fut.wait();
             std::tie(last_trigger, last_trigger_qpc) = tp_fut.get();
 
+            core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start fetching data");
+            auto const start_fetch = std::chrono::steady_clock::now();
+            std::vector<std::future<oscilloscope_sample>> all_wf_fut;
+            all_wf_fut.reserve(rtx_instr_.size());
 
+            for (auto& [name, i] : rtx_instr_) {
+                all_wf_fut.push_back(std::async(std::launch::async,
+                    std::bind(static_cast<oscilloscope_sample (rtx_instrument::*)(oscilloscope_waveform_points const,
+                                  rtx_instrument::timeout_type const)>(&rtx_instrument::data),
+                        std::addressof(i), oscilloscope_waveform_points::maximum, 1000)));
+            }
+
+            for (auto& f : all_wf_fut) {
+                f.wait();
+            }
+            auto const stop_fetch = std::chrono::steady_clock::now();
+            core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Stop fetching data %dms",
+                std::chrono::duration_cast<std::chrono::milliseconds>(stop_fetch - start_fetch).count());
+
+            std::size_t f_cnt = 0;
             std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [&](auto& instr) {
                 auto const& name = instr.first;
                 auto& i = instr.second;
@@ -161,7 +180,8 @@ void RTXInstruments::StartMeasurement(
 
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start reading data");
                 auto const start_read = std::chrono::steady_clock::now();
-                auto const all_waveforms = i.data(oscilloscope_waveform_points::maximum);
+                //auto const all_waveforms = i.data(oscilloscope_waveform_points::maximum);
+                auto const all_waveforms = all_wf_fut[f_cnt++].get();
 
                 auto const num_segments = i.history_segments();
 
