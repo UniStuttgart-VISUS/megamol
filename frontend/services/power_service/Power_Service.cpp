@@ -12,7 +12,7 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <filesystem>
-#include <regex>
+#include <format>
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
@@ -73,7 +73,12 @@ bool Power_Service::init(void* configPtr) {
     main_trigger_->RegisterPreTrigger("Power_Service", std::bind(&Power_Service::sb_pre_trg, this));
     main_trigger_->RegisterPostTrigger("Power_Service", std::bind(&Power_Service::sb_post_trg, this));
 
-    rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);
+    try {
+        rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);
+    } catch (std::exception& ex) {
+        log_error(std::format("RTX devices not available: {}", ex.what()));
+        rtx_ = nullptr;
+    }
 
     callbacks_.signal_high =
         std::bind(&megamol::power::ParallelPortTrigger::SetBit, main_trigger_->GetHandle(), 7, true);
@@ -222,7 +227,9 @@ void Power_Service::fill_lua_callbacks() {
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerSetup", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             //setup_measurement();
-            rtx_->ApplyConfigs();
+            if (rtx_) {
+                rtx_->ApplyConfigs();
+            }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
@@ -231,10 +238,12 @@ void Power_Service::fill_lua_callbacks() {
             //start_measurement();
             seg_cnt_ = 0;
             write_folder_ = path;
-            if (write_to_files_) {
-                rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy});
-            } else {
-                rtx_->StartMeasurement(path, {&megamol::power::wf_tracy});
+            if (rtx_) {
+                if (write_to_files_) {
+                    rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy});
+                } else {
+                    rtx_->StartMeasurement(path, {&megamol::power::wf_tracy});
+                }
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
@@ -259,9 +268,10 @@ void Power_Service::fill_lua_callbacks() {
             visus::power_overwhelming::rtx_instrument_configuration config = sol_state_[name];
 
             config_map_[name] = config;*/
-
-            rtx_->UpdateConfigs(
-                path, points, count, std::chrono::milliseconds(range), std::chrono::milliseconds(timeout));
+            if (rtx_) {
+                rtx_->UpdateConfigs(
+                    path, points, count, std::chrono::milliseconds(range), std::chrono::milliseconds(timeout));
+            }
             reset_segment_range(std::chrono::milliseconds(range));
 
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
@@ -269,7 +279,7 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
         "mmPowerIsPending", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
-            return frontend_resources::LuaCallbacksCollection::BoolResult{rtx_->IsMeasurementPending()};
+            return frontend_resources::LuaCallbacksCollection::BoolResult{rtx_ ? rtx_->IsMeasurementPending() : false};
         }});
 
     /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
@@ -282,7 +292,9 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>("mmPowerSoftwareTrigger", "(bool set)",
         {[&](bool set) -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            rtx_->SetSoftwareTrigger(set);
+            if (rtx_) {
+                rtx_->SetSoftwareTrigger(set);
+            }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
