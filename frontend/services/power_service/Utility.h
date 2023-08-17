@@ -25,7 +25,7 @@ using timeline_t = std::vector<int64_t>;
 using samples_t = std::vector<float>;
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
 using segments_t = std::vector<value_map_t>;
-using writer_func_t = std::function<void(int64_t, std::filesystem::path const&, segments_t const&)>;
+using writer_func_t = std::function<void(std::filesystem::path const&, segments_t const&)>;
 } // namespace power
 
 inline int64_t get_highres_timer() {
@@ -109,6 +109,13 @@ inline power::timeline_t offset_timeline(power::timeline_t const& timeline, std:
     std::transform(ret.begin(), ret.end(), ret.begin(), [o = offset.count()](auto const& val) { return val + o; });
 
     return ret;
+}
+
+inline int64_t get_tracy_time(int64_t base, int64_t tracy_offset) {
+    static int64_t const frequency = get_highres_timer_freq();
+    auto base_ticks =
+        static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(frequency));
+    return base_ticks + tracy_offset;
 }
 
 } // namespace megamol::power

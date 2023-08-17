@@ -193,10 +193,14 @@ void RTXInstruments::StartMeasurement(
                                                           std::chrono::duration<float>(waveform.segment_offset())));
                     auto const ltrg_ns = tp_dur_to_epoch_ns(last_trigger);
                     auto const wall_times = offset_timeline(abs_times, ltrg_ns);
+                    power::timeline_t timestamps(abs_times.size());
+                    std::transform(abs_times.begin(), abs_times.end(), timestamps.begin(),
+                        [&last_trigger_qpc](auto const& base) { return get_tracy_time(base, last_trigger_qpc); });
 
                     values_map[s_idx]["sample_times"] = sample_times;
                     values_map[s_idx]["abs_times"] = abs_times;
                     values_map[s_idx]["wall_times"] = wall_times;
+                    values_map[s_idx]["timestamps"] = timestamps;
 
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
                         auto const tpn = name + "_" + channels[c_idx].label().text();
@@ -211,8 +215,8 @@ void RTXInstruments::StartMeasurement(
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start writing data");
                 auto const start_write = std::chrono::steady_clock::now();
                 std::for_each(writer_funcs.begin(), writer_funcs.end(),
-                    [&last_trigger_qpc, &output_folder, &values_map](
-                        auto const& writer_func) { writer_func(last_trigger_qpc, output_folder, values_map); });
+                    [&output_folder, &values_map](
+                        auto const& writer_func) { writer_func(output_folder, values_map); });
                 auto const stop_write = std::chrono::steady_clock::now();
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Finished writing data in %dms",
                     std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());
