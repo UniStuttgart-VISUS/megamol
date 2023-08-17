@@ -43,16 +43,16 @@ public:
         return trg_tp;
     }
 
-    void RegisterSignal(std::function<void()> const& signal) {
-        signals_.push_back(signal);
+    void RegisterSignal(std::string const& name, std::function<void()> const& signal) {
+        signals_[name] = signal;
     }
 
-    void RegisterSubTrigger(std::function<void()> const& trigger) {
-        sub_trigger_.push_back(trigger);
+    void RegisterSubTrigger(std::string const& name, std::function<void()> const& trigger) {
+        sub_trigger_[name] = trigger;
     }
 
-    void RegisterPreTrigger(std::function<void()> const& pre_trigger) {
-        pre_trigger_.push_back(pre_trigger);
+    void RegisterPreTrigger(std::string const& name, std::function<void()> const& pre_trigger) {
+        pre_trigger_[name] = pre_trigger;
     }
 
     void SetLPTAddress(std::string const& address) {
@@ -92,30 +92,30 @@ private:
     }
 
     void notify_all() const {
-        for (auto const& s : signals_) {
+        for (auto const& [n, s] : signals_) {
             s();
         }
     }
 
     void fire_sub_trigger() const {
-        for (auto const& t : sub_trigger_) {
+        for (auto const& [n, t] : sub_trigger_) {
             t();
         }
     }
 
     void fire_pre_trigger() const {
-        for (auto const& p : pre_trigger_) {
+        for (auto const& [n, p] : pre_trigger_) {
             p();
         }
     }
 
     std::unique_ptr<ParallelPortTrigger> trigger_;
 
-    std::vector<std::function<void()>> signals_;
+    std::unordered_map<std::string, std::function<void()>> signals_;
 
-    std::vector<std::function<void()>> sub_trigger_;
+    std::unordered_map<std::string, std::function<void()>> sub_trigger_;
 
-    std::vector<std::function<void()>> pre_trigger_;
+    std::unordered_map<std::string, std::function<void()>> pre_trigger_;
 
     bool armed_ = false;
 

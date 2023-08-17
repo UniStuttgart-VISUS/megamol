@@ -37,7 +37,6 @@ RTXInstruments::RTXInstruments() {
     sol_register_all(sol_state_);
 
     trigger_ = std::make_unique<Trigger>("lpt1");
-    trigger_->RegisterSubTrigger(std::bind(&RTXInstruments::soft_trg, this));
 }
 
 void RTXInstruments::UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,
@@ -231,21 +230,21 @@ void RTXInstruments::StartMeasurement(
     t_thread.detach();
 }
 
-void RTXInstruments::SetLPTTrigger(std::string const& address) {
-    std::regex p("^(lpt|LPT)(\\d)$");
-    std::smatch m;
-    if (!std::regex_search(address, m, p)) {
-        core::utility::log::Log::DefaultLog.WriteError("LPT parameter malformed");
-        lpt_trigger_ = nullptr;
-        return;
-    }
-
-    try {
-        lpt_trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\" + address).c_str());
-    } catch (...) {
-        lpt_trigger_ = nullptr;
-    }
-}
+//void RTXInstruments::SetLPTTrigger(std::string const& address) {
+//    std::regex p("^(lpt|LPT)(\\d)$");
+//    std::smatch m;
+//    if (!std::regex_search(address, m, p)) {
+//        core::utility::log::Log::DefaultLog.WriteError("LPT parameter malformed");
+//        lpt_trigger_ = nullptr;
+//        return;
+//    }
+//
+//    try {
+//        lpt_trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\" + address).c_str());
+//    } catch (...) {
+//        lpt_trigger_ = nullptr;
+//    }
+//}
 
 bool RTXInstruments::waiting_on_trigger() const {
     for (auto& [name, i] : rtx_instr_) {

@@ -140,7 +140,7 @@ bool Power_Service::init(void* configPtr) {
     write_to_files_ = conf->write_to_files;
     write_folder_ = conf->folder;
 
-    rtx_.SetLPTTrigger(lpt);
+    //rtx_.SetLPTTrigger(lpt);
 
     std::regex p("^(lpt|LPT)(\\d)$");
     std::smatch m;
