@@ -28,4 +28,4 @@ void sol_expressions(sol::state& lua,
 
 void sol_register_all(sol::state& lua);
 
-} // namespace visus::power_overwhelming
+} // namespace megamol::power
