@@ -11,29 +11,16 @@
 
 #ifdef MEGAMOL_USE_POWER
 
-#include <codecvt>
 #include <filesystem>
-#include <fstream>
-#include <iomanip>
-#include <numeric>
 #include <regex>
-#include <stdexcept>
-
-#ifdef WIN32
-#include <Windows.h>
-#else
-#include <time.h>
-#endif
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
 #endif
 
 #include "LuaCallbacksCollection.h"
-#include <power_overwhelming/timestamp_resolution.h>
 
 #include "WriterUtility.h"
-#include "sol_rtx_instrument.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -68,72 +55,14 @@ Power_Service::~Power_Service() {
     // clean up raw pointers you allocated with new, which is bad practice and nobody does
 }
 
-//std::string unmueller_string(wchar_t const* name) {
-//    std::string no_mueller =
-//        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));
-//
-//    /*char* sensor_name = new char[wcslen(name) + 1];
-//    wcstombs(sensor_name, name, wcslen(name) + 1);
-//    std::string no_mueller(sensor_name);
-//    delete[] sensor_name;*/
-//    return no_mueller;
-//}
-
-//std::string get_device_name(visus::power_overwhelming::rtx_instrument const& i) {
-//    auto name_size = i.name(nullptr, 0);
-//    std::string name;
-//    name.resize(name_size);
-//    i.name(name.data(), name_size);
-//    if (name_size != 0) {
-//        name.resize(name_size - 1);
-//    }
-//    return name;
-//}
-
-//static int measure_time_in_ms = 50;
-//static int sample_count = 50000;
-
-//void test_func(const visus::power_overwhelming::measurement& m, void*, std::string const&) {}
-
-//void tracy_sample(
-//    wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
-//    auto usr_data = static_cast<std::pair<std::string, SampleBuffer*>*>(usr_ptr);
-//    auto const& name = usr_data->first;
-//    auto buffer = usr_data->second;
-//#ifdef MEGAMOL_USE_TRACY
-//    for (std::size_t i = 0; i < n; ++i) {
-//        TracyPlot(name.data(), m[i].power());
-//    }
-//#endif
-//    for (std::size_t i = 0; i < n; ++i) {
-//        buffer->Add(m[i].power(), m[i].timestamp());
-//    }
-//}
 
 bool Power_Service::init(void* configPtr) {
     if (configPtr == nullptr)
         return false;
 
-    /*rtx_.UpdateConfigs("C:/dev/hpgmol/frontend/services/power_service/config/", 500000, 3,
-        std::chrono::milliseconds(600), std::chrono::milliseconds(20000));
-    rtx_.SetSoftwareTrigger(true);
-    rtx_.ApplyConfigs();*/
-
     //sol_state_.open_libraries(sol::lib::base);
 
-    //visus::power_overwhelming::sol_register_all(sol_state_);
-
     //visus::power_overwhelming::sol_expressions(sol_state_, values_map_);
-
-    //#ifdef WIN32
-    //    LARGE_INTEGER f;
-    //    QueryPerformanceFrequency(&f);
-    //    qpc_frequency_ = f.QuadPart;
-    //#else
-    //    timespec tp;
-    //    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
-    //    qpc_frequency_ = tp.tv_nsec;
-    //#endif
 
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
@@ -217,16 +146,6 @@ void Power_Service::close() {
     // close libraries or APIs you manage
     // wrap up resources your service provides, but don not depend on outside resources to be available here
     // after this, at some point only the destructor of your service gets called
-
-    /*nvml_sensors_.clear();
-    emi_sensors_.clear();
-    msr_sensors_.clear();
-    tinker_sensors_.clear();
-
-    ParquetWriter(std::filesystem::path(write_folder_) / "nvml.parquet", nvml_buffers_);
-    ParquetWriter(std::filesystem::path(write_folder_) / "emi.parquet", emi_buffers_);
-    ParquetWriter(std::filesystem::path(write_folder_) / "msr.parquet", msr_buffers_);
-    ParquetWriter(std::filesystem::path(write_folder_) / "tinker.parquet", tinker_buffers_);*/
 }
 
 std::vector<FrontendResource>& Power_Service::getProvidedResources() {
@@ -249,35 +168,11 @@ const std::vector<std::string> Power_Service::getRequestedResourceNames() const 
     /*this->m_requestedResourcesNames = {"ExternalResource_1", "ExternalResource_2"};*/
 
     return m_requestedResourcesNames;
-
-    // alternative
-    return {"ExternalResource_1", "ExternalResource_2"};
 }
 
 void Power_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     // maybe we want to keep the list of requested resources
     this->m_requestedResourceReferences = resources;
-
-    // prepare usage of requested resources
-    //this->m_externalResource_1_ptr =
-    //    &resources[0].getResource<ExternalResource_1>(); // resources are in requested order and not null
-    //this->m_externalResource_2_ptr =
-    //    &resources[1]
-    //         .getResource<
-    //             namspace::to::resource::ExternalResource_2>(); // ptr will be not null or program terminates by design
-
-    //try {
-    //    auto devices = visus::power_overwhelming::visa_instrument::find_resources("0x0AAD", "0x01D6");
-
-    //    for (auto d = devices.as<char>(); (d != nullptr) && (*d != 0); d += strlen(d) + 1) {
-    //        core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: Found device %s", d);
-
-    //        rtx_instr_.emplace_back(d);
-    //    }
-    //} catch (std::exception& ex) {
-    //    core::utility::log::Log::DefaultLog.WriteError(
-    //        "[Power_Service]: Error during instrument discovery: %s", ex.what());
-    //}
 
     fill_lua_callbacks();
 }
@@ -319,8 +214,6 @@ void Power_Service::preGraphRender() {
     // rendering via MegaMol View is called after this function finishes
     // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
     // which leads to view.Render()
-    /*if (trigger_)
-        trigger_->WriteHigh();*/
 }
 
 void Power_Service::postGraphRender() {
@@ -328,22 +221,6 @@ void Power_Service::postGraphRender() {
     // e.g. end frame timer
     // update window name
     // swap buffers, glClear
-    /*if (trigger_)
-        trigger_->WriteLow();*/
-    //#ifdef MEGAMOL_USE_TRACY
-    //    for (auto& [name, sensor] : nvml_sensors_) {
-    //        auto val = sensor.sample_data();
-    //        TracyPlot(name.data(), val.power());
-    //    }
-    //    for (auto& [name, sensor] : msr_sensors_) {
-    //        auto val = sensor.sample_data();
-    //        TracyPlot(name.data(), val.power());
-    //    }
-    //    for (auto& [name, sensor] : tinker_sensors_) {
-    //        auto val = sensor.sample_data();
-    //        TracyPlot(name.data(), val.power());
-    //    }
-    //#endif
 }
 
 //std::vector<float> Power_Service::examine_expression(std::string const& name, std::string const& exp_path, int s_idx) {
@@ -366,6 +243,7 @@ void Power_Service::fill_lua_callbacks() {
         "(string path)", {[&](std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             //start_measurement();
             seg_cnt_ = 0;
+            write_folder_ = path;
             if (write_to_files_) {
                 rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy});
             } else {

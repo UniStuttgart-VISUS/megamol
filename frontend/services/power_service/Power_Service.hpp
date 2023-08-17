@@ -11,29 +11,20 @@
 
 #include <chrono>
 #include <thread>
-#include <unordered_map>
-#include <variant>
 
 #include "AbstractFrontendService.hpp"
 
 #include "ParallelPortTrigger.h"
-#include "ParquetWriter.h"
 #include "Trigger.h"
 #include "Utility.h"
 
 #include "PowerCallbacks.h"
 
-//#include <power_overwhelming/emi_sensor.h>
-//#include <power_overwhelming/msr_sensor.h>
-//#include <power_overwhelming/nvml_sensor.h>
 #include <power_overwhelming/rtx_instrument.h>
-#include <power_overwhelming/rtx_instrument_configuration.h>
-//#include <power_overwhelming/tinkerforge_sensor.h>
 
 #include <sol/sol.hpp>
 
 #include "RTXInstruments.h"
-#include "SampleBuffer.h"
 #include "Samplers.h"
 
 namespace megamol {
@@ -210,6 +201,31 @@ private:
 
     void fill_lua_callbacks();
 
+    void reset_segment_range(std::chrono::milliseconds const& range);
+
+    void write_sample_buffers();
+
+    void sb_pre_trg() {
+        static auto freq = static_cast<double>(megamol::power::get_highres_timer_freq());
+        do_buffer_ = true;
+#ifdef WIN32
+        FILETIME f;
+        GetSystemTimeAsFileTime(&f);
+        ULARGE_INTEGER tv;
+        tv.HighPart = f.dwHighDateTime;
+        tv.LowPart = f.dwLowDateTime;
+        sb_qpc_offset_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
+#else
+#endif
+    }
+
+    void sb_post_trg() {
+        do_buffer_ = false;
+        auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this));
+        t.detach();
+        ++seg_cnt_;
+    }
+
     //std::unordered_map<std::string, std::string> exp_map_;
 
     //std::vector<float> examine_expression(std::string const& name, std::string const& exp_path, int s_idx);
@@ -224,31 +240,9 @@ private:
 
     std::size_t seg_cnt_ = 0;
 
-    void sb_pre_trg() {
-        static auto freq = static_cast<double>(megamol::power::get_highres_timer_freq());
-        do_buffer_ = true;
-        FILETIME f;
-        GetSystemTimeAsFileTime(&f);
-        ULARGE_INTEGER tv;
-        tv.HighPart = f.dwHighDateTime;
-        tv.LowPart = f.dwLowDateTime;
-        sb_qpc_offset_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
-    }
-
-    void sb_post_trg() {
-        do_buffer_ = false;
-        auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this));
-        t.detach();
-        ++seg_cnt_;
-    }
-
-    void write_sample_buffers();
-
     std::shared_ptr<megamol::power::Trigger> main_trigger_;
 
     int64_t sb_qpc_offset_;
-
-    void reset_segment_range(std::chrono::milliseconds const& range);
 };
 
 } // namespace frontend
