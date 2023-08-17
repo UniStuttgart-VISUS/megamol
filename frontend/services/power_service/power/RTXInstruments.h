@@ -38,8 +38,6 @@ public:
     void StartMeasurement(
         std::filesystem::path const& output_folder, std::vector<power::writer_func_t> const& writer_funcs);
 
-    //void SetLPTTrigger(std::string const& address);
-
     void SetSoftwareTrigger(bool set) {
         enforce_software_trigger_ = set;
         trigger_->RegisterSubTrigger("RTXInstruments", std::bind(&RTXInstruments::soft_trg, this));
@@ -58,24 +56,6 @@ private:
 
     bool waiting_on_trigger() const;
 
-    /*std::tuple<std::chrono::system_clock::time_point, int64_t> trigger() {
-#ifdef MEGAMOL_USE_TRACY
-        ZoneScopedNC("RTXInstruments::trigger", 0xDB0ABF);
-#endif
-        if (enforce_software_trigger_) {
-            for (auto& [name, i] : rtx_instr_) {
-                i.trigger_manually();
-            }
-        } else {
-            if (lpt_trigger_) {
-                lpt_trigger_->SetBit(6, true);
-                lpt_trigger_->SetBit(6, false);
-            }
-        }
-
-        return std::make_tuple(std::chrono::system_clock::now(), get_highres_timer());
-    }*/
-
     std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument> rtx_instr_;
 
     std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument_configuration> rtx_config_;
@@ -84,14 +64,11 @@ private:
 
     std::chrono::milliseconds config_range_;
 
-    //std::unique_ptr<ParallelPortTrigger> lpt_trigger_ = nullptr;
-
     bool enforce_software_trigger_ = false;
 
     bool pending_measurement_ = false;
 
-    std::shared_ptr<Trigger> trigger_;
-    //std::unique_ptr<Trigger> trigger_;
+    std::shared_ptr<Trigger> trigger_ = nullptr;
 };
 
 } // namespace megamol::power
