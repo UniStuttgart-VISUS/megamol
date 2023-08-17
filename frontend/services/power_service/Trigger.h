@@ -18,17 +18,7 @@ namespace megamol::power {
 class Trigger {
 public:
     Trigger(std::string const& address) {
-        std::regex p("^(lpt|LPT)(\\d)$");
-        std::smatch m;
-        if (!std::regex_search(address, m, p)) {
-            throw std::runtime_error("LPT address malformed");
-        }
-
-        try {
-            trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\" + address).c_str());
-        } catch (...) {
-            trigger_ = nullptr;
-        }
+        set_lpt(address);
     }
 
     void ArmTrigger() {
@@ -43,11 +33,12 @@ public:
         std::chrono::milliseconds const& prefix, std::chrono::milliseconds const& postfix,
         std::chrono::milliseconds const& wait) {
         std::tuple<std::chrono::system_clock::time_point, int64_t> trg_tp;
+        std::unique_lock<std::mutex> trg_lock(trg_mtx_);
         while (armed_) {
             fire_pre_trigger();
             std::this_thread::sleep_for(prefix);
             trg_tp = fire_trigger();
-            std::this_thread::sleep_for(postfix + wait - prefix);
+            std::this_thread::sleep_for(postfix + wait + prefix);
         }
         return trg_tp;
     }
@@ -64,7 +55,26 @@ public:
         pre_trigger_.push_back(pre_trigger);
     }
 
+    void SetLPTAddress(std::string const& address) {
+        set_lpt(address);
+    }
+
 private:
+    void set_lpt(std::string const& address) {
+        std::regex p("^(lpt|LPT)(\\d)$");
+        std::smatch m;
+        if (!std::regex_search(address, m, p)) {
+            throw std::runtime_error("LPT address malformed");
+        }
+
+        std::unique_lock<std::mutex> trg_lock(trg_mtx_);
+        try {
+            trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\" + address).c_str());
+        } catch (...) {
+            trigger_ = nullptr;
+        }
+    }
+
     std::tuple<std::chrono::system_clock::time_point, int64_t> fire_trigger() {
 #ifdef MEGAMOL_USE_TRACY
         ZoneScopedNC("Trigger::trigger", 0xDB0ABF);
@@ -108,6 +118,8 @@ private:
     std::vector<std::function<void()>> pre_trigger_;
 
     bool armed_ = false;
+
+    std::mutex trg_mtx_;
 };
 } // namespace megamol::power
 
