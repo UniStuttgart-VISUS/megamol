@@ -71,7 +71,7 @@ bool Power_Service::init(void* configPtr) {
 
     //rtx_.SetLPTTrigger(lpt);
 
-    std::regex p("^(lpt|LPT)(\\d)$");
+    /*std::regex p("^(lpt|LPT)(\\d)$");
     std::smatch m;
     if (!std::regex_search(lpt, m, p)) {
         log_error("LPT parameter malformed");
@@ -82,7 +82,7 @@ bool Power_Service::init(void* configPtr) {
         trigger_ = std::make_unique<megamol::power::ParallelPortTrigger>(("\\\\.\\" + lpt).c_str());
     } catch (...) {
         trigger_ = nullptr;
-    }
+    }*/
 
     main_trigger_ = std::make_shared<megamol::power::Trigger>(lpt);
     main_trigger_->RegisterPreTrigger("Power_Service", std::bind(&Power_Service::sb_pre_trg, this));
@@ -90,8 +90,10 @@ bool Power_Service::init(void* configPtr) {
 
     rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);
 
-    callbacks_.signal_high = std::bind(&megamol::power::ParallelPortTrigger::SetBit, trigger_.get(), 7, true);
-    callbacks_.signal_low = std::bind(&megamol::power::ParallelPortTrigger::SetBit, trigger_.get(), 7, false);
+    callbacks_.signal_high =
+        std::bind(&megamol::power::ParallelPortTrigger::SetBit, main_trigger_->GetHandle(), 7, true);
+    callbacks_.signal_low =
+        std::bind(&megamol::power::ParallelPortTrigger::SetBit, main_trigger_->GetHandle(), 7, false);
     callbacks_.signal_frame = [&]() -> void {
         /*auto m_func = [&]() {
             trigger_->SetBit(7, true);
@@ -103,8 +105,8 @@ bool Power_Service::init(void* configPtr) {
         };
         auto t = std::thread(m_func);
         t.detach();*/
-        trigger_->SetBit(7, true);
-        trigger_->SetBit(7, false);
+        main_trigger_->GetHandle()->SetBit(7, true);
+        main_trigger_->GetHandle()->SetBit(7, false);
     };
 
     m_providedResourceReferences = {{frontend_resources::PowerCallbacks_Req_Name, callbacks_}};

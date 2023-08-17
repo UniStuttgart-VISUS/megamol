@@ -66,6 +66,10 @@ public:
         set_lpt(address);
     }
 
+    ParallelPortTrigger* GetHandle() {
+        return trigger_.get();
+    }
+
 private:
     void set_lpt(std::string const& address) {
         std::regex p("^(lpt|LPT)(\\d)$");

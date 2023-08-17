@@ -180,7 +180,7 @@ private:
     // you do NOT catch or check for that exception or need to care for it in any way!)
     std::vector<FrontendResource> m_requestedResourceReferences;
 
-    std::unique_ptr<megamol::power::ParallelPortTrigger> trigger_;
+    //std::unique_ptr<megamol::power::ParallelPortTrigger> trigger_;
 
     frontend_resources::PowerCallbacks callbacks_;
 
