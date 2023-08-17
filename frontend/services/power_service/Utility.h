@@ -20,13 +20,11 @@
 
 namespace megamol::power {
 
-namespace power {
 using timeline_t = std::vector<int64_t>;
 using samples_t = std::vector<float>;
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
 using segments_t = std::vector<value_map_t>;
 using writer_func_t = std::function<void(std::filesystem::path const&, segments_t const&)>;
-} // namespace power
 
 inline int64_t get_highres_timer() {
 #ifdef WIN32
