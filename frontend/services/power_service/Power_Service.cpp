@@ -20,7 +20,7 @@
 
 #include "LuaCallbacksCollection.h"
 
-#include "WriterUtility.h"
+#include "power/WriterUtility.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"

@@ -8,7 +8,7 @@
 #include <variant>
 #include <vector>
 
-#include <SampleBuffer.h>
+#include "power/SampleBuffer.h"
 
 namespace megamol::power {
 void ParquetWriter(std::filesystem::path const& file_path,

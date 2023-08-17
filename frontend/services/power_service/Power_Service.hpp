@@ -14,18 +14,17 @@
 
 #include "AbstractFrontendService.hpp"
 
-#include "ParallelPortTrigger.h"
-#include "Trigger.h"
-#include "Utility.h"
+#include "power/ParallelPortTrigger.h"
+#include "power/Trigger.h"
+#include "power/Utility.h"
+#include "power/RTXInstruments.h"
+#include "power/Samplers.h"
 
 #include "PowerCallbacks.h"
 
 #include <power_overwhelming/rtx_instrument.h>
 
 #include <sol/sol.hpp>
-
-#include "RTXInstruments.h"
-#include "Samplers.h"
 
 namespace megamol {
 namespace frontend {
