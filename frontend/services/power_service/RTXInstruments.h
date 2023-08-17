@@ -12,8 +12,8 @@
 #include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/rtx_instrument_configuration.h>
 
-#include "Trigger.h"
 #include "ParallelPortTrigger.h"
+#include "Trigger.h"
 #include "Utility.h"
 
 #include <sol/sol.hpp>
@@ -94,6 +94,6 @@ private:
     //std::unique_ptr<Trigger> trigger_;
 };
 
-} // namespace megamol::frontend
+} // namespace megamol::power
 
 #endif

@@ -128,6 +128,6 @@ void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuf
         core::utility::log::Log::DefaultLog.WriteError("[ParquetWriter]: %s", ex.what());
     }
 }
-} // namespace megamol::frontend
+} // namespace megamol::power
 
 #endif

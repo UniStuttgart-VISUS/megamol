@@ -184,16 +184,16 @@ bool Power_Service::init(void* configPtr) {
 
     using namespace visus::power_overwhelming;
 
-    std::tie(nvml_sensors_, nvml_buffers_) =
-        megamol::power::InitSampler<nvml_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
+    std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
     std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
-                           std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
     if (emi_sensors_.empty()) {
-        std::tie(msr_sensors_, msr_buffers_) =
-            megamol::power::InitSampler<msr_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
+        std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
+            std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_);
     }
-    std::tie(tinker_sensors_, tinker_buffers_) =
-        megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5), do_buffer_);
+    std::tie(tinker_sensors_, tinker_buffers_) = megamol::power::InitSampler<tinkerforge_sensor>(
+        std::chrono::milliseconds(600), std::chrono::milliseconds(5), do_buffer_);
 
     //return init(*static_cast<Config*>(configPtr));
     return true;

@@ -54,6 +54,6 @@ inline void wf_tracy(
 #endif
 }
 
-} // namespace megamol::frontend
+} // namespace megamol::power
 
 #endif

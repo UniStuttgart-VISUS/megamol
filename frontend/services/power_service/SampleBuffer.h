@@ -36,4 +36,4 @@ private:
     std::vector<int64_t> timestamps_;
 };
 
-} // namespace megamol::frontend
+} // namespace megamol::power

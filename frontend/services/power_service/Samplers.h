@@ -82,16 +82,16 @@ inline std::tuple<samplers_t<T>, buffers_t> InitSampler(
         buffers.push_back(SampleBuffer(sensor_name, sample_range, sample_dis));
 
         sensors[sensor_name] = std::move(sensor);
-        sensors[sensor_name].sample(
-            std::move(async_sampling()
-                          .delivers_measurement_data_to(&tracy_sample)
-                          .stores_and_passes_context(std::make_tuple(sensor_name, &buffers.back(), std::cref(do_buffer)))
-                          .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
-                          .using_resolution(timestamp_resolution::microseconds)));
+        sensors[sensor_name].sample(std::move(
+            async_sampling()
+                .delivers_measurement_data_to(&tracy_sample)
+                .stores_and_passes_context(std::make_tuple(sensor_name, &buffers.back(), std::cref(do_buffer)))
+                .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
+                .using_resolution(timestamp_resolution::microseconds)));
     }
 
     return std::make_tuple(std::move(sensors), std::move(buffers));
 }
-} // namespace megamol::frontend
+} // namespace megamol::power
 
 #endif

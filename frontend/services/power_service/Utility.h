@@ -111,6 +111,6 @@ inline power::timeline_t offset_timeline(power::timeline_t const& timeline, std:
     return ret;
 }
 
-} // namespace megamol::frontend
+} // namespace megamol::power
 
 #endif
