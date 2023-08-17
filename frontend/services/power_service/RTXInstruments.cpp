@@ -215,8 +215,7 @@ void RTXInstruments::StartMeasurement(
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start writing data");
                 auto const start_write = std::chrono::steady_clock::now();
                 std::for_each(writer_funcs.begin(), writer_funcs.end(),
-                    [&output_folder, &values_map](
-                        auto const& writer_func) { writer_func(output_folder, values_map); });
+                    [&output_folder, &values_map](auto const& writer_func) { writer_func(output_folder, values_map); });
                 auto const stop_write = std::chrono::steady_clock::now();
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Finished writing data in %dms",
                     std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());

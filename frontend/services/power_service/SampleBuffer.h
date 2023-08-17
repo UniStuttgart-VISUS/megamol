@@ -14,6 +14,8 @@ public:
 
     void Add(float const sample, int64_t const timestamp, int64_t const walltime);
 
+    void Clear();
+
     std::vector<float> const& ReadSamples() const {
         return samples_;
     }
@@ -30,6 +32,8 @@ public:
         return name_;
     }
 
+    void SetSampleRange(std::chrono::milliseconds const& sample_range);
+
 private:
     std::string name_;
 
@@ -40,6 +44,8 @@ private:
     std::vector<int64_t> timestamps_;
 
     std::vector<int64_t> walltimes_;
+
+    std::chrono::milliseconds sample_dis_;
 };
 
 } // namespace megamol::power

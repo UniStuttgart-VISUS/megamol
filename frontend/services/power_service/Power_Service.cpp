@@ -397,6 +397,7 @@ void Power_Service::fill_lua_callbacks() {
 
             rtx_->UpdateConfigs(
                 path, points, count, std::chrono::milliseconds(range), std::chrono::milliseconds(timeout));
+            reset_segment_range(std::chrono::milliseconds(range));
 
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
@@ -434,7 +435,13 @@ void Power_Service::fill_lua_callbacks() {
     register_callbacks(callbacks);
 }
 
-void Power_Service::write_sample_buffers() const {
+void clear_sb(power::buffers_t& buffers) {
+    for (auto& b : buffers) {
+        b.Clear();
+    }
+}
+
+void Power_Service::write_sample_buffers() {
     ParquetWriter(
         std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt_) + ".parquet"), nvml_buffers_);
     ParquetWriter(
@@ -455,6 +462,24 @@ void Power_Service::write_sample_buffers() const {
         }
     }
 #endif
+
+    clear_sb(nvml_buffers_);
+    clear_sb(emi_buffers_);
+    clear_sb(msr_buffers_);
+    clear_sb(tinker_buffers_);
+}
+
+void set_sb_range(power::buffers_t& buffers, std::chrono::milliseconds const& range) {
+    for (auto& b : buffers) {
+        b.SetSampleRange(range);
+    }
+}
+
+void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) {
+    set_sb_range(nvml_buffers_, range);
+    set_sb_range(emi_buffers_, range);
+    set_sb_range(msr_buffers_, range);
+    set_sb_range(tinker_buffers_, range);
 }
 
 } // namespace frontend

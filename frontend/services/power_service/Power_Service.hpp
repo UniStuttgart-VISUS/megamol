@@ -242,11 +242,13 @@ private:
         ++seg_cnt_;
     }
 
-    void write_sample_buffers() const;
+    void write_sample_buffers();
 
     std::shared_ptr<megamol::power::Trigger> main_trigger_;
 
     int64_t sb_qpc_offset_;
+
+    void reset_segment_range(std::chrono::milliseconds const& range);
 };
 
 } // namespace frontend
