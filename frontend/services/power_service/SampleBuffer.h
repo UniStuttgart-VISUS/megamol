@@ -3,7 +3,7 @@
 #include <chrono>
 #include <vector>
 
-namespace megamol::frontend {
+namespace megamol::power {
 
 class SampleBuffer {
 public:

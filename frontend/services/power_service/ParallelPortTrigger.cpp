@@ -7,7 +7,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-namespace megamol::frontend {
+namespace megamol::power {
 
 ParallelPortTrigger::ParallelPortTrigger(char const* path) {
     this->Open(path);
@@ -79,6 +79,6 @@ DWORD ParallelPortTrigger::SetBit(unsigned char idx, bool state) {
     return 0;
 }
 
-} // namespace megamol::frontend
+} // namespace megamol::power
 
 #endif

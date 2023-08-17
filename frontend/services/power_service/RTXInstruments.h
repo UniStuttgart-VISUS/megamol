@@ -12,6 +12,7 @@
 #include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/rtx_instrument_configuration.h>
 
+#include "Trigger.h"
 #include "ParallelPortTrigger.h"
 #include "Utility.h"
 
@@ -23,7 +24,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-namespace megamol::frontend {
+namespace megamol::power {
 
 class RTXInstruments {
 public:
@@ -48,6 +49,12 @@ public:
     }
 
 private:
+    void soft_trg() {
+        for (auto& [name, i] : rtx_instr_) {
+            i.trigger_manually();
+        }
+    }
+
     bool waiting_on_trigger() const;
 
     std::tuple<std::chrono::system_clock::time_point, int64_t> trigger() {
@@ -81,6 +88,8 @@ private:
     bool enforce_software_trigger_ = false;
 
     bool pending_measurement_ = false;
+
+    std::unique_ptr<Trigger> trigger_;
 };
 
 } // namespace megamol::frontend

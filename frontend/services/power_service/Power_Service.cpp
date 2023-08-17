@@ -150,13 +150,13 @@ bool Power_Service::init(void* configPtr) {
     }
 
     try {
-        trigger_ = std::make_unique<ParallelPortTrigger>(("\\\\.\\" + lpt).c_str());
+        trigger_ = std::make_unique<megamol::power::ParallelPortTrigger>(("\\\\.\\" + lpt).c_str());
     } catch (...) {
         trigger_ = nullptr;
     }
 
-    callbacks_.signal_high = std::bind(&ParallelPortTrigger::SetBit, trigger_.get(), 7, true);
-    callbacks_.signal_low = std::bind(&ParallelPortTrigger::SetBit, trigger_.get(), 7, false);
+    callbacks_.signal_high = std::bind(&megamol::power::ParallelPortTrigger::SetBit, trigger_.get(), 7, true);
+    callbacks_.signal_low = std::bind(&megamol::power::ParallelPortTrigger::SetBit, trigger_.get(), 7, false);
     callbacks_.signal_frame = [&]() -> void {
         /*auto m_func = [&]() {
             trigger_->SetBit(7, true);
@@ -209,15 +209,15 @@ bool Power_Service::init(void* configPtr) {
     using namespace visus::power_overwhelming;
 
     std::tie(nvml_sensors_, nvml_buffers_) =
-        InitSampler<nvml_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
-    std::tie(emi_sensors_, emi_buffers_) =
-        InitSampler<emi_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+        megamol::power::InitSampler<nvml_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+    std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
+                           std::chrono::milliseconds(600), std::chrono::milliseconds(1));
     if (emi_sensors_.empty()) {
         std::tie(msr_sensors_, msr_buffers_) =
-            InitSampler<msr_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+            megamol::power::InitSampler<msr_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(1));
     }
     std::tie(tinker_sensors_, tinker_buffers_) =
-        InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5));
+        megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5));
 
     //setup_measurement();
 
@@ -535,9 +535,9 @@ void Power_Service::fill_lua_callbacks() {
         "(string path)", {[&](std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             //start_measurement();
             if (write_to_files_) {
-                rtx_.StartMeasurement(path, {&wf_parquet, &wf_tracy});
+                rtx_.StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy});
             } else {
-                rtx_.StartMeasurement(path, {&wf_tracy});
+                rtx_.StartMeasurement(path, {&megamol::power::wf_tracy});
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});

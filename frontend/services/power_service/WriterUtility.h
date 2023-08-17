@@ -12,7 +12,7 @@
 #include <tracy/Tracy.hpp>
 #endif
 
-namespace megamol::frontend {
+namespace megamol::power {
 
 inline void wf_parquet(int64_t, std::filesystem::path const& output_folder, power::segments_t const& values_map) {
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {

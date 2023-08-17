@@ -1,6 +1,6 @@
 #include "SampleBuffer.h"
 
-megamol::frontend::SampleBuffer::SampleBuffer(
+megamol::power::SampleBuffer::SampleBuffer(
     std::string const& name, std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis)
         : name_(name) {
     auto const total_samples = sample_range / sample_dis;
@@ -9,7 +9,7 @@ megamol::frontend::SampleBuffer::SampleBuffer(
     timestamps_.reserve(cap_incr_);
 }
 
-void megamol::frontend::SampleBuffer::Add(float const sample, int64_t const timestamp) {
+void megamol::power::SampleBuffer::Add(float const sample, int64_t const timestamp) {
     samples_.push_back(sample);
     timestamps_.push_back(timestamp);
     if (samples_.size() > 0.95f * samples_.capacity()) {

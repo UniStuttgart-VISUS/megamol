@@ -3,6 +3,7 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <algorithm>
+#include <future>
 #include <numeric>
 #include <regex>
 #include <stdexcept>
@@ -14,7 +15,7 @@
 
 using namespace visus::power_overwhelming;
 
-namespace megamol::frontend {
+namespace megamol::power {
 
 RTXInstruments::RTXInstruments() {
     auto num_devices = rtx_instrument::all(nullptr, 0);
@@ -34,6 +35,9 @@ RTXInstruments::RTXInstruments() {
     sol_state_.open_libraries(sol::lib::base);
 
     sol_register_all(sol_state_);
+
+    trigger_ = std::make_unique<Trigger>("lpt1");
+    trigger_->RegisterSubTrigger(std::bind(&RTXInstruments::soft_trg, this));
 }
 
 void RTXInstruments::UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,
@@ -95,24 +99,45 @@ void RTXInstruments::StartMeasurement(
 
             int global_device_counter = 0;
             for (auto& [name, i] : rtx_instr_) {
-                i.on_operation_complete_ex([&global_device_counter](visa_instrument&) { ++global_device_counter; });
+                i.on_operation_complete_ex(
+                    [&global_device_counter, num_dev = rtx_instr_.size(), trigger = trigger_.get()](visa_instrument&) {
+                        ++global_device_counter;
+                        if (global_device_counter >= num_dev) {
+                            trigger->DisarmTrigger();
+                        }
+                    });
                 i.acquisition(oscilloscope_acquisition_state::single);
                 i.operation_complete_async();
             }
 
             // magic sleep to wait until devices are ready to recieve other requests
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            while (!waiting_on_trigger()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
 
-            while (global_device_counter < rtx_instr_.size()) {
+            trigger_->ArmTrigger();
+            auto tp_fut = std::async(
+                std::launch::async, std::bind(&Trigger::StartTriggerSequence, trigger_.get(), config_range_ / 12,
+                                        config_range_ - config_range_ / 12, std::chrono::milliseconds(1000)));
+            /*while (global_device_counter < rtx_instr_.size()) {
                 core::utility::log::Log::DefaultLog.WriteInfo("Waiting on trigger %d", global_device_counter);
                 if (waiting_on_trigger()) {
                     core::utility::log::Log::DefaultLog.WriteInfo("Trigger!");
                     std::tie(last_trigger, last_trigger_qpc) = trigger();
                 } else {
+                    trigger_->DisarmTrigger();
                     break;
                 }
                 std::this_thread::sleep_for(config_range_ * 1.1f);
+            }*/
+            /*while (global_device_counter < rtx_instr_.size()) {
+                std::this_thread::sleep_for(config_range_ / 2);
             }
+            trigger_->DisarmTrigger();*/
+            tp_fut.wait();
+            std::tie(last_trigger, last_trigger_qpc) = tp_fut.get();
+
 
             std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [&](auto& instr) {
                 auto const& name = instr.first;
@@ -214,6 +239,6 @@ bool RTXInstruments::waiting_on_trigger() const {
     return false;
 }
 
-} // namespace megamol::frontend
+} // namespace megamol::power
 
 #endif

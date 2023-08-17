@@ -18,7 +18,7 @@
 #include <Windows.h>
 #endif
 
-namespace megamol::frontend {
+namespace megamol::power {
 
 namespace power {
 using timeline_t = std::vector<int64_t>;

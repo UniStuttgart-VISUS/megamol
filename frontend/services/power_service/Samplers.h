@@ -19,13 +19,13 @@
 #include <tracy/Tracy.hpp>
 #endif
 
-namespace megamol::frontend {
-namespace power {
+namespace megamol::power {
+
 template<typename T>
 using samplers_t = std::unordered_map<std::string, T>;
 
 using buffers_t = std::vector<SampleBuffer>;
-} // namespace power
+
 
 inline void tracy_sample(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
@@ -54,17 +54,17 @@ inline std::string unmueller_string(wchar_t const* name) {
 }
 
 template<typename T>
-inline std::tuple<power::samplers_t<T>, power::buffers_t> InitSampler(
+inline std::tuple<samplers_t<T>, buffers_t> InitSampler(
     std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis) {
     using namespace visus::power_overwhelming;
     auto sensor_count = T::for_all(nullptr, 0);
     std::vector<T> tmp_sensors(sensor_count);
     T::for_all(tmp_sensors.data(), tmp_sensors.size());
 
-    power::buffers_t buffers;
+    buffers_t buffers;
     buffers.reserve(sensor_count);
 
-    power::samplers_t<T> sensors;
+    samplers_t<T> sensors;
     sensors.reserve(sensor_count);
 
     for (auto& sensor : tmp_sensors) {

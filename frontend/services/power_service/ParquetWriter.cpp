@@ -8,7 +8,7 @@
 #include <parquet/api/reader.h>
 #include <parquet/api/writer.h>
 
-namespace megamol::frontend {
+namespace megamol::power {
 void ParquetWriter(std::filesystem::path const& file_path,
     std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>> const& values_map) {
     using namespace parquet;

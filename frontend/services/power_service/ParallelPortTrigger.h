@@ -9,7 +9,7 @@
 #include <wil/resource.h>
 #endif
 
-namespace megamol::frontend {
+namespace megamol::power {
 
 class ParallelPortTrigger final {
 
@@ -37,6 +37,6 @@ private:
     std::uint8_t data_state_;
 };
 
-} // namespace megamol::frontend
+} // namespace megamol::power
 
 #endif
