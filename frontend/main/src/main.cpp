@@ -55,6 +55,9 @@ static void log_error(std::string const& text) {
 void loadPlugins(megamol::frontend_resources::PluginsResource& pluginsRes);
 
 int main(const int argc, const char** argv) {
+#if defined(MEGAMOL_DETECT_MEMLEAK) && defined(DEBUG)
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 #ifdef MEGAMOL_USE_TRACY
     ZoneScoped;
 #endif
