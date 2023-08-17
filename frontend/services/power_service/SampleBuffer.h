@@ -12,7 +12,7 @@ public:
     explicit SampleBuffer(std::string const& name, std::chrono::milliseconds const& sample_range,
         std::chrono::milliseconds const& sample_dis);
 
-    void Add(float const sample, int64_t const timestamp);
+    void Add(float const sample, int64_t const timestamp, int64_t const walltime);
 
     std::vector<float> const& ReadSamples() const {
         return samples_;
@@ -20,6 +20,10 @@ public:
 
     std::vector<int64_t> const& ReadTimestamps() const {
         return timestamps_;
+    }
+
+    std::vector<int64_t> const& ReadWalltimes() const {
+        return walltimes_;
     }
 
     std::string const& Name() const {
@@ -34,6 +38,8 @@ private:
     std::vector<float> samples_;
 
     std::vector<int64_t> timestamps_;
+
+    std::vector<int64_t> walltimes_;
 };
 
 } // namespace megamol::power

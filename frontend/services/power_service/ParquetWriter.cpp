@@ -82,12 +82,14 @@ void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuf
     try {
         // create scheme
         NodeVector fields;
-        fields.reserve(buffers.size() * 2);
+        fields.reserve(buffers.size() * 3);
         for (auto const& b : buffers) {
             fields.push_back(
                 PrimitiveNode::Make(b.Name() + "_samples", Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
             fields.push_back(
                 PrimitiveNode::Make(b.Name() + "_ts", Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
+            fields.push_back(
+                PrimitiveNode::Make(b.Name() + "_wt", Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
         }
         auto schema = std::static_pointer_cast<GroupNode>(GroupNode::Make("schema", Repetition::REQUIRED, fields));
 
@@ -114,6 +116,9 @@ void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuf
             auto const& t_values = b.ReadTimestamps();
             auto int_writer = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
             int_writer->WriteBatch(t_values.size(), nullptr, nullptr, t_values.data());
+            auto const& w_values = b.ReadWalltimes();
+            auto int_writer2 = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
+            int_writer2->WriteBatch(w_values.size(), nullptr, nullptr, w_values.data());
         }
 
         // close

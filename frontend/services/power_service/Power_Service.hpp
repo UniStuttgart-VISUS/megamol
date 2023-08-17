@@ -19,6 +19,7 @@
 #include "ParallelPortTrigger.h"
 #include "ParquetWriter.h"
 #include "Trigger.h"
+#include "Utility.h"
 
 #include "PowerCallbacks.h"
 
@@ -224,7 +225,14 @@ private:
     std::size_t seg_cnt_ = 0;
 
     void sb_pre_trg() {
+        static auto freq = static_cast<double>(megamol::power::get_highres_timer_freq());
         do_buffer_ = true;
+        FILETIME f;
+        GetSystemTimeAsFileTime(&f);
+        ULARGE_INTEGER tv;
+        tv.HighPart = f.dwHighDateTime;
+        tv.LowPart = f.dwLowDateTime;
+        sb_qpc_offset_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
     }
 
     void sb_post_trg() {
@@ -237,6 +245,8 @@ private:
     void write_sample_buffers() const;
 
     std::shared_ptr<megamol::power::Trigger> main_trigger_;
+
+    int64_t sb_qpc_offset_;
 };
 
 } // namespace frontend
