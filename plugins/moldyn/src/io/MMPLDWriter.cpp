@@ -461,8 +461,9 @@ bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDat
                 }
             } break;
             default:
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "MMPLDWriter: incoming unknown color type %u", points.GetColourDataType());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("MMPLDWriter: incoming unknown color type %u",
+                    static_cast<std::underlying_type_t<decltype(points.GetColourDataType())>>(
+                        points.GetColourDataType()));
                 break;
             }
         } else {
