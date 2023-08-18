@@ -35,7 +35,7 @@ bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_tex
                 out_texture_ptr, img.Width(), img.Height(), img.PeekDataAs<FLOAT>(), tex_min_filter, tex_max_filter);
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                "Unable to read texture: %s [%s, %s, line %d]\n", filename.string(), __FILE__, __FUNCTION__, __LINE__);
             retval = false;
         }
     } else {

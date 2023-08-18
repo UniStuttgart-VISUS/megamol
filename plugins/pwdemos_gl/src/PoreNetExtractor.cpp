@@ -251,7 +251,7 @@ bool PoreNetExtractor::onExtractBtnClicked(core::param::ParamSlot& slot) {
     if ((extDir != EXTDIR_X) && (extDir != EXTDIR_Y) && (extDir != EXTDIR_Z)) {
         pgdc->Unlock();
         cdc->Unlock();
-        Log::DefaultLog.WriteError("Extraction direction has an illegal value: %d\n", extDir);
+        Log::DefaultLog.WriteError("Extraction direction has an illegal value: %d\n", static_cast<std::underlying_type_t<ExtractionDir>>(extDir));
         Log::DefaultLog.WriteError("Extraction aborted");
         return true;
     }

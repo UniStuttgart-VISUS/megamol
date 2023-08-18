@@ -1481,7 +1481,7 @@ void PDBLoader::loadFile(const std::filesystem::path& filename) {
 void PDBLoader::loadFileCap(const std::filesystem::path& filename) {
     using megamol::core::utility::log::Log;
 
-    Log::DefaultLog.WriteInfo("Loading CAP file: %s", filename.c_str()); // DEBUG
+    Log::DefaultLog.WriteInfo("Loading CAP file: %s", filename.string()); // DEBUG
 
     vislib::sys::ASCIIFileBuffer file;
     vislib::StringA line;

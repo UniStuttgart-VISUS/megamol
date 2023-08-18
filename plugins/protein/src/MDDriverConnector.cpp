@@ -256,7 +256,8 @@ bool MDDriverConnector::startSocket(const vislib::TString& host, int port) {
         }
         // handshake: check that header type (byte swapped) is handshake (failure could indicate wrong endian)
         if (this->byteSwap(this->header.type) != MDD_HANDSHAKE) {
-            Log::DefaultLog.WriteError("Handshake: unexpected header type - expected %d, received %d", MDD_HANDSHAKE,
+            Log::DefaultLog.WriteError("Handshake: unexpected header type - expected %d, received %d",
+                static_cast<std::underlying_type_t<decltype(MDD_HANDSHAKE)>>(MDD_HANDSHAKE),
                 this->byteSwap(this->header.type));
             return false;
         }
