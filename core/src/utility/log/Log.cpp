@@ -6,9 +6,6 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#include <algorithm>
-#include <climits>
-#include <cstdio>
 #include <iomanip>
 #include <sstream>
 

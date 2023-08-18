@@ -14,6 +14,7 @@
 #include <thread>
 
 #include <spdlog/spdlog.h>
+#include <fmt/printf.h>
 
 // Enclose title of log message between start and and tag to get it pushed in GUI popup
 #define LOGMESSAGE_GUI_POPUP_START_TAG "<<<<<"
@@ -247,4 +248,3 @@ private:
 } // namespace megamol::core::utility::log
 
 #include "Log.inl"
-#include <fmt/printf.h>
