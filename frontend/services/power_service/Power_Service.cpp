@@ -105,16 +105,25 @@ bool Power_Service::init(void* configPtr) {
 
     using namespace visus::power_overwhelming;
 
+    auto emi_discard_func = [](std::string const& name) { return name.find("RAPL_Package0_PKG") == std::string::npos; };
+
+    auto tinker_config_func = [](tinkerforge_sensor& sensor) {
+        sensor.reset();
+        sensor.configure(
+            sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
+    };
+
     std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_, sb_qpc_offset_);
     std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_, sb_qpc_offset_);
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_, sb_qpc_offset_, emi_discard_func);
     if (emi_sensors_.empty()) {
         std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_, sb_qpc_offset_);
     }
-    std::tie(tinker_sensors_, tinker_buffers_) = megamol::power::InitSampler<tinkerforge_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(5), do_buffer_, sb_qpc_offset_);
+    std::tie(tinker_sensors_, tinker_buffers_) =
+        megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
+            do_buffer_, sb_qpc_offset_, nullptr, tinker_config_func);
 
     //return init(*static_cast<Config*>(configPtr));
     return true;

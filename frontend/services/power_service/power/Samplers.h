@@ -67,9 +67,15 @@ inline std::string unmueller_string(wchar_t const* name) {
     return no_mueller;
 }
 
+using discard_func_t = std::function<bool(std::string const&)>;
+
+template<typename T>
+using config_func_t = std::function<void(T&)>;
+
 template<typename T>
 inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
-    std::chrono::milliseconds const& sample_dis, bool const& do_buffer, int64_t const& offset) {
+    std::chrono::milliseconds const& sample_dis, bool const& do_buffer, int64_t const& offset,
+    discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
     using namespace visus::power_overwhelming;
     auto sensor_count = T::for_all(nullptr, 0);
     std::vector<T> tmp_sensors(sensor_count);
@@ -83,6 +89,10 @@ inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::millisecond
 
     for (auto& sensor : tmp_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
+        if (discard) {
+            if (discard(sensor_name))
+                continue;
+        }
 
 #ifdef MEGAMOL_USE_TRACY
         TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
@@ -91,6 +101,9 @@ inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::millisecond
         buffers.push_back(SampleBuffer(sensor_name, sample_range, sample_dis));
 
         sensors[sensor_name] = std::move(sensor);
+        if (config) {
+            config(sensors[sensor_name]);
+        }
         sensors[sensor_name].sample(
             std::move(async_sampling()
                           .delivers_measurement_data_to(&tracy_sample)
