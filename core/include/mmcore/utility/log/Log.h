@@ -13,8 +13,8 @@
 #include <string>
 #include <thread>
 
-#include <spdlog/spdlog.h>
 #include <fmt/printf.h>
+#include <spdlog/spdlog.h>
 
 // Enclose title of log message between start and and tag to get it pushed in GUI popup
 #define LOGMESSAGE_GUI_POPUP_START_TAG "<<<<<"
