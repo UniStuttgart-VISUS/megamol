@@ -15,14 +15,29 @@ void ParquetWriter(std::filesystem::path const& file_path,
     using namespace parquet::schema;
 
     try {
+        std::size_t min_field_size = 0;
+        bool first_time = true;
+
         // create scheme
         NodeVector fields;
         fields.reserve(values_map.size());
         for (auto const& [name, v_values] : values_map) {
             if (std::holds_alternative<std::vector<float>>(v_values)) {
                 fields.push_back(PrimitiveNode::Make(name, Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
+                if (first_time) {
+                    min_field_size = std::get<std::vector<float>>(v_values).size();
+                    first_time = false;
+                } else {
+                    min_field_size = std::min(min_field_size, std::get<std::vector<float>>(v_values).size());
+                }
             } else if (std::holds_alternative<std::vector<int64_t>>(v_values)) {
                 fields.push_back(PrimitiveNode::Make(name, Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
+                if (first_time) {
+                    min_field_size = std::get<std::vector<int64_t>>(v_values).size();
+                    first_time = false;
+                } else {
+                    min_field_size = std::min(min_field_size, std::get<std::vector<int64_t>>(v_values).size());
+                }
             } else {
                 throw std::runtime_error("Unexpected type");
             }
@@ -49,11 +64,11 @@ void ParquetWriter(std::filesystem::path const& file_path,
             if (std::holds_alternative<std::vector<float>>(v_values)) {
                 auto const& values = std::get<std::vector<float>>(v_values);
                 auto float_writer = static_cast<FloatWriter*>(rg_writer->column(c_idx++));
-                float_writer->WriteBatch(values.size(), nullptr, nullptr, values.data());
+                float_writer->WriteBatch(min_field_size, nullptr, nullptr, values.data());
             } else if (std::holds_alternative<std::vector<int64_t>>(v_values)) {
                 auto const& values = std::get<std::vector<int64_t>>(v_values);
                 auto int_writer = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
-                int_writer->WriteBatch(values.size(), nullptr, nullptr, values.data());
+                int_writer->WriteBatch(min_field_size, nullptr, nullptr, values.data());
             } else {
                 throw std::runtime_error("Unexpected type");
             }
@@ -80,6 +95,8 @@ void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuf
         return;
 
     try {
+        std::size_t min_field_size = buffers[0].ReadSamples().size();
+
         // create scheme
         NodeVector fields;
         fields.reserve(buffers.size() * 3);
@@ -90,6 +107,7 @@ void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuf
                 PrimitiveNode::Make(b.Name() + "_ts", Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
             fields.push_back(
                 PrimitiveNode::Make(b.Name() + "_wt", Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
+            min_field_size = std::min(min_field_size, b.ReadSamples().size());
         }
         auto schema = std::static_pointer_cast<GroupNode>(GroupNode::Make("schema", Repetition::REQUIRED, fields));
 
@@ -112,13 +130,13 @@ void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuf
         for (auto const& b : buffers) {
             auto const& s_values = b.ReadSamples();
             auto float_writer = static_cast<FloatWriter*>(rg_writer->column(c_idx++));
-            float_writer->WriteBatch(s_values.size(), nullptr, nullptr, s_values.data());
+            float_writer->WriteBatch(min_field_size, nullptr, nullptr, s_values.data());
             auto const& t_values = b.ReadTimestamps();
             auto int_writer = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
-            int_writer->WriteBatch(t_values.size(), nullptr, nullptr, t_values.data());
+            int_writer->WriteBatch(min_field_size, nullptr, nullptr, t_values.data());
             auto const& w_values = b.ReadWalltimes();
             auto int_writer2 = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
-            int_writer2->WriteBatch(w_values.size(), nullptr, nullptr, w_values.data());
+            int_writer2->WriteBatch(min_field_size, nullptr, nullptr, w_values.data());
         }
 
         // close
