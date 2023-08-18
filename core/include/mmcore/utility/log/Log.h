@@ -13,13 +13,11 @@
 #include <string>
 #include <thread>
 
+#include <spdlog/spdlog.h>
+
 // Enclose title of log message between start and and tag to get it pushed in GUI popup
 #define LOGMESSAGE_GUI_POPUP_START_TAG "<<<<<"
 #define LOGMESSAGE_GUI_POPUP_END_TAG ">>>>>"
-
-namespace spdlog::sinks {
-class sink;
-} // namespace spdlog::sinks
 
 namespace megamol::core::utility::log {
 
@@ -161,16 +159,24 @@ public:
      * 'LEVEL_ERROR'.
      *
      * @param fmt The log message
+     * @param args Arguments to pass to formatter
      */
-    void WriteError(const char* fmt, ...);
+    template<typename... Args>
+    void WriteError(const char* fmt, Args&&... args) {
+        writeMessage(log_level::error, fmt, std::forward<Args>(args)...);
+    }
 
     /**
      * Writes a formatted error message to the log. The level will be
      * 'LEVEL_INFO'.
      *
      * @param fmt The log message
+     * @param args Arguments to pass to formatter
      */
-    void WriteInfo(const char* fmt, ...);
+    template<typename... Args>
+    void WriteInfo(const char* fmt, Args&&... args) {
+        writeMessage(log_level::info, fmt, std::forward<Args>(args)...);
+    }
 
     /**
      * Writes a formatted messages with the specified log level to the log
@@ -180,16 +186,24 @@ public:
      *
      * @param level The log level of the message.
      * @param fmt The log message.
+     * @param args Arguments to pass to formatter
      */
-    void WriteMsg(log_level level, const char* fmt, ...);
+    template<typename... Args>
+    void WriteMsg(log_level level, const char* fmt, Args&&... args) {
+        writeMessage(level, fmt, std::forward<Args>(args)...);
+    }
 
     /**
      * Writes a formatted error message to the log. The level will be
      * 'LEVEL_WARN'.
      *
      * @param fmt The log message
+     * @param args Arguments to pass to formatter
      */
-    void WriteWarn(const char* fmt, ...);
+    template<typename... Args>
+    void WriteWarn(const char* fmt, Args&&... args) {
+        writeMessage(log_level::warn, fmt, std::forward<Args>(args)...);
+    }
 
     /**
      * Writes a formatted error message to the log. The level will be
@@ -217,17 +231,10 @@ private:
      *
      * @param level The level of the message
      * @param msg The message text itself
+     * @param args Arguments to pass to formatter
      */
-    void writeMessage(log_level level, const std::string& msg);
-
-    /**
-     * Writes a pre-formatted message with specified log level, time stamp
-     * and source id to the log.
-     *
-     * @param level The level of the message
-     * @param msg The message text itself
-     */
-    void writeMessageVaA(log_level level, const char* fmt, va_list argptr);
+    template<typename... Args>
+    void writeMessage(log_level level, std::string const& msg, Args&&... args);
 
     /**
      * Answer a file name suffix for log files
@@ -238,3 +245,6 @@ private:
 };
 
 } // namespace megamol::core::utility::log
+
+#include "Log.inl"
+#include <fmt/printf.h>
