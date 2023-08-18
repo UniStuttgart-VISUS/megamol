@@ -14,10 +14,12 @@ void Log::writeMessage(log_level level, std::string const& msg, Args&&... args) 
     }
 
     auto fmsg = msg;
-    if (msg.find("%") == std::string::npos) {
-        fmsg = fmt::format(msg, std::forward<Args>(args)...);
-    } else {
-        fmsg = fmt::sprintf(msg, std::forward<Args>(args)...);
+    if constexpr (sizeof...(Args) > 0) {
+        if (msg.find("%") == std::string::npos) {
+            fmsg = fmt::format(msg, std::forward<Args>(args)...);
+        } else {
+            fmsg = fmt::sprintf(msg, std::forward<Args>(args)...);
+        }
     }
 
     switch (level) {
