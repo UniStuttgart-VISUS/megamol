@@ -81,7 +81,8 @@ void RTXInstruments::ApplyConfigs() {
 void RTXInstruments::StartMeasurement(
     std::filesystem::path const& output_folder, std::vector<power::writer_func_t> const& writer_funcs) {
     if (!std::filesystem::is_directory(output_folder)) {
-        core::utility::log::Log::DefaultLog.WriteError("[RTXInstruments]: Path {} is not a directory", output_folder);
+        core::utility::log::Log::DefaultLog.WriteError(
+            "[RTXInstruments]: Path {} is not a directory", output_folder.string());
         return;
     }
 
