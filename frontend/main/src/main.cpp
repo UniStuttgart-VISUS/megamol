@@ -28,6 +28,7 @@
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
+#include <tracy/TracyC.h>
 #endif
 
 #ifdef MEGAMOL_USE_POWER
@@ -59,7 +60,9 @@ int main(const int argc, const char** argv) {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 #ifdef MEGAMOL_USE_TRACY
-    ZoneScoped;
+    tracy::StartupProfiler();
+    //ZoneScoped;
+    TracyCZone(main, true);
 #endif
     megamol::core::LuaAPI lua_api;
 
@@ -181,11 +184,13 @@ int main(const int argc, const char** argv) {
     profiling_config.include_graph_events = config.include_graph_events;
 
 #ifdef MEGAMOL_USE_POWER
+    std::list<std::string> power_str_container;
     megamol::frontend::Power_Service power_service;
     megamol::frontend::Power_Service::Config power_config;
     power_config.lpt = config.power_lpt;
     power_config.write_to_files = config.power_write_file;
     power_config.folder = config.power_folder;
+    power_config.str_container = &power_str_container;
     power_service.setPriority(1);
 #endif
 
@@ -378,6 +383,11 @@ int main(const int argc, const char** argv) {
 
     // close glfw context, network connections, other system resources
     services.close();
+
+#ifdef MEGAMOL_USE_TRACY
+    TracyCZoneEnd(main); 
+    tracy::ShutdownProfiler();
+#endif
 
     return ret;
 }

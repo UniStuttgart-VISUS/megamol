@@ -66,6 +66,7 @@ bool Power_Service::init(void* configPtr) {
 
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
+    str_cont_ = conf->str_container;
     write_to_files_ = conf->write_to_files;
     write_folder_ = conf->folder;
 
@@ -114,15 +115,16 @@ bool Power_Service::init(void* configPtr) {
     };
 
     std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_, sb_qpc_offset_);
-    std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_, sb_qpc_offset_, emi_discard_func);
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_);
+    std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(std::chrono::milliseconds(600),
+        std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_, emi_discard_func);
     if (emi_sensors_.empty()) {
         std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
-            std::chrono::milliseconds(600), std::chrono::milliseconds(1), do_buffer_, sb_qpc_offset_);
+            std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_);
     }
     std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
+            str_cont_, 
             do_buffer_, sb_qpc_offset_, nullptr, tinker_config_func);
 
     //return init(*static_cast<Config*>(configPtr));
@@ -147,6 +149,10 @@ void Power_Service::close() {
     // close libraries or APIs you manage
     // wrap up resources your service provides, but don not depend on outside resources to be available here
     // after this, at some point only the destructor of your service gets called
+    nvml_sensors_.clear();
+    emi_sensors_.clear();
+    msr_sensors_.clear();
+    tinker_sensors_.clear();
 }
 
 std::vector<FrontendResource>& Power_Service::getProvidedResources() {

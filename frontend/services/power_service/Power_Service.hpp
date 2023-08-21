@@ -25,6 +25,7 @@
 #include <power_overwhelming/rtx_instrument.h>
 
 #include <sol/sol.hpp>
+#include <list>
 
 namespace megamol {
 namespace frontend {
@@ -39,6 +40,7 @@ public:
         std::string lpt = "lpt1";
         bool write_to_files = false;
         std::string folder = "./";
+        std::list<std::string>* str_container;
     };
 
     // sometimes somebody wants to know the name of the service
@@ -240,6 +242,8 @@ private:
     std::shared_ptr<megamol::power::Trigger> main_trigger_;
 
     int64_t sb_qpc_offset_;
+
+    std::list<std::string>* str_cont_;
 };
 
 } // namespace frontend

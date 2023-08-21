@@ -39,13 +39,13 @@ inline int64_t convert_walltime(int64_t const& ts) {
 
 inline void tracy_sample(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
-    auto usr_data = static_cast<std::tuple<std::string, SampleBuffer*, bool const&, int64_t const&>*>(usr_ptr);
+    auto usr_data = static_cast<std::tuple<std::string*, SampleBuffer*, bool const&, int64_t const&>*>(usr_ptr);
     auto const& name = std::get<0>(*usr_data);
     auto buffer = std::get<1>(*usr_data);
     auto const& do_buffer = std::get<2>(*usr_data);
 #ifdef MEGAMOL_USE_TRACY
     for (std::size_t i = 0; i < n; ++i) {
-        TracyPlot(name.data(), m[i].power());
+        TracyPlot(name->data(), m[i].power());
     }
 #endif
     if (do_buffer) {
@@ -74,7 +74,7 @@ using config_func_t = std::function<void(T&)>;
 
 template<typename T>
 inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
-    std::chrono::milliseconds const& sample_dis, bool const& do_buffer, int64_t const& offset,
+    std::chrono::milliseconds const& sample_dis, std::list<std::string>* str_cont, bool const& do_buffer, int64_t const& offset,
     discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
     using namespace visus::power_overwhelming;
     auto sensor_count = T::for_all(nullptr, 0);
@@ -89,26 +89,28 @@ inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::millisecond
 
     for (auto& sensor : tmp_sensors) {
         auto sensor_name = unmueller_string(sensor.name());
+        str_cont->push_back(sensor_name);
+        auto const* str_ptr = &str_cont->back();
         if (discard) {
-            if (discard(sensor_name))
+            if (discard(*str_ptr))
                 continue;
         }
 
 #ifdef MEGAMOL_USE_TRACY
-        TracyPlotConfig(sensor_name.data(), tracy::PlotFormatType::Number, false, true, 0);
+        TracyPlotConfig(str_ptr->data(), tracy::PlotFormatType::Number, false, true, 0);
 #endif
 
-        buffers.push_back(SampleBuffer(sensor_name, sample_range, sample_dis));
+        buffers.push_back(SampleBuffer(*str_ptr, sample_range, sample_dis));
 
-        sensors[sensor_name] = std::move(sensor);
+        sensors[*str_ptr] = std::move(sensor);
         if (config) {
-            config(sensors[sensor_name]);
+            config(sensors[*str_ptr]);
         }
-        sensors[sensor_name].sample(
+        sensors[*str_ptr].sample(
             std::move(async_sampling()
                           .delivers_measurement_data_to(&tracy_sample)
                           .stores_and_passes_context(
-                              std::make_tuple(sensor_name, &buffers.back(), std::cref(do_buffer), std::cref(offset)))
+                              std::make_tuple(str_ptr, &buffers.back(), std::cref(do_buffer), std::cref(offset)))
                           .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
                           .using_resolution(timestamp_resolution::hundred_nanoseconds)));
     }
