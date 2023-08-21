@@ -10,6 +10,7 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <chrono>
+#include <list>
 #include <thread>
 
 #include "AbstractFrontendService.hpp"
@@ -25,7 +26,6 @@
 
 #include <power_overwhelming/rtx_instrument.h>
 
-#include <list>
 #include <sol/sol.hpp>
 
 namespace megamol {
