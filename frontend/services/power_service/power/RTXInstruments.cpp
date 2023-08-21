@@ -107,7 +107,7 @@ void RTXInstruments::StartMeasurement(
             }
 
             // magic sleep to wait until devices are ready to recieve other requests
-            //std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             while (!waiting_on_trigger()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
