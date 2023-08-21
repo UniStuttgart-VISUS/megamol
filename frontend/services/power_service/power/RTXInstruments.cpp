@@ -203,7 +203,8 @@ void RTXInstruments::StartMeasurement(
 
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
                         auto const tpn = name + "_" + channels[c_idx].label().text();
-                        values_map[s_idx][tpn] = transform_waveform(waveform);
+                        values_map[s_idx][tpn] =
+                            transform_waveform(all_waveforms[s_idx * num_channels + c_idx].waveform());
                     }
 
                     //ParquetWriter(fullpath, values_map[s_idx]);
