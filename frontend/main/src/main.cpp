@@ -385,7 +385,7 @@ int main(const int argc, const char** argv) {
     services.close();
 
 #ifdef MEGAMOL_USE_TRACY
-    TracyCZoneEnd(main); 
+    TracyCZoneEnd(main);
     tracy::ShutdownProfiler();
 #endif
 

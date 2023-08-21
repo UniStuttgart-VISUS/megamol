@@ -24,8 +24,8 @@
 
 #include <power_overwhelming/rtx_instrument.h>
 
-#include <sol/sol.hpp>
 #include <list>
+#include <sol/sol.hpp>
 
 namespace megamol {
 namespace frontend {

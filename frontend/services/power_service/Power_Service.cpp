@@ -124,8 +124,7 @@ bool Power_Service::init(void* configPtr) {
     }
     std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
-            str_cont_, 
-            do_buffer_, sb_qpc_offset_, nullptr, tinker_config_func);
+            str_cont_, do_buffer_, sb_qpc_offset_, nullptr, tinker_config_func);
 
     //return init(*static_cast<Config*>(configPtr));
     return true;

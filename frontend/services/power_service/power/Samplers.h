@@ -74,8 +74,8 @@ using config_func_t = std::function<void(T&)>;
 
 template<typename T>
 inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
-    std::chrono::milliseconds const& sample_dis, std::list<std::string>* str_cont, bool const& do_buffer, int64_t const& offset,
-    discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
+    std::chrono::milliseconds const& sample_dis, std::list<std::string>* str_cont, bool const& do_buffer,
+    int64_t const& offset, discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
     using namespace visus::power_overwhelming;
     auto sensor_count = T::for_all(nullptr, 0);
     std::vector<T> tmp_sensors(sensor_count);
