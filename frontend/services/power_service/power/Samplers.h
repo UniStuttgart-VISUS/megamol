@@ -28,6 +28,8 @@ using samplers_t = std::unordered_map<std::string, T>;
 
 using buffers_t = std::vector<SampleBuffer>;
 
+using context_t = std::tuple<std::string*, SampleBuffer*, bool const&, int64_t const&>;
+
 inline int64_t convert_timestamp(int64_t const& offset, int64_t const& ts) {
     return ts + offset;
 }
@@ -40,7 +42,7 @@ inline int64_t convert_walltime(int64_t const& ts) {
 
 inline void tracy_sample(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
-    auto usr_data = static_cast<std::tuple<std::string*, SampleBuffer*, bool const&, int64_t const&>*>(usr_ptr);
+    auto usr_data = static_cast<context_t*>(usr_ptr);
     auto const& name = std::get<0>(*usr_data);
     auto buffer = std::get<1>(*usr_data);
     auto const& do_buffer = std::get<2>(*usr_data);
