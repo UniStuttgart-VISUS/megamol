@@ -17,6 +17,7 @@
 #include "power/ParallelPortTrigger.h"
 #include "power/RTXInstruments.h"
 #include "power/Samplers.h"
+#include "power/StringContainer.h"
 #include "power/Trigger.h"
 #include "power/Utility.h"
 
@@ -40,7 +41,7 @@ public:
         std::string lpt = "lpt1";
         bool write_to_files = false;
         std::string folder = "./";
-        std::list<std::string>* str_container;
+        power::StringContainer* str_container;
     };
 
     // sometimes somebody wants to know the name of the service
@@ -243,7 +244,7 @@ private:
 
     int64_t sb_qpc_offset_;
 
-    std::list<std::string>* str_cont_;
+    power::StringContainer* str_cont_;
 };
 
 } // namespace frontend

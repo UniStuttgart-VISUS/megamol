@@ -33,6 +33,7 @@
 
 #ifdef MEGAMOL_USE_POWER
 #include "Power_Service.hpp"
+#include "power/StringContainer.h"
 #endif
 
 using megamol::core::utility::log::Log;
@@ -184,7 +185,7 @@ int main(const int argc, const char** argv) {
     profiling_config.include_graph_events = config.include_graph_events;
 
 #ifdef MEGAMOL_USE_POWER
-    std::list<std::string> power_str_container;
+    megamol::power::StringContainer power_str_container;
     megamol::frontend::Power_Service power_service;
     megamol::frontend::Power_Service::Config power_config;
     power_config.lpt = config.power_lpt;

@@ -14,6 +14,7 @@
 #include <power_overwhelming/tinkerforge_sensor.h>
 
 #include "SampleBuffer.h"
+#include "StringContainer.h"
 #include "Utility.h"
 
 #ifdef MEGAMOL_USE_TRACY
@@ -74,7 +75,7 @@ using config_func_t = std::function<void(T&)>;
 
 template<typename T>
 inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
-    std::chrono::milliseconds const& sample_dis, std::list<std::string>* str_cont, bool const& do_buffer,
+    std::chrono::milliseconds const& sample_dis, StringContainer* str_cont, bool const& do_buffer,
     int64_t const& offset, discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
     using namespace visus::power_overwhelming;
     auto sensor_count = T::for_all(nullptr, 0);
@@ -88,9 +89,7 @@ inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::millisecond
     sensors.reserve(sensor_count);
 
     for (auto& sensor : tmp_sensors) {
-        auto sensor_name = unmueller_string(sensor.name());
-        str_cont->push_back(sensor_name);
-        auto const* str_ptr = &str_cont->back();
+        auto str_ptr = str_cont->Add(unmueller_string(sensor.name()));
         if (discard) {
             if (discard(*str_ptr))
                 continue;
