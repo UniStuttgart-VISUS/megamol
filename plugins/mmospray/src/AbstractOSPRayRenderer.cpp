@@ -27,7 +27,8 @@
 namespace megamol::ospray {
 
 void ospErrorCallback(OSPError err, const char* details) {
-    megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
+    megamol::core::utility::log::Log::DefaultLog.WriteError(
+        "OSPRay Error %u: %s", static_cast<std::underlying_type_t<OSPError>>(err), details);
 }
 
 void ospStatusCallback(const char* msg) {
