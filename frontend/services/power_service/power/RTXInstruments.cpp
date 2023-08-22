@@ -3,6 +3,7 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <algorithm>
+#include <bitset>
 #include <future>
 #include <stdexcept>
 #include <thread>
@@ -65,6 +66,8 @@ void RTXInstruments::ApplyConfigs() {
             } else {
                 i.synchronise_clock();
                 i.reset(true, true);
+                i.write("STOP\n");
+                i.operation_complete();
                 fit->second.apply(i);
                 i.reference_position(oscilloscope_reference_point::left);
                 i.trigger_position(oscilloscope_quantity(0, "ms"));
@@ -93,6 +96,8 @@ void RTXInstruments::StartMeasurement(
             std::chrono::system_clock::time_point last_trigger;
             int64_t last_trigger_qpc;
 
+            waiting_on_trigger();
+
             int global_device_counter = 0;
             for (auto& [name, i] : rtx_instr_) {
                 i.on_operation_complete_ex(
@@ -107,7 +112,7 @@ void RTXInstruments::StartMeasurement(
             }
 
             // magic sleep to wait until devices are ready to recieve other requests
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             while (!waiting_on_trigger()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
@@ -236,6 +241,7 @@ bool RTXInstruments::waiting_on_trigger() const {
         auto res = i.query("STAT:OPER:COND?\n");
         *strchr(res.as<char>(), '\n') = 0;
         auto const val = std::atoi(res.as<char>());
+        //core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Stat Cond: {}", std::bitset<32>(val).to_string());
         if (val & 8) {
             return true;
         }
