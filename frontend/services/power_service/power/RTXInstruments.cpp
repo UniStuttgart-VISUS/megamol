@@ -66,6 +66,7 @@ void RTXInstruments::ApplyConfigs() {
             } else {
                 i.synchronise_clock();
                 i.reset(true, true);
+                // need to stop running measurement otherwise wait on trigger cannot be used to guard start of trigger sequence
                 i.write("STOP\n");
                 i.operation_complete();
                 fit->second.apply(i);

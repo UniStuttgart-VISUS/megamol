@@ -147,7 +147,8 @@ void sol_rtx_instrument_configuration(sol::state& lua) {
 
     //config_table["as_slave"] = &rtx_instrument_configuration::as_slave;
     lua.set_function("as_slave",
-        [](const rtx_instrument_configuration& config) -> rtx_instrument_configuration { return config.as_slave(); });
+        [](const rtx_instrument_configuration& config,
+            oscilloscope_quantity const& level) -> rtx_instrument_configuration { return config.as_slave(0, level); });
 
     //lua->set_function("get_config",
     //    [](const oscilloscope_quantity quant, const oscilloscope_acquisition& acq) -> rtx_instrument_configuration {
