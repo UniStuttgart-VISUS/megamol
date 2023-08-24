@@ -144,9 +144,5 @@ private:
 
     CompositingOutHandler outFormatHandler_;
 
-    /** Texture Format variables*/
-    int out_tex_internal_format_ = GL_RGBA32F;
-    int out_tex_format_ = GL_RGB;
-    int out_tex_type_ = GL_FLOAT;
 };
 } // namespace megamol::compositing_gl
