@@ -188,7 +188,9 @@ bool megamol::volume::DifferenceVolume::onGetData(core::Call& call) {
         default:
             Log::DefaultLog.WriteError("%hs is not supported for scalar "
                                        "type %u.",
-                DifferenceVolume::ClassName(), src->GetMetadata()->ScalarType);
+                DifferenceVolume::ClassName(),
+                static_cast<std::underlying_type_t<decltype(src->GetMetadata()->ScalarType)>>(
+                    src->GetMetadata()->ScalarType));
             return false;
         }
 

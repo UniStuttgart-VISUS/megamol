@@ -220,7 +220,8 @@ bool datatools::ParticleVelocities::assertData(
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "ParticleVelocities: inconsistent vertex data type"
                     "between frames %u (%u) and %u (%u)in list %u",
-                    time - 1, cachedVertexDataType[i], time, in->AccessParticles(i).GetVertexDataType(), i);
+                    time - 1, static_cast<uint32_t>(cachedVertexDataType[i]), time,
+                    static_cast<uint32_t>(in->AccessParticles(i).GetVertexDataType()), i);
                 return false;
             }
             if (cachedListLength[i] != in->AccessParticles(i).GetCount()) {

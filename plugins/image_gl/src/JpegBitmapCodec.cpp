@@ -326,7 +326,8 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage& mem) const {
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unsupported image format - channels: %u, type: %u. At %s:%u", this->image().GetChannelCount(),
-                    this->image().GetChannelType(), __FILE__, __LINE__);
+                    static_cast<std::underlying_type_t<BitmapImage::ChannelType>>(this->image().GetChannelType()),
+                    __FILE__, __LINE__);
             }
         } else if (this->image().GetChannelCount() == 3) {
             if (this->image().GetChannelType() == BitmapImage::CHANNELTYPE_BYTE) {
@@ -341,13 +342,19 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage& mem) const {
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Unsupported channel labels- channels: [%u, %u, %u]. At %s:%u",
-                        this->image().GetChannelLabel(0), this->image().GetChannelLabel(1),
-                        this->image().GetChannelLabel(2), __FILE__, __LINE__);
+                        static_cast<std::underlying_type_t<BitmapImage::ChannelLabel>>(
+                            this->image().GetChannelLabel(0)),
+                        static_cast<std::underlying_type_t<BitmapImage::ChannelLabel>>(
+                            this->image().GetChannelLabel(1)),
+                        static_cast<std::underlying_type_t<BitmapImage::ChannelLabel>>(
+                            this->image().GetChannelLabel(2)),
+                        __FILE__, __LINE__);
                 }
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unsupported channel count - channels: %u, type: %u. At %s:%u", this->image().GetChannelCount(),
-                    this->image().GetChannelType(), __FILE__, __LINE__);
+                    static_cast<std::underlying_type_t<BitmapImage::ChannelType>>(this->image().GetChannelType()),
+                    __FILE__, __LINE__);
             }
         }
         hr = piFrameEncode->SetPixelFormat(&pixelFormat);
