@@ -8,7 +8,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO gralkapk/tracy
     REF 0c35824d63ce696328a0948e4c4023f4cdba53c2 # plot_time
-    SHA512 288aca7e662d8da6cd18b752ecefb2ee155b3de1337baae3be5e55f465a74b3c55a0b75b0e2e782a17192ae0efb3caf78a6d3e9ce85782ff7ab7bf843920b375
+    SHA512 e39bd42dfc8e78b5732e733578f602a161ad016455b40e15d76a839f26bb53ade236d27ea45a2aa9a845224fea77268d1e486331af672cd1d819f03cda801d36
     HEAD_REF master
     PATCHES
         001-fix-vcxproj-vcpkg.patch
