@@ -22,8 +22,10 @@ jobs:
         cmake -S . -B ${{ github.workspace }}/build -G "Visual Studio 16 2019"
         -DMEGAMOL_STOP_AFTER_VCPKG=ON
         -DMEGAMOL_USE_CGAL=ON
-        -DMEGAMOL_USE_OSPRAY=ON
         -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
+        -DMEGAMOL_USE_OSPRAY=ON
+        -DMEGAMOL_USE_STACKTRACE=ON
+        -DMEGAMOL_USE_TRACY=ON
       env:
         VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
   linux:
@@ -48,8 +50,10 @@ jobs:
         cmake -S . -B ${{ github.workspace }}/build -G "Unix Makefiles"
         -DMEGAMOL_STOP_AFTER_VCPKG=ON
         -DMEGAMOL_USE_CGAL=ON
-        -DMEGAMOL_USE_OSPRAY=ON
         -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
+        -DMEGAMOL_USE_OSPRAY=ON
+        -DMEGAMOL_USE_STACKTRACE=ON
+        -DMEGAMOL_USE_TRACY=ON
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
