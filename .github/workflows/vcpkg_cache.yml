@@ -9,6 +9,8 @@ on:
 
 jobs:
   windows:
+    # Skip on PR from forked repo as no secrets are available.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     strategy:
       fail-fast: false
       matrix:
@@ -29,6 +31,8 @@ jobs:
       env:
         VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
   linux:
+    # Skip on PR from forked repo as no secrets are available.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     strategy:
       fail-fast: false
       matrix:
