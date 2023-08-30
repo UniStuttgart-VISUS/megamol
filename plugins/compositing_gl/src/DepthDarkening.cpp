@@ -188,8 +188,8 @@ void megamol::compositing_gl::DepthDarkening::fitTextures(std::shared_ptr<glowl:
     std::vector<std::shared_ptr<glowl::Texture2D>> texVec = {outputTex_, intermediateTex_, intermediateTex2_};
     for (auto& tex : texVec) {
         if (tex->getWidth() != resolution.first || tex->getHeight() != resolution.second) {
-            glowl::TextureLayout tx_layout{(GLint)outFormatHandler_.getInternalFormat(), resolution.first, resolution.second,
-                1, outFormatHandler_.getFormat(), outFormatHandler_.getType(), 1};
+            glowl::TextureLayout tx_layout{(GLint)outFormatHandler_.getInternalFormat(), resolution.first,
+                resolution.second, 1, outFormatHandler_.getFormat(), outFormatHandler_.getType(), 1};
             tex->reload(tx_layout, nullptr);
         }
     }

@@ -103,7 +103,7 @@ private:
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot camera_slot_;
 
-     /**
+    /**
      * \brief Updates texture format variables and recompiles shaders.
      *
      * @return 'true' if successfully updated, 'false' otherwise

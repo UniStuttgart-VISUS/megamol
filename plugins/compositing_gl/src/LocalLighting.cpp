@@ -45,8 +45,8 @@ megamol::compositing_gl::LocalLighting::LocalLighting()
               "RoughMetalTexture", "Connects to the roughness/metalness render target texture")
         , m_lightSlot("lights", "Lights are retrieved over this slot")
         , m_camera_slot("Camera", "Connects a (copy of) camera state")
-        , outHandler_(
-              "OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F}, std::bind(&LocalLighting::textureFormatUpdate, this)) {
+        , outHandler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::bind(&LocalLighting::textureFormatUpdate, this)) {
     this->m_illuminationmode << new megamol::core::param::EnumParam(0);
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Lambert");
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Blinn-Phong");

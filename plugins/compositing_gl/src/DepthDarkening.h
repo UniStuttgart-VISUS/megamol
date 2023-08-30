@@ -143,6 +143,5 @@ private:
     std::unique_ptr<glowl::BufferObject> gaussValues_;
 
     CompositingOutHandler outFormatHandler_;
-
 };
 } // namespace megamol::compositing_gl

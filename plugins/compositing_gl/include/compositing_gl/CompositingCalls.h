@@ -35,19 +35,18 @@ public:
     int internalFormat;
     int format;
     int type;
-    inline CallTextureFormatData(int internalFormatP, int formatP, int typeP) :
-        internalFormat(internalFormatP),
-        format (formatP),
-        type (typeP)
-        {}
+    inline CallTextureFormatData(int internalFormatP, int formatP, int typeP)
+            : internalFormat(internalFormatP)
+            , format(formatP)
+            , type(typeP) {}
     ~CallTextureFormatData() = default;
 };
 
 class CallTextureFormat
         : public core::GenericVersionedCall<std::shared_ptr<CallTextureFormatData>, core::EmptyMetaData> {
- public:
+public:
     inline CallTextureFormat() : GenericVersionedCall<std::shared_ptr<CallTextureFormatData>, core::EmptyMetaData>() {}
-     ~CallTextureFormat() override = default;
+    ~CallTextureFormat() override = default;
 
     static const char* ClassName() {
         return "CallTextureFormat";

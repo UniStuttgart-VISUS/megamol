@@ -60,14 +60,14 @@ public:
 
 
     /*
-    * Constructor for manual handeling of changes in selected formats.
-    * On changed format selection, recently changed returns 'true'.
-    * 
-    * @Param define Name of the String to be replaced within shaders.
-    * @Param allowedTypes Enum representation of opengl internal texture formats.
-    * @Param slotName Visible name of format selection field in GUI
-    * @Param slotDesc Description of selection field in GUI
-    */
+     * Constructor for manual handeling of changes in selected formats.
+     * On changed format selection, recently changed returns 'true'.
+     *
+     * @Param define Name of the String to be replaced within shaders.
+     * @Param allowedTypes Enum representation of opengl internal texture formats.
+     * @Param slotName Visible name of format selection field in GUI
+     * @Param slotDesc Description of selection field in GUI
+     */
     CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedTypes,
         std::string slotName = "slot for selecting Out Formats", std::string slotDesc = "Slot for selecting Tex Outs");
 
@@ -75,7 +75,7 @@ public:
      * Constructor for automatic handeling of changes in selected formats.
      * This constructor expects a function in owner to handle relevant updates outside this object.
      * On selection change 'externalUpdateFunc' is called.
-     * 
+     *
      * @param define: Name of the String to be replaced within shaders.
      * @param allowed:Types Enum representation of opengl internal texture formats.
      * @param externalUpdateFunc: (Callback)Function of owner to update shaders and texture format variables when format selection is changed.
@@ -87,13 +87,13 @@ public:
         std::string slotDesc = "Slot for selecting Tex Outs");
 
     /*
-    * @return 'true' if selection changed since last call of this function, 'false' if no change happened.
-    */
+     * @return 'true' if selection changed since last call of this function, 'false' if no change happened.
+     */
     bool recentlyChanged();
 
     /*
-    * Adds definitions to shader.
-    */
+     * Adds definitions to shader.
+     */
     std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> addDefinitions(msf::ShaderFactoryOptionsOpenGL);
     /*
      * Adds definitions to shader.

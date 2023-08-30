@@ -577,9 +577,9 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
                         static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
 
                     if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
-                        glowl::TextureLayout tx_layout(out_format_handler_.getInternalFormat(), std::get<0>(texture_res),
-                            std::get<1>(texture_res), 1, out_format_handler_.getFormat(), out_format_handler_.getType(),
-                            1);
+                        glowl::TextureLayout tx_layout(out_format_handler_.getInternalFormat(),
+                            std::get<0>(texture_res), std::get<1>(texture_res), 1, out_format_handler_.getFormat(),
+                            out_format_handler_.getType(), 1);
                         tgt->reload(tx_layout, nullptr);
                     }
                 };
