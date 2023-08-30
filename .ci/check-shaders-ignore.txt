@@ -48,4 +48,9 @@ plugins/compositing_gl/shaders/compositing_gl/textureAlphaCompositing.comp.glsl
 plugins/compositing_gl/shaders/compositing_gl/textureDepthCompositing.comp.glsl
 plugins/compositing_gl/shaders/compositing_gl/textureMultiply.comp.glsl
 plugins/compositing_gl/shaders/compositing_gl/toon.comp.glsl
+plugins/compositing_gl/shaders/compositing_gl/AntiAliasing/fxaa.comp.glsl
+plugins/compositing_gl/shaders/compositing_gl/AntiAliasing/smaa_neighborhood_blending.comp.glsl
+plugins/compositing_gl/shaders/compositing_gl/assao/apply.comp.glsl
 plugins/compositing_gl/shaders/compositing_gl/assao/uniforms/apply_uniforms.glsl
+plugins/compositing_gl/shaders/compositing_gl/assao/non_smart_apply.comp.glsl
+plugins/compositing_gl/shaders/compositing_gl/assao/non_smart_half_apply.comp.glsl
