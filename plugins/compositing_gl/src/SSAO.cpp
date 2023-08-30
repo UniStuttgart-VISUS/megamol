@@ -103,7 +103,7 @@ megamol::compositing_gl::SSAO::SSAO()
         , settings_have_changed_(false)
         , slot_is_active_(false)
         , update_caused_by_normal_slot_change_(false)
-        , out_format_handler_("OUTFORMAT", {GL_R8_SNORM, GL_R16F, GL_R32F},
+        , out_format_handler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
               std::function<bool()>(std::bind(&SSAO::textureFormatUpdate, this))) {
     this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &SSAO::getDataCallback);
     this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
@@ -367,9 +367,6 @@ bool megamol::compositing_gl::SSAO::create() {
         non_smart_blur_prgm_ = core::utility::make_glowl_shader(
             "non_smart_blur", shader_options, "compositing_gl/assao/non_smart_blur.comp.glsl");
 
-        naive_ssao_prgm_ =
-            core::utility::make_glowl_shader("naive_ssao", shader_options, "compositing_gl/naive_ssao.comp.glsl");
-
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("SSAO: " + std::string(e.what())).c_str());
     }
@@ -495,6 +492,8 @@ bool megamol::compositing_gl::SSAO::textureFormatUpdate() {
             "non_smart_apply", *shader_options_flags, "compositing_gl/assao/non_smart_apply.comp.glsl");
         simple_blur_prgm_ = core::utility::make_glowl_shader(
             "simple_blur", *shader_options_flags, "compositing_gl/simple_blur.comp.glsl");
+        naive_ssao_prgm_ = core::utility::make_glowl_shader(
+            "naive_ssao", *shader_options_flags, "compositing_gl/naive_ssao.comp.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("SSAO: " + std::string(e.what())).c_str());
         return false;

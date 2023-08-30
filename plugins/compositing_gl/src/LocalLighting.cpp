@@ -108,29 +108,7 @@ megamol::compositing_gl::LocalLighting::~LocalLighting() {
 }
 
 bool megamol::compositing_gl::LocalLighting::create() {
-
-    auto const shader_options =
-        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    auto const shader_options_flags = outHandler_.addDefinitions(shader_options);
-
-    try {
-        m_lambert_prgm = core::utility::make_glowl_shader(
-            "compositing_lambert", *shader_options_flags, "compositing_gl/lambert.comp.glsl");
-
-        m_phong_prgm = core::utility::make_glowl_shader(
-            "compositing_phong", *shader_options_flags, "compositing_gl/phong.comp.glsl");
-
-        m_toon_prgm = core::utility::make_glowl_shader(
-            "compositing_toon", *shader_options_flags, "compositing_gl/toon.comp.glsl");
-
-    } catch (std::exception& e) {
-        Log::DefaultLog.WriteError(("LocalLighting: " + std::string(e.what())).c_str());
-        return false;
-    }
-
-    glowl::TextureLayout tx_layout(
-        outHandler_.getInternalFormat(), 1, 1, 1, outHandler_.getFormat(), outHandler_.getType(), 1);
-    m_output_texture = std::make_shared<glowl::Texture2D>("lighting_output", tx_layout, nullptr);
+    textureFormatUpdate();
 
     m_point_lights_buffer =
         std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
