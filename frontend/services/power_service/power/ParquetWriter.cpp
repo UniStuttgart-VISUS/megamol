@@ -5,12 +5,36 @@
 #include "mmcore/utility/log/Log.h"
 
 #include <arrow/io/file.h>
+#include <arrow/util/key_value_metadata.h>
 #include <parquet/api/reader.h>
 #include <parquet/api/writer.h>
 
 namespace megamol::power {
+template<typename T>
+void BatchWriter(parquet::RowGroupWriter* writer, std::vector<T> const& data, int c_idx, std::size_t min_field_size) {
+    if constexpr (std::is_same_v<T, float>) {
+        auto float_writer = static_cast<parquet::FloatWriter*>(writer->column(c_idx));
+        float_writer->WriteBatch(min_field_size, nullptr, nullptr, data.data());
+    } else if (std::is_same_v<T, int64_t>) {
+        auto int_writer = static_cast<parquet::Int64Writer*>(writer->column(c_idx));
+        int_writer->WriteBatch(min_field_size, nullptr, nullptr, data.data());
+    } else {
+        throw std::invalid_argument("Unsupported type");
+    }
+}
+
+void WriteMetaData(std::unique_ptr<parquet::ParquetFileWriter>& file_writer, MetaData const* meta) {
+    auto md = std::make_shared<parquet::KeyValueMetadata>();
+    md->Append(std::string("project_file"), meta->project_file);
+    for (auto const& [key, value] : meta->oszi_configs) {
+        md->Append(key, value);
+    }
+    file_writer->AddKeyValueMetadata(md);
+}
+
 void ParquetWriter(std::filesystem::path const& file_path,
-    std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>> const& values_map) {
+    std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>> const& values_map,
+    MetaData const* meta) {
     using namespace parquet;
     using namespace parquet::schema;
 
@@ -56,6 +80,11 @@ void ParquetWriter(std::filesystem::path const& file_path,
         // create instance
         auto file_writer = ParquetFileWriter::Open(file, schema, props);
 
+        // write meta data
+        if (meta) {
+            WriteMetaData(file_writer, meta);
+        }
+
         // write data
         auto rg_writer = file_writer->AppendBufferedRowGroup();
 
@@ -63,12 +92,10 @@ void ParquetWriter(std::filesystem::path const& file_path,
         for (auto const& [name, v_values] : values_map) {
             if (std::holds_alternative<std::vector<float>>(v_values)) {
                 auto const& values = std::get<std::vector<float>>(v_values);
-                auto float_writer = static_cast<FloatWriter*>(rg_writer->column(c_idx++));
-                float_writer->WriteBatch(min_field_size, nullptr, nullptr, values.data());
+                BatchWriter(rg_writer, values, c_idx++, min_field_size);
             } else if (std::holds_alternative<std::vector<int64_t>>(v_values)) {
                 auto const& values = std::get<std::vector<int64_t>>(v_values);
-                auto int_writer = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
-                int_writer->WriteBatch(min_field_size, nullptr, nullptr, values.data());
+                BatchWriter(rg_writer, values, c_idx++, min_field_size);
             } else {
                 throw std::runtime_error("Unexpected type");
             }
@@ -87,7 +114,8 @@ void ParquetWriter(std::filesystem::path const& file_path,
     }
 }
 
-void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuffer> const& buffers) {
+void ParquetWriter(
+    std::filesystem::path const& file_path, std::vector<SampleBuffer> const& buffers, MetaData const* meta) {
     using namespace parquet;
     using namespace parquet::schema;
 
@@ -123,20 +151,22 @@ void ParquetWriter(std::filesystem::path const& file_path, std::vector<SampleBuf
         // create instance
         auto file_writer = ParquetFileWriter::Open(file, schema, props);
 
+        // write meta data
+        if (meta) {
+            WriteMetaData(file_writer, meta);
+        }
+
         // write data
         auto rg_writer = file_writer->AppendBufferedRowGroup();
 
         int c_idx = 0;
         for (auto const& b : buffers) {
             auto const& s_values = b.ReadSamples();
-            auto float_writer = static_cast<FloatWriter*>(rg_writer->column(c_idx++));
-            float_writer->WriteBatch(min_field_size, nullptr, nullptr, s_values.data());
+            BatchWriter(rg_writer, s_values, c_idx++, min_field_size);
             auto const& t_values = b.ReadTimestamps();
-            auto int_writer = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
-            int_writer->WriteBatch(min_field_size, nullptr, nullptr, t_values.data());
+            BatchWriter(rg_writer, t_values, c_idx++, min_field_size);
             auto const& w_values = b.ReadWalltimes();
-            auto int_writer2 = static_cast<Int64Writer*>(rg_writer->column(c_idx++));
-            int_writer2->WriteBatch(min_field_size, nullptr, nullptr, w_values.data());
+            BatchWriter(rg_writer, w_values, c_idx++, min_field_size);
         }
 
         // close
