@@ -57,11 +57,11 @@ public:
 
 class IImageDataWriter {
 public:
-    bool write_screenshot(IScreenshotSource const& image_source, std::filesystem::path const& filename) const {
-        return this->write_image(image_source.take_screenshot(), filename);
+    bool write_screenshot(IScreenshotSource const& image_source, std::filesystem::path const& filename, void const* user_ptr = nullptr) const {
+        return this->write_image(image_source.take_screenshot(), filename, user_ptr);
     }
 
-    virtual bool write_image(ScreenshotImageData const& image, std::filesystem::path const& filename) const = 0;
+    virtual bool write_image(ScreenshotImageData const& image, std::filesystem::path const& filename, void const* user_ptr = nullptr) const = 0;
 
     ~IImageDataWriter() = default;
 };
@@ -99,7 +99,7 @@ private:
 
 class ScreenshotImageDataToPNGWriter : public IImageDataWriter {
 public:
-    bool write_image(ScreenshotImageData const& image, std::filesystem::path const& filename) const override;
+    bool write_image(ScreenshotImageData const& image, std::filesystem::path const& filename, void const* user_ptr = nullptr) const override;
 };
 
 
