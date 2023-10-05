@@ -20,6 +20,7 @@
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "mmstd_gl/view/View3DGL.h"
 #include "vislib/sys/FastFile.h"
+#include "RuntimeInfo.h"
 
 
 namespace megamol::cinematic_gl {
@@ -35,6 +36,7 @@ public:
         Base::requested_lifetime_resources(req);
         req.require<frontend_resources::RuntimeConfig>();
         req.require<core::MegaMolGraph>();
+        req.require<frontend_resources::RuntimeInfo>();
     }
 
     /**
@@ -113,6 +115,7 @@ private:
     unsigned int fps;
     bool skyboxCubeMode;
     std::shared_ptr<glowl::FramebufferObject> cinematicFbo;
+    megamol::frontend_resources::RuntimeInfo const* ri_ = nullptr;
 
     /**********************************************************************
      * functions

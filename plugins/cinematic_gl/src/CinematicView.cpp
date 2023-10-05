@@ -109,6 +109,8 @@ CinematicView::CinematicView()
 
     this->addSBSideToNameParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->addSBSideToNameParam);
+
+    ri_ = &frontend_resources.get<frontend_resources::RuntimeInfo>();
 }
 
 
@@ -685,7 +687,7 @@ bool CinematicView::render_to_file_write() {
         auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
         project = const_cast<megamol::core::MegaMolGraph&>(megamolgraph).Convenience().SerializeGraph();
 
-        megamol::core::utility::graphics::ScreenShotComments ssc(project);
+        megamol::core::utility::graphics::ScreenShotComments ssc(project, ri_);
         png_set_text(
             this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
