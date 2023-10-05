@@ -41,18 +41,6 @@ RuntimeInfo_Service::~RuntimeInfo_Service() {
 }
 
 bool RuntimeInfo_Service::init(void* configPtr) {
-    if (configPtr == nullptr)
-        return false;
-
-    return init(*static_cast<Config*>(configPtr));
-}
-
-bool RuntimeInfo_Service::init(const Config& config) {
-    // initialize your service and its provided resources using config parameters
-    // for now, you dont need to worry about your service beeing initialized or closed multiple times
-    // init() and close() only get called once in the lifetime of each service object
-    // but maybe more instances of your service will get created? this may be relevant for central resources you manage (like libraries, network connections).
-
     ri_resource_.get_hardware_info = [&]() { return get_hardware_info(); };
     ri_resource_.get_os_info = [&]() { return get_os_info(); };
     ri_resource_.get_runtime_libraries = [&]() { return get_runtime_libraries(); };

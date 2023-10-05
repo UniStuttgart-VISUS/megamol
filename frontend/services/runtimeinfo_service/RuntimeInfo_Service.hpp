@@ -38,7 +38,6 @@ public:
 
     // init service with input config data, e.g. init GLFW with OpenGL and open window with certain decorations/hints
     // if init() fails return false (this will terminate program execution), on success return true
-    bool init(const Config& config);
     bool init(void* configPtr) override;
     void close() override;
 

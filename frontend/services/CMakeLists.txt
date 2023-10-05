@@ -111,7 +111,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   "gui/3rd"
   "gui/src"
   "vr_service"
-  "runtime_service"
+  "runtimeinfo_service"
   # "service_template"
 )
 

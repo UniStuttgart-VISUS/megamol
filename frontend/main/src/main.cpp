@@ -25,6 +25,7 @@
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/factories/PluginRegister.h"
 #include "mmcore/utility/log/Log.h"
+#include "RuntimeInfo_Service.hpp"
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
@@ -68,6 +69,9 @@ int main(const int argc, const char** argv) {
 
     log(config.as_string());
     log(global_value_store.as_string());
+
+    megamol::frontend::RuntimeInfo_Service ri_service;
+    ri_service.setPriority(1);
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
@@ -193,6 +197,7 @@ int main(const int argc, const char** argv) {
     // clang-format on
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
+    services.add(ri_service, nullptr);
     if (with_gl) {
         services.add(gl_service, &openglConfig);
     }
