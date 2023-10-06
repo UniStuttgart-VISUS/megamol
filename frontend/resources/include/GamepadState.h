@@ -11,6 +11,7 @@
 #include <functional>
 #include <list>
 #include <string>
+#include <vector>
 
 namespace megamol {
 namespace frontend_resources {
@@ -55,9 +56,21 @@ struct GamepadState {
         Released = 0,
         Pressed = 1,
     };
+    enum class HatIs : unsigned char {
+        CENTERED = 0,
+        UP = 1,
+        RIGHT = 2,
+        DOWN = 4,
+        LEFT = 8,
+        RIGHT_UP = (RIGHT | UP),
+        RIGHT_DOWN = (RIGHT | DOWN),
+        LEFT_UP = (LEFT | UP),
+        LEFT_DOWN = (LEFT | DOWN),
+    };
 
-    unsigned char buttons[15] = {};
-    float axes[6] = {};
+    std::vector<float> axes = {};
+    std::vector<unsigned char> buttons = {};
+    std::vector<unsigned char> hats = {};
 
     std::string name;
     std::string guid;
@@ -74,16 +87,29 @@ struct GamepadState {
         return button == static_cast<unsigned char>(ButtonIs::Pressed);
     }
 
+    bool pressed(const Button b) const {
+        return pressed(button(b));
+    }
+
     bool released(const unsigned char button) const {
         return button == static_cast<unsigned char>(ButtonIs::Released);
     }
 
-#define zero(X) std::memset(X, 0, sizeof(X))
-    void clear() {
-        zero(axes);
-        zero(buttons);
+    HatIs hat(const unsigned int index) const {
+        return static_cast<HatIs>(hats[index]);
     }
-#undef zero;
+
+    int hat_count() const {
+        return hats.size();
+    }
+
+    void clear() {
+        buttons.clear();
+        axes.clear();
+        hats.clear();
+        name.clear();
+        guid.clear();
+    }
 };
 
 struct Connected_Gamepads {

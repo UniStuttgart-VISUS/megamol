@@ -157,10 +157,13 @@ private:
         int joystick_buttons_count = 0;
         int joystick_hats_count = 0;
 
+        int gamepad_axes_count = 0;
+        int gamepad_buttons_count = 0;
+
         void* user_ptr = nullptr;
     };
     std::unordered_map<int, Joystick> m_joysticks;
-    Joystick make_joystick(const int jid);
+    std::optional<Joystick> make_joystick(const int jid);
     int poll_joystick_state(Joystick& j);
     void poll_joysticks();
 
