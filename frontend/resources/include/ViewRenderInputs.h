@@ -32,8 +32,10 @@ struct ViewRenderInputs : public frontend_resources::RenderInputsUpdate {
     std::function<std::optional<frontend_resources::RenderInput::CameraMatrices>()> render_input_camera_handler = []() {
         return std::nullopt;
     };
-    std::function<std::optional<frontend_resources::RenderInput::CameraViewProjectionParameters>()>
-        render_input_camera_parameters_handler = []() { return std::nullopt; };
+    std::function<std::optional<frontend_resources::RenderInput::CameraPose>()>
+        render_input_camera_pose_parameters_handler = []() { return std::nullopt; };
+    std::function<std::optional<frontend_resources::RenderInput::CameraProjection>()>
+        render_input_camera_projection_parameters_handler = []() { return std::nullopt; };
 
     void update() override {
         auto fbo_size = render_input_framebuffer_size_handler();
@@ -45,7 +47,8 @@ struct ViewRenderInputs : public frontend_resources::RenderInputsUpdate {
         render_input.local_tile_relative_end = {tile.tile_end_normalized.first, tile.tile_end_normalized.second};
 
         render_input.camera_matrices_override = render_input_camera_handler();
-        render_input.camera_view_projection_parameters_override = render_input_camera_parameters_handler();
+        render_input.camera_view_projection_parameters_override = render_input_camera_projection_parameters_handler();
+        render_input.camera_view_pose_parameters_override = render_input_camera_pose_parameters_handler();
     }
 
     frontend::FrontendResource get_resource() override {
