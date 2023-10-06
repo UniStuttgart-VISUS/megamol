@@ -9,6 +9,9 @@
 
 #include "AbstractFrontendService.hpp"
 
+#include <map>
+#include <optional>
+
 namespace megamol {
 namespace frontend {
 
@@ -53,6 +56,22 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 
     void gamepad_window() const;
+
+    enum class PoseManipulator {
+        Arcball = 0,
+        //Turntable,
+        FPS,
+        COUNT,
+    };
+    PoseManipulator m_manipulation_mode = PoseManipulator::Arcball;
+
+    float m_axis_threshold = 0.05f;
+
+    // all known view3d entry points
+    std::map<std::string, void*> m_view3d_modules;
+
+    // the entry point currently controlled
+    std::optional<std::string> m_controlled_view3d = std::nullopt;
 };
 
 } // namespace frontend
