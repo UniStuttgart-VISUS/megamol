@@ -117,73 +117,79 @@ std::vector<std::string> dlinfo_linkmap(void* handle) {
 } // namespace
 
 void megamol::core::utility::platform::RuntimeInfo::get_hardware_info() {
+    if (m_hardware_info.empty()) {
 #ifdef _WIN32
-    //m_hardware_info = execute("systeminfo");
-    std::stringstream s;
-    s << "{" << std::endl;
-    s << R"("Processor Name":")" << wmi.get_value("Win32_Processor", "Name") << "\"," << std::endl;
-    s << R"("Processor Version":")" << wmi.get_value("Win32_Processor", "Version") << "\"," << std::endl;
-    s << R"("GPU Name":")" << wmi.get_value("Win32_VideoController", "Name") << "\"," << std::endl;
-    s << R"("OS Name":")" << wmi.get_value("Win32_OperatingSystem", "Name") << "\"," << std::endl;
-    s << R"("OS Version":")" << wmi.get_value("Win32_OperatingSystem", "Version") << "\"," << std::endl;
-    s << R"("OS Architecture":")" << wmi.get_value("Win32_OperatingSystem", "OSArchitecture") << "\"," << std::endl;
-    s << R"("Available Memory":")" << wmi.get_value("Win32_OperatingSystem", "TotalVisibleMemorySize") << "\""
-      << std::endl;
-    s << "}";
-    m_hardware_info = s.str();
+        //m_hardware_info = execute("systeminfo");
+        std::stringstream s;
+        s << "{" << std::endl;
+        s << R"("Processor Name":")" << wmi.get_value("Win32_Processor", "Name") << "\"," << std::endl;
+        s << R"("Processor Version":")" << wmi.get_value("Win32_Processor", "Version") << "\"," << std::endl;
+        s << R"("GPU Name":")" << wmi.get_value("Win32_VideoController", "Name") << "\"," << std::endl;
+        s << R"("OS Name":")" << wmi.get_value("Win32_OperatingSystem", "Name") << "\"," << std::endl;
+        s << R"("OS Version":")" << wmi.get_value("Win32_OperatingSystem", "Version") << "\"," << std::endl;
+        s << R"("OS Architecture":")" << wmi.get_value("Win32_OperatingSystem", "OSArchitecture") << "\"," << std::endl;
+        s << R"("Available Memory":")" << wmi.get_value("Win32_OperatingSystem", "TotalVisibleMemorySize") << "\""
+          << std::endl;
+        s << "}";
+        m_hardware_info = s.str();
 #else
-    m_hardware_info = execute("cat /proc/cpuinfo /proc/meminfo");
+        m_hardware_info = execute("cat /proc/cpuinfo /proc/meminfo");
 #endif
+    }
 }
 
 void megamol::core::utility::platform::RuntimeInfo::get_runtime_libraries() {
+    if (m_runtime_libraries.empty()) {
 #ifdef _WIN32
-    HANDLE h_mod_snap = INVALID_HANDLE_VALUE;
-    h_mod_snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (h_mod_snap != INVALID_HANDLE_VALUE) {
-        std::stringstream out;
-        MODULEENTRY32 me32;
-        me32.dwSize = sizeof(MODULEENTRY32);
-        if (Module32First(h_mod_snap, &me32)) {
-            do {
-                out << me32.szExePath << " (";
-                out << get_file_version(me32.szExePath) << ")" << std::endl;
-            } while (Module32Next(h_mod_snap, &me32));
+        HANDLE h_mod_snap = INVALID_HANDLE_VALUE;
+        h_mod_snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+        if (h_mod_snap != INVALID_HANDLE_VALUE) {
+            std::stringstream out;
+            MODULEENTRY32 me32;
+            me32.dwSize = sizeof(MODULEENTRY32);
+            if (Module32First(h_mod_snap, &me32)) {
+                do {
+                    out << me32.szExePath << " (";
+                    out << get_file_version(me32.szExePath) << ")" << std::endl;
+                } while (Module32Next(h_mod_snap, &me32));
+            }
+            CloseHandle(h_mod_snap);
+            m_runtime_libraries = out.str();
+        } else {
+            m_runtime_libraries = "";
         }
-        CloseHandle(h_mod_snap);
-        m_runtime_libraries = out.str();
-    } else {
-        m_runtime_libraries = "";
-    }
 #else
-    void* handle = dlopen(nullptr, RTLD_NOW);
+        void* handle = dlopen(nullptr, RTLD_NOW);
 
-    // TODO looks like all library paths are already absolute, do we need search paths here?
-    // const auto paths = dlinfo_search_path(handle);
+        // TODO looks like all library paths are already absolute, do we need search paths here?
+        // const auto paths = dlinfo_search_path(handle);
 
-    const auto list = dlinfo_linkmap(handle);
+        const auto list = dlinfo_linkmap(handle);
 
-    std::stringstream out;
-    for (const auto& lib : list) {
-        out << lib;
-        // If the library is a symlink, print link target to get the filename with the full version number.
-        std::filesystem::path p(lib);
-        if (std::filesystem::is_symlink(p)) {
-            p = std::filesystem::canonical(p);
-            out << " (=> " << p.string() << ")";
+        std::stringstream out;
+        for (const auto& lib : list) {
+            out << lib;
+            // If the library is a symlink, print link target to get the filename with the full version number.
+            std::filesystem::path p(lib);
+            if (std::filesystem::is_symlink(p)) {
+                p = std::filesystem::canonical(p);
+                out << " (=> " << p.string() << ")";
+            }
+            out << std::endl;
         }
-        out << std::endl;
-    }
-    m_runtime_libraries = out.str();
+        m_runtime_libraries = out.str();
 #endif
+    }
 }
 
 void megamol::core::utility::platform::RuntimeInfo::get_os_info() {
+    if (m_os_info.empty()) {
 #ifdef _WIN32
-    m_os_info = execute("ver");
+        m_os_info = execute("ver");
 #else
-    m_os_info = execute("cat /etc/issue");
+        m_os_info = execute("cat /etc/issue");
 #endif
+    }
 }
 
 
@@ -207,5 +213,82 @@ std::string megamol::core::utility::platform::RuntimeInfo::execute(const std::st
         return result;
     } else {
         return "unable to execute " + cmd;
+    }
+}
+
+
+void megamol::core::utility::platform::RuntimeInfo::get_smbios_info(bool serial) {
+    if (smbios_.empty()) {
+#ifdef _WIN32
+        std::stringstream s;
+        s << "{" << std::endl;
+        s << R"("Manufacturer":")" << wmi.get_value("Win32_BaseBoard", "Manufacturer") << "\"," << std::endl;
+        s << R"("Product":")" << wmi.get_value("Win32_BaseBoard", "Product") << "\"," << std::endl;
+        s << R"("Version":")" << wmi.get_value("Win32_BaseBoard", "Version") << "\"," << std::endl;
+        if (serial)
+            s << R"("SerialNumber":")" << wmi.get_value("Win32_BaseBoard", "SerialNumber") << "\"," << std::endl;
+        s << "}";
+        smbios_ = s.str();
+#else
+
+#endif
+    }
+}
+
+
+void megamol::core::utility::platform::RuntimeInfo::get_cpu_info() {
+    if (cpu_.empty()) {
+#ifdef _WIN32
+        std::stringstream s;
+        s << "{" << std::endl;
+        s << R"("Manufacturer":")" << wmi.get_value("Win32_Processor", "Manufacturer") << "\"," << std::endl;
+        s << R"("Name":")" << wmi.get_value("Win32_Processor", "Name") << "\"," << std::endl;
+        s << R"("ProcessorId":")" << wmi.get_value("Win32_Processor", "ProcessorId") << "\"," << std::endl;
+        s << R"("NumberOfCores":")" << wmi.get_value("Win32_Processor", "NumberOfCores") << "\"," << std::endl;
+        s << R"("NumberOfLogicalProcessors":")" << wmi.get_value("Win32_Processor", "NumberOfLogicalProcessors")
+          << "\"," << std::endl;
+        s << R"("AvailableRam":")" << wmi.get_value("Win32_OperatingSystem", "TotalVisibleMemorySize") << "\","
+          << std::endl;
+        s << "}";
+        cpu_ = s.str();
+#else
+
+#endif
+    }
+}
+
+
+void megamol::core::utility::platform::RuntimeInfo::get_gpu_info() {
+    if (gpu_.empty()) {
+#ifdef _WIN32
+        std::stringstream s;
+        s << "{" << std::endl;
+        s << R"("Name":")" << wmi.get_value("Win32_VideoController", "Name") << "\"," << std::endl;
+        s << R"("DriverVersion":")" << wmi.get_value("Win32_VideoController", "DriverVersion") << "\"," << std::endl;
+        s << R"("AdapterRam":")" << wmi.get_value("Win32_VideoController", "AdapterRam") << "\"," << std::endl;
+        s << "}";
+        gpu_ = s.str();
+#else
+
+#endif
+    }
+}
+
+
+void megamol::core::utility::platform::RuntimeInfo::get_OS_info() {
+    if (os_.empty()) {
+#ifdef _WIN32
+        std::stringstream s;
+        s << "{" << std::endl;
+        s << R"("Name":")" << wmi.get_value("Win32_ComputerSystem", "Name") << "\"," << std::endl;
+        s << R"("OSName":")" << wmi.get_value("Win32_OperatingSystem", "Name") << "\"," << std::endl;
+        s << R"("Manufacturer":")" << wmi.get_value("Win32_OperatingSystem", "Manufacturer") << "\"," << std::endl;
+        s << R"("Version":")" << wmi.get_value("Win32_OperatingSystem", "Version") << "\"," << std::endl;
+        s << R"("OSArchitecture":")" << wmi.get_value("Win32_OperatingSystem", "OSArchitecture") << "\"," << std::endl;
+        s << "}";
+        os_ = s.str();
+#else
+
+#endif
     }
 }

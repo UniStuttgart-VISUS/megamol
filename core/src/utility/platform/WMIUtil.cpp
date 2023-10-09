@@ -10,21 +10,25 @@
 
 #ifdef _WIN32
 
+#include <wil/resource.h>
+#include <wil/com.h>
+
 megamol::core::utility::platform::WMIUtil::WMIUtil() {
     HRESULT hres;
 
     // Step 1: --------------------------------------------------
     // Initialize COM. ------------------------------------------
-
-    hres = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    auto cleanup = wil::CoInitializeEx(COINIT_MULTITHREADED);
+    //hres = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    /*hres = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hres)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "WMIUtil: Failed to initialize COM library. Is COM already initialized? Error code = %#010X", hres);
-    }
+    }*/
 
     // Step 2: --------------------------------------------------
     // Set general COM security levels --------------------------
-
+    
     hres = CoInitializeSecurity(nullptr,
         -1,                          // COM authentication
         nullptr,                     // Authentication services
@@ -40,22 +44,26 @@ megamol::core::utility::platform::WMIUtil::WMIUtil() {
     if (FAILED(hres)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "WMIUtil: Failed to initialize security. Error code = %#010X", hres);
-        CoUninitialize();
+        //CoUninitialize();
         return;
     }
 
     // Step 3: ---------------------------------------------------
     // Obtain the initial locator to WMI -------------------------
+    auto locator = wil::CoCreateInstance<IWbemLocator>(CLSID_WbemLocator, CLSCTX_INPROC_SERVER);
+    /*hres = CoCreateInstance(
+        CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemLocator, reinterpret_cast<LPVOID*>(&locator));*/
 
-    hres = CoCreateInstance(
-        CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemLocator, reinterpret_cast<LPVOID*>(&locator));
-
-    if (FAILED(hres)) {
+    if (!locator) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("WMIUtil: Failed to create IWbemLocator object.");
+        return;
+    }
+    /*if (FAILED(hres)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "WMIUtil: Failed to create IWbemLocator object. Error code = %#010X", hres);
         CoUninitialize();
         return;
-    }
+    }*/
 
     // Step 4: -----------------------------------------------------
     // Connect to WMI through the IWbemLocator::ConnectServer method
@@ -76,9 +84,9 @@ megamol::core::utility::platform::WMIUtil::WMIUtil() {
     if (FAILED(hres)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "WMIUtil: Could not connect. Error code = %#010X", hres);
-        locator->Release();
-        locator = nullptr;
-        CoUninitialize();
+        //locator->Release();
+        //locator = nullptr;
+        //CoUninitialize();
         return;
     }
 
@@ -86,8 +94,8 @@ megamol::core::utility::platform::WMIUtil::WMIUtil() {
 
     // Step 5: --------------------------------------------------
     // Set security levels on the proxy -------------------------
-
-    hres = CoSetProxyBlanket(service, // Indicates the proxy to set
+   
+    hres = CoSetProxyBlanket(service.get(), // Indicates the proxy to set
         RPC_C_AUTHN_WINNT,            // RPC_C_AUTHN_xxx
         RPC_C_AUTHZ_NONE,             // RPC_C_AUTHZ_xxx
         nullptr,                      // Server principal name
@@ -100,23 +108,26 @@ megamol::core::utility::platform::WMIUtil::WMIUtil() {
     if (FAILED(hres)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "WMIUtil: Could not set proxy blanket. Error code = %#010X", hres);
-        service->Release();
-        service = nullptr;
-        locator->Release();
-        locator = nullptr;
-        CoUninitialize();
+        //service->Release();
+        //service = nullptr;
+        //locator->Release();
+        //locator = nullptr;
+        //CoUninitialize();
         return;
     }
+
+    cleanup.release();
 }
 
 megamol::core::utility::platform::WMIUtil::~WMIUtil() {
     // Cleanup
     // ========
 
-    if (service)
-        service->Release();
-    if (locator)
-        locator->Release();
+    /*if (service)
+        service->Release();*/
+    /*if (locator)
+        locator->Release();*/
+    service.reset();
     CoUninitialize();
 }
 
@@ -165,12 +176,20 @@ std::string megamol::core::utility::platform::WMIUtil::get_value(
 
         // Get the value of the Name property
         hr = pclsObj->Get(ws_attribute, 0, &vtProp, nullptr, nullptr);
-        auto wslen = ::SysStringLen(vtProp.bstrVal);
-        auto len = ::WideCharToMultiByte(CP_ACP, 0, vtProp.bstrVal, wslen, nullptr, 0, nullptr, nullptr);
-        std::string dblstr(len, '\0');
-        len = ::WideCharToMultiByte(CP_ACP, 0 /* no flags */, vtProp.bstrVal, wslen /* not necessary NULL-terminated */,
-            &dblstr[0], len, nullptr, nullptr /* no default char */);
-        ret = dblstr;
+
+        if (vtProp.vt == VARENUM::VT_BSTR) {
+            auto wslen = ::SysStringLen(vtProp.bstrVal);
+            auto len = ::WideCharToMultiByte(CP_ACP, 0, vtProp.bstrVal, wslen, nullptr, 0, nullptr, nullptr);
+            std::string dblstr(len, '\0');
+            len = ::WideCharToMultiByte(CP_ACP, 0 /* no flags */, vtProp.bstrVal,
+                wslen /* not necessary NULL-terminated */, &dblstr[0], len, nullptr, nullptr /* no default char */);
+            ret = dblstr;
+        } else if (vtProp.vt == VARENUM::VT_I4) {
+            ret = std::to_string(vtProp.lVal);
+        } else {
+            throw std::runtime_error("WMIUtil: Unsupported ret type");
+        }
+
         VariantClear(&vtProp);
 
         pclsObj->Release();
