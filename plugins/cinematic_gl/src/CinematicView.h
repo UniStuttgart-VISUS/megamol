@@ -12,6 +12,7 @@
 #include <png.h>
 
 #include "ModuleGraphSubscription.h"
+#include "RuntimeInfo.h"
 #include "cinematic/Keyframe.h"
 #include "cinematic_gl/CinematicUtils.h"
 #include "mmcore/CallerSlot.h"
@@ -20,7 +21,6 @@
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "mmstd_gl/view/View3DGL.h"
 #include "vislib/sys/FastFile.h"
-#include "RuntimeInfo.h"
 
 
 namespace megamol::cinematic_gl {

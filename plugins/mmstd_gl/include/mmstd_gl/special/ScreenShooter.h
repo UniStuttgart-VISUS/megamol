@@ -10,12 +10,12 @@
 
 #include <glowl/FramebufferObject.hpp>
 
+#include "RuntimeInfo.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/view/AbstractView.h"
-#include "RuntimeInfo.h"
 
 namespace megamol::mmstd_gl::special {
 

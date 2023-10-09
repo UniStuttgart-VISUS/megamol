@@ -19,13 +19,13 @@
 #include "ProjectLoader_Service.hpp"
 #include "Remote_Service.hpp"
 #include "RuntimeConfig.h"
+#include "RuntimeInfo_Service.hpp"
 #include "Screenshot_Service.hpp"
 #include "VR_Service.hpp"
 #include "mmcore/LuaAPI.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/factories/PluginRegister.h"
 #include "mmcore/utility/log/Log.h"
-#include "RuntimeInfo_Service.hpp"
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>

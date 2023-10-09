@@ -10,8 +10,8 @@
 
 #ifdef _WIN32
 
-#include <wil/resource.h>
 #include <wil/com.h>
+#include <wil/resource.h>
 
 megamol::core::utility::platform::WMIUtil::WMIUtil() {
     HRESULT hres;
@@ -28,7 +28,7 @@ megamol::core::utility::platform::WMIUtil::WMIUtil() {
 
     // Step 2: --------------------------------------------------
     // Set general COM security levels --------------------------
-    
+
     hres = CoInitializeSecurity(nullptr,
         -1,                          // COM authentication
         nullptr,                     // Authentication services
@@ -94,15 +94,15 @@ megamol::core::utility::platform::WMIUtil::WMIUtil() {
 
     // Step 5: --------------------------------------------------
     // Set security levels on the proxy -------------------------
-   
+
     hres = CoSetProxyBlanket(service.get(), // Indicates the proxy to set
-        RPC_C_AUTHN_WINNT,            // RPC_C_AUTHN_xxx
-        RPC_C_AUTHZ_NONE,             // RPC_C_AUTHZ_xxx
-        nullptr,                      // Server principal name
-        RPC_C_AUTHN_LEVEL_CALL,       // RPC_C_AUTHN_LEVEL_xxx
-        RPC_C_IMP_LEVEL_IMPERSONATE,  // RPC_C_IMP_LEVEL_xxx
-        nullptr,                      // client identity
-        EOAC_NONE                     // proxy capabilities
+        RPC_C_AUTHN_WINNT,                  // RPC_C_AUTHN_xxx
+        RPC_C_AUTHZ_NONE,                   // RPC_C_AUTHZ_xxx
+        nullptr,                            // Server principal name
+        RPC_C_AUTHN_LEVEL_CALL,             // RPC_C_AUTHN_LEVEL_xxx
+        RPC_C_IMP_LEVEL_IMPERSONATE,        // RPC_C_IMP_LEVEL_xxx
+        nullptr,                            // client identity
+        EOAC_NONE                           // proxy capabilities
     );
 
     if (FAILED(hres)) {

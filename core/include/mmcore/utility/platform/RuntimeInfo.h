@@ -5,8 +5,8 @@
  */
 #pragma once
 
-#include <string>
 #include <mutex>
+#include <string>
 
 #include "WMIUtil.h"
 
