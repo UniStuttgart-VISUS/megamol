@@ -69,6 +69,8 @@ protected:
      */
     ImageWrapper Render(double time, double instanceTime) override;
 
+    bool create() override;
+
 private:
     typedef std::chrono::system_clock::time_point TimePoint_t;
 

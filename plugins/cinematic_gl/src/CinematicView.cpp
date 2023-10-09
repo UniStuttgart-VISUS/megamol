@@ -109,8 +109,6 @@ CinematicView::CinematicView()
 
     this->addSBSideToNameParam << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->addSBSideToNameParam);
-
-    ri_ = &frontend_resources.get<frontend_resources::RuntimeInfo>();
 }
 
 
@@ -530,6 +528,13 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
     }
 
     return GetRenderingResult();
+}
+
+
+bool megamol::cinematic_gl::CinematicView::create() {
+    ri_ = &frontend_resources.get<frontend_resources::RuntimeInfo>();
+
+    return View3DGL::create();
 }
 
 
