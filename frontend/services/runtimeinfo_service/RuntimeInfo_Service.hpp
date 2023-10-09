@@ -145,6 +145,14 @@ private:
 
     std::string get_runtime_libraries();
 
+    std::string get_smbios_info();
+
+    std::string get_cpu_info();
+
+    std::string get_gpu_info();
+
+    std::string get_OS_info();
+
     // this can hold references to the resources (i.e. structs) we provide to others, e.g. you may fill this and return it in getProvidedResources()
     // provided resources will be queried by the system only once,
     // there is no requirement to store the resources in a vector the whole time, you just need to return such a vector in getProvidedResources()

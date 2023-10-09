@@ -4,6 +4,8 @@
  * All rights reserved.
  */
 
+#include <thread>
+
 // search/replace Template_Service with your class name
 // you should also delete the FAQ comments in these template files after you read and understood them
 #include "RuntimeInfo_Service.hpp"
@@ -45,7 +47,25 @@ bool RuntimeInfo_Service::init(void* configPtr) {
     ri_resource_.get_os_info = [&]() { return get_os_info(); };
     ri_resource_.get_runtime_libraries = [&]() { return get_runtime_libraries(); };
 
+    ri_resource_.get_smbios_info = [&]() { return get_smbios_info(); };
+    ri_resource_.get_cpu_info = [&]() { return get_cpu_info(); };
+    ri_resource_.get_gpu_info = [&]() { return get_gpu_info(); };
+    ri_resource_.get_OS_info = [&]() { return get_OS_info(); };
+
     m_providedResourceReferences = {{"RuntimeInfo", ri_resource_}};
+
+    auto t = std::thread([&]() {
+        //log("(Async) get WMI stuff");
+        get_hardware_info();
+        get_os_info();
+        get_runtime_libraries();
+        get_smbios_info();
+        get_cpu_info();
+        get_gpu_info();
+        get_OS_info();
+        //log("(Async) finished getting WMI stuff");
+    });
+    t.detach();
 
     log("initialized successfully");
     return true;
@@ -108,6 +128,22 @@ std::string RuntimeInfo_Service::get_os_info() {
 
 std::string RuntimeInfo_Service::get_runtime_libraries() {
     return ri_.GetRuntimeLibraries();
+}
+
+std::string RuntimeInfo_Service::get_smbios_info() {
+    return ri_.GetSMBIOSInfo();
+}
+
+std::string RuntimeInfo_Service::get_cpu_info() {
+    return ri_.GetCPUInfo();
+}
+
+std::string RuntimeInfo_Service::get_gpu_info() {
+    return ri_.GetGPUInfo();
+}
+
+std::string RuntimeInfo_Service::get_OS_info() {
+    return ri_.GetOSInfo();
 }
 
 
