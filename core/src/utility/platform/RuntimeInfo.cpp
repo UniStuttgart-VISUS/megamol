@@ -230,7 +230,7 @@ void megamol::core::utility::platform::RuntimeInfo::get_smbios_info(bool serial)
         s << "}";
         smbios_ = s.str();
 #else
-
+        smbios_ = "SMBIOS info not available";
 #endif
     }
 }
@@ -252,7 +252,7 @@ void megamol::core::utility::platform::RuntimeInfo::get_cpu_info() {
         s << "}";
         cpu_ = s.str();
 #else
-
+        cpu_ = execute("cat /proc/cpuinfo /proc/meminfo");
 #endif
     }
 }
@@ -269,7 +269,7 @@ void megamol::core::utility::platform::RuntimeInfo::get_gpu_info() {
         s << "}";
         gpu_ = s.str();
 #else
-
+        gpu_ = "GPU info not available";
 #endif
     }
 }
@@ -288,7 +288,13 @@ void megamol::core::utility::platform::RuntimeInfo::get_OS_info() {
         s << "}";
         os_ = s.str();
 #else
-
+        std::stringstream s;
+        s << "{" << std::endl;
+        s << R"("Name":")" << execute("cat /proc/sys/kernel/hostname") << "\"," << std::endl;
+        s << R"("OSName":")" << execute("cat /etc/issue") << "\"," << std::endl;
+        s << R"("Version":")" << execute("cat /proc/sys/kernel/osrelease") << "\"," << std::endl;
+        s << "}";
+        os_ = s.str();
 #endif
     }
 }
