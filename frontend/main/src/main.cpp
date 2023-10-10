@@ -19,6 +19,7 @@
 #include "ProjectLoader_Service.hpp"
 #include "Remote_Service.hpp"
 #include "RuntimeConfig.h"
+#include "RuntimeInfo_Service.hpp"
 #include "Screenshot_Service.hpp"
 #include "VR_Service.hpp"
 #include "mmcore/LuaAPI.h"
@@ -79,6 +80,9 @@ int main(const int argc, const char** argv) {
 
     log(config.as_string());
     log(global_value_store.as_string());
+
+    megamol::frontend::RuntimeInfo_Service ri_service;
+    ri_service.setPriority(1);
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
@@ -215,6 +219,7 @@ int main(const int argc, const char** argv) {
     // clang-format on
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
+    services.add(ri_service, nullptr);
 #ifdef MEGAMOL_USE_POWER
     services.add(power_service, &power_config);
 #endif

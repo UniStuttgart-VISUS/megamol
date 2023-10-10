@@ -58,6 +58,10 @@
     "tinygltf",
     "tinyobjloader",
     "tinyply",
+    {
+      "name": "wil",
+      "platform": "windows"
+    },
     "zeromq",
     "zfp",
     "zlib"
