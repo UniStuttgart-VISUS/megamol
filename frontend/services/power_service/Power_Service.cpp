@@ -102,7 +102,7 @@ bool Power_Service::init(void* configPtr) {
 
     m_providedResourceReferences = {{frontend_resources::PowerCallbacks_Req_Name, callbacks_}};
 
-    m_requestedResourcesNames = {"RegisterLuaCallbacks"};
+    m_requestedResourcesNames = {"RegisterLuaCallbacks", "RuntimeInfo"};
 
     using namespace visus::power_overwhelming;
 
@@ -182,6 +182,16 @@ void Power_Service::setRequestedResources(std::vector<FrontendResource> resource
     // maybe we want to keep the list of requested resources
     this->m_requestedResourceReferences = resources;
 
+    ri_ = &m_requestedResourceReferences[1].getResource<frontend_resources::RuntimeInfo>();
+
+    meta_.runtime_libs = ri_->get_runtime_libraries();
+
+    meta_.hardware_software_info.clear();
+    meta_.hardware_software_info["OS"] = ri_->get_OS_info();
+    meta_.hardware_software_info["SMBIOS"] = ri_->get_smbios_info();
+    meta_.hardware_software_info["GPU"] = ri_->get_gpu_info();
+    meta_.hardware_software_info["CPU"] = ri_->get_cpu_info();
+
     fill_lua_callbacks();
 }
 
@@ -256,9 +266,9 @@ void Power_Service::fill_lua_callbacks() {
             write_folder_ = path;
             if (rtx_) {
                 if (write_to_files_) {
-                    rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy});
+                    rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy}, &meta_);
                 } else {
-                    rtx_->StartMeasurement(path, {&megamol::power::wf_tracy});
+                    rtx_->StartMeasurement(path, {&megamol::power::wf_tracy}, &meta_);
                 }
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};

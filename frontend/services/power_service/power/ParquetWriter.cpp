@@ -29,6 +29,10 @@ void WriteMetaData(std::unique_ptr<parquet::ParquetFileWriter>& file_writer, Met
     for (auto const& [key, value] : meta->oszi_configs) {
         md->Append(key, value);
     }
+    md->Append(std::string("runtime_libraries"), meta->runtime_libs);
+    for (auto const& [key, value] : meta->hardware_software_info) {
+        md->Append(key, value);
+    }
     file_writer->AddKeyValueMetadata(md);
 }
 

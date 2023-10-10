@@ -12,6 +12,7 @@
 #include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/rtx_instrument_configuration.h>
 
+#include "MetaData.h"
 #include "ParallelPortTrigger.h"
 #include "Trigger.h"
 #include "Utility.h"
@@ -35,8 +36,8 @@ public:
 
     void ApplyConfigs();
 
-    void StartMeasurement(
-        std::filesystem::path const& output_folder, std::vector<power::writer_func_t> const& writer_funcs);
+    void StartMeasurement(std::filesystem::path const& output_folder,
+        std::vector<power::writer_func_t> const& writer_funcs, power::MetaData const* meta);
 
     void SetSoftwareTrigger(bool set) {
         enforce_software_trigger_ = set;

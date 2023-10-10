@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <set>
 
+#include "MetaData.h"
 #include "ParquetWriter.h"
 #include "Utility.h"
 
@@ -14,14 +15,16 @@
 
 namespace megamol::power {
 
-inline void wf_parquet(std::filesystem::path const& output_folder, power::segments_t const& values_map) {
+inline void wf_parquet(
+    std::filesystem::path const& output_folder, power::segments_t const& values_map, power::MetaData const* meta) {
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {
         auto const fullpath = output_folder / ("rtx_s" + std::to_string(s_idx) + ".parquet");
-        ParquetWriter(fullpath, values_map[s_idx]);
+        ParquetWriter(fullpath, values_map[s_idx], meta);
     }
 }
 
-inline void wf_tracy(std::filesystem::path const& output_folder, power::segments_t const& values_map) {
+inline void wf_tracy(
+    std::filesystem::path const& output_folder, power::segments_t const& values_map, power::MetaData const* meta) {
 #ifdef MEGAMOL_USE_TRACY
     static std::set<std::string> tpn_library;
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {

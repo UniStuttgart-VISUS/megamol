@@ -75,6 +75,8 @@ void RTXInstruments::ApplyConfigs() {
                 i.operation_complete();
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Configured device %s", name);
             }
+
+            // TODO: store configs in metadata
         });
     } catch (std::exception& ex) {
         core::utility::log::Log::DefaultLog.WriteError(
@@ -82,16 +84,16 @@ void RTXInstruments::ApplyConfigs() {
     }
 }
 
-void RTXInstruments::StartMeasurement(
-    std::filesystem::path const& output_folder, std::vector<power::writer_func_t> const& writer_funcs) {
+void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder,
+    std::vector<power::writer_func_t> const& writer_funcs, power::MetaData const* meta) {
     if (!std::filesystem::is_directory(output_folder)) {
         core::utility::log::Log::DefaultLog.WriteError(
             "[RTXInstruments]: Path {} is not a directory", output_folder.string());
         return;
     }
 
-    auto t_func = [&](std::filesystem::path const& output_folder,
-                      std::vector<power::writer_func_t> const& writer_funcs) {
+    auto t_func = [&](std::filesystem::path const& output_folder, std::vector<power::writer_func_t> const& writer_funcs,
+                      power::MetaData const* meta) {
         try {
             pending_measurement_ = true;
             std::chrono::system_clock::time_point last_trigger;
@@ -221,7 +223,8 @@ void RTXInstruments::StartMeasurement(
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start writing data");
                 auto const start_write = std::chrono::steady_clock::now();
                 std::for_each(writer_funcs.begin(), writer_funcs.end(),
-                    [&output_folder, &values_map](auto const& writer_func) { writer_func(output_folder, values_map); });
+                    [&output_folder, &values_map, &meta](
+                        auto const& writer_func) { writer_func(output_folder, values_map, meta); });
                 auto const stop_write = std::chrono::steady_clock::now();
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Finished writing data in %dms",
                     std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());
@@ -233,7 +236,7 @@ void RTXInstruments::StartMeasurement(
         }
     };
 
-    auto t_thread = std::thread(t_func, output_folder, writer_funcs);
+    auto t_thread = std::thread(t_func, output_folder, writer_funcs, meta);
     t_thread.detach();
 }
 

@@ -15,6 +15,9 @@
 
 #include "AbstractFrontendService.hpp"
 
+#include "RuntimeInfo.h"
+
+#include "power/MetaData.h"
 #include "power/ParallelPortTrigger.h"
 #include "power/RTXInstruments.h"
 #include "power/Samplers.h"
@@ -245,6 +248,10 @@ private:
     int64_t sb_qpc_offset_;
 
     power::StringContainer* str_cont_;
+
+    frontend_resources::RuntimeInfo const* ri_;
+
+    power::MetaData meta_;
 };
 
 } // namespace frontend
