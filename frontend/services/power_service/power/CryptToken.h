@@ -3,17 +3,19 @@
 #include <cstddef>
 #include <string>
 
+#include "ProtectedMemory.h"
+
 namespace megamol::power {
 class CryptToken {
 public:
-    CryptToken(std::string const& filename, void* window_ptr = nullptr);
+    CryptToken(std::string const& filename);
 
-    ~CryptToken();
+    ~CryptToken() = default;
 
     char const* GetToken() const;
 
 private:
-    char* token_safe_;
+    power::ProtectedMemory token_;
 
     std::size_t token_size_;
 };

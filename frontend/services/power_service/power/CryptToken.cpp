@@ -5,67 +5,61 @@
 
 #if WIN32
 #include <Windows.h>
+#include <wincred.h>
 #include <wincrypt.h>
-#if MEGAMOL_USE_OPENGL
-#include <GLFW/glfw3.h>
-#define GLFW_EXPOSE_NATIVE_WGL
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
-#endif
+#pragma comment(lib, "Credui.lib")
+#pragma comment(lib, "Crypt32.lib")
 #endif
 
 namespace megamol::power {
-CryptToken::CryptToken(std::string const& filename, void* window_ptr = nullptr) : token_safe_(nullptr), token_size_(0) {
-    std::filesystem::path filepath(filename);
-    if (std::filesystem::exists(filepath) && std::filesystem::is_regular_file(filepath)) {
-        auto in_file = std::ifstream(filepath, std::ios::binary);
-        token_size_ = std::filesystem::file_size(filepath);
-        auto data_size = token_size_;
-        auto cbMod = data_size % CRYPTPROTECTMEMORY_BLOCK_SIZE;
-        if (cbMod) {
-            data_size += CRYPTPROTECTMEMORY_BLOCK_SIZE - cbMod;
-        }
-        token_safe_ = (char*)LocalAlloc(LPTR, data_size);
-        if (!token_safe_) {
-            throw std::runtime_error("[CryptToken] Cannot allocate data");
-        }
-        if (!CryptProtectMemory(token_safe_, data_size, CRYPTPROTECTMEMORY_SAME_PROCESS)) {
-            LocalFree(token_safe_);
-            throw std::runtime_error("[CryptToken] Cannot encrypt data");
-        }
+CryptToken::CryptToken(std::string const& filename) : token_(CREDUI_MAX_PASSWORD_LENGTH + 1), token_size_(0) {
+//std::filesystem::path filepath(filename);
+#if WIN32
+    if (std::filesystem::exists(filename) && std::filesystem::is_regular_file(filename)) {
+        token_size_ = std::filesystem::file_size(filename);
         std::string file_data;
         file_data.resize(token_size_);
+        auto in_file = std::ifstream(filename, std::ios::binary);
         in_file.read(file_data.data(), token_size_);
+        in_file.close();
         DATA_BLOB blob_in;
         blob_in.cbData = token_size_;
         blob_in.pbData = (BYTE*)(file_data.data());
         DATA_BLOB blob_out;
-        blob_out.cbData = data_size;
-        blob_out.pbData = (BYTE*)token_safe_;
         if (!CryptUnprotectData(&blob_in, nullptr, nullptr, nullptr, nullptr, 0, &blob_out)) {
-            LocalFree(token_safe_);
-            throw std::runtime_error("[CryptToken] Cannot copy data");
+            throw std::runtime_error("[CryptToken] Cannot decrypt data");
         }
-        token_size_ = data_size;
-        in_file.close();
+        token_size_ = blob_out.cbData;
+        std::copy(blob_out.pbData, blob_out.pbData + blob_out.cbData, token_.GetPtr());
+        SecureZeroMemory(blob_out.pbData, blob_out.cbData);
+        LocalFree(blob_out.pbData);
     } else {
-#if MEGAMOL_USE_OPENGL
-        char* buffer = new char[32767];
-        GetEnvironmentVariable("DataverseAPIKey", buffer, 32767);
-#else
-        throw std::runtime_error("[CryptToken] Cannot open file");
-#endif
+        BOOL tkSave;
+        auto res = CredUIPromptForCredentials(nullptr, "DarUSDataverse", nullptr, 0, (PSTR) "", 0, token_.GetPtr(),
+            CREDUI_MAX_PASSWORD_LENGTH + 1, &tkSave,
+            CREDUI_FLAGS_DO_NOT_PERSIST | CREDUI_FLAGS_EXCLUDE_CERTIFICATES | CREDUI_FLAGS_GENERIC_CREDENTIALS |
+                CREDUI_FLAGS_PASSWORD_ONLY_OK | CREDUI_FLAGS_KEEP_USERNAME);
+
+        DATA_BLOB blob_in;
+        blob_in.cbData = strlen(token_.GetPtr());
+        blob_in.pbData = (BYTE*)token_.GetPtr();
+        DATA_BLOB blob_out;
+        if (!CryptProtectData(&blob_in, nullptr, nullptr, nullptr, nullptr, 0, &blob_out)) {
+            throw std::runtime_error("[CryptToken] Cannot encrypt data");
+        }
+
+        std::ofstream out_file(filename, std::ios::binary);
+        out_file.write((char const*)blob_out.pbData, blob_out.cbData);
+        out_file.close();
+
+        SecureZeroMemory(blob_out.pbData, blob_out.cbData);
+        LocalFree(blob_out.pbData);
     }
-}
-
-
-CryptToken::~CryptToken() {
-    SecureZeroMemory(token_safe_, token_size_);
-    LocalFree(token_safe_);
+#endif
 }
 
 
 char const* CryptToken::GetToken() const {
-    return token_safe_;
+    return token_.GetPtr();
 }
 } // namespace megamol::power
