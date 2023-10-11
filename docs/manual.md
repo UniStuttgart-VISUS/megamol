@@ -75,23 +75,106 @@ The *OSPRay plugin* is currently disabled by default.
 See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/OSPRay_plugin/Readme.md) for additional instructions on how to enable it.
 
 <!-- ---------------------------------------------------------------------- -->
-#### Microsoft Windows
 
-1. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
-2. Create a new `build` directory.
-3. As generator, it is recommended to use the latest version of [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Community Edition is free to use) with default native compilers and for the platform x64.
-4. If you want to download prebuild binaries for required third party libraries enable the option `MEGAMOL_VCPKG_DOWNLOAD_CACHE` before configure. Otherwise, libraries will be built during configure.
-5. Next, click `Configure` a few times (until all red entries disappear).
-6. Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files and configure once more.
-7. Then click `Generate` to generate the build files.
-8. The configuration creates a `megamol.sln` file inside the build directory.
-9. Open the `megamol.sln` file with *Visual Studio*.
-10. Use the `ALL_BUILD` target to build MegaMol.
-11. Afterwards, use the `INSTALL` target to create your MegaMol installation.
-12. The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
+#### Microsoft Windows with Visual Studio 2022
+1. Install Visual Studio 2022 (community edition is fine); make sure to enable
+    - Desktop development with C++
+    - C++ CMake tools for Windows
+    - (C++ components woth "Linux" in their name are optional for compiling into a WSL)
+1. Using standard CMake Presets is highly recommended (Tools|Options|CMake|General|Always use CMake Presets) - we assume this is **selected** from here on. If you keep using the proprietary Visual Studio presets, you can use a UI for configuring CMake, but presets will not work if you want to switch to external CMake at some point.
+1. Write presets according to your preference or requirements (see below for an example). Toggle features as you need them in this file.
+1. Project|Configure
+1. Select megamol.exe (Install) as target
+1. Build|Build megamol.exe(Install) or press [F5]
 
-![CMake Windows](images/cmake_windows.png)
-*Screenshot of `cmake-gui` after generating build files.*
+<details>
+<summary>Sample to get you started</summary>
+
+#### Content of a sample CMakeUserPresets.json file
+
+Note the use of `MEGAMOL_VCPKG_DOWNLOAD_CACHE` to download precompiled binaries generated with our CI. This can speed up the build process considerably, if your environment matches our CI closely enough.
+
+Make sure you change **`CMAKE_INSTALL_PREFIX`** into something sensible. You will find the executable there.
+
+A preset like `ubuntu-default` can be used to cross-compile into a WSL instance on your machine.
+
+```json
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "MEGAMOL_VCPKG_DOWNLOAD_CACHE": true,
+        "MEGAMOL_USE_OPENGL": true
+      }
+    },
+    {
+      "name": "vs-multi",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "generator": "Ninja Multi-Config",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "MPI_GUESS_LIBRARY_NAME": "MSMPI",
+        "CMAKE_INSTALL_PREFIX": "<some dir>",
+        "MEGAMOL_USE_OSPRAY": true,
+        "MEGAMOL_PLUGIN_MMOSPRAY": true,
+        "MEGAMOL_TESTS": true,
+        "MEGAMOL_EXAMPLES": true
+      }
+    },
+    {
+      "name": "ubuntu-default",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "ENABLE_GL": false,
+        "ENABLE_MPI": false
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Debug-Multi",
+      "configurePreset": "vs-multi",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Release-Multi",
+      "configurePreset": "vs-multi",
+      "configuration": "Release"
+    },
+    {
+      "name": "RelWithDebInfo-Multi",
+      "configurePreset": "vs-multi",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "ubuntu-debug",
+      "configurePreset": "ubuntu-default",
+      "configuration": "Debug"
+    }
+  ]
+}
+  ```
+</details>
 
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu, Debian)
