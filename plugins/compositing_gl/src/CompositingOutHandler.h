@@ -69,7 +69,7 @@ public:
      * @Param slotDesc Description of selection field in GUI
      */
     CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedTypes,
-        std::string slotName = "slot for selecting Out Formats", std::string slotDesc = "Slot for selecting Tex Outs");
+        std::string slotName = "OutputFormat", std::string slotDesc = "Slot for selecting texture output format");
 
     /*
      * Constructor for automatic handeling of changes in selected formats.
@@ -83,8 +83,8 @@ public:
      * @param slotDesc: Description of selection field in GUI
      */
     CompositingOutHandler(std::string defineName, std::vector<unsigned int> allowedTypes,
-        std::function<bool()> externalUpdatFunc, std::string slotName = "slot for selecting Out Formats",
-        std::string slotDesc = "Slot for selecting Tex Outs");
+        std::function<bool()> externalUpdatFunc, std::string slotName = "OutputFormat",
+        std::string slotDesc = "Slot for selecting texture output format");
 
     /*
      * @return 'true' if selection changed since last call of this function, 'false' if no change happened.
