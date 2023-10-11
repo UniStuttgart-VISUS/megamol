@@ -6,9 +6,6 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#include <algorithm>
-#include <climits>
-#include <cstdio>
 #include <iomanip>
 #include <sstream>
 
@@ -201,103 +198,6 @@ void megamol::core::utility::log::Log::AddFileTarget(const char* filename, bool 
             logger->sinks().push_back(sink);
         }
     }
-}
-
-
-/*
- * megamol::core::utility::log::Log::WriteError
- */
-void megamol::core::utility::log::Log::WriteError(const char* fmt, ...) {
-    va_list argptr;
-    va_start(argptr, fmt);
-    this->writeMessageVaA(log_level::error, fmt, argptr);
-    va_end(argptr);
-}
-
-
-/*
- * megamol::core::utility::log::Log::WriteInfo
- */
-void megamol::core::utility::log::Log::WriteInfo(const char* fmt, ...) {
-    va_list argptr;
-    va_start(argptr, fmt);
-    this->writeMessageVaA(log_level::info, fmt, argptr);
-    va_end(argptr);
-}
-
-
-/*
- * megamol::core::utility::log::Log::writeMessage
- */
-void megamol::core::utility::log::Log::writeMessage(log_level level, const std::string& msg) {
-    auto logger = spdlog::get(logger_name);
-    auto echo_logger = spdlog::get(echo_logger_name);
-    if (!logger)
-        return;
-    if (msg.empty())
-        return;
-    // remove newline at end because spdlog and other log targets already add newlines
-    if (msg.back() == '\n') {
-        this->writeMessage(level, msg.substr(0, msg.size() - 1));
-        return;
-    }
-
-    switch (level) {
-    case log_level::error: {
-        logger->error("{}", msg);
-        (echo_logger ? echo_logger->error("{}", msg) : (void)(0));
-    } break;
-    case log_level::warn: {
-        logger->warn("{}", msg);
-        (echo_logger ? echo_logger->warn("{}", msg) : (void)(0));
-    } break;
-    case log_level::info:
-    default: {
-        logger->info("{}", msg);
-        (echo_logger ? echo_logger->info("{}", msg) : (void)(0));
-    }
-    }
-}
-
-
-/*
- * megamol::core::utility::log::Log::writeMessage
- */
-void megamol::core::utility::log::Log::writeMessageVaA(log_level level, const char* fmt, va_list argptr) {
-    std::string msg;
-    if (fmt != nullptr) {
-        va_list tmp;
-        va_copy(tmp, argptr);
-        msg.resize(1ull + std::vsnprintf(nullptr, 0, fmt, argptr));
-        std::vsnprintf(msg.data(), msg.size(), fmt, tmp);
-        va_end(tmp);
-        msg.resize(msg.size() - 1);
-    } else {
-        msg = "Empty log message\n";
-    }
-    this->writeMessage(level, msg);
-}
-
-
-/*
- * megamol::core::utility::log::Log::WriteMsg
- */
-void megamol::core::utility::log::Log::WriteMsg(const log_level level, const char* fmt, ...) {
-    va_list argptr;
-    va_start(argptr, fmt);
-    this->writeMessageVaA(level, fmt, argptr);
-    va_end(argptr);
-}
-
-
-/*
- * megamol::core::utility::log::Log::WriteWarn
- */
-void megamol::core::utility::log::Log::WriteWarn(const char* fmt, ...) {
-    va_list argptr;
-    va_start(argptr, fmt);
-    this->writeMessageVaA(log_level::warn, fmt, argptr);
-    va_end(argptr);
 }
 
 

@@ -619,7 +619,7 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
         return true;
     } else {
-        Log::DefaultLog.WriteError("Coudn't find uncertainty input data file: \"%s\"", T2A(filename.c_str())); // ERROR
+        Log::DefaultLog.WriteError("Coudn't find uncertainty input data file: \"%s\"", filename.string()); // ERROR
         return false;
     }
 }

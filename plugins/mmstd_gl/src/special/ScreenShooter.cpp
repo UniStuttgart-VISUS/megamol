@@ -973,7 +973,7 @@ bool special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& slot) 
                 core::param::ParamSlot* timeSlot = this->findTimeParam(av);
                 if (timeSlot != nullptr) {
                     auto startTime = static_cast<float>(this->animFromSlot.Param<core::param::IntParam>()->Value());
-                    Log::DefaultLog.WriteInfo("Starting animation of screen shots at %f.", time);
+                    Log::DefaultLog.WriteInfo("Starting animation of screen shots at %f.", startTime);
                     timeSlot->Param<core::param::FloatParam>()->SetValue(startTime);
                     this->animLastFrameTime = std::numeric_limits<decltype(animLastFrameTime)>::lowest();
                 } else {

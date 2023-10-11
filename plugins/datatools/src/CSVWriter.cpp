@@ -47,7 +47,7 @@ bool megamol::datatools::CSVWriter::run() {
 
     if (std::filesystem::exists(filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[CSVWriter]: File %s already exists and will be overwritten.", filename.c_str());
+            "[CSVWriter]: File %s already exists and will be overwritten.", filename.string());
     }
 
     if (!(*inCall)(1) || !(*inCall)(0)) {

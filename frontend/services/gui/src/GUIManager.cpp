@@ -1183,7 +1183,9 @@ void megamol::gui::GUIManager::draw_popups() {
         ImGui::OpenPopup("About");
     }
     open = true;
-    if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize))) {
 
         const std::string email("megamol@visus.uni-stuttgart.de");
         const std::string web_link("https://megamol.org/");
@@ -1231,6 +1233,32 @@ void megamol::gui::GUIManager::draw_popups() {
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(gitstr.c_str());
+
+        ImGui::Separator();
+        if (ImGui::CollapsingHeader("Build Info")) {
+            if (ImGui::BeginTable("build_info", 3)) {
+                ImGui::TableSetupColumn("Key");
+                ImGui::TableSetupColumn("Value");
+                ImGui::TableSetupColumn("");
+                ImGui::TableHeadersRow();
+                for (const auto& i : megamol::core::utility::buildinfo::AllKeyValues()) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%s", i.first.c_str());
+                    ImGui::TableNextColumn();
+                    if (i.second.size() <= 120) {
+                        ImGui::Text("%s", i.second.c_str());
+                    } else {
+                        ImGui::Text("[...] (value too long, use copy)");
+                    }
+                    ImGui::TableNextColumn();
+                    if (ImGui::Button(("Copy##" + i.first).c_str())) {
+                        ImGui::SetClipboardText(i.second.c_str());
+                    }
+                }
+                ImGui::EndTable();
+            }
+        }
 
         ImGui::Separator();
         ImGui::TextUnformatted(imguistr.c_str());
