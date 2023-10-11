@@ -128,6 +128,15 @@ bool Power_Service::init(void* configPtr) {
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
             str_cont_, do_buffer_, sb_qpc_offset_, nullptr, tinker_config_func);
 
+    hmc_sensors_.resize(hmc8015_sensor::for_all(nullptr, 0));
+    hmc8015_sensor::for_all(hmc_sensors_.data(), hmc_sensors_.size());
+    for (auto& s : hmc_sensors_) {
+        s.synchronise_clock();
+        s.voltage_range(instrument_range::explicitly, 300);
+        s.current_range(instrument_range::explicitly, 5);
+        s.log_behaviour(std::numeric_limits<float>::lowest(), log_mode::unlimited);
+    }
+
     //return init(*static_cast<Config*>(configPtr));
     return true;
 }
@@ -154,6 +163,7 @@ void Power_Service::close() {
     emi_sensors_.clear();
     msr_sensors_.clear();
     tinker_sensors_.clear();
+    hmc_sensors_.clear();
 }
 
 std::vector<FrontendResource>& Power_Service::getProvidedResources() {
@@ -256,6 +266,11 @@ void Power_Service::fill_lua_callbacks() {
             if (rtx_) {
                 rtx_->ApplyConfigs();
             }
+            for (auto& s : hmc_sensors_) {
+                s.log_file(
+                    (std::string("pwr_") + std::to_string(hmc_measure_cnt_) + std::string(".csv")).c_str(), true, true);
+            }
+            ++hmc_measure_cnt_;
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
@@ -264,12 +279,23 @@ void Power_Service::fill_lua_callbacks() {
             //start_measurement();
             seg_cnt_ = 0;
             write_folder_ = path;
+            for (auto& s : hmc_sensors_) {
+                s.log(true);
+            }
             if (rtx_) {
                 if (write_to_files_) {
                     rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy}, &meta_);
                 } else {
                     rtx_->StartMeasurement(path, {&megamol::power::wf_tracy}, &meta_);
                 }
+            }
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
+        "mmPowerSignalHalt", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            for (auto& s : hmc_sensors_) {
+                s.log(false);
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});

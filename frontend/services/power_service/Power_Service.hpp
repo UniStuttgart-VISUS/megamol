@@ -28,6 +28,7 @@
 #include "PowerCallbacks.h"
 
 #include <power_overwhelming/rtx_instrument.h>
+#include <power_overwhelming/hmc8015_sensor.h>
 
 #include <sol/sol.hpp>
 
@@ -201,6 +202,9 @@ private:
 
     power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
     power::buffers_t tinker_buffers_;
+
+    std::vector<visus::power_overwhelming::hmc8015_sensor> hmc_sensors_;
+    unsigned int hmc_measure_cnt_ = 0;
 
     void fill_lua_callbacks();
 
