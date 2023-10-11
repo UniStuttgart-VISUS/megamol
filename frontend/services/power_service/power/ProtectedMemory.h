@@ -30,4 +30,4 @@ private:
 
     std::size_t data_size_ = 0;
 };
-}
+} // namespace megamol::power

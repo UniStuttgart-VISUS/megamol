@@ -27,8 +27,8 @@
 
 #include "PowerCallbacks.h"
 
-#include <power_overwhelming/rtx_instrument.h>
 #include <power_overwhelming/hmc8015_sensor.h>
+#include <power_overwhelming/rtx_instrument.h>
 
 #include <sol/sol.hpp>
 
