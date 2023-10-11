@@ -81,8 +81,10 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
     - Desktop development with C++
     - C++ CMake tools for Windows
     - (C++ components woth "Linux" in their name are optional for compiling into a WSL)
-1. Using standard CMake Presets is highly recommended (Tools|Options|CMake|General|Always use CMake Presets) - we assume this is **selected** from here on. If you keep using the proprietary Visual Studio presets, you can use a UI for configuring CMake, but presets will not work if you want to switch to external CMake at some point.
-1. Write presets according to your preference or requirements (see below for an example). Toggle features as you need them in this file.
+1. If you are unsure which MegaMol features you need, use the Visual Studio UI for setting the CMake options and ignore the following details and **skip to the next point**. If you keep using the proprietary Visual Studio presets, these will not work if you want/need to switch to external CMake at some point!
+    - Using standard CMake Presets is recommended for advanced users (Tools|Options|CMake|General|Always use CMake 
+    Presets) - these will still work when switching to external CMake.
+    - Write presets according to your preference or requirements (see below for an example). Toggle features as you need them in this file.
 1. Project|Configure
 1. Select megamol.exe (Install) as target
 1. Build|Build megamol.exe(Install) or press [F5]
