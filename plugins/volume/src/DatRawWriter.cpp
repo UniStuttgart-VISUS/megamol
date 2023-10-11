@@ -62,7 +62,7 @@ void DatRawWriter::release() {}
  */
 bool DatRawWriter::run() {
     using megamol::core::utility::log::Log;
-    std::string filepath(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_u8string());
+    std::string filepath(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_string());
     if (filepath.empty()) {
         Log::DefaultLog.WriteError("No file path specified. Abort.");
         return false;

@@ -39,7 +39,7 @@ std::iostream& FileStreamProvider::GetStream() {
 
         if (!this->stream.good()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unable to open file '%s' for writing!",
-                this->filePath.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                this->filePath.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         }
     }
 

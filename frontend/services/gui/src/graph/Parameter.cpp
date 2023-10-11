@@ -1450,7 +1450,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
     if (scope == megamol::gui::Parameter::WidgetScope::LOCAL) {
         ImGui::BeginGroup();
         if (!std::holds_alternative<std::string>(this->gui_widget_value)) {
-            this->gui_widget_value = val.generic_u8string();
+            this->gui_widget_value = val.generic_string();
         }
         ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1487,21 +1487,21 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
                     auto error_flags = FilePathParam::ValidatePath(val, file_extensions, file_flags);
                     if (error_flags & FilePathParam::FilePathParam::Flag_File) {
                         this->gui_popup_msg =
-                            "Omitting value '" + val.generic_u8string() + "'. Expected file but directory is given.";
+                            "Omitting value '" + val.generic_string() + "'. Expected file but directory is given.";
                     }
                     if (error_flags & FilePathParam::Flag_Directory) {
                         this->gui_popup_msg =
-                            "Omitting value '" + val.generic_u8string() + "'. Expected directory but file is given.";
+                            "Omitting value '" + val.generic_string() + "'. Expected directory but file is given.";
                     }
                     if (error_flags & FilePathParam::Internal_NoExistenceCheck) {
-                        this->gui_popup_msg = "Omitting value '" + val.generic_u8string() + "'. File does not exist.";
+                        this->gui_popup_msg = "Omitting value '" + val.generic_string() + "'. File does not exist.";
                     }
                     if (error_flags & FilePathParam::Internal_RestrictExtension) {
                         std::string log_exts;
                         for (auto& ext : file_extensions) {
                             log_exts += "'." + ext + "' ";
                         }
-                        this->gui_popup_msg = "Omitting value '" + val.generic_u8string() +
+                        this->gui_popup_msg = "Omitting value '" + val.generic_string() +
                                               "'. File does not have required extension: " + log_exts;
                     }
                     if (error_flags != 0) {
@@ -1520,7 +1520,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
             this->filepath_scroll_xmax = true;
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-            this->gui_widget_value = val.generic_u8string();
+            this->gui_widget_value = val.generic_string();
         }
         ImGui::PopItemWidth();
 

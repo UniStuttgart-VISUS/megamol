@@ -160,7 +160,7 @@ void io::XYZLoader::assertData() {
     if (!file.Open(filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\"",
-            filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+            filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         return;
     }
     vislib::sys::TextFileReader reader(&file);
@@ -177,7 +177,7 @@ void io::XYZLoader::assertData() {
         } catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "Unable to parse atom count from first line in \"%s\"",
-                filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         }
     }
 
@@ -224,7 +224,7 @@ void io::XYZLoader::assertData() {
         } catch (...) {
             if (warning) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn("Problem parsing \"%s\":",
-                    filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                    filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
                 warning = false;
             }
             megamol::core::utility::log::Log::DefaultLog.WriteError(

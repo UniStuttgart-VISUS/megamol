@@ -444,7 +444,7 @@ void CSVDataSource::assertData() {
 
     } catch (const vislib::Exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Could not load \"%s\": %s [%s, %d]",
-            filename.generic_u8string().c_str(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+            filename.generic_string().c_str(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         this->columns.clear();
         this->values.clear();
     } catch (...) {

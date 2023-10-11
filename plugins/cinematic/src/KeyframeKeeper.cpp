@@ -652,7 +652,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->fileNameParam.IsDirty()) {
         this->fileNameParam.ResetDirty();
 
-        this->filename = this->fileNameParam.Param<param::FilePathParam>()->Value().generic_u8string();
+        this->filename = this->fileNameParam.Param<param::FilePathParam>()->Value().generic_string();
     }
     // saveKeyframesParam -----------------------------------------------------
     if (this->saveKeyframesParam.IsDirty()) {

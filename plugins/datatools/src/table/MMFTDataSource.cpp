@@ -101,7 +101,7 @@ void MMFTDataSource::assertData() {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to open file \"%s\". Abort.", filename.generic_u8string().c_str());
+            "Unable to open file \"%s\". Abort.", filename.generic_string().c_str());
         return;
     }
 

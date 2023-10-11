@@ -43,7 +43,7 @@ bool FilePathParam::ParseValue(std::string const& v) {
 void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 
     try {
-        auto tmp_val_str = v.generic_u8string();
+        auto tmp_val_str = v.generic_string();
         std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
         auto new_value = std::filesystem::path(tmp_val_str);
         if (this->value != new_value) {
@@ -52,16 +52,16 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
             if (error_flags & Flag_File) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[FilePathParam] Omitting value '%s'. Expected file but directory is given.",
-                    new_value.generic_u8string().c_str());
+                    new_value.generic_string().c_str());
             }
             if (error_flags & Flag_Directory) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[FilePathParam] Omitting value '%s'. Expected directory but file is given.",
-                    new_value.generic_u8string().c_str());
+                    new_value.generic_string().c_str());
             }
             if (error_flags & Internal_NoExistenceCheck) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[FilePathParam] Omitting value '%s'. File does not exist.", new_value.generic_u8string().c_str());
+                    "[FilePathParam] Omitting value '%s'. File does not exist.", new_value.generic_string().c_str());
             }
             if (error_flags & Internal_RestrictExtension) {
                 std::string log_exts;
@@ -70,7 +70,7 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                 }
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[FilePathParam] Omitting value '%s'. File does not have required extension: %s",
-                    new_value.generic_u8string().c_str(), log_exts.c_str());
+                    new_value.generic_string().c_str(), log_exts.c_str());
             }
             if (error_flags == 0) {
                 this->value = new_value;
@@ -116,7 +116,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
         if (f & FilePathParam::Internal_RestrictExtension) {
             bool valid_ext = false;
             for (auto& ext : e) {
-                if (p.extension().generic_u8string() == std::string("." + ext)) {
+                if (p.extension().generic_string() == std::string("." + ext)) {
                     valid_ext = true;
                 }
             }

@@ -109,7 +109,7 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open MMPLD-File \"%s\".",
-            this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+            this->filename.Param<param::FilePathParam>()->Value().generic_string().c_str());
 
         SAFE_DELETE(this->file);
 

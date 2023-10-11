@@ -95,7 +95,7 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (!file->Open(filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
         Log::DefaultLog.WriteError("Unable to open MMGDD-File \"%s\".",
-            filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+            filename.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         SAFE_DELETE(file);
         this->setFrameCount(1);
         this->initFrameCache(1);

@@ -1,7 +1,7 @@
 # MegaMol configuration
 
 # C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 99)
 
 # Warnings
@@ -106,6 +106,13 @@ if (MEGAMOL_USE_CGAL)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 endif ()
+
+# MEMLEAK
+if (MEGAMOL_DETECT_MEMLEAK)
+  if(MSVC)
+    add_compile_definitions("$<$<CONFIG:DEBUG>:MEGAMOL_DETECT_MEMLEAK>")
+  endif()
+endif()
 
 # imgui
 # Set IMGUI_USER_CONFIG globally on imgui target for all users.

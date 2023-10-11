@@ -1144,7 +1144,7 @@ void IMDAtomDataSource::assertData() {
     // this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(filename.native().c_str(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteError("Unable to open imd file %s\n", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Unable to open imd file %s\n", filename.generic_string().c_str());
         return;
     }
 

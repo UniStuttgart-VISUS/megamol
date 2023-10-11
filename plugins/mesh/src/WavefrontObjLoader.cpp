@@ -45,7 +45,7 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
         ++m_version;
 
         auto vislib_filename = m_filename_slot.Param<core::param::FilePathParam>()->Value();
-        std::string filename(vislib_filename.generic_u8string());
+        std::string filename(vislib_filename.generic_string());
 
         m_obj_model = std::make_shared<TinyObjModel>();
 

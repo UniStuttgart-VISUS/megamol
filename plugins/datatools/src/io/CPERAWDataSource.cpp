@@ -64,7 +64,7 @@ bool CPERAWDataSource::assertData() {
     numPoints = 0;
     data.resize(0);
 
-    const char* fname = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+    const char* fname = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str();
 
     FILE* f;
 #ifdef _WIN32

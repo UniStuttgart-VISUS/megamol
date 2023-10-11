@@ -96,7 +96,7 @@ bool megamol::datatools::DataFileSequenceStepper::GetFilename(
             this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return false;
     }
-    outName = vislib::TString((sp == NULL) ? fpp->Value().generic_u8string().c_str() : sp->Value().c_str());
+    outName = vislib::TString((sp == NULL) ? fpp->Value().generic_string().c_str() : sp->Value().c_str());
     if (outName.IsEmpty()) {
         Log::DefaultLog.WriteWarn("Value of parameter \"%s\" is empty.",
             this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());

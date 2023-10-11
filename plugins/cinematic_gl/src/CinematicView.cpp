@@ -531,6 +531,13 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
 }
 
 
+bool megamol::cinematic_gl::CinematicView::create() {
+    ri_ = &frontend_resources.get<frontend_resources::RuntimeInfo>();
+
+    return View3DGL::create();
+}
+
+
 bool CinematicView::render_to_file_setup() {
 
     auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
@@ -602,7 +609,7 @@ bool CinematicView::render_to_file_setup() {
     frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday,
         now->tm_hour, now->tm_min, now->tm_sec, this->fps);
     this->png_data.path = static_cast<vislib::StringA>(
-        this->frameFolderParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->frameFolderParam.Param<param::FilePathParam>()->Value().generic_string().c_str());
     if (this->png_data.path.IsEmpty()) {
         this->png_data.path = vislib::sys::Path::Concatenate(vislib::sys::Path::GetCurrentDirectoryA(), frameFolder);
     }
@@ -685,7 +692,7 @@ bool CinematicView::render_to_file_write() {
         auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
         project = const_cast<megamol::core::MegaMolGraph&>(megamolgraph).Convenience().SerializeGraph();
 
-        megamol::core::utility::graphics::ScreenShotComments ssc(project);
+        megamol::core::utility::graphics::ScreenShotComments ssc(project, ri_);
         png_set_text(
             this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,

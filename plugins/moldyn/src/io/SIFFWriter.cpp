@@ -101,8 +101,7 @@ bool SIFFWriter::run() {
     }
 
     if (vislib::sys::File::Exists(filename.native().c_str())) {
-        Log::DefaultLog.WriteWarn(
-            "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteWarn("File %s already exists and will be overwritten.", filename.generic_string().c_str());
     }
 
     mpdc->SetFrameID(0, true);
@@ -114,7 +113,7 @@ bool SIFFWriter::run() {
     vislib::sys::FastFile file;
     if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteError("Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Unable to create output file \"%s\". Abort.", filename.generic_string().c_str());
         return false;
     }
 

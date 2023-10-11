@@ -163,9 +163,9 @@ void ParticleFortLoader::assertData() {
 
         const float tetGrowFac = 1.3f; // tetrahedron in-sphere to out-sphere radius
         const vislib::TString& posFileName =
-            this->positionFileNameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+            this->positionFileNameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str();
         const vislib::TString& attrFileName =
-            this->attributeFileNameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+            this->attributeFileNameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str();
 
         this->release(); // because I know it only clears the memory arrays
         this->datahash++;
