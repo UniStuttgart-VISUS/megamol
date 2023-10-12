@@ -36,7 +36,7 @@ void main(void) {
             }
         }
     } else {
-        frag_out = texture(input_tx2D,uv_coord).rgba;
+        frag_out = vec4(texture(input_tx2D,uv_coord).rgba);
     }
 
     gl_FragDepth = texture(depth_tx2D, uv_coord).r;

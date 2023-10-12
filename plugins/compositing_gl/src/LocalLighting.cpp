@@ -44,7 +44,9 @@ megamol::compositing_gl::LocalLighting::LocalLighting()
         , m_roughness_metalness_tex_slot(
               "RoughMetalTexture", "Connects to the roughness/metalness render target texture")
         , m_lightSlot("lights", "Lights are retrieved over this slot")
-        , m_camera_slot("Camera", "Connects a (copy of) camera state") {
+        , m_camera_slot("Camera", "Connects a (copy of) camera state")
+        , outHandler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::bind(&LocalLighting::textureFormatUpdate, this)) {
     this->m_illuminationmode << new megamol::core::param::EnumParam(0);
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Lambert");
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Blinn-Phong");
@@ -97,6 +99,8 @@ megamol::compositing_gl::LocalLighting::LocalLighting()
 
     this->m_camera_slot.SetCompatibleCall<CallCameraDescription>();
     this->MakeSlotAvailable(&this->m_camera_slot);
+
+    this->MakeSlotAvailable(outHandler_.getFormatSelectorSlot());
 }
 
 megamol::compositing_gl::LocalLighting::~LocalLighting() {
@@ -104,27 +108,7 @@ megamol::compositing_gl::LocalLighting::~LocalLighting() {
 }
 
 bool megamol::compositing_gl::LocalLighting::create() {
-
-    auto const shader_options =
-        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-
-    try {
-        m_lambert_prgm =
-            core::utility::make_glowl_shader("compositing_lambert", shader_options, "compositing_gl/lambert.comp.glsl");
-
-        m_phong_prgm =
-            core::utility::make_glowl_shader("compositing_phong", shader_options, "compositing_gl/phong.comp.glsl");
-
-        m_toon_prgm =
-            core::utility::make_glowl_shader("compositing_toon", shader_options, "compositing_gl/toon.comp.glsl");
-
-    } catch (std::exception& e) {
-        Log::DefaultLog.WriteError(("LocalLighting: " + std::string(e.what())).c_str());
-        return false;
-    }
-
-    glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
-    m_output_texture = std::make_shared<glowl::Texture2D>("lighting_output", tx_layout, nullptr);
+    textureFormatUpdate();
 
     m_point_lights_buffer =
         std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
@@ -193,8 +177,8 @@ bool megamol::compositing_gl::LocalLighting::getDataCallback(core::Call& caller)
 
             if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
                 m_output_texture->getHeight() != std::get<1>(texture_res)) {
-                glowl::TextureLayout tx_layout(
-                    GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+                glowl::TextureLayout tx_layout(outHandler_.getInternalFormat(), std::get<0>(texture_res),
+                    std::get<1>(texture_res), 1, outHandler_.getFormat(), outHandler_.getType(), 1);
                 m_output_texture->reload(tx_layout, nullptr);
             }
 
@@ -433,5 +417,32 @@ bool megamol::compositing_gl::LocalLighting::getDataCallback(core::Call& caller)
 }
 
 bool megamol::compositing_gl::LocalLighting::getMetaDataCallback(core::Call& caller) {
+    return true;
+}
+
+bool megamol::compositing_gl::LocalLighting::textureFormatUpdate() {
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto const shader_options_flags = outHandler_.addDefinitions(shader_options);
+
+    try {
+        m_lambert_prgm = core::utility::make_glowl_shader(
+            "compositing_lambert", *shader_options_flags, "compositing_gl/lambert.comp.glsl");
+
+        m_phong_prgm = core::utility::make_glowl_shader(
+            "compositing_phong", *shader_options_flags, "compositing_gl/phong.comp.glsl");
+
+        m_toon_prgm = core::utility::make_glowl_shader(
+            "compositing_toon", *shader_options_flags, "compositing_gl/toon.comp.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("LocalLighting: " + std::string(e.what())).c_str());
+        return false;
+    }
+
+    glowl::TextureLayout tx_layout(
+        outHandler_.getInternalFormat(), 1, 1, 1, outHandler_.getFormat(), outHandler_.getType(), 1);
+    m_output_texture = std::make_shared<glowl::Texture2D>("lighting_output", tx_layout, nullptr);
+
     return true;
 }

@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 
 #include "compositing_gl/CompositingCalls.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -21,12 +22,15 @@ megamol::compositing_gl::DepthDarkening::DepthDarkening()
         , kernelRadiusParam_(
               "kernelRadius", "The radius of the used gauss kernel in pixels (for Full HD 40 is recommended)")
         , lambdaValueParam_("lambda", "Lambda value determining the strength of the darkening effect. 0 shuts it off")
+        , out_texture_format_slot_("OutTexFormat", "texture format of output texture")
         , version_(0)
         , blurShader_(nullptr)
         , darkenShader_(nullptr)
         , intermediateTex_(nullptr)
         , intermediateTex2_(nullptr)
-        , outputTex_(nullptr) {
+        , outputTex_(nullptr)
+        , outFormatHandler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::function<bool()>(std::bind(&DepthDarkening::textureFormatUpdate, this))) {
 
     outputTexSlot_.SetCallback(CallTexture2D::ClassName(), CallTexture2D::FunctionName(CallTexture2D::CallGetData),
         &DepthDarkening::getDataCallback);
@@ -47,6 +51,8 @@ megamol::compositing_gl::DepthDarkening::DepthDarkening()
     lambdaValueParam_.SetParameter(new core::param::FloatParam(4.0f, 0.0f, 100.0f));
     this->MakeSlotAvailable(&lambdaValueParam_);
     lambdaValueParam_.ForceSetDirty();
+
+    this->MakeSlotAvailable(outFormatHandler_.getFormatSelectorSlot());
 }
 
 megamol::compositing_gl::DepthDarkening::~DepthDarkening() {
@@ -54,35 +60,9 @@ megamol::compositing_gl::DepthDarkening::~DepthDarkening() {
 }
 
 bool megamol::compositing_gl::DepthDarkening::create() {
-
-    auto const shdr_options =
-        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    try {
-
-        blurShader_ = core::utility::make_glowl_shader(
-            "dd_blur", shdr_options, std::filesystem::path("compositing_gl/gauss_blur.comp.glsl"));
-
-        darkenShader_ = core::utility::make_glowl_shader(
-            "dd_darken", shdr_options, std::filesystem::path("compositing_gl/depth_darkening.comp.glsl"));
-
-    } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[DepthDarkening] %s", ex.what());
-    } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[DepthDarkening] Unable to compile shader: Unknown exception: %s", ex.what());
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[DepthDarkening] Unable to compile shader: Unknown exception.");
-    }
-
-    glowl::TextureLayout tx_layout{GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1};
-    outputTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_output", tx_layout, nullptr);
-    intermediateTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_intermediate", tx_layout, nullptr);
-    intermediateTex2_ = std::make_shared<glowl::Texture2D>("depth_darkening_intermediate2", tx_layout, nullptr);
-
     gaussValues_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
-    return true;
+    return textureFormatUpdate();
 }
 
 void megamol::compositing_gl::DepthDarkening::release() {}
@@ -208,8 +188,8 @@ void megamol::compositing_gl::DepthDarkening::fitTextures(std::shared_ptr<glowl:
     std::vector<std::shared_ptr<glowl::Texture2D>> texVec = {outputTex_, intermediateTex_, intermediateTex2_};
     for (auto& tex : texVec) {
         if (tex->getWidth() != resolution.first || tex->getHeight() != resolution.second) {
-            glowl::TextureLayout tx_layout{
-                GL_RGBA16F, resolution.first, resolution.second, 1, GL_RGBA, GL_HALF_FLOAT, 1};
+            glowl::TextureLayout tx_layout{(GLint)outFormatHandler_.getInternalFormat(), resolution.first,
+                resolution.second, 1, outFormatHandler_.getFormat(), outFormatHandler_.getType(), 1};
             tex->reload(tx_layout, nullptr);
         }
     }
@@ -239,4 +219,50 @@ void megamol::compositing_gl::DepthDarkening::recalcKernel() {
     }
     // upload the kernel to GPU
     gaussValues_->rebuffer(kernelVec);
+}
+
+bool megamol::compositing_gl::DepthDarkening::textureFormatUpdate() {
+
+    // reinit all textures
+    auto const shdr_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+
+    auto shader_options_flags = outFormatHandler_.addDefinitions(shdr_options);
+
+    try {
+        blurShader_ = core::utility::make_glowl_shader(
+            "dd_blur", *shader_options_flags, std::filesystem::path("compositing_gl/gauss_blur.comp.glsl"));
+
+        darkenShader_ = core::utility::make_glowl_shader(
+            "dd_darken", *shader_options_flags, std::filesystem::path("compositing_gl/depth_darkening.comp.glsl"));
+
+    } catch (glowl::GLSLProgramException const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[DepthDarkening] %s", ex.what());
+        return false;
+    } catch (std::exception const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[DepthDarkening] Unable to compile shader: Unknown exception: %s", ex.what());
+        return false;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[DepthDarkening] Unable to compile shader: Unknown exception.");
+        return false;
+    }
+    glowl::TextureLayout tx_layout;
+
+    //checks if slot is connected
+    if (inputDepthSlot_.GetStatus() == 2) {
+        tx_layout = glowl::TextureLayout{(GLint)outFormatHandler_.getInternalFormat(),
+            static_cast<int>(inputDepthSlot_.CallAs<CallTexture2D>()->getData()->getWidth()),
+            static_cast<int>(inputDepthSlot_.CallAs<CallTexture2D>()->getData()->getHeight()), 1,
+            outFormatHandler_.getFormat(), outFormatHandler_.getType(), 1};
+    } else {
+        tx_layout = glowl::TextureLayout{(GLint)outFormatHandler_.getInternalFormat(), 1, 1, 1,
+            outFormatHandler_.getFormat(), outFormatHandler_.getType(), 1};
+    }
+    outputTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_output", tx_layout, nullptr);
+    intermediateTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_intermediate", tx_layout, nullptr);
+    intermediateTex2_ = std::make_shared<glowl::Texture2D>("depth_darkening_intermediate2", tx_layout, nullptr);
+
+    return true;
 }
