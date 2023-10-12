@@ -188,7 +188,7 @@ void megamol::compositing_gl::DepthDarkening::fitTextures(std::shared_ptr<glowl:
     std::vector<std::shared_ptr<glowl::Texture2D>> texVec = {outputTex_, intermediateTex_, intermediateTex2_};
     for (auto& tex : texVec) {
         if (tex->getWidth() != resolution.first || tex->getHeight() != resolution.second) {
-            glowl::TextureLayout tx_layout{(GLint)outFormatHandler_.getInternalFormat(), resolution.first,
+            glowl::TextureLayout tx_layout{(GLint) outFormatHandler_.getInternalFormat(), resolution.first,
                 resolution.second, 1, outFormatHandler_.getFormat(), outFormatHandler_.getType(), 1};
             tex->reload(tx_layout, nullptr);
         }
@@ -252,12 +252,12 @@ bool megamol::compositing_gl::DepthDarkening::textureFormatUpdate() {
 
     //checks if slot is connected
     if (inputDepthSlot_.GetStatus() == 2) {
-        tx_layout = glowl::TextureLayout{(GLint)outFormatHandler_.getInternalFormat(),
+        tx_layout = glowl::TextureLayout{(GLint) outFormatHandler_.getInternalFormat(),
             static_cast<int>(inputDepthSlot_.CallAs<CallTexture2D>()->getData()->getWidth()),
             static_cast<int>(inputDepthSlot_.CallAs<CallTexture2D>()->getData()->getHeight()), 1,
             outFormatHandler_.getFormat(), outFormatHandler_.getType(), 1};
     } else {
-        tx_layout = glowl::TextureLayout{(GLint)outFormatHandler_.getInternalFormat(), 1, 1, 1,
+        tx_layout = glowl::TextureLayout{(GLint) outFormatHandler_.getInternalFormat(), 1, 1, 1,
             outFormatHandler_.getFormat(), outFormatHandler_.getType(), 1};
     }
     outputTex_ = std::make_shared<glowl::Texture2D>("depth_darkening_output", tx_layout, nullptr);

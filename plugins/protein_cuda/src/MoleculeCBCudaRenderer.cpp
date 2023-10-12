@@ -231,7 +231,7 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
 
     // map OpenGL buffer object for writing from CUDA
     float* atomPosPtr;
-    cudaGLMapBufferObject((void**)&atomPosPtr, buffers_[static_cast<int>(Buffers::ATOM_POS)]->getName());
+    cudaGLMapBufferObject((void**) &atomPosPtr, buffers_[static_cast<int>(Buffers::ATOM_POS)]->getName());
 
     // calculate grid hash
     calcHash(m_dGridParticleHash, m_dGridParticleIndex,
@@ -271,10 +271,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     uint numSC = 0;
     uint lastSC = 0;
     checkCudaErrors(
-        cudaMemcpy((void*)&numSC, (void*)(m_dSmallCircleVisibleScan + (this->numAtoms * this->atomNeighborCount) - 1),
+        cudaMemcpy((void*) &numSC, (void*) (m_dSmallCircleVisibleScan + (this->numAtoms * this->atomNeighborCount) - 1),
             sizeof(uint), cudaMemcpyDeviceToHost));
     checkCudaErrors(
-        cudaMemcpy((void*)&lastSC, (void*)(m_dSmallCircleVisible + (this->numAtoms * this->atomNeighborCount) - 1),
+        cudaMemcpy((void*) &lastSC, (void*) (m_dSmallCircleVisible + (this->numAtoms * this->atomNeighborCount) - 1),
             sizeof(uint), cudaMemcpyDeviceToHost));
     numSC += lastSC;
 
@@ -284,10 +284,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
     uint numProbes = 0;
     uint lastProbeCnt = 0;
     checkCudaErrors(
-        cudaMemcpy((void*)&numProbes, (void*)(m_dArcCountScan + (this->numAtoms * this->atomNeighborCount) - 1),
+        cudaMemcpy((void*) &numProbes, (void*) (m_dArcCountScan + (this->numAtoms * this->atomNeighborCount) - 1),
             sizeof(uint), cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy((void*)&lastProbeCnt,
-        (void*)(m_dArcCount + (this->numAtoms * this->atomNeighborCount) - 1), sizeof(uint), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy((void*) &lastProbeCnt,
+        (void*) (m_dArcCount + (this->numAtoms * this->atomNeighborCount) - 1), sizeof(uint), cudaMemcpyDeviceToHost));
     numProbes += lastProbeCnt;
 
     // resize torus buffer objects
@@ -319,22 +319,22 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
 
     // map probe buffer object for writing from CUDA
     float* probePosPtr;
-    cudaGLMapBufferObject((void**)&probePosPtr, buffers_[static_cast<int>(Buffers::PROBE_POS)]->getName());
+    cudaGLMapBufferObject((void**) &probePosPtr, buffers_[static_cast<int>(Buffers::PROBE_POS)]->getName());
 
     // map spherical triangle buffer objects for writing from CUDA
     float *sphereTriaVec1Ptr, *sphereTriaVec2Ptr, *sphereTriaVec3Ptr;
     cudaGLMapBufferObject(
-        (void**)&sphereTriaVec1Ptr, buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_1)]->getName());
+        (void**) &sphereTriaVec1Ptr, buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_1)]->getName());
     cudaGLMapBufferObject(
-        (void**)&sphereTriaVec2Ptr, buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_2)]->getName());
+        (void**) &sphereTriaVec2Ptr, buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_2)]->getName());
     cudaGLMapBufferObject(
-        (void**)&sphereTriaVec3Ptr, buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_3)]->getName());
+        (void**) &sphereTriaVec3Ptr, buffers_[static_cast<int>(Buffers::SPHERE_TRIA_VEC_3)]->getName());
 
     // map torus buffer objects for writing from CUDA
     float *torusPosPtr, *torusVSPtr, *torusAxisPtr;
-    cudaGLMapBufferObject((void**)&torusPosPtr, buffers_[static_cast<int>(Buffers::TORUS_POS)]->getName());
-    cudaGLMapBufferObject((void**)&torusVSPtr, buffers_[static_cast<int>(Buffers::TORUS_VS)]->getName());
-    cudaGLMapBufferObject((void**)&torusAxisPtr, buffers_[static_cast<int>(Buffers::TORUS_AXIS)]->getName());
+    cudaGLMapBufferObject((void**) &torusPosPtr, buffers_[static_cast<int>(Buffers::TORUS_POS)]->getName());
+    cudaGLMapBufferObject((void**) &torusVSPtr, buffers_[static_cast<int>(Buffers::TORUS_VS)]->getName());
+    cudaGLMapBufferObject((void**) &torusAxisPtr, buffers_[static_cast<int>(Buffers::TORUS_AXIS)]->getName());
 
     // compute vertex buffer objects for probe positions
     writeProbePositionsCB(probePosPtr, sphereTriaVec1Ptr, sphereTriaVec2Ptr, sphereTriaVec3Ptr, torusPosPtr, torusVSPtr,
@@ -376,10 +376,10 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda(MolecularDataCall* mol) {
 
     // map texture coordinate buffer object for writing from CUDA
     float* texCoordPtr;
-    cudaGLMapBufferObject((void**)&texCoordPtr, buffers_[static_cast<int>(Buffers::TEX_COORD)]->getName());
+    cudaGLMapBufferObject((void**) &texCoordPtr, buffers_[static_cast<int>(Buffers::TEX_COORD)]->getName());
     // map singularity texture buffer object for writing from CUDA
     float* singTexPtr;
-    cudaGLMapBufferObject((void**)&singTexPtr, buffers_[static_cast<int>(Buffers::SING_TEX)]->getName());
+    cudaGLMapBufferObject((void**) &singTexPtr, buffers_[static_cast<int>(Buffers::SING_TEX)]->getName());
 
     // find all intersecting probes for each probe and write them to a texture
     writeSingularityTextureCB(texCoordPtr, singTexPtr, m_dSortedProbePos, m_dGridProbeIndex, m_dCellStart, m_dCellEnd,
@@ -570,7 +570,7 @@ bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, mmst
     // allocate GPU data
     unsigned int memSize = sizeof(float) * 4 * this->numAtoms;
     // array for atom positions
-    allocateArray((void**)&m_dPos, memSize);
+    allocateArray((void**) &m_dPos, memSize);
     //cudaMalloc(  (void**)&m_dPos, memSize);
     //cudaError e;
     //e = cudaGetLastError();
@@ -581,38 +581,38 @@ bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, mmst
     //megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR,
     //    "Free GPU Memory: %i / %i (MB)", free / ( 1024 * 1024), total / ( 1024 * 1024));
     // array for sorted atom positions
-    allocateArray((void**)&m_dSortedPos, memSize);
+    allocateArray((void**) &m_dSortedPos, memSize);
     // array for sorted atom positions
-    allocateArray((void**)&m_dSortedProbePos, memSize * this->atomNeighborCount);
+    allocateArray((void**) &m_dSortedProbePos, memSize * this->atomNeighborCount);
     // array for the counted number of atoms
-    allocateArray((void**)&m_dNeighborCount, this->numAtoms * sizeof(uint));
+    allocateArray((void**) &m_dNeighborCount, this->numAtoms * sizeof(uint));
     // array for the neighbor atoms
-    allocateArray((void**)&m_dNeighbors, this->numAtoms * this->atomNeighborCount * sizeof(uint));
+    allocateArray((void**) &m_dNeighbors, this->numAtoms * this->atomNeighborCount * sizeof(uint));
     // array for the small circles
-    allocateArray((void**)&m_dSmallCircles, this->numAtoms * this->atomNeighborCount * 4 * sizeof(float));
+    allocateArray((void**) &m_dSmallCircles, this->numAtoms * this->atomNeighborCount * 4 * sizeof(float));
     // array for the small circle visibility
-    allocateArray((void**)&m_dSmallCircleVisible, this->numAtoms * this->atomNeighborCount * sizeof(uint));
+    allocateArray((void**) &m_dSmallCircleVisible, this->numAtoms * this->atomNeighborCount * sizeof(uint));
     // array for the small circle visibility prefix sum
-    allocateArray((void**)&m_dSmallCircleVisibleScan, this->numAtoms * this->atomNeighborCount * sizeof(uint));
+    allocateArray((void**) &m_dSmallCircleVisibleScan, this->numAtoms * this->atomNeighborCount * sizeof(uint));
     // array for the arcs
     allocateArray(
-        (void**)&m_dArcs, this->numAtoms * this->atomNeighborCount * this->atomNeighborCount * 4 * sizeof(float));
+        (void**) &m_dArcs, this->numAtoms * this->atomNeighborCount * this->atomNeighborCount * 4 * sizeof(float));
     // array for the arcs
     allocateArray(
-        (void**)&m_dArcIdxK, this->numAtoms * this->atomNeighborCount * this->atomNeighborCount * sizeof(uint));
+        (void**) &m_dArcIdxK, this->numAtoms * this->atomNeighborCount * this->atomNeighborCount * sizeof(uint));
     // array for the arc count
-    allocateArray((void**)&m_dArcCount, this->numAtoms * this->atomNeighborCount * sizeof(uint));
+    allocateArray((void**) &m_dArcCount, this->numAtoms * this->atomNeighborCount * sizeof(uint));
     // array for the arc count scan (prefix sum)
-    allocateArray((void**)&m_dArcCountScan, this->numAtoms * this->atomNeighborCount * sizeof(uint));
+    allocateArray((void**) &m_dArcCountScan, this->numAtoms * this->atomNeighborCount * sizeof(uint));
 
-    allocateArray((void**)&m_dGridParticleHash, this->numAtoms * sizeof(uint));
-    allocateArray((void**)&m_dGridParticleIndex, this->numAtoms * sizeof(uint));
+    allocateArray((void**) &m_dGridParticleHash, this->numAtoms * sizeof(uint));
+    allocateArray((void**) &m_dGridParticleIndex, this->numAtoms * sizeof(uint));
 
-    allocateArray((void**)&m_dGridProbeHash, this->numAtoms * this->atomNeighborCount * sizeof(uint));
-    allocateArray((void**)&m_dGridProbeIndex, this->numAtoms * this->atomNeighborCount * sizeof(uint));
+    allocateArray((void**) &m_dGridProbeHash, this->numAtoms * this->atomNeighborCount * sizeof(uint));
+    allocateArray((void**) &m_dGridProbeIndex, this->numAtoms * this->atomNeighborCount * sizeof(uint));
 
-    allocateArray((void**)&m_dCellStart, this->numGridCells * sizeof(uint));
-    allocateArray((void**)&m_dCellEnd, this->numGridCells * sizeof(uint));
+    allocateArray((void**) &m_dCellStart, this->numGridCells * sizeof(uint));
+    allocateArray((void**) &m_dCellEnd, this->numGridCells * sizeof(uint));
 
     // clear all buffers
     for (auto& e : buffers_) {

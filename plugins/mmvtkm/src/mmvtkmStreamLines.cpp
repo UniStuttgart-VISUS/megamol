@@ -857,7 +857,7 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
     }
 
 
-    float numVertices = (float)vertices.size();
+    float numVertices = (float) vertices.size();
     std::vector<std::pair<float, glm::vec3>> angles;
     glm::vec3 center = vertices[0] + 0.5f * (vertices[1] - vertices[0]);
 
@@ -922,7 +922,7 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
         });
 
 
-    for (int i = 0; i < (int)numVertices; ++i) {
+    for (int i = 0; i < (int) numVertices; ++i) {
         vertices[i] = angles[i].second;
     }
 
@@ -1032,7 +1032,7 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier
 
     mesh::MeshDataAccessCollection::VertexAttribute va;
     va.data = reinterpret_cast<uint8_t*>(data.data());
-    va.byte_size = 3 * (size_t)numPoints * sizeof(float);
+    va.byte_size = 3 * (size_t) numPoints * sizeof(float);
     va.component_cnt = 3;
     va.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
     va.stride = 3 * sizeof(float);
@@ -1041,7 +1041,7 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier
 
     mesh::MeshDataAccessCollection::VertexAttribute vColor;
     vColor.data = reinterpret_cast<uint8_t*>(color.data());
-    vColor.byte_size = 4 * (size_t)numPoints * sizeof(float);
+    vColor.byte_size = 4 * (size_t) numPoints * sizeof(float);
     vColor.component_cnt = 4;
     vColor.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
     vColor.stride = 4 * sizeof(float);
@@ -1120,8 +1120,8 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             }
 
             dataSetBounds_ = rhsVtkmDc->getMetaData().minMaxBounds;
-            visVec3f low = {(float)dataSetBounds_.X.Min, (float)dataSetBounds_.Y.Min, (float)dataSetBounds_.Z.Min};
-            visVec3f up = {(float)dataSetBounds_.X.Max, (float)dataSetBounds_.Y.Max, (float)dataSetBounds_.Z.Max};
+            visVec3f low = {(float) dataSetBounds_.X.Min, (float) dataSetBounds_.Y.Min, (float) dataSetBounds_.Z.Min};
+            visVec3f up = {(float) dataSetBounds_.X.Max, (float) dataSetBounds_.Y.Max, (float) dataSetBounds_.Z.Max};
             this->psLowerStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(low, false);
             this->psUpperStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(up, false);
         }
@@ -1174,14 +1174,14 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         // sample points in triangles and combine each triangles' samples
         seedStrategy_ = psSeedStrategy_.Param<core::param::EnumParam>()->Value();
         for (const auto& tri : seedPlaneTriangles_) {
-            unsigned int numTriSeeds = (unsigned int)floor(numSeeds_ * tri.weight);
+            unsigned int numTriSeeds = (unsigned int) floor(numSeeds_ * tri.weight);
 
             int cnt = 0;
             for (int i = 0; i < numTriSeeds; ++i) {
                 float s = 0, t = 0;
                 if (seedStrategy_ == 0) {
-                    s = (float)rand() / (float)RAND_MAX;
-                    t = (float)rand() / (float)RAND_MAX;
+                    s = (float) rand() / (float) RAND_MAX;
+                    t = (float) rand() / (float) RAND_MAX;
                 } else if (seedStrategy_ == 1) {
                     s = sobol::sample(cnt, 0);
                     t = sobol::sample(cnt, 1);
@@ -1290,7 +1290,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
                 streamlineData_[i][j] = glm::vec3(crnt[0], crnt[1], crnt[2]);
 
-                streamlineColor_[i][j] = glm::vec4(glm::vec3((float)j / (float)numPoints * 0.9f + 0.1f), 1.f);
+                streamlineColor_[i][j] = glm::vec4(glm::vec3((float) j / (float) numPoints * 0.9f + 0.1f), 1.f);
             }
 
 

@@ -656,7 +656,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             torusShader_->setUniform("mvpinverse", mvpinverse_);
             torusShader_->setUniform("mvptransposed", mvptranspose_);
 
-            glDrawArrays(GL_POINTS, 0, ((unsigned int)this->torusVertexArray[cntRS].Count()) / 3);
+            glDrawArrays(GL_POINTS, 0, ((unsigned int) this->torusVertexArray[cntRS].Count()) / 3);
 
             glUseProgram(0);
             glBindVertexArray(0);
@@ -701,7 +701,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             sphericalTriangleShader_->setUniform("camUp", up);
             sphericalTriangleShader_->setUniform("zValues", nearplane, farplane);
             sphericalTriangleShader_->setUniform(
-                "texOffset", 1.0f / (float)this->singTexWidth[cntRS], 1.0f / (float)this->singTexHeight[cntRS]);
+                "texOffset", 1.0f / (float) this->singTexWidth[cntRS], 1.0f / (float) this->singTexHeight[cntRS]);
             sphericalTriangleShader_->setUniform("view", view_);
             sphericalTriangleShader_->setUniform("proj", proj_);
             sphericalTriangleShader_->setUniform("viewInverse", invview_);
@@ -709,7 +709,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
             sphericalTriangleShader_->setUniform("mvpinverse", mvpinverse_);
             sphericalTriangleShader_->setUniform("mvptransposed", mvptranspose_);
 
-            glDrawArrays(GL_POINTS, 0, ((unsigned int)this->sphericTriaVertexArray[cntRS].Count()) / 4);
+            glDrawArrays(GL_POINTS, 0, ((unsigned int) this->sphericTriaVertexArray[cntRS].Count()) / 4);
 
             // disable spherical triangle shader
             glUseProgram(0);
@@ -742,7 +742,7 @@ void MoleculeSESRenderer::RenderSESGpuRaycasting(const MolecularDataCall* mol) {
         sphereShader_->setUniform("mvpinverse", mvpinverse_);
         sphereShader_->setUniform("mvptransposed", mvptranspose_);
 
-        glDrawArrays(GL_POINTS, 0, ((unsigned int)this->sphereVertexArray[cntRS].Count()) / 4);
+        glDrawArrays(GL_POINTS, 0, ((unsigned int) this->sphereVertexArray[cntRS].Count()) / 4);
 
         // disable sphere shader
         glUseProgram(0);
@@ -831,23 +831,23 @@ void MoleculeSESRenderer::ComputeRaycastingArrays() {
             this->sphericTriaVec3[cntRS][i * 4 + 3] = dualProbeRad * dualProbeRad;
             // store number of cutting probes and texture coordinates for each edge
             this->sphericTriaTexCoord1[cntRS][i * 3 + 0] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge1()->cuttingProbes.size();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge1()->cuttingProbes.size();
             this->sphericTriaTexCoord1[cntRS][i * 3 + 1] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge1()->GetTexCoordX();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge1()->GetTexCoordX();
             this->sphericTriaTexCoord1[cntRS][i * 3 + 2] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge1()->GetTexCoordY();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge1()->GetTexCoordY();
             this->sphericTriaTexCoord2[cntRS][i * 3 + 0] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge2()->cuttingProbes.size();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge2()->cuttingProbes.size();
             this->sphericTriaTexCoord2[cntRS][i * 3 + 1] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge2()->GetTexCoordX();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge2()->GetTexCoordX();
             this->sphericTriaTexCoord2[cntRS][i * 3 + 2] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge2()->GetTexCoordY();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge2()->GetTexCoordY();
             this->sphericTriaTexCoord3[cntRS][i * 3 + 0] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->cuttingProbes.size();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->cuttingProbes.size();
             this->sphericTriaTexCoord3[cntRS][i * 3 + 1] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->GetTexCoordX();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->GetTexCoordX();
             this->sphericTriaTexCoord3[cntRS][i * 3 + 2] =
-                (float)this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
+                (float) this->reducedSurface[cntRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
             // colors
             this->sphericTriaColors[cntRS][i * 3 + 0] =
                 CodeColor(&this->atomColorTable[this->reducedSurface[cntRS]->GetRSFace(i)->GetVertex1()->GetIndex()].x);
@@ -1105,23 +1105,23 @@ void MoleculeSESRenderer::ComputeRaycastingArrays(unsigned int idxRS) {
         this->sphericTriaVec3[idxRS][i * 4 + 3] = dualProbeRad * dualProbeRad;
         // store number of cutting probes and texture coordinates for each edge
         this->sphericTriaTexCoord1[idxRS][i * 3 + 0] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge1()->cuttingProbes.size();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge1()->cuttingProbes.size();
         this->sphericTriaTexCoord1[idxRS][i * 3 + 1] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge1()->GetTexCoordX();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge1()->GetTexCoordX();
         this->sphericTriaTexCoord1[idxRS][i * 3 + 2] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge1()->GetTexCoordY();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge1()->GetTexCoordY();
         this->sphericTriaTexCoord2[idxRS][i * 3 + 0] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge2()->cuttingProbes.size();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge2()->cuttingProbes.size();
         this->sphericTriaTexCoord2[idxRS][i * 3 + 1] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge2()->GetTexCoordX();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge2()->GetTexCoordX();
         this->sphericTriaTexCoord2[idxRS][i * 3 + 2] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge2()->GetTexCoordY();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge2()->GetTexCoordY();
         this->sphericTriaTexCoord3[idxRS][i * 3 + 0] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge3()->cuttingProbes.size();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge3()->cuttingProbes.size();
         this->sphericTriaTexCoord3[idxRS][i * 3 + 1] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge3()->GetTexCoordX();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge3()->GetTexCoordX();
         this->sphericTriaTexCoord3[idxRS][i * 3 + 2] =
-            (float)this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
+            (float) this->reducedSurface[idxRS]->GetRSFace(i)->GetEdge3()->GetTexCoordY();
         // colors
         this->sphericTriaColors[idxRS][i * 3 + 0] =
             CodeColor(&this->atomColorTable[this->reducedSurface[idxRS]->GetRSFace(i)->GetVertex1()->GetIndex()].x);
@@ -1286,9 +1286,9 @@ void MoleculeSESRenderer::ComputeRaycastingArrays(unsigned int idxRS) {
  * code a rgb-color into one float
  */
 float MoleculeSESRenderer::CodeColor(const float* col) const {
-    return float((int)(col[0] * 255.0f) * 1000000 // red
-                 + (int)(col[1] * 255.0f) * 1000  // green
-                 + (int)(col[2] * 255.0f));       // blue
+    return float((int) (col[0] * 255.0f) * 1000000 // red
+                 + (int) (col[1] * 255.0f) * 1000  // green
+                 + (int) (col[2] * 255.0f));       // blue
 }
 
 
@@ -1300,12 +1300,12 @@ vislib::math::Vector<float, 3> MoleculeSESRenderer::DecodeColor(int codedColor) 
     vislib::math::Vector<float, 3> color;
     float red, green;
     if (col >= 1000000)
-        red = floor((float)col / 1000000.0f);
+        red = floor((float) col / 1000000.0f);
     else
         red = 0.0;
     col = col - int(red * 1000000.0f);
     if (col > 1000)
-        green = floor((float)col / 1000.0f);
+        green = floor((float) col / 1000.0f);
     else
         green = 0.0;
     col = col - int(green * 1000.0f);
@@ -1330,7 +1330,7 @@ void MoleculeSESRenderer::CreateSingularityTextures() {
     // check if the singularity texture has the right size
     if (this->reducedSurface.size() != this->singularityTexture.size()) {
         // store old singularity texture size
-        unsigned int singTexSizeOld = (unsigned int)this->singularityTexture.size();
+        unsigned int singTexSizeOld = (unsigned int) this->singularityTexture.size();
         // resize singularity texture to fit the number of reduced surfaces
         this->singularityTexture.resize(this->reducedSurface.size());
         // generate a new texture for each new singularity texture
@@ -1351,10 +1351,10 @@ void MoleculeSESRenderer::CreateSingularityTextures() {
 
     for (cntRS = 0; cntRS < this->reducedSurface.size(); ++cntRS) {
         // set width and height of texture
-        if ((unsigned int)texSize < this->reducedSurface[cntRS]->GetCutRSEdgesCount()) {
+        if ((unsigned int) texSize < this->reducedSurface[cntRS]->GetCutRSEdgesCount()) {
             this->singTexHeight[cntRS] = texSize;
             this->singTexWidth[cntRS] =
-                numProbes * (int)ceil(double(this->reducedSurface[cntRS]->GetCutRSEdgesCount()) / (double)texSize);
+                numProbes * (int) ceil(double(this->reducedSurface[cntRS]->GetCutRSEdgesCount()) / (double) texSize);
         } else {
             this->singTexHeight[cntRS] = this->reducedSurface[cntRS]->GetCutRSEdgesCount();
             this->singTexWidth[cntRS] = numProbes;
@@ -1447,10 +1447,10 @@ void MoleculeSESRenderer::CreateSingularityTexture(unsigned int idxRS) {
     unsigned int numProbes = 16;
 
     // set width and height of texture
-    if ((unsigned int)texSize < this->reducedSurface[idxRS]->GetCutRSEdgesCount()) {
+    if ((unsigned int) texSize < this->reducedSurface[idxRS]->GetCutRSEdgesCount()) {
         this->singTexHeight[idxRS] = texSize;
         this->singTexWidth[idxRS] =
-            numProbes * (int)ceil(double(this->reducedSurface[idxRS]->GetCutRSEdgesCount()) / (double)texSize);
+            numProbes * (int) ceil(double(this->reducedSurface[idxRS]->GetCutRSEdgesCount()) / (double) texSize);
     } else {
         this->singTexHeight[idxRS] = this->reducedSurface[idxRS]->GetCutRSEdgesCount();
         this->singTexWidth[idxRS] = numProbes;

@@ -376,7 +376,7 @@ bool UncertaintySequenceRenderer::create() {
     this->glyphAxis.AssertCapacity(structCount);
     initVec = vislib::math::Vector<float, 2>(0.0f, -0.5f);
     for (unsigned int i = 0; i < structCount; i++) {
-        angle = 2.0f * (float)SEQ_PI / static_cast<float>(structCount) * static_cast<float>(i);
+        angle = 2.0f * (float) SEQ_PI / static_cast<float>(structCount) * static_cast<float>(i);
         if (i == 0) {
             tmpVec = initVec;
         } else {
@@ -437,7 +437,7 @@ void UncertaintySequenceRenderer::calculateGeometryVertices(int samples) {
             case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX):
             case (UncertaintyDataCall::secStructure::G_310_HELIX):
             case (UncertaintyDataCall::secStructure::I_PI_HELIX):
-                offset = flip * (height / 2.0f) + sin(dS * 2.0f * (float)SEQ_PI) * 0.25f;
+                offset = flip * (height / 2.0f) + sin(dS * 2.0f * (float) SEQ_PI) * 0.25f;
                 break;
             case (UncertaintyDataCall::secStructure::B_BRIDGE):
                 offset = ((dS > 1.0f / 7.0f)
@@ -615,7 +615,7 @@ bool UncertaintySequenceRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
         // set new row height
         this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);
 
-        unsigned int oldRowHeight = (unsigned int)this->rowHeight;
+        unsigned int oldRowHeight = (unsigned int) this->rowHeight;
 
         this->dataPrepared = this->PrepareData(udc, bs);
 
@@ -806,7 +806,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
     // store current glPolygonMode
     GLuint tmpMode[2];
-    glGetIntegerv(GL_POLYGON_MODE, (GLint*)tmpMode);
+    glGetIntegerv(GL_POLYGON_MODE, (GLint*) tmpMode);
 
     // USE LINE MODE FOR WIREFRAME RENDERING
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -841,16 +841,16 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
             unsigned int sucCnt;
 
             vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>>*
-                secUncertainty = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+                secUncertainty = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
             vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure,
                 static_cast<int>(UncertaintyDataCall::secStructure::NOE)>>* sortedUncertainty =
-                &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+                &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
 
             // Draw this unfolded view amino-acid based (and not line based)
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
 
                 curCnt = this->diffStrucCount[i];
-                yPosTemp = (float)(this->methodRows - curCnt) / 2.0f;
+                yPosTemp = (float) (this->methodRows - curCnt) / 2.0f;
 
                 for (unsigned int d = 0; d < curCnt; d++) {
 
@@ -860,7 +860,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                                           : (sortedUncertainty->operator[](i)[0]));
                     if (curStr == UncertaintyDataCall::secStructure::E_EXT_STRAND) {
                         if ((i < (this->aminoAcidCount - 1)) &&
-                            (secUncertainty->operator[](i + 1)[(int)UncertaintyDataCall::secStructure::E_EXT_STRAND] >
+                            (secUncertainty->operator[](i + 1)[(int) UncertaintyDataCall::secStructure::E_EXT_STRAND] >
                                 0.0f)) {
                             folStr = UncertaintyDataCall::secStructure::E_EXT_STRAND;
                         }
@@ -892,8 +892,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                 preCnt = (i > 0) ? (this->diffStrucCount[i - 1]) : (curCnt);
                 sucCnt = (i < this->aminoAcidCount - 1) ? (this->diffStrucCount[i + 1]) : (curCnt);
 
-                upBound = -1.0f * (float)(this->methodRows - curCnt) / 2.0f;
-                loBound = upBound - (float)curCnt;
+                upBound = -1.0f * (float) (this->methodRows - curCnt) / 2.0f;
+                loBound = upBound - (float) curCnt;
 
                 if (this->residueFlag[i] == UncertaintyDataCall::addFlags::MISSING) {
                     curCnt = 0;
@@ -908,8 +908,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
                 if (preCnt > curCnt) {
 
-                    upBndPre = -1.0f * (float)(this->methodRows - preCnt) / 2.0f;
-                    loBndPre = upBndPre - (float)preCnt;
+                    upBndPre = -1.0f * (float) (this->methodRows - preCnt) / 2.0f;
+                    loBndPre = upBndPre - (float) preCnt;
 
                     // upper closing brackets
                     GLfloat cpUpClose[4][3] = {{posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f},
@@ -931,8 +931,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                 }
                 if (preCnt < curCnt) {
 
-                    upBndPre = -1.0f * (float)(this->methodRows - preCnt) / 2.0f;
-                    loBndPre = upBndPre - (float)preCnt;
+                    upBndPre = -1.0f * (float) (this->methodRows - preCnt) / 2.0f;
+                    loBndPre = upBndPre - (float) preCnt;
 
                     // upper opening brackets
                     GLfloat cpUpOpen[4][3] = {{posOffset.X() - 0.5f, -posOffset.Y() + upBndPre, 0.0f},
@@ -985,8 +985,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                         glEnd();
                     } else if (sucCnt > curCnt) {
 
-                        upBndPre = -1.0f * (float)(this->methodRows - sucCnt) / 2.0f;
-                        loBndPre = upBndPre - (float)sucCnt;
+                        upBndPre = -1.0f * (float) (this->methodRows - sucCnt) / 2.0f;
+                        loBndPre = upBndPre - (float) sucCnt;
 
                         // upper opening brackets
                         GLfloat cpUpOpen[4][3] = {{posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f},
@@ -1009,8 +1009,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                     }
                     if (sucCnt < curCnt) {
 
-                        upBndPre = -1.0f * (float)(this->methodRows - sucCnt) / 2.0f;
-                        loBndPre = upBndPre - (float)sucCnt;
+                        upBndPre = -1.0f * (float) (this->methodRows - sucCnt) / 2.0f;
+                        loBndPre = upBndPre - (float) sucCnt;
 
                         // upper closing brackets
                         GLfloat cpUpClose[4][3] = {{posOffset.X() + 1.5f, -posOffset.Y() + upBndPre, 0.0f},
@@ -1066,8 +1066,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                     // draw geometry twice at line endings
                     if (i == this->aminoAcidCount - 1) {
 
-                        upBound = -1.0f * (float)(this->methodRows - curCnt) / 2.0f;
-                        loBound = upBound - (float)curCnt;
+                        upBound = -1.0f * (float) (this->methodRows - curCnt) / 2.0f;
+                        loBound = upBound - (float) curCnt;
 
                         glBegin(GL_LINES);
                         glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBound, 0.5f);
@@ -1075,8 +1075,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                         glEnd();
                     } else if ((i > 0) && (i % this->resCols == (this->resCols - 1))) {
 
-                        upBndPre = -1.0f * (float)(this->methodRows - sucCnt) / 2.0f;
-                        loBndPre = upBndPre - (float)sucCnt;
+                        upBndPre = -1.0f * (float) (this->methodRows - sucCnt) / 2.0f;
+                        loBndPre = upBndPre - (float) sucCnt;
 
                         if (sucCnt != curCnt) {
                             upBound = (upBound > upBndPre) ? (upBound) : (upBndPre - off);
@@ -1094,7 +1094,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
 
             // draw uncertainty
-            yPos += (float)this->methodRows;
+            yPos += (float) this->methodRows;
             if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
                 float col;
                 glBegin(GL_QUADS);
@@ -1118,10 +1118,10 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         } else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) { // UNFOLDED UNCERTAINTY LINE VIEW
 
             vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>>*
-                secUncertainty = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+                secUncertainty = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
             vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure,
                 static_cast<int>(UncertaintyDataCall::secStructure::NOE)>>* sortedUncertainty =
-                &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+                &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
 
             vislib::math::Vector<float, 2> posOffset;
 
@@ -1141,12 +1141,12 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
             }
 
             if (uncRowFlag) {
-                upBound = std::ceil((float)this->methodRows / 2.0f) + 0.5f;
-                loBound = std::floor((float)this->methodRows / 2.0f) - 0.5f;
+                upBound = std::ceil((float) this->methodRows / 2.0f) + 0.5f;
+                loBound = std::floor((float) this->methodRows / 2.0f) - 0.5f;
                 offset = 1.0f;
             } else {
-                upBound = (float)this->methodRows / 2.0f;
-                loBound = (float)this->methodRows / 2.0f;
+                upBound = (float) this->methodRows / 2.0f;
+                loBound = (float) this->methodRows / 2.0f;
             }
 
             //draw geometry tiles for secondary structure
@@ -1157,7 +1157,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
             //STRIDE
             if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
                 for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-                    if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]] < 1.0f) {
+                    if (secUncertainty->operator[](i)[(int) sortedUncertainty->operator[](i)[0]] < 1.0f) {
                         tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::STRIDE);
                         this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0],
                             ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0])
@@ -1174,7 +1174,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
             // DSSP
             if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
                 for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-                    if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]] < 1.0f) {
+                    if (secUncertainty->operator[](i)[(int) sortedUncertainty->operator[](i)[0]] < 1.0f) {
                         tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP);
                         this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0],
                             ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0])
@@ -1191,7 +1191,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
             // PDB
             if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
                 for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-                    if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]] < 1.0f) {
+                    if (secUncertainty->operator[](i)[(int) sortedUncertainty->operator[](i)[0]] < 1.0f) {
                         tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PDB);
                         this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0],
                             ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0])
@@ -1208,7 +1208,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
             // PROSIGN
             if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
                 for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-                    if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]] < 1.0f) {
+                    if (secUncertainty->operator[](i)[(int) sortedUncertainty->operator[](i)[0]] < 1.0f) {
                         tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PROSIGN);
                         this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0],
                             ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0])
@@ -1241,12 +1241,12 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                 posOffset.SetX(this->vertices[2 * i]);
                 posOffset.SetY(this->vertices[2 * i + 1] + upBound);
 
-                uncCur = secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]];
+                uncCur = secUncertainty->operator[](i)[(int) sortedUncertainty->operator[](i)[0]];
                 if (this->residueFlag[i] == UncertaintyDataCall::addFlags::MISSING) {
                     uncCur = 1.0f;
                 }
                 if (i > 0) {
-                    uncPre = secUncertainty->operator[](i - 1)[(int)sortedUncertainty->operator[](i - 1)[0]];
+                    uncPre = secUncertainty->operator[](i - 1)[(int) sortedUncertainty->operator[](i - 1)[0]];
                     if (this->residueFlag[i - 1] == UncertaintyDataCall::addFlags::MISSING) {
                         uncPre = 1.0f;
                     }
@@ -1254,7 +1254,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                     uncPre = uncCur;
                 }
                 if (i < this->aminoAcidCount - 1) {
-                    uncSuc = secUncertainty->operator[](i + 1)[(int)sortedUncertainty->operator[](i + 1)[0]];
+                    uncSuc = secUncertainty->operator[](i + 1)[(int) sortedUncertainty->operator[](i + 1)[0]];
                     if (this->residueFlag[i + 1] == UncertaintyDataCall::addFlags::MISSING) {
                         uncSuc = 1.0f;
                     }
@@ -1424,7 +1424,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
             }
 
             // draw uncertainty
-            yPos += (float)this->methodRows;
+            yPos += (float) this->methodRows;
             if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
                 float col;
                 glBegin(GL_QUADS);
@@ -1512,7 +1512,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                 break;
                             }
                             this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2],
-                                (this->vertices[i * 2 + 1] + yPos + (float)j), this->strideStructThreshold[i][j], min,
+                                (this->vertices[i * 2 + 1] + yPos + (float) j), this->strideStructThreshold[i][j], min,
                                 max, threshold);
                         }
                     }
@@ -1542,7 +1542,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                     for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
                         if ((this->dsspStructEnergy[i][j] < 1.0E38f) && (this->dsspStructEnergy[i][j] != 0.0f)) {
                             this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2],
-                                (this->vertices[i * 2 + 1] + yPos + (float)j), this->dsspStructEnergy[i][j], min, max,
+                                (this->vertices[i * 2 + 1] + yPos + (float) j), this->dsspStructEnergy[i][j], min, max,
                                 threshold);
                         }
                     }
@@ -1611,7 +1611,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             }
 
                             this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2],
-                                this->vertices[i * 2 + 1] + yPos + (float)j, this->prosignStructThreshold[i][j], min,
+                                this->vertices[i * 2 + 1] + yPos + (float) j, this->prosignStructThreshold[i][j], min,
                                 max, threshold, true);
                         }
                     }
@@ -1795,7 +1795,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         glColor3fv(fgColor);
         glEnable(GL_VERTEX_ARRAY);
         glVertexPointer(2, GL_FLOAT, 0, this->chainSeparatorVertices.PeekElements());
-        glDrawArrays(GL_LINES, 0, (GLsizei)this->chainSeparatorVertices.Count() / 2);
+        glDrawArrays(GL_LINES, 0, (GLsizei) this->chainSeparatorVertices.Count() / 2);
         glDisable(GL_VERTEX_ARRAY);
 
         // draw legend/key
@@ -1883,7 +1883,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                     else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) {
 
                         float yPosTemp = yPos + 0.5f;
-                        float upBound = std::ceil((float)this->methodRows / 2.0f) + 0.5f;
+                        float upBound = std::ceil((float) this->methodRows / 2.0f) + 0.5f;
 
                         bool uncRowFlag = false;
                         if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
@@ -1948,7 +1948,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                         ////////////////////////////////////////////////
 
 
-                        yPos += (float)this->methodRows;
+                        yPos += (float) this->methodRows;
 
                         if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
                             tmpStr = "Uncertainty";
@@ -2025,7 +2025,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                     -(static_cast<float>(i) * this->rowHeight + yPos + float(j)), wordlength, 1.0f,
                                     fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                             }
-                            yPos += (float)this->strideThresholdCount;
+                            yPos += (float) this->strideThresholdCount;
                         }
                         if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
                             tmpStr = "DSSP";
@@ -2053,7 +2053,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                     -(static_cast<float>(i) * this->rowHeight + yPos + float(j)), wordlength, 1.0f,
                                     fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                             }
-                            yPos += (float)this->dsspThresholdCount;
+                            yPos += (float) this->dsspThresholdCount;
                         }
                         if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
                             tmpStr = this->pdbLegend;
@@ -2095,7 +2095,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                     -(static_cast<float>(i) * this->rowHeight + yPos + float(j)), wordlength, 1.0f,
                                     fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                             }
-                            yPos += (float)this->prosignThresholdCount;
+                            yPos += (float) this->prosignThresholdCount;
                         }
 
                         ////////////////////////////////////////////////
@@ -2210,7 +2210,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         // render mouse hover
         if ((this->mousePos.X() > -1.0f) && (this->mousePos.X() < static_cast<float>(this->resCols)) &&
             (this->mousePos.Y() > 0.0f) && (this->mousePos.Y() < static_cast<float>(this->resRows + 1)) &&
-            (this->mousePosResIdx > -1) && (this->mousePosResIdx < (int)this->aminoAcidCount)) {
+            (this->mousePosResIdx > -1) && (this->mousePosResIdx < (int) this->aminoAcidCount)) {
 
             glColor3f(1.0f, 0.75f, 0.0f);
             glBegin(GL_LINE_STRIP);
@@ -2234,19 +2234,19 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
                         unsigned int curCnt = this->diffStrucCount[mousePosResIdx];
 
-                        start = ((float)(this->methodRows - curCnt) / 2.0f) * perCentRow;
+                        start = ((float) (this->methodRows - curCnt) / 2.0f) * perCentRow;
                         for (unsigned int m = 0; m < curCnt; m++) {
 
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
 
                                 UncertaintyDataCall::secStructure assignment = this->sortedSecStructAssignment[(
-                                    int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][m];
+                                    int) UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][m];
 
                                 tmpStr = "Methods:    ";
                                 unsigned int cnt = 0;
                                 for (int n = 0; n < UncertaintyDataCall::assMethod::NOM - 1;
                                      n++) { // without UNCERTAINTY
-                                    if (this->secStructUncertainty[n][mousePosResIdx][(int)assignment] >
+                                    if (this->secStructUncertainty[n][mousePosResIdx][(int) assignment] >
                                         SEQ_FLOAT_EPS) {
                                         if (cnt > 0) {
                                             tmpStr.Append(", ");
@@ -2273,8 +2273,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                 }
 
                                 tmpStr2.Format("Structure:  %s - %.2f %% ",
-                                    this->secStructDescription[(int)assignment].PeekBuffer(),
-                                    this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY]
+                                    this->secStructDescription[(int) assignment].PeekBuffer(),
+                                    this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::UNCERTAINTY]
                                                               [mousePosResIdx][assignment] *
                                         100.0f);
 
@@ -2283,7 +2283,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
                             start += perCentRow;
                         }
-                        start += ((float)(this->methodRows - curCnt) / 2.0f) * perCentRow;
+                        start += ((float) (this->methodRows - curCnt) / 2.0f) * perCentRow;
 
                         if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING &&
@@ -2316,7 +2316,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                     // UNFOLDED UNCERTAINTY LINE VIEW
                     else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) {
 
-                        float startUnc = (std::ceil((float)this->methodRows / 2.0f) - 0.5f) * perCentRow;
+                        float startUnc = (std::ceil((float) this->methodRows / 2.0f) - 0.5f) * perCentRow;
 
                         bool uncRowFlag = false;
                         if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
@@ -2327,7 +2327,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                      i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
                                     if (this->secStructUncertainty[(int)
                                                 UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][(
-                                            int)this->sortedSecStructAssignment[(int)
+                                            int) this->sortedSecStructAssignment[(int)
                                                 UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] >
                                         0.0f) {
                                         if (i > 0) {
@@ -2335,12 +2335,12 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                         }
                                         tmpStr3.Format(" %s: %.2f %% ",
                                             this
-                                                ->secStructDescription[(int)this->sortedSecStructAssignment[(
-                                                    int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]]
+                                                ->secStructDescription[(int) this->sortedSecStructAssignment[(int)
+                                                        UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]]
                                                 .PeekBuffer(),
                                             this->secStructUncertainty[(int)
                                                     UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][(
-                                                int)this->sortedSecStructAssignment[(int)
+                                                int) this->sortedSecStructAssignment[(int)
                                                     UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] *
                                                 100.0f);
                                         tmpStr2.Append(tmpStr3);
@@ -2359,13 +2359,13 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                 tmpStr2.Format("%s: %.3f %%",
                                     this
                                         ->secStructDescription[(
-                                            int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE]
-                                                                               [mousePosResIdx][0]]
+                                            int) this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE]
+                                                                                [mousePosResIdx][0]]
                                         .PeekBuffer(),
                                     this->secStructUncertainty[(int)
                                             UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][(
-                                        int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE]
-                                                                           [mousePosResIdx][0]] *
+                                        int) this->sortedSecStructAssignment[(int)
+                                            UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]] *
                                         100.0f);
                                 this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
@@ -2378,8 +2378,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "DSSP:";
                                 tmpStr2 = this->secStructDescription[(
-                                    int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::DSSP]
-                                                                       [mousePosResIdx][0]];
+                                    int) this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::DSSP]
+                                                                        [mousePosResIdx][0]];
                                 this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
                             start += perCentRow;
@@ -2391,8 +2391,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "PDB:";
                                 tmpStr2 = this->secStructDescription[(
-                                    int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PDB]
-                                                                       [mousePosResIdx][0]];
+                                    int) this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PDB]
+                                                                        [mousePosResIdx][0]];
                                 this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
                             start += perCentRow;
@@ -2404,8 +2404,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "Prosign:";
                                 tmpStr2 = this->secStructDescription[(
-                                    int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PROSIGN]
-                                                                       [mousePosResIdx][0]];
+                                    int) this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PROSIGN]
+                                                                        [mousePosResIdx][0]];
                                 this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
                             start += perCentRow;
@@ -2455,13 +2455,13 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                 tmpStr2.Format("%s: %.3f %%",
                                     this
                                         ->secStructDescription[(
-                                            int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE]
-                                                                               [mousePosResIdx][0]]
+                                            int) this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE]
+                                                                                [mousePosResIdx][0]]
                                         .PeekBuffer(),
                                     this->secStructUncertainty[(int)
                                             UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][(
-                                        int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE]
-                                                                           [mousePosResIdx][0]] *
+                                        int) this->sortedSecStructAssignment[(int)
+                                            UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]] *
                                         100.0f);
                                 this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
@@ -2525,8 +2525,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "DSSP:";
                                 tmpStr2 = this->secStructDescription[(
-                                    int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::DSSP]
-                                                                       [mousePosResIdx][0]];
+                                    int) this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::DSSP]
+                                                                        [mousePosResIdx][0]];
                                 this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
                             start += perCentRow;
@@ -2562,8 +2562,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "PDB:";
                                 tmpStr2 = this->secStructDescription[(
-                                    int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PDB]
-                                                                       [mousePosResIdx][0]];
+                                    int) this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PDB]
+                                                                        [mousePosResIdx][0]];
                                 this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
                             start += perCentRow;
@@ -2572,8 +2572,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "Prosign:";
                                 tmpStr2 = this->secStructDescription[(
-                                    int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PROSIGN]
-                                                                       [mousePosResIdx][0]];
+                                    int) this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PROSIGN]
+                                                                        [mousePosResIdx][0]];
                                 this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
                             start += perCentRow;
@@ -2640,7 +2640,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                      i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
                                     if (this->secStructUncertainty[(int)
                                                 UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][(
-                                            int)this->sortedSecStructAssignment[(int)
+                                            int) this->sortedSecStructAssignment[(int)
                                                 UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] >
                                         0.0f) {
                                         if (i > 0) {
@@ -2648,12 +2648,12 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                         }
                                         tmpStr3.Format(" %s: %.2f %% ",
                                             this
-                                                ->secStructDescription[(int)this->sortedSecStructAssignment[(
-                                                    int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]]
+                                                ->secStructDescription[(int) this->sortedSecStructAssignment[(int)
+                                                        UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]]
                                                 .PeekBuffer(),
                                             this->secStructUncertainty[(int)
                                                     UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][(
-                                                int)this->sortedSecStructAssignment[(int)
+                                                int) this->sortedSecStructAssignment[(int)
                                                     UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] *
                                                 100.0f);
                                         tmpStr2.Append(tmpStr3);
@@ -2761,10 +2761,10 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
     vislib::math::Vector<unsigned int, structCount> lastSortedStructBT;
 
     vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>>*
-        secUncertainty = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+        secUncertainty = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
     vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure,
         static_cast<int>(UncertaintyDataCall::secStructure::NOE)>>* sortedUncertainty =
-        &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+        &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
 
     //glDisable(GL_DEPTH_TEST); // disabled depth test is necessary because of geometry overlay drawing
 
@@ -2783,7 +2783,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
             posOffset.SetX(this->vertices[2 * i]);
             posOffset.SetY(this->vertices[2 * i + 1] + yPos + 1.0f);
 
-            sMax = (unsigned int)sortedUncertainty->operator[](i)[0];
+            sMax = (unsigned int) sortedUncertainty->operator[](i)[0];
             uMax = secUncertainty->operator[](i)[sMax];
 
             // CERTAIN amino-acids
@@ -2823,9 +2823,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                         posOffset.SetY(posOffset.Y() - 0.5f);
                         // check if end of strand is an arrow (the arrows vertices are stored in BRIDGE )
                         if (i < this->aminoAcidCount - 1) {
-                            if ((sMax == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
-                                (sMax != (unsigned int)sortedUncertainty->operator[](i + 1)[0])) {
-                                sMax = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+                            if ((sMax == (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                                (sMax != (unsigned int) sortedUncertainty->operator[](i + 1)[0])) {
+                                sMax = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
                             }
                         }
                         glBegin(GL_TRIANGLE_STRIP);
@@ -2845,7 +2845,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     (this->currentUncertainStructGeometry == UNCERTAIN_STRUCT_STAT_VERTI)) {
 
                     if (i > 0) {
-                        if (secUncertainty->operator[](i - 1)[(int)sortedUncertainty->operator[](i - 1)[0]] == 1.0f) {
+                        if (secUncertainty->operator[](i - 1)[(int) sortedUncertainty->operator[](i - 1)[0]] == 1.0f) {
                             for (unsigned int j = 0; j < structCount; j++) {
                                 lastSortedStructBT[j] = sMax;
                             }
@@ -2859,7 +2859,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     }
                     // copy data to sortedStruct
                     for (unsigned int j = 0; j < structCount; j++) {
-                        sortedStructBT[j] = (unsigned int)sortedUncertainty->operator[](i)[j];
+                        sortedStructBT[j] = (unsigned int) sortedUncertainty->operator[](i)[j];
                     }
                     // search for structure type matching the last sorted
                     for (unsigned int j = 0; j < structCount; j++) {     // lastSortedStruct
@@ -2880,7 +2880,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                     //assign structure type for left side from previous amino-acid
                     if (i > 0) {
-                        if (secUncertainty->operator[](i - 1)[(int)sortedUncertainty->operator[](i - 1)[0]] == 1.0f) {
+                        if (secUncertainty->operator[](i - 1)[(int) sortedUncertainty->operator[](i - 1)[0]] == 1.0f) {
                             sLeft = sortedUncertainty->operator[](i - 1)[0];
                         } else {
                             for (unsigned int j = 0; j < structCount; j++) {
@@ -2907,7 +2907,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                     // copy data to sortedStruct
                     for (unsigned int j = 0; j < structCount; j++) {
-                        sortedStructLR[j] = (unsigned int)sortedUncertainty->operator[](i)[j];
+                        sortedStructLR[j] = (unsigned int) sortedUncertainty->operator[](i)[j];
                     }
                     // search for structure type matching on the left and right side
                     for (unsigned int j = 0; j < structCount; j++) {
@@ -2949,17 +2949,18 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                     glUniformMatrix4fv(
                         this->shader->getUniformLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-                    glUniform2fv(this->shader->getUniformLocation("worldPos"), 1, (GLfloat*)posOffset.PeekComponents());
+                    glUniform2fv(
+                        this->shader->getUniformLocation("worldPos"), 1, (GLfloat*) posOffset.PeekComponents());
                     glUniform4fv(
                         this->shader->getUniformLocation("structCol"), structCount, &this->secStructColor.front().x);
                     glUniform1iv(this->shader->getUniformLocation("sortedStruct"), structCount,
-                        (GLint*)sortedStructLR.PeekComponents());
+                        (GLint*) sortedStructLR.PeekComponents());
                     glUniform1fv(this->shader->getUniformLocation("structUnc"), structCount,
-                        (GLfloat*)secUncertainty->operator[](i).PeekComponents());
+                        (GLfloat*) secUncertainty->operator[](i).PeekComponents());
                     glUniform1f(
                         this->shader->getUniformLocation("gradientInt"), this->currentUncertainGardientInterval);
                     glUniform1i(
-                        this->shader->getUniformLocation("colorInterpol"), (int)this->currentUncertainColorInterpol);
+                        this->shader->getUniformLocation("colorInterpol"), (int) this->currentUncertainColorInterpol);
 
                     glBegin(GL_QUADS);
 
@@ -3026,20 +3027,20 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                     glBegin(GL_TRIANGLE_FAN);
 
-                    uMax = secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]];
+                    uMax = secUncertainty->operator[](i)[(int) sortedUncertainty->operator[](i)[0]];
 
                     // first vertex is center of fan
-                    glColor3fv(&this->secStructColor[(unsigned int)UncertaintyDataCall::secStructure::NOTDEFINED].x);
+                    glColor3fv(&this->secStructColor[(unsigned int) UncertaintyDataCall::secStructure::NOTDEFINED].x);
                     glVertex2f(posOffset.X(), -posOffset.Y());
 
                     for (unsigned int j = 0; j < this->glyphAxis.Count(); j++) {
-                        glColor3fv(&this->secStructColor[(unsigned int)sortedUncertainty->operator[](i)[j]].x);
-                        uTemp = secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[j]] / uMax;
+                        glColor3fv(&this->secStructColor[(unsigned int) sortedUncertainty->operator[](i)[j]].x);
+                        uTemp = secUncertainty->operator[](i)[(int) sortedUncertainty->operator[](i)[j]] / uMax;
                         posTemp = posOffset + (this->glyphAxis[j] * uTemp);
                         glVertex2f(posTemp.X(), -(posTemp.Y()));
                     }
                     // second vertex of fan once more
-                    glColor3fv(&this->secStructColor[(unsigned int)sortedUncertainty->operator[](i)[0]].x);
+                    glColor3fv(&this->secStructColor[(unsigned int) sortedUncertainty->operator[](i)[0]].x);
                     uTemp = 1.0f;
                     posTemp = posOffset + (this->glyphAxis[0] * uTemp);
                     glVertex2f(posTemp.X(), -(posTemp.Y()));
@@ -3072,7 +3073,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     // get the number off structures with uncertainty greater 0
                     diffStruct = 0;
                     for (unsigned int k = 0; k < structCount; k++) {
-                        if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[k]] > 0.0f)
+                        if (secUncertainty->operator[](i)[(int) sortedUncertainty->operator[](i)[k]] > 0.0f)
                             diffStruct++;
                     }
 
@@ -3085,7 +3086,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                             tDelta = 0.0f;
                             for (unsigned int k = 0; k < diffStruct; k++) {
 
-                                sTemp = (unsigned int)sortedUncertainty->operator[](i)[k];
+                                sTemp = (unsigned int) sortedUncertainty->operator[](i)[k];
                                 uTemp = secUncertainty->operator[](i)[sTemp];
 
                                 if ((tDelta <= timer) && (timer <= (tDelta + uTemp))) {
@@ -3095,9 +3096,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     }
                                     // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                                     if (i < this->aminoAcidCount - 1) {
-                                        if ((sTemp == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
-                                            (sTemp != (unsigned int)sortedUncertainty->operator[](i + 1)[0])) {
-                                            sTemp = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+                                        if ((sTemp == (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                                            (sTemp != (unsigned int) sortedUncertainty->operator[](i + 1)[0])) {
+                                            sTemp = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
                                         }
                                     }
                                     posTemp = this->secStructVertices[sTemp][j];
@@ -3105,9 +3106,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                         (1.0f - (timer - tDelta) / uTemp) * this->secStructVertices[sTemp][j].Y());
 
                                     if (k == diffStruct - 1) {
-                                        sTemp = (unsigned int)sortedUncertainty->operator[](i)[0];
+                                        sTemp = (unsigned int) sortedUncertainty->operator[](i)[0];
                                     } else {
-                                        sTemp = (unsigned int)sortedUncertainty->operator[](i)[k + 1];
+                                        sTemp = (unsigned int) sortedUncertainty->operator[](i)[k + 1];
                                     }
                                     if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
                                         colTemp = colTemp + ((timer - tDelta) / uTemp) * (this->secStructColor[sTemp]);
@@ -3115,9 +3116,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     }
                                     // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                                     if (i < this->aminoAcidCount - 1) {
-                                        if ((sTemp == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
-                                            (sTemp != (unsigned int)sortedUncertainty->operator[](i + 1)[0])) {
-                                            sTemp = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+                                        if ((sTemp == (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                                            (sTemp != (unsigned int) sortedUncertainty->operator[](i + 1)[0])) {
+                                            sTemp = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
                                         }
                                     }
                                     posTemp.SetY(posTemp.Y() +
@@ -3135,7 +3136,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                 if ((static_cast<float>(k) * tDelta <= timer) &&
                                     (timer <= (static_cast<float>(k) * tDelta + tDelta))) {
 
-                                    sTemp = (unsigned int)sortedUncertainty->operator[](i)[k];
+                                    sTemp = (unsigned int) sortedUncertainty->operator[](i)[k];
                                     uTemp = secUncertainty->operator[](i)[sTemp];
 
                                     if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
@@ -3144,9 +3145,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     }
                                     // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                                     if (i < this->aminoAcidCount - 1) {
-                                        if ((sTemp == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
-                                            (sTemp != (unsigned int)sortedUncertainty->operator[](i + 1)[0])) {
-                                            sTemp = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+                                        if ((sTemp == (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                                            (sTemp != (unsigned int) sortedUncertainty->operator[](i + 1)[0])) {
+                                            sTemp = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
                                         }
                                     }
                                     posTemp = this->secStructVertices[sTemp][j];
@@ -3162,9 +3163,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
 
                                     if (k == diffStruct - 1)
-                                        sTemp = (unsigned int)sortedUncertainty->operator[](i)[0];
+                                        sTemp = (unsigned int) sortedUncertainty->operator[](i)[0];
                                     else
-                                        sTemp = (unsigned int)sortedUncertainty->operator[](i)[k + 1];
+                                        sTemp = (unsigned int) sortedUncertainty->operator[](i)[k + 1];
 
                                     uTemp = secUncertainty->operator[](i)[sTemp];
 
@@ -3175,9 +3176,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     }
                                     // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                                     if (i < this->aminoAcidCount - 1) {
-                                        if ((sTemp == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
-                                            (sTemp != (unsigned int)sortedUncertainty->operator[](i + 1)[0])) {
-                                            sTemp = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+                                        if ((sTemp == (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                                            (sTemp != (unsigned int) sortedUncertainty->operator[](i + 1)[0])) {
+                                            sTemp = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
                                         }
                                     }
 
@@ -3212,9 +3213,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                             // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                             if (i < this->aminoAcidCount - 1) {
-                                if ((sTemp == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
-                                    (sTemp != (unsigned int)sortedUncertainty->operator[](i + 1)[0])) {
-                                    sTemp = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+                                if ((sTemp == (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                                    (sTemp != (unsigned int) sortedUncertainty->operator[](i + 1)[0])) {
+                                    sTemp = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
                                 }
                             }
                             for (unsigned int k = 0; k < this->secStructVertices[sTemp].Count(); k++) {
@@ -3243,9 +3244,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                             // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                             if (i < this->aminoAcidCount - 1) {
-                                if ((sTemp == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
-                                    (sTemp != (unsigned int)sortedUncertainty->operator[](i + 1)[0])) {
-                                    sTemp = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+                                if ((sTemp == (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                                    (sTemp != (unsigned int) sortedUncertainty->operator[](i + 1)[0])) {
+                                    sTemp = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
                                 }
                             }
                             for (unsigned int k = 0; k < this->secStructVertices[sTemp].Count(); k++) {
@@ -3284,17 +3285,17 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                         glUniformMatrix4fv(
                             this->shader->getUniformLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
                         glUniform2fv(
-                            this->shader->getUniformLocation("worldPos"), 1, (GLfloat*)posOffset.PeekComponents());
+                            this->shader->getUniformLocation("worldPos"), 1, (GLfloat*) posOffset.PeekComponents());
                         glUniform4fv(this->shader->getUniformLocation("structCol"), structCount,
-                            (GLfloat*)&this->secStructColor.front().x);
+                            (GLfloat*) &this->secStructColor.front().x);
                         glUniform1iv(this->shader->getUniformLocation("sortedStruct"), structCount,
-                            (GLint*)sortedStructLR.PeekComponents());
+                            (GLint*) sortedStructLR.PeekComponents());
                         glUniform1fv(this->shader->getUniformLocation("structUnc"), structCount,
-                            (GLfloat*)secUncertainty->operator[](i).PeekComponents());
+                            (GLfloat*) secUncertainty->operator[](i).PeekComponents());
                         glUniform1f(
                             this->shader->getUniformLocation("gradientInt"), this->currentUncertainGardientInterval);
                         glUniform1i(this->shader->getUniformLocation("colorInterpol"),
-                            (int)this->currentUncertainColorInterpol);
+                            (int) this->currentUncertainColorInterpol);
                     }
 
                     posOffset.SetY(posOffset.Y() - 0.5f);
@@ -3310,9 +3311,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                             // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                             if (i < this->aminoAcidCount - 1) {
-                                if ((sTemp == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
-                                    (sTemp != (unsigned int)sortedUncertainty->operator[](i + 1)[0])) {
-                                    sTemp = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+                                if ((sTemp == (unsigned int) UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                                    (sTemp != (unsigned int) sortedUncertainty->operator[](i + 1)[0])) {
+                                    sTemp = (unsigned int) UncertaintyDataCall::secStructure::B_BRIDGE;
                                 }
                             }
                             posTemp.SetY(posTemp.Y() + uTemp * this->secStructVertices[sTemp][j].Y());
@@ -3385,15 +3386,15 @@ void UncertaintySequenceRenderer::DrawSecStructGeometryTiles(UncertaintyDataCall
 
     // ignore as missing flagged amino-acids and NOTDEFINED secondary structure types
     if ((f != UncertaintyDataCall::addFlags::MISSING) && (cur != UncertaintyDataCall::secStructure::NOTDEFINED)) {
-        glColor3fv(&this->secStructColor[(int)cur].x);
+        glColor3fv(&this->secStructColor[(int) cur].x);
         // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
         if ((curTemp == UncertaintyDataCall::secStructure::E_EXT_STRAND) && (curTemp != fol)) {
             curTemp = UncertaintyDataCall::secStructure::B_BRIDGE;
         }
         glBegin(GL_TRIANGLE_STRIP);
-        for (unsigned int i = 0; i < this->secStructVertices[(int)curTemp].Count(); i++) {
-            glVertex2f(x + this->secStructVertices[(int)curTemp][i].X(),
-                -(y + 0.5f + this->secStructVertices[(int)curTemp][i].Y()));
+        for (unsigned int i = 0; i < this->secStructVertices[(int) curTemp].Count(); i++) {
+            glVertex2f(x + this->secStructVertices[(int) curTemp][i].X(),
+                -(y + 0.5f + this->secStructVertices[(int) curTemp][i].Y()));
         }
         glEnd();
     }
@@ -3414,7 +3415,7 @@ void UncertaintySequenceRenderer::DrawSecStructTextureTiles(UncertaintyDataCall:
         glColor4fv(bgColor);
         this->markerTextures[0]->Bind();
     } else {
-        glColor3fv(&this->secStructColor[(int)cur].x);
+        glColor3fv(&this->secStructColor[(int) cur].x);
         switch (cur) {
         case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX):
             if (pre != cur) {
@@ -3516,7 +3517,7 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, core::view::Mouse
             this->selection[this->mousePosResIdx] = this->initialClickSelection;
             consumeEvent = true;
         } else {
-            if (this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->aminoAcidCount) {
+            if (this->mousePosResIdx > -1 && this->mousePosResIdx < (int) this->aminoAcidCount) {
                 this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
             }
         }
@@ -3826,10 +3827,10 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall* udc, BindingS
     if (this->currentViewMode == VIEWMODE_UNFOLDED_AMINOACID) {
 
         vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>>*
-            secUncertainty = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+            secUncertainty = &this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
         vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure,
             static_cast<int>(UncertaintyDataCall::secStructure::NOE)>>* sortedUncertainty =
-            &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+            &this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::UNCERTAINTY];
 
         // Bestimme die unterschiedlichen Strukturtypen mit u > 0 für alle Amino-Säuren
         for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
@@ -3837,7 +3838,7 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall* udc, BindingS
             this->diffStrucCount.Add(0);
             if (this->residueFlag[aa] != UncertaintyDataCall::addFlags::MISSING) {
                 for (unsigned int k = 0; k < UncertaintyDataCall::secStructure::NOE; k++) {
-                    if (secUncertainty->operator[](aa)[(int)sortedUncertainty->operator[](aa)[k]] > 0.0f)
+                    if (secUncertainty->operator[](aa)[(int) sortedUncertainty->operator[](aa)[k]] > 0.0f)
                         this->diffStrucCount.Last()++;
                 }
             }
@@ -3857,10 +3858,10 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall* udc, BindingS
         for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
 
             if (this->residueFlag[aa] != UncertaintyDataCall::addFlags::MISSING) {
-                aaCur = this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][aa][(
-                    int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][aa][0]];
+                aaCur = this->secStructUncertainty[(int) UncertaintyDataCall::assMethod::UNCERTAINTY][aa][(
+                    int) this->sortedSecStructAssignment[(int) UncertaintyDataCall::assMethod::UNCERTAINTY][aa][0]];
 
-                float offset = (float)this->secStructRows;
+                float offset = (float) this->secStructRows;
 
                 if (aaCur < 1.0f) {
                     this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);

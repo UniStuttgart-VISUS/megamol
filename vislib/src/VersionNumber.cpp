@@ -82,7 +82,7 @@ unsigned int vislib::VersionNumber::Parse(const char* verStr) {
                     this->minorNumber = value;
                     break;
                 case 3:
-                    this->revisionNumber = (const char*)value;
+                    this->revisionNumber = (const char*) value;
                     break;
                 }
                 retval++;
@@ -143,7 +143,7 @@ unsigned int vislib::VersionNumber::Parse(const wchar_t* verStr) {
                     this->minorNumber = value;
                     break;
                 case 3:
-                    this->revisionNumber = (const char*)value;
+                    this->revisionNumber = (const char*) value;
                     break;
                 }
                 retval++;

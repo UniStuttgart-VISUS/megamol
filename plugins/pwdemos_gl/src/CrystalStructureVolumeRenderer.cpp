@@ -626,9 +626,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
         gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
         gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
-        gridDim[0] = (int)ceil(gridXAxis[0] / this->densGridSpacing);
-        gridDim[1] = (int)ceil(gridYAxis[1] / this->densGridSpacing);
-        gridDim[2] = (int)ceil(gridZAxis[2] / this->densGridSpacing);
+        gridDim[0] = (int) ceil(gridXAxis[0] / this->densGridSpacing);
+        gridDim[1] = (int) ceil(gridYAxis[1] / this->densGridSpacing);
+        gridDim[2] = (int) ceil(gridZAxis[2] / this->densGridSpacing);
         gridXAxis[0] = (gridDim[0] - 1) * this->densGridSpacing;
         gridYAxis[1] = (gridDim[1] - 1) * this->densGridSpacing;
         gridZAxis[2] = (gridDim[2] - 1) * this->densGridSpacing;
@@ -753,7 +753,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         //        printf("Vectors contained in density tex %u\n", dipole_cnt);
 
         // Compute uniform grid containing density map of the vectors
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
 
         int rc = cqs->calc_map(static_cast<long>(gridPos.Count() / 4), gridPos.PeekElements(), gridCol.PeekElements(),
             true, // Use 'color' array
@@ -774,7 +774,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         // Setup texture
 
         this->uniGridDensity.MemCpyFromDevice(cqs->getMap());
-        this->uniGridColor.MemCpyFromDevice((float3*)cqs->getColorMap());
+        this->uniGridColor.MemCpyFromDevice((float3*) cqs->getColorMap());
 
         /*for(int x = 0; x < gridDim.X(); x++) {
             for(int y = 0; y < gridDim.Y(); y++) {
@@ -854,9 +854,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
     gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
     gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
-    gridDim[0] = (int)ceil(gridXAxis[0] / this->gridSpacing);
-    gridDim[1] = (int)ceil(gridYAxis[1] / this->gridSpacing);
-    gridDim[2] = (int)ceil(gridZAxis[2] / this->gridSpacing);
+    gridDim[0] = (int) ceil(gridXAxis[0] / this->gridSpacing);
+    gridDim[1] = (int) ceil(gridYAxis[1] / this->gridSpacing);
+    gridDim[2] = (int) ceil(gridZAxis[2] / this->gridSpacing);
     gridXAxis[0] = (gridDim[0] - 1) * this->gridSpacing;
     gridYAxis[1] = (gridDim[1] - 1) * this->gridSpacing;
     gridZAxis[2] = (gridDim[2] - 1) * this->gridSpacing;
@@ -883,10 +883,10 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     // Allocate device memory if necessary
 
     if (this->gridCurlD == NULL) {
-        checkCudaErrors(cudaMalloc((void**)&this->gridCurlD, sizeof(float) * nVoxels * 3));
+        checkCudaErrors(cudaMalloc((void**) &this->gridCurlD, sizeof(float) * nVoxels * 3));
     }
     if (this->gridCurlMagD == NULL) {
-        checkCudaErrors(cudaMalloc((void**)&this->gridCurlMagD, sizeof(float) * nVoxels));
+        checkCudaErrors(cudaMalloc((void**) &this->gridCurlMagD, sizeof(float) * nVoxels));
     }
 
     // Copy grid parameters to constant device memory
@@ -924,7 +924,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 
     // Compute curl magnitude
 
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
 
     cudaErr = protein_cuda::CudaGetCurlMagnitude(
         cqs->getColorMap(), this->gridCurlD, this->gridCurlMagD, nVoxels, this->gridSpacing);
@@ -1005,9 +1005,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
     gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
     gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
     gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
-    gridDim[0] = (int)ceil(gridXAxis[0] / this->gridSpacing);
-    gridDim[1] = (int)ceil(gridYAxis[1] / this->gridSpacing);
-    gridDim[2] = (int)ceil(gridZAxis[2] / this->gridSpacing);
+    gridDim[0] = (int) ceil(gridXAxis[0] / this->gridSpacing);
+    gridDim[1] = (int) ceil(gridYAxis[1] / this->gridSpacing);
+    gridDim[2] = (int) ceil(gridZAxis[2] / this->gridSpacing);
     gridXAxis[0] = (gridDim[0] - 1) * this->gridSpacing;
     gridYAxis[1] = (gridDim[1] - 1) * this->gridSpacing;
     gridZAxis[2] = (gridDim[2] - 1) * this->gridSpacing;
@@ -1077,7 +1077,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
 
     // Compute uniform grid (vector field and density map)
 
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
     int rc = cqs->calc_map(dataCnt, &gridDataPos[0], &gridData[0],
         true, // Use seperate 'color' array
         gridOrg.PeekComponents(), gridDim.PeekComponents(),
@@ -1096,7 +1096,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
 
     // Copy data from device to host
 
-    this->uniGridVecField.MemCpyFromDevice((float3*)(cqs->getColorMap()));
+    this->uniGridVecField.MemCpyFromDevice((float3*) (cqs->getColorMap()));
 
     // DEBUG
     /*for(int x = 0; x < this->uniGridVecField.GetGridDim().X(); x++) {
@@ -1251,7 +1251,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
     using namespace vislib_gl::graphics::gl;
 
     // Init random number generator
-    srand((unsigned)time(0));
+    srand((unsigned) time(0));
 
     // Create quicksurf object
     if (!this->cudaqsurf) {
@@ -1440,9 +1440,9 @@ void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
     gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
     gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
     gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
-    gridDim[0] = (int)ceil(gridXAxis[0] / this->gridSpacing);
-    gridDim[1] = (int)ceil(gridYAxis[1] / this->gridSpacing);
-    gridDim[2] = (int)ceil(gridZAxis[2] / this->gridSpacing);
+    gridDim[0] = (int) ceil(gridXAxis[0] / this->gridSpacing);
+    gridDim[1] = (int) ceil(gridYAxis[1] / this->gridSpacing);
+    gridDim[2] = (int) ceil(gridZAxis[2] / this->gridSpacing);
     gridXAxis[0] = (gridDim[0] - 1) * this->gridSpacing;
     gridYAxis[1] = (gridDim[1] - 1) * this->gridSpacing;
     gridZAxis[2] = (gridDim[2] - 1) * this->gridSpacing;
@@ -1602,7 +1602,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
     for (int x = 0; x < this->licRandBuffSize; x++) {
         for (int y = 0; y < this->licRandBuffSize; y++) {
             for (int z = 0; z < this->licRandBuffSize; z++) {
-                float randVal = (float)rand() / float(RAND_MAX);
+                float randVal = (float) rand() / float(RAND_MAX);
                 /*if(randVal > 0.5f)
                     this->licRandBuff.SetAt(x, y, z, 1.0f);
                 else
@@ -1656,7 +1656,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::release(void) {
     this->rcShaderDebug.Release();
     this->pplShader.Release();
     if (this->cudaqsurf != NULL) {
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
         delete cqs;
     }
 }
@@ -1948,9 +1948,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
     gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
     gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
-    gridDim[0] = (int)ceil(gridXAxis[0] / this->gridSpacing);
-    gridDim[1] = (int)ceil(gridYAxis[1] / this->gridSpacing);
-    gridDim[2] = (int)ceil(gridZAxis[2] / this->gridSpacing);
+    gridDim[0] = (int) ceil(gridXAxis[0] / this->gridSpacing);
+    gridDim[1] = (int) ceil(gridYAxis[1] / this->gridSpacing);
+    gridDim[2] = (int) ceil(gridZAxis[2] / this->gridSpacing);
     gridXAxis[0] = (gridDim[0] - 1) * this->gridSpacing;
     gridYAxis[1] = (gridDim[1] - 1) * this->gridSpacing;
     gridZAxis[2] = (gridDim[2] - 1) * this->gridSpacing;
@@ -2837,9 +2837,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
     gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
     gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
-    gridDim[0] = (int)ceil(gridXAxis[0] / this->densGridSpacing);
-    gridDim[1] = (int)ceil(gridYAxis[1] / this->densGridSpacing);
-    gridDim[2] = (int)ceil(gridZAxis[2] / this->densGridSpacing);
+    gridDim[0] = (int) ceil(gridXAxis[0] / this->densGridSpacing);
+    gridDim[1] = (int) ceil(gridYAxis[1] / this->densGridSpacing);
+    gridDim[2] = (int) ceil(gridZAxis[2] / this->densGridSpacing);
     gridXAxis[0] = (gridDim[0] - 1) * this->densGridSpacing;
     gridYAxis[1] = (gridDim[1] - 1) * this->densGridSpacing;
     gridZAxis[2] = (gridDim[2] - 1) * this->densGridSpacing;
@@ -2902,14 +2902,14 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
         if (this->mcNormOut != NULL)
             delete[] this->mcNormOut;
         // Allocate memory
-        checkCudaErrors(cudaMalloc((void**)&this->mcVertOut_D, nVerticesMC * sizeof(float3)));
-        checkCudaErrors(cudaMalloc((void**)&this->mcNormOut_D, nVerticesMC * sizeof(float3)));
+        checkCudaErrors(cudaMalloc((void**) &this->mcVertOut_D, nVerticesMC * sizeof(float3)));
+        checkCudaErrors(cudaMalloc((void**) &this->mcNormOut_D, nVerticesMC * sizeof(float3)));
         this->mcVertOut = new float[nVerticesMC * 3];
         this->mcNormOut = new float[nVerticesMC * 3];
         printf("(Re)allocating of memory done.");
     }
 
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
 
     // Setup
     if (!this->cudaMC->Initialize(gridDimAlt)) {
@@ -3289,7 +3289,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::SetupAtomColors(const protein
 
     this->atomColor.SetCount(dc->GetAtomCnt() * 3);
 #pragma omp parallel for
-    for (int at = 0; at < (int)dc->GetAtomCnt(); at++) {
+    for (int at = 0; at < (int) dc->GetAtomCnt(); at++) {
         if (dc->GetAtomType()[at] == protein_calls::CrystalStructureDataCall::BA) { // Green
             this->atomColor[at * 3 + 0] = 0.0f;
             this->atomColor[at * 3 + 1] = 0.6f;

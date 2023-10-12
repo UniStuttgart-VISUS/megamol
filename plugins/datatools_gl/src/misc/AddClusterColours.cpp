@@ -195,7 +195,7 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
                     for (UINT64 j = 0; j < parts.GetCount(); j++) {
                         //                        float v = (values[j] - parts.GetMinColourIndexValue()) /
                         //                            (parts.GetMaxColourIndexValue() - parts.GetMinColourIndexValue());
-                        unsigned int clusterId = (unsigned int)(values[j] / 100000000.0);
+                        unsigned int clusterId = (unsigned int) (values[j] / 100000000.0);
                         unsigned int colorIdx = (clusterId % 13);
                         float v = static_cast<float>(colorIdx) / 13.0f;
                         if (v < 0.0f)

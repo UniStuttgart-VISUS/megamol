@@ -259,7 +259,7 @@ void VecField3f::SearchCritPointsCUDA(unsigned int maxItNewton, float stepNewton
 
     // TODO What happens if a double pointer is beeing cast to a float pointer?
     // Call CUDA function
-    SearchNullPoints((const float*)this->data, make_uint3(this->dimX, this->dimY, this->dimZ),
+    SearchNullPoints((const float*) this->data, make_uint3(this->dimX, this->dimY, this->dimZ),
         make_float3(this->orgX, this->orgY, this->orgZ), make_float3(this->spacingX, this->spacingY, this->spacingZ),
         cellCoords, 0);
 

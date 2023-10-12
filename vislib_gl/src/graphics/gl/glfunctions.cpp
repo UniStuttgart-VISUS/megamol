@@ -187,7 +187,7 @@ const vislib::VersionNumber& vislib_gl::graphics::gl::GLVersion() {
             minor = vislib::CharTraitsA::ParseInt(verStr);
         }
 
-        number.Set(major, minor, (const char*)release);
+        number.Set(major, minor, (const char*) release);
     }
     return number;
 }

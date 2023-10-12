@@ -525,12 +525,12 @@ int* OutlineFont::buildUpGlyphRun(const char* txtutf8, float maxWidth) const {
         }
 
         // select glyph
-        idx = this->data.glyphIndex[idx * 16 + ((unsigned char)txtutf8[i] % 0x10)];
+        idx = this->data.glyphIndex[idx * 16 + ((unsigned char) txtutf8[i] % 0x10)];
         if (idx == 0)
             continue; // glyph not found
         if (idx > 0) {
             // second part of byte
-            idx = this->data.glyphIndex[idx * 16 + ((unsigned char)txtutf8[i] / 0x10)];
+            idx = this->data.glyphIndex[idx * 16 + ((unsigned char) txtutf8[i] / 0x10)];
             if (idx == 0)
                 continue; // glyph not found
             if (idx > 0)

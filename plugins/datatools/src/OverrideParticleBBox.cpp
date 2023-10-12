@@ -126,7 +126,7 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
     //    }
     //}
 
-    if (!(inData)(0))
+    if (!(inData) (0))
         return false;
     outData = inData; // also transfers the unlocker to 'outData'
 

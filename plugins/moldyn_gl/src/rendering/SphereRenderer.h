@@ -144,7 +144,7 @@ public:
 
         // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
 
-        std::string glsl_ver_str((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+        std::string glsl_ver_str((char*) glGetString(GL_SHADING_LANGUAGE_VERSION));
         std::size_t found = glsl_ver_str.find(".");
         int major = -1;
         int minor = -1;
@@ -157,8 +157,8 @@ public:
         }
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glsl_ver_str.c_str());
-        if ((major < (int)(SPHERE_MIN_GLSL_MAJOR)) ||
-            (major == (int)(SPHERE_MIN_GLSL_MAJOR) && minor < (int)(SPHERE_MIN_GLSL_MINOR))) {
+        if ((major < (int) (SPHERE_MIN_GLSL_MAJOR)) ||
+            (major == (int) (SPHERE_MIN_GLSL_MAJOR) && minor < (int) (SPHERE_MIN_GLSL_MINOR))) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] No render mode available. OpenGL "
                 "Shading Language version 1.3 or greater is required.");

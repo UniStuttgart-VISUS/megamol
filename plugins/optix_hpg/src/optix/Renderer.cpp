@@ -63,7 +63,7 @@ void megamol::optix_hpg::Renderer::setup() {
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_module_, &sbt_miss_records_[0]));
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_occlusion_module_, &sbt_miss_records_[1]));
 
-    sbt_raygen_record_.data.frameStateBuffer = (device::FrameState*)get_frame_state_buffer();
+    sbt_raygen_record_.data.frameStateBuffer = (device::FrameState*) get_frame_state_buffer();
 }
 
 

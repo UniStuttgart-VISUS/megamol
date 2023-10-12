@@ -448,7 +448,7 @@ bool megamol::compositing_gl::SSAO::create() {
             randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
         sample = glm::normalize(sample);
         sample *= randomFloats(generator);
-        float scale = (float)i / 64.0;
+        float scale = (float) i / 64.0;
         ssaoKernel.push_back(sample.x);
         ssaoKernel.push_back(sample.y);
         ssaoKernel.push_back(sample.z);
@@ -593,11 +593,11 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
             std::array<int, 2> txResNormal;
             if (!generateNormals) {
                 normals_ = callNormal->getData();
-                txResNormal = {(int)normals_->getWidth(), (int)normals_->getHeight()};
+                txResNormal = {(int) normals_->getWidth(), (int) normals_->getHeight()};
             }
 
             auto depthTx2D = callDepth->getData();
-            std::array<int, 2> txResDepth = {(int)depthTx2D->getWidth(), (int)depthTx2D->getHeight()};
+            std::array<int, 2> txResDepth = {(int) depthTx2D->getWidth(), (int) depthTx2D->getHeight()};
 
             setupOutputTexture(depthTx2D, final_output_);
 
@@ -997,8 +997,8 @@ void megamol::compositing_gl::SSAO::updateConstants(
 
     const glm::mat4& proj = inputs->ProjectionMatrix;
 
-    consts.ViewportPixelSize = glm::vec2(1.0f / (float)size_.x, 1.0f / (float)size_.y);
-    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float)half_size_.x, 1.0f / (float)half_size_.y);
+    consts.ViewportPixelSize = glm::vec2(1.0f / (float) size_.x, 1.0f / (float) size_.y);
+    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float) half_size_.x, 1.0f / (float) half_size_.y);
 
     consts.Viewport2xPixelSize = glm::vec2(consts.ViewportPixelSize.x * 2.0f, consts.ViewportPixelSize.y * 2.0f);
     consts.Viewport2xPixelSize_x_025 =
@@ -1048,7 +1048,7 @@ void megamol::compositing_gl::SSAO::updateConstants(
 
     // used to get average load per pixel; 9.0 is there to compensate for only doing every 9th InterlockedAdd in
     // PSPostprocessImportanceMapB for performance reasons
-    consts.LoadCounterAvgDiv = 9.0f / (float)(quarter_size_.x * quarter_size_.y * 255.0);
+    consts.LoadCounterAvgDiv = 9.0f / (float) (quarter_size_.x * quarter_size_.y * 255.0);
 
     // Special settings for lowest quality level - just nerf the effect a tiny bit
     if (settings.QualityLevel <= 0) {
@@ -1071,7 +1071,7 @@ void megamol::compositing_gl::SSAO::updateConstants(
 
     consts.InvSharpness = std::clamp(1.0f - settings.Sharpness, 0.0f, 1.0f);
     consts.PassIndex = pass;
-    consts.QuarterResPixelSize = glm::vec2(1.0f / (float)quarter_size_.x, 1.0f / (float)quarter_size_.y);
+    consts.QuarterResPixelSize = glm::vec2(1.0f / (float) quarter_size_.x, 1.0f / (float) quarter_size_.y);
 
     float additionalAngleOffset =
         settings.TemporalSupersamplingAngleOffset; // if using temporal supersampling approach (like "Progressive
@@ -1088,13 +1088,13 @@ void megamol::compositing_gl::SSAO::updateConstants(
         b = spmap[subPass];
 
         float ca, sa;
-        float angle0 = ((float)a + (float)b / (float)subPassCount) * (3.1415926535897932384626433832795f) * 0.5f;
+        float angle0 = ((float) a + (float) b / (float) subPassCount) * (3.1415926535897932384626433832795f) * 0.5f;
         angle0 += additionalAngleOffset;
 
         ca = ::cosf(angle0);
         sa = ::sinf(angle0);
 
-        float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float)subPassCount) * 0.07f;
+        float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float) subPassCount) * 0.07f;
         scale *= additionalRadiusScale;
 
         // all values are within [-1, 1]

@@ -55,7 +55,7 @@ bool TexInspectModule::getDataCallback(core::Call& caller) {
         auto tex_width = tex->getWidth();
         auto tex_height = tex->getHeight();
 
-        tex_inspector_.SetTexture((void*)(intptr_t)tex_handle, tex_width, tex_height);
+        tex_inspector_.SetTexture((void*) (intptr_t) tex_handle, tex_width, tex_height);
         tex_inspector_.ShowWindow();
     }
 

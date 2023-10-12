@@ -463,7 +463,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     {GL_TEXTURE_WRAP_S, GL_CLAMP}};
                 try {
                     this->m_transfer_function = std::make_shared<glowl::Texture2D>(
-                        "ProbeTransferFunction", tex_layout, (GLvoid*)tfc->GetTextureData());
+                        "ProbeTransferFunction", tex_layout, (GLvoid*) tfc->GetTextureData());
                 } catch (glowl::TextureException const& exc) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Error on transfer texture view creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__,

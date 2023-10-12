@@ -52,7 +52,7 @@ public:
         };
         /** getter for the edge list size */
         const unsigned int GetEdgeCount() const {
-            return (unsigned int)edgeList.size();
+            return (unsigned int) edgeList.size();
         };
         /** add edge */
         void AddEdge(RSEdge* edge) {
@@ -331,7 +331,7 @@ public:
      * @return The number of RS-vertices.
      */
     unsigned int GetRSVertexCount() {
-        return (unsigned int)rsVertex.size();
+        return (unsigned int) rsVertex.size();
     };
 
     /**
@@ -339,7 +339,7 @@ public:
      * @return The number of RS-edges.
      */
     unsigned int GetRSEdgeCount() {
-        return (unsigned int)rsEdge.size();
+        return (unsigned int) rsEdge.size();
     };
 
     /**
@@ -347,7 +347,7 @@ public:
      * @return The number of RS-faces.
      */
     unsigned int GetRSFaceCount() {
-        return (unsigned int)rsFace.size();
+        return (unsigned int) rsFace.size();
     };
 
     /**

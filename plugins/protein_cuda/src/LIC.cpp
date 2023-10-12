@@ -37,7 +37,7 @@ bool protein_cuda::LIC::CalcLicX(UniGrid3D<float3>& grid, UniGrid3D<float>& rand
                                                                       (grid.GetGridDim().X() * grid.GetGridStepSize()) *
                                                                       grid.GetGridDim().X());
     //printf("Grid x coord in unigrid space %i\n", gridCoordX); // DEBUG
-    gridCoordX *= static_cast<int>((float)(licDim.X()) / (float)(grid.GetGridDim().X()));
+    gridCoordX *= static_cast<int>((float) (licDim.X()) / (float) (grid.GetGridDim().X()));
     //printf("Grid x coord in lic tex space %i\n", gridCoordX); // DEBUG
 
     //float minStreamLines = 3.0f;
@@ -237,7 +237,7 @@ bool protein_cuda::LIC::CalcLicY(UniGrid3D<float3>& grid, UniGrid3D<float>& rand
     int gridCoordY = static_cast<int>(licBuffY.GetGridOrg().Y() - grid.GetGridOrg().Y() /
                                                                       (grid.GetGridDim().Y() * grid.GetGridStepSize()) *
                                                                       grid.GetGridDim().Y());
-    gridCoordY *= static_cast<int>(((float)(licDim.Y()) / (float)(grid.GetGridDim().Y())));
+    gridCoordY *= static_cast<int>(((float) (licDim.Y()) / (float) (grid.GetGridDim().Y())));
 
     //float minStreamLines = 3.0f;
     int length = static_cast<int>(streamLen);
@@ -439,7 +439,7 @@ bool protein_cuda::LIC::CalcLicZ(UniGrid3D<float3>& grid, UniGrid3D<float>& rand
     int gridCoordZ = static_cast<int>(licBuffZ.GetGridOrg().Z() - grid.GetGridOrg().Z() /
                                                                       (grid.GetGridDim().Z() * grid.GetGridStepSize()) *
                                                                       grid.GetGridDim().Z());
-    gridCoordZ *= static_cast<int>((float)(licDim.Z()) / (float)(grid.GetGridDim().Z()));
+    gridCoordZ *= static_cast<int>((float) (licDim.Z()) / (float) (grid.GetGridDim().Z()));
 
     //float minStreamLines = 3.0f;
     int length = static_cast<int>(streamLen);
@@ -631,9 +631,9 @@ vislib::math::Vector<float, 3> protein_cuda::LIC::sampleUniGrid(
 
     // Nearest neighbour sampling
     vislib::math::Vector<unsigned int, 3> p(
-        (unsigned int)(pos.X() * ((float)grid.GetGridDim().X() / (float)licDim.X())),
-        (unsigned int)(pos.Y() * ((float)grid.GetGridDim().Y() / (float)licDim.Y())),
-        (unsigned int)(pos.Z() * ((float)grid.GetGridDim().Z() / (float)licDim.Z())));
+        (unsigned int) (pos.X() * ((float) grid.GetGridDim().X() / (float) licDim.X())),
+        (unsigned int) (pos.Y() * ((float) grid.GetGridDim().Y() / (float) licDim.Y())),
+        (unsigned int) (pos.Z() * ((float) grid.GetGridDim().Z() / (float) licDim.Z())));
 
     //printf("==== unigrid dimensions: %u %u %u\n", grid.GetGridDim().X(), grid.GetGridDim().Y(), grid.GetGridDim().Z()); // DEBUG
     //printf("==== sampling at pos: %u %u %u\n", p.X(), p.Y(), p.Z()); // DEBUG

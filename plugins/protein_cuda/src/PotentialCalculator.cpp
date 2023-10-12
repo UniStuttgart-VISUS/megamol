@@ -272,9 +272,9 @@ void PotentialCalculator::initGridParams(gridParams& grid, MolecularDataCall* dc
     gridXAxisLen = grid.maxC[0] - grid.minC[0];
     gridYAxisLen = grid.maxC[1] - grid.minC[1];
     gridZAxisLen = grid.maxC[2] - grid.minC[2];
-    grid.size[0] = (int)ceil(gridXAxisLen / grid.delta[0]);
-    grid.size[1] = (int)ceil(gridYAxisLen / grid.delta[1]);
-    grid.size[2] = (int)ceil(gridZAxisLen / grid.delta[2]);
+    grid.size[0] = (int) ceil(gridXAxisLen / grid.delta[0]);
+    grid.size[1] = (int) ceil(gridYAxisLen / grid.delta[1]);
+    grid.size[2] = (int) ceil(gridZAxisLen / grid.delta[2]);
 
     //    // FFT needs the grid to be a power of two
     //    if (this->computationalMethod == GPU_POISSON_SOLVER) {
@@ -340,12 +340,12 @@ bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall* mol
     //    }
 
     // Compute uniform grid
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
     int rc = cqs->calc_map(mol->AtomCount(),
         &this->particlePos.Peek()[0],     // Pointer to 'particle positions
         &this->particleCharges.Peek()[0], // Pointer to 'color' array
         true,                             // Do not use 'color' array
-        CUDAQuickSurf::VolTexFormat::RGB3F, (float*)&this->chargesGrid.minC[0], (int*)&this->chargesGrid.size[0],
+        CUDAQuickSurf::VolTexFormat::RGB3F, (float*) &this->chargesGrid.minC[0], (int*) &this->chargesGrid.size[0],
         this->maxParticleRad,
         5.0f, // Radius scale
         this->chargesGrid.delta[0],
@@ -357,7 +357,7 @@ bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall* mol
         return false;
     }
 
-    CudaSafeCall(cudaMemcpy((void*)this->chargesBuff.Peek(), (const void*)cqs->getColorMap(),
+    CudaSafeCall(cudaMemcpy((void*) this->chargesBuff.Peek(), (const void*) cqs->getColorMap(),
         sizeof(float) * this->chargesBuff.GetCount(), cudaMemcpyDeviceToHost));
 
     // Set charges
@@ -575,7 +575,7 @@ void PotentialCalculator::release(void) {
     this->particleCharges.Release();
     this->chargesBuff.Release();
     if (this->cudaqsurf != NULL) {
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
         delete cqs;
     }
     cudaDeviceReset();
