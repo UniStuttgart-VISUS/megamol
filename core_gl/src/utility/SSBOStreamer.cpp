@@ -66,7 +66,7 @@ GLuint SSBOStreamer::SetDataWithSize(
 GLuint SSBOStreamer::GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up) const {
     // Lazy initialisation of offset alignment because OGl context must be available.
     if (this->offsetAlignment == 0) {
-        glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, (GLint*)&this->offsetAlignment);
+        glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, (GLint*) &this->offsetAlignment);
     }
     // Rounding the number of items per chunk is important for alignment and thus performance.
     // That means, if we synchronize with another buffer that has tiny items, we have to make

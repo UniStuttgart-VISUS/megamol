@@ -49,11 +49,11 @@ bool PDBInterpolator::getData(core::Call& call) {
 
     float call_time = mdc->Calltime();
 
-    int call_time_one = (int)call_time;
+    int call_time_one = (int) call_time;
     int call_time_two = call_time_one + 1;
-    float x = call_time - (float)call_time_one;
+    float x = call_time - (float) call_time_one;
 
-    mdc->SetCalltime((float)call_time_one);
+    mdc->SetCalltime((float) call_time_one);
     mdc->SetFrameID(static_cast<int>(call_time_one));
 
     if (!(*mdc)(MolecularDataCall::CallForGetData))
@@ -64,7 +64,7 @@ bool PDBInterpolator::getData(core::Call& call) {
     float* pos0 = new float[mdc->AtomCount() * 3];
     memcpy(pos0, mdc->AtomPositions(), mdc->AtomCount() * 3 * sizeof(float));
 
-    mdc->SetCalltime((float)call_time_one);
+    mdc->SetCalltime((float) call_time_one);
     mdc->SetFrameID(static_cast<int>(call_time_one));
 
     if (!(*mdc)(MolecularDataCall::CallForGetData))

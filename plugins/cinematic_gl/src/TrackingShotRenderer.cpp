@@ -46,7 +46,7 @@ TrackingShotRenderer::TrackingShotRenderer()
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
-    this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
+    this->stepsParam.SetParameter(new param::IntParam((int) this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
     this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H, core::view::Modifier::SHIFT));
@@ -333,8 +333,8 @@ bool TrackingShotRenderer::OnMouseMove(double x, double y) {
     }
 
     // Just store current mouse position
-    this->mouseX = (float)static_cast<int>(x);
-    this->mouseY = (float)static_cast<int>(y);
+    this->mouseX = (float) static_cast<int>(x);
+    this->mouseY = (float) static_cast<int>(y);
 
     // Check for grabbed or hit manipulator
     if (this->manipulatorGrabbed && this->manipulators.ProcessHitManipulator(this->mouseX, this->mouseY)) {

@@ -83,9 +83,9 @@ void TextureInspector::ShowWindow() {
         ImGui::Spacing();
 
         //Custom color values to example-select buttons to make them stand out
-        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.59f, 0.7f, 0.8f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.59f, 0.8f, 0.8f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.59f, 0.9f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4) ImColor::HSV(0.59f, 0.7f, 0.8f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4) ImColor::HSV(0.59f, 0.8f, 0.8f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4) ImColor::HSV(0.59f, 0.9f, 1.0f));
 
         // Draw row of buttons, one for each scene
         static int selected_scene = 0;

@@ -278,7 +278,7 @@ bool SecStructRenderer2D::GetExtents(mmstd_gl::CallRender2DGL& call) {
 
                     // is the current residue really an aminoacid?
                     if (mdc->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID) {
-                        acid = (MolecularDataCall::AminoAcid*)(mdc->Residues()[aaIdx]);
+                        acid = (MolecularDataCall::AminoAcid*) (mdc->Residues()[aaIdx]);
                     } else {
                         continue;
                     }

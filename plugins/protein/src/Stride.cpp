@@ -19,9 +19,9 @@ Stride::Stride(MolecularDataCall* mol) : Successful(false) {
     // set hydrogen bond count to zero
     HydroBondCnt = 0;
 
-    ProteinChain = (CHAIN**)ckalloc(MAX_CHAIN * sizeof(CHAIN*));
-    HydroBond = (HBOND**)ckalloc(MAXHYDRBOND * sizeof(HBOND*));
-    StrideCmd = (COMMAND*)ckalloc(sizeof(COMMAND));
+    ProteinChain = (CHAIN**) ckalloc(MAX_CHAIN * sizeof(CHAIN*));
+    HydroBond = (HBOND**) ckalloc(MAXHYDRBOND * sizeof(HBOND*));
+    StrideCmd = (COMMAND*) ckalloc(sizeof(COMMAND));
 
     // set default values for command variable
     DefaultCmd(StrideCmd);
@@ -110,7 +110,7 @@ void Stride::GetChains(MolecularDataCall* mol) {
     // build chains from Molecular Data Call
     //////////////////////////////////////////////////////
 
-    ProteinChainCnt = std::min((unsigned int)mol->MoleculeCount(), (unsigned int)MAX_CHAIN);
+    ProteinChainCnt = std::min((unsigned int) mol->MoleculeCount(), (unsigned int) MAX_CHAIN);
     chain = 0;
 
     // iterate over all chains
@@ -130,7 +130,7 @@ void Stride::GetChains(MolecularDataCall* mol) {
             atomCount = mol->Residues()[idx + cntRes]->AtomCount();
             ProteinChain[cntCha]->NAtom += atomCount;
 
-            ProteinChain[cntCha]->Rsd[cntRes] = (RESIDUE*)ckalloc(sizeof(RESIDUE));
+            ProteinChain[cntCha]->Rsd[cntRes] = (RESIDUE*) ckalloc(sizeof(RESIDUE));
 
             r = ProteinChain[cntCha]->Rsd[cntRes];
             r->NAtom = atomCount;
@@ -176,8 +176,8 @@ void Stride::GetChains(MolecularDataCall* mol) {
         c->Resolution = 0.0f;
         for (i = 0; i < c->NRes; ++i) {
             r = c->Rsd[i];
-            r->Inv = (INVOLVED*)ckalloc(sizeof(INVOLVED));
-            r->Prop = (PROPERTY*)ckalloc(sizeof(PROPERTY));
+            r->Inv = (INVOLVED*) ckalloc(sizeof(INVOLVED));
+            r->Prop = (PROPERTY*) ckalloc(sizeof(PROPERTY));
             r->Inv->NBondDnr = 0;
             r->Inv->NBondAcc = 0;
             r->Inv->InterchainHBonds = STRIDE_NO;
@@ -300,12 +300,12 @@ bool Stride::WriteToInterface(MolecularDataCall* mol) {
                 sec.back().SetType(MolecularDataCall::SecStructure::TYPE_SHEET);
             else
                 sec.back().SetType(MolecularDataCall::SecStructure::TYPE_COIL);
-            mol->SetMoleculeSecondaryStructure(Cn, idx, (unsigned int)sec.size() - idx);
-            idx = (int)sec.size();
+            mol->SetMoleculeSecondaryStructure(Cn, idx, (unsigned int) sec.size() - idx);
+            idx = (int) sec.size();
         }
         // handled all residues of current chain, copy sec struct to interface
-        mol->SetSecondaryStructureCount((unsigned int)sec.size());
-        for (i = 0; i < (int)sec.size(); ++i) {
+        mol->SetSecondaryStructureCount((unsigned int) sec.size());
+        for (i = 0; i < (int) sec.size(); ++i) {
             mol->SetSecondaryStructure(i, sec[i]);
         }
 
@@ -361,8 +361,8 @@ void Stride::DefaultCmd(COMMAND* Cmd) {
     strcpy(Cmd->OutFile, "");
     strcpy(Cmd->InputFile, "");
 
-    Cmd->NActive = (int)strlen(Cmd->Active);
-    Cmd->NProcessed = (int)strlen(Cmd->Processed);
+    Cmd->NActive = (int) strlen(Cmd->Active);
+    Cmd->NProcessed = (int) strlen(Cmd->Processed);
 }
 
 int Stride::ReadPDBFile(CHAIN** Chain, int* Cn, COMMAND* Cmd) {
@@ -407,8 +407,8 @@ int Stride::ReadPDBFile(CHAIN** Chain, int* Cn, COMMAND* Cmd) {
         c->Resolution = Resolution;
         for (i = 0; i < c->NRes; i++) {
             r = c->Rsd[i];
-            r->Inv = (INVOLVED*)ckalloc(sizeof(INVOLVED));
-            r->Prop = (PROPERTY*)ckalloc(sizeof(PROPERTY));
+            r->Inv = (INVOLVED*) ckalloc(sizeof(INVOLVED));
+            r->Prop = (PROPERTY*) ckalloc(sizeof(PROPERTY));
             r->Inv->NBondDnr = 0;
             r->Inv->NBondAcc = 0;
             r->Inv->InterchainHBonds = STRIDE_NO;
@@ -530,13 +530,13 @@ float** Stride::DefaultHelixMap(COMMAND* Cmd) {
             0.0006944445f, 0.0036063762f, 0.0080820229f, 0.0101532144f, 0.0076146079f, 0.0032324446f, 0.0006009616f,
             0.0000000000f, 0.0000000000f, 0.0000000000f, 0.0000000000f}};
 
-    Map = (float**)ckalloc(DEFNUMPIXEL * sizeof(float*));
+    Map = (float**) ckalloc(DEFNUMPIXEL * sizeof(float*));
 
     for (i = 0; i < DEFNUMPIXEL; i++)
         Map[i] = &(Data[i][0]);
 
     Cmd->NPixel = DEFNUMPIXEL;
-    Cmd->PhiPsiStep = (float)(MAXPHIPSI - MINPHIPSI) / (float)Cmd->NPixel;
+    Cmd->PhiPsiStep = (float) (MAXPHIPSI - MINPHIPSI) / (float) Cmd->NPixel;
 
     return (Map);
 }
@@ -601,13 +601,13 @@ float** Stride::DefaultSheetMap(COMMAND* Cmd) {
             0.0000000000f, 0.0000000000f, 0.0010016026f, 0.0046167620f, 0.0157516468f, 0.0453012958f, 0.0937970504f,
             0.1454590708f, 0.1861637682f, 0.2019522935f, 0.1764564067f}};
 
-    Map = (float**)ckalloc(DEFNUMPIXEL * sizeof(float*));
+    Map = (float**) ckalloc(DEFNUMPIXEL * sizeof(float*));
 
     for (i = 0; i < DEFNUMPIXEL; i++)
         Map[i] = &(Data[i][0]);
 
     Cmd->NPixel = DEFNUMPIXEL;
-    Cmd->PhiPsiStep = (float)(MAXPHIPSI - MINPHIPSI) / (float)Cmd->NPixel;
+    Cmd->PhiPsiStep = (float) (MAXPHIPSI - MINPHIPSI) / (float) Cmd->NPixel;
 
     return (Map);
 }
@@ -645,7 +645,7 @@ int Stride::PlaceHydrogens(CHAIN* Chain) {
             Length_N_H = Dist(r->Coord[N], r->Coord[H]);
 
             for (i = 0; i < 3; i++)
-                r->Coord[H][i] = r->Coord[N][i] + (float)DIST_N_H * (r->Coord[H][i] - r->Coord[N][i]) / Length_N_H;
+                r->Coord[H][i] = r->Coord[N][i] + (float) DIST_N_H * (r->Coord[H][i] - r->Coord[N][i]) / Length_N_H;
 
             strcpy(r->AtomType[H], "H");
             r->NAtom++;
@@ -661,8 +661,8 @@ int Stride::FindHydrogenBonds(CHAIN** Chain, int NChain, HBOND** HBond, COMMAND*
     int NDnr = 0, NAcc = 0;
     int dc, ac, ccd, cca, cc, hc = 0, i;
 
-    Dnr = (DONOR**)ckalloc(MAXDONOR * sizeof(DONOR*));
-    Acc = (ACCEPTOR**)ckalloc(MAXACCEPTOR * sizeof(ACCEPTOR*));
+    Dnr = (DONOR**) ckalloc(MAXDONOR * sizeof(DONOR*));
+    Acc = (ACCEPTOR**) ckalloc(MAXACCEPTOR * sizeof(ACCEPTOR*));
 
     for (cc = 0; cc < NChain; cc++) {
         FindDnr(Chain[cc], Dnr, &NDnr, Cmd);
@@ -670,8 +670,8 @@ int Stride::FindHydrogenBonds(CHAIN** Chain, int NChain, HBOND** HBond, COMMAND*
     }
 
     BOOLEAN *BondedDonor, *BondedAcceptor;
-    BondedDonor = (BOOLEAN*)ckalloc(NDnr * sizeof(BOOLEAN));
-    BondedAcceptor = (BOOLEAN*)ckalloc(NAcc * sizeof(BOOLEAN));
+    BondedDonor = (BOOLEAN*) ckalloc(NDnr * sizeof(BOOLEAN));
+    BondedAcceptor = (BOOLEAN*) ckalloc(NAcc * sizeof(BOOLEAN));
 
     for (i = 0; i < NDnr; i++)
         BondedDonor[i] = STRIDE_NO;
@@ -693,7 +693,7 @@ int Stride::FindHydrogenBonds(CHAIN** Chain, int NChain, HBOND** HBond, COMMAND*
 
             if (hc == MAXHYDRBOND)
                 die("Number of hydrogen bonds exceeds current limit of %d in %s\n", MAXHYDRBOND, Chain[0]->File);
-            HBond[hc] = (HBOND*)ckalloc(sizeof(HBOND));
+            HBond[hc] = (HBOND*) ckalloc(sizeof(HBOND));
 
             HBond[hc]->ExistHydrBondRose = STRIDE_NO;
             HBond[hc]->ExistHydrBondBaker = STRIDE_NO;
@@ -886,8 +886,8 @@ void Stride::DiscrPhiPsi(CHAIN** Chain, int NChain, COMMAND* Cmd) {
 
             if (Res != 0) {
                 for (i = 0; i < Cmd->NPixel; i++)
-                    if (r->Prop->Phi > MINPHIPSI + (float)(i)*Cmd->PhiPsiStep &&
-                        r->Prop->Phi <= MINPHIPSI + (float)(i + 1) * Cmd->PhiPsiStep) {
+                    if (r->Prop->Phi > MINPHIPSI + (float) (i) *Cmd->PhiPsiStep &&
+                        r->Prop->Phi <= MINPHIPSI + (float) (i + 1) * Cmd->PhiPsiStep) {
                         r->Prop->PhiZn = i;
                         break;
                     }
@@ -895,8 +895,8 @@ void Stride::DiscrPhiPsi(CHAIN** Chain, int NChain, COMMAND* Cmd) {
 
             if (Res != Chain[Cn]->NRes - 1) {
                 for (i = 0; i < Cmd->NPixel; i++)
-                    if (r->Prop->Psi > MINPHIPSI + (float)(i)*Cmd->PhiPsiStep &&
-                        r->Prop->Psi <= MINPHIPSI + (float)(i + 1) * Cmd->PhiPsiStep) {
+                    if (r->Prop->Psi > MINPHIPSI + (float) (i) *Cmd->PhiPsiStep &&
+                        r->Prop->Psi <= MINPHIPSI + (float) (i + 1) * Cmd->PhiPsiStep) {
                         r->Prop->PsiZn = i;
                         break;
                     }
@@ -920,7 +920,7 @@ void Stride::Helix(CHAIN** Chain, int Cn, HBOND** HBond, COMMAND* Cmd, float** P
 
     CONSTf = 1 + Cmd->C1_H;
 
-    Prob = (float*)ckalloc(MAX_RES * sizeof(float));
+    Prob = (float*) ckalloc(MAX_RES * sizeof(float));
 
     for (i = 0; i < Chain[Cn]->NRes; i++)
         Prob[i] = 0.0;
@@ -1001,13 +1001,13 @@ void Stride::Sheet(CHAIN** Chain, int Cn1, int Cn2, HBOND** HBond, COMMAND* Cmd,
     char *AntiPar1, *Par1, *AntiPar2, *Par2;
     int i;
 
-    PatN = (PATTERN**)ckalloc(MAXHYDRBOND * sizeof(PATTERN*));
-    PatP = (PATTERN**)ckalloc(MAXHYDRBOND * sizeof(PATTERN*));
+    PatN = (PATTERN**) ckalloc(MAXHYDRBOND * sizeof(PATTERN*));
+    PatP = (PATTERN**) ckalloc(MAXHYDRBOND * sizeof(PATTERN*));
 
-    AntiPar1 = (char*)ckalloc(Chain[Cn1]->NRes * sizeof(char)); /* Antiparallel strands */
-    Par1 = (char*)ckalloc(Chain[Cn1]->NRes * sizeof(char));     /* Parallel strands */
-    AntiPar2 = (char*)ckalloc(Chain[Cn2]->NRes * sizeof(char)); /* Antiparallel strands */
-    Par2 = (char*)ckalloc(Chain[Cn2]->NRes * sizeof(char));     /* Parallel strands */
+    AntiPar1 = (char*) ckalloc(Chain[Cn1]->NRes * sizeof(char)); /* Antiparallel strands */
+    Par1 = (char*) ckalloc(Chain[Cn1]->NRes * sizeof(char));     /* Parallel strands */
+    AntiPar2 = (char*) ckalloc(Chain[Cn2]->NRes * sizeof(char)); /* Antiparallel strands */
+    Par2 = (char*) ckalloc(Chain[Cn2]->NRes * sizeof(char));     /* Parallel strands */
 
     for (i = 0; i < Chain[Cn1]->NRes; i++) {
         AntiPar1[i] = 'C';
@@ -1199,7 +1199,7 @@ void Stride::BetaTurn(CHAIN** Chain, int Cn) {
             r[3]->Prop->Asn = 'T';
 
         Tn = Chain[Cn]->NAssignedTurn;
-        Chain[Cn]->AssignedTurn[Tn] = (TURN*)ckalloc(sizeof(TURN));
+        Chain[Cn]->AssignedTurn[Tn] = (TURN*) ckalloc(sizeof(TURN));
         t = Chain[Cn]->AssignedTurn[Tn];
         strcpy(t->Res1, r[0]->ResType);
         strcpy(t->Res2, r[3]->ResType);
@@ -1249,7 +1249,7 @@ void Stride::GammaTurn(CHAIN** Chain, int Cn, HBOND** HBond) {
             r[3]->Prop->Asn = 'T';
 
         Tn = Chain[Cn]->NAssignedTurn;
-        Chain[Cn]->AssignedTurn[Tn] = (TURN*)ckalloc(sizeof(TURN));
+        Chain[Cn]->AssignedTurn[Tn] = (TURN*) ckalloc(sizeof(TURN));
         t = Chain[Cn]->AssignedTurn[Tn];
         strcpy(t->Res1, r[1]->ResType);
         strcpy(t->Res2, r[3]->ResType);
@@ -1293,7 +1293,7 @@ int Stride::SSBond(CHAIN** Chain, int NChain) {
                         FindAtom(Chain[Cn1], Res1, "SG", &S1) && FindAtom(Chain[Cn2], Res2, "SG", &S2) &&
                         Dist(Chain[Cn1]->Rsd[Res1]->Coord[S1], Chain[Cn2]->Rsd[Res2]->Coord[S2]) <= SSDIST) {
                         Bn = Chain[0]->NBond;
-                        Chain[0]->SSbond[Bn] = (SSBOND*)ckalloc(sizeof(SSBOND));
+                        Chain[0]->SSbond[Bn] = (SSBOND*) ckalloc(sizeof(SSBOND));
                         strcpy(Chain[0]->SSbond[Bn]->PDB_ResNumb1, Chain[Cn1]->Rsd[Res1]->PDB_ResNumb);
                         strcpy(Chain[0]->SSbond[Bn]->PDB_ResNumb2, Chain[Cn2]->Rsd[Res2]->PDB_ResNumb);
                         Chain[0]->SSbond[Bn]->ChainId1 = Chain[Cn1]->Id;
@@ -1408,7 +1408,7 @@ void Stride::ReportShort(CHAIN** Chain, int NChain, FILE* Out, COMMAND* Cmd) {
             if (!Chain[Cn]->Valid)
                 continue;
 
-            Asn = (char*)ckalloc(Chain[Cn]->NRes * sizeof(char));
+            Asn = (char*) ckalloc(Chain[Cn]->NRes * sizeof(char));
             ExtractAsn(Chain, Cn, Asn);
             NStr = Boundaries(Asn, Chain[Cn]->NRes, (*StrTypes), Bound);
 
@@ -1443,7 +1443,7 @@ void Stride::Glue(const char* String1, const char* String2, FILE* Out) {
     BUFFER Bf;
 
     strcpy(Bf, String1);
-    strncpy(Bf, String2, (int)strlen(String2));
+    strncpy(Bf, String2, (int) strlen(String2));
 
     fprintf(Out, "%s", Bf);
 }
@@ -1520,7 +1520,7 @@ int Stride::Process_ATOM(BUFFER Buffer, CHAIN** Chain, int* ChainNumber, BOOLEAN
         }
         NR = Chain[CC]->NRes;
         strcpy(LastRes[CC], Field[0]);
-        Chain[CC]->Rsd[NR] = (RESIDUE*)ckalloc(sizeof(RESIDUE));
+        Chain[CC]->Rsd[NR] = (RESIDUE*) ckalloc(sizeof(RESIDUE));
         strcpy(Chain[CC]->Rsd[NR]->PDB_ResNumb, LastRes[CC]);
         Chain[CC]->Rsd[NR]->NAtom = 0;
         SplitString(Buffer + 17, Field, 1);
@@ -1544,28 +1544,28 @@ int Stride::Process_ATOM(BUFFER Buffer, CHAIN** Chain, int* ChainNumber, BOOLEAN
     strcpy(Tmp, Buffer);
     Buffer[38] = ' ';
     SplitString(Tmp + 30, Field, 1);
-    r->Coord[NA][0] = (float)atof(Field[0]);
+    r->Coord[NA][0] = (float) atof(Field[0]);
 
     strcpy(Tmp, Buffer);
     Buffer[46] = ' ';
     SplitString(Tmp + 38, Field, 1);
-    r->Coord[NA][1] = (float)atof(Field[0]);
+    r->Coord[NA][1] = (float) atof(Field[0]);
 
     strcpy(Tmp, Buffer);
     Buffer[54] = ' ';
     SplitString(Tmp + 46, Field, 1);
-    r->Coord[NA][2] = (float)atof(Field[0]);
+    r->Coord[NA][2] = (float) atof(Field[0]);
 
     if (Buffer[57] == '.') {
         strcpy(Tmp, Buffer);
         Tmp[60] = ' ';
         SplitString(Tmp + 54, Field, 1);
-        r->Occupancy[NA] = (float)atof(Field[0]);
+        r->Occupancy[NA] = (float) atof(Field[0]);
     } else
         r->Occupancy[NA] = -1.00;
 
     SplitString(Buffer + 63, Field, 1);
-    r->TempFactor[NA] = (float)atof(Field[0]);
+    r->TempFactor[NA] = (float) atof(Field[0]);
 
     r->NAtom++;
 
@@ -1652,9 +1652,9 @@ float Stride::Torsion(float* Coord1, float* Coord2, float* Coord3, float* Coord4
 
     /* Find the components of the three bond vectors */
     for (i = 0; i < 3; i++) {
-        Comp[0][i] = (double)(Coord2[i] - Coord1[i]);
-        Comp[1][i] = (double)(Coord3[i] - Coord2[i]);
-        Comp[2][i] = (double)(Coord4[i] - Coord3[i]);
+        Comp[0][i] = (double) (Coord2[i] - Coord1[i]);
+        Comp[1][i] = (double) (Coord3[i] - Coord2[i]);
+        Comp[2][i] = (double) (Coord4[i] - Coord3[i]);
     }
 
     /* Calculate vectors perpendicular to the planes 123 and 234 */
@@ -1696,7 +1696,7 @@ float Stride::Torsion(float* Coord1, float* Coord2, float* Coord3, float* Coord4
         TripleScalarProd += Comp[0][i] * Perp_234[i];
 
     /* Torsion angle has the sign of the triple scalar product */
-    return ((TripleScalarProd > 0.0) ? (float)AbsTorsAng : (float)(-AbsTorsAng));
+    return ((TripleScalarProd > 0.0) ? (float) AbsTorsAng : (float) (-AbsTorsAng));
 }
 
 float Stride::Dist(float* Coord1, float* Coord2) {
@@ -1834,7 +1834,7 @@ int Stride::DefineDnr(
         //free ( Dnr[*dc] );
         return (FAILURE);
     } else {
-        Dnr[*dc] = (DONOR*)ckalloc(sizeof(DONOR));
+        Dnr[*dc] = (DONOR*) ckalloc(sizeof(DONOR));
         memcpy(Dnr[*dc], &tempDonor, sizeof(DONOR));
         (*dc)++;
     }
@@ -1967,7 +1967,7 @@ int Stride::DefineAcceptor(
         //free ( Acc[*ac] );
         return (FAILURE);
     } else {
-        Acc[*ac] = (ACCEPTOR*)ckalloc(sizeof(ACCEPTOR));
+        Acc[*ac] = (ACCEPTOR*) ckalloc(sizeof(ACCEPTOR));
         memcpy(Acc[*ac], &tempAcc, sizeof(ACCEPTOR));
         (*ac)++;
     }
@@ -1984,7 +1984,7 @@ void Stride::GRID_Energy(float* CA2, float* C, float* O, float* H, float* N, COM
     /***** Distance dependence ( 8-6 potential ) ****/
     if (Cmd->Truncate && HBond->AccDonDist < RmGRID)
         HBond->AccDonDist = RmGRID;
-    HBond->Er = float(CGRID / pow((double)HBond->AccDonDist, 8.0) - DGRID / pow((double)HBond->AccDonDist, 6.0));
+    HBond->Er = float(CGRID / pow((double) HBond->AccDonDist, 8.0) - DGRID / pow((double) HBond->AccDonDist, 6.0));
 
     /************** Angular dependance ****************/
     /* Find projection of the hydrogen on the O-C-CA plane */
@@ -1997,14 +1997,14 @@ void Stride::GRID_Energy(float* CA2, float* C, float* O, float* H, float* N, COM
 
     /* Calculate both angle-dependent HB energy components Et and Ep */
     if (HBond->ti >= 0.0 && HBond->ti < 90.0)
-        HBond->Et = (float)(cos(RAD(HBond->to)) * (0.9f + 0.1f * sin(RAD(2.0f * HBond->ti))));
+        HBond->Et = (float) (cos(RAD(HBond->to)) * (0.9f + 0.1f * sin(RAD(2.0f * HBond->ti))));
     else if (HBond->ti >= 90.0f && HBond->ti < 110.0f)
-        HBond->Et = (float)(K1GRID * cos(RAD(HBond->to)) * (pow((K2GRID - pow(cos(RAD(HBond->ti)), 2.0)), 3.0)));
+        HBond->Et = (float) (K1GRID * cos(RAD(HBond->to)) * (pow((K2GRID - pow(cos(RAD(HBond->ti)), 2.0)), 3.0)));
     else
         HBond->Et = 0.0f;
 
     if (HBond->p > 90.0f && HBond->p < 270.0f)
-        HBond->Ep = (float)pow(cos(RAD(HBond->p)), 2.0);
+        HBond->Ep = (float) pow(cos(RAD(HBond->p)), 2.0);
     else
         HBond->Ep = 0.0f;
 
@@ -2034,7 +2034,7 @@ float Stride::Ang(float* Coord1, float* Coord2, float* Coord3) {
     else if (D < 0.0 && fabs(D + 1.0) < Eps)
         D += Eps;
 
-    return ((float)(RADDEG * acos(D)));
+    return ((float) (RADDEG * acos(D)));
 }
 
 int Stride::FindChain(CHAIN** Chain, int NChain, char ChainId) {
@@ -2119,7 +2119,7 @@ int Stride::Link(HBOND** HBond, CHAIN** Chain, int Cn1, int Cn2, RESIDUE* Res1_1
     if (Prob1 < Treshold && Prob2 < Treshold) {
 
         if (!Test) {
-            Pattern[*NumPat] = (PATTERN*)ckalloc(sizeof(PATTERN));
+            Pattern[*NumPat] = (PATTERN*) ckalloc(sizeof(PATTERN));
             Pattern[*NumPat]->ExistPattern = STRIDE_YES;
             Pattern[*NumPat]->Hb1 = HBond[BondNumber1];
             Pattern[*NumPat]->Hb2 = HBond[BondNumber2];
@@ -3079,7 +3079,7 @@ int Stride::Boundaries(char* Asn, int L, char SecondStr, int (*Bound)[2]) {
 }
 
 void Stride::InitChain(CHAIN** Chain) {
-    *Chain = (CHAIN*)ckalloc(sizeof(CHAIN));
+    *Chain = (CHAIN*) ckalloc(sizeof(CHAIN));
 
     (*Chain)->NRes = 0;
     (*Chain)->NHelix = 0;
@@ -3093,13 +3093,13 @@ void Stride::InitChain(CHAIN** Chain) {
     (*Chain)->Ter = 0;
     (*Chain)->Resolution = 0.0;
 
-    (*Chain)->File = (char*)ckalloc(BUFSZ * sizeof(char));
-    (*Chain)->Rsd = (RESIDUE**)ckalloc(MAX_RES * sizeof(RESIDUE*));
-    (*Chain)->Helix = (HELIX**)ckalloc(MAX_HELIX * sizeof(HELIX*));
-    (*Chain)->Sheet = (SHEET**)ckalloc(MAX_SHEET * sizeof(SHEET*));
-    (*Chain)->Turn = (TURN**)ckalloc(MAX_TURN * sizeof(TURN*));
-    (*Chain)->AssignedTurn = (TURN**)ckalloc(MAX_TURN * sizeof(TURN*));
-    (*Chain)->SSbond = (SSBOND**)ckalloc(MAX_BOND * sizeof(SSBOND*));
+    (*Chain)->File = (char*) ckalloc(BUFSZ * sizeof(char));
+    (*Chain)->Rsd = (RESIDUE**) ckalloc(MAX_RES * sizeof(RESIDUE*));
+    (*Chain)->Helix = (HELIX**) ckalloc(MAX_HELIX * sizeof(HELIX*));
+    (*Chain)->Sheet = (SHEET**) ckalloc(MAX_SHEET * sizeof(SHEET*));
+    (*Chain)->Turn = (TURN**) ckalloc(MAX_TURN * sizeof(TURN*));
+    (*Chain)->AssignedTurn = (TURN**) ckalloc(MAX_TURN * sizeof(TURN*));
+    (*Chain)->SSbond = (SSBOND**) ckalloc(MAX_BOND * sizeof(SSBOND*));
 
     (*Chain)->Valid = STRIDE_YES;
 }
@@ -3111,7 +3111,7 @@ int Stride::SplitString(char* Buffer, char** Fields, int MaxField) {
 
     FieldCnt = 0;
     FieldFlag = 0;
-    BuffLen = (int)strlen(Buffer) - 1;
+    BuffLen = (int) strlen(Buffer) - 1;
 
     strcpy(LocalBuffer, Buffer);
 

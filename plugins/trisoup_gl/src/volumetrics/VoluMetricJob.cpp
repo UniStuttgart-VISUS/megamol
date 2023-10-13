@@ -204,10 +204,10 @@ DWORD VoluMetricJob::Run(void* userData) {
                 geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 UINT64 numParticles = datacall->AccessParticles(partListI).GetCount();
                 unsigned int stride = datacall->AccessParticles(partListI).GetVertexDataStride();
-                unsigned char* vertexData = (unsigned char*)datacall->AccessParticles(partListI).GetVertexData();
+                unsigned char* vertexData = (unsigned char*) datacall->AccessParticles(partListI).GetVertexData();
                 for (UINT64 l = 0; l < numParticles; l++) {
-                    vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(4 * sizeof(float) + stride) * l]);
-                    float currRad = (float)vertexData[(4 * sizeof(float) + stride) * l + 3];
+                    vislib::math::ShallowPoint<float, 3> sp((float*) &vertexData[(4 * sizeof(float) + stride) * l]);
+                    float currRad = (float) vertexData[(4 * sizeof(float) + stride) * l + 3];
                     if (currRad > MaxRad) {
                         MaxRad = currRad;
                     }
@@ -243,9 +243,9 @@ DWORD VoluMetricJob::Run(void* userData) {
 
         int subVolCells = this->subVolumeResolutionSlot.Param<megamol::core::param::IntParam>()->Value();
 #if 1 // ndef _DEBUG
-        int resX = (int)((trisoup::volumetrics::VoxelizerFloat)b.Width() / cellSize) + 2;
-        int resY = (int)((trisoup::volumetrics::VoxelizerFloat)b.Height() / cellSize) + 2;
-        int resZ = (int)((trisoup::volumetrics::VoxelizerFloat)b.Depth() / cellSize) + 2;
+        int resX = (int) ((trisoup::volumetrics::VoxelizerFloat) b.Width() / cellSize) + 2;
+        int resY = (int) ((trisoup::volumetrics::VoxelizerFloat) b.Height() / cellSize) + 2;
+        int resZ = (int) ((trisoup::volumetrics::VoxelizerFloat) b.Depth() / cellSize) + 2;
         b.SetWidth(resX * cellSize);
         b.SetHeight(resY * cellSize);
         b.SetDepth(resZ * cellSize);
@@ -259,9 +259,9 @@ DWORD VoluMetricJob::Run(void* userData) {
 
         while (divX == 1 && divY == 1 && divZ == 1) {
             subVolCells /= 2;
-            divX = (int)ceil((trisoup::volumetrics::VoxelizerFloat)resX / subVolCells);
-            divY = (int)ceil((trisoup::volumetrics::VoxelizerFloat)resY / subVolCells);
-            divZ = (int)ceil((trisoup::volumetrics::VoxelizerFloat)resZ / subVolCells);
+            divX = (int) ceil((trisoup::volumetrics::VoxelizerFloat) resX / subVolCells);
+            divY = (int) ceil((trisoup::volumetrics::VoxelizerFloat) resY / subVolCells);
+            divZ = (int) ceil((trisoup::volumetrics::VoxelizerFloat) resZ / subVolCells);
         }
 #else
         divX = 1;
@@ -271,7 +271,7 @@ DWORD VoluMetricJob::Run(void* userData) {
         int resX = subVolCells + 2;
         int resY = subVolCells + 2;
         int resZ = subVolCells + 2;
-        cellSize = (trisoup::volumetrics::VoxelizerFloat)b.Width() / subVolCells /*resX*/;
+        cellSize = (trisoup::volumetrics::VoxelizerFloat) b.Width() / subVolCells /*resX*/;
 #endif
 
         vertSize += bboxBytes * divX * divY * divZ;
@@ -314,7 +314,7 @@ DWORD VoluMetricJob::Run(void* userData) {
                     sjd->parent = this;
                     sjd->datacall = datacall;
                     sjd->Bounds = bx;
-                    sjd->CellSize = (trisoup::volumetrics::VoxelizerFloat)MinRad *
+                    sjd->CellSize = (trisoup::volumetrics::VoxelizerFloat) MinRad *
                                     this->cellSizeRatioSlot.Param<megamol::core::param::FloatParam>()->Value();
                     sjd->resX = restX;
                     sjd->resY = restY;

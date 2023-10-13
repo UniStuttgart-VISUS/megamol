@@ -1114,8 +1114,8 @@ bool GrimRenderer::Render(megamol::mmstd_gl::CallRender3DGL& call) {
             glUniform3fv(this->vert_cnt_shader_2_->getUniformLocation("camIn"), 1, glm::value_ptr(cam_view));
             glUniform3fv(this->vert_cnt_shader_2_->getUniformLocation("camRight"), 1, glm::value_ptr(cam_right));
             glUniform3fv(this->vert_cnt_shader_2_->getUniformLocation("camUp"), 1, glm::value_ptr(cam_up));
-            this->vert_cnt_shader_2_->setUniform("depthTexParams", (GLint)this->depthmap_[0].GetWidth(),
-                (GLint)(this->depthmap_[0].GetHeight() * 2 / 3), (GLint)maxLevel);
+            this->vert_cnt_shader_2_->setUniform("depthTexParams", (GLint) this->depthmap_[0].GetWidth(),
+                (GLint) (this->depthmap_[0].GetHeight() * 2 / 3), (GLint) maxLevel);
 
             glEnable(GL_TEXTURE_2D);
             glActiveTextureARB(GL_TEXTURE2_ARB);
@@ -1445,8 +1445,8 @@ bool GrimRenderer::Render(megamol::mmstd_gl::CallRender3DGL& call) {
             glUniform1i(da_sphere_shader->getUniformLocation("use_shading"), static_cast<int>(!deferred_shading));
 
             if (use_vert_cull) {
-                da_sphere_shader->setUniform("depthTexParams", (GLint)this->depthmap_[0].GetWidth(),
-                    (GLint)(this->depthmap_[0].GetHeight() * 2 / 3), (GLint)maxLevel);
+                da_sphere_shader->setUniform("depthTexParams", (GLint) this->depthmap_[0].GetWidth(),
+                    (GLint) (this->depthmap_[0].GetHeight() * 2 / 3), (GLint) maxLevel);
                 glEnable(GL_TEXTURE_2D);
                 glActiveTextureARB(GL_TEXTURE2_ARB);
                 this->depthmap_[0].BindColourTexture();

@@ -100,9 +100,9 @@ public:
      */
     inline void SetH(float h) {
         h /= 360.0;
-        h -= (long)h; // ]1 .. -1[
+        h -= (long) h; // ]1 .. -1[
         h += 1.0f;
-        h -= (long)h; // ]1 .. 0]
+        h -= (long) h; // ]1 .. 0]
         this->comp[0] = h * 360.0f;
     }
 

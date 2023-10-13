@@ -400,7 +400,7 @@ void RamachandranPlot::computeDihedralAngles(protein_calls::MolecularDataCall& m
             protein_calls::MolecularDataCall::AminoAcid* acid = nullptr;
 
             if (mol.Residues()[aaIdx]->Identifier() == protein_calls::MolecularDataCall::Residue::AMINOACID) {
-                acid = (protein_calls::MolecularDataCall::AminoAcid*)(mol.Residues()[aaIdx]);
+                acid = (protein_calls::MolecularDataCall::AminoAcid*) (mol.Residues()[aaIdx]);
             } else {
                 angles_[aaIdx].x = -1000.0f;
                 angles_[aaIdx].y = -1000.0f;
@@ -422,7 +422,7 @@ void RamachandranPlot::computeDihedralAngles(protein_calls::MolecularDataCall& m
                 // we have no prevCPos
                 phi = -1000.0f;
             } else {
-                acid = (protein_calls::MolecularDataCall::AminoAcid*)(mol.Residues()[aaIdx - 1]);
+                acid = (protein_calls::MolecularDataCall::AminoAcid*) (mol.Residues()[aaIdx - 1]);
                 if (acid != nullptr) {
                     prevCPos = glm::make_vec3(&mol.AtomPositions()[acid->CCarbIndex() * 3]);
                 } else {
@@ -434,7 +434,7 @@ void RamachandranPlot::computeDihedralAngles(protein_calls::MolecularDataCall& m
                 // we have no nextNPos
                 psi = -1000.0f;
             } else {
-                acid = (protein_calls::MolecularDataCall::AminoAcid*)(mol.Residues()[aaIdx + 1]);
+                acid = (protein_calls::MolecularDataCall::AminoAcid*) (mol.Residues()[aaIdx + 1]);
                 if (acid != nullptr) {
                     nextNPos = glm::make_vec3(&mol.AtomPositions()[acid->NIndex() * 3]);
                 } else {

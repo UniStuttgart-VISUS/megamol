@@ -158,9 +158,9 @@ bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0, unsigned in
     this->xaxis[0] = maxcoord[0] - mincoord[0];
     this->yaxis[1] = maxcoord[1] - mincoord[1];
     this->zaxis[2] = maxcoord[2] - mincoord[2];
-    this->numvoxels[0] = (int)ceil(this->xaxis[0] / gridspacing);
-    this->numvoxels[1] = (int)ceil(this->yaxis[1] / gridspacing);
-    this->numvoxels[2] = (int)ceil(this->zaxis[2] / gridspacing);
+    this->numvoxels[0] = (int) ceil(this->xaxis[0] / gridspacing);
+    this->numvoxels[1] = (int) ceil(this->yaxis[1] / gridspacing);
+    this->numvoxels[2] = (int) ceil(this->zaxis[2] / gridspacing);
     this->xaxis[0] = (this->numvoxels[0] - 1) * gridspacing;
     this->yaxis[1] = (this->numvoxels[1] - 1) * gridspacing;
     this->zaxis[2] = (this->numvoxels[2] - 1) * gridspacing;
@@ -202,7 +202,7 @@ bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0, unsigned in
         }
 
         // Copy data from device to host
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
         checkCudaErrors(cudaMemcpy(griddata, cqs->getColorMap(),
             this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3 * sizeof(float), cudaMemcpyDeviceToHost));
 
@@ -373,9 +373,9 @@ bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0, unsigned
     this->xaxis[0] = maxcoord[0] - mincoord[0];
     this->yaxis[1] = maxcoord[1] - mincoord[1];
     this->zaxis[2] = maxcoord[2] - mincoord[2];
-    this->numvoxels[0] = (int)ceil(this->xaxis[0] / gridspacing);
-    this->numvoxels[1] = (int)ceil(this->yaxis[1] / gridspacing);
-    this->numvoxels[2] = (int)ceil(this->zaxis[2] / gridspacing);
+    this->numvoxels[0] = (int) ceil(this->xaxis[0] / gridspacing);
+    this->numvoxels[1] = (int) ceil(this->yaxis[1] / gridspacing);
+    this->numvoxels[2] = (int) ceil(this->zaxis[2] / gridspacing);
     this->xaxis[0] = (this->numvoxels[0] - 1) * gridspacing;
     this->yaxis[1] = (this->numvoxels[1] - 1) * gridspacing;
     this->zaxis[2] = (this->numvoxels[2] - 1) * gridspacing;
@@ -404,7 +404,7 @@ bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0, unsigned
 
         // Copy data from device to host
 
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
         checkCudaErrors(cudaMemcpy(griddata, cqs->getColorMap(),
             this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3 * sizeof(float), cudaMemcpyDeviceToHost));
 
@@ -459,9 +459,9 @@ bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0, unsigned 
     this->xaxis[0] = maxcoord[0] - mincoord[0];
     this->yaxis[1] = maxcoord[1] - mincoord[1];
     this->zaxis[2] = maxcoord[2] - mincoord[2];
-    this->numvoxels[0] = (int)ceil(this->xaxis[0] / gridspacing);
-    this->numvoxels[1] = (int)ceil(this->yaxis[1] / gridspacing);
-    this->numvoxels[2] = (int)ceil(this->zaxis[2] / gridspacing);
+    this->numvoxels[0] = (int) ceil(this->xaxis[0] / gridspacing);
+    this->numvoxels[1] = (int) ceil(this->yaxis[1] / gridspacing);
+    this->numvoxels[2] = (int) ceil(this->zaxis[2] / gridspacing);
     this->xaxis[0] = (this->numvoxels[0] - 1) * gridspacing;
     this->yaxis[1] = (this->numvoxels[1] - 1) * gridspacing;
     this->zaxis[2] = (this->numvoxels[2] - 1) * gridspacing;
@@ -490,7 +490,7 @@ bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0, unsigned 
 
         // Copy data from device to host
 
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
         checkCudaErrors(cudaMemcpy(griddata, cqs->getColorMap(),
             this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3 * sizeof(float), cudaMemcpyDeviceToHost));
 
@@ -523,8 +523,8 @@ bool protein_cuda::DataWriter::CalcMapDipoleAvg(protein_calls::CrystalStructureD
 
     float* xyzr = NULL;
     float* color = NULL;
-    xyzr = (float*)malloc(dc->GetCellCnt() * sizeof(float) * 4);
-    color = (float*)malloc(dc->GetCellCnt() * sizeof(float) * 4);
+    xyzr = (float*) malloc(dc->GetCellCnt() * sizeof(float) * 4);
+    color = (float*) malloc(dc->GetCellCnt() * sizeof(float) * 4);
     if (this->frameData0 == NULL) {
         this->frameData0 = new float[dc->GetAtomCnt() * 7];
     }
@@ -660,7 +660,7 @@ bool protein_cuda::DataWriter::CalcMapDipoleAvg(protein_calls::CrystalStructureD
     //} // DEBUG
 
     // compute both density map and floating point color texture map
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
     int rc = cqs->calc_map(dc->GetCellCnt(), &xyzr[0], &color[0], true, CUDAQuickSurf::VolTexFormat::RGB3F,
         this->origin, this->numvoxels,
         2.5f, // Max radius
@@ -688,7 +688,7 @@ bool protein_cuda::DataWriter::CalcMapTiDisplAvg(protein_calls::CrystalStructure
     float radscale, float gridspacing, float isoval) {
 
     float* xyzr = NULL;
-    xyzr = (float*)malloc(dc->GetCellCnt() * sizeof(float) * 4);
+    xyzr = (float*) malloc(dc->GetCellCnt() * sizeof(float) * 4);
     if (this->frameData0 == NULL) {
         this->frameData0 = new float[dc->GetAtomCnt() * 7];
     }
@@ -786,7 +786,7 @@ bool protein_cuda::DataWriter::CalcMapTiDisplAvg(protein_calls::CrystalStructure
 
 
     // compute both density map and floating point color texture map
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
     int rc = cqs->calc_map(dc->GetCellCnt(), &xyzr[0], &this->addedTiDispl[0], true, CUDAQuickSurf::VolTexFormat::RGB3F,
         this->origin, this->numvoxels,
         2.5f, // Max radius
@@ -874,7 +874,7 @@ void protein_cuda::DataWriter::release(void) {
     if (this->addedPos != NULL)
         delete[] this->addedPos;
     if (this->cudaqsurf) {
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
         delete cqs;
     }
 }
@@ -909,7 +909,7 @@ bool protein_cuda::DataWriter::writeFrame2VTKLegacy(
             << std::endl; // TODO Don't hardcode this
     outfile << "POINT_DATA " << this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] << std::endl;
 
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf;
     float* testArr = new float[this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3];
     checkCudaErrors(cudaMemcpy(testArr, cqs->getColorMap(),
         this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3 * sizeof(float), cudaMemcpyDeviceToHost));
@@ -1335,7 +1335,7 @@ bool protein_cuda::DataWriter::WriteFrameFileBinAvg(protein_calls::CrystalStruct
         }
         dc->Unlock();
     }
-    outStr.write((char*)(buff), NATOMS * 3 * sizeof(float));
+    outStr.write((char*) (buff), NATOMS * 3 * sizeof(float));
 
     for (unsigned int w = 1; w + avgOffset - 1 < dc->FrameCount(); w++) {
 
@@ -1369,7 +1369,7 @@ bool protein_cuda::DataWriter::WriteFrameFileBinAvg(protein_calls::CrystalStruct
         }
         dc->Unlock();
 
-        outStr.write((char*)(buff), NATOMS * 3 * sizeof(float)); // Write to file
+        outStr.write((char*) (buff), NATOMS * 3 * sizeof(float)); // Write to file
     }
 
     delete[] buff;
@@ -1458,7 +1458,7 @@ bool protein_cuda::DataWriter::ReadTiDispl(protein_calls::CrystalStructureDataCa
     float* buff = new float[dc->GetCellCnt() * 6];
     unsigned int frame = 0;
     while (inStr.good()) {
-        inStr.read((char*)buff, dc->GetCellCnt() * 24);
+        inStr.read((char*) buff, dc->GetCellCnt() * 24);
         for (int cnt = 0; cnt < 125000; cnt++) {
             printf("FRAME %u pos %f %f %f vec %f %f %f\n", frame, buff[cnt * 6 + 0], buff[cnt * 6 + 1],
                 buff[cnt * 6 + 2], buff[cnt * 6 + 3], buff[cnt * 6 + 4], buff[cnt * 6 + 5]);
@@ -1495,7 +1495,7 @@ bool protein_cuda::DataWriter::ReadTiODipole(protein_calls::CrystalStructureData
     float* buff = new float[dc->GetCellCnt() * 6];
     unsigned int frame = 0;
     while (inStr.good()) {
-        inStr.read((char*)buff, dc->GetCellCnt() * 24);
+        inStr.read((char*) buff, dc->GetCellCnt() * 24);
         for (int cnt = 0; cnt <= 124999; cnt++) {
             printf("FRAME %u pos %f %f %f vec %f %f %f\n", frame, buff[cnt * 6 + 0], buff[cnt * 6 + 1],
                 buff[cnt * 6 + 2], buff[cnt * 6 + 3], buff[cnt * 6 + 4], buff[cnt * 6 + 5]);
@@ -1635,7 +1635,7 @@ bool protein_cuda::DataWriter::WriteTiDispl(protein_calls::CrystalStructureDataC
             break;
         }
 
-        for (int cnt = 0; cnt < (int)dc->GetCellCnt(); cnt++) {
+        for (int cnt = 0; cnt < (int) dc->GetCellCnt(); cnt++) {
             buff[cnt * 6 + 0] = dc->GetAtomPos()[3 * dc->GetCells()[idxSorted[cnt]] + 0];
             buff[cnt * 6 + 1] = dc->GetAtomPos()[3 * dc->GetCells()[idxSorted[cnt]] + 1];
             buff[cnt * 6 + 2] = dc->GetAtomPos()[3 * dc->GetCells()[idxSorted[cnt]] + 2];
@@ -1646,7 +1646,7 @@ bool protein_cuda::DataWriter::WriteTiDispl(protein_calls::CrystalStructureDataC
 
         dc->Unlock();
         printf("Writing frame %u ...\n", fr);
-        outStr.write((char*)buff, 24 * dc->GetCellCnt());
+        outStr.write((char*) buff, 24 * dc->GetCellCnt());
     }
     outStr.close();
 
@@ -1842,7 +1842,7 @@ bool protein_cuda::DataWriter::WriteTiODipole(protein_calls::CrystalStructureDat
         }
 
 #pragma omp parallel for
-        for (int cnt = 0; cnt < (int)dc->GetCellCnt(); cnt++) {
+        for (int cnt = 0; cnt < (int) dc->GetCellCnt(); cnt++) {
             buff[cnt * 6 + 0] = dc->GetAtomPos()[3 * dc->GetCells()[15 * idxSorted[cnt] + 14] + 0];
             buff[cnt * 6 + 1] = dc->GetAtomPos()[3 * dc->GetCells()[15 * idxSorted[cnt] + 14] + 1];
             buff[cnt * 6 + 2] = dc->GetAtomPos()[3 * dc->GetCells()[15 * idxSorted[cnt] + 14] + 2];
@@ -1855,7 +1855,7 @@ bool protein_cuda::DataWriter::WriteTiODipole(protein_calls::CrystalStructureDat
 
         dc->Unlock();
         printf("Writing frame %u ...\n", fr);
-        outStr.write((char*)buff, 24 * dc->GetCellCnt());
+        outStr.write((char*) buff, 24 * dc->GetCellCnt());
     }
     outStr.close();
 
@@ -1896,14 +1896,14 @@ void protein_cuda::DataWriter::PutVelocity() {
 
     // Get atom info
     int* atomInfo = new int[7 * 625000];
-    atomTypesStr.read((char*)atomInfo, 625000 * 28);
+    atomTypesStr.read((char*) atomInfo, 625000 * 28);
     atomTypesStr.close();
 
     // Loop through all frames
     float* buff = new float[625000 * 3];
     unsigned int frame = 0;
     while (inStr.good()) {
-        inStr.read((char*)buff, 625000 * 12);
+        inStr.read((char*) buff, 625000 * 12);
 
         float avgMag = 0.0;
         unsigned int avgCnt = 0;

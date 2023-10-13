@@ -13,7 +13,7 @@ struct ImGui_ImplGeneric_Data {
 };
 
 static ImGui_ImplGeneric_Data* ImGui_ImplGeneric_GetBackendData() {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplGeneric_Data*)ImGui::GetIO().BackendPlatformUserData : NULL;
+    return ImGui::GetCurrentContext() ? (ImGui_ImplGeneric_Data*) ImGui::GetIO().BackendPlatformUserData : NULL;
 }
 
 bool ImGui_ImplGeneric_Init(GenericWindow* window) {
@@ -22,7 +22,7 @@ bool ImGui_ImplGeneric_Init(GenericWindow* window) {
 
     // Setup backend capabilities flags
     ImGui_ImplGeneric_Data* bd = IM_NEW(ImGui_ImplGeneric_Data)();
-    io.BackendPlatformUserData = (void*)bd;
+    io.BackendPlatformUserData = (void*) bd;
     io.BackendPlatformName = "imgui_impl_generic";
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
@@ -54,7 +54,7 @@ void ImGui_ImplGeneric_NewFrame(GenericWindow* window, GenericMonitor* monitor) 
     int display_w = monitor->res_x;
     int display_h = monitor->res_y;
 
-    io.DisplaySize = ImVec2((float)w, (float)h);
+    io.DisplaySize = ImVec2((float) w, (float) h);
     if (w > 0 && h > 0)
-        io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
+        io.DisplayFramebufferScale = ImVec2((float) display_w / w, (float) display_h / h);
 }

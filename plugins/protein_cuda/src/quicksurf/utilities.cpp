@@ -221,7 +221,7 @@ char* str_tokenize(const char* newcmd, int* argc, char* argv[]) {
         argv[*argc] = strtok(NULL, " ,;\t\n");
     }
 
-    return (*argc > 0 ? argv[0] : (char*)NULL);
+    return (*argc > 0 ? argv[0] : (char*) NULL);
 }
 
 
@@ -239,7 +239,7 @@ double time_of_day(void) {
     struct timezone tz;
 
     gettimeofday(&tm, &tz);
-    return ((double)(tm.tv_sec) + (double)(tm.tv_usec) / 1000000.0);
+    return ((double) (tm.tv_sec) + (double) (tm.tv_usec) / 1000000.0);
 #endif
 }
 
@@ -264,7 +264,7 @@ int vmd_check_stdin(void) {
 #if !defined(ARCH_AIX3)
     ret = select(16, &readvec, NULL, NULL, &timeout);
 #else
-    ret = select(16, (int*)(&readvec), NULL, NULL, &timeout);
+    ret = select(16, (int*) (&readvec), NULL, NULL, &timeout);
 #endif
 
     if (ret == -1) {        // got an error
@@ -285,7 +285,7 @@ char* vmd_username(void) {
     char username[1024];
     unsigned long size = 1023;
 
-    if (GetUserName((char*)&username, &size)) {
+    if (GetUserName((char*) &username, &size)) {
         return stringdup(username);
     } else {
         return stringdup("Windows User");
@@ -393,7 +393,7 @@ float angle(const float* a, const float* b) {
     cross_prod(ab, a, b);
     float psin = sqrtf(dot_prod(ab, ab));
     float pcos = dot_prod(a, b);
-    return 57.2958f * (float)atan2(psin, pcos);
+    return 57.2958f * (float) atan2(psin, pcos);
 }
 
 
@@ -414,7 +414,7 @@ float dihedral(const float* a1, const float* a2, const float* a3, const float* a
 
     // atan2f would be faster, but we'll have to workaround the lack
     // of existence on some platforms.
-    return 57.2958f * (float)atan2(psin, pcos);
+    return 57.2958f * (float) atan2(psin, pcos);
 }
 
 // compute the distance between points a & b
@@ -567,7 +567,7 @@ long vmd_get_total_physmem_mb(void) {
                 return -1;
             pos += 9; /* skip tag */
             ;
-            return strtol(pos, (char**)NULL, 10) / 1024L;
+            return strtol(pos, (char**) NULL, 10) / 1024L;
         }
     }
     return -1;
@@ -623,19 +623,19 @@ long vmd_get_avail_physmem_mb(void) {
             if (pos != NULL) {
                 pos += 8; /* skip tag */
                 ;
-                val += strtol(pos, (char**)NULL, 10);
+                val += strtol(pos, (char**) NULL, 10);
             }
             pos = strstr(meminfobuf, "Buffers:");
             if (pos != NULL) {
                 pos += 8; /* skip tag */
                 ;
-                val += strtol(pos, (char**)NULL, 10);
+                val += strtol(pos, (char**) NULL, 10);
             }
             pos = strstr(meminfobuf, "Cached:");
             if (pos != NULL) {
                 pos += 8; /* skip tag */
                 ;
-                val += strtol(pos, (char**)NULL, 10);
+                val += strtol(pos, (char**) NULL, 10);
             }
             return val / 1024L;
         } else {
@@ -676,10 +676,10 @@ long vmd_get_avail_physmem_mb(void) {
 /// return integer percentage of physical memory available
 long vmd_get_avail_physmem_percent(void) {
     double total, avail;
-    total = (double)vmd_get_total_physmem_mb();
-    avail = (double)vmd_get_avail_physmem_mb();
+    total = (double) vmd_get_total_physmem_mb();
+    avail = (double) vmd_get_avail_physmem_mb();
     if (total > 0.0 && avail >= 0.0)
-        return (long)(avail / (total / 100.0));
+        return (long) (avail / (total / 100.0));
 
     return -1; /* return an error */
 }
@@ -687,9 +687,9 @@ long vmd_get_avail_physmem_percent(void) {
 
 // returns minimum distance for Poisson disk sampler
 float correction(int nrays) {
-    float N = (float)nrays;
+    float N = (float) nrays;
     float eightPi = VMD_PIF * 8.0f;
-    float denom = (float)(N * (3.0f * sqrtf(3)));
+    float denom = (float) (N * (3.0f * sqrtf(3)));
     float ans = sqrtf(eightPi / denom);
     float minD = sqrtf((ans * ans) + powf(((VMD_PIF / 6.0f) * ans), 2));
 
@@ -721,7 +721,7 @@ float arcdistance(float lambda1, float lambda2, float phi1, float phi2) {
     sincosf(lambda2, &sl2, &cl2);
     sincosf(phi2, &sp2, &cp2);
 
-    float cos_Ang = (float)(((cl1 * sp1) * (cl2 * sp2)) + ((sl1 * sp1) * (sl2 * sp2)) + (cp1 * cp2));
+    float cos_Ang = (float) (((cl1 * sp1) * (cl2 * sp2)) + ((sl1 * sp1) * (sl2 * sp2)) + (cp1 * cp2));
 
     return acosf(cos_Ang);
 }
@@ -742,11 +742,11 @@ int k_candidates(int k, int nrays, int idx, int testpt, float minD, float* candi
 
     float dp, dl;
     for (int i = 0; i < k; i++) {
-        dl = (float)(lambda1 - (minLambda + ((float)(RAND_MAX_INV * vmd_random())) * minLambda));
-        dp = (float)(phi1 - (minPhi + ((float)(RAND_MAX_INV * vmd_random())) * minPhi));
+        dl = (float) (lambda1 - (minLambda + ((float) (RAND_MAX_INV * vmd_random())) * minLambda));
+        dp = (float) (phi1 - (minPhi + ((float) (RAND_MAX_INV * vmd_random())) * minPhi));
 
-        candidates[i * 2 + 0] = (float)(lambda1 + (dl));
-        candidates[i * 2 + 1] = (float)(phi1 + (dp));
+        candidates[i * 2 + 0] = (float) (lambda1 + (dl));
+        candidates[i * 2 + 1] = (float) (phi1 + (dp));
     }
 
     for (int j = 0; j < k; j++) {
@@ -807,8 +807,8 @@ int poisson_sample_on_sphere(float* population, int N, int k, int verbose) {
     int numactive = N;
 
     vmd_srandom(512346);
-    population[0] = (float)((RAND_MAX_INV * vmd_random()) * VMD_TWOPI);
-    population[1] = (float)((RAND_MAX_INV * vmd_random()) * VMD_PI);
+    population[0] = (float) ((RAND_MAX_INV * vmd_random()) * VMD_TWOPI);
+    population[1] = (float) ((RAND_MAX_INV * vmd_random()) * VMD_PI);
     popul++; //for consistency -- popul incremented after each addition
 
     while (converged == 0) {

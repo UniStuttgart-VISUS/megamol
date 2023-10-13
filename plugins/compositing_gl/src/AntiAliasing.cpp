@@ -612,7 +612,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
             if (smaa_constants_.Rt_metrics[2] != input_width || smaa_constants_.Rt_metrics[3] != input_height ||
                 settings_have_changed_) {
                 smaa_constants_.Rt_metrics = glm::vec4(
-                    1.f / (float)input_width, 1.f / (float)input_height, (float)input_width, (float)input_height);
+                    1.f / (float) input_width, 1.f / (float) input_height, (float) input_width, (float) input_height);
                 ssbo_constants_->rebuffer(&smaa_constants_, sizeof(smaa_constants_));
             }
 
@@ -660,7 +660,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
             break;
         }
 
-        tex_inspector_.SetTexture((void*)(intptr_t)tex_to_show, tex_dim.x, tex_dim.y);
+        tex_inspector_.SetTexture((void*) (intptr_t) tex_to_show, tex_dim.x, tex_dim.y);
         tex_inspector_.ShowWindow();
     }
 

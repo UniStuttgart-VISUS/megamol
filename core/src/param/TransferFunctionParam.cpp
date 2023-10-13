@@ -265,7 +265,7 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
 
             // Check transfer function node data
             if (json.at("Nodes").is_array()) {
-                unsigned int tmp_size = (unsigned int)json.at("Nodes").size();
+                unsigned int tmp_size = (unsigned int) json.at("Nodes").size();
                 for (unsigned int i = 0; i < tmp_size; ++i) {
                     if (!json.at("Nodes")[i].is_array()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -298,7 +298,7 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
 
             // Check value range
             if (json.at("ValueRange").is_array()) {
-                unsigned int tmp_size = (unsigned int)json.at("ValueRange").size();
+                unsigned int tmp_size = (unsigned int) json.at("ValueRange").size();
                 if (tmp_size != 2) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "There should be at two entries in 'ValueRange' array. [%s, %s, line %d]\n", __FILE__,

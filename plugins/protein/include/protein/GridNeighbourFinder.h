@@ -49,7 +49,7 @@ public:
             /* resize bounding-box and grid structure */
             vislib::math::Dimension<T, 3> dim = boundingBox.GetSize();
             for (int i = 0; i < 3; i++)
-                this->gridResolution[i] = (unsigned int)floor(dim[i] / (2 * searchDistance) + 1.0);
+                this->gridResolution[i] = (unsigned int) floor(dim[i] / (2 * searchDistance) + 1.0);
             this->gridSize = this->gridResolution[0] * this->gridResolution[1] * this->gridResolution[2];
             this->elementBBox = boundingBox;
 
@@ -71,8 +71,8 @@ public:
         /** fill the internal grid structure */
         vislib::math::Dimension<T, 3> bBoxDimension = this->elementBBox.GetSize();
         for (int i = 0; i < 3; i++) {
-            this->gridResolutionFactors[i] = (T)this->gridResolution[i] / bBoxDimension[i];
-            this->cellSize[i] = (T)bBoxDimension[i] / this->gridResolution[i]; //(T)1.0) / gridResolutionFactors[i];
+            this->gridResolutionFactors[i] = (T) this->gridResolution[i] / bBoxDimension[i];
+            this->cellSize[i] = (T) bBoxDimension[i] / this->gridResolution[i]; //(T)1.0) / gridResolutionFactors[i];
         }
         // sort the element positions into the grid ...
         for (unsigned int i = 0; i < this->elementCount; i++) {
@@ -92,12 +92,12 @@ public:
         // calculate range in the grid ...
         int min[3], max[3];
         for (unsigned int i = 0; i < 3; i++) {
-            min[i] = (int)floor((relPos[i] - distance) * gridResolutionFactors[i]);
+            min[i] = (int) floor((relPos[i] - distance) * gridResolutionFactors[i]);
             if (min[i] < 0)
                 min[i] = 0;
-            max[i] = (int)ceil((relPos[i] + distance) * gridResolutionFactors[i]);
-            if (max[i] >= (int)gridResolution[i])
-                max[i] = (int)gridResolution[i] - 1;
+            max[i] = (int) ceil((relPos[i] + distance) * gridResolutionFactors[i]);
+            if (max[i] >= (int) gridResolution[i])
+                max[i] = (int) gridResolution[i] - 1;
         }
 
         // loop over all cells inside the sphere (point, distance)
@@ -123,9 +123,9 @@ private:
     VISLIB_FORCEINLINE void insertPointIntoGrid(const T* point) {
         //Point relPos = sub(point, elementOrigin);
         unsigned int indexX =
-            (unsigned int)(/*relPos.X()*/ (point[0] - elementOrigin[0]) * gridResolutionFactors[0]); // floor()?
-        unsigned int indexY = (unsigned int)(/*relPos.Y()*/ (point[1] - elementOrigin[1]) * gridResolutionFactors[1]);
-        unsigned int indexZ = (unsigned int)(/*relPos.Z()*/ (point[2] - elementOrigin[2]) * gridResolutionFactors[2]);
+            (unsigned int) (/*relPos.X()*/ (point[0] - elementOrigin[0]) * gridResolutionFactors[0]); // floor()?
+        unsigned int indexY = (unsigned int) (/*relPos.Y()*/ (point[1] - elementOrigin[1]) * gridResolutionFactors[1]);
+        unsigned int indexZ = (unsigned int) (/*relPos.Z()*/ (point[2] - elementOrigin[2]) * gridResolutionFactors[2]);
         ASSERT(indexX < gridResolution[0] && indexY < gridResolution[1] && indexZ < gridResolution[2]);
         vislib::Array<const T*>& cell = elementGrid[cellIndex(indexX, indexY, indexZ)];
         cell.Add(point);
@@ -133,9 +133,9 @@ private:
 
     VISLIB_FORCEINLINE void findNeighboursInCell(
         const vislib::Array<const T*>& cell, const T* point, T distance, vislib::Array<unsigned int>& resIdx) const {
-        for (int i = 0; i < (int)cell.Count(); i++)
+        for (int i = 0; i < (int) cell.Count(); i++)
             if (dist(cell[i], point) <= distance)
-                resIdx.Add((unsigned int)((cell[i] - elementPositions) / 3)); // store atom index
+                resIdx.Add((unsigned int) ((cell[i] - elementPositions) / 3)); // store atom index
     }
 
     inline unsigned int cellIndex(unsigned int x, unsigned int y, unsigned int z) const {

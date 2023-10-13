@@ -709,7 +709,7 @@ void megamol::test_gl::rendering::SRTest::loadData(geocalls::MultiParticleDataCa
 
         if (mode == upload_mode::BUFFER_ARRAY) {
             auto& bufA = data_.bufArray[pl_idx];
-            bufA.SetDataWithSize(positions.data(), 16, 16, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024 - 1));
+            bufA.SetDataWithSize(positions.data(), 16, 16, parts.GetCount(), (GLuint) (2 * 1024 * 1024 * 1024 - 1));
         }
     }
 }
