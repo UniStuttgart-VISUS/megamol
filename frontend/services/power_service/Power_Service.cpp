@@ -292,10 +292,11 @@ void Power_Service::fill_lua_callbacks() {
                     if (dataverse_key_) {
                         std::function<void(std::string)> dataverse_writer =
                             std::bind(&power::DataverseWriter, dataverse_config_.base_path, dataverse_config_.doi,
-                                std::placeholders::_1, dataverse_key_->GetToken());
+                                std::placeholders::_1, dataverse_key_->GetToken(), std::ref(sbroker_.Get(false)));
                         power::writer_func_t parquet_dataverse_writer = std::bind(&power::wf_parquet_dataverse,
                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, dataverse_writer);
-                        rtx_->StartMeasurement(path, {parquet_dataverse_writer, &megamol::power::wf_tracy}, &meta_, sbroker_.Get(false));
+                        rtx_->StartMeasurement(
+                            path, {parquet_dataverse_writer, &megamol::power::wf_tracy}, &meta_, sbroker_.Get(false));
                     } else {
                         rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy}, &meta_,
                             sbroker_.Get(false));
@@ -415,17 +416,17 @@ void Power_Service::write_sample_buffers() {
 
     if (dataverse_key_) {
         if (!nvml_buffers_.empty())
-            power::DataverseWriter(
-                dataverse_config_.base_path, dataverse_config_.doi, nvml_path.string(), dataverse_key_->GetToken());
+            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, nvml_path.string(),
+                dataverse_key_->GetToken(), sbroker_.Get(false));
         if (!emi_buffers_.empty())
-            power::DataverseWriter(
-                dataverse_config_.base_path, dataverse_config_.doi, emi_path.string(), dataverse_key_->GetToken());
+            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, emi_path.string(),
+                dataverse_key_->GetToken(), sbroker_.Get(false));
         if (!msr_buffers_.empty())
-            power::DataverseWriter(
-                dataverse_config_.base_path, dataverse_config_.doi, msr_path.string(), dataverse_key_->GetToken());
+            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, msr_path.string(),
+                dataverse_key_->GetToken(), sbroker_.Get(false));
         if (!tinker_buffers_.empty())
-            power::DataverseWriter(
-                dataverse_config_.base_path, dataverse_config_.doi, tinker_path.string(), dataverse_key_->GetToken());
+            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, tinker_path.string(),
+                dataverse_key_->GetToken(), sbroker_.Get(false));
     }
 
 #if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
