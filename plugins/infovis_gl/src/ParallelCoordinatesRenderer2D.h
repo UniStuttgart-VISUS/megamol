@@ -108,6 +108,11 @@ protected:
     enum DrawMode {
         DRAW_DISCRETE = 0,
         DRAW_DENSITY,
+        DRAW_DUAL_HOUGH,
+        DRAW_DUAL_SPAWN_LINES,
+        DRAW_DUAL_AXES_NORMALIZED,
+        DRAW_DUAL_MB_SPACE,
+        DRAW_DUAL_AXIS_SPACE
     };
 
     enum SelectionMode {
@@ -146,6 +151,8 @@ protected:
     void drawDiscrete(bool useTf, glm::vec4 const& color, glm::vec4 selectedColor);
 
     void drawDensity(std::shared_ptr<glowl::FramebufferObject> const& fbo);
+
+    void drawDual(int drawmode, std::shared_ptr<glowl::FramebufferObject> const& fbo);
 
     void drawAxes(glm::mat4 ortho);
 
@@ -188,6 +195,8 @@ protected:
     core::param::ParamSlot scaleToFitParam_;
     core::param::ParamSlot resetFiltersParam_;
     core::param::ParamSlot filterStateParam_;
+    core::param::ParamSlot debugFloatParam_;
+    core::param::ParamSlot debugFloatBParam_;
 
     // Data Info
     std::size_t currentTableDataHash_;
@@ -245,8 +254,24 @@ protected:
     std::unique_ptr<glowl::GLSLProgram> drawAxesProgram_;
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorPickProgram_;
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorStrokeProgram_;
+    std::unique_ptr<glowl::GLSLProgram> dualHoughProgramC_;
+    std::unique_ptr<glowl::GLSLProgram> dualRelAxesC_;
+    std::unique_ptr<glowl::GLSLProgram> dualNormalizedAxesProgramC_;
+    std::unique_ptr<glowl::GLSLProgram> dualSpawnLinesProgramD_;
+    std::unique_ptr<glowl::GLSLProgram> dualSpawnLinesProgramTF_;
+    std::unique_ptr<glowl::GLSLProgram> dualHoughProgramD_;
+    std::unique_ptr<glowl::GLSLProgram> dualRayProgramD_;
+    std::unique_ptr<glowl::GLSLProgram> dualRelRayProgramD_;
+
+    // Compute and draw shader program for dual m-b-space (slope and offset)
+    std::unique_ptr<glowl::GLSLProgram> dualMBSpaceProgramC_;
+    std::unique_ptr<glowl::GLSLProgram> dualMBSpaceProgramD_;
+    // Compute and draw shader program for dual axis-space (normalized start and end points)
+    std::unique_ptr<glowl::GLSLProgram> dualAxisSpaceProgramC_;
+    std::unique_ptr<glowl::GLSLProgram> dualAxisSpaceProgramD_;
 
     std::array<GLint, 3> filterWorkgroupSize_;
+    std::array<GLint, 3> dualWorkgroupSize_;
     std::array<GLint, 3> selectPickWorkgroupSize_;
     std::array<GLint, 3> selectStrokeWorkgroupSize_;
     std::array<GLint, 3> densityMinMaxWorkgroupSize_;
@@ -254,6 +279,11 @@ protected:
     std::array<GLint, 3> maxWorkgroupCount_;
 
     std::unique_ptr<glowl::FramebufferObject> densityFbo_;
+    std::unique_ptr<glowl::Texture2DArray> dualDensityTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualCentroidXTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualCentroidYTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualCoMomentTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualSelectTexture_;
 
     // View and camera state
     std::optional<core::view::Camera> cameraCopy_;
