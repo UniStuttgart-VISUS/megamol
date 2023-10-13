@@ -11,6 +11,7 @@
 #include "CSVFileSequence.h"
 #include "CSVWriter.h"
 #include "ColorToDir.h"
+#include "CopyParticleGlobals.h"
 #include "DataFileSequence.h"
 #include "DataFileSequenceStepper.h"
 #include "DataSetTimeRewriteModule.h"
@@ -112,6 +113,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::SphereDataUnifier>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleThinner>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::OverrideParticleGlobals>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::CopyParticleGlobals>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleRelaxationModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListSelector>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ForceCubicCBoxModule>();
