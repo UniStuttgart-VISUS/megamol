@@ -37,7 +37,7 @@ public:
     void ApplyConfigs();
 
     void StartMeasurement(std::filesystem::path const& output_folder,
-        std::vector<power::writer_func_t> const& writer_funcs, power::MetaData const* meta);
+        std::vector<power::writer_func_t> const& writer_funcs, power::MetaData const* meta, char& signal);
 
     void SetSoftwareTrigger(bool set) {
         enforce_software_trigger_ = set;

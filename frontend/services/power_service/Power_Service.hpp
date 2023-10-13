@@ -22,6 +22,7 @@
 #include "power/ParallelPortTrigger.h"
 #include "power/RTXInstruments.h"
 #include "power/Samplers.h"
+#include "power/SignalBroker.h"
 #include "power/StringContainer.h"
 #include "power/Trigger.h"
 #include "power/Utility.h"
@@ -264,6 +265,8 @@ private:
         std::string base_path;
         std::string doi;
     } dataverse_config_;
+
+    power::SignalBroker sbroker_;
 };
 
 } // namespace frontend

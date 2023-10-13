@@ -85,7 +85,7 @@ void RTXInstruments::ApplyConfigs() {
 }
 
 void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder,
-    std::vector<power::writer_func_t> const& writer_funcs, power::MetaData const* meta) {
+    std::vector<power::writer_func_t> const& writer_funcs, power::MetaData const* meta, char& signal) {
     if (!std::filesystem::is_directory(output_folder)) {
         core::utility::log::Log::DefaultLog.WriteError(
             "[RTXInstruments]: Path {} is not a directory", output_folder.string());
@@ -93,9 +93,10 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
     }
 
     auto t_func = [&](std::filesystem::path const& output_folder, std::vector<power::writer_func_t> const& writer_funcs,
-                      power::MetaData const* meta) {
+                      power::MetaData const* meta, char& signal) {
         try {
             pending_measurement_ = true;
+            signal = true;
             std::chrono::system_clock::time_point last_trigger;
             int64_t last_trigger_qpc;
 
@@ -230,13 +231,14 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                     std::chrono::duration_cast<std::chrono::milliseconds>(stop_write - start_write).count());
             });
             pending_measurement_ = false;
+            signal = false;
         } catch (std::exception& ex) {
             core::utility::log::Log::DefaultLog.WriteError(
                 "[RTXInstruments]: Failed to take measurement.\n%s", ex.what());
         }
     };
 
-    auto t_thread = std::thread(t_func, output_folder, writer_funcs, meta);
+    auto t_thread = std::thread(t_func, output_folder, writer_funcs, meta, std::ref(signal));
     t_thread.detach();
 }
 

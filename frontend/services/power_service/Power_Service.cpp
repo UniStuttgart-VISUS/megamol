@@ -295,12 +295,13 @@ void Power_Service::fill_lua_callbacks() {
                                 std::placeholders::_1, dataverse_key_->GetToken());
                         power::writer_func_t parquet_dataverse_writer = std::bind(&power::wf_parquet_dataverse,
                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, dataverse_writer);
-                        rtx_->StartMeasurement(path, {parquet_dataverse_writer, &megamol::power::wf_tracy}, &meta_);
+                        rtx_->StartMeasurement(path, {parquet_dataverse_writer, &megamol::power::wf_tracy}, &meta_, sbroker_.Get(false));
                     } else {
-                        rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy}, &meta_);
+                        rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy}, &meta_,
+                            sbroker_.Get(false));
                     }
                 } else {
-                    rtx_->StartMeasurement(path, {&megamol::power::wf_tracy}, &meta_);
+                    rtx_->StartMeasurement(path, {&megamol::power::wf_tracy}, &meta_, sbroker_.Get(false));
                 }
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
@@ -311,6 +312,7 @@ void Power_Service::fill_lua_callbacks() {
             for (auto& s : hmc_sensors_) {
                 s.log(false);
             }
+            sbroker_.Reset();
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
@@ -345,7 +347,8 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
         "mmPowerIsPending", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
-            return frontend_resources::LuaCallbacksCollection::BoolResult{rtx_ ? rtx_->IsMeasurementPending() : false};
+            //return frontend_resources::LuaCallbacksCollection::BoolResult{rtx_ ? rtx_->IsMeasurementPending() : false};
+            return frontend_resources::LuaCallbacksCollection::BoolResult{sbroker_.GetValue()};
         }});
 
     /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
