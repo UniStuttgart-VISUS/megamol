@@ -122,9 +122,9 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
             }
 
             trigger_->ArmTrigger();
-            auto tp_fut = std::async(
-                std::launch::async, std::bind(&Trigger::StartTriggerSequence, trigger_.get(), config_range_ / 12,
-                                        config_range_ - config_range_ / 12, std::chrono::milliseconds(1000)));
+            auto tp_fut = std::async(std::launch::async,
+                std::bind(&Trigger::StartTriggerSequence, trigger_.get(), config_range_ / 12,
+                    config_range_ - config_range_ / 12, std::chrono::milliseconds(1000) + config_range_));
             /*while (global_device_counter < rtx_instr_.size()) {
                 core::utility::log::Log::DefaultLog.WriteInfo("Waiting on trigger %d", global_device_counter);
                 if (waiting_on_trigger()) {
