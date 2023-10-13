@@ -328,6 +328,7 @@ bool special::ScreenShooter::Terminate() {
  */
 bool special::ScreenShooter::create() {
     currentFbo = std::make_shared<glowl::FramebufferObject>(1, 1);
+    ri_ = &frontend_resources.get<frontend_resources::RuntimeInfo>();
     return true;
 }
 
@@ -468,7 +469,7 @@ void special::ScreenShooter::BeforeRender(core::view::AbstractView* view) {
         std::string project;
         auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
         project = const_cast<megamol::core::MegaMolGraph&>(megamolgraph).Convenience().SerializeGraph();
-        megamol::core::utility::graphics::ScreenShotComments ssc(project);
+        megamol::core::utility::graphics::ScreenShotComments ssc(project, ri_);
 
         png_set_text(data.pngPtr, data.pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 

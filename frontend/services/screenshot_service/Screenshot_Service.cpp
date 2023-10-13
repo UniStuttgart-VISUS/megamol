@@ -69,8 +69,8 @@ static void PNGAPI pngFlushFileFunc(png_structp pngPtr) {
     f->Flush();
 }
 
-static bool write_png_to_file(
-    megamol::frontend_resources::ScreenshotImageData const& image, std::filesystem::path const& filename) {
+static bool write_png_to_file(megamol::frontend_resources::ScreenshotImageData const& image,
+    std::filesystem::path const& filename, megamol::frontend_resources::RuntimeInfo const* ri) {
     vislib::sys::FastFile file;
     try {
         // open final image file
@@ -105,7 +105,7 @@ static bool write_png_to_file(
     if (guistate_resources_ptr) {
         project.append(guistate_resources_ptr->request_gui_state(true));
     }
-    megamol::core::utility::graphics::ScreenShotComments ssc(project);
+    megamol::core::utility::graphics::ScreenShotComments ssc(project, ri);
     png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
     png_set_IHDR(pngPtr, pngInfoPtr, image.width, image.height, 8, PNG_COLOR_TYPE_RGB_ALPHA /* PNG_COLOR_TYPE_RGB */,
@@ -172,8 +172,9 @@ megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() con
 }
 
 bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(
-    ScreenshotImageData const& image, std::filesystem::path const& filename) const {
-    return write_png_to_file(image, filename);
+    ScreenshotImageData const& image, std::filesystem::path const& filename, void const* ri_ptr) const {
+    return write_png_to_file(
+        image, filename, reinterpret_cast<megamol::frontend_resources::RuntimeInfo const*>(ri_ptr));
 }
 
 namespace megamol::frontend {
@@ -194,22 +195,10 @@ bool Screenshot_Service::init(void* configPtr) {
 bool Screenshot_Service::init(const Config& config) {
 
     m_requestedResourcesNames = {"optional<OpenGL_Context>", // TODO: for GLScreenshoSource. how to kill?
-        frontend_resources::MegaMolGraph_Req_Name, "optional<GUIState>", "RuntimeConfig",
-        "optional<GUIRegisterWindow>"};
-
-    this->m_frontbufferToPNG_trigger = [&](std::filesystem::path const& filename) -> bool {
-        log("write screenshot to " + filename.generic_u8string());
-        return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
-    };
+        frontend_resources::MegaMolGraph_Req_Name, "optional<GUIState>", "RuntimeConfig", "optional<GUIRegisterWindow>",
+        "RuntimeInfo"};
 
     screenshot_show_privacy_note = config.show_privacy_note;
-
-    this->m_imagewrapperToPNG_trigger = [&](megamol::frontend_resources::ImageWrapper const& image,
-                                            std::filesystem::path const& filename) -> bool {
-        log("write screenshot to " + filename.generic_u8string());
-        return m_toFileWriter_resource.write_screenshot(
-            megamol::frontend_resources::ImageWrapperScreenshotSource(image), filename);
-    };
 
     log("initialized successfully");
     return true;
@@ -218,6 +207,18 @@ bool Screenshot_Service::init(const Config& config) {
 void Screenshot_Service::close() {}
 
 std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
+    this->m_frontbufferToPNG_trigger = [&](std::filesystem::path const& filename) -> bool {
+        log("write screenshot to " + filename.generic_u8string());
+        return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename, ri_);
+    };
+
+    this->m_imagewrapperToPNG_trigger = [&](megamol::frontend_resources::ImageWrapper const& image,
+                                            std::filesystem::path const& filename) -> bool {
+        log("write screenshot to " + filename.generic_u8string());
+        return m_toFileWriter_resource.write_screenshot(
+            megamol::frontend_resources::ImageWrapperScreenshotSource(image), filename, ri_);
+    };
+
     this->m_providedResourceReferences = {{"GLScreenshotSource", m_frontbufferSource_resource},
         {"ImageDataToPNGWriter", m_toFileWriter_resource},
         {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger},
@@ -247,6 +248,8 @@ void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> res
         gui_window_request_resource.register_notification(
             "Screenshot", std::weak_ptr<bool>(service_open_popup), privacy_note);
     }
+
+    ri_ = &resources[5].getResource<megamol::frontend_resources::RuntimeInfo>();
 }
 
 void Screenshot_Service::updateProvidedResources() {}
