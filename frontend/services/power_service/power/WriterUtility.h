@@ -23,6 +23,15 @@ inline void wf_parquet(
     }
 }
 
+inline void wf_parquet_dataverse(std::filesystem::path const& output_folder, power::segments_t const& values_map,
+    power::MetaData const* meta, std::function<void(std::string)> const& dataverse_writer) {
+    for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {
+        auto const fullpath = output_folder / ("rtx_s" + std::to_string(s_idx) + ".parquet");
+        ParquetWriter(fullpath, values_map[s_idx], meta);
+        dataverse_writer(fullpath.string());
+    }
+}
+
 inline void wf_tracy(
     std::filesystem::path const& output_folder, power::segments_t const& values_map, power::MetaData const* meta) {
 #ifdef MEGAMOL_USE_TRACY

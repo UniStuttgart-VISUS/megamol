@@ -17,6 +17,7 @@
 
 #include "RuntimeInfo.h"
 
+#include "power/CryptToken.h"
 #include "power/MetaData.h"
 #include "power/ParallelPortTrigger.h"
 #include "power/RTXInstruments.h"
@@ -256,6 +257,13 @@ private:
     frontend_resources::RuntimeInfo const* ri_;
 
     power::MetaData meta_;
+
+    std::unique_ptr<power::CryptToken> dataverse_key_ = nullptr;
+
+    struct dataverse_config_s {
+        std::string base_path;
+        std::string doi;
+    } dataverse_config_;
 };
 
 } // namespace frontend

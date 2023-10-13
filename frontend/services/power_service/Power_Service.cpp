@@ -20,6 +20,7 @@
 
 #include "LuaCallbacksCollection.h"
 
+#include "power/DataverseWriter.h"
 #include "power/WriterUtility.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
@@ -128,13 +129,17 @@ bool Power_Service::init(void* configPtr) {
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
             str_cont_, do_buffer_, sb_qpc_offset_, nullptr, tinker_config_func);
 
-    hmc_sensors_.resize(hmc8015_sensor::for_all(nullptr, 0));
-    hmc8015_sensor::for_all(hmc_sensors_.data(), hmc_sensors_.size());
-    for (auto& s : hmc_sensors_) {
-        s.synchronise_clock();
-        s.voltage_range(instrument_range::explicitly, 300);
-        s.current_range(instrument_range::explicitly, 5);
-        s.log_behaviour(std::numeric_limits<float>::lowest(), log_mode::unlimited);
+    try {
+        hmc_sensors_.resize(hmc8015_sensor::for_all(nullptr, 0));
+        hmc8015_sensor::for_all(hmc_sensors_.data(), hmc_sensors_.size());
+        for (auto& s : hmc_sensors_) {
+            s.synchronise_clock();
+            s.voltage_range(instrument_range::explicitly, 300);
+            s.current_range(instrument_range::explicitly, 5);
+            s.log_behaviour(std::numeric_limits<float>::lowest(), log_mode::unlimited);
+        }
+    } catch (...) {
+        core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: No HMC devices found");
     }
 
     //return init(*static_cast<Config*>(configPtr));
@@ -284,7 +289,16 @@ void Power_Service::fill_lua_callbacks() {
             }
             if (rtx_) {
                 if (write_to_files_) {
-                    rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy}, &meta_);
+                    if (dataverse_key_) {
+                        std::function<void(std::string)> dataverse_writer =
+                            std::bind(&power::DataverseWriter, dataverse_config_.base_path, dataverse_config_.doi,
+                                std::placeholders::_1, dataverse_key_->GetToken());
+                        power::writer_func_t parquet_dataverse_writer = std::bind(&power::wf_parquet_dataverse,
+                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, dataverse_writer);
+                        rtx_->StartMeasurement(path, {parquet_dataverse_writer, &megamol::power::wf_tracy}, &meta_);
+                    } else {
+                        rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy}, &meta_);
+                    }
                 } else {
                     rtx_->StartMeasurement(path, {&megamol::power::wf_tracy}, &meta_);
                 }
@@ -357,6 +371,21 @@ void Power_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});*/
 
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>("mmPowerDataverseKey",
+        "(string path_to_key)",
+        {[&](std::string path_to_key) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            dataverse_key_ = std::make_unique<power::CryptToken>(path_to_key);
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string>(
+        "mmPowerDataverseDataset", "(string base_path, string doi)",
+        {[&](std::string base_path, std::string doi) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            dataverse_config_.base_path = base_path;
+            dataverse_config_.doi = doi;
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
     auto& register_callbacks =
         m_requestedResourceReferences[0]
             .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
@@ -371,14 +400,30 @@ void clear_sb(power::buffers_t& buffers) {
 }
 
 void Power_Service::write_sample_buffers() {
-    ParquetWriter(
-        std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt_) + ".parquet"), nvml_buffers_);
-    ParquetWriter(
-        std::filesystem::path(write_folder_) / ("emi_s" + std::to_string(seg_cnt_) + ".parquet"), emi_buffers_);
-    ParquetWriter(
-        std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt_) + ".parquet"), msr_buffers_);
-    ParquetWriter(
-        std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt_) + ".parquet"), tinker_buffers_);
+    auto const nvml_path = std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt_) + ".parquet");
+    ParquetWriter(nvml_path, nvml_buffers_);
+    auto const emi_path = std::filesystem::path(write_folder_) / ("emi_s" + std::to_string(seg_cnt_) + ".parquet");
+    ParquetWriter(emi_path, emi_buffers_);
+    auto const msr_path = std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt_) + ".parquet");
+    ParquetWriter(msr_path, msr_buffers_);
+    auto const tinker_path =
+        std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt_) + ".parquet");
+    ParquetWriter(tinker_path, tinker_buffers_);
+
+    if (dataverse_key_) {
+        if (!nvml_buffers_.empty())
+            power::DataverseWriter(
+                dataverse_config_.base_path, dataverse_config_.doi, nvml_path.string(), dataverse_key_->GetToken());
+        if (!emi_buffers_.empty())
+            power::DataverseWriter(
+                dataverse_config_.base_path, dataverse_config_.doi, emi_path.string(), dataverse_key_->GetToken());
+        if (!msr_buffers_.empty())
+            power::DataverseWriter(
+                dataverse_config_.base_path, dataverse_config_.doi, msr_path.string(), dataverse_key_->GetToken());
+        if (!tinker_buffers_.empty())
+            power::DataverseWriter(
+                dataverse_config_.base_path, dataverse_config_.doi, tinker_path.string(), dataverse_key_->GetToken());
+    }
 
 #if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
     static std::string name = "nvml_debug";
