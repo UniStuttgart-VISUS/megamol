@@ -2688,7 +2688,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
-            auto* selected_slot_uid_ptr = (ImGuiID*)payload->Data;
+            auto* selected_slot_uid_ptr = (ImGuiID*) payload->Data;
             if (selected_slot_uid_ptr == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__,
@@ -3504,7 +3504,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_PROFILING_DATA")) {
                 assert(payload->DataSize == (dnd_size * sizeof(char)));
-                std::string payload_id = (const char*)payload->Data;
+                std::string payload_id = (const char*) payload->Data;
                 try {
                     auto uid_payload = static_cast<ImGuiID>(std::strtol(payload_id.c_str(), nullptr, 10));
                     if (errno == ERANGE) {

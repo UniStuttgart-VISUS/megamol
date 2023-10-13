@@ -191,7 +191,7 @@ bool megamol::infovis::PCAProjection::project(megamol::datatools::table::TableDa
 
 
     covarianceMatrix = covarianceMatrix.transpose() * covarianceMatrix;
-    covarianceMatrix = covarianceMatrix / (float)(rowsCount - 1);
+    covarianceMatrix = covarianceMatrix / (float) (rowsCount - 1);
 
 
     // calculate Eigenvalues and Eigenvectors

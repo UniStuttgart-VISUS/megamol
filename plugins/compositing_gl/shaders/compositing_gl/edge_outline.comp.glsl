@@ -4,7 +4,8 @@ uniform sampler2D normal_tx2D;
 uniform sampler2D depth_tx2D;
 uniform sampler2D noise_tx2D;
 
-layout(rgba16) writeonly uniform image2D tgt_tx2D;
+layout(OUTFORMAT) writeonly uniform image2D tgt_tx2D;
+
 
 uniform mat4 view_mx;
 uniform mat4 proj_mx;

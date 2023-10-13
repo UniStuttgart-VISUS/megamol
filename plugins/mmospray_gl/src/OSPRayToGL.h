@@ -19,7 +19,7 @@ inline constexpr auto ospray_to_gl_init_func = [](std::shared_ptr<glowl::Framebu
     fbo->width = width;
     fbo->height = height;
 
-    glGenTextures(1, (GLuint*)&fbo->data.col_tex);
+    glGenTextures(1, (GLuint*) &fbo->data.col_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.col_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -28,7 +28,7 @@ inline constexpr auto ospray_to_gl_init_func = [](std::shared_ptr<glowl::Framebu
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenTextures(1, (GLuint*)&fbo->data.depth_tex);
+    glGenTextures(1, (GLuint*) &fbo->data.depth_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.depth_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

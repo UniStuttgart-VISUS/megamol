@@ -615,7 +615,7 @@ void TableToLines::colorTransferGray(std::vector<float>& grayArray, float const*
         } else {
             float exact_tf = (tableSize - 1) * scaled_gray;
             int floor = std::floor(exact_tf);
-            float tail = exact_tf - (float)floor;
+            float tail = exact_tf - (float) floor;
             floor *= 4;
             for (int i = 0; i < target_length; i++) {
                 float colorFloor = transferTable[floor + i];

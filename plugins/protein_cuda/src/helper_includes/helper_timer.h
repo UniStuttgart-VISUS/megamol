@@ -79,10 +79,10 @@ public:
             LARGE_INTEGER temp;
 
             // get the tick frequency from the OS
-            QueryPerformanceFrequency((LARGE_INTEGER*)&temp);
+            QueryPerformanceFrequency((LARGE_INTEGER*) &temp);
 
             // convert to type in which it is needed
-            freq = ((double)temp.QuadPart) / 1000.0;
+            freq = ((double) temp.QuadPart) / 1000.0;
 
             // rememeber query
             freq_set = true;
@@ -145,7 +145,7 @@ private:
 //! Start time measurement
 ////////////////////////////////////////////////////////////////////////////////
 inline void StopWatchWin::start() {
-    QueryPerformanceCounter((LARGE_INTEGER*)&start_time);
+    QueryPerformanceCounter((LARGE_INTEGER*) &start_time);
     running = true;
 }
 
@@ -154,8 +154,8 @@ inline void StopWatchWin::start() {
 //! variable. Also increment the number of times this clock has been run.
 ////////////////////////////////////////////////////////////////////////////////
 inline void StopWatchWin::stop() {
-    QueryPerformanceCounter((LARGE_INTEGER*)&end_time);
-    diff_time = (float)(((double)end_time.QuadPart - (double)start_time.QuadPart) / freq);
+    QueryPerformanceCounter((LARGE_INTEGER*) &end_time);
+    diff_time = (float) (((double) end_time.QuadPart - (double) start_time.QuadPart) / freq);
 
     total_time += diff_time;
     clock_sessions++;
@@ -172,7 +172,7 @@ inline void StopWatchWin::reset() {
     clock_sessions = 0;
 
     if (running) {
-        QueryPerformanceCounter((LARGE_INTEGER*)&start_time);
+        QueryPerformanceCounter((LARGE_INTEGER*) &start_time);
     }
 }
 
@@ -189,8 +189,8 @@ inline float StopWatchWin::getTime() {
 
     if (running) {
         LARGE_INTEGER temp;
-        QueryPerformanceCounter((LARGE_INTEGER*)&temp);
-        retval += (float)(((double)(temp.QuadPart - start_time.QuadPart)) / freq);
+        QueryPerformanceCounter((LARGE_INTEGER*) &temp);
+        retval += (float) (((double) (temp.QuadPart - start_time.QuadPart)) / freq);
     }
 
     return retval;
@@ -330,7 +330,7 @@ inline float StopWatchLinux::getDiffTime() {
     gettimeofday(&t_time, 0);
 
     // time difference in milli-seconds
-    return (float)(1000.0 * (t_time.tv_sec - start_time.tv_sec) + (0.001 * (t_time.tv_usec - start_time.tv_usec)));
+    return (float) (1000.0 * (t_time.tv_sec - start_time.tv_sec) + (0.001 * (t_time.tv_usec - start_time.tv_usec)));
 }
 #endif // WIN32
 
@@ -345,9 +345,9 @@ inline float StopWatchLinux::getDiffTime() {
 inline bool sdkCreateTimer(StopWatchInterface** timer_interface) {
     //printf("sdkCreateTimer called object %08x\n", (void *)*timer_interface);
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
-    *timer_interface = (StopWatchInterface*)new StopWatchWin();
+    *timer_interface = (StopWatchInterface*) new StopWatchWin();
 #else
-    *timer_interface = (StopWatchInterface*)new StopWatchLinux();
+    *timer_interface = (StopWatchInterface*) new StopWatchLinux();
 #endif
     return (*timer_interface != NULL) ? true : false;
 }

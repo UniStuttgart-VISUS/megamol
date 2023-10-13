@@ -3,7 +3,7 @@
 uniform sampler2D src0_tx2D; // primary source texture, target texture resolution will match this one
 uniform sampler2D src1_tx2D; // secondary source texture, is read from using normalized texture coords derived from primary
 
-layout(rgba16) writeonly uniform image2D tgt_tx2D;
+layout(OUTFORMAT) writeonly uniform image2D tgt_tx2D;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 

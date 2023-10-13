@@ -1001,7 +1001,7 @@ DWORD TetraVoxelizer::Run(void* userData) {
         UINT64 numParticles = ps.GetCount();
         unsigned int stride = ps.GetVertexDataStride();
         geocalls::MultiParticleDataCall::Particles::VertexDataType dataType = ps.GetVertexDataType();
-        unsigned char* vertexData = (unsigned char*)ps.GetVertexData();
+        unsigned char* vertexData = (unsigned char*) ps.GetVertexData();
         switch (dataType) {
         case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
             continue;
@@ -1035,7 +1035,7 @@ DWORD TetraVoxelizer::Run(void* userData) {
         UINT64 numParticles = ps.GetCount();
         unsigned int stride = ps.GetVertexDataStride();
         geocalls::MultiParticleDataCall::Particles::VertexDataType dataType = ps.GetVertexDataType();
-        unsigned char* vertexData = (unsigned char*)ps.GetVertexData();
+        unsigned char* vertexData = (unsigned char*) ps.GetVertexData();
         switch (dataType) {
         case geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE:
             continue;
@@ -1050,9 +1050,9 @@ DWORD TetraVoxelizer::Run(void* userData) {
             return -2;
         }
         for (UINT64 l = 0; l < numParticles; l++) {
-            vislib::math::ShallowPoint<float, 3> sp((float*)&vertexData[(vertFloatSize + stride) * l]);
+            vislib::math::ShallowPoint<float, 3> sp((float*) &vertexData[(vertFloatSize + stride) * l]);
             if (dataType == geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-                currRad = (float)vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
+                currRad = (float) vertexData[(vertFloatSize + stride) * l + 3 * sizeof(float)];
                 currRad *= sjd->RadMult;
             }
             if (Centroid.Distance(sp) > currRad + distOffset) {

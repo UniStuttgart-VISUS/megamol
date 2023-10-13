@@ -225,7 +225,7 @@ bool TimeLineRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         this->moveRightFrameParam.ResetDirty();
         // Set selected animation time to right animation time frame
         float at = ccc->GetSelectedKeyframe().GetAnimTime();
-        float fpsFrac = 1.0f / (float)(this->fps);
+        float fpsFrac = 1.0f / (float) (this->fps);
         float t = std::round(at / fpsFrac) * fpsFrac;
         t += fpsFrac;
         if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
@@ -240,7 +240,7 @@ bool TimeLineRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         this->moveLeftFrameParam.ResetDirty();
         // Set selected animation time to left animation time frame
         float at = ccc->GetSelectedKeyframe().GetAnimTime();
-        float fpsFrac = 1.0f / (float)(this->fps);
+        float fpsFrac = 1.0f / (float) (this->fps);
         float t = std::round(at / fpsFrac) * fpsFrac;
         t -= fpsFrac;
         if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
@@ -358,7 +358,7 @@ bool TimeLineRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     }
 
     // Push frame marker lines ------------------------------------------------
-    float frameFrac = this->axes[Axis::X].length / ((float)(this->fps) * (this->axes[Axis::X].maxValue)) *
+    float frameFrac = this->axes[Axis::X].length / ((float) (this->fps) * (this->axes[Axis::X].maxValue)) *
                       this->axes[Axis::X].scaleFactor;
     loop_max = this->axes[Axis::X].length + (frameFrac / 2.0f);
     for (float f = this->axes[Axis::X].scaleOffset; f <= loop_max; f = (f + frameFrac)) {
@@ -830,8 +830,8 @@ bool TimeLineRenderer::OnMouseMove(double x, double y) {
     float yAxisValue;
 
     // Store current mouse position
-    this->mouseX = (float)static_cast<int>(x);
-    this->mouseY = this->viewport.y - (float)static_cast<int>(y);
+    this->mouseX = (float) static_cast<int>(x);
+    this->mouseY = this->viewport.y - (float) static_cast<int>(y);
 
     // LEFT-CLICK --- keyframe selection
     if (this->mouseButton == MouseButton::BUTTON_LEFT) {

@@ -79,17 +79,17 @@ while read -r file; do
   if [[ "$is_cpp" == true ]]; then
     # ClangFormat
     if [[ "$_fix" == true ]]; then
-      clang-format-14 -i "$file"
+      clang-format-16 -i "$file"
     else
       # Workaround "set -e" and store exit code
       format_exit_code=0
-      output="$(clang-format-14 --dry-run --Werror "$file" 2>&1)" || format_exit_code=$?
+      output="$(clang-format-16 --dry-run --Werror "$file" 2>&1)" || format_exit_code=$?
       if [[ $format_exit_code -ne 0 ]]; then
         EXIT_CODE=1
         echo "::error::ClangFormat found issues in: $file"
         #echo "$output"
         # Show detailed diff. Requires ClangFormat to run again, but should mostly affect only a few files.
-        clang-format-14 "$file" | diff --color=always -u "$file" - || true
+        clang-format-16 "$file" | diff --color=always -u "$file" - || true
       fi
     fi
 

@@ -442,7 +442,7 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Read(void* outBuf, const
             this->mappedData = this->SafeMapView();
         }
         dataLeft = bufS;
-        bufferPos = (char*)outBuf;
+        bufferPos = (char*) outBuf;
         while (dataLeft > 0) {
             // BUG: what happens if reading more data than available and the view
             // has been resized to smaller than viewSize because the file is shorter?

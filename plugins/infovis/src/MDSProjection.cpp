@@ -198,7 +198,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::classicMds(
     assert(squaredDissimilarityMatrix.rows() == squaredDissimilarityMatrix.cols());
 
     Eigen::MatrixXd J = Eigen::MatrixXd::Identity(rowsCount, rowsCount) -
-                        (1.0 / (double)rowsCount) * Eigen::MatrixXd::Ones(rowsCount, rowsCount);
+                        (1.0 / (double) rowsCount) * Eigen::MatrixXd::Ones(rowsCount, rowsCount);
 
     // Apply double centering
     Eigen::MatrixXd B = -0.5 * J * squaredDissimilarityMatrix * J;
@@ -317,7 +317,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::smacofMds(Eigen::MatrixXd dissi
     for (k = 0; k < countSteps; k++) {
         if (weightsAllOne) {
             Eigen::MatrixXd B = bMatrix(X, weightsMatrix, dissimilarityMatrix);
-            X = ((B * X).array()) / (float)nPoints;
+            X = ((B * X).array()) / (float) nPoints;
 
         } else {
             X = Vp * bMatrix(X, weightsMatrix, dissimilarityMatrix) * X;
@@ -427,7 +427,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::ordinalMds(Eigen::MatrixXd diss
                         for (int i : notMonotoncols) {
                             avg += distances(row, i);
                         }
-                        avg /= (double)notMonotoncols.size();
+                        avg /= (double) notMonotoncols.size();
 
                         for (int i : notMonotoncols)
                             newDistances(row, i) = avg;

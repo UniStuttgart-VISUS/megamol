@@ -252,7 +252,7 @@ int wkf_thread_numprocessors(void) {
 //static void wkf_cpuid(uint32_t eax, uint32_t ecx, uint32_t* abcd) {
 static void wkf_cpuid(unsigned int eax, unsigned int ecx, unsigned int* abcd) {
 #if defined(_MSC_VER)
-    __cpuidex((int*)abcd, eax, ecx);
+    __cpuidex((int*) abcd, eax, ecx);
 #else
                                  //  uint32_t ebx, edx;
     unsigned int ebx = 0, edx = 0;
@@ -287,7 +287,7 @@ static unsigned long long wkf_xgetbv(unsigned int index) {
 #else
     unsigned int eax = 0, edx = 0;
     __asm__ __volatile__("xgetbv;" : "=a"(eax), "=d"(edx) : "c"(index));
-    return ((unsigned long long)edx << 32) | eax;
+    return ((unsigned long long) edx << 32) | eax;
 #endif
 }
 #endif
@@ -377,9 +377,9 @@ int wkf_cpu_capability_flags(wkf_cpu_caps_t* cpucaps) {
         int logicalcores = (cpuinfo[1] >> 16) && 0xFF;
         int physicalcores = logicalcores;
         char vendor[16] = {0};
-        ((unsigned*)vendor)[0] = vendcpuinfo[1];
-        ((unsigned*)vendor)[1] = vendcpuinfo[3];
-        ((unsigned*)vendor)[2] = vendcpuinfo[2];
+        ((unsigned*) vendor)[0] = vendcpuinfo[1];
+        ((unsigned*) vendor)[1] = vendcpuinfo[3];
+        ((unsigned*) vendor)[2] = vendcpuinfo[2];
 
         /* hmm, not quite right yet */
         if (!strcmp(vendor, "GenuineIntel")) {
@@ -548,7 +548,7 @@ int* wkf_cpu_affinitylist(int* cpuaffinitycount) {
 
     /* build affinity list */
     if (affinitycount > 0) {
-        affinitylist = (int*)malloc(affinitycount * sizeof(int));
+        affinitylist = (int*) malloc(affinitycount * sizeof(int));
         if (affinitylist == NULL)
             return NULL;
 
@@ -657,7 +657,7 @@ int wkf_thread_create(wkf_thread_t* thr, void* fctn(void*), void* arg) {
 #ifdef WKFTHREADS
 #ifdef _MSC_VER
     DWORD tid; /* thread id, msvc only */
-    *thr = CreateThread(NULL, 8192, (LPTHREAD_START_ROUTINE)fctn, arg, 0, &tid);
+    *thr = CreateThread(NULL, 8192, (LPTHREAD_START_ROUTINE) fctn, arg, 0, &tid);
     if (*thr == NULL) {
         status = -1;
     }
@@ -675,18 +675,18 @@ int wkf_thread_create(wkf_thread_t* thr, void* fctn(void*), void* arg) {
         pthread_attr_t attr;
         pthread_attr_init(&attr);
         pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-        status = pthread_create(thr, &attr, (WKFTHREAD_START_ROUTINE)fctn, arg);
+        status = pthread_create(thr, &attr, (WKFTHREAD_START_ROUTINE) fctn, arg);
         pthread_attr_destroy(&attr);
     }
 #elif defined(__PARAGON__)
     status = pthread_create(thr, pthread_attr_default, fctn, arg);
 #else
-    status = pthread_create(thr, NULL, (WKFTHREAD_START_ROUTINE)fctn, arg);
+    status = pthread_create(thr, NULL, (WKFTHREAD_START_ROUTINE) fctn, arg);
 #endif
 #endif /* USEPOSIXTHREADS */
 
 #ifdef USEUITHREADS
-    status = thr_create(NULL, 0, (WKFTHREAD_START_ROUTINE)fctn, arg, 0, thr);
+    status = thr_create(NULL, 0, (WKFTHREAD_START_ROUTINE) fctn, arg, 0, thr);
 #endif /* USEUITHREADS */
 #endif /* WKFTHREADS */
 
@@ -1361,7 +1361,7 @@ int wkf_rwlock_unlock(wkf_rwlock_t* rwp) {
  * Simple counting barrier primitive
  */
 wkf_barrier_t* wkf_thread_barrier_init(int n_clients) {
-    wkf_barrier_t* barrier = (wkf_barrier_t*)malloc(sizeof(wkf_barrier_t));
+    wkf_barrier_t* barrier = (wkf_barrier_t*) malloc(sizeof(wkf_barrier_t));
 
 #ifdef WKFTHREADS
     if (barrier != NULL) {
@@ -1567,7 +1567,7 @@ int wkf_tilestack_init(wkf_tilestack_t* s, int size) {
 
     if (size > 0) {
         s->size = size;
-        s->s = (wkf_tasktile_t*)malloc(s->size * sizeof(wkf_tasktile_t));
+        s->s = (wkf_tasktile_t*) malloc(s->size * sizeof(wkf_tasktile_t));
     } else {
         s->size = 0;
         s->s = NULL;
@@ -1592,7 +1592,7 @@ int wkf_tilestack_compact(wkf_tilestack_t* s) {
 #endif
     if (s->size > (s->top + 1)) {
         int newsize = s->top + 1;
-        wkf_tasktile_t* tmp = (wkf_tasktile_t*)realloc(s->s, newsize * sizeof(wkf_tasktile_t));
+        wkf_tasktile_t* tmp = (wkf_tasktile_t*) realloc(s->s, newsize * sizeof(wkf_tasktile_t));
         if (tmp == NULL) {
 #if defined(WKFTHREADS)
             wkf_mutex_unlock(&s->mtx);
@@ -1617,7 +1617,7 @@ int wkf_tilestack_push(wkf_tilestack_t* s, const wkf_tasktile_t* t) {
     s->top++;
     if (s->top >= s->size) {
         int newsize = s->size + s->growthrate;
-        wkf_tasktile_t* tmp = (wkf_tasktile_t*)realloc(s->s, newsize * sizeof(wkf_tasktile_t));
+        wkf_tasktile_t* tmp = (wkf_tasktile_t*) realloc(s->s, newsize * sizeof(wkf_tasktile_t));
         if (tmp == NULL) {
             s->top--;
 #if defined(WKFTHREADS)
@@ -1805,8 +1805,8 @@ int wkf_shared_iterator_getfatalerror(wkf_shared_iterator_t* it) {
  */
 static void* wkf_threadpool_workerproc(void* voidparms) {
     void* (*fctn)(void*);
-    wkf_threadpool_workerdata_t* workerdata = (wkf_threadpool_workerdata_t*)voidparms;
-    wkf_threadpool_t* thrpool = (wkf_threadpool_t*)workerdata->thrpool;
+    wkf_threadpool_workerdata_t* workerdata = (wkf_threadpool_workerdata_t*) voidparms;
+    wkf_threadpool_t* thrpool = (wkf_threadpool_t*) workerdata->thrpool;
 
     while ((fctn = wkf_thread_run_barrier(&thrpool->runbar, NULL, NULL, &workerdata->parms)) != NULL) {
         (*fctn)(workerdata);
@@ -1825,7 +1825,7 @@ static void* wkf_threadpool_workersync(void* voidparms) {
 wkf_threadpool_t* wkf_threadpool_create(int workercount, int* devlist) {
     int i;
     wkf_threadpool_t* thrpool = NULL;
-    thrpool = (wkf_threadpool_t*)malloc(sizeof(wkf_threadpool_t));
+    thrpool = (wkf_threadpool_t*) malloc(sizeof(wkf_threadpool_t));
     if (thrpool == NULL)
         return NULL;
 
@@ -1837,7 +1837,7 @@ wkf_threadpool_t* wkf_threadpool_create(int workercount, int* devlist) {
 
     /* if caller provides a device list, use it, otherwise we assume */
     /* all workers are CPU cores */
-    thrpool->devlist = (int*)malloc(sizeof(int) * workercount);
+    thrpool->devlist = (int*) malloc(sizeof(int) * workercount);
     if (devlist == NULL) {
         for (i = 0; i < workercount; i++)
             thrpool->devlist[i] = -1; /* mark as a CPU core */
@@ -1856,8 +1856,8 @@ wkf_threadpool_t* wkf_threadpool_create(int workercount, int* devlist) {
     wkf_thread_run_barrier_init(&thrpool->runbar, workercount + 1);
 
     /* allocate and initialize thread pool */
-    thrpool->threads = (wkf_thread_t*)malloc(sizeof(wkf_thread_t) * workercount);
-    thrpool->workerdata = (wkf_threadpool_workerdata_t*)malloc(sizeof(wkf_threadpool_workerdata_t) * workercount);
+    thrpool->threads = (wkf_thread_t*) malloc(sizeof(wkf_thread_t) * workercount);
+    thrpool->workerdata = (wkf_threadpool_workerdata_t*) malloc(sizeof(wkf_threadpool_workerdata_t) * workercount);
     memset(thrpool->workerdata, 0, sizeof(wkf_threadpool_workerdata_t) * workercount);
 
     /* setup per-worker data */
@@ -1957,7 +1957,7 @@ int wkf_threadpool_get_workercount(wkf_threadpool_t* thrpool) {
 
 /** worker thread can call this to get its ID and number of peers */
 int wkf_threadpool_worker_getid(void* voiddata, int* threadid, int* threadcount) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voiddata;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voiddata;
     if (threadid != NULL)
         *threadid = worker->threadid;
 
@@ -1970,7 +1970,7 @@ int wkf_threadpool_worker_getid(void* voiddata, int* threadid, int* threadcount)
 
 /** worker thread can call this to get its CPU/GPU device ID */
 int wkf_threadpool_worker_getdevid(void* voiddata, int* devid) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voiddata;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voiddata;
     if (devid != NULL)
         *devid = worker->devid;
 
@@ -1985,7 +1985,7 @@ int wkf_threadpool_worker_getdevid(void* voiddata, int* devid) {
  * device initialization process
  */
 int wkf_threadpool_worker_setdevspeed(void* voiddata, float speed) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voiddata;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voiddata;
     worker->devspeed = speed;
     return 0;
 }
@@ -1996,7 +1996,7 @@ int wkf_threadpool_worker_setdevspeed(void* voiddata, float speed) {
  * as determined by the SM/core count and clock rate
  */
 int wkf_threadpool_worker_getdevspeed(void* voiddata, float* speed) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voiddata;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voiddata;
     if (speed != NULL)
         *speed = worker->devspeed;
     return 0;
@@ -2008,10 +2008,10 @@ int wkf_threadpool_worker_getdevspeed(void* voiddata, float* speed) {
  * as determined by the SM/core count and clock rate
  */
 int wkf_threadpool_worker_devscaletile(void* voiddata, int* tilesize) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voiddata;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voiddata;
     if (tilesize != NULL) {
         int scaledtilesize;
-        scaledtilesize = (int)(worker->devspeed * ((float)(*tilesize)));
+        scaledtilesize = (int) (worker->devspeed * ((float) (*tilesize)));
         if (scaledtilesize < 1)
             scaledtilesize = 1;
 
@@ -2024,7 +2024,7 @@ int wkf_threadpool_worker_devscaletile(void* voiddata, int* tilesize) {
 
 /** worker thread can call this to get its client data pointer */
 int wkf_threadpool_worker_getdata(void* voiddata, void** clientdata) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voiddata;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voiddata;
     if (clientdata != NULL)
         *clientdata = worker->parms;
 
@@ -2043,7 +2043,7 @@ int wkf_threadpool_sched_dynamic(wkf_threadpool_t* thrpool, wkf_tasktile_t* tile
 /** iterate the shared iterator over the requested half-open interval */
 int wkf_threadpool_next_tile(void* voidparms, int reqsize, wkf_tasktile_t* tile) {
     int rc;
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voidparms;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voidparms;
     rc = wkf_shared_iterator_next_tile(worker->iter, reqsize, tile);
     if (rc == WKF_SCHED_DONE) {
         /* if the error stack is empty, then we're done, otherwise pop */
@@ -2061,14 +2061,14 @@ int wkf_threadpool_next_tile(void* voidparms, int reqsize, wkf_tasktile_t* tile)
  * already taken from the scheduler
  */
 int wkf_threadpool_tile_failed(void* voidparms, wkf_tasktile_t* tile) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voidparms;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voidparms;
     return wkf_tilestack_push(worker->errorstack, tile);
 }
 
 
 /* worker thread calls this to indicate that an unrecoverable error occured */
 int wkf_threadpool_setfatalerror(void* voidparms) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voidparms;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voidparms;
     wkf_shared_iterator_setfatalerror(worker->iter);
     return 0;
 }
@@ -2076,7 +2076,7 @@ int wkf_threadpool_setfatalerror(void* voidparms) {
 
 /* worker thread calls this to indicate that an unrecoverable error occured */
 int wkf_threadpool_getfatalerror(void* voidparms) {
-    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*)voidparms;
+    wkf_threadpool_workerdata_t* worker = (wkf_threadpool_workerdata_t*) voidparms;
     /* query error status for return to caller */
     return wkf_shared_iterator_getfatalerror(worker->iter);
 }
@@ -2100,12 +2100,12 @@ int wkf_threadlaunch(int numprocs, void* clientdata, void* fctn(void*), wkf_task
         return -1;
 
     /* allocate array of threads */
-    threads = (wkf_thread_t*)calloc(numprocs * sizeof(wkf_thread_t), 1);
+    threads = (wkf_thread_t*) calloc(numprocs * sizeof(wkf_thread_t), 1);
     if (threads == NULL)
         return -1;
 
     /* allocate and initialize array of thread parameters */
-    parms = (wkf_threadlaunch_t*)malloc(numprocs * sizeof(wkf_threadlaunch_t));
+    parms = (wkf_threadlaunch_t*) malloc(numprocs * sizeof(wkf_threadlaunch_t));
     if (parms == NULL) {
         free(threads);
         return -1;
@@ -2127,7 +2127,7 @@ int wkf_threadlaunch(int numprocs, void* clientdata, void* fctn(void*), wkf_task
         /*     will just be using the same device anyway */
         /*     Ideally we shouldn't need to do this....  */
         /* single thread does all of the work */
-        fctn((void*)&parms[0]);
+        fctn((void*) &parms[0]);
     } else {
         /* spawn child threads to do the work */
         for (i = 0; i < numprocs; i++) {
@@ -2141,7 +2141,7 @@ int wkf_threadlaunch(int numprocs, void* clientdata, void* fctn(void*), wkf_task
     }
 #else
     /* single thread does all of the work */
-    fctn((void*)&parms[0]);
+    fctn((void*) &parms[0]);
 #endif
 
     /* free threads/parms */
@@ -2160,7 +2160,7 @@ int wkf_threadlaunch(int numprocs, void* clientdata, void* fctn(void*), wkf_task
 
 /** worker thread can call this to get its ID and number of peers */
 int wkf_threadlaunch_getid(void* voidparms, int* threadid, int* threadcount) {
-    wkf_threadlaunch_t* worker = (wkf_threadlaunch_t*)voidparms;
+    wkf_threadlaunch_t* worker = (wkf_threadlaunch_t*) voidparms;
     if (threadid != NULL)
         *threadid = worker->threadid;
 
@@ -2173,7 +2173,7 @@ int wkf_threadlaunch_getid(void* voidparms, int* threadid, int* threadcount) {
 
 /** worker thread can call this to get its client data pointer */
 int wkf_threadlaunch_getdata(void* voidparms, void** clientdata) {
-    wkf_threadlaunch_t* worker = (wkf_threadlaunch_t*)voidparms;
+    wkf_threadlaunch_t* worker = (wkf_threadlaunch_t*) voidparms;
     if (clientdata != NULL)
         *clientdata = worker->clientdata;
 
@@ -2183,14 +2183,14 @@ int wkf_threadlaunch_getdata(void* voidparms, void** clientdata) {
 
 /** iterate the shared iterator over the requested half-open interval */
 int wkf_threadlaunch_next_tile(void* voidparms, int reqsize, wkf_tasktile_t* tile) {
-    wkf_threadlaunch_t* worker = (wkf_threadlaunch_t*)voidparms;
+    wkf_threadlaunch_t* worker = (wkf_threadlaunch_t*) voidparms;
     return wkf_shared_iterator_next_tile(worker->iter, reqsize, tile);
 }
 
 
 /** worker thread calls this to indicate that an unrecoverable error occured */
 int wkf_threadlaunch_setfatalerror(void* voidparms) {
-    wkf_threadlaunch_t* worker = (wkf_threadlaunch_t*)voidparms;
+    wkf_threadlaunch_t* worker = (wkf_threadlaunch_t*) voidparms;
     return wkf_shared_iterator_setfatalerror(worker->iter);
 }
 

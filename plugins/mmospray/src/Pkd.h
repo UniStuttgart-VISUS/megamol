@@ -145,7 +145,7 @@ struct PKDBuildJob {
 };
 
 static void pkdBuildThread(void* arg) {
-    PKDBuildJob* job = (PKDBuildJob*)arg;
+    PKDBuildJob* job = (PKDBuildJob*) arg;
     job->pkd->buildRec(job->nodeID, job->bounds, job->depth);
     delete job;
 }

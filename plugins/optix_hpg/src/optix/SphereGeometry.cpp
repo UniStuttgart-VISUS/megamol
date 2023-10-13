@@ -171,7 +171,7 @@ bool megamol::optix_hpg::SphereGeometry::assertData(geocalls::MultiParticleDataC
         SBTRecord<device::SphereGeoData> sbt_record;
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_module_, &sbt_record));
 
-        sbt_record.data.particleBufferPtr = (device::Particle*)particle_data_[pl_idx];
+        sbt_record.data.particleBufferPtr = (device::Particle*) particle_data_[pl_idx];
         sbt_record.data.colorBufferPtr = nullptr;
         sbt_record.data.radius = particles.GetGlobalRadius();
         sbt_record.data.hasColorData = has_color;
@@ -180,7 +180,7 @@ bool megamol::optix_hpg::SphereGeometry::assertData(geocalls::MultiParticleDataC
                 particles.GetGlobalColour()[2] / 255.f, particles.GetGlobalColour()[3] / 255.f);
 
         if (has_color) {
-            sbt_record.data.colorBufferPtr = (glm::vec4*)color_data_[pl_idx];
+            sbt_record.data.colorBufferPtr = (glm::vec4*) color_data_[pl_idx];
         }
         sbt_records_.push_back(sbt_record);
 

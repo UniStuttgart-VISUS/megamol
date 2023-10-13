@@ -134,7 +134,7 @@ GenericFilter::ImagePtr GenericFilter::operator()() {
 ImageMetadata GenericFilter::getMetadata() const {
     if (input.image1) {
         ImageMetadata metadata = input.image1->getMetadata();
-        metadata.hash = util::computeHash(input.image1, input.image2, (int)input.operation);
+        metadata.hash = util::computeHash(input.image1, input.image2, (int) input.operation);
         return metadata;
     } else {
         return {};

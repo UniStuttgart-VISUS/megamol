@@ -13,6 +13,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "CompositingOutHandler.h"
 #include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
@@ -96,6 +97,13 @@ private:
     void fitTextures(std::shared_ptr<glowl::Texture2D> source);
 
     /**
+     * \brief Updates texture format variables and recompiles shaders.
+     *
+     * @return 'true' if successfully updated, 'false' otherwise
+     */
+    bool textureFormatUpdate();
+
+    /**
      * Recalculates the contents of the kernel buffer based on the input
      */
     void recalcKernel();
@@ -112,6 +120,9 @@ private:
     core::param::ParamSlot kernelRadiusParam_;
     /** Parameter slot for the effect strength */
     core::param::ParamSlot lambdaValueParam_;
+
+    /** Parameter for choosing texture formats used within this module*/
+    megamol::core::param::ParamSlot out_texture_format_slot_;
 
     /** version identifier */
     uint32_t version_;
@@ -130,5 +141,7 @@ private:
 
     /** buffer for the gauss kernel */
     std::unique_ptr<glowl::BufferObject> gaussValues_;
+
+    CompositingOutHandler outFormatHandler_;
 };
 } // namespace megamol::compositing_gl

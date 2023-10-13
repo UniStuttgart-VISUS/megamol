@@ -218,7 +218,7 @@ bool ParameterList::Draw() {
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
             assert(payload->DataSize == (dnd_size * sizeof(char)));
-            std::string payload_id = (const char*)payload->Data;
+            std::string payload_id = (const char*) payload->Data;
             try {
                 auto module_uid_payload = static_cast<ImGuiID>(std::strtol(payload_id.c_str(), nullptr, 10));
                 if (errno == ERANGE) {

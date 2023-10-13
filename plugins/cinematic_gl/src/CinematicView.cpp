@@ -561,7 +561,7 @@ bool CinematicView::render_to_file_setup() {
     unsigned int firstFrame = static_cast<unsigned int>(this->firstRenderFrameParam.Param<param::IntParam>()->Value());
     unsigned int lastFrame = static_cast<unsigned int>(this->lastRenderFrameParam.Param<param::IntParam>()->Value());
 
-    unsigned int maxFrame = (unsigned int)(ccc->GetTotalAnimTime() * (float)this->fps);
+    unsigned int maxFrame = (unsigned int) (ccc->GetTotalAnimTime() * (float) this->fps);
     if (firstFrame > maxFrame) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[CINEMATIC VIEW] [render_to_file_setup] Max frame count exceeded. Limiting first frame to maximum frame "
@@ -578,11 +578,11 @@ bool CinematicView::render_to_file_setup() {
     }
 
     this->png_data.cnt = firstFrame;
-    this->png_data.animTime = (float)this->png_data.cnt / (float)this->fps;
+    this->png_data.animTime = (float) this->png_data.cnt / (float) this->fps;
 
     // Calculate pre-decimal point positions for frame counter in filename
     this->png_data.exp_frame_cnt = 1;
-    float frameCnt = (float)(this->fps) * ccc->GetTotalAnimTime();
+    float frameCnt = (float) (this->fps) * ccc->GetTotalAnimTime();
     while (frameCnt > 1.0f) {
         frameCnt /= 10.0f;
         this->png_data.exp_frame_cnt++;
@@ -750,7 +750,7 @@ bool CinematicView::render_to_file_write() {
 
         // Next frame/time step
         this->png_data.cnt++;
-        this->png_data.animTime = (float)this->png_data.cnt / (float)this->fps;
+        this->png_data.animTime = (float) this->png_data.cnt / (float) this->fps;
         float fpsFrac = (1.0f / static_cast<float>(this->fps));
         // Fit animTime to exact full seconds (removing rounding error)
         if (std::abs(this->png_data.animTime - std::round(this->png_data.animTime)) < (fpsFrac / 2.0)) {

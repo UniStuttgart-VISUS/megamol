@@ -69,17 +69,17 @@ void protein::BSpline::setG(vislib::math::Vector<float, 3> v1, vislib::math::Vec
 void protein::BSpline::setN(unsigned int n) {
     this->N = n;
 
-    this->S.SetAt(0, 0, 6.0f / (float)pow((double)n, (double)3));
+    this->S.SetAt(0, 0, 6.0f / (float) pow((double) n, (double) 3));
     this->S.SetAt(0, 1, 0.0f);
     this->S.SetAt(0, 2, 0.0f);
     this->S.SetAt(0, 3, 0.0f);
-    this->S.SetAt(1, 0, 6.0f / (float)pow((double)n, (double)3));
-    this->S.SetAt(1, 1, 2.0f / (float)pow((double)n, (double)2));
+    this->S.SetAt(1, 0, 6.0f / (float) pow((double) n, (double) 3));
+    this->S.SetAt(1, 1, 2.0f / (float) pow((double) n, (double) 2));
     this->S.SetAt(1, 2, 0.0f);
     this->S.SetAt(1, 3, 0.0f);
-    this->S.SetAt(2, 0, 1.0f / (float)pow((double)n, (double)3));
-    this->S.SetAt(2, 1, 1.0f / (float)pow((double)n, (double)2));
-    this->S.SetAt(2, 2, 1.0f / (float)n);
+    this->S.SetAt(2, 0, 1.0f / (float) pow((double) n, (double) 3));
+    this->S.SetAt(2, 1, 1.0f / (float) pow((double) n, (double) 2));
+    this->S.SetAt(2, 2, 1.0f / (float) n);
     this->S.SetAt(2, 3, 0.0f);
     this->S.SetAt(3, 0, 0.0f);
     this->S.SetAt(3, 1, 0.0f);
@@ -165,7 +165,7 @@ bool protein::BSpline::computeSpline() {
         }
 
         // FIX START
-        unsigned int end = (unsigned int)this->backbone.size() - 1;
+        unsigned int end = (unsigned int) this->backbone.size() - 1;
 
         // assign the geometry matrix
         this->setG(

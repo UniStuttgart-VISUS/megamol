@@ -75,7 +75,7 @@ VTIWriter::VTIWriter()
 
     // Parameter for the output format of the data
     megamol::core::param::EnumParam* fp =
-        new megamol::core::param::EnumParam((int)protein_calls::VTKImageData::VTISOURCE_ASCII);
+        new megamol::core::param::EnumParam((int) protein_calls::VTKImageData::VTISOURCE_ASCII);
     fp->SetTypePair(protein_calls::VTKImageData::VTISOURCE_BINARY, "Binary");
     fp->SetTypePair(protein_calls::VTKImageData::VTISOURCE_ASCII, "Ascii");
     //fp->SetTypePair(VTKImageData::VTISOURCE_APPENDED, "Appended"); // TODO Not implemented yet
@@ -277,7 +277,7 @@ bool VTIWriter::writeDataAscii(
     const void* data, size_t size, std::ofstream& outfile, protein_calls::VTKImageData::DataArray::DataType t) {
     switch (t) {
     case protein_calls::VTKImageData::DataArray::VTI_FLOAT:
-        this->writeDataAsciiFloat((const float*)data, size, outfile);
+        this->writeDataAsciiFloat((const float*) data, size, outfile);
         return true;
     case protein_calls::VTKImageData::DataArray::VTI_INT:
         return true;
@@ -300,7 +300,7 @@ bool VTIWriter::writeDataBinary(
     const void* data, size_t size, std::ofstream& outfile, protein_calls::VTKImageData::DataArray::DataType t) {
     switch (t) {
     case protein_calls::VTKImageData::DataArray::VTI_FLOAT:
-        this->writeDataBinaryFloat((const float*)data, size, outfile);
+        this->writeDataBinaryFloat((const float*) data, size, outfile);
         return true;
     case protein_calls::VTKImageData::DataArray::VTI_INT:
         return true;
@@ -347,10 +347,10 @@ bool VTIWriter::writeDataBinaryFloat(const float* data, size_t size, std::ofstre
     this->buffEn.Validate((sizeFillerBytes / 3) * 4); // Buffer for encoded data
     this->buffDec.Validate(sizeBytes + 4);            // Buffer for decoded data + size
 
-    memcpy(this->buffDec.Peek(), (const char*)(&sizeBytes), 4);
+    memcpy(this->buffDec.Peek(), (const char*) (&sizeBytes), 4);
     memcpy(this->buffDec.Peek() + 4, data, sizeBytes);
 
-    Base64::Encode((const char*)this->buffDec.Peek(), this->buffEn.Peek(), sizeBytes + 4);
+    Base64::Encode((const char*) this->buffDec.Peek(), this->buffEn.Peek(), sizeBytes + 4);
     outfile.write(this->buffEn.Peek(), this->buffEn.GetCount());
 
     return true;
@@ -433,10 +433,10 @@ bool VTIWriter::writeFile(protein_calls::VTIDataCall* dc) {
     std::string digits;
     ss << dc->FrameID();
     filename.append(
-        (const char*)(this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())); // Set output folder
+        (const char*) (this->outDirSlot.Param<core::param::StringParam>()->Value().c_str())); // Set output folder
     filename.append("/");
     filename.append(
-        (const char*)(this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().c_str())); // Set prefix
+        (const char*) (this->filenamePrefixSlot.Param<core::param::StringParam>()->Value().c_str())); // Set prefix
     filename.append(".");
     filename.append((ss.str()).c_str());
     filename.append(".vti");
@@ -520,7 +520,7 @@ bool VTIWriter::writePiece(const protein_calls::VTIDataCall* dc, uint idx, std::
     // Loop through all data arrays in this pieces point data to write the
     for (size_t p = 0; p < dc->GetArrayCntOfPiecePointData(idx); ++p) {
         // Write either scalar, vector, or tensor data
-        size_t nComponents = dc->GetPointDataArrayNumberOfComponents((unsigned int)p, idx);
+        size_t nComponents = dc->GetPointDataArrayNumberOfComponents((unsigned int) p, idx);
         if (nComponents == 1) {
             outfile << " Scalars=\"";
         } else if (nComponents == 3) {
@@ -528,15 +528,15 @@ bool VTIWriter::writePiece(const protein_calls::VTIDataCall* dc, uint idx, std::
         } else {
             outfile << " Tensors=\"";
         }
-        printf("ID: %s\n", dc->GetPointDataArrayId((unsigned int)p, idx).PeekBuffer());
-        outfile << dc->GetPointDataArrayId((unsigned int)p, idx);
+        printf("ID: %s\n", dc->GetPointDataArrayId((unsigned int) p, idx).PeekBuffer());
+        outfile << dc->GetPointDataArrayId((unsigned int) p, idx);
         outfile << "\"";
     }
     outfile << ">" << std::endl;
     // Actual data
     for (size_t p = 0; p < dc->GetArrayCntOfPiecePointData(idx); ++p) {
         // Write data
-        this->writeDataArray(dc, true, (unsigned int)p, idx, outfile);
+        this->writeDataArray(dc, true, (unsigned int) p, idx, outfile);
     }
     // End point data
     outfile << "      </PointData>" << std::endl;
@@ -548,7 +548,7 @@ bool VTIWriter::writePiece(const protein_calls::VTIDataCall* dc, uint idx, std::
     // Loop through all data arrays in this pieces point data to write the
     for (size_t p = 0; p < dc->GetArrayCntOfPieceCellData(idx); ++p) {
         // Write either scalar, vector, or tensor data
-        size_t nComponents = dc->GetCellDataArrayNumberOfComponents((unsigned int)p, idx);
+        size_t nComponents = dc->GetCellDataArrayNumberOfComponents((unsigned int) p, idx);
         if (nComponents == 1) {
             outfile << " Scalars=\"";
         } else if (nComponents == 3) {
@@ -556,14 +556,14 @@ bool VTIWriter::writePiece(const protein_calls::VTIDataCall* dc, uint idx, std::
         } else {
             outfile << " Tensors=\"";
         }
-        outfile << dc->GetCellDataArrayId((unsigned int)p, idx);
+        outfile << dc->GetCellDataArrayId((unsigned int) p, idx);
         outfile << "\"";
     }
     outfile << ">" << std::endl;
     // Actual data
     for (size_t p = 0; p < dc->GetArrayCntOfPieceCellData(idx); ++p) {
         // Write data
-        this->writeDataArray(dc, true, (unsigned int)p, idx, outfile);
+        this->writeDataArray(dc, true, (unsigned int) p, idx, outfile);
     }
     // End cell data
     outfile << "      </CellData>" << std::endl;

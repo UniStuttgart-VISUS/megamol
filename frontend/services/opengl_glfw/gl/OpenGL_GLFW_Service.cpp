@@ -502,7 +502,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     XCloseDisplay(display);
 #endif
     if (m_opengl_context.major_ < 3) {
-        auto ext = std::string((char const*)glGetString(GL_EXTENSIONS));
+        auto ext = std::string((char const*) glGetString(GL_EXTENSIONS));
         std::istringstream iss(ext);
         std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(),
             std::back_inserter(m_opengl_context.ext_));
@@ -512,7 +512,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
         m_opengl_context.ext_.resize(num_ext);
         for (GLint i = 0; i < num_ext; ++i) {
-            m_opengl_context.ext_[i] = std::string((char const*)glGetStringi(GL_EXTENSIONS, i));
+            m_opengl_context.ext_[i] = std::string((char const*) glGetStringi(GL_EXTENSIONS, i));
         }
     }
 

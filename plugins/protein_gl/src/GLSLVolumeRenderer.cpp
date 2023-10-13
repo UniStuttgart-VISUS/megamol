@@ -636,10 +636,10 @@ void protein_gl::GLSLVolumeRenderer::ParameterRefresh(mmstd_gl::CallRender3DGL* 
     }
 
     // get current clip plane normal
-    vislib::math::Vector<float, 3> cp0n((float)this->volClipPlane[0].PeekComponents()[0],
-        (float)this->volClipPlane[0].PeekComponents()[1], (float)this->volClipPlane[0].PeekComponents()[2]);
+    vislib::math::Vector<float, 3> cp0n((float) this->volClipPlane[0].PeekComponents()[0],
+        (float) this->volClipPlane[0].PeekComponents()[1], (float) this->volClipPlane[0].PeekComponents()[2]);
     // get current clip plane distance
-    float cp0d = (float)this->volClipPlane[0].PeekComponents()[3];
+    float cp0d = (float) this->volClipPlane[0].PeekComponents()[3];
 
     // check clip plane normal parameter
     if (this->volClipPlane0NormParam.IsDirty()) {
@@ -1262,7 +1262,7 @@ void GLSLVolumeRenderer::drawClippedPolygon(vislib::math::Cuboid<float> bounding
 
     // check for each clip plane
     float vcpd;
-    for (int i = 0; i < (int)this->volClipPlane.Count(); ++i) {
+    for (int i = 0; i < (int) this->volClipPlane.Count(); ++i) {
         slices.setupSingleSlice(this->volClipPlane[i].PeekComponents(), position.PeekComponents());
         float d = 0.0f;
         vcpd = static_cast<float>(this->volClipPlane[i].PeekComponents()[3]);

@@ -41,7 +41,7 @@ void processGPURenderTasks(
         }
 
         glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(), render_task->mesh->getIndexType(),
-            (GLvoid*)0, render_task->draw_cnt, 0);
+            (GLvoid*) 0, render_task->draw_cnt, 0);
 
         // Reset previously set GLStates
         render_task->reset_states();

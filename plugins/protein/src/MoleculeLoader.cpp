@@ -110,7 +110,7 @@ bool MoleculeLoader::getMDCData(core::Call& call) {
     mdc->SetFormerAtomIndices(s.former_atom_indices_.data());
 
     mdc->SetConnections(s.connectivity_.size(), &s.connectivity_.front().x);
-    mdc->SetResidues(s.residues_.size(), (const protein_calls::MolecularDataCall::Residue**)s.residues_.data());
+    mdc->SetResidues(s.residues_.size(), (const protein_calls::MolecularDataCall::Residue**) s.residues_.data());
     mdc->SetSolventResidueIndices(s.solvent_residue_index_.size(), s.solvent_residue_index_.data());
     mdc->SetResidueTypeNames(s.residue_type_names_.size(), s.residue_type_names_.data());
     mdc->SetMolecules(s.molecules_.size(), s.molecules_.data());

@@ -166,8 +166,9 @@ bool io::VTFResDataSource::Frame::LoadFrame(
         }
         case PARTICLES: {
             vislib::math::Vector<float, 3> pos;
-            pos.Set((float)vislib::CharTraitsA::ParseDouble(shreds[1]),
-                (float)vislib::CharTraitsA::ParseDouble(shreds[2]), (float)vislib::CharTraitsA::ParseDouble(shreds[3]));
+            pos.Set((float) vislib::CharTraitsA::ParseDouble(shreds[1]),
+                (float) vislib::CharTraitsA::ParseDouble(shreds[2]),
+                (float) vislib::CharTraitsA::ParseDouble(shreds[3]));
 
             vislib::math::Vector<float, 4> col;
             col.Set(0, // type
@@ -210,8 +211,8 @@ bool io::VTFResDataSource::Frame::LoadFrame(
                 // NOTE TODO Changed for SFB_DEMO
                 float* particleData = col[0].AsAt<float>(4 * sizeof(float) * particleId);
                 particleData[1] = static_cast<float>(parsedClusters);
-                float soa = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 4]);
-                float ld = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 3]);
+                float soa = (float) vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 4]);
+                float ld = (float) vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 3]);
                 //particleData[0] = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 1]);
                 particleData[0] = ld / std::pow(soa * 0.25f, 1.0f / 3.0f);
 
@@ -233,7 +234,7 @@ bool io::VTFResDataSource::Frame::LoadFrame(
     // count + start + data
     this->clusterInfos.sizeofPlainData =
         2 * this->clusterInfos.data.Count() * sizeof(int) + this->partCnt[0] * sizeof(int);
-    this->clusterInfos.plainData = (unsigned int*)malloc(this->clusterInfos.sizeofPlainData);
+    this->clusterInfos.plainData = (unsigned int*) malloc(this->clusterInfos.sizeofPlainData);
     this->clusterInfos.numClusters = static_cast<unsigned int>(this->clusterInfos.data.Count());
     unsigned int ptr = 0;
     unsigned int summedSizesSoFar = static_cast<unsigned int>(2 * this->clusterInfos.data.Count());
@@ -393,8 +394,8 @@ const io::VTFResDataSource::Frame* io::VTFResDataSource::Frame::MakeInterpolatio
 
     for (unsigned int t = 0; t < a.typeCnt; t++) {
         for (unsigned int i = 0; i < this->partCnt[t]; i++) {
-            vislib::math::ShallowPoint<float, 3> av((float*)a.pos[t].As<float>() + i * 3);
-            vislib::math::ShallowPoint<float, 3> bv((float*)b.pos[t].As<float>() + i * 3);
+            vislib::math::ShallowPoint<float, 3> av((float*) a.pos[t].As<float>() + i * 3);
+            vislib::math::ShallowPoint<float, 3> bv((float*) b.pos[t].As<float>() + i * 3);
             vislib::math::ShallowPoint<float, 3> tv(this->pos[t].As<float>() + i * 3);
 
             if (av.SquareDistance(bv) > 0.01) {
@@ -508,7 +509,7 @@ io::VTFResDataSource::~VTFResDataSource() {
  */
 view::AnimDataModule::Frame* io::VTFResDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<io::VTFResDataSource*>(this));
-    f->SetTypeCount((unsigned int)this->types.Count());
+    f->SetTypeCount((unsigned int) this->types.Count());
     return f;
 }
 
@@ -574,11 +575,11 @@ void io::VTFResDataSource::preprocessFrame(Frame& frame) {
         const float* v = frame.PartPoss(t);
         for (unsigned int p = 0; p < frame.PartCnt(t); ++p) {
             // HAZARD: This cast brackets might be wrong
-            unsigned int x = static_cast<unsigned int>(floorf((float)N * v[3 * p + 0])) /
+            unsigned int x = static_cast<unsigned int>(floorf((float) N * v[3 * p + 0])) /
                              static_cast<unsigned int>(this->extents.GetX());
-            unsigned int y = static_cast<unsigned int>(floorf((float)N * v[3 * p + 1])) /
+            unsigned int y = static_cast<unsigned int>(floorf((float) N * v[3 * p + 1])) /
                              static_cast<unsigned int>(this->extents.GetY());
-            unsigned int z = static_cast<unsigned int>(floorf((float)N * v[3 * p + 2])) /
+            unsigned int z = static_cast<unsigned int>(floorf((float) N * v[3 * p + 2])) /
                              static_cast<unsigned int>(this->extents.GetZ());
             vislib::Array<int>& cell = frame.particleGridCell(x, y, z);
             cell.Add(p);
@@ -593,11 +594,11 @@ void io::VTFResDataSource::preprocessFrame(Frame& frame) {
         for (unsigned int p = 0; p < frame.PartCnt(t); ++p) {
             vislib::math::ShallowVector<float, 3> pos(const_cast<float*>(&v[3 * p]));
 
-            unsigned int x = static_cast<unsigned int>(floorf((float)N * pos.GetX())) /
+            unsigned int x = static_cast<unsigned int>(floorf((float) N * pos.GetX())) /
                              static_cast<unsigned int>(this->extents.GetX());
-            unsigned int y = static_cast<unsigned int>(floorf((float)N * pos.GetY())) /
+            unsigned int y = static_cast<unsigned int>(floorf((float) N * pos.GetY())) /
                              static_cast<unsigned int>(this->extents.GetY());
-            unsigned int z = static_cast<unsigned int>(floorf((float)N * pos.GetZ())) /
+            unsigned int z = static_cast<unsigned int>(floorf((float) N * pos.GetZ())) /
                              static_cast<unsigned int>(this->extents.GetZ());
 
             // over each neighboring cell
@@ -687,7 +688,7 @@ if (!this->parseHeaderAndFrameIndices(this->filename.Param<param::FilePathParam>
 }
 */
     Frame tmpFrame(*this);
-    tmpFrame.SetTypeCount((unsigned int)this->types.Count());
+    tmpFrame.SetTypeCount((unsigned int) this->types.Count());
     // use frame zero to estimate the frame size in memory to calculate the
     // frame cache size
     this->loadFrame(&tmpFrame, 0);
@@ -742,8 +743,8 @@ void io::VTFResDataSource::getFrameFiles(vislib::StringA directory) {
 
     this->frameFiles.Sort(&sortFileArray);
 
-    this->setFrameCount((unsigned int)this->frameFiles.Count());
-    printf("Frame Count %u\n", (unsigned int)this->frameFiles.Count());
+    this->setFrameCount((unsigned int) this->frameFiles.Count());
+    printf("Frame Count %u\n", (unsigned int) this->frameFiles.Count());
 
     // only one type here
     SimpleType type;
@@ -883,7 +884,7 @@ bool io::VTFResDataSource::getDataCallback(Call& caller) {
 
         c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
         c2->SetUnlocker(new Unlocker(*f));
-        c2->SetParticleListCount((unsigned int)this->types.Count());
+        c2->SetParticleListCount((unsigned int) this->types.Count());
         for (unsigned int i = 0; i < this->types.Count(); i++) {
             c2->AccessParticles(i).SetGlobalRadius(this->types[i].Radius() /* / this->boxScaling*/);
             c2->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());

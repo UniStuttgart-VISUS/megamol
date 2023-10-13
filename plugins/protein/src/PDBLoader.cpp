@@ -95,7 +95,7 @@ int PDBLoader::Frame::decodebits(char* buff, int offset, int bitsize) {
     char tmpBuff[] = {buff[3], buff[2], buff[1], buff[0]};
 
     // interprete char-array as an integer
-    num = *(int*)tmpBuff;
+    num = *(int*) tmpBuff;
     // cut off right offset
     num = num >> (32 - (offset + bitsize));
 
@@ -174,7 +174,7 @@ unsigned int PDBLoader::Frame::sizeofints(unsigned int sizes[]) {
 
     num = 1;
     num_of_bytes--;
-    while (bytes[num_of_bytes] >= (unsigned int)num) {
+    while (bytes[num_of_bytes] >= (unsigned int) num) {
         num_of_bits++;
         num *= 2;
     }
@@ -189,7 +189,7 @@ int PDBLoader::Frame::sizeofint(int size) {
     unsigned int num = 1;
     int num_of_bits = 0;
 
-    while ((unsigned int)size >= num && num_of_bits < 32) {
+    while ((unsigned int) size >= num && num_of_bits < 32) {
         num_of_bits++;
         num <<= 1;
     }
@@ -233,33 +233,33 @@ bool PDBLoader::Frame::writeFrame(std::ofstream* outfile, float precision, float
 
     // write date to outfile
     int date = 1995;
-    changeByteOrder((char*)&date);
-    outfile->write((char*)&date, 4);
+    changeByteOrder((char*) &date);
+    outfile->write((char*) &date, 4);
 
     // write number of atoms to outfile
     int atomCount = AtomCount();
-    changeByteOrder((char*)&atomCount);
-    outfile->write((char*)&atomCount, 4);
+    changeByteOrder((char*) &atomCount);
+    outfile->write((char*) &atomCount, 4);
 
     // write simulation step to outfile
     int step = frame;
-    changeByteOrder((char*)&step);
-    outfile->write((char*)&step, 4);
+    changeByteOrder((char*) &step);
+    outfile->write((char*) &step, 4);
 
     // write simulation time to outfile
-    float simtime = (float)frame;
-    changeByteOrder((char*)&simtime);
-    outfile->write((char*)&simtime, 4);
+    float simtime = (float) frame;
+    changeByteOrder((char*) &simtime);
+    outfile->write((char*) &simtime, 4);
 
     precision /= 10.0;
 
     // get the range of values
-    minInt[0] = (int)(minFloats[0] * precision + 1);
-    minInt[1] = (int)(minFloats[1] * precision + 1);
-    minInt[2] = (int)(minFloats[2] * precision + 1);
-    maxInt[0] = (int)(maxFloats[0] * precision + 1);
-    maxInt[1] = (int)(maxFloats[1] * precision + 1);
-    maxInt[2] = (int)(maxFloats[2] * precision + 1);
+    minInt[0] = (int) (minFloats[0] * precision + 1);
+    minInt[1] = (int) (minFloats[1] * precision + 1);
+    minInt[2] = (int) (minFloats[2] * precision + 1);
+    maxInt[0] = (int) (maxFloats[0] * precision + 1);
+    maxInt[1] = (int) (maxFloats[1] * precision + 1);
+    maxInt[2] = (int) (maxFloats[2] * precision + 1);
 
     sizes[0] = maxInt[0] - minInt[0] + 1;
     sizes[1] = maxInt[1] - minInt[1] + 1;
@@ -270,42 +270,42 @@ bool PDBLoader::Frame::writeFrame(std::ofstream* outfile, float precision, float
 
     // write the bounding box to outfile
     float* box = new float[9];
-    box[0] = (float)sizes[0] / precision;
+    box[0] = (float) sizes[0] / precision;
     box[1] = 0.0;
     box[2] = 0.0;
     box[3] = 0.0;
-    box[4] = (float)sizes[1] / precision;
+    box[4] = (float) sizes[1] / precision;
     box[5] = 0.0;
     box[6] = 0.0;
     box[7] = 0.0;
-    box[8] = (float)sizes[2] / precision;
+    box[8] = (float) sizes[2] / precision;
 
     for (i = 0; i < 9; i++)
-        changeByteOrder((char*)&box[i]);
+        changeByteOrder((char*) &box[i]);
 
-    outfile->write((char*)box, 36);
+    outfile->write((char*) box, 36);
 
     // write number of atoms to outfile
-    outfile->write((char*)&atomCount, 4);
+    outfile->write((char*) &atomCount, 4);
 
     // write precision to outfile
     float prec = precision * 10.0f;
-    changeByteOrder((char*)&prec);
-    outfile->write((char*)&prec, 4);
+    changeByteOrder((char*) &prec);
+    outfile->write((char*) &prec, 4);
 
     // write maxint[] and minint[] to outfile
     int maxVal[] = {maxInt[0], maxInt[1], maxInt[2]};
     int minVal[] = {minInt[0], minInt[1], minInt[2]};
     for (i = 0; i < 3; i++) {
-        changeByteOrder((char*)&maxVal[i]);
-        changeByteOrder((char*)&minVal[i]);
+        changeByteOrder((char*) &maxVal[i]);
+        changeByteOrder((char*) &minVal[i]);
     }
-    outfile->write((char*)&minVal, 12);
-    outfile->write((char*)&maxVal, 12);
+    outfile->write((char*) &minVal, 12);
+    outfile->write((char*) &maxVal, 12);
 
     // write smallidx to outfile
     int smallidx = 0;
-    outfile->write((char*)&smallidx, 4);
+    outfile->write((char*) &smallidx, 4);
 
     unsigned int bitoffset = 0;
 
@@ -323,9 +323,9 @@ bool PDBLoader::Frame::writeFrame(std::ofstream* outfile, float precision, float
     // unsigned ints and encode
     for (i = 0; i < AtomCount(); i++) {
 
-        thiscoord[0] = (int)(atomPosition[i * 3 + 0] * precision) - minInt[0];
-        thiscoord[1] = (int)(atomPosition[i * 3 + 1] * precision) - minInt[1];
-        thiscoord[2] = (int)(atomPosition[i * 3 + 2] * precision) - minInt[2];
+        thiscoord[0] = (int) (atomPosition[i * 3 + 0] * precision) - minInt[0];
+        thiscoord[1] = (int) (atomPosition[i * 3 + 1] * precision) - minInt[1];
+        thiscoord[2] = (int) (atomPosition[i * 3 + 2] * precision) - minInt[2];
 
         encodeints(charPt, bitsize, sizes, thiscoord, bitoffset);
 
@@ -346,8 +346,8 @@ bool PDBLoader::Frame::writeFrame(std::ofstream* outfile, float precision, float
 
     // write the size to outfile
     unsigned int s = byteSize;
-    changeByteOrder((char*)&s);
-    outfile->write((char*)&s, 4);
+    changeByteOrder((char*) &s);
+    outfile->write((char*) &s, 4);
 
     // write buffer to file
     outfile->write(charbuff, byteSize + ((4 - byteSize % 4) % 4));
@@ -425,7 +425,7 @@ bool PDBLoader::Frame::encodeints(
 void PDBLoader::Frame::encodebits(char* outbuff, int bitsize, int bitoffset, unsigned int num) {
 
     num <<= (32 - (bitoffset + bitsize));
-    char* numpt = (char*)&num;
+    char* numpt = (char*) &num;
 
     // change byte order on little endian systems
     outbuff[0] = outbuff[0] | numpt[3];
@@ -481,34 +481,34 @@ void PDBLoader::Frame::readFrame(std::fstream* file) {
     if (atomCount <= 3) {
         float posX, posY, posZ;
         for (i = 0; i < atomCount; i++) {
-            file->read((char*)&posX, 4);
-            changeByteOrder((char*)&posX);
-            file->read((char*)&posY, 4);
-            changeByteOrder((char*)&posY);
-            file->read((char*)&posZ, 4);
-            changeByteOrder((char*)&posZ);
+            file->read((char*) &posX, 4);
+            changeByteOrder((char*) &posX);
+            file->read((char*) &posY, 4);
+            changeByteOrder((char*) &posY);
+            file->read((char*) &posZ, 4);
+            changeByteOrder((char*) &posZ);
             this->SetAtomPosition(i, posX, posY, posZ);
         }
         return;
     }
 
     // read the precision of the float coordinates
-    file->read((char*)&precision, 4);
-    changeByteOrder((char*)&precision);
+    file->read((char*) &precision, 4);
+    changeByteOrder((char*) &precision);
     precision /= 10.0f;
 
     // read the lower bound of 'big' integer-coordinates
-    file->read((char*)&minint, 12);
+    file->read((char*) &minint, 12);
 
-    changeByteOrder((char*)&minint[0]);
-    changeByteOrder((char*)&minint[1]);
-    changeByteOrder((char*)&minint[2]);
+    changeByteOrder((char*) &minint[0]);
+    changeByteOrder((char*) &minint[1]);
+    changeByteOrder((char*) &minint[2]);
 
     // read the upper bound of 'big' integer-coordinates
-    file->read((char*)&maxint, 12);
-    changeByteOrder((char*)&maxint[0]);
-    changeByteOrder((char*)&maxint[1]);
-    changeByteOrder((char*)&maxint[2]);
+    file->read((char*) &maxint, 12);
+    changeByteOrder((char*) &maxint[0]);
+    changeByteOrder((char*) &maxint[1]);
+    changeByteOrder((char*) &maxint[2]);
 
 
     sizeint[0] = maxint[0] - minint[0] + 1;
@@ -530,17 +530,17 @@ void PDBLoader::Frame::readFrame(std::fstream* file) {
 
     // read number of bits used to encode 'small' integers
     // note: changes dynamically within one frame
-    file->read((char*)&smallidx, 4);
+    file->read((char*) &smallidx, 4);
     if (*file) {
         //std::cout << "all characters read successfully.";
     } else {
         std::cout << "error: only " << file->gcount() << " could be read";
     }
-    changeByteOrder((char*)&smallidx);
+    changeByteOrder((char*) &smallidx);
 
     // calculate maxidx/minidx
     int minidx, maxidx;
-    if (LASTIDX < (unsigned int)(smallidx + 8)) {
+    if (LASTIDX < (unsigned int) (smallidx + 8)) {
         maxidx = LASTIDX;
     } else {
         maxidx = smallidx + 8;
@@ -563,15 +563,15 @@ void PDBLoader::Frame::readFrame(std::fstream* file) {
     larger = magicints[maxidx];
 
     // read the size of the compressed data-block
-    file->read((char*)&size, 4);
-    changeByteOrder((char*)&size);
+    file->read((char*) &size, 4);
+    changeByteOrder((char*) &size);
 
-    buffer = new int[(int)(atomCount * 3 * 1.2)];
+    buffer = new int[(int) (atomCount * 3 * 1.2)];
 
     // get the compressed data-block
-    file->read((char*)&buffer[0], size);
+    file->read((char*) &buffer[0], size);
 
-    buffPt = (char*)buffer;
+    buffPt = (char*) buffer;
     bit_offset = 0;
 
 
@@ -655,8 +655,8 @@ void PDBLoader::Frame::readFrame(std::fstream* file) {
                     prevcoord[2] = tempCoord;
 
                     // calculate float-value of the old coordinate
-                    this->SetAtomPosition(i, (float)prevcoord[0] / precision, (float)prevcoord[1] / precision,
-                        (float)prevcoord[2] / precision);
+                    this->SetAtomPosition(i, (float) prevcoord[0] / precision, (float) prevcoord[1] / precision,
+                        (float) prevcoord[2] / precision);
                     i++;
                 } else {
                     prevcoord[0] = thiscoord[0];
@@ -664,13 +664,13 @@ void PDBLoader::Frame::readFrame(std::fstream* file) {
                     prevcoord[2] = thiscoord[2];
                 }
 
-                this->SetAtomPosition(i, (float)thiscoord[0] / precision, (float)thiscoord[1] / precision,
-                    (float)thiscoord[2] / precision);
+                this->SetAtomPosition(i, (float) thiscoord[0] / precision, (float) thiscoord[1] / precision,
+                    (float) thiscoord[2] / precision);
                 i++;
             }
         } else {
-            this->SetAtomPosition(
-                i, (float)thiscoord[0] / precision, (float)thiscoord[1] / precision, (float)thiscoord[2] / precision);
+            this->SetAtomPosition(i, (float) thiscoord[0] / precision, (float) thiscoord[1] / precision,
+                (float) thiscoord[2] / precision);
             i++;
         }
 
@@ -936,18 +936,18 @@ bool PDBLoader::getData(core::Call& call) {
     }
 
     dc->SetConnections(
-        static_cast<unsigned int>(this->connectivity.Count() / 2), (unsigned int*)this->connectivity.PeekElements());
+        static_cast<unsigned int>(this->connectivity.Count() / 2), (unsigned int*) this->connectivity.PeekElements());
     dc->SetResidues(static_cast<unsigned int>(this->residue.Count()),
-        (const MolecularDataCall::Residue**)this->residue.PeekElements());
+        (const MolecularDataCall::Residue**) this->residue.PeekElements());
     // dc->SetAtomResidueIndices(this->atomResidueIdx.PeekElements());
     dc->SetSolventResidueIndices(
         static_cast<unsigned int>(this->solventResidueIdx.Count()), this->solventResidueIdx.PeekElements());
     dc->SetResidueTypeNames(static_cast<unsigned int>(this->residueTypeName.Count()),
-        (vislib::StringA*)this->residueTypeName.PeekElements());
-    dc->SetMolecules(
-        static_cast<unsigned int>(this->molecule.Count()), (MolecularDataCall::Molecule*)this->molecule.PeekElements());
+        (vislib::StringA*) this->residueTypeName.PeekElements());
+    dc->SetMolecules(static_cast<unsigned int>(this->molecule.Count()),
+        (MolecularDataCall::Molecule*) this->molecule.PeekElements());
     dc->SetChains(
-        static_cast<unsigned int>(this->chain.Count()), (MolecularDataCall::Chain*)this->chain.PeekElements());
+        static_cast<unsigned int>(this->chain.Count()), (MolecularDataCall::Chain*) this->chain.PeekElements());
 
     if ((!this->secStructAvailable || this->recomputeStridePerFrameSlot.Param<param::BoolParam>()->Value()) &&
         this->strideFlagSlot.Param<param::BoolParam>()->Value()) {
@@ -1026,11 +1026,11 @@ void PDBLoader::release() {
     // stop frame-loading thread before clearing data array
     resetFrameCache();
 
-    for (int i = 0; i < (int)this->data.Count(); i++)
+    for (int i = 0; i < (int) this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
 
-    for (int i = 0; i < (int)this->residue.Count(); i++)
+    for (int i = 0; i < (int) this->residue.Count(); i++)
         delete residue[i];
     this->residue.Clear();
 
@@ -1094,7 +1094,7 @@ void PDBLoader::loadFile(const std::filesystem::path& filename) {
 
     this->bbox.Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-    for (int i = 0; i < (int)this->data.Count(); i++)
+    for (int i = 0; i < (int) this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
 
@@ -1335,7 +1335,7 @@ void PDBLoader::loadFile(const std::filesystem::path& filename) {
         MolecularDataCall::Chain::ChainType chainType = MolecularDataCall::Chain::ChainType::UNSPECIFIC;
         MolecularDataCall::Chain new_chain = MolecularDataCall::Chain(firstMolIdx, molCnt, name, chainType);
         this->chain.Add(new_chain);
-        this->molecule.Add(MolecularDataCall::Molecule(0, (unsigned int)this->residue.Count(), 0));
+        this->molecule.Add(MolecularDataCall::Molecule(0, (unsigned int) this->residue.Count(), 0));
     }
 
     // search for CA, C, O and N in amino acids
@@ -1343,7 +1343,7 @@ void PDBLoader::loadFile(const std::filesystem::path& filename) {
     for (resCnt = 0; resCnt < this->residue.Count(); ++resCnt) {
         // check if the current residue is an amino acid
         if (this->residue[resCnt]->Identifier() == MolecularDataCall::Residue::AMINOACID) {
-            aminoacid = (MolecularDataCall::AminoAcid*)this->residue[resCnt];
+            aminoacid = (MolecularDataCall::AminoAcid*) this->residue[resCnt];
             idx = aminoacid->FirstAtomIndex();
             cnt = idx + aminoacid->AtomCount();
             // loop over all atom of the current amino acid
@@ -1439,9 +1439,9 @@ void PDBLoader::loadFile(const std::filesystem::path& filename) {
 
             xtcFile.seekg(4, std::ios_base::cur);
             // read number of atoms
-            xtcFile.read((char*)&nAtoms, 4);
+            xtcFile.read((char*) &nAtoms, 4);
             // change byte order
-            num = (char*)&nAtoms;
+            num = (char*) &nAtoms;
             tmpByte = num[0];
             num[0] = num[3];
             num[3] = tmpByte;
@@ -1621,7 +1621,7 @@ void PDBLoader::parseAtomEntry(vislib::StringA& atomEntry, unsigned int atom, un
         if (this->IsAminoAcid(resName)) {
             MolecularDataCall::AminoAcid* res =
                 new MolecularDataCall::AminoAcid(atom, 1, 0, 0, 0, 0, atomBBox, resTypeIdx, -1, newResSeq);
-            this->residue.Add((MolecularDataCall::Residue*)res);
+            this->residue.Add((MolecularDataCall::Residue*) res);
         } else {
             MolecularDataCall::Residue* res =
                 new MolecularDataCall::Residue(atom, 1, atomBBox, resTypeIdx, -1, newResSeq);
@@ -1653,7 +1653,7 @@ void PDBLoader::parseAtomEntry(vislib::StringA& atomEntry, unsigned int atom, un
         if (this->IsAminoAcid(resName)) {
             MolecularDataCall::AminoAcid* res =
                 new MolecularDataCall::AminoAcid(atom, 1, 0, 0, 0, 0, atomBBox, resTypeIdx, -1, newResSeq);
-            this->residue.Add((MolecularDataCall::Residue*)res);
+            this->residue.Add((MolecularDataCall::Residue*) res);
         } else {
             MolecularDataCall::Residue* res =
                 new MolecularDataCall::Residue(atom, 1, atomBBox, resTypeIdx, -1, newResSeq);
@@ -2113,20 +2113,20 @@ bool PDBLoader::readNumXTCFrames() {
 
     // get length of file:
     xtcFile.seekg(0, xtcFile.end);
-    int xtcFileLength = (int)xtcFile.tellg();
+    int xtcFileLength = (int) xtcFile.tellg();
     xtcFile.seekg(0, xtcFile.beg);
 
     // read until eof
     while (!xtcFile.eof() && xtcFile.tellg() < xtcFileLength) {
         // add the offset to the offset array
-        this->XTCFrameOffset.Add((unsigned int)xtcFile.tellg());
+        this->XTCFrameOffset.Add((unsigned int) xtcFile.tellg());
 
         // skip some header data
         xtcFile.seekg(56, std::ios_base::cur);
         // read precision
-        xtcFile.read((char*)&precision, 4);
+        xtcFile.read((char*) &precision, 4);
         // change byte-order
-        num = (char*)&precision;
+        num = (char*) &precision;
         tmpByte = num[0];
         num[0] = num[3];
         num[3] = tmpByte;
@@ -2136,19 +2136,19 @@ bool PDBLoader::readNumXTCFrames() {
         precision /= 10.0f;
 
         // get the lower bound
-        xtcFile.read((char*)&minint, 12);
+        xtcFile.read((char*) &minint, 12);
         // get the upper bound
-        xtcFile.read((char*)&maxint, 12);
+        xtcFile.read((char*) &maxint, 12);
         // change byte-order
         for (i = 0; i < 3; i++) {
-            num = (char*)&minint[i];
+            num = (char*) &minint[i];
             tmpByte = num[0];
             num[0] = num[3];
             num[3] = tmpByte;
             tmpByte = num[1];
             num[1] = num[2];
             num[2] = tmpByte;
-            num = (char*)&maxint[i];
+            num = (char*) &maxint[i];
             tmpByte = num[0];
             num[0] = num[3];
             num[3] = tmpByte;
@@ -2161,19 +2161,19 @@ bool PDBLoader::readNumXTCFrames() {
         this->bbox.Union(tmpBBox);
         // get the current frames bounding box including the atom radius
         // note: atom radius is divided by 10
-        tmpBBox = vislib::math::Cuboid<float>((float)minint[0] / precision - 0.3f, (float)minint[1] / precision - 0.3f,
-            (float)minint[2] / precision - 0.3f,
+        tmpBBox = vislib::math::Cuboid<float>((float) minint[0] / precision - 0.3f,
+            (float) minint[1] / precision - 0.3f, (float) minint[2] / precision - 0.3f,
 
-            (float)maxint[0] / precision + 0.3f, (float)maxint[1] / precision + 0.3f,
-            (float)maxint[2] / precision + 0.3f);
+            (float) maxint[0] / precision + 0.3f, (float) maxint[1] / precision + 0.3f,
+            (float) maxint[2] / precision + 0.3f);
 
         // skip some header data
         xtcFile.seekg(4, std::ios_base::cur);
 
         // read size of the compressed block of data
-        xtcFile.read((char*)&size, 4);
+        xtcFile.read((char*) &size, 4);
         // change byte-order
-        num = (char*)&size;
+        num = (char*) &size;
         tmpByte = num[0];
         num[0] = num[3];
         num[3] = tmpByte;
