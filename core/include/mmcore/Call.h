@@ -68,6 +68,21 @@ public:
     bool operator()(unsigned int func = 0);
 
     /**
+     * Calls function 'func'.
+     *
+     * @param func The function to be called.
+     *
+     * @return The return value of the function.
+     */
+    template<typename RET, typename REQ>
+    std::shared_ptr<RET> operator()(unsigned int func, REQ const& req) {
+        if (callee != nullptr) {
+            return callee->InCall(funcMap[func], req);
+        }
+        return nullptr;
+    }
+
+    /**
      * Answers the callee slot this call is connected to.
      *
      * @return The callee slot this call is connected to.
