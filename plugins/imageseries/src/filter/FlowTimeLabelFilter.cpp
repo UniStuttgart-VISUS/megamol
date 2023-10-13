@@ -68,7 +68,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
     // Create interface images
     const enum class interface_t : Timestamp {
-        none = -1,
+        none = 0,
         full
     } interface_output = interface_t::none; //static_cast<interface_t>(75); // TODO: parameter?!
 
