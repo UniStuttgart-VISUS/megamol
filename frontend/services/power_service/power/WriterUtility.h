@@ -15,25 +15,31 @@
 
 namespace megamol::power {
 
-inline void wf_parquet(
-    std::filesystem::path const& output_folder, power::segments_t const& values_map, power::MetaData const* meta) {
+inline std::filesystem::path create_full_path(
+    std::filesystem::path const& output_folder, std::string const& device_name, std::size_t const s_idx) {
+    return output_folder / (device_name + "_s" + std::to_string(s_idx) + ".parquet");
+}
+
+inline void wf_parquet(std::filesystem::path const& output_folder, std::string const& device_name,
+    power::segments_t const& values_map, power::MetaData const* meta) {
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {
-        auto const fullpath = output_folder / ("rtx_s" + std::to_string(s_idx) + ".parquet");
+        auto const fullpath = create_full_path(output_folder, device_name, s_idx);
         ParquetWriter(fullpath, values_map[s_idx], meta);
     }
 }
 
-inline void wf_parquet_dataverse(std::filesystem::path const& output_folder, power::segments_t const& values_map,
-    power::MetaData const* meta, std::function<void(std::string)> const& dataverse_writer) {
+inline void wf_parquet_dataverse(std::filesystem::path const& output_folder, std::string const& device_name,
+    power::segments_t const& values_map, power::MetaData const* meta,
+    std::function<void(std::string)> const& dataverse_writer) {
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {
-        auto const fullpath = output_folder / ("rtx_s" + std::to_string(s_idx) + ".parquet");
+        auto const fullpath = create_full_path(output_folder, device_name, s_idx);
         ParquetWriter(fullpath, values_map[s_idx], meta);
         dataverse_writer(fullpath.string());
     }
 }
 
-inline void wf_tracy(
-    std::filesystem::path const& output_folder, power::segments_t const& values_map, power::MetaData const* meta) {
+inline void wf_tracy(std::filesystem::path const& output_folder, [[maybe_unused]] std::string const&,
+    power::segments_t const& values_map, power::MetaData const* meta) {
 #ifdef MEGAMOL_USE_TRACY
     static std::set<std::string> tpn_library;
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {

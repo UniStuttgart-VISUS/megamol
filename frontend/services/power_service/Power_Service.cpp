@@ -294,7 +294,7 @@ void Power_Service::fill_lua_callbacks() {
                             std::bind(&power::DataverseWriter, dataverse_config_.base_path, dataverse_config_.doi,
                                 std::placeholders::_1, dataverse_key_->GetToken(), std::ref(sbroker_.Get(false)));
                         power::writer_func_t parquet_dataverse_writer = std::bind(&power::wf_parquet_dataverse,
-                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, dataverse_writer);
+                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, dataverse_writer);
                         rtx_->StartMeasurement(
                             path, {parquet_dataverse_writer, &megamol::power::wf_tracy}, &meta_, sbroker_.Get(false));
                     } else {
