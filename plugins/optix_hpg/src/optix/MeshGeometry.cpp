@@ -149,8 +149,8 @@ bool megamol::optix_hpg::MeshGeometry::assertData(mesh::CallMesh& call, Context 
 
         SBTRecord<device::MeshGeoData> sbt_record;
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(mesh_module_, &sbt_record));
-        sbt_record.data.index_buffer = (glm::uvec3*)mesh_idx_data_.back();
-        sbt_record.data.vertex_buffer = (glm::vec3*)mesh_pos_data_.back();
+        sbt_record.data.index_buffer = (glm::uvec3*) mesh_idx_data_.back();
+        sbt_record.data.vertex_buffer = (glm::vec3*) mesh_pos_data_.back();
 
         sbt_records_.push_back(sbt_record);
 

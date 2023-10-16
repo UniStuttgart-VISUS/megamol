@@ -92,8 +92,8 @@ inline int findCudaGLDevice(int argc, const char** argv) {
     int devID = 0;
 
     // If the command-line has a device number specified, use it
-    if (checkCmdLineFlag(argc, (const char**)argv, "device")) {
-        devID = gpuGLDeviceInit(argc, (const char**)argv);
+    if (checkCmdLineFlag(argc, (const char**) argv, "device")) {
+        devID = gpuGLDeviceInit(argc, (const char**) argv);
 
         if (devID < 0) {
             printf("no CUDA capable devices found, exiting...\n");

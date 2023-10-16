@@ -163,7 +163,7 @@ private:
             int s1 = (*sortedSeries)[this->index];
             int s2 = (*sortedSeries)[other.index];
             int sameCount = 0;
-            for (int i = 0; i < (int)diagram->GetTransitionCount(); i++) {
+            for (int i = 0; i < (int) diagram->GetTransitionCount(); i++) {
                 protein_calls::SplitMergeCall::SplitMergeTransition* smt = diagram->GetTransition(i);
                 if ((smt->DestinationSeries() == s1 && smt->SourceSeries() == s2) ||
                     (smt->DestinationSeries() == s2 && smt->SourceSeries() == s1)) {

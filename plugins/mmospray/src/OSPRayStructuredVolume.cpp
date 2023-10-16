@@ -213,7 +213,7 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
     this->structureContainer.volumeType = volumeTypeEnum::STRUCTUREDVOLUME;
     structuredVolumeStructure svs;
 
-    svs.volRepType = (volumeRepresentationType)this->repType.Param<core::param::EnumParam>()->Value();
+    svs.volRepType = (volumeRepresentationType) this->repType.Param<core::param::EnumParam>()->Value();
     svs.voxels = cd->GetData();
     svs.gridOrigin = gridOrigin;
     svs.gridSpacing = gridSpacing;

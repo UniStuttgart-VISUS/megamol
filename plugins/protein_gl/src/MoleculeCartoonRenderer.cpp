@@ -901,7 +901,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
                     bSplineSecStruct[cntChain].push_back(mol->SecondaryStructures()[cntS].Type());
                     // get the index of the C-alpha atom
                     if (mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                        aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
                     else
                         continue;
                     idx = aminoacid->CAlphaIndex();
@@ -1298,7 +1298,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(const MolecularDataCall* mol, flo
 
                     // get the index of the C-alpha atom
                     if (mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                        aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
                     else
                         continue;
 
@@ -2028,7 +2028,7 @@ void MoleculeCartoonRenderer::RenderCartoonLineCPU(const MolecularDataCall* mol,
                     bSplineSecStruct[cntChain].push_back(mol->SecondaryStructures()[cntS].Type());
                     // get the index of the C-alpha atom
                     if (mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                        aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
                     else
                         continue;
                     idx = aminoacid->CAlphaIndex();
@@ -2143,7 +2143,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 glBegin(GL_LINES_ADJACENCY_EXT);
 
                 // vertex 1
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
                 idx = aminoacid->CAlphaIndex();
                 v1.SetX(atomPos[idx * 3 + 0]);
                 v1.SetY(atomPos[idx * 3 + 1]);
@@ -2163,7 +2163,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 else
                     flip = 1.0;
                 n1 *= flip;
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 2]);
+                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA + 2]);
                 idx = aminoacid->CAlphaIndex();
                 glSecondaryColor3f(
                     this->atomColorTable[idx].x, this->atomColorTable[idx].y, this->atomColorTable[idx].z);
@@ -2171,7 +2171,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 glVertex3fv(v1.PeekComponents());
 
                 // vertex 2
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 1]);
+                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA + 1]);
                 idx = aminoacid->CAlphaIndex();
                 v2.SetX(atomPos[idx * 3 + 0]);
                 v2.SetY(atomPos[idx * 3 + 1]);
@@ -2196,7 +2196,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 glVertex3fv(v2.PeekComponents());
 
                 // vertex 3
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 2]);
+                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA + 2]);
                 idx = aminoacid->CAlphaIndex();
                 v3.SetX(atomPos[idx * 3 + 0]);
                 v3.SetY(atomPos[idx * 3 + 1]);
@@ -2220,7 +2220,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 glVertex3fv(v3.PeekComponents());
 
                 // vertex 4
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 3]);
+                aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA + 3]);
                 idx = aminoacid->CAlphaIndex();
                 v4.SetX(atomPos[idx * 3 + 0]);
                 v4.SetY(atomPos[idx * 3 + 1]);
@@ -2321,7 +2321,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
                     bSplineSecStruct[cntChain].push_back(mol->SecondaryStructures()[cntS].Type());
                     // get the index of the C-alpha atom
                     if (mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                        aminoacid = (MolecularDataCall::AminoAcid*) (mol->Residues()[cntAA]);
                     else
                         continue;
                     idx = aminoacid->CAlphaIndex();
@@ -2381,7 +2381,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
         // --- START store the vertices, colors and parameters ---
         this->totalCountTube = 0;
         for (unsigned int i = 0; i < bSplineCoords.size(); i++) {
-            this->totalCountTube += (unsigned int)bSplineCoords[i].size();
+            this->totalCountTube += (unsigned int) bSplineCoords[i].size();
         }
 
         if (this->vertTube)

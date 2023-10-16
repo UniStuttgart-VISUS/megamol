@@ -181,7 +181,7 @@ Inform& Inform::operator<<(double d) {
     return *this;
 }
 
-Inform& Inform::operator<<(Inform& (*f)(Inform&)) {
+Inform& Inform::operator<<(Inform& (*f)(Inform&) ) {
     return f(*this);
 }
 

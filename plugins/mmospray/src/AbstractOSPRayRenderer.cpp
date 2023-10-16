@@ -27,7 +27,8 @@
 namespace megamol::ospray {
 
 void ospErrorCallback(OSPError err, const char* details) {
-    megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
+    megamol::core::utility::log::Log::DefaultLog.WriteError(
+        "OSPRay Error %u: %s", static_cast<std::underlying_type_t<OSPError>>(err), details);
 }
 
 void ospStatusCallback(const char* msg) {
@@ -187,7 +188,7 @@ void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
             peekchar = getc(file);
             while (peekchar == '#') {
                 auto tmp = fgets(lineBuf, LINESZ, file);
-                (void)tmp;
+                (void) tmp;
                 peekchar = getc(file);
             }
             ungetc(peekchar, file);
@@ -202,7 +203,7 @@ void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
             peekchar = getc(file);
             while (peekchar == '#') {
                 auto tmp = fgets(lineBuf, LINESZ, file);
-                (void)tmp;
+                (void) tmp;
                 peekchar = getc(file);
             }
             ungetc(peekchar, file);
@@ -216,7 +217,7 @@ void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
             data = new unsigned char[width * height * 3];
             rc = fread(data, width * height * 3, 1, file);
             // flip in y, because OSPRay's textures have the origin at the lower left corner
-            unsigned char* texels = (unsigned char*)data;
+            unsigned char* texels = (unsigned char*) data;
             for (int y = 0; y < height / 2; y++)
                 for (int x = 0; x < width * 3; x++)
                     std::swap(texels[y * width * 3 + x], texels[(height - 1 - y) * width * 3 + x]);
@@ -483,9 +484,9 @@ void AbstractOSPRayRenderer::writePPM(std::string fileName, const std::array<int
     // file << "P6\n" << size.x << " " << size.y << "\n255\n";
     FILE* file = fopen(fileName.c_str(), "wb");
     fprintf(file, "P6\n%i %i\n255\n", size[0], size[1]);
-    unsigned char* out = (unsigned char*)alloca(3 * size[0]);
+    unsigned char* out = (unsigned char*) alloca(3 * size[0]);
     for (int y = 0; y < size[1]; y++) {
-        const unsigned char* in = (const unsigned char*)&pixel[(size[1] - 1 - y) * size[1]];
+        const unsigned char* in = (const unsigned char*) &pixel[(size[1] - 1 - y) * size[1]];
         for (int x = 0; x < size[0]; x++) {
             out[3 * x + 0] = in[4 * x + 0];
             out[3 * x + 1] = in[4 * x + 1];

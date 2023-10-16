@@ -88,7 +88,7 @@ public:
      */
     inline cudaError_t Release() {
         if (this->pt_D != NULL) {
-            CudaSafeCall(cudaFree((void*)(this->pt_D)));
+            CudaSafeCall(cudaFree((void*) (this->pt_D)));
         }
         this->size = 0;
         this->count = 0;
@@ -118,7 +118,7 @@ public:
 
         if ((this->pt_D == NULL) || (sizeNew > this->size)) {
             this->Release();
-            CudaSafeCall(cudaMalloc((void**)&this->pt_D, sizeof(T) * sizeNew));
+            CudaSafeCall(cudaMalloc((void**) &this->pt_D, sizeof(T) * sizeNew));
             //            printf("Allocated at %p\n", &this->pt_D);
             this->size = sizeNew;
         }

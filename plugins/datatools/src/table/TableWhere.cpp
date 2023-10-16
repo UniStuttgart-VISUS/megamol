@@ -113,7 +113,7 @@ bool megamol::datatools::table::TableWhere::prepareData(TableDataCall& src, cons
 
     /* Request the source data. */
     src.SetFrameID(frameID);
-    if (!(src)(0)) {
+    if (!(src) (0)) {
         Log::DefaultLog.WriteError(
             _T("The call to %hs failed in %hs."), TableDataCall::FunctionName(0), TableDataCall::ClassName());
         return false;

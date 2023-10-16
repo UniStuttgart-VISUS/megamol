@@ -124,7 +124,7 @@ inline void radix_sort_core_(RandomIt s, RandomIt e, RadixTraits radix_traits) {
 
 template<class RandomIt, class ValueType, class RadixTraits>
 inline void radix_sort_entry_(RandomIt s, RandomIt e, ValueType*, RadixTraits radix_traits) {
-    if (e - s <= (int)kInsertSortThreshold)
+    if (e - s <= (int) kInsertSortThreshold)
         insert_sort_core_<RandomIt, ValueType, RadixTraits>(s, e, radix_traits);
     else
         radix_sort_core_<RandomIt, ValueType, RadixTraits, RadixTraits::nBytes - 1>(s, e, radix_traits);
@@ -133,9 +133,9 @@ inline void radix_sort_entry_(RandomIt s, RandomIt e, ValueType*, RadixTraits ra
 template<class RandomIt, class ValueType>
 inline void radix_sort_entry_(RandomIt s, RandomIt e, ValueType*) {
     if (ValueType(-1) > ValueType(0)) {
-        radix_sort_entry_(s, e, (ValueType*)(0), RadixTraitsUnsigned<ValueType>());
+        radix_sort_entry_(s, e, (ValueType*) (0), RadixTraitsUnsigned<ValueType>());
     } else {
-        radix_sort_entry_(s, e, (ValueType*)(0), RadixTraitsSigned<ValueType>());
+        radix_sort_entry_(s, e, (ValueType*) (0), RadixTraitsSigned<ValueType>());
     }
 }
 

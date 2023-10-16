@@ -158,9 +158,9 @@ DatRawDataFormat megamol::volume::VolumetricDataSource::getOutputDataFormat() co
         case 8:
             return DatRawDataFormat::DR_FORMAT_LONG;
         default:
-            Log::DefaultLog.WriteError(_T("Unsupported scalar ")
-                                       _T("length %u in combination with type %d."),
-                scalarLength, scalarType);
+            Log::DefaultLog.WriteError("Unsupported scalar "
+                                       "length %u in combination with type %d.",
+                scalarLength, static_cast<std::underlying_type_t<VolumetricDataCall::ScalarType>>(scalarType));
             return DatRawDataFormat::DR_FORMAT_NONE;
         }
 
@@ -175,9 +175,9 @@ DatRawDataFormat megamol::volume::VolumetricDataSource::getOutputDataFormat() co
         case 8:
             return DatRawDataFormat::DR_FORMAT_ULONG;
         default:
-            Log::DefaultLog.WriteError(_T("Unsupported scalar ")
-                                       _T("length %u in combination with type %d."),
-                scalarLength, scalarType);
+            Log::DefaultLog.WriteError("Unsupported scalar "
+                                       "length %u in combination with type %d.",
+                scalarLength, static_cast<std::underlying_type_t<VolumetricDataCall::ScalarType>>(scalarType));
             return DatRawDataFormat::DR_FORMAT_NONE;
         }
 
@@ -190,9 +190,9 @@ DatRawDataFormat megamol::volume::VolumetricDataSource::getOutputDataFormat() co
         case 8:
             return DatRawDataFormat::DR_FORMAT_DOUBLE;
         default:
-            Log::DefaultLog.WriteError(_T("Unsupported scalar ")
-                                       _T("length %u in combination with type %d."),
-                scalarLength, scalarType);
+            Log::DefaultLog.WriteError("Unsupported scalar "
+                                       "length %u in combination with type %d.",
+                scalarLength, static_cast<std::underlying_type_t<VolumetricDataCall::ScalarType>>(scalarType));
             return DatRawDataFormat::DR_FORMAT_NONE;
         }
 
@@ -534,7 +534,7 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
 
                     /* Request follow-up frames. */
                     for (size_t i = 1; (i < this->metadata.NumberOfFrames) && (i < this->buffers.Count() - 1); ++i) {
-                        unsigned int frameID = (c.FrameID() + i) % (unsigned int)this->metadata.NumberOfFrames;
+                        unsigned int frameID = (c.FrameID() + i) % (unsigned int) this->metadata.NumberOfFrames;
                         if (this->bufferForFrameIDUnsafe(frameID) < 0) {
                             BufferSlot* bs = nullptr;
                             if (!unusedBuffers.IsEmpty()) {
@@ -623,7 +623,7 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
 
                     for (size_t i = loadStart; i < dst.Count(); ++i) {
                         size_t idx = i % dst.Count();
-                        this->buffers[idx]->FrameID = c.FrameID() + (unsigned int)i;
+                        this->buffers[idx]->FrameID = c.FrameID() + (unsigned int) i;
                         this->buffers[idx]->Buffer.AssertSize(frameSize);
                         this->buffers[idx]->status.store(BUFFER_STATUS_READY);
                         dst[i] = this->buffers[idx]->Buffer.At(0);
@@ -656,14 +656,14 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
                     auto frameID = c.FrameID() + i;
                     auto format = this->getOutputDataFormat();
 #if (defined(DEBUG) || defined(_DEBUG))
-                    Log::DefaultLog.WriteInfo(_T("Loading frame %u in format ")
-                                              _T("%hs to 0x%p"),
-                        frameID, ::datRaw_getDataFormatName(format), dst.PeekElements());
+                    Log::DefaultLog.WriteInfo("Loading frame %u in format "
+                                              "%hs to 0x%p",
+                        frameID, ::datRaw_getDataFormatName(format), reinterpret_cast<void const*>(dst.PeekElements()));
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
                     retval = (::datRaw_loadStep(this->fileInfo, static_cast<int>(frameID), &buffer, format) != 0);
                     ::datRaw_close(this->fileInfo);
                     if (!retval) {
-                        Log::DefaultLog.WriteError(_T("Loading frame %u failed."), frameID);
+                        Log::DefaultLog.WriteError("Loading frame %u failed.", frameID);
                         break;
                     }
                 } /* end for (size_t i = 0; i < dst.Count(); ++i) */
@@ -673,8 +673,8 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
             Log::DefaultLog.WriteError(e.GetMsg());
             retval = false;
         } catch (...) {
-            Log::DefaultLog.WriteError(_T("Unexpected exception in callback ")
-                                       _T("onGetData (please check the call)."));
+            Log::DefaultLog.WriteError("Unexpected exception in callback "
+                                       "onGetData (please check the call).");
             retval = false;
         }
 
@@ -742,7 +742,7 @@ bool megamol::volume::VolumetricDataSource::onGetExtents(core::Call& call) {
          */
 
         /* Complete request. */
-        c.SetExtent((unsigned int)this->metadata.NumberOfFrames, this->metadata.Origin[0], this->metadata.Origin[1],
+        c.SetExtent((unsigned int) this->metadata.NumberOfFrames, this->metadata.Origin[0], this->metadata.Origin[1],
             this->metadata.Origin[2], this->metadata.Extents[0] + this->metadata.Origin[0],
             this->metadata.Extents[1] + this->metadata.Origin[1], this->metadata.Extents[2] + this->metadata.Origin[2]);
 

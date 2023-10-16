@@ -291,7 +291,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
     // Setup data array
     this->imgdata.SetNumberOfPieces(1);
     this->imgdata.SetPointData(
-        (const char*)this->data.Peek(), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
+        (const char*) this->data.Peek(), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
 
     Log::DefaultLog.WriteInfo("%s: ... done (%f s)", this->ClassName(),
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG

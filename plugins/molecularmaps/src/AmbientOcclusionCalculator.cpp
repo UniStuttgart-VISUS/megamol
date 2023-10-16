@@ -329,7 +329,7 @@ void AmbientOcclusionCalculator::createVolumeCPU(AmbientOcclusionCalculator::AOS
 
 #ifdef DEBUG_WRITE
     std::ofstream file("aovolume.raw", std::ios::binary);
-    file.write((char*)vol[0].data(), sizeof(float) * vol[0].size());
+    file.write((char*) vol[0].data(), sizeof(float) * vol[0].size());
     file.close();
 #endif /* DEBUG_WRITE */
 

@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glowl/glowl.h>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -149,6 +150,13 @@ private:
     bool visibilityCallback(core::param::ParamSlot& slot);
 
     /**
+     * \brief Sets texture format variables and recompiles shaders.
+     *
+     *  @return 'true' if updates sucessfull, 'false' otherwise
+     */
+    bool textureFormatUpdate();
+
+    /**
      * \brief Sets the setting parameter values of the SMAAConstants struct depending
      * on the chosen quality level.
      */
@@ -210,6 +218,7 @@ private:
     void copyTextureViaShader(
         const std::shared_ptr<glowl::Texture2D>& tgt, const std::shared_ptr<glowl::Texture2D>& src);
 
+
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
     frontend_resources::performance::handle_vector timers_;
@@ -263,6 +272,7 @@ private:
     /** Parameter for selecting the antialiasing technique, e.g. smaa, fxaa, no aa */
     megamol::core::param::ParamSlot mode_;
 
+
     /** Parameter for selecting the smaa technique: SMAA 1x, SMAA S2x, SMAA T2x, or SMAA 4x
      * SMAA 1x:  basic version of SMAA
      * SMAA S2x: includes all SMAA 1x features plus spatial multismapling (not implemented yet)
@@ -310,6 +320,7 @@ private:
     /** Slot for optionally querying a depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot depth_tex_slot_;
 
+    CompositingOutHandler out_format_handler_;
 
     bool settings_have_changed_;
 };

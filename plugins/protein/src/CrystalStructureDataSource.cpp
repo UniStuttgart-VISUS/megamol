@@ -122,8 +122,8 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource()
     case CHKPT_SOURCE:
         (*dirc)(1); // Call for get extend
         (*dirc)(0); // Call for get data
-        this->atomCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
-        this->dipoleCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
+        this->atomCnt = (unsigned int) dirc->AccessParticles(0).GetCount();
+        this->dipoleCnt = (unsigned int) dirc->AccessParticles(0).GetCount();
         this->cellCnt = 0;
         this->frameCnt = 1;
         break;
@@ -325,7 +325,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     }
 
     fileAtoms.seekg(0, std::ios::beg);
-    fileAtoms.read((char*)bufferAtoms, this->atomCnt * 7 * sizeof(int));
+    fileAtoms.read((char*) bufferAtoms, this->atomCnt * 7 * sizeof(int));
     fileAtoms.close();
 
     // Set atom types and colors
@@ -380,7 +380,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     }
 
     fileCells.seekg(0, std::ios::beg);
-    fileCells.read((char*)this->cells, this->cellCnt * 15 * sizeof(int));
+    fileCells.read((char*) this->cells, this->cellCnt * 15 * sizeof(int));
     fileCells.close();
 
     //printf("  cells done ...\n"); // DEBUG
@@ -526,8 +526,8 @@ void protein::CrystalStructureDataSource::updateParams() {
         case CHKPT_SOURCE:
             (*dirc)(1); // Call for get extend
             (*dirc)(0); // Call for get data
-            this->atomCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
-            this->dipoleCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
+            this->atomCnt = (unsigned int) dirc->AccessParticles(0).GetCount();
+            this->dipoleCnt = (unsigned int) dirc->AccessParticles(0).GetCount();
             this->cellCnt = 0;
             this->frameCnt = 1;
             break;
@@ -604,7 +604,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         }
 
         // Read frame data of the displacement frame from file
-        file.read((char*)(fr->dipole), this->dipoleCnt * 3 * sizeof(float));
+        file.read((char*) (fr->dipole), this->dipoleCnt * 3 * sizeof(float));
 
         // Skip frames
         // Note: -1 because we already skipped one frame by reading it
@@ -613,7 +613,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         file.seekg(this->atomCnt * 3 * sizeof(float) * fr->GetFrameIdx(), std::ios::beg);
 
         // Read atom pos from file
-        file.read((char*)(fr->atomPos), this->atomCnt * 3 * sizeof(float));
+        file.read((char*) (fr->atomPos), this->atomCnt * 3 * sizeof(float));
 
         // Close file
         file.close();
@@ -661,7 +661,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         }
 
         // Read frame data of the displacement frame from file
-        file.read((char*)(fr->atomPos), this->atomCnt * 3 * sizeof(float));
+        file.read((char*) (fr->atomPos), this->atomCnt * 3 * sizeof(float));
         // Calc displacement
 #pragma omp parallel for
         for (int di = 0; di < static_cast<int>(dipoleCnt); di++) {
@@ -678,7 +678,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         file.seekg(this->atomCnt * 3 * sizeof(float) * fr->GetFrameIdx(), std::ios::beg);
 
         // Read atom pos from file
-        file.read((char*)(fr->atomPos), this->atomCnt * 3 * sizeof(float));
+        file.read((char*) (fr->atomPos), this->atomCnt * 3 * sizeof(float));
 
         // Close file
         file.close();
@@ -709,7 +709,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         file.seekg(this->atomCnt * 3 * sizeof(float) * fr->GetFrameIdx(), std::ios::beg);
 
         // Read atom pos from file
-        file.read((char*)(fr->atomPos), this->atomCnt * 3 * sizeof(float));
+        file.read((char*) (fr->atomPos), this->atomCnt * 3 * sizeof(float));
 
         // Close file
         file.close();
@@ -787,7 +787,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         if (!(*dirc)(1))
             return false;
 
-        this->dipoleCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
+        this->dipoleCnt = (unsigned int) dirc->AccessParticles(0).GetCount();
 
         // Note: we only have one particle list in this case
         geocalls::MultiParticleDataCall::Particles& parts = dirc->AccessParticles(0);
@@ -874,7 +874,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         file.seekg(this->atomCnt * 3 * sizeof(float) * fr->GetFrameIdx(), std::ios::beg);
 
         // Read atom pos from file
-        file.read((char*)(fr->atomPos), this->atomCnt * 3 * sizeof(float));
+        file.read((char*) (fr->atomPos), this->atomCnt * 3 * sizeof(float));
 
         // Close file
         file.close();
@@ -940,7 +940,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         file.seekg(this->atomCnt * 3 * sizeof(float) * fr->GetFrameIdx(), std::ios::beg);
 
         // Read atom pos from file
-        file.read((char*)(fr->atomPos), this->atomCnt * 3 * sizeof(float));
+        file.read((char*) (fr->atomPos), this->atomCnt * 3 * sizeof(float));
 
         // Close file
         file.close();

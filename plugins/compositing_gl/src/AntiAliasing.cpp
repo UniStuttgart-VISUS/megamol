@@ -49,8 +49,16 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
         , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")
         , input_tex_slot_("InputTexture", "Connects the input texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth texture")
-        , settings_have_changed_(false) {
-    auto aa_modes = new core::param::EnumParam(0);
+        , settings_have_changed_(false)
+        , out_format_handler_("OUTFORMAT",
+              {
+                  GL_RGBA8_SNORM,
+                  GL_RGBA16F,
+                  GL_RGBA32F,
+              },
+              std::function<bool()>(std::bind(&AntiAliasing::textureFormatUpdate, this))) {
+
+    auto aa_modes = new core::param::EnumParam(1);
     aa_modes->SetTypePair(0, "SMAA");
     aa_modes->SetTypePair(1, "FXAA");
     aa_modes->SetTypePair(2, "None");
@@ -129,6 +137,8 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
         this->MakeSlotAvailable(tex_slot);
     }
 
+    this->MakeSlotAvailable(out_format_handler_.getFormatSelectorSlot());
+
     this->output_tex_slot_.SetCallback(
         compositing_gl::CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
     this->output_tex_slot_.SetCallback(
@@ -168,12 +178,13 @@ bool megamol::compositing_gl::AntiAliasing::create() {
     // create shader programs
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto shader_options_flags = out_format_handler_.addDefinitions(shader_options);
 
     try {
         copy_prgm_ = core::utility::make_glowl_shader("copy_texture", shader_options, "compositing_gl/copy.comp.glsl");
 
-        fxaa_prgm_ =
-            core::utility::make_glowl_shader("fxaa", shader_options, "compositing_gl/AntiAliasing/fxaa.comp.glsl");
+        fxaa_prgm_ = core::utility::make_glowl_shader(
+            "fxaa", *shader_options_flags, "compositing_gl/AntiAliasing/fxaa.comp.glsl");
 
         smaa_edge_detection_prgm_ = core::utility::make_glowl_shader(
             "smaa_edge_detection", shader_options, "compositing_gl/AntiAliasing/smaa_edge_detection.comp.glsl");
@@ -182,13 +193,14 @@ bool megamol::compositing_gl::AntiAliasing::create() {
             shader_options, "compositing_gl/AntiAliasing/smaa_blending_weights_calculation.comp.glsl");
 
         smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader("smaa_neighborhood_blending",
-            shader_options, "compositing_gl/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
+            *shader_options_flags, "compositing_gl/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("AntiAliasing: " + std::string(e.what())).c_str());
     }
 
     // init all textures
-    glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
+    glowl::TextureLayout tx_layout(out_format_handler_.getInternalFormat(), 1, 1, 1, out_format_handler_.getFormat(),
+        out_format_handler_.getType(), 1);
     output_tx2D_ = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
 
     // textures for smaa
@@ -566,7 +578,8 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
 
         // init output texture if necessary
         if (output_tx2D_->getWidth() != input_width || output_tx2D_->getHeight() != input_height) {
-            glowl::TextureLayout tx_layout(GL_RGBA16F, input_width, input_height, 1, GL_RGBA, GL_HALF_FLOAT, 1);
+            glowl::TextureLayout tx_layout(out_format_handler_.getInternalFormat(), input_width, input_height, 1,
+                out_format_handler_.getFormat(), out_format_handler_.getType(), 1);
 
             output_tx2D_->reload(tx_layout, nullptr);
         }
@@ -599,7 +612,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
             if (smaa_constants_.Rt_metrics[2] != input_width || smaa_constants_.Rt_metrics[3] != input_height ||
                 settings_have_changed_) {
                 smaa_constants_.Rt_metrics = glm::vec4(
-                    1.f / (float)input_width, 1.f / (float)input_height, (float)input_width, (float)input_height);
+                    1.f / (float) input_width, 1.f / (float) input_height, (float) input_width, (float) input_height);
                 ssbo_constants_->rebuffer(&smaa_constants_, sizeof(smaa_constants_));
             }
 
@@ -647,7 +660,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
             break;
         }
 
-        tex_inspector_.SetTexture((void*)(intptr_t)tex_to_show, tex_dim.x, tex_dim.y);
+        tex_inspector_.SetTexture((void*) (intptr_t) tex_to_show, tex_dim.x, tex_dim.y);
         tex_inspector_.ShowWindow();
     }
 
@@ -659,6 +672,26 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
     return true;
 }
 
+
+bool megamol::compositing_gl::AntiAliasing::textureFormatUpdate() {
+    glowl::TextureLayout tx_layout(out_format_handler_.getInternalFormat(), 1, 1, 1, out_format_handler_.getFormat(),
+        out_format_handler_.getType(), 1);
+    output_tx2D_ = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto shader_options_flags = out_format_handler_.addDefinitions(shader_options);
+
+    try {
+        fxaa_prgm_ = core::utility::make_glowl_shader(
+            "fxaa", *shader_options_flags, "compositing_gl/AntiAliasing/fxaa.comp.glsl");
+        smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader("smaa_neighborhood_blending",
+            *shader_options_flags, "compositing_gl/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(("AntiAliasing: " + std::string(e.what())).c_str());
+        return false;
+    }
+    return true;
+}
 
 /*
  * @megamol::compositing_gl::AntiAliasing::getMetaDataCallback

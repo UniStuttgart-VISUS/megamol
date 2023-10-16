@@ -341,7 +341,7 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
             break;
         }
 
-        tex_inspector_.SetTexture((void*)(intptr_t)tex_to_show, xres, yres);
+        tex_inspector_.SetTexture((void*) (intptr_t) tex_to_show, xres, yres);
         tex_inspector_.ShowWindow();
     }
 

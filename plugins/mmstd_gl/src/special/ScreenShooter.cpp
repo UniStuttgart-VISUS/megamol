@@ -383,8 +383,8 @@ void special::ScreenShooter::BeforeRender(core::view::AbstractView* view) {
 
                 if (this->animAddTime2FrameSlot.Param<core::param::BoolParam>()->Value()) {
                     int intPart = static_cast<int>(floor(this->animLastFrameTime));
-                    float fractPart = this->animLastFrameTime - (float)intPart;
-                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart * 1000.0f));
+                    float fractPart = this->animLastFrameTime - (float) intPart;
+                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int) (fractPart * 1000.0f));
                 } else {
                     ext.Format(_T(".%.5u.png"), this->outputCounter);
                 }
@@ -872,7 +872,7 @@ void special::ScreenShooter::BeforeRender(core::view::AbstractView* view) {
         if (data.pngInfoPtr != NULL) {
             png_destroy_write_struct(&data.pngPtr, &data.pngInfoPtr);
         } else {
-            png_destroy_write_struct(&data.pngPtr, (png_infopp)NULL);
+            png_destroy_write_struct(&data.pngPtr, (png_infopp) NULL);
         }
     }
     try {
@@ -973,7 +973,7 @@ bool special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& slot) 
                 core::param::ParamSlot* timeSlot = this->findTimeParam(av);
                 if (timeSlot != nullptr) {
                     auto startTime = static_cast<float>(this->animFromSlot.Param<core::param::IntParam>()->Value());
-                    Log::DefaultLog.WriteInfo("Starting animation of screen shots at %f.", time);
+                    Log::DefaultLog.WriteInfo("Starting animation of screen shots at %f.", startTime);
                     timeSlot->Param<core::param::FloatParam>()->SetValue(startTime);
                     this->animLastFrameTime = std::numeric_limits<decltype(animLastFrameTime)>::lowest();
                 } else {

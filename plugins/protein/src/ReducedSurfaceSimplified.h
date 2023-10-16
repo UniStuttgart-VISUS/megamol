@@ -45,7 +45,7 @@ public:
         unsigned int SidechainAtomIndex(unsigned int idx) const;
         /** The number of amino acids in this chain */
         unsigned int AminoAcidCount() const {
-            return (unsigned int)backbonePos.size();
+            return (unsigned int) backbonePos.size();
         };
         /** The maximum radius of a backbone or sidechain */
         float MaxRadius() const {
@@ -121,7 +121,7 @@ public:
         };
         /** getter for the edge list size */
         const unsigned int GetEdgeCount() const {
-            return (unsigned int)edgeList.size();
+            return (unsigned int) edgeList.size();
         };
         /** add edge */
         void AddEdge(RSEdge* edge) {
@@ -389,7 +389,7 @@ public:
      * @return The number of RS-vertices.
      */
     unsigned int GetRSVertexCount() {
-        return (unsigned int)rsVertex.size();
+        return (unsigned int) rsVertex.size();
     };
 
     /**
@@ -397,7 +397,7 @@ public:
      * @return The number of RS-edges.
      */
     unsigned int GetRSEdgeCount() {
-        return (unsigned int)rsEdge.size();
+        return (unsigned int) rsEdge.size();
     };
 
     /**
@@ -405,7 +405,7 @@ public:
      * @return The number of RS-faces.
      */
     unsigned int GetRSFaceCount() {
-        return (unsigned int)rsFace.size();
+        return (unsigned int) rsFace.size();
     };
 
     /**
@@ -462,7 +462,7 @@ public:
     bool UpdateData(const float lowerThreshold, const float upperThreshold);
 
     unsigned int SimpleChainCount() const {
-        return (unsigned int)simpleChain.size();
+        return (unsigned int) simpleChain.size();
     };
     const SimplifiedChain* SimpleChain(unsigned int idx) const {
         return simpleChain.at(idx);

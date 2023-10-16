@@ -187,12 +187,12 @@ inline T SampleFieldAtPosTrilin(float pos[3], T* field, float gridOrg[3], float 
     f[0] = (pos[0] - gridOrg[0]) / gridDelta[0];
     f[1] = (pos[1] - gridOrg[1]) / gridDelta[1];
     f[2] = (pos[2] - gridOrg[2]) / gridDelta[2];
-    c[0] = (int)(f[0]);
-    c[1] = (int)(f[1]);
-    c[2] = (int)(f[2]);
-    f[0] = f[0] - (float)c[0]; // alpha
-    f[1] = f[1] - (float)c[1]; // beta
-    f[2] = f[2] - (float)c[2]; // gamma
+    c[0] = (int) (f[0]);
+    c[1] = (int) (f[1]);
+    c[2] = (int) (f[2]);
+    f[0] = f[0] - (float) c[0]; // alpha
+    f[1] = f[1] - (float) c[1]; // beta
+    f[2] = f[2] - (float) c[2]; // gamma
 
     c[0] = std::min(std::max(c[0], int(0)), gridSize[0] - 2);
     c[1] = std::min(std::max(c[1], int(0)), gridSize[1] - 2);

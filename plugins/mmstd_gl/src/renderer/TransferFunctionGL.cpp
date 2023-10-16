@@ -120,7 +120,7 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
 
         GLint otid = 0;
         glGetIntegerv(GL_TEXTURE_BINDING_1D, &otid);
-        glBindTexture(GL_TEXTURE_1D, (GLuint)this->texID);
+        glBindTexture(GL_TEXTURE_1D, (GLuint) this->texID);
         const auto tex_format =
             this->texFormat == core::view::AbstractCallGetTransferFunction::TEXTURE_FORMAT_RGBA ? GL_RGBA : GL_RGB;
 

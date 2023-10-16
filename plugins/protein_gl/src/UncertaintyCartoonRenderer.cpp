@@ -777,7 +777,7 @@ bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
                     // is the current residue really an aminoacid?
                     if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-                        acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
+                        acid = (MolecularDataCall::AminoAcid*) (mol->Residues()[aaIdx]);
                     else
                         continue;
 
@@ -794,8 +794,8 @@ bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                     uncIndex = this->synchronizedIndex[aaIdx];
                     for (unsigned int k = 0; k < this->structCount; k++) {
                         calpha.sortedStruct[k] = static_cast<int>(
-                            this->sortedSecStructAssignment[(int)this->currentMethodData][uncIndex][k]);
-                        calpha.unc[k] = this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
+                            this->sortedSecStructAssignment[(int) this->currentMethodData][uncIndex][k]);
+                        calpha.unc[k] = this->secStructUncertainty[(int) this->currentMethodData][uncIndex][k];
                         if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
                             // calpha.unc[k] = (mol->AtomBFactors()[acid->CAlphaIndex()] -
                             // mol->MinimumBFactor())/(mol->MaximumBFactor() - mol->MinimumBFactor());
@@ -808,10 +808,10 @@ bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                             }
                         }
                     }
-                    if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
+                    if (this->currentColoringMode == (int) COLOR_MODE_CHAIN) {
                         for (unsigned int k = 0; k < 3; k++)
                             calpha.col[k] = this->chainColors[uncIndex][k];
-                    } else if (this->currentColoringMode == (int)COLOR_MODE_AMINOACID) {
+                    } else if (this->currentColoringMode == (int) COLOR_MODE_AMINOACID) {
                         for (unsigned int k = 0; k < 3; k++)
                             calpha.col[k] = this->aminoAcidColors[uncIndex][k];
                     }
@@ -905,7 +905,7 @@ bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         tubeShader_->setUniform("pipeWidth", this->currentBackboneWidth);
         tubeShader_->setUniform("interpolateColors", this->colorInterpolationParam.Param<param::BoolParam>()->Value());
         glUniform4fv(tubeShader_->getUniformLocation("structCol"), this->structCount,
-            (GLfloat*)this->secStructColor.PeekElements());
+            (GLfloat*) this->secStructColor.PeekElements());
         tubeShader_->setUniform("colorMode", this->currentColoringMode);
         tubeShader_->setUniform("onlyTubes", this->onlyTubesParam.Param<param::BoolParam>()->Value());
         tubeShader_->setUniform("uncVisMode", static_cast<int>(this->currentUncVis));
@@ -960,7 +960,7 @@ bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                 if (this->currentOutlineMode == OUTLINE_LINE) {
                     glPolygonMode(GL_BACK, GL_LINE);
                     glEnable(GL_LINE_SMOOTH);
-                    glLineWidth((float)this->currentOutlineScaling);
+                    glLineWidth((float) this->currentOutlineScaling);
                 } else {
                     glPolygonMode(GL_BACK, GL_FILL);
                 }
@@ -978,15 +978,15 @@ bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             // numVert = number of vertices fitting into bufSize
             UINT64 stride = 0; // aminoacid index in mainChain
 
-            for (int i = 0; i < (int)molSizes.size(); i++) { // loop over all secondary structures
+            for (int i = 0; i < (int) molSizes.size(); i++) { // loop over all secondary structures
                 UINT64 vertCounter = 0;
                 while (
                     vertCounter < molSizes[i]) { // loop over all aminoacids inside of one secondary structure - WHY ?
 
                     const char* currVert =
-                        (const char*)(&this->mainChain[(unsigned int)vertCounter +
-                                                       (unsigned int)stride]); // pointer to current vertex data in
-                                                                               // mainChain
+                        (const char*) (&this->mainChain[(unsigned int) vertCounter +
+                                                        (unsigned int) stride]); // pointer to current vertex data in
+                                                                                 // mainChain
 
                     void* mem = static_cast<char*>(this->theSingleMappedMem) +
                                 this->bufSize * this->currBuf; // pointer to the mapped memory - ?
@@ -997,11 +997,11 @@ bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                     this->WaitSignal(this->fences[this->currBuf]); // wait for buffer 'currBuf' to be "ready" - ?
 
                     memcpy(mem, whence,
-                        (size_t)vertsThisTime *
+                        (size_t) vertsThisTime *
                             vertStride); // copy data of current vertex data in mainChain to mapped memory - ?
 
                     glFlushMappedNamedBufferRangeEXT(theSingleBuffer, this->bufSize * this->currBuf,
-                        (GLsizeiptr)vertsThisTime * vertStride); // parameter: buffer, offset, length
+                        (GLsizeiptr) vertsThisTime * vertStride); // parameter: buffer, offset, length
 
                     tubeShader_->setUniform("instanceOffset", 0);
 
@@ -1011,7 +1011,7 @@ bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                         GL_PATCH_VERTICES, 1); // set parameter GL_PATCH_VERTICES to 1 (the number of vertices that will
                                                // be used to make up a single patch primitive)
                     glDrawArrays(
-                        GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3)); // draw as many as (vertsThisTime-3) patches
+                        GL_PATCHES, 0, (GLsizei) (vertsThisTime - 3)); // draw as many as (vertsThisTime-3) patches
                     // -3 ? - because the first atom is added 3 times for each different secondary structure ??
                     this->QueueSignal(this->fences[this->currBuf]); // queue signal - tell that mapped memory
                                                                     // 'operations' are done - ?
@@ -1059,7 +1059,7 @@ void UncertaintyCartoonRenderer::GetBytesAndStride(MolecularDataCall& mol, unsig
     vertBytes = 0;
     colBytes = 0;
     // colBytes = vislib::math::Max(colBytes, 3 * 4U);
-    vertBytes = vislib::math::Max(vertBytes, (unsigned int)sizeof(CAlpha));
+    vertBytes = vislib::math::Max(vertBytes, (unsigned int) sizeof(CAlpha));
 
     colStride = 0;
     colStride = (colStride < colBytes) ? (colBytes) : (colStride);

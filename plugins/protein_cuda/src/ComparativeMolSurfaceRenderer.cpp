@@ -644,9 +644,9 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     gridXAxisLen = this->volMaxC.x - this->volOrg.x;
     gridYAxisLen = this->volMaxC.y - this->volOrg.y;
     gridZAxisLen = this->volMaxC.z - this->volOrg.z;
-    this->volDim.x = (int)ceil(gridXAxisLen / this->qsGridDelta);
-    this->volDim.y = (int)ceil(gridYAxisLen / this->qsGridDelta);
-    this->volDim.z = (int)ceil(gridZAxisLen / this->qsGridDelta);
+    this->volDim.x = (int) ceil(gridXAxisLen / this->qsGridDelta);
+    this->volDim.y = (int) ceil(gridYAxisLen / this->qsGridDelta);
+    this->volDim.z = (int) ceil(gridZAxisLen / this->qsGridDelta);
     gridXAxisLen = (this->volDim.x - 1) * this->qsGridDelta;
     gridYAxisLen = (this->volDim.y - 1) * this->qsGridDelta;
     gridZAxisLen = (this->volDim.z - 1) * this->qsGridDelta;
@@ -683,7 +683,7 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     int rc = cqs->calc_map(mol->AtomCount(), &this->gridDataPos.Peek()[0],
         NULL,  // Pointer to 'color' array
         false, // Do not use 'color' array
-        CUDAQuickSurf::VolTexFormat::RGB3F, (float*)&this->volOrg, (int*)&this->volDim, this->maxAtomRad,
+        CUDAQuickSurf::VolTexFormat::RGB3F, (float*) &this->volOrg, (int*) &this->volDim, this->maxAtomRad,
         this->qsRadScl, // Radius scaling
         this->qsGridDelta, this->qsIsoVal, this->qsGaussLim, false);
 
@@ -855,23 +855,25 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                 for (uint acid = 0; acid < mol1->SecondaryStructures()[sec].AminoAcidCount(); ++acid) {
 
                     uint cAlphaIdx =
-                        ((const MolecularDataCall::AminoAcid*)(mol1->Residues()[mol1->SecondaryStructures()[sec]
-                                                                                    .FirstAminoAcidIndex() +
-                                                                                acid]))
+                        ((const MolecularDataCall::AminoAcid*) (mol1->Residues()[mol1->SecondaryStructures()[sec]
+                                                                                     .FirstAminoAcidIndex() +
+                                                                                 acid]))
                             ->CAlphaIndex();
                     uint cCarbIdx =
-                        ((const MolecularDataCall::AminoAcid*)(mol1->Residues()[mol1->SecondaryStructures()[sec]
-                                                                                    .FirstAminoAcidIndex() +
-                                                                                acid]))
+                        ((const MolecularDataCall::AminoAcid*) (mol1->Residues()[mol1->SecondaryStructures()[sec]
+                                                                                     .FirstAminoAcidIndex() +
+                                                                                 acid]))
                             ->CCarbIndex();
-                    uint nIdx = ((const MolecularDataCall::AminoAcid*)(mol1->Residues()[mol1->SecondaryStructures()[sec]
-                                                                                            .FirstAminoAcidIndex() +
-                                                                                        acid]))
-                                    ->NIndex();
-                    uint oIdx = ((const MolecularDataCall::AminoAcid*)(mol1->Residues()[mol1->SecondaryStructures()[sec]
-                                                                                            .FirstAminoAcidIndex() +
-                                                                                        acid]))
-                                    ->OIndex();
+                    uint nIdx =
+                        ((const MolecularDataCall::AminoAcid*) (mol1->Residues()[mol1->SecondaryStructures()[sec]
+                                                                                     .FirstAminoAcidIndex() +
+                                                                                 acid]))
+                            ->NIndex();
+                    uint oIdx =
+                        ((const MolecularDataCall::AminoAcid*) (mol1->Residues()[mol1->SecondaryStructures()[sec]
+                                                                                     .FirstAminoAcidIndex() +
+                                                                                 acid]))
+                            ->OIndex();
 
                     //                    printf("c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n",
                     //                            cAlphaIdx, cCarbIdx, oIdx, nIdx); // DEBUG
@@ -893,20 +895,20 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                 for (uint acid = 0; acid < secStructure.AminoAcidCount(); ++acid) {
 
                     uint cAlphaIdx =
-                        ((const MolecularDataCall::AminoAcid*)(mol2->Residues()[secStructure.FirstAminoAcidIndex() +
-                                                                                acid]))
+                        ((const MolecularDataCall::AminoAcid*) (mol2->Residues()[secStructure.FirstAminoAcidIndex() +
+                                                                                 acid]))
                             ->CAlphaIndex();
                     uint cCarbIdx =
-                        ((const MolecularDataCall::AminoAcid*)(mol2->Residues()[secStructure.FirstAminoAcidIndex() +
-                                                                                acid]))
+                        ((const MolecularDataCall::AminoAcid*) (mol2->Residues()[secStructure.FirstAminoAcidIndex() +
+                                                                                 acid]))
                             ->CCarbIndex();
                     uint nIdx =
-                        ((const MolecularDataCall::AminoAcid*)(mol2->Residues()[secStructure.FirstAminoAcidIndex() +
-                                                                                acid]))
+                        ((const MolecularDataCall::AminoAcid*) (mol2->Residues()[secStructure.FirstAminoAcidIndex() +
+                                                                                 acid]))
                             ->NIndex();
                     uint oIdx =
-                        ((const MolecularDataCall::AminoAcid*)(mol2->Residues()[secStructure.FirstAminoAcidIndex() +
-                                                                                acid]))
+                        ((const MolecularDataCall::AminoAcid*) (mol2->Residues()[secStructure.FirstAminoAcidIndex() +
+                                                                                 acid]))
                             ->OIndex();
                     //                    printf("amino acid idx %u, c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n", secStructure.
                     //                            FirstAminoAcidIndex()+acid, cAlphaIdx, cCarbIdx, oIdx, nIdx);
@@ -982,7 +984,7 @@ atoms instead.",
             for (size_t res = 0; res < mol1->ResidueCount(); ++res) {
                 const MolecularDataCall::Residue* residue = mol1->Residues()[res];
                 if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
-                    uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
+                    uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*) (residue))->CAlphaIndex();
                     this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * cAlphaIdx]);
                     //                    printf("ADDING ATOM POS 1 %f %f %f\n",
                     //                            this->rmsPosVec1.Peek()[3*posCnt1+0],
@@ -1018,7 +1020,7 @@ atoms instead.",
             for (size_t res = 0; res < mol2->ResidueCount(); ++res) {
                 const MolecularDataCall::Residue* residue = mol2->Residues()[res];
                 if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
-                    uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
+                    uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*) (residue))->CAlphaIndex();
                     this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * cAlphaIdx]);
                     //                    printf("ADDING ATOM POS 2 %f %f %f\n",
                     //                            this->rmsPosVec2.Peek()[3*posCnt2+0],
@@ -1533,11 +1535,11 @@ bool ComparativeMolSurfaceRenderer::initPotentialMap(VTIDataCall* cmd, gridParam
  */
 void ComparativeMolSurfaceRenderer::release(void) {
     if (this->cudaqsurf1 != NULL) {
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf1;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf1;
         delete cqs;
     }
     if (this->cudaqsurf2 != NULL) {
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf2;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) this->cudaqsurf2;
         delete cqs;
     }
     this->deformSurf1.Release();
@@ -1705,14 +1707,14 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // (Re-)compute volume texture if necessary
     if (this->triggerComputeVolume) {
 
-        if (!this->computeDensityMap(mol1->AtomPositions(), mol1, (CUDAQuickSurf*)this->cudaqsurf1)) {
+        if (!this->computeDensityMap(mol1->AtomPositions(), mol1, (CUDAQuickSurf*) this->cudaqsurf1)) {
 
             Log::DefaultLog.WriteError("%s: could not compute density map #1", this->ClassName());
 
             return false;
         }
 
-        if (!this->computeDensityMap(this->atomPosFitted.Peek(), mol2, (CUDAQuickSurf*)this->cudaqsurf2)) {
+        if (!this->computeDensityMap(this->atomPosFitted.Peek(), mol2, (CUDAQuickSurf*) this->cudaqsurf2)) {
 
             Log::DefaultLog.WriteError("%s: could not compute density map #2", this->ClassName());
 
@@ -1780,7 +1782,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Get vertex positions based on the level set
         if (!this->deformSurf1.ComputeVertexPositions(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1814,7 +1816,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Build triangle mesh from vertices
         if (!this->deformSurf1.ComputeTriangles(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1833,7 +1835,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Compute vertex connectivity
         if (!this->deformSurf1.ComputeConnectivity(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1852,7 +1854,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Regularize the mesh of surface #1
         if (!this->deformSurf1.MorphToVolumeGradient(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1873,7 +1875,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Compute vertex normals
         if (!this->deformSurf1.ComputeNormals(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1911,7 +1913,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Get vertex positions based on the level set
         if (!this->deformSurf2.ComputeVertexPositions(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1928,7 +1930,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Build triangle mesh from vertices
         if (!this->deformSurf2.ComputeTriangles(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1945,7 +1947,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Compute vertex connectivity
         if (!this->deformSurf2.ComputeConnectivity(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1958,7 +1960,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
         if (!this->deformSurf2.ComputeTriangleNeighbors(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1971,7 +1973,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Compute edge list (this needs to be done before any deformation happens
         if (!this->deformSurf2.ComputeEdgeList(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -1988,7 +1990,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Regularize the mesh of surface #2
         if (!this->deformSurf2.MorphToVolumeGradient(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -2011,7 +2013,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         // Compute vertex normals
         if (!this->deformSurf2.ComputeNormals(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -2059,18 +2061,18 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             // Morph surface #2 to shape #1 using GVF
             if (!this->deformSurfMapped.MorphToVolumeGVF(
 #ifndef USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                    ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                     this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
 #ifndef USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                     this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
                     this->deformSurf1.PeekCubeStates(), this->volDim, this->volOrg, this->volDelta, this->qsIsoVal,
                     this->interpolMode,
-                    ((this->cmpMode == COMPARE_1_MORPH) ? (int)(calltime) : this->surfaceMappingMaxIt),
+                    ((this->cmpMode == COMPARE_1_MORPH) ? (int) (calltime) : this->surfaceMappingMaxIt),
                     this->surfMappedMinDisplScl, this->surfMappedSpringStiffness, this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl, this->surfMappedGVFScl, this->surfMappedGVFIt)) {
 
@@ -2086,12 +2088,12 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             // Morph surface #2 to shape #1 using implicit molecular surface
             if (!this->deformSurfMapped.MorphToVolumeGradient(
 #ifndef USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                     this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
                     this->volDim, this->volOrg, this->volDelta, this->qsIsoVal, this->interpolMode,
-                    ((this->cmpMode == COMPARE_1_MORPH) ? (int)(calltime) : this->surfaceMappingMaxIt),
+                    ((this->cmpMode == COMPARE_1_MORPH) ? (int) (calltime) : this->surfaceMappingMaxIt),
                     this->surfMappedMinDisplScl, this->surfMappedSpringStiffness, this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl)) {
 
@@ -2107,12 +2109,12 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             // Morph surface #2 to shape #1 using implicit molecular surface + distance field
             if (!this->deformSurfMapped.MorphToVolumeDistfield(
 #ifndef USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                     this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
                     this->volDim, this->volOrg, this->volDelta, this->qsIsoVal, this->interpolMode,
-                    ((this->cmpMode == COMPARE_1_MORPH) ? (int)(calltime) : this->surfaceMappingMaxIt),
+                    ((this->cmpMode == COMPARE_1_MORPH) ? (int) (calltime) : this->surfaceMappingMaxIt),
                     this->surfMappedMinDisplScl, this->surfMappedSpringStiffness, this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl, this->distFieldThresh)) {
 
@@ -2150,18 +2152,18 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
             if (!this->deformSurfMapped.MorphToVolumeTwoWayGVF(
 #ifndef USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                    ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                     this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
 #ifndef USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                    ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                     this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
                     this->deformSurf2.PeekCubeStates(), this->deformSurf1.PeekCubeStates(), this->volDim, this->volOrg,
                     this->volDelta, this->qsIsoVal, this->interpolMode,
-                    ((this->cmpMode == COMPARE_1_MORPH) ? (int)(calltime) : this->surfaceMappingMaxIt),
+                    ((this->cmpMode == COMPARE_1_MORPH) ? (int) (calltime) : this->surfaceMappingMaxIt),
                     this->surfMappedMinDisplScl, this->surfMappedSpringStiffness, this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl, this->surfMappedGVFScl, this->surfMappedGVFIt, true,
                     true)) {
@@ -2188,7 +2190,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 #endif // VERBOSE
         // Perform subdivision with subsequent deformation to create a fine
         // target mesh enough
-        if (((this->cmpMode == COMPARE_1_MORPH) ? (int)(calltime) : this->surfaceMappingMaxIt) > 0) {
+        if (((this->cmpMode == COMPARE_1_MORPH) ? (int) (calltime) : this->surfaceMappingMaxIt) > 0) {
             int newTris;
             for (int i = 0; i < this->maxSubdivLevel; ++i) {
                 for (int j = 0; j < this->subStepLevel; ++j) {
@@ -2197,7 +2199,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
                     newTris = this->deformSurfMapped.RefineMesh(1,
 #ifndef USE_PROCEDURAL_DATA
-                        ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                        ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                         this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -2219,12 +2221,12 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                     // Morph surface #2 to shape #1 using Two-Way-GVF
                     if (!this->deformSurfMapped.MorphToVolumeTwoWayGVFSubdiv(
 #ifndef USE_PROCEDURAL_DATA
-                            ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                            ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                             this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
 #ifndef USE_PROCEDURAL_DATA
-                            ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                            ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                             this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -2244,7 +2246,7 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
         if (!this->deformSurfMapped.FlagCorruptTriangles(
 #ifndef USE_PROCEDURAL_DATA
-                ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+                ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                 this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
@@ -2271,13 +2273,13 @@ bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         if (this->maxSubdivLevel > 0) {
             if (!this->deformSurfMapped.TrackPathSubdivVertices(
 #ifndef USE_PROCEDURAL_DATA
-                    ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+                    ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
 #else  //  USE_PROCEDURAL_DATA
                     this->procField2D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
                     this->volDim, this->volOrg, this->volDelta, this->surfaceMappingForcesScl,
                     this->surfMappedMinDisplScl, this->qsIsoVal,
-                    ((this->cmpMode == COMPARE_1_MORPH) ? (int)(calltime) : this->surfaceMappingMaxIt))) {
+                    ((this->cmpMode == COMPARE_1_MORPH) ? (int) (calltime) : this->surfaceMappingMaxIt))) {
                 return false;
             }
         }
@@ -3701,12 +3703,12 @@ bool ComparativeMolSurfaceRenderer::initProcFieldData() {
     testField2.Set(0x00);
 
     // Copy to device array
-    if (!CudaSafeCall(cudaMemcpy(testField1.Peek(), ((CUDAQuickSurf*)this->cudaqsurf1)->getMap(),
+    if (!CudaSafeCall(cudaMemcpy(testField1.Peek(), ((CUDAQuickSurf*) this->cudaqsurf1)->getMap(),
             sizeof(float) * fieldSize, cudaMemcpyDeviceToHost))) {
         return false;
     }
     // Copy to device array
-    if (!CudaSafeCall(cudaMemcpy(testField2.Peek(), ((CUDAQuickSurf*)this->cudaqsurf2)->getMap(),
+    if (!CudaSafeCall(cudaMemcpy(testField2.Peek(), ((CUDAQuickSurf*) this->cudaqsurf2)->getMap(),
             sizeof(float) * fieldSize, cudaMemcpyDeviceToHost))) {
         return false;
     }

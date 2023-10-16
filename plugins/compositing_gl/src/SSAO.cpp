@@ -102,7 +102,9 @@ megamol::compositing_gl::SSAO::SSAO()
         , ps_ssao_sample_cnt_("SSAO Samples", "Sets the number of samples used SSAO")
         , settings_have_changed_(false)
         , slot_is_active_(false)
-        , update_caused_by_normal_slot_change_(false) {
+        , update_caused_by_normal_slot_change_(false)
+        , out_format_handler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::function<bool()>(std::bind(&SSAO::textureFormatUpdate, this))) {
     this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetData", &SSAO::getDataCallback);
     this->output_tex_slot_.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &SSAO::getMetaDataCallback);
     this->MakeSlotAvailable(&this->output_tex_slot_);
@@ -209,6 +211,8 @@ megamol::compositing_gl::SSAO::SSAO()
         core::param::AbstractParamPresentation::Presentation::Drag);
     this->ps_detail_shadow_strength_.SetUpdateCallback(&SSAO::settingsCallback);
     this->MakeSlotAvailable(&this->ps_detail_shadow_strength_);
+
+    this->MakeSlotAvailable(out_format_handler_.getFormatSelectorSlot());
 }
 
 
@@ -360,22 +364,8 @@ bool megamol::compositing_gl::SSAO::create() {
         smart_blur_wide_prgm_ = core::utility::make_glowl_shader(
             "smart_blur_wide", shader_options, "compositing_gl/assao/smart_blur_wide.comp.glsl");
 
-        apply_prgm_ = core::utility::make_glowl_shader("apply", shader_options, "compositing_gl/assao/apply.comp.glsl");
-
         non_smart_blur_prgm_ = core::utility::make_glowl_shader(
             "non_smart_blur", shader_options, "compositing_gl/assao/non_smart_blur.comp.glsl");
-
-        non_smart_apply_prgm_ = core::utility::make_glowl_shader(
-            "non_smart_apply", shader_options, "compositing_gl/assao/non_smart_apply.comp.glsl");
-
-        non_smart_half_apply_prgm_ = core::utility::make_glowl_shader(
-            "non_smart_half_apply", shader_options, "compositing_gl/assao/non_smart_half_apply.comp.glsl");
-
-        naive_ssao_prgm_ =
-            core::utility::make_glowl_shader("naive_ssao", shader_options, "compositing_gl/naive_ssao.comp.glsl");
-
-        simple_blur_prgm_ =
-            core::utility::make_glowl_shader("simple_blur", shader_options, "compositing_gl/simple_blur.comp.glsl");
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("SSAO: " + std::string(e.what())).c_str());
@@ -384,6 +374,8 @@ bool megamol::compositing_gl::SSAO::create() {
     depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);
     ao_result_layout_ = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_FLOAT, 1);
     normal_layout_ = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
+
+
     half_depths_[0] =
         std::make_shared<glowl::Texture2D>("half_depths0", depth_buffer_viewspace_linear_layout_, nullptr);
     half_depths_[1] =
@@ -401,7 +393,7 @@ bool megamol::compositing_gl::SSAO::create() {
                     depth_buffer_viewspace_linear_layout_, 0, 1, 0, 1);
         }
     }
-    final_output_ = std::make_shared<glowl::Texture2D>("final_output", depth_buffer_viewspace_linear_layout_, nullptr);
+
     ping_pong_half_result_a_ =
         std::make_shared<glowl::Texture2D>("ping_pong_half_result_a", ao_result_layout_, nullptr);
     ping_pong_half_result_b_ =
@@ -446,10 +438,6 @@ bool megamol::compositing_gl::SSAO::create() {
     sampler_state_viewspace_depth_tap_ =
         std::make_shared<glowl::Sampler>("sampler_state_viewspace_depth_tap", intParams);
 
-
-    // naive ssao stuff
-    intermediate_tx2d_ = std::make_shared<glowl::Texture2D>("screenspace_effect_intermediate", normal_layout_, nullptr);
-
     // quick 'n dirty from https://learnopengl.com/Advanced-Lighting/SSAO
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // random floats between 0.0 - 1.0
     std::default_random_engine generator;
@@ -460,7 +448,7 @@ bool megamol::compositing_gl::SSAO::create() {
             randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
         sample = glm::normalize(sample);
         sample *= randomFloats(generator);
-        float scale = (float)i / 64.0;
+        float scale = (float) i / 64.0;
         ssaoKernel.push_back(sample.x);
         ssaoKernel.push_back(sample.y);
         ssaoKernel.push_back(sample.z);
@@ -477,9 +465,41 @@ bool megamol::compositing_gl::SSAO::create() {
     glowl::TextureLayout tx_layout2(GL_RGB32F, 4, 4, 1, GL_RGB, GL_FLOAT, 1);
     ssao_kernel_rot_tx2d_ = std::make_shared<glowl::Texture2D>("ssao_kernel_rotation", tx_layout2, ssaoNoise.data());
 
+    textureFormatUpdate();
+
     return true;
 }
 
+bool megamol::compositing_gl::SSAO::textureFormatUpdate() {
+    glowl::TextureLayout final_out_layout = glowl::TextureLayout(out_format_handler_.getInternalFormat(), 1, 1, 1,
+        out_format_handler_.getFormat(), out_format_handler_.getType(), 1);
+
+    // naive ssao stuff
+    intermediate_tx2d_ =
+        std::make_shared<glowl::Texture2D>("screenspace_effect_intermediate", final_out_layout, nullptr);
+    final_output_ = std::make_shared<glowl::Texture2D>("final_output", final_out_layout, nullptr);
+
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto const shader_options_flags = out_format_handler_.addDefinitions(shader_options);
+
+    try {
+        apply_prgm_ =
+            core::utility::make_glowl_shader("apply", *shader_options_flags, "compositing_gl/assao/apply.comp.glsl");
+        non_smart_half_apply_prgm_ = core::utility::make_glowl_shader(
+            "non_smart_half_apply", *shader_options_flags, "compositing_gl/assao/non_smart_half_apply.comp.glsl");
+        non_smart_apply_prgm_ = core::utility::make_glowl_shader(
+            "non_smart_apply", *shader_options_flags, "compositing_gl/assao/non_smart_apply.comp.glsl");
+        simple_blur_prgm_ = core::utility::make_glowl_shader(
+            "simple_blur", *shader_options_flags, "compositing_gl/simple_blur.comp.glsl");
+        naive_ssao_prgm_ = core::utility::make_glowl_shader(
+            "naive_ssao", *shader_options_flags, "compositing_gl/naive_ssao.comp.glsl");
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(("SSAO: " + std::string(e.what())).c_str());
+        return false;
+    }
+    return true;
+}
 
 /*
  * @megamol::compositing_gl::SSAO::release
@@ -549,14 +569,16 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
             ++version_;
 
             std::function<void(std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt)>
-                setupOutputTexture = [](std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
+                setupOutputTexture = [this](
+                                         std::shared_ptr<glowl::Texture2D> src, std::shared_ptr<glowl::Texture2D> tgt) {
                     // set output texture size to primary input texture
                     std::array<float, 2> texture_res = {
                         static_cast<float>(src->getWidth()), static_cast<float>(src->getHeight())};
 
                     if (tgt->getWidth() != std::get<0>(texture_res) || tgt->getHeight() != std::get<1>(texture_res)) {
-                        glowl::TextureLayout tx_layout(GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res),
-                            1, GL_RGBA, GL_HALF_FLOAT, 1);
+                        glowl::TextureLayout tx_layout(out_format_handler_.getInternalFormat(),
+                            std::get<0>(texture_res), std::get<1>(texture_res), 1, out_format_handler_.getFormat(),
+                            out_format_handler_.getType(), 1);
                         tgt->reload(tx_layout, nullptr);
                     }
                 };
@@ -571,11 +593,11 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
             std::array<int, 2> txResNormal;
             if (!generateNormals) {
                 normals_ = callNormal->getData();
-                txResNormal = {(int)normals_->getWidth(), (int)normals_->getHeight()};
+                txResNormal = {(int) normals_->getWidth(), (int) normals_->getHeight()};
             }
 
             auto depthTx2D = callDepth->getData();
-            std::array<int, 2> txResDepth = {(int)depthTx2D->getWidth(), (int)depthTx2D->getHeight()};
+            std::array<int, 2> txResDepth = {(int) depthTx2D->getWidth(), (int) depthTx2D->getHeight()};
 
             setupOutputTexture(depthTx2D, final_output_);
 
@@ -975,8 +997,8 @@ void megamol::compositing_gl::SSAO::updateConstants(
 
     const glm::mat4& proj = inputs->ProjectionMatrix;
 
-    consts.ViewportPixelSize = glm::vec2(1.0f / (float)size_.x, 1.0f / (float)size_.y);
-    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float)half_size_.x, 1.0f / (float)half_size_.y);
+    consts.ViewportPixelSize = glm::vec2(1.0f / (float) size_.x, 1.0f / (float) size_.y);
+    consts.HalfViewportPixelSize = glm::vec2(1.0f / (float) half_size_.x, 1.0f / (float) half_size_.y);
 
     consts.Viewport2xPixelSize = glm::vec2(consts.ViewportPixelSize.x * 2.0f, consts.ViewportPixelSize.y * 2.0f);
     consts.Viewport2xPixelSize_x_025 =
@@ -1026,7 +1048,7 @@ void megamol::compositing_gl::SSAO::updateConstants(
 
     // used to get average load per pixel; 9.0 is there to compensate for only doing every 9th InterlockedAdd in
     // PSPostprocessImportanceMapB for performance reasons
-    consts.LoadCounterAvgDiv = 9.0f / (float)(quarter_size_.x * quarter_size_.y * 255.0);
+    consts.LoadCounterAvgDiv = 9.0f / (float) (quarter_size_.x * quarter_size_.y * 255.0);
 
     // Special settings for lowest quality level - just nerf the effect a tiny bit
     if (settings.QualityLevel <= 0) {
@@ -1049,7 +1071,7 @@ void megamol::compositing_gl::SSAO::updateConstants(
 
     consts.InvSharpness = std::clamp(1.0f - settings.Sharpness, 0.0f, 1.0f);
     consts.PassIndex = pass;
-    consts.QuarterResPixelSize = glm::vec2(1.0f / (float)quarter_size_.x, 1.0f / (float)quarter_size_.y);
+    consts.QuarterResPixelSize = glm::vec2(1.0f / (float) quarter_size_.x, 1.0f / (float) quarter_size_.y);
 
     float additionalAngleOffset =
         settings.TemporalSupersamplingAngleOffset; // if using temporal supersampling approach (like "Progressive
@@ -1066,13 +1088,13 @@ void megamol::compositing_gl::SSAO::updateConstants(
         b = spmap[subPass];
 
         float ca, sa;
-        float angle0 = ((float)a + (float)b / (float)subPassCount) * (3.1415926535897932384626433832795f) * 0.5f;
+        float angle0 = ((float) a + (float) b / (float) subPassCount) * (3.1415926535897932384626433832795f) * 0.5f;
         angle0 += additionalAngleOffset;
 
         ca = ::cosf(angle0);
         sa = ::sinf(angle0);
 
-        float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float)subPassCount) * 0.07f;
+        float scale = 1.0f + (a - 1.5f + (b - (subPassCount - 1.0f) * 0.5f) / (float) subPassCount) * 0.07f;
         scale *= additionalRadiusScale;
 
         // all values are within [-1, 1]

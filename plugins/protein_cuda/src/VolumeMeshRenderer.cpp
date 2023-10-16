@@ -377,7 +377,7 @@ bool VolumeMeshRenderer::create(void) {
  */
 void VolumeMeshRenderer::release(void) {
     if (cudaqsurf) {
-        CUDAQuickSurf* cqs = (CUDAQuickSurf*)cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*) cudaqsurf;
         delete cqs;
     }
     wkf_timer_destroy(timer);
@@ -652,7 +652,7 @@ bool VolumeMeshRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     cudaDeviceSynchronize(); // Paranoia
 
     // store CUDA density map size
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) cudaqsurf;
     uint3 hVolSize;
     hVolSize.x = numvoxels[0];
     hVolSize.y = numvoxels[1];
@@ -1218,7 +1218,7 @@ void VolumeMeshRenderer::SortTriangleMesh() {
 
     // sort everything
     SortTrianglesDevice(
-        this->vertexCount / 3, (float4x3*)vertices, (float4x3*)verticesCopy, (float4x3*)colors, (float4x3*)normals);
+        this->vertexCount / 3, (float4x3*) vertices, (float4x3*) verticesCopy, (float4x3*) colors, (float4x3*) normals);
 
     // Unmap VBOs.
     CUDA_VERIFY(cudaGraphicsUnmapResources(1, &positionResource, 0));
@@ -1266,7 +1266,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     cudaMemcpy3DParms copyParams = {0};
     copyParams.dstArray = this->aoVolume;
     copyParams.dstPos = make_cudaPos(1, 1, 1);
-    copyParams.srcPtr = make_cudaPitchedPtr((void*)aoVolumeHost, aoVolumeHostExtent.width * sizeof(float),
+    copyParams.srcPtr = make_cudaPitchedPtr((void*) aoVolumeHost, aoVolumeHostExtent.width * sizeof(float),
         aoVolumeHostExtent.width, aoVolumeHostExtent.height);
     copyParams.extent = aoVolumeHostExtent;
     copyParams.kind = cudaMemcpyHostToDevice;
@@ -2354,9 +2354,9 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
         // TODO compute the center line of this feature
         perf.SetMark();
         clg[fCnt - 1] = new CenterLineGenerator();
-        clg[fCnt - 1]->SetTriangleMesh(this->featureVertexCntNew, (float*)this->featureTriangleVerticesHost,
-            this->edgeCount, (unsigned int*)this->featureTriangleEdgesHost,
-            (unsigned int*)this->featureTriangleEdgeCountHost);
+        clg[fCnt - 1]->SetTriangleMesh(this->featureVertexCntNew, (float*) this->featureTriangleVerticesHost,
+            this->edgeCount, (unsigned int*) this->featureTriangleEdgesHost,
+            (unsigned int*) this->featureTriangleEdgeCountHost);
         //printf( "Time to prepare center line data for feature %3i (%5i tria): %.5f\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         if (!clg[fCnt - 1]->freeEdgeRing.empty() && !clg[fCnt - 1]->freeEdgeRing[0].empty()) {
             for (auto edge : clEdges[fCnt - 1]) {
@@ -2391,7 +2391,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     cudaMemcpy(this->vertexColors, colors, this->vertexCount * 4 * sizeof(float), cudaMemcpyDeviceToHost);
     float ifac = this->cmWeightParam.Param<param::FloatParam>()->Value();
 #pragma omp parallel for
-    for (int i = 0; i < (int)this->vertexCount; i++) {
+    for (int i = 0; i < (int) this->vertexCount; i++) {
         int atomIdx = this->neighborAtomOfVertex[i];
         if (atomIdx < 0) {
             // ERROR no nearest atom found (color magenta)
@@ -2653,10 +2653,10 @@ void VolumeMeshRenderer::ValidateCubeMemory() {
         CUDA_VERIFY(cudaMalloc3DArray(&this->aoVolume, &cd, aoVolumeExtent));
         // Emulate cudaMemset3D for cudaArrays.
         float* zeroArray =
-            (float*)calloc(aoVolumeExtent.width * aoVolumeExtent.height * aoVolumeExtent.depth, sizeof(float));
+            (float*) calloc(aoVolumeExtent.width * aoVolumeExtent.height * aoVolumeExtent.depth, sizeof(float));
         cudaMemcpy3DParms copyParams = {0};
         copyParams.srcPtr = make_cudaPitchedPtr(
-            (void*)zeroArray, aoVolumeExtent.width * sizeof(float), aoVolumeExtent.width, aoVolumeExtent.height);
+            (void*) zeroArray, aoVolumeExtent.width * sizeof(float), aoVolumeExtent.width, aoVolumeExtent.height);
         copyParams.dstArray = this->aoVolume;
         copyParams.extent = aoVolumeExtent;
         copyParams.kind = cudaMemcpyHostToDevice;
@@ -2932,9 +2932,9 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall* mol, float* posInter, int qua
     xaxis[0] = maxcoord[0] - mincoord[0];
     yaxis[1] = maxcoord[1] - mincoord[1];
     zaxis[2] = maxcoord[2] - mincoord[2];
-    numvoxels[0] = (int)ceil(xaxis[0] / gridspacing);
-    numvoxels[1] = (int)ceil(yaxis[1] / gridspacing);
-    numvoxels[2] = (int)ceil(zaxis[2] / gridspacing);
+    numvoxels[0] = (int) ceil(xaxis[0] / gridspacing);
+    numvoxels[1] = (int) ceil(yaxis[1] / gridspacing);
+    numvoxels[2] = (int) ceil(zaxis[2] / gridspacing);
 
     // recalc the grid dimensions from rounded/padded voxel counts
     xaxis[0] = (numvoxels[0] - 1) * gridspacing;
@@ -2963,9 +2963,9 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall* mol, float* posInter, int qua
     int ind = 0;
     int ind4 = 0;
     int ind1 = 0;
-    xyzr = (float*)malloc(mol->AtomCount() * sizeof(float) * 4);
+    xyzr = (float*) malloc(mol->AtomCount() * sizeof(float) * 4);
     if (useCol) {
-        colors = (float*)malloc(mol->AtomCount() * sizeof(float) * 4);
+        colors = (float*) malloc(mol->AtomCount() * sizeof(float) * 4);
 
         // build compacted lists of atom coordinates, radii, and colors
         for (i = 0; i < mol->AtomCount(); i++) {
@@ -3022,7 +3022,7 @@ int VolumeMeshRenderer::calcMap(MolecularDataCall* mol, float* posInter, int qua
 
     pretime = wkf_timer_timenow(timer);
 
-    CUDAQuickSurf* cqs = (CUDAQuickSurf*)cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*) cudaqsurf;
 
     // compute both density map and floating point color texture map
     //int rc = cqs->calc_surf( mol->AtomCount(), &xyzr[0],

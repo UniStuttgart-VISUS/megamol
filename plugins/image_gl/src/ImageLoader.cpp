@@ -242,7 +242,7 @@ bool ImageLoader::DeleteData(core::Call& call) {
 bool ImageLoader::loadImage(const std::filesystem::path& path) {
     if (!std::filesystem::is_regular_file(path)) {
         core::utility::log::Log::DefaultLog.WriteError(
-            "ImageLoader: Could not open the file \"%s\" because it is no regular file", path.c_str());
+            "ImageLoader: Could not open the file \"%s\" because it is no regular file", path.string());
     }
     auto fileSize = std::filesystem::file_size(path);
     std::vector<uint8_t> loadedFile;
@@ -252,7 +252,7 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
         file.read(reinterpret_cast<char*>(loadedFile.data()), fileSize);
     } else {
         core::utility::log::Log::DefaultLog.WriteError(
-            "ImageLoader: Could not open the file \"%s\" from disk", path.c_str());
+            "ImageLoader: Could not open the file \"%s\" from disk", path.string());
     }
 
     vislib::graphics::BitmapImage image;
@@ -268,7 +268,7 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
         vislib::sys::Log::DefaultLog.WriteInfo("Successfully loaded image %u", this->loaded);
 #endif
     } else {
-        core::utility::log::Log::DefaultLog.WriteError("ImageLoader: failed decoding file \"%s\"", path.c_str());
+        core::utility::log::Log::DefaultLog.WriteError("ImageLoader: failed decoding file \"%s\"", path.string());
         return false;
     }
 

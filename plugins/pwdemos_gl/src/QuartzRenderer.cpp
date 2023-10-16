@@ -327,9 +327,9 @@ bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                     ::glBindBuffer(GL_ARRAY_BUFFER, vbo);
                     ::glBufferData(GL_ARRAY_BUFFER, list.Count() * 8 * sizeof(float), list.Data(), GL_STATIC_DRAW);
                     ::glEnableVertexAttribArray(0);
-                    ::glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+                    ::glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) 0);
                     ::glEnableVertexAttribArray(1);
-                    ::glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)16);
+                    ::glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) 16);
 
                     //::glVertexPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data());
                     //::glTexCoordPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data() + 4);

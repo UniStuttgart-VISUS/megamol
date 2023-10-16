@@ -168,7 +168,7 @@ void ProteinAligner::getCAlphaPosList(const MolecularDataCall& input, std::vecto
     for (unsigned int res = 0; res < resCnt; ++res) {
         MolecularDataCall::AminoAcid* amino;
         if (input.Residues()[res]->Identifier() == MolecularDataCall::Residue::AMINOACID) {
-            amino = (MolecularDataCall::AminoAcid*)(input.Residues()[res]);
+            amino = (MolecularDataCall::AminoAcid*) (input.Residues()[res]);
         } else {
             continue;
         }

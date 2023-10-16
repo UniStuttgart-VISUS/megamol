@@ -54,6 +54,7 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::compositing_gl::CallTexture2D>();
         this->call_descriptions.RegisterAutoDescription<megamol::compositing_gl::CallCamera>();
         this->call_descriptions.RegisterAutoDescription<megamol::compositing_gl::CallFramebufferGL>();
+        this->call_descriptions.RegisterAutoDescription<megamol::compositing_gl::CallTextureFormat>();
     }
 };
 } // namespace megamol::compositing_gl
