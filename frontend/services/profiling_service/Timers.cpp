@@ -114,9 +114,11 @@ void gl_timer::wait_for_frame_end(frame_type frame) {
     int done = (lq == 0);
     //if (done)
     //    printf("actually, not blocking\n");
+#ifdef MEGAMOL_USE_OPENGL
     while (!done) {
         glGetQueryObjectiv(lq, GL_QUERY_RESULT_AVAILABLE, &done);
     }
+#endif
 }
 
 int32_t gl_timer::choose_launch_buffer(frame_type frame) {
