@@ -223,7 +223,7 @@ private:
         ULARGE_INTEGER tv;
         tv.HighPart = f.dwHighDateTime;
         tv.LowPart = f.dwLowDateTime;
-        sb_qpc_offset_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
+        sb_qpc_offset_100ns_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
 #else
 #endif
     }
@@ -251,7 +251,7 @@ private:
 
     std::shared_ptr<megamol::power::Trigger> main_trigger_;
 
-    int64_t sb_qpc_offset_;
+    int64_t sb_qpc_offset_100ns_;
 
     power::StringContainer* str_cont_;
 

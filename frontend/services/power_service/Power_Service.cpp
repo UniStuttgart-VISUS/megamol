@@ -118,16 +118,16 @@ bool Power_Service::init(void* configPtr) {
     };
 
     std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_);
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_100ns_);
     std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(std::chrono::milliseconds(600),
-        std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_, emi_discard_func);
+        std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_100ns_, emi_discard_func);
     if (emi_sensors_.empty()) {
         std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(std::chrono::milliseconds(600),
-            std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_, msr_discard_func);
+            std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_100ns_, msr_discard_func);
     }
     std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
-            str_cont_, do_buffer_, sb_qpc_offset_, nullptr, tinker_config_func);
+            str_cont_, do_buffer_, sb_qpc_offset_100ns_, nullptr, tinker_config_func);
 
     try {
         hmc_sensors_.resize(hmc8015_sensor::for_all(nullptr, 0));
@@ -293,8 +293,9 @@ void Power_Service::fill_lua_callbacks() {
                         std::function<void(std::string)> dataverse_writer =
                             std::bind(&power::DataverseWriter, dataverse_config_.base_path, dataverse_config_.doi,
                                 std::placeholders::_1, dataverse_key_->GetToken(), std::ref(sbroker_.Get(false)));
-                        power::writer_func_t parquet_dataverse_writer = std::bind(&power::wf_parquet_dataverse,
-                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, dataverse_writer);
+                        power::writer_func_t parquet_dataverse_writer =
+                            std::bind(&power::wf_parquet_dataverse, std::placeholders::_1, std::placeholders::_2,
+                                std::placeholders::_3, std::placeholders::_4, dataverse_writer);
                         rtx_->StartMeasurement(
                             path, {parquet_dataverse_writer, &megamol::power::wf_tracy}, &meta_, sbroker_.Get(false));
                     } else {
@@ -410,8 +411,7 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     ParquetWriter(emi_path, emi_buffers_);
     auto const msr_path = std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt) + ".parquet");
     ParquetWriter(msr_path, msr_buffers_);
-    auto const tinker_path =
-        std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt) + ".parquet");
+    auto const tinker_path = std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt) + ".parquet");
     ParquetWriter(tinker_path, tinker_buffers_);
 
     if (dataverse_key_) {
