@@ -14,7 +14,7 @@
 namespace megamol::frontend_resources::performance {
 
 std::string Itimer::parent_name(const timer_config& conf) {
-    switch (conf.parent_type) {
+    switch (conf.parent) {
     case parent_type::CALL: {
         const auto c = static_cast<megamol::core::Call*>(conf.parent_pointer);
         return c->GetDescriptiveText();

@@ -28,7 +28,7 @@ handle_vector PerformanceManager::add_timers(megamol::core::Module* m, std::vect
     handle_vector ret;
     timer_config conf;
     conf.parent_pointer = m;
-    conf.parent_type = parent_type::USER_REGION;
+    conf.parent = parent_type::USER_REGION;
     for (const auto& btc : timer_list) {
         conf.api = btc.api;
         conf.name = btc.name;
@@ -51,7 +51,7 @@ handle_vector PerformanceManager::add_timers(megamol::core::Call* c, query_api a
     const auto caps = c->GetCapabilities();
     timer_config conf;
     conf.parent_pointer = c;
-    conf.parent_type = parent_type::CALL;
+    conf.parent = parent_type::CALL;
     conf.api = api;
     for (auto i = 0; i < c->GetCallbackCount(); ++i) {
         conf.name = c->GetCallbackName(i);
@@ -71,7 +71,7 @@ handle_vector PerformanceManager::add_timers(megamol::core::Call* c, query_api a
 handle_type PerformanceManager::add_timer(std::string name, query_api api) {
     handle_type ret;
     timer_config conf;
-    conf.parent_type = parent_type::BUILTIN;
+    conf.parent = parent_type::BUILTIN;
     conf.api = api;
     conf.name = name;
     conf.user_index = 0;
@@ -101,7 +101,7 @@ void* PerformanceManager::lookup_parent_pointer(handle_type h) {
 }
 
 parent_type PerformanceManager::lookup_parent_type(handle_type h) {
-    return timers[h]->get_conf().parent_type;
+    return timers[h]->get_conf().parent;
 }
 
 std::string PerformanceManager::lookup_name(handle_type h) {
@@ -176,7 +176,7 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
     timer_entry e;
     e.handle = timer->Itimer::get_handle();
     e.user_index = tconf.basic_timer_config::user_index;
-    e.parent_type = tconf.timer_config::parent_type;
+    e.parent = tconf.timer_config::parent;
 
     for (uint32_t region = 0; region < timer->Itimer::get_region_count(); ++region) {
         e.frame_index = region;

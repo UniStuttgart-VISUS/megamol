@@ -72,7 +72,7 @@ bool Profiling_Service::init(void* configPtr) {
                 const auto the_duration =
                     std::chrono::duration<timer_datatype, timer_ratio>(e.duration.time_since_epoch()).count();
 
-                log_buffer << frame << ";" << parent_type_string(e.parent_type) << ";" << parent << ";" << name << ";"
+                log_buffer << frame << ";" << parent_type_string(e.parent) << ";" << parent << ";" << name << ";"
                            << comment << ";" << e.global_index << ";" << e.frame_index << ";" << query_api_string(e.api)
                            << ";" << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
                            << std::to_string(the_duration) << std::endl;

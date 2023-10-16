@@ -59,7 +59,7 @@ bool datatools::CopyParticleGlobals::manipulateData(
     //outData = inData; // also transfers the unlocker to 'outData'
 
     //inData.SetUnlocker(nullptr, false); // keep original data locked
-                                        // original data will be unlocked through outData
+    // original data will be unlocked through outData
 
     if (this->AnyParameterDirty()) {
         myHash++;

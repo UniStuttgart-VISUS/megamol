@@ -8,6 +8,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace megamol::frontend_resources::performance {
@@ -57,7 +58,7 @@ struct basic_timer_config {
 };
 
 struct timer_config : public basic_timer_config {
-    parent_type parent_type = parent_type::CALL;
+    parent_type parent = parent_type::CALL;
     void* parent_pointer = nullptr;
     std::string comment;
 };
@@ -70,7 +71,7 @@ struct timer_entry {
     uint32_t frame_index = 0;
     // user payload, used to track call indices, for example
     user_index_type user_index = 0;
-    parent_type parent_type = parent_type::BUILTIN;
+    parent_type parent = parent_type::BUILTIN;
     time_point start, end, duration;
     int64_t global_index = 0;
 };
