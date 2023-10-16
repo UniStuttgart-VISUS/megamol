@@ -403,15 +403,15 @@ void clear_sb(power::buffers_t& buffers) {
     }
 }
 
-void Power_Service::write_sample_buffers() {
-    auto const nvml_path = std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt_) + ".parquet");
+void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
+    auto const nvml_path = std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt) + ".parquet");
     ParquetWriter(nvml_path, nvml_buffers_);
-    auto const emi_path = std::filesystem::path(write_folder_) / ("emi_s" + std::to_string(seg_cnt_) + ".parquet");
+    auto const emi_path = std::filesystem::path(write_folder_) / ("emi_s" + std::to_string(seg_cnt) + ".parquet");
     ParquetWriter(emi_path, emi_buffers_);
-    auto const msr_path = std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt_) + ".parquet");
+    auto const msr_path = std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt) + ".parquet");
     ParquetWriter(msr_path, msr_buffers_);
     auto const tinker_path =
-        std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt_) + ".parquet");
+        std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt) + ".parquet");
     ParquetWriter(tinker_path, tinker_buffers_);
 
     if (dataverse_key_) {

@@ -212,7 +212,7 @@ private:
 
     void reset_segment_range(std::chrono::milliseconds const& range);
 
-    void write_sample_buffers();
+    void write_sample_buffers(std::size_t seg_cnt);
 
     void sb_pre_trg() {
         static auto freq = static_cast<double>(megamol::power::get_highres_timer_freq());
@@ -230,7 +230,7 @@ private:
 
     void sb_post_trg() {
         do_buffer_ = false;
-        auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this));
+        auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this, seg_cnt_));
         t.detach();
         ++seg_cnt_;
     }
