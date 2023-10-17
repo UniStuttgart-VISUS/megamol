@@ -148,7 +148,7 @@ int64_t gzread_like_you_mean_it (gzFile file, voidp buf, uint64_t len) {
     const int32_t chunk_size = INT_MAX;
     uint64_t rest = len;
     while (rest > 0) {
-        const uint32_t todo = min(rest, chunk_size);
+        const uint32_t todo = rest < chunk_size ? (uint32_t)rest : chunk_size;
         const uint32_t count = gzread(file, mem_loc, todo);
         if (count != todo) {
             // that should be an error
