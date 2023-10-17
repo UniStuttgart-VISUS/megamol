@@ -4,7 +4,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO UniStuttgart-VISUS/dataversepp
     REF "master"
-    SHA512 457c3470c30962602e05a1f74c45448db1d521a17af9c480ae35af47a6dc9c48cfeab0fa349606d46154a5d7364a9fa29aeabf80d8d12b88a0dd4b404cb7a6e5
+    SHA512 65d4431dab6a4b490ef710f9e8f0a58b4cdf5d1f78bbea96f2d06c5dcfb926f0359088b820bed447a7f0879a2a5774bf7cea4c727d5400e3a2cbebf870d8953c
     HEAD_REF master
     PATCHES
       01_curl.patch

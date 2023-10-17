@@ -65,7 +65,7 @@ void RTXInstruments::ApplyConfigs() {
                 core::utility::log::Log::DefaultLog.WriteWarn("[RTXInstruments]: No config found for device %s", name);
             } else {
                 i.synchronise_clock();
-                i.reset(true, true);
+                i.reset(rtx_instrument_reset::all);
                 // need to stop running measurement otherwise wait on trigger cannot be used to guard start of trigger sequence
                 i.write("STOP\n");
                 i.operation_complete();
