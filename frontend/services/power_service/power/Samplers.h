@@ -114,7 +114,7 @@ inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::millisecond
                           .stores_and_passes_context(
                               std::make_tuple(str_ptr, &buffers.back(), std::cref(do_buffer), std::cref(offset)))
                           .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
-                          .using_resolution(timestamp_resolution::hundred_nanoseconds)));
+                          .using_resolution(timestamp_resolution::hundred_nanoseconds).from_source(tinkerforge_sensor_source::power)));
     }
 
     return std::make_tuple(std::move(sensors), std::move(buffers));
