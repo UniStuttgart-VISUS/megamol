@@ -65,10 +65,10 @@ void RTXInstruments::ApplyConfigs() {
                 core::utility::log::Log::DefaultLog.WriteWarn("[RTXInstruments]: No config found for device %s", name);
             } else {
                 i.synchronise_clock();
-                i.reset(rtx_instrument_reset::all);
+                i.reset(rtx_instrument_reset::buffers | rtx_instrument_reset::status | rtx_instrument_reset::stop);
                 // need to stop running measurement otherwise wait on trigger cannot be used to guard start of trigger sequence
-                i.write("STOP\n");
-                i.operation_complete();
+                //i.write("STOP\n");
+                //i.operation_complete();
                 fit->second.apply(i);
                 i.reference_position(oscilloscope_reference_point::left);
                 i.trigger_position(oscilloscope_quantity(0, "ms"));
