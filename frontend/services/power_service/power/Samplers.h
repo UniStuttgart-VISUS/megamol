@@ -31,13 +31,13 @@ using buffers_t = std::vector<SampleBuffer>;
 using context_t = std::tuple<std::string*, SampleBuffer*, bool const&, int64_t const&>;
 
 inline int64_t convert_timestamp_ns(int64_t const& offset_100ns, int64_t const& ts_100ns) {
-    return (ts_100ns + offset_100ns) * 100;
+    return ts_100ns + offset_100ns;
 }
 
 inline int64_t convert_walltime_ns(int64_t const& ts_100ns) {
     constexpr int64_t offset =
         std::chrono::duration<std::int64_t, std::ratio<1, 10000000>>(116444736000000000LL).count();
-    return (ts_100ns - offset) * 100;
+    return ts_100ns - offset;
 }
 
 inline void tracy_sample(
