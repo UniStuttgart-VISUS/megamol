@@ -214,19 +214,24 @@ private:
 
     void write_sample_buffers(std::size_t seg_cnt);
 
-    void sb_pre_trg() {
-        static auto freq = static_cast<double>(megamol::power::get_highres_timer_freq());
+//    void sb_pre_trg() {
+//        //static auto freq = static_cast<double>(megamol::power::get_highres_timer_freq());
+//        do_buffer_ = true;
+//#ifdef WIN32
+//        FILETIME f;
+//        GetSystemTimePreciseAsFileTime(&f);
+//        ULARGE_INTEGER tv;
+//        tv.HighPart = f.dwHighDateTime;
+//        tv.LowPart = f.dwLowDateTime;
+//        //sb_qpc_offset_100ns_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
+//        sb_qpc_offset_100ns_ = tv.QuadPart;
+//#else
+//#endif
+//    }
+
+    void sb_sgn_trg(std::tuple<std::chrono::system_clock::time_point, int64_t> const& ts) {
         do_buffer_ = true;
-#ifdef WIN32
-        FILETIME f;
-        GetSystemTimePreciseAsFileTime(&f);
-        ULARGE_INTEGER tv;
-        tv.HighPart = f.dwHighDateTime;
-        tv.LowPart = f.dwLowDateTime;
-        //sb_qpc_offset_100ns_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
-        sb_qpc_offset_100ns_ = tv.QuadPart;
-#else
-#endif
+        sb_qpc_offset_100ns_ = std::get<1>(ts);
     }
 
     void sb_post_trg() {

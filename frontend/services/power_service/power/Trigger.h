@@ -46,7 +46,8 @@ public:
         return trg_tp;
     }
 
-    void RegisterSignal(std::string const& name, std::function<void()> const& signal) {
+    void RegisterSignal(std::string const& name,
+        std::function<void(std::tuple<std::chrono::system_clock::time_point, int64_t> const&)> const& signal) {
         signals_[name] = signal;
     }
 
@@ -97,14 +98,16 @@ private:
             trigger_->SetBit(6, false);
         }
 
-        notify_all();
 
-        return std::make_tuple(std::chrono::system_clock::now(), get_highres_timer());
+        auto ts = std::make_tuple(std::chrono::system_clock::now(), get_highres_timer());
+        notify_all(ts);
+
+        return ts;
     }
 
-    void notify_all() const {
+    void notify_all(std::tuple<std::chrono::system_clock::time_point, int64_t> const& ts) const {
         for (auto const& [n, s] : signals_) {
-            s();
+            s(ts);
         }
     }
 
@@ -137,7 +140,9 @@ private:
 
     std::unique_ptr<ParallelPortTrigger> trigger_;
 
-    std::unordered_map<std::string, std::function<void()>> signals_;
+    std::unordered_map<std::string,
+        std::function<void(std::tuple<std::chrono::system_clock::time_point, int64_t> const&)>>
+        signals_;
 
     std::unordered_map<std::string, std::function<void()>> sub_trigger_;
 
