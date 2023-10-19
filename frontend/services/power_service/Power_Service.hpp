@@ -12,6 +12,7 @@
 #include <chrono>
 #include <list>
 #include <thread>
+#include <fstream>
 
 #include "AbstractFrontendService.hpp"
 
@@ -205,7 +206,7 @@ private:
     power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
     power::buffers_t tinker_buffers_;
 
-    std::vector<visus::power_overwhelming::hmc8015_sensor> hmc_sensors_;
+    std::unordered_map<std::string, visus::power_overwhelming::hmc8015_sensor> hmc_sensors_;
     unsigned int hmc_measure_cnt_ = 0;
 
     void fill_lua_callbacks();
@@ -229,16 +230,54 @@ private:
 //#endif
 //    }
 
-    void sb_sgn_trg(std::tuple<std::chrono::system_clock::time_point, int64_t> const& ts) {
+    void sb_pre_trg() {
         do_buffer_ = true;
-        sb_qpc_offset_100ns_ = std::get<1>(ts);
     }
+
+    /*void sb_sgn_trg(std::tuple<std::chrono::system_clock::time_point, int64_t> const& ts) {
+        sb_qpc_offset_100ns_ = std::get<1>(ts);
+    }*/
 
     void sb_post_trg() {
         do_buffer_ = false;
-        auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this, seg_cnt_));
-        t.detach();
+        /*auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this, seg_cnt_));
+        t.detach();*/
+        write_sample_buffers(seg_cnt_);
         ++seg_cnt_;
+    }
+
+    std::string gen_hmc_filename(unsigned int const cnt) {
+        return std::string("pwr_") + std::to_string(cnt) + std::string(".csv");
+    }
+
+    void hmc_pre_trg() {
+        for (auto& [n, s] : hmc_sensors_) {
+            s.log_file(gen_hmc_filename(hmc_measure_cnt_).c_str(), true, false);
+        }
+        for (auto& [n, s] : hmc_sensors_) {
+            s.log(true);
+        }
+    }
+
+    void hmc_post_trg() {
+        for (auto& [n, s] : hmc_sensors_) {
+            s.log(false);
+        }
+        ++hmc_measure_cnt_;
+    }
+
+    void hmc_fin_trg() {
+        for (auto& [n, s] : hmc_sensors_) {
+            for (unsigned int hmc_m = 0; hmc_m < hmc_measure_cnt_; ++hmc_m) {
+                auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
+                auto const hmc_path =
+                    std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
+                std::ofstream file(hmc_path.string());
+                file.write(blob.as<char const>(), blob.size());
+                file.close();
+            }
+        }
+        hmc_measure_cnt_ = 0;
     }
 
     //std::unordered_map<std::string, std::string> exp_map_;
@@ -257,7 +296,7 @@ private:
 
     std::shared_ptr<megamol::power::Trigger> main_trigger_;
 
-    int64_t sb_qpc_offset_100ns_;
+    //int64_t sb_qpc_offset_100ns_;
 
     power::StringContainer* str_cont_;
 

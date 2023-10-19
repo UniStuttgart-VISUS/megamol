@@ -43,6 +43,7 @@ public:
             fire_post_trigger();
             std::this_thread::sleep_for(wait + prefix);
         }
+        fire_fin_trigger();
         return trg_tp;
     }
 
@@ -61,6 +62,10 @@ public:
 
     void RegisterPostTrigger(std::string const& name, std::function<void()> const& post_trigger) {
         post_trigger_[name] = post_trigger;
+    }
+
+    void RegisterFinTrigger(std::string const& name, std::function<void()> const& fin_trigger) {
+        fin_trigger_[name] = fin_trigger;
     }
 
     void SetLPTAddress(std::string const& address) {
@@ -138,6 +143,15 @@ private:
         }
     }
 
+    void fire_fin_trigger() const {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedN("Trigger::fire_fin_trigger");
+#endif
+        for (auto const& [n, p] : fin_trigger_) {
+            p();
+        }
+    }
+
     std::unique_ptr<ParallelPortTrigger> trigger_;
 
     std::unordered_map<std::string,
@@ -149,6 +163,8 @@ private:
     std::unordered_map<std::string, std::function<void()>> pre_trigger_;
 
     std::unordered_map<std::string, std::function<void()>> post_trigger_;
+
+    std::unordered_map<std::string, std::function<void()>> fin_trigger_;
 
     bool armed_ = false;
 

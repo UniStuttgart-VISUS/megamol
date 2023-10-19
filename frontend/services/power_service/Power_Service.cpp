@@ -72,7 +72,8 @@ bool Power_Service::init(void* configPtr) {
     write_folder_ = conf->folder;
 
     main_trigger_ = std::make_shared<megamol::power::Trigger>(lpt);
-    main_trigger_->RegisterSignal("Power_Service", std::bind(&Power_Service::sb_sgn_trg, this, std::placeholders::_1));
+    main_trigger_->RegisterPreTrigger("Power_Service", std::bind(&Power_Service::sb_pre_trg, this));
+    //main_trigger_->RegisterSignal("Power_Service", std::bind(&Power_Service::sb_sgn_trg, this, std::placeholders::_1));
     main_trigger_->RegisterPostTrigger("Power_Service", std::bind(&Power_Service::sb_post_trg, this));
 
     try {
@@ -118,25 +119,28 @@ bool Power_Service::init(void* configPtr) {
     };
 
     std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_100ns_);
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);
     std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(std::chrono::milliseconds(600),
-        std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_100ns_, emi_discard_func);
+        std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);
     if (emi_sensors_.empty()) {
         std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(std::chrono::milliseconds(600),
-            std::chrono::milliseconds(1), str_cont_, do_buffer_, sb_qpc_offset_100ns_, msr_discard_func);
+            std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);
     }
     std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
-            str_cont_, do_buffer_, sb_qpc_offset_100ns_, nullptr, tinker_config_func);
+            str_cont_, do_buffer_, nullptr, tinker_config_func);
 
     try {
-        hmc_sensors_.resize(hmc8015_sensor::for_all(nullptr, 0));
-        hmc8015_sensor::for_all(hmc_sensors_.data(), hmc_sensors_.size());
-        for (auto& s : hmc_sensors_) {
+        std::vector<hmc8015_sensor> hmc_tmp(hmc8015_sensor::for_all(nullptr, 0));
+        hmc8015_sensor::for_all(hmc_tmp.data(), hmc_tmp.size());
+        hmc_sensors_.reserve(hmc_tmp.size());
+        for (auto& s : hmc_tmp) {
             s.synchronise_clock();
             s.voltage_range(instrument_range::explicitly, 300);
             s.current_range(instrument_range::explicitly, 5);
             s.log_behaviour(std::numeric_limits<float>::lowest(), log_mode::unlimited);
+            auto const name = power::unmueller_string(s.name());
+            hmc_sensors_[name] = std::move(s);
         }
     } catch (...) {
         core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: No HMC devices found");
@@ -271,11 +275,6 @@ void Power_Service::fill_lua_callbacks() {
             if (rtx_) {
                 rtx_->ApplyConfigs();
             }
-            for (auto& s : hmc_sensors_) {
-                s.log_file(
-                    (std::string("pwr_") + std::to_string(hmc_measure_cnt_) + std::string(".csv")).c_str(), true, true);
-            }
-            ++hmc_measure_cnt_;
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
@@ -284,9 +283,6 @@ void Power_Service::fill_lua_callbacks() {
             //start_measurement();
             seg_cnt_ = 0;
             write_folder_ = path;
-            for (auto& s : hmc_sensors_) {
-                s.log(true);
-            }
             if (rtx_) {
                 if (write_to_files_) {
                     if (dataverse_key_) {
@@ -311,9 +307,6 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerSignalHalt", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            for (auto& s : hmc_sensors_) {
-                s.log(false);
-            }
             sbroker_.Reset();
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
