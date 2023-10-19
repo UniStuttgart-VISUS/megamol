@@ -30,9 +30,16 @@ using writer_func_t = std::function<void(std::filesystem::path const&, std::stri
 
 inline int64_t get_highres_timer() {
 #ifdef WIN32
-    LARGE_INTEGER t;
+    FILETIME f;
+    GetSystemTimePreciseAsFileTime(&f);
+    ULARGE_INTEGER tv;
+    tv.HighPart = f.dwHighDateTime;
+    tv.LowPart = f.dwLowDateTime;
+    return tv.QuadPart;
+
+    /*LARGE_INTEGER t;
     QueryPerformanceCounter(&t);
-    return t.QuadPart;
+    return t.QuadPart;*/
 #else
 #endif
 }
@@ -72,9 +79,10 @@ inline std::vector<float> transform_waveform(visus::power_overwhelming::oscillos
 
 inline int64_t get_highres_timer_freq() {
 #ifdef WIN32
-    LARGE_INTEGER f;
+    return 1;
+    /*LARGE_INTEGER f;
     QueryPerformanceFrequency(&f);
-    return f.QuadPart;
+    return f.QuadPart;*/
 #else
     timespec tp;
     clock_getres(CLOCK_MONOTONIC_RAW, &tp);
@@ -112,10 +120,11 @@ inline power::timeline_t offset_timeline(power::timeline_t const& timeline, std:
 }
 
 inline int64_t get_tracy_time(int64_t base, int64_t tracy_offset) {
-    static int64_t const frequency = get_highres_timer_freq();
+    /*static int64_t const frequency = get_highres_timer_freq();
     auto base_ticks =
         static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(frequency));
-    return base_ticks + tracy_offset;
+    return base_ticks + tracy_offset;*/
+    return (base / 100) + tracy_offset;
 }
 
 } // namespace megamol::power

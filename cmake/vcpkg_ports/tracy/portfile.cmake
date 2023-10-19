@@ -7,8 +7,8 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO gralkapk/tracy
-    REF 0c35824d63ce696328a0948e4c4023f4cdba53c2 # plot_time
-    SHA512 e39bd42dfc8e78b5732e733578f602a161ad016455b40e15d76a839f26bb53ade236d27ea45a2aa9a845224fea77268d1e486331af672cd1d819f03cda801d36
+    REF 717885b61494572536609b2e522fab5990d28a87 # plot_time
+    SHA512 e13eada6976fd6fb30cad061dbce42c8535f686cc47a252d9f5a7a07327e1a6b04494b8a8b985b9f8e71943c1bf7d6fad0a177c6292cc2edcdb874147eee0dd2
     HEAD_REF master
     PATCHES
         001-fix-vcxproj-vcpkg.patch

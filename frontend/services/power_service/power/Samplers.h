@@ -31,7 +31,8 @@ using buffers_t = std::vector<SampleBuffer>;
 using context_t = std::tuple<std::string*, SampleBuffer*, bool const&, int64_t const&>;
 
 inline int64_t convert_timestamp_ns(int64_t const& offset_100ns, int64_t const& ts_100ns) {
-    return ts_100ns + offset_100ns;
+    //return ts_100ns + offset_100ns;
+    return ts_100ns;
 }
 
 inline int64_t convert_walltime_ns(int64_t const& ts_100ns) {

@@ -219,11 +219,12 @@ private:
         do_buffer_ = true;
 #ifdef WIN32
         FILETIME f;
-        GetSystemTimeAsFileTime(&f);
+        GetSystemTimePreciseAsFileTime(&f);
         ULARGE_INTEGER tv;
         tv.HighPart = f.dwHighDateTime;
         tv.LowPart = f.dwLowDateTime;
-        sb_qpc_offset_100ns_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
+        //sb_qpc_offset_100ns_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
+        sb_qpc_offset_100ns_ = tv.QuadPart;
 #else
 #endif
     }
