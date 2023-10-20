@@ -20,6 +20,7 @@
     "eigen3",
     "glfw3",
     "glm",
+    "imath",
     {
       "name": "imgui",
       "features": [
@@ -45,6 +46,7 @@
     },
     "nlohmann-json",
     "obj-io",
+    "openexr",
     "qhull",
     "quickhull",
     "simultaneous-sort",
@@ -95,9 +97,6 @@
         },
         "mpi"
       ]
-    },
-    "nvperf": {
-      "description": "Use NVPerf Profiling"
     },
     "opengl": {
       "description": "Use OpenGL",
