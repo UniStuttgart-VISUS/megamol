@@ -7,8 +7,10 @@
 
 #include "OpenEXRWriter.h"
 #include "compositing_gl/CompositingCalls.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
+#include <vector>
 
 #include <OpenEXR/ImfArray.h>
 #include <OpenEXR/ImfMatrixAttribute.h>
@@ -23,68 +25,83 @@ using namespace Imath;
 OpenEXRWriter::OpenEXRWriter()
         : mmstd_gl::ModuleGL()
         , m_filename_slot("Filename", "Filename to read from")
-        , m_image_width_slot("ImageWidth", "Width of the loaded image")
-        , m_image_height_slot("ImageHeight", "Height of the loaded image")
+        , m_button_slot("Screenshot Button", "Button triggering writing of input texture to file")
         , m_input_tex_slot("Color", "Texture to be written to file")
+        , m_texture_pipe_out("Passthrough", "slot to pass texture through to calling module")
         , m_version(0) {
-    this->m_filename_slot << new core::param::FilePathParam("");
+    this->m_filename_slot << new core::param::FilePathParam(
+        "OPENEXRTESTOUTPUTFILE.exr", core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"exr"});
     this->MakeSlotAvailable(&this->m_filename_slot);
 
-    this->m_image_width_slot << new core::param::IntParam(0);
-    this->m_image_width_slot.Param<megamol::core::param::IntParam>()->SetGUIReadOnly(true);
-    this->MakeSlotAvailable(&this->m_image_width_slot);
+    this->m_button_slot << new core::param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
+    this->m_button_slot.SetUpdateCallback(&OpenEXRWriter::triggerButtonClicked);
+    this->MakeSlotAvailable(&this->m_button_slot);
 
-    this->m_image_height_slot << new core::param::IntParam(0);
-    this->m_image_height_slot.Param<megamol::core::param::IntParam>()->SetGUIReadOnly(true);
-    this->MakeSlotAvailable(&this->m_image_height_slot);
+    this->m_texture_pipe_out.SetCallback(
+        compositing_gl::CallTexture2D::ClassName(), "GetData", &OpenEXRWriter::getDataCallback);
+    this->m_texture_pipe_out.SetCallback(
+        compositing_gl::CallTexture2D::ClassName(), "GetMetaData", &OpenEXRWriter::getMetaDataCallback);
+    this->MakeSlotAvailable(&m_texture_pipe_out);
 
     this->m_input_tex_slot.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_tex_slot);
 }
 
 
-megamol::compositing_gl::OpenEXRWriter::~OpenEXRWriter() {
+OpenEXRWriter::~OpenEXRWriter() {
     this->Release();
 }
 
-bool megamol::compositing_gl::OpenEXRWriter::create() {
+bool OpenEXRWriter::create() {
     m_output_layout = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1);
     m_output_texture = std::make_shared<glowl::Texture2D>("exr_tx2D", m_output_layout, nullptr);
     return true;
 }
 
-void megamol::compositing_gl::OpenEXRWriter::release() {}
+void OpenEXRWriter::release() {}
 
-bool megamol::compositing_gl::OpenEXRWriter::getDataCallback(core::Call& caller) {
+bool OpenEXRWriter::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<compositing_gl::CallTexture2D*>(&caller);
+    auto rhs_call_input = m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>();
 
-    if (lhs_tc == NULL)
+    if (rhs_call_input == NULL)
+        return false;
+    if (!(*rhs_call_input)(0))
         return false;
 
-    if (m_filename_slot.IsDirty()) {
-        RgbaInputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str()); //(filename)
-        Box2i dw = file.dataWindow();
-
-        int width = dw.max.x - dw.min.x+1;
-        int height = dw.max.y - dw.min.y + 1;
-        Imf::Array2D<Rgba> pixels;
-        pixels.resizeErase(height, width);
-
+    if (saveRequested) {
+        m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>();
+        int width = m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>()->getData()->getWidth();
+        int height = m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>()->getData()->getHeight();
+        RgbaOutputFile file(
+            m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), width, height, WRITE_RGBA);
+        std::vector<float> rawPixels(width * height * 4);
+        glGetTextureImage(m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>()->getData()->getName(), 0,
+            m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>()->getData()->getFormat(), GL_FLOAT, 1,
+            &rawPixels[0]);
+        Array2D<Rgba> pixels(width, height);
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                Rgba temp(rawPixels[4 * (i * width + j)], rawPixels[4 * (i * width + j) + 1],
+                    rawPixels[4 * (i * width + j) + 2], rawPixels[4 * (i * width + j) + 3]);
+                pixels[i][j] = temp;
+            }
+        }
         file.setFrameBuffer(&pixels[0][0], 1, width);
-        file.readPixels(dw.min.y, dw.max.y);
-
-        m_output_layout = glowl::TextureLayout(GL_RGBA16F, width, height, 1, GL_RGBA, GL_HALF_FLOAT, 1);
-        m_output_texture->reload(m_output_layout, &pixels[0][0]);
+        file.writePixels(height);
+        saveRequested = false;
     }
 
-    //if (lhs_tc->version() < m_version) {
-        lhs_tc->setData(m_output_texture, m_version);
-    //}
-
+    lhs_tc->setData(rhs_call_input->getData(), rhs_call_input->version());
     return true;
 }
 
-bool megamol::compositing_gl::OpenEXRWriter::getMetaDataCallback(core::Call& caller) {
+bool OpenEXRWriter::triggerButtonClicked(core::param::ParamSlot& button) {
+    saveRequested = true;
+    return true;
+}
+
+bool OpenEXRWriter::getMetaDataCallback(core::Call& caller) {
     return true;
 }
 

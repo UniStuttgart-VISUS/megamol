@@ -42,25 +42,31 @@ protected:
 
     void release() override;
 
-private:
     bool getDataCallback(core::Call& caller);
     bool getMetaDataCallback(core::Call& caller);
+
+private:
     /** Slot for loading the file */
     core::param::ParamSlot m_filename_slot;
 
-    /** Slot for showing the image width. Read-only */
-    core::param::ParamSlot m_image_width_slot;
-
-    /** Slot for showing the image height. Read-only */
-    core::param::ParamSlot m_image_height_slot;
+    /** Button triggering writing of exr file*/
+    core::param::ParamSlot m_button_slot;
 
     /** Slot for requesting the textures from another module, i.e. rhs connection */
     megamol::core::CallerSlot m_input_tex_slot;
+
+    /** lhs connection. Passthrough for input texture*/
+    megamol::core::CalleeSlot m_texture_pipe_out;
 
     /** Texture that holds the data from the loaded .exr file */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
     glowl::TextureLayout m_output_layout;
 
     uint32_t m_version;
+    bool saveRequested = false;
+
+    bool triggerButtonClicked(core::param::ParamSlot& slot);
+
+
 };
 } // namespace megamol::compositing_gl
