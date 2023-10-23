@@ -14,6 +14,8 @@
 #include <list>
 #include <thread>
 
+#include "mmcore/MegaMolGraph.h"
+
 #include "AbstractFrontendService.hpp"
 
 #include "RuntimeInfo.h"
@@ -321,6 +323,8 @@ private:
     } dataverse_config_;
 
     power::SignalBroker sbroker_;
+
+    core::MegaMolGraph* megamolgraph_ptr_;
 };
 
 } // namespace frontend

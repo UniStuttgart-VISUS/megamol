@@ -20,6 +20,8 @@
 
 #include "LuaCallbacksCollection.h"
 
+#include "ModuleGraphSubscription.h"
+
 #include "power/DataverseWriter.h"
 #include "power/WriterUtility.h"
 
@@ -105,7 +107,7 @@ bool Power_Service::init(void* configPtr) {
 
     m_providedResourceReferences = {{frontend_resources::PowerCallbacks_Req_Name, callbacks_}};
 
-    m_requestedResourcesNames = {"RegisterLuaCallbacks", "RuntimeInfo"};
+    m_requestedResourcesNames = {"RegisterLuaCallbacks", "RuntimeInfo", frontend_resources::MegaMolGraph_Req_Name};
 
     using namespace visus::power_overwhelming;
 
@@ -121,11 +123,11 @@ bool Power_Service::init(void* configPtr) {
 
     std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);
-    std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(std::chrono::milliseconds(600),
-        std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);
+    std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);
     if (emi_sensors_.empty()) {
-        std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(std::chrono::milliseconds(600),
-            std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);
+        std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
+            std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);
     }
     std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
@@ -203,6 +205,8 @@ void Power_Service::setRequestedResources(std::vector<FrontendResource> resource
     this->m_requestedResourceReferences = resources;
 
     ri_ = &m_requestedResourceReferences[1].getResource<frontend_resources::RuntimeInfo>();
+    megamolgraph_ptr_ =
+        const_cast<core::MegaMolGraph*>(&m_requestedResourceReferences[2].getResource<core::MegaMolGraph>());
 
     meta_.runtime_libs = ri_->get_runtime_libraries();
 
@@ -284,6 +288,7 @@ void Power_Service::fill_lua_callbacks() {
             //start_measurement();
             seg_cnt_ = 0;
             write_folder_ = path;
+            meta_.project_file = megamolgraph_ptr_->Convenience().SerializeGraph();
             if (rtx_) {
                 if (write_to_files_) {
                     if (dataverse_key_) {
