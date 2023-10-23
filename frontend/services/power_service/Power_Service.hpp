@@ -10,9 +10,9 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <chrono>
+#include <fstream>
 #include <list>
 #include <thread>
-#include <fstream>
 
 #include "AbstractFrontendService.hpp"
 
@@ -37,6 +37,10 @@
 
 namespace megamol {
 namespace frontend {
+
+inline std::string gen_hmc_filename(unsigned int const cnt) {
+    return std::string("pwr_") + std::to_string(cnt) + std::string(".csv");
+}
 
 // search/replace Power_Service with your class name
 // you should also delete the FAQ comments in these template files after you read and understood them
@@ -214,20 +218,20 @@ private:
 
     void write_sample_buffers(std::size_t seg_cnt);
 
-//    void sb_pre_trg() {
-//        //static auto freq = static_cast<double>(megamol::power::get_highres_timer_freq());
-//        do_buffer_ = true;
-//#ifdef WIN32
-//        FILETIME f;
-//        GetSystemTimePreciseAsFileTime(&f);
-//        ULARGE_INTEGER tv;
-//        tv.HighPart = f.dwHighDateTime;
-//        tv.LowPart = f.dwLowDateTime;
-//        //sb_qpc_offset_100ns_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
-//        sb_qpc_offset_100ns_ = tv.QuadPart;
-//#else
-//#endif
-//    }
+    //    void sb_pre_trg() {
+    //        //static auto freq = static_cast<double>(megamol::power::get_highres_timer_freq());
+    //        do_buffer_ = true;
+    //#ifdef WIN32
+    //        FILETIME f;
+    //        GetSystemTimePreciseAsFileTime(&f);
+    //        ULARGE_INTEGER tv;
+    //        tv.HighPart = f.dwHighDateTime;
+    //        tv.LowPart = f.dwLowDateTime;
+    //        //sb_qpc_offset_100ns_ = static_cast<double>(megamol::power::get_highres_timer()) / freq * 10000000.0 - tv.QuadPart;
+    //        sb_qpc_offset_100ns_ = tv.QuadPart;
+    //#else
+    //#endif
+    //    }
 
     void seg_post_trg() {
         ++seg_cnt_;
@@ -248,10 +252,6 @@ private:
         if (write_to_files_) {
             write_sample_buffers(seg_cnt_);
         }
-    }
-
-    std::string gen_hmc_filename(unsigned int const cnt) {
-        return std::string("pwr_") + std::to_string(cnt) + std::string(".csv");
     }
 
     void hmc_pre_trg() {
