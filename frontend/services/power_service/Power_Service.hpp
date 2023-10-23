@@ -218,6 +218,8 @@ private:
 
     void reset_segment_range(std::chrono::milliseconds const& range);
 
+    void reset_measurement();
+
     void write_sample_buffers(std::size_t seg_cnt);
 
     //    void sb_pre_trg() {

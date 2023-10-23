@@ -286,7 +286,7 @@ void Power_Service::fill_lua_callbacks() {
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>("mmPowerMeasure",
         "(string path)", {[&](std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             //start_measurement();
-            seg_cnt_ = 0;
+            reset_measurement();
             write_folder_ = path;
             meta_.project_file = megamolgraph_ptr_->Convenience().SerializeGraph();
             if (rtx_) {
@@ -311,11 +311,11 @@ void Power_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
+    /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerSignalHalt", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             sbroker_.Reset();
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});
+        }});*/
 
     /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerTrigger", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
@@ -348,7 +348,6 @@ void Power_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>(
         "mmPowerIsPending", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult {
-            //return frontend_resources::LuaCallbacksCollection::BoolResult{rtx_ ? rtx_->IsMeasurementPending() : false};
             return frontend_resources::LuaCallbacksCollection::BoolResult{sbroker_.GetValue()};
         }});
 
@@ -457,6 +456,11 @@ void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) 
     set_sb_range(emi_buffers_, range);
     set_sb_range(msr_buffers_, range);
     set_sb_range(tinker_buffers_, range);
+}
+
+void Power_Service::reset_measurement() {
+    sbroker_.Reset();
+    seg_cnt_ = 0;
 }
 
 } // namespace frontend

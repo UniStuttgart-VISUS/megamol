@@ -44,10 +44,6 @@ public:
         trigger_->RegisterSubTrigger("RTXInstruments", std::bind(&RTXInstruments::soft_trg, this));
     }
 
-    bool IsMeasurementPending() const {
-        return pending_measurement_;
-    }
-
 private:
     void soft_trg() {
         for (auto& [name, i] : rtx_instr_) {
@@ -66,8 +62,6 @@ private:
     std::chrono::milliseconds config_range_;
 
     bool enforce_software_trigger_ = false;
-
-    bool pending_measurement_ = false;
 
     std::shared_ptr<Trigger> trigger_ = nullptr;
 };
