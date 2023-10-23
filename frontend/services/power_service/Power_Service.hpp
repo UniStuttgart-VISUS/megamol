@@ -32,6 +32,7 @@
 
 #include "PowerCallbacks.h"
 
+#include <power_overwhelming/adl_sensor.h>
 #include <power_overwhelming/hmc8015_sensor.h>
 #include <power_overwhelming/rtx_instrument.h>
 
@@ -211,6 +212,9 @@ private:
 
     power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
     power::buffers_t tinker_buffers_;
+
+    power::samplers_t<visus::power_overwhelming::adl_sensor> adl_sensors_;
+    power::buffers_t adl_buffers_;
 
     std::unordered_map<std::string, visus::power_overwhelming::hmc8015_sensor> hmc_sensors_;
 

@@ -123,6 +123,8 @@ bool Power_Service::init(void* configPtr) {
 
     std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);
+    std::tie(adl_sensors_, adl_buffers_) = megamol::power::InitSampler<adl_sensor>(
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);
     std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);
     if (emi_sensors_.empty()) {
@@ -175,6 +177,7 @@ void Power_Service::close() {
     emi_sensors_.clear();
     msr_sensors_.clear();
     tinker_sensors_.clear();
+    adl_sensors_.clear();
     hmc_sensors_.clear();
 }
 
@@ -405,6 +408,8 @@ void clear_sb(power::buffers_t& buffers) {
 void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     auto const nvml_path = std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt) + ".parquet");
     ParquetWriter(nvml_path, nvml_buffers_);
+    auto const adl_path = std::filesystem::path(write_folder_) / ("adl_s" + std::to_string(seg_cnt) + ".parquet");
+    ParquetWriter(adl_path, adl_buffers_);
     auto const emi_path = std::filesystem::path(write_folder_) / ("emi_s" + std::to_string(seg_cnt) + ".parquet");
     ParquetWriter(emi_path, emi_buffers_);
     auto const msr_path = std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt) + ".parquet");
@@ -415,6 +420,9 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     if (dataverse_key_) {
         if (!nvml_buffers_.empty())
             power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, nvml_path.string(),
+                dataverse_key_->GetToken(), sbroker_.Get(false));
+        if (!adl_buffers_.empty())
+            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, adl_path.string(),
                 dataverse_key_->GetToken(), sbroker_.Get(false));
         if (!emi_buffers_.empty())
             power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, emi_path.string(),
@@ -440,6 +448,7 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
 #endif
 
     clear_sb(nvml_buffers_);
+    clear_sb(adl_buffers_);
     clear_sb(emi_buffers_);
     clear_sb(msr_buffers_);
     clear_sb(tinker_buffers_);
@@ -453,6 +462,7 @@ void set_sb_range(power::buffers_t& buffers, std::chrono::milliseconds const& ra
 
 void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) {
     set_sb_range(nvml_buffers_, range);
+    set_sb_range(adl_buffers_, range);
     set_sb_range(emi_buffers_, range);
     set_sb_range(msr_buffers_, range);
     set_sb_range(tinker_buffers_, range);
