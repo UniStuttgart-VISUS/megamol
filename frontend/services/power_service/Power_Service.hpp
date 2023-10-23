@@ -207,7 +207,6 @@ private:
     power::buffers_t tinker_buffers_;
 
     std::unordered_map<std::string, visus::power_overwhelming::hmc8015_sensor> hmc_sensors_;
-    unsigned int hmc_measure_cnt_ = 0;
 
     void fill_lua_callbacks();
 
@@ -230,6 +229,10 @@ private:
 //#endif
 //    }
 
+    void seg_post_trg() {
+        ++seg_cnt_;
+    }
+
     void sb_pre_trg() {
         do_buffer_ = true;
     }
@@ -242,8 +245,9 @@ private:
         do_buffer_ = false;
         /*auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this, seg_cnt_));
         t.detach();*/
-        write_sample_buffers(seg_cnt_);
-        ++seg_cnt_;
+        if (write_to_files_) {
+            write_sample_buffers(seg_cnt_);
+        }
     }
 
     std::string gen_hmc_filename(unsigned int const cnt) {
@@ -252,7 +256,7 @@ private:
 
     void hmc_pre_trg() {
         for (auto& [n, s] : hmc_sensors_) {
-            s.log_file(gen_hmc_filename(hmc_measure_cnt_).c_str(), true, false);
+            s.log_file(gen_hmc_filename(seg_cnt_).c_str(), true, false);
         }
         for (auto& [n, s] : hmc_sensors_) {
             s.log(true);
@@ -263,21 +267,26 @@ private:
         for (auto& [n, s] : hmc_sensors_) {
             s.log(false);
         }
-        ++hmc_measure_cnt_;
     }
 
     void hmc_fin_trg() {
-        for (auto& [n, s] : hmc_sensors_) {
-            for (unsigned int hmc_m = 0; hmc_m < hmc_measure_cnt_; ++hmc_m) {
-                auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
-                auto const hmc_path =
-                    std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
-                std::ofstream file(hmc_path.string());
-                file.write(blob.as<char const>(), blob.size());
-                file.close();
+        if (write_to_files_) {
+            for (auto& [n, s] : hmc_sensors_) {
+                for (unsigned int hmc_m = 0; hmc_m < seg_cnt_; ++hmc_m) {
+                    auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
+                    auto const hmc_path =
+                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
+                    std::ofstream file(hmc_path.string());
+                    file.write(blob.as<char const>(), blob.size());
+                    file.close();
+                }
             }
         }
-        hmc_measure_cnt_ = 0;
+        for (auto& [n, s] : hmc_sensors_) {
+            for (unsigned int hmc_m = 0; hmc_m < seg_cnt_; ++hmc_m) {
+                s.delete_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
+            }
+        }
     }
 
     //std::unordered_map<std::string, std::string> exp_map_;
