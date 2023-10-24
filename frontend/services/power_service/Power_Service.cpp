@@ -203,11 +203,11 @@ void Power_Service::close() {
     // close libraries or APIs you manage
     // wrap up resources your service provides, but don not depend on outside resources to be available here
     // after this, at some point only the destructor of your service gets called
-    nvml_sensors_.clear();
+    /*nvml_sensors_.clear();
     emi_sensors_.clear();
     msr_sensors_.clear();
     tinker_sensors_.clear();
-    adl_sensors_.clear();
+    adl_sensors_.clear();*/
     hmc_sensors_.clear();
 }
 
@@ -437,18 +437,19 @@ void clear_sb(power::buffers_t& buffers) {
 
 void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     auto const nvml_path = std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt) + ".parquet");
-    ParquetWriter(nvml_path, nvml_buffers_);
     auto const adl_path = std::filesystem::path(write_folder_) / ("adl_s" + std::to_string(seg_cnt) + ".parquet");
-    ParquetWriter(adl_path, adl_buffers_);
     auto const emi_path = std::filesystem::path(write_folder_) / ("emi_s" + std::to_string(seg_cnt) + ".parquet");
-    ParquetWriter(emi_path, emi_buffers_);
     auto const msr_path = std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt) + ".parquet");
-    ParquetWriter(msr_path, msr_buffers_);
     auto const tinker_path = std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt) + ".parquet");
-    ParquetWriter(tinker_path, tinker_buffers_);
+
+    /*ParquetWriter(nvml_path, nvml_buffers_);
+    ParquetWriter(adl_path, adl_buffers_);
+    ParquetWriter(emi_path, emi_buffers_);
+    ParquetWriter(msr_path, msr_buffers_);
+    ParquetWriter(tinker_path, tinker_buffers_);*/
 
     if (dataverse_key_) {
-        if (!nvml_buffers_.empty())
+        /*if (!nvml_buffers_.empty())
             power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, nvml_path.string(),
                 dataverse_key_->GetToken(), sbroker_.Get(false));
         if (!adl_buffers_.empty())
@@ -462,26 +463,62 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
                 dataverse_key_->GetToken(), sbroker_.Get(false));
         if (!tinker_buffers_.empty())
             power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, tinker_path.string(),
+                dataverse_key_->GetToken(), sbroker_.Get(false));*/
+        if (nvml_samplers_)
+            nvml_samplers_->WriteBuffers(nvml_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
                 dataverse_key_->GetToken(), sbroker_.Get(false));
+        if (adl_samplers_)
+            adl_samplers_->WriteBuffers(adl_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+                dataverse_key_->GetToken(), sbroker_.Get(false));
+        if (emi_samplers_)
+            emi_samplers_->WriteBuffers(emi_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+                dataverse_key_->GetToken(), sbroker_.Get(false));
+        if (msr_samplers_)
+            msr_samplers_->WriteBuffers(msr_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+                dataverse_key_->GetToken(), sbroker_.Get(false));
+        if (tinker_samplers_)
+            tinker_samplers_->WriteBuffers(tinker_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+                dataverse_key_->GetToken(), sbroker_.Get(false));
+    } else {
+        if (nvml_samplers_)
+            nvml_samplers_->WriteBuffers(nvml_path, &meta_);
+        if (adl_samplers_)
+            adl_samplers_->WriteBuffers(adl_path, &meta_);
+        if (emi_samplers_)
+            emi_samplers_->WriteBuffers(emi_path, &meta_);
+        if (msr_samplers_)
+            msr_samplers_->WriteBuffers(msr_path, &meta_);
+        if (tinker_samplers_)
+            tinker_samplers_->WriteBuffers(tinker_path, &meta_);
     }
 
-#if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
-    static std::string name = "nvml_debug";
-    for (auto const& b : nvml_buffers_) {
-        TracyPlotConfig(name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
-        auto const& values = b.ReadSamples();
-        auto const& ts = b.ReadTimestamps();
-        for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
-            tracy::Profiler::PlotData(name.c_str(), values[v_idx], ts[v_idx]);
-        }
-    }
-#endif
+//#if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
+//    static std::string name = "nvml_debug";
+//    for (auto const& b : nvml_buffers_) {
+//        TracyPlotConfig(name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+//        auto const& values = b.ReadSamples();
+//        auto const& ts = b.ReadTimestamps();
+//        for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
+//            tracy::Profiler::PlotData(name.c_str(), values[v_idx], ts[v_idx]);
+//        }
+//    }
+//#endif
 
-    clear_sb(nvml_buffers_);
+    if (nvml_samplers_)
+        nvml_samplers_->ResetBuffers();
+    if (adl_samplers_)
+        adl_samplers_->ResetBuffers();
+    if (emi_samplers_)
+        emi_samplers_->ResetBuffers();
+    if (msr_samplers_)
+        msr_samplers_->ResetBuffers();
+    if (tinker_samplers_)
+        tinker_samplers_->ResetBuffers();
+    /*clear_sb(nvml_buffers_);
     clear_sb(adl_buffers_);
     clear_sb(emi_buffers_);
     clear_sb(msr_buffers_);
-    clear_sb(tinker_buffers_);
+    clear_sb(tinker_buffers_);*/
 }
 
 void set_sb_range(power::buffers_t& buffers, std::chrono::milliseconds const& range) {
@@ -491,11 +528,21 @@ void set_sb_range(power::buffers_t& buffers, std::chrono::milliseconds const& ra
 }
 
 void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) {
-    set_sb_range(nvml_buffers_, range);
+    if (nvml_samplers_)
+        nvml_samplers_->SetSegmentRange(range);
+    if (adl_samplers_)
+        adl_samplers_->SetSegmentRange(range);
+    if (emi_samplers_)
+        emi_samplers_->SetSegmentRange(range);
+    if (msr_samplers_)
+        msr_samplers_->SetSegmentRange(range);
+    if (tinker_samplers_)
+        tinker_samplers_->SetSegmentRange(range);
+    /*set_sb_range(nvml_buffers_, range);
     set_sb_range(adl_buffers_, range);
     set_sb_range(emi_buffers_, range);
     set_sb_range(msr_buffers_, range);
-    set_sb_range(tinker_buffers_, range);
+    set_sb_range(tinker_buffers_, range);*/
 }
 
 void Power_Service::reset_measurement() {

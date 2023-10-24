@@ -202,24 +202,24 @@ private:
     std::vector<visus::power_overwhelming::rtx_instrument> rtx_instr_;
 
     std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::nvml_sensor>> nvml_samplers_ = nullptr;
-    power::samplers_t<visus::power_overwhelming::nvml_sensor> nvml_sensors_;
-    power::buffers_t nvml_buffers_;
+    /*power::samplers_t<visus::power_overwhelming::nvml_sensor> nvml_sensors_;
+    power::buffers_t nvml_buffers_;*/
 
     std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::emi_sensor>> emi_samplers_ = nullptr;
-    power::samplers_t<visus::power_overwhelming::emi_sensor> emi_sensors_;
-    power::buffers_t emi_buffers_;
+    /*power::samplers_t<visus::power_overwhelming::emi_sensor> emi_sensors_;
+    power::buffers_t emi_buffers_;*/
 
     std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::msr_sensor>> msr_samplers_ = nullptr;
-    power::samplers_t<visus::power_overwhelming::msr_sensor> msr_sensors_;
-    power::buffers_t msr_buffers_;
+    /*power::samplers_t<visus::power_overwhelming::msr_sensor> msr_sensors_;
+    power::buffers_t msr_buffers_;*/
 
     std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::tinkerforge_sensor>> tinker_samplers_ = nullptr;
-    power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
-    power::buffers_t tinker_buffers_;
+    /*power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
+    power::buffers_t tinker_buffers_;*/
 
     std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::adl_sensor>> adl_samplers_ = nullptr;
-    power::samplers_t<visus::power_overwhelming::adl_sensor> adl_sensors_;
-    power::buffers_t adl_buffers_;
+    /*power::samplers_t<visus::power_overwhelming::adl_sensor> adl_sensors_;
+    power::buffers_t adl_buffers_;*/
 
     std::unordered_map<std::string, visus::power_overwhelming::hmc8015_sensor> hmc_sensors_;
 
@@ -252,6 +252,16 @@ private:
 
     void sb_pre_trg() {
         do_buffer_ = true;
+        if (nvml_samplers_)
+            nvml_samplers_->StartRecording();
+        if (adl_samplers_)
+            adl_samplers_->StartRecording();
+        if (emi_samplers_)
+            emi_samplers_->StartRecording();
+        if (msr_samplers_)
+            msr_samplers_->StartRecording();
+        if (tinker_samplers_)
+            tinker_samplers_->StartRecording();
     }
 
     /*void sb_sgn_trg(std::tuple<std::chrono::system_clock::time_point, int64_t> const& ts) {
@@ -260,6 +270,16 @@ private:
 
     void sb_post_trg() {
         do_buffer_ = false;
+        if (nvml_samplers_)
+            nvml_samplers_->StopRecording();
+        if (adl_samplers_)
+            adl_samplers_->StopRecording();
+        if (emi_samplers_)
+            emi_samplers_->StopRecording();
+        if (msr_samplers_)
+            msr_samplers_->StopRecording();
+        if (tinker_samplers_)
+            tinker_samplers_->StopRecording();
         /*auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this, seg_cnt_));
         t.detach();*/
         if (write_to_files_) {
