@@ -201,18 +201,23 @@ private:
 
     std::vector<visus::power_overwhelming::rtx_instrument> rtx_instr_;
 
+    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::nvml_sensor>> nvml_samplers_ = nullptr;
     power::samplers_t<visus::power_overwhelming::nvml_sensor> nvml_sensors_;
     power::buffers_t nvml_buffers_;
 
+    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::emi_sensor>> emi_samplers_ = nullptr;
     power::samplers_t<visus::power_overwhelming::emi_sensor> emi_sensors_;
     power::buffers_t emi_buffers_;
 
+    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::msr_sensor>> msr_samplers_ = nullptr;
     power::samplers_t<visus::power_overwhelming::msr_sensor> msr_sensors_;
     power::buffers_t msr_buffers_;
 
+    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::tinkerforge_sensor>> tinker_samplers_ = nullptr;
     power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
     power::buffers_t tinker_buffers_;
 
+    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::adl_sensor>> adl_samplers_ = nullptr;
     power::samplers_t<visus::power_overwhelming::adl_sensor> adl_sensors_;
     power::buffers_t adl_buffers_;
 

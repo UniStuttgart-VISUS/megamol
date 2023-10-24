@@ -127,6 +127,9 @@ public:
         using namespace visus::power_overwhelming;
 
         auto const sensor_count = T::for_all(nullptr, 0);
+        if (sensor_count == 0) {
+            throw std::runtime_error("now sensors found");
+        }
 
         std::vector<T> tmp_sensors(sensor_count);
         T::for_all(tmp_sensors.data(), tmp_sensors.size());

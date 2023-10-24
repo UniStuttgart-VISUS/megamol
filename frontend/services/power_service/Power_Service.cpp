@@ -121,19 +121,49 @@ bool Power_Service::init(void* configPtr) {
             sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
     };
 
-    std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);
-    std::tie(adl_sensors_, adl_buffers_) = megamol::power::InitSampler<adl_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);
-    std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);
-    if (emi_sensors_.empty()) {
-        std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
-            std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);
+    try {
+        nvml_samplers_ = std::make_unique<power::SamplerCollection<nvml_sensor>>(
+            std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+    } catch (...) {
+        nvml_samplers_ = nullptr;
     }
-    std::tie(tinker_sensors_, tinker_buffers_) =
+    /*std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
+    try {
+        adl_samplers_ = std::make_unique<power::SamplerCollection<adl_sensor>>(
+            std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+    } catch (...) {
+        adl_samplers_ = nullptr;
+    }
+    /*std::tie(adl_sensors_, adl_buffers_) = megamol::power::InitSampler<adl_sensor>(
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
+    try {
+        emi_samplers_ = std::make_unique<power::SamplerCollection<emi_sensor>>(
+            std::chrono::milliseconds(600), std::chrono::milliseconds(1), emi_discard_func);
+    } catch (...) {
+        emi_samplers_ = nullptr;
+    }
+    /*std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
+        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);*/
+    if (!emi_samplers_) {
+        try {
+            msr_samplers_ = std::make_unique<power::SamplerCollection<msr_sensor>>(
+                std::chrono::milliseconds(600), std::chrono::milliseconds(1), msr_discard_func);
+        } catch (...) {
+            msr_samplers_ = nullptr;
+        }
+        /*std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
+            std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);*/
+    }
+    try {
+        tinker_samplers_ = std::make_unique<power::SamplerCollection<tinkerforge_sensor>>(
+            std::chrono::milliseconds(600), std::chrono::milliseconds(5), nullptr, tinker_config_func);
+    } catch (...) {
+        tinker_samplers_ = nullptr;
+    }
+    /*std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
-            str_cont_, do_buffer_, nullptr, tinker_config_func);
+            str_cont_, do_buffer_, nullptr, tinker_config_func);*/
 
     try {
         std::vector<hmc8015_sensor> hmc_tmp(hmc8015_sensor::for_all(nullptr, 0));
