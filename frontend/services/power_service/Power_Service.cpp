@@ -122,44 +122,44 @@ bool Power_Service::init(void* configPtr) {
     };
 
     try {
-        nvml_samplers_ = std::make_unique<power::SamplerCollection<nvml_sensor>>(
+        samplers.nvml_samplers_ = std::make_unique<power::SamplerCollection<nvml_sensor>>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1));
     } catch (...) {
-        nvml_samplers_ = nullptr;
+        samplers.nvml_samplers_ = nullptr;
     }
     /*std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
     try {
-        adl_samplers_ = std::make_unique<power::SamplerCollection<adl_sensor>>(
+        samplers.adl_samplers_ = std::make_unique<power::SamplerCollection<adl_sensor>>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1));
     } catch (...) {
-        adl_samplers_ = nullptr;
+        samplers.adl_samplers_ = nullptr;
     }
     /*std::tie(adl_sensors_, adl_buffers_) = megamol::power::InitSampler<adl_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
     try {
-        emi_samplers_ = std::make_unique<power::SamplerCollection<emi_sensor>>(
+        samplers.emi_samplers_ = std::make_unique<power::SamplerCollection<emi_sensor>>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1), emi_discard_func);
     } catch (...) {
-        emi_samplers_ = nullptr;
+        samplers.emi_samplers_ = nullptr;
     }
     /*std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);*/
-    if (!emi_samplers_) {
+    if (!samplers.emi_samplers_) {
         try {
-            msr_samplers_ = std::make_unique<power::SamplerCollection<msr_sensor>>(
+            samplers.msr_samplers_ = std::make_unique<power::SamplerCollection<msr_sensor>>(
                 std::chrono::milliseconds(600), std::chrono::milliseconds(1), msr_discard_func);
         } catch (...) {
-            msr_samplers_ = nullptr;
+            samplers.msr_samplers_ = nullptr;
         }
         /*std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);*/
     }
     try {
-        tinker_samplers_ = std::make_unique<power::SamplerCollection<tinkerforge_sensor>>(
+        samplers.tinker_samplers_ = std::make_unique<power::SamplerCollection<tinkerforge_sensor>>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(5), nullptr, tinker_config_func);
     } catch (...) {
-        tinker_samplers_ = nullptr;
+        samplers.tinker_samplers_ = nullptr;
     }
     /*std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
@@ -429,11 +429,11 @@ void Power_Service::fill_lua_callbacks() {
     register_callbacks(callbacks);
 }
 
-void clear_sb(power::buffers_t& buffers) {
-    for (auto& b : buffers) {
-        b.Clear();
-    }
-}
+//void clear_sb(power::buffers_t& buffers) {
+//    for (auto& b : buffers) {
+//        b.Clear();
+//    }
+//}
 
 void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     auto const nvml_path = std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt) + ".parquet");
@@ -441,6 +441,9 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     auto const emi_path = std::filesystem::path(write_folder_) / ("emi_s" + std::to_string(seg_cnt) + ".parquet");
     auto const msr_path = std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt) + ".parquet");
     auto const tinker_path = std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt) + ".parquet");
+
+    auto const tpl = std::make_tuple(samplers_s::nvml_path_t{nvml_path}, samplers_s::adl_path_t{adl_path},
+        samplers_s::emi_path_t{emi_path}, samplers_s::msr_path_t{msr_path}, samplers_s::tinker_path_t{tinker_path});
 
     /*ParquetWriter(nvml_path, nvml_buffers_);
     ParquetWriter(adl_path, adl_buffers_);
@@ -464,32 +467,40 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
         if (!tinker_buffers_.empty())
             power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, tinker_path.string(),
                 dataverse_key_->GetToken(), sbroker_.Get(false));*/
-        if (nvml_samplers_)
-            nvml_samplers_->WriteBuffers(nvml_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+
+        /*if (samplers.nvml_samplers_)
+            samplers.nvml_samplers_->WriteBuffers(nvml_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
                 dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (adl_samplers_)
-            adl_samplers_->WriteBuffers(adl_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+        if (samplers.adl_samplers_)
+            samplers.adl_samplers_->WriteBuffers(adl_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
                 dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (emi_samplers_)
-            emi_samplers_->WriteBuffers(emi_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+        if (samplers.emi_samplers_)
+            samplers.emi_samplers_->WriteBuffers(emi_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
                 dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (msr_samplers_)
-            msr_samplers_->WriteBuffers(msr_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+        if (samplers.msr_samplers_)
+            samplers.msr_samplers_->WriteBuffers(msr_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
                 dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (tinker_samplers_)
-            tinker_samplers_->WriteBuffers(tinker_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
-                dataverse_key_->GetToken(), sbroker_.Get(false));
+        if (samplers.tinker_samplers_)
+            samplers.tinker_samplers_->WriteBuffers(tinker_path, &meta_, dataverse_config_.base_path,
+                dataverse_config_.doi,
+                dataverse_key_->GetToken(), sbroker_.Get(false));*/
+
+        samplers.visit<power::MetaData const*, std::string const&, std::string const&, char const*, char&>(
+            &power::ISamplerCollection::WriteBuffers, tpl, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
+            dataverse_key_->GetToken(), sbroker_.Get(false));
     } else {
-        if (nvml_samplers_)
-            nvml_samplers_->WriteBuffers(nvml_path, &meta_);
-        if (adl_samplers_)
-            adl_samplers_->WriteBuffers(adl_path, &meta_);
-        if (emi_samplers_)
-            emi_samplers_->WriteBuffers(emi_path, &meta_);
-        if (msr_samplers_)
-            msr_samplers_->WriteBuffers(msr_path, &meta_);
-        if (tinker_samplers_)
-            tinker_samplers_->WriteBuffers(tinker_path, &meta_);
+        /*if (samplers.nvml_samplers_)
+            samplers.nvml_samplers_->WriteBuffers(nvml_path, &meta_);
+        if (samplers.adl_samplers_)
+            samplers.adl_samplers_->WriteBuffers(adl_path, &meta_);
+        if (samplers.emi_samplers_)
+            samplers.emi_samplers_->WriteBuffers(emi_path, &meta_);
+        if (samplers.msr_samplers_)
+            samplers.msr_samplers_->WriteBuffers(msr_path, &meta_);
+        if (samplers.tinker_samplers_)
+            samplers.tinker_samplers_->WriteBuffers(tinker_path, &meta_);*/
+
+        samplers.visit<power::MetaData const*>(&power::ISamplerCollection::WriteBuffers, tpl, &meta_);
     }
 
 //#if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
@@ -504,7 +515,9 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
 //    }
 //#endif
 
-    if (nvml_samplers_)
+    samplers.visit(&power::ISamplerCollection::ResetBuffers);
+
+    /*if (nvml_samplers_)
         nvml_samplers_->ResetBuffers();
     if (adl_samplers_)
         adl_samplers_->ResetBuffers();
@@ -513,7 +526,9 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     if (msr_samplers_)
         msr_samplers_->ResetBuffers();
     if (tinker_samplers_)
-        tinker_samplers_->ResetBuffers();
+        tinker_samplers_->ResetBuffers();*/
+
+
     /*clear_sb(nvml_buffers_);
     clear_sb(adl_buffers_);
     clear_sb(emi_buffers_);
@@ -521,14 +536,16 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     clear_sb(tinker_buffers_);*/
 }
 
-void set_sb_range(power::buffers_t& buffers, std::chrono::milliseconds const& range) {
-    for (auto& b : buffers) {
-        b.SetSampleRange(range);
-    }
-}
+//void set_sb_range(power::buffers_t& buffers, std::chrono::milliseconds const& range) {
+//    for (auto& b : buffers) {
+//        b.SetSampleRange(range);
+//    }
+//}
 
 void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) {
-    if (nvml_samplers_)
+    samplers.visit<std::chrono::milliseconds const&>(&power::ISamplerCollection::SetSegmentRange, range);
+
+    /*if (nvml_samplers_)
         nvml_samplers_->SetSegmentRange(range);
     if (adl_samplers_)
         adl_samplers_->SetSegmentRange(range);
@@ -537,7 +554,8 @@ void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) 
     if (msr_samplers_)
         msr_samplers_->SetSegmentRange(range);
     if (tinker_samplers_)
-        tinker_samplers_->SetSegmentRange(range);
+        tinker_samplers_->SetSegmentRange(range);*/
+
     /*set_sb_range(nvml_buffers_, range);
     set_sb_range(adl_buffers_, range);
     set_sb_range(emi_buffers_, range);

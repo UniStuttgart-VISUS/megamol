@@ -13,6 +13,8 @@
 #include <power_overwhelming/nvml_sensor.h>
 #include <power_overwhelming/tinkerforge_sensor.h>
 
+#include "DataverseWriter.h"
+#include "ParquetWriter.h"
 #include "SampleBuffer.h"
 #include "StringContainer.h"
 #include "Utility.h"
@@ -119,8 +121,60 @@ inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::millisecond
     return std::make_tuple(std::move(sensors), std::move(buffers));
 }
 
+struct ISamplerCollection {
+    virtual void SetSegmentRange(std::chrono::milliseconds const& range) = 0;
+
+    virtual void ResetBuffers() = 0;
+
+    virtual void WriteBuffers(std::filesystem::path const& path, MetaData const* meta) const = 0;
+
+    virtual void WriteBuffers(std::filesystem::path const& path, MetaData const* meta,
+        std::string const& dataverse_path, std::string const& dataverse_doi, char const* dataverse_token,
+        char& fin_signal) const = 0;
+
+    virtual void StartRecording() = 0;
+
+    virtual void StopRecording() = 0;
+
+    virtual ~ISamplerCollection() = default;
+};
+
+//struct SamplerCollectionBase : public ISamplerCollection {
+//    template<typename T>
+//    SamplerCollectionBase(SamplerCollection<T>* pimpl) : pimpl_(pimpl) {}
+//
+//    void SetSegmentRange(std::chrono::milliseconds const& range) override {
+//        pimpl_->SetSegmentRange(range);
+//    }
+//
+//    void ResetBuffers() override {
+//        pimpl_->ResetBuffers();
+//    }
+//
+//    void WriteBuffers(std::filesystem::path const& path, MetaData const* meta) const override {
+//        pimpl_->WriteBuffers(path, meta);
+//    }
+//
+//    void WriteBuffers(std::filesystem::path const& path, MetaData const* meta, std::string const& dataverse_path,
+//        std::string const& dataverse_doi, char const* dataverse_token, char& fin_signal) const override {
+//        pimpl_->WriteBuffers(path, meta, dataverse_path, dataverse_doi, dataverse_token, fin_signal);
+//    }
+//
+//    void StartRecording() override {
+//        pimpl_->StartRecording();
+//    }
+//
+//    void StopRecording() override {
+//        pimpl_->StopRecording();
+//    }
+//
+//    ISamplerCollection* pimpl_;
+//
+//    virtual ~SamplerCollectionBase() = default;
+//};
+
 template<typename T>
-class SamplerCollection final {
+class SamplerCollection final : public ISamplerCollection {
 public:
     SamplerCollection(std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis,
         discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
@@ -183,33 +237,33 @@ public:
         return *this;
     }*/
 
-    void SetSegmentRange(std::chrono::milliseconds const& range) {
+    void SetSegmentRange(std::chrono::milliseconds const& range) override {
         for (auto& b : buffers_) {
             b.SetSampleRange(range);
         }
     }
 
-    void ResetBuffers() {
+    void ResetBuffers() override {
         for (auto& b : buffers_) {
             b.Clear();
         }
     }
 
-    void WriteBuffers(std::filesystem::path const& path, MetaData const* meta) const {
+    void WriteBuffers(std::filesystem::path const& path, MetaData const* meta) const override {
         ParquetWriter(path, buffers_, meta);
     }
 
     void WriteBuffers(std::filesystem::path const& path, MetaData const* meta, std::string const& dataverse_path,
-        std::string const& dataverse_doi, char const* dataverse_token, char& fin_signal) const {
+        std::string const& dataverse_doi, char const* dataverse_token, char& fin_signal) const override {
         ParquetWriter(path, buffers_, meta);
         DataverseWriter(dataverse_path, dataverse_doi, path.string(), dataverse_token, fin_signal);
     }
 
-    void StartRecording() {
+    void StartRecording() override {
         do_buffer_ = true;
     }
 
-    void StopRecording() {
+    void StopRecording() override {
         do_buffer_ = false;
     }
 

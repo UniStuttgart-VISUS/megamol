@@ -201,25 +201,131 @@ private:
 
     std::vector<visus::power_overwhelming::rtx_instrument> rtx_instr_;
 
-    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::nvml_sensor>> nvml_samplers_ = nullptr;
-    /*power::samplers_t<visus::power_overwhelming::nvml_sensor> nvml_sensors_;
-    power::buffers_t nvml_buffers_;*/
+    struct samplers_s {
 
-    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::emi_sensor>> emi_samplers_ = nullptr;
-    /*power::samplers_t<visus::power_overwhelming::emi_sensor> emi_sensors_;
-    power::buffers_t emi_buffers_;*/
+        struct nvml_path_t {
+            explicit nvml_path_t(std::filesystem::path const& path) : path_(path) {}
+            operator std::filesystem::path const&() const {
+                return path_;
+            }
+            std::filesystem::path const& path_;
+        };
+        struct adl_path_t {
+            explicit adl_path_t(std::filesystem::path const& path) : path_(path) {}
+            operator std::filesystem::path const&() const {
+                return path_;
+            }
+            std::filesystem::path const& path_;
+        };
+        struct emi_path_t {
+            explicit emi_path_t(std::filesystem::path const& path) : path_(path) {}
+            operator std::filesystem::path const&() const {
+                return path_;
+            }
+            std::filesystem::path const& path_;
+        };
+        struct msr_path_t {
+            explicit msr_path_t(std::filesystem::path const& path) : path_(path) {}
+            operator std::filesystem::path const&() const {
+                return path_;
+            }
+            std::filesystem::path const& path_;
+        };
+        struct tinker_path_t {
+            explicit tinker_path_t(std::filesystem::path const& path) : path_(path) {}
+            operator std::filesystem::path const&() const {
+                return path_;
+            }
+            std::filesystem::path const& path_;
+        };
 
-    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::msr_sensor>> msr_samplers_ = nullptr;
-    /*power::samplers_t<visus::power_overwhelming::msr_sensor> msr_sensors_;
-    power::buffers_t msr_buffers_;*/
+        template<typename... Ts>
+        using to_invoke_f = void(power::ISamplerCollection::*)(Ts...);
+        template<typename... Ts>
+        using to_invoke_f_c = void(power::ISamplerCollection::*)(Ts...) const;
 
-    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::tinkerforge_sensor>> tinker_samplers_ = nullptr;
-    /*power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
-    power::buffers_t tinker_buffers_;*/
+        /*template<typename C>
+        using to_invoke_f_s = void(C::*)(void*);*/
 
-    std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::adl_sensor>> adl_samplers_ = nullptr;
-    /*power::samplers_t<visus::power_overwhelming::adl_sensor> adl_sensors_;
-    power::buffers_t adl_buffers_;*/
+        template<typename... Ts>
+        void visit(to_invoke_f<Ts...> to_invoke, Ts... args) {
+            if (nvml_samplers_)
+                (*nvml_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+            if (adl_samplers_)
+                (*adl_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+            if (emi_samplers_)
+                (*emi_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+            if (msr_samplers_)
+                (*msr_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+            if (tinker_samplers_)
+                (*tinker_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+        }
+
+        template<typename... Ts>
+        void visit(to_invoke_f_c<std::filesystem::path const&, Ts...> to_invoke,
+            std::tuple<nvml_path_t, adl_path_t, emi_path_t, msr_path_t, tinker_path_t> const& paths, Ts... args) {
+            if (nvml_samplers_)
+                (*nvml_samplers_.*to_invoke)(std::get<0>(paths), std::forward<Ts>(args)...);
+            if (adl_samplers_)
+                (*adl_samplers_.*to_invoke)(std::get<1>(paths), std::forward<Ts>(args)...);
+            if (emi_samplers_)
+                (*emi_samplers_.*to_invoke)(std::get<2>(paths), std::forward<Ts>(args)...);
+            if (msr_samplers_)
+                (*msr_samplers_.*to_invoke)(std::get<3>(paths), std::forward<Ts>(args)...);
+            if (tinker_samplers_)
+                (*tinker_samplers_.*to_invoke)(std::get<4>(paths), std::forward<Ts>(args)...);
+        }
+
+        /*template<typename... Ts>
+        void visit(to_invoke_f<Ts...> to_invoke) {
+            if (nvml_samplers_)
+                to_invoke(nvml_samplers_.get());
+            if (emi_samplers_)
+                to_invoke(emi_samplers_.get());
+            if (msr_samplers_)
+                to_invoke(msr_samplers_.get());
+            if (tinker_samplers_)
+                to_invoke(tinker_samplers_.get());
+            if (adl_samplers_)
+                to_invoke(adl_samplers_.get());
+        }*/
+
+        /*template <typename C>
+        void visit(to_invoke_f_s<C> to_invoke) {
+            if (nvml_samplers_)
+                to_invoke(nvml_samplers_.get());
+            if (emi_samplers_)
+                to_invoke(emi_samplers_.get());
+            if (msr_samplers_)
+                to_invoke(msr_samplers_.get());
+            if (tinker_samplers_)
+                to_invoke(tinker_samplers_.get());
+            if (adl_samplers_)
+                to_invoke(adl_samplers_.get());
+        }*/
+
+        std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::nvml_sensor>> nvml_samplers_ = nullptr;
+        /*power::samplers_t<visus::power_overwhelming::nvml_sensor> nvml_sensors_;
+        power::buffers_t nvml_buffers_;*/
+
+        std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::emi_sensor>> emi_samplers_ = nullptr;
+        /*power::samplers_t<visus::power_overwhelming::emi_sensor> emi_sensors_;
+        power::buffers_t emi_buffers_;*/
+
+        std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::msr_sensor>> msr_samplers_ = nullptr;
+        /*power::samplers_t<visus::power_overwhelming::msr_sensor> msr_sensors_;
+        power::buffers_t msr_buffers_;*/
+
+        std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::tinkerforge_sensor>> tinker_samplers_ =
+            nullptr;
+        /*power::samplers_t<visus::power_overwhelming::tinkerforge_sensor> tinker_sensors_;
+        power::buffers_t tinker_buffers_;*/
+
+        std::unique_ptr<power::SamplerCollection<visus::power_overwhelming::adl_sensor>> adl_samplers_ = nullptr;
+        /*power::samplers_t<visus::power_overwhelming::adl_sensor> adl_sensors_;
+        power::buffers_t adl_buffers_;*/
+
+    } samplers;
 
     std::unordered_map<std::string, visus::power_overwhelming::hmc8015_sensor> hmc_sensors_;
 
@@ -252,7 +358,10 @@ private:
 
     void sb_pre_trg() {
         do_buffer_ = true;
-        if (nvml_samplers_)
+
+        samplers.visit(&power::ISamplerCollection::StartRecording);
+
+        /*if (nvml_samplers_)
             nvml_samplers_->StartRecording();
         if (adl_samplers_)
             adl_samplers_->StartRecording();
@@ -261,7 +370,7 @@ private:
         if (msr_samplers_)
             msr_samplers_->StartRecording();
         if (tinker_samplers_)
-            tinker_samplers_->StartRecording();
+            tinker_samplers_->StartRecording();*/
     }
 
     /*void sb_sgn_trg(std::tuple<std::chrono::system_clock::time_point, int64_t> const& ts) {
@@ -270,7 +379,10 @@ private:
 
     void sb_post_trg() {
         do_buffer_ = false;
-        if (nvml_samplers_)
+
+        samplers.visit(&power::ISamplerCollection::StopRecording);
+
+        /*if (nvml_samplers_)
             nvml_samplers_->StopRecording();
         if (adl_samplers_)
             adl_samplers_->StopRecording();
@@ -279,9 +391,11 @@ private:
         if (msr_samplers_)
             msr_samplers_->StopRecording();
         if (tinker_samplers_)
-            tinker_samplers_->StopRecording();
+            tinker_samplers_->StopRecording();*/
+
         /*auto t = std::thread(std::bind(&Power_Service::write_sample_buffers, this, seg_cnt_));
         t.detach();*/
+
         if (write_to_files_) {
             write_sample_buffers(seg_cnt_);
         }
