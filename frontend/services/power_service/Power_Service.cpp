@@ -289,6 +289,18 @@ void Power_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>("mmPowerWriteToFile", "(bool flag)",
+        {[&](bool const flag) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            write_to_files_ = flag;
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>("mmPowerSetLPTAddress",
+        "(string address)", {[&](std::string const address) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            main_trigger_->SetLPTAddress(address);
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
     /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
         "mmPowerSignalHalt", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             sbroker_.Reset();
