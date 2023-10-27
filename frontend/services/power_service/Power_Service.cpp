@@ -189,28 +189,12 @@ bool Power_Service::init(void* configPtr) {
         core::utility::log::Log::DefaultLog.WriteInfo("[Power_Service]: No HMC devices found");
     }
 
+    log("initialized successfully");
     //return init(*static_cast<Config*>(configPtr));
     return true;
 }
 
-bool Power_Service::init(const Config& config) {
-    // initialize your service and its provided resources using config parameters
-    // for now, you dont need to worry about your service beeing initialized or closed multiple times
-    // init() and close() only get called once in the lifetime of each service object
-    // but maybe more instances of your service will get created? this may be relevant for central resources you manage (like libraries, network connections).
-
-    /*if (init_failed) {
-        log_error("failed initialization because");
-        return false;
-    }*/
-    log("initialized successfully");
-    return true;
-}
-
 void Power_Service::close() {
-    // close libraries or APIs you manage
-    // wrap up resources your service provides, but don not depend on outside resources to be available here
-    // after this, at some point only the destructor of your service gets called
     /*nvml_sensors_.clear();
     emi_sensors_.clear();
     msr_sensors_.clear();
@@ -220,24 +204,10 @@ void Power_Service::close() {
 }
 
 std::vector<FrontendResource>& Power_Service::getProvidedResources() {
-    //this->m_providedResource1 = MyProvidedResource_1{...};
-    //this->m_providedResource2 = MyProvidedResource_2{...};
-    //this->m_providedResource3 = MyProvidedResource_3{...};
-
-    //this->m_providedResourceReferences = {// construct std::vector
-    //    {"MyProvidedResource_1",
-    //        m_providedResource1}, // constructor FrontendResource{"MyProvidedResource_1", m_providedResource1}
-    //    {"MyProvidedResource_2", m_providedResource2 /*reference to resource gets passed around*/},
-    //    {"MyProvidedResource_3" /*resources are identified using unique names in the system*/, m_providedResource3}};
-
     return m_providedResourceReferences;
 }
 
 const std::vector<std::string> Power_Service::getRequestedResourceNames() const {
-    // since this function should not change the state of the service
-    // you should assign your requested resource names in init()
-    /*this->m_requestedResourcesNames = {"ExternalResource_1", "ExternalResource_2"};*/
-
     return m_requestedResourcesNames;
 }
 
@@ -260,51 +230,15 @@ void Power_Service::setRequestedResources(std::vector<FrontendResource> resource
     fill_lua_callbacks();
 }
 
-void Power_Service::updateProvidedResources() {
-    // update resources we provide to others with new available data
+void Power_Service::updateProvidedResources() {}
 
-    //this->m_providedResource1.update();
-    //this->m_providedResource2 = MyProvidedResource_2{new_data()};
+void Power_Service::digestChangedRequestedResources() {}
 
-    //// deleting resources others may be using is not good
-    //// you need to guarantee that your resource objects are alive and usable until your close() gets called
-    //delete this->m_providedResource3; // DONT DO THIS
-}
+void Power_Service::resetProvidedResources() {}
 
-void Power_Service::digestChangedRequestedResources() {
-    //digest_changes(*this->m_externalResource_1_ptr); // not that the pointer should never become invalid by design
-    //digest_changes(*this->m_externalResource_2_ptr); // not that the pointer should never become invalid by design
+void Power_Service::preGraphRender() {}
 
-    //// FrontendResource::getResource<>() returns CONST references. if you know what you are doing you may modify resources that are not yours.
-    //modify_resource(const_cast<ExternalResource_1&>(resources[0].getResource<ExternalResource_1>()));
-
-    //if (need_to_shutdown)
-    //    this->setShutdown();
-}
-
-void Power_Service::resetProvidedResources() {
-    // this gets called at the end of the main loop iteration
-    // since the current resources state should have been handled in this frame already
-    // you may clean up resources whose state is not needed for the next iteration
-    // e.g. m_keyboardEvents.clear();
-    // network_traffic_buffer.reset_to_empty();
-}
-
-void Power_Service::preGraphRender() {
-    // this gets called right before the graph is told to render something
-    // e.g. you can start a start frame timer here
-
-    // rendering via MegaMol View is called after this function finishes
-    // in the end this calls the equivalent of ::mmcRenderView(hView, &renderContext)
-    // which leads to view.Render()
-}
-
-void Power_Service::postGraphRender() {
-    // the graph finished rendering and you may more stuff here
-    // e.g. end frame timer
-    // update window name
-    // swap buffers, glClear
-}
+void Power_Service::postGraphRender() {}
 
 //std::vector<float> Power_Service::examine_expression(std::string const& name, std::string const& exp_path, int s_idx) {
 //    sol_state_["s_idx"] = s_idx;
