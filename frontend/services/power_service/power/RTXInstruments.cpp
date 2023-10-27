@@ -55,8 +55,11 @@ void RTXInstruments::UpdateConfigs(std::filesystem::path const& config_folder, i
     }
 }
 
-void RTXInstruments::ApplyConfigs() {
+void RTXInstruments::ApplyConfigs(MetaData* meta) {
     try {
+        if (meta) {
+            meta->oszi_configs.clear();
+        }
         std::for_each(rtx_instr_.begin(), rtx_instr_.end(), [&](auto& instr) {
             auto const& name = instr.first;
             auto& i = instr.second;
@@ -70,6 +73,13 @@ void RTXInstruments::ApplyConfigs() {
                 //i.write("STOP\n");
                 //i.operation_complete();
                 fit->second.apply(i);
+                if (meta) {
+                    auto const cfg_str_size = rtx_instrument_configuration::serialise(nullptr, 0, fit->second);
+                    std::string cfg_str;
+                    cfg_str.resize(cfg_str_size);
+                    rtx_instrument_configuration::serialise(cfg_str.data(), cfg_str.size(), fit->second);
+                    meta->oszi_configs[fit->first] = cfg_str;
+                }
                 i.reference_position(oscilloscope_reference_point::left);
                 i.trigger_position(oscilloscope_quantity(0, "ms"));
                 i.operation_complete();

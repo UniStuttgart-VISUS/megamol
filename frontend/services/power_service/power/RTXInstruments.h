@@ -34,7 +34,7 @@ public:
     void UpdateConfigs(std::filesystem::path const& config_folder, int points, int count,
         std::chrono::milliseconds range, std::chrono::milliseconds timeout);
 
-    void ApplyConfigs();
+    void ApplyConfigs(MetaData* meta = nullptr);
 
     void StartMeasurement(std::filesystem::path const& output_folder,
         std::vector<power::writer_func_t> const& writer_funcs, power::MetaData const* meta, char& signal);

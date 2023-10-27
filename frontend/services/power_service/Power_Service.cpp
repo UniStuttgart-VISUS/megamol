@@ -256,7 +256,7 @@ void Power_Service::fill_lua_callbacks() {
         "mmPowerSetup", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
             //setup_measurement();
             if (rtx_) {
-                rtx_->ApplyConfigs();
+                rtx_->ApplyConfigs(&meta_);
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
