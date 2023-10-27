@@ -121,49 +121,57 @@ bool Power_Service::init(void* configPtr) {
             sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
     };
 
+    std::unique_ptr<power::SamplerCollection<nvml_sensor>> nvml_samplers = nullptr;
     try {
-        samplers.nvml_samplers_ = std::make_unique<power::SamplerCollection<nvml_sensor>>(
+        nvml_samplers = std::make_unique<power::SamplerCollection<nvml_sensor>>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1));
     } catch (...) {
-        samplers.nvml_samplers_ = nullptr;
+        nvml_samplers = nullptr;
     }
     /*std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
+    std::unique_ptr<power::SamplerCollection<adl_sensor>> adl_samplers = nullptr;
     try {
-        samplers.adl_samplers_ = std::make_unique<power::SamplerCollection<adl_sensor>>(
+        adl_samplers = std::make_unique<power::SamplerCollection<adl_sensor>>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1));
     } catch (...) {
-        samplers.adl_samplers_ = nullptr;
+        adl_samplers = nullptr;
     }
     /*std::tie(adl_sensors_, adl_buffers_) = megamol::power::InitSampler<adl_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
+    std::unique_ptr<power::SamplerCollection<emi_sensor>> emi_samplers = nullptr;
     try {
-        samplers.emi_samplers_ = std::make_unique<power::SamplerCollection<emi_sensor>>(
+        emi_samplers = std::make_unique<power::SamplerCollection<emi_sensor>>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1), emi_discard_func);
     } catch (...) {
-        samplers.emi_samplers_ = nullptr;
+        emi_samplers = nullptr;
     }
     /*std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);*/
-    if (!samplers.emi_samplers_) {
+    std::unique_ptr<power::SamplerCollection<msr_sensor>> msr_samplers = nullptr;
+    if (!emi_samplers) {
         try {
-            samplers.msr_samplers_ = std::make_unique<power::SamplerCollection<msr_sensor>>(
+            msr_samplers = std::make_unique<power::SamplerCollection<msr_sensor>>(
                 std::chrono::milliseconds(600), std::chrono::milliseconds(1), msr_discard_func);
         } catch (...) {
-            samplers.msr_samplers_ = nullptr;
+            msr_samplers = nullptr;
         }
         /*std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);*/
     }
+    std::unique_ptr<power::SamplerCollection<tinkerforge_sensor>> tinker_samplers = nullptr;
     try {
-        samplers.tinker_samplers_ = std::make_unique<power::SamplerCollection<tinkerforge_sensor>>(
+        tinker_samplers = std::make_unique<power::SamplerCollection<tinkerforge_sensor>>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(5), nullptr, tinker_config_func);
     } catch (...) {
-        samplers.tinker_samplers_ = nullptr;
+        tinker_samplers = nullptr;
     }
     /*std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
             str_cont_, do_buffer_, nullptr, tinker_config_func);*/
+
+    samplers = power::SamplersCollectionWrapper(std::move(nvml_samplers), std::move(adl_samplers),
+        std::move(emi_samplers), std::move(msr_samplers), std::move(tinker_samplers));
 
     try {
         std::vector<hmc8015_sensor> hmc_tmp(hmc8015_sensor::for_all(nullptr, 0));
@@ -442,8 +450,10 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     auto const msr_path = std::filesystem::path(write_folder_) / ("msr_s" + std::to_string(seg_cnt) + ".parquet");
     auto const tinker_path = std::filesystem::path(write_folder_) / ("tinker_s" + std::to_string(seg_cnt) + ".parquet");
 
-    auto const tpl = std::make_tuple(samplers_s::nvml_path_t{nvml_path}, samplers_s::adl_path_t{adl_path},
-        samplers_s::emi_path_t{emi_path}, samplers_s::msr_path_t{msr_path}, samplers_s::tinker_path_t{tinker_path});
+    auto const tpl = std::make_tuple(power::SamplersCollectionWrapper::nvml_path_t{nvml_path},
+        power::SamplersCollectionWrapper::adl_path_t{adl_path}, power::SamplersCollectionWrapper::emi_path_t{emi_path},
+        power::SamplersCollectionWrapper::msr_path_t{msr_path},
+        power::SamplersCollectionWrapper::tinker_path_t{tinker_path});
 
     /*ParquetWriter(nvml_path, nvml_buffers_);
     ParquetWriter(adl_path, adl_buffers_);
@@ -503,17 +513,17 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
         samplers.visit<power::MetaData const*>(&power::ISamplerCollection::WriteBuffers, tpl, &meta_);
     }
 
-//#if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
-//    static std::string name = "nvml_debug";
-//    for (auto const& b : nvml_buffers_) {
-//        TracyPlotConfig(name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
-//        auto const& values = b.ReadSamples();
-//        auto const& ts = b.ReadTimestamps();
-//        for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
-//            tracy::Profiler::PlotData(name.c_str(), values[v_idx], ts[v_idx]);
-//        }
-//    }
-//#endif
+    //#if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
+    //    static std::string name = "nvml_debug";
+    //    for (auto const& b : nvml_buffers_) {
+    //        TracyPlotConfig(name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
+    //        auto const& values = b.ReadSamples();
+    //        auto const& ts = b.ReadTimestamps();
+    //        for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
+    //            tracy::Profiler::PlotData(name.c_str(), values[v_idx], ts[v_idx]);
+    //        }
+    //    }
+    //#endif
 
     samplers.visit(&power::ISamplerCollection::ResetBuffers);
 

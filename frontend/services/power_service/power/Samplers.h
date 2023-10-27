@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <power_overwhelming/adl_sensor.h>
 #include <power_overwhelming/emi_sensor.h>
 #include <power_overwhelming/msr_sensor.h>
 #include <power_overwhelming/nvml_sensor.h>
@@ -22,6 +23,8 @@
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
 #endif
+
+using namespace visus::power_overwhelming;
 
 namespace megamol::power {
 
@@ -139,40 +142,6 @@ struct ISamplerCollection {
     virtual ~ISamplerCollection() = default;
 };
 
-//struct SamplerCollectionBase : public ISamplerCollection {
-//    template<typename T>
-//    SamplerCollectionBase(SamplerCollection<T>* pimpl) : pimpl_(pimpl) {}
-//
-//    void SetSegmentRange(std::chrono::milliseconds const& range) override {
-//        pimpl_->SetSegmentRange(range);
-//    }
-//
-//    void ResetBuffers() override {
-//        pimpl_->ResetBuffers();
-//    }
-//
-//    void WriteBuffers(std::filesystem::path const& path, MetaData const* meta) const override {
-//        pimpl_->WriteBuffers(path, meta);
-//    }
-//
-//    void WriteBuffers(std::filesystem::path const& path, MetaData const* meta, std::string const& dataverse_path,
-//        std::string const& dataverse_doi, char const* dataverse_token, char& fin_signal) const override {
-//        pimpl_->WriteBuffers(path, meta, dataverse_path, dataverse_doi, dataverse_token, fin_signal);
-//    }
-//
-//    void StartRecording() override {
-//        pimpl_->StartRecording();
-//    }
-//
-//    void StopRecording() override {
-//        pimpl_->StopRecording();
-//    }
-//
-//    ISamplerCollection* pimpl_;
-//
-//    virtual ~SamplerCollectionBase() = default;
-//};
-
 template<typename T>
 class SamplerCollection final : public ISamplerCollection {
 public:
@@ -273,6 +242,116 @@ private:
     power::buffers_t buffers_;
     power::samplers_t<T> sensors_;
 };
+
+class SamplersCollectionWrapper final {
+public:
+    struct base_path_t {
+        explicit base_path_t(std::filesystem::path const& path) : path_(path) {}
+        operator std::filesystem::path const&() const {
+            return path_;
+        }
+
+    protected:
+        ~base_path_t() = default;
+
+    private:
+        std::filesystem::path const& path_;
+    };
+
+    struct nvml_path_t final : public base_path_t {
+        explicit nvml_path_t(std::filesystem::path const& path) : base_path_t(path) {}
+    };
+    struct adl_path_t final : public base_path_t {
+        explicit adl_path_t(std::filesystem::path const& path) : base_path_t(path) {}
+    };
+    struct emi_path_t final : public base_path_t {
+        explicit emi_path_t(std::filesystem::path const& path) : base_path_t(path) {}
+    };
+    struct msr_path_t final : public base_path_t {
+        explicit msr_path_t(std::filesystem::path const& path) : base_path_t(path) {}
+    };
+    struct tinker_path_t final : public base_path_t {
+        explicit tinker_path_t(std::filesystem::path const& path) : base_path_t(path) {}
+    };
+
+    template<typename... Ts>
+    using to_invoke_f = void (ISamplerCollection::*)(Ts...);
+    template<typename... Ts>
+    using to_invoke_f_c = void (ISamplerCollection::*)(Ts...) const;
+
+    template<typename... Ts>
+    void visit(to_invoke_f<Ts...> to_invoke, Ts... args) {
+        if (nvml_samplers_)
+            (*nvml_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+        if (adl_samplers_)
+            (*adl_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+        if (emi_samplers_)
+            (*emi_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+        if (msr_samplers_)
+            (*msr_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+        if (tinker_samplers_)
+            (*tinker_samplers_.*to_invoke)(std::forward<Ts>(args)...);
+    }
+
+    template<typename... Ts>
+    void visit(to_invoke_f_c<std::filesystem::path const&, Ts...> to_invoke,
+        std::tuple<nvml_path_t, adl_path_t, emi_path_t, msr_path_t, tinker_path_t> const& paths, Ts... args) {
+        if (nvml_samplers_)
+            (*nvml_samplers_.*to_invoke)(std::get<0>(paths), std::forward<Ts>(args)...);
+        if (adl_samplers_)
+            (*adl_samplers_.*to_invoke)(std::get<1>(paths), std::forward<Ts>(args)...);
+        if (emi_samplers_)
+            (*emi_samplers_.*to_invoke)(std::get<2>(paths), std::forward<Ts>(args)...);
+        if (msr_samplers_)
+            (*msr_samplers_.*to_invoke)(std::get<3>(paths), std::forward<Ts>(args)...);
+        if (tinker_samplers_)
+            (*tinker_samplers_.*to_invoke)(std::get<4>(paths), std::forward<Ts>(args)...);
+    }
+
+    SamplersCollectionWrapper() = default;
+
+    SamplersCollectionWrapper(std::unique_ptr<SamplerCollection<nvml_sensor>>&& nvml_samplers,
+        std::unique_ptr<SamplerCollection<adl_sensor>>&& adl_samplers,
+        std::unique_ptr<SamplerCollection<emi_sensor>>&& emi_samplers,
+        std::unique_ptr<SamplerCollection<msr_sensor>>&& msr_samplers,
+        std::unique_ptr<SamplerCollection<tinkerforge_sensor>>&& tinker_samplers)
+            : nvml_samplers_{std::move(nvml_samplers)}
+            , adl_samplers_{std::move(adl_samplers)}
+            , emi_samplers_{std::move(emi_samplers)}
+            , msr_samplers_{std::move(msr_samplers)}
+            , tinker_samplers_{std::move(tinker_samplers)} {}
+
+    SamplersCollectionWrapper(SamplersCollectionWrapper&& rhs)
+            : nvml_samplers_{std::exchange(rhs.nvml_samplers_, nullptr)}
+            , adl_samplers_{std::exchange(rhs.adl_samplers_, nullptr)}
+            , emi_samplers_{std::exchange(rhs.emi_samplers_, nullptr)}
+            , msr_samplers_{std::exchange(rhs.msr_samplers_, nullptr)}
+            , tinker_samplers_{std::exchange(rhs.tinker_samplers_, nullptr)} {}
+
+    SamplersCollectionWrapper& operator=(SamplersCollectionWrapper&& rhs) {
+        nvml_samplers_ = std::exchange(rhs.nvml_samplers_, nullptr);
+        adl_samplers_ = std::exchange(rhs.adl_samplers_, nullptr);
+        emi_samplers_ = std::exchange(rhs.emi_samplers_, nullptr);
+        msr_samplers_ = std::exchange(rhs.msr_samplers_, nullptr);
+        tinker_samplers_ = std::exchange(rhs.tinker_samplers_, nullptr);
+
+        return *this;
+    }
+
+    ~SamplersCollectionWrapper() = default;
+
+private:
+    std::unique_ptr<SamplerCollection<nvml_sensor>> nvml_samplers_ = nullptr;
+
+    std::unique_ptr<SamplerCollection<adl_sensor>> adl_samplers_ = nullptr;
+
+    std::unique_ptr<SamplerCollection<emi_sensor>> emi_samplers_ = nullptr;
+
+    std::unique_ptr<SamplerCollection<msr_sensor>> msr_samplers_ = nullptr;
+
+    std::unique_ptr<SamplerCollection<tinkerforge_sensor>> tinker_samplers_ = nullptr;
+};
+
 } // namespace megamol::power
 
 #endif
