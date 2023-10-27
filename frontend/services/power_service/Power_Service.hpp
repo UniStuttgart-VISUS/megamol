@@ -24,7 +24,7 @@
 #include "power/MetaData.h"
 #include "power/ParallelPortTrigger.h"
 #include "power/RTXInstruments.h"
-#include "power/Samplers.h"
+#include "power/SamplerCollection.h"
 #include "power/SignalBroker.h"
 #include "power/StringContainer.h"
 #include "power/Trigger.h"
