@@ -74,10 +74,13 @@ bool Power_Service::init(void* configPtr) {
     write_folder_ = conf->folder;
 
     main_trigger_ = std::make_shared<megamol::power::Trigger>(lpt);
-    main_trigger_->RegisterPreTrigger("Power_Service", std::bind(&Power_Service::sb_pre_trg, this));
+    main_trigger_->RegisterPreTrigger("Power_Service_sb", std::bind(&Power_Service::sb_pre_trg, this));
+    main_trigger_->RegisterPreTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_pre_trg, this));
     //main_trigger_->RegisterSignal("Power_Service", std::bind(&Power_Service::sb_sgn_trg, this, std::placeholders::_1));
-    main_trigger_->RegisterPostTrigger("Power_Service", std::bind(&Power_Service::sb_post_trg, this));
-    main_trigger_->RegisterPostTrigger("Power_Service", std::bind(&Power_Service::seg_post_trg, this));
+    main_trigger_->RegisterPostTrigger("Power_Service_sb", std::bind(&Power_Service::sb_post_trg, this));
+    main_trigger_->RegisterPostTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_post_trg, this));
+    main_trigger_->RegisterPostTrigger("Power_Service_seg", std::bind(&Power_Service::seg_post_trg, this));
+    main_trigger_->RegisterFinTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_fin_trg, this));
 
     try {
         rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);
