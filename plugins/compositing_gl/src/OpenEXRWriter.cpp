@@ -24,9 +24,10 @@ using namespace Imath;
 
 OpenEXRWriter::OpenEXRWriter()
         : mmstd_gl::ModuleGL()
+        , version_(0)
         , m_filename_slot("Filename", "Filename to read from")
         , m_button_slot("Screenshot Button", "Button triggering writing of input texture to file")
-        , m_input_tex_slot("Color", "Texture to be written to file")
+        , m_input_tex_slot("ColorTexture", "Texture to be written to file")
         , m_texture_pipe_out("Passthrough", "slot to pass texture through to calling module")
         , m_version(0) {
     this->m_filename_slot << new core::param::FilePathParam(
@@ -63,36 +64,43 @@ void OpenEXRWriter::release() {}
 bool OpenEXRWriter::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<compositing_gl::CallTexture2D*>(&caller);
     auto rhs_call_input = m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>();
-
-    if (rhs_call_input == NULL)
+    if (rhs_call_input == nullptr)
         return false;
-    if (!(*rhs_call_input)(0))
+    if (!(*rhs_call_input)(CallTexture2D::CallGetData))
         return false;
+    auto interm = rhs_call_input->getData();
+    ++version_;
+    lhs_tc->setData(rhs_call_input->getData(), version_);
 
     if (saveRequested) {
-        m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>();
-        int width = m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>()->getData()->getWidth();
-        int height = m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>()->getData()->getHeight();
-        RgbaOutputFile file(
-            m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), width, height, WRITE_RGBA);
-        std::vector<float> rawPixels(width * height * 4);
-        glGetTextureImage(m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>()->getData()->getName(), 0,
-            m_input_tex_slot.CallAs<compositing_gl::CallTexture2D>()->getData()->getFormat(), GL_FLOAT, 1,
-            &rawPixels[0]);
-        Array2D<Rgba> pixels(width, height);
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                Rgba temp(rawPixels[4 * (i * width + j)], rawPixels[4 * (i * width + j) + 1],
-                    rawPixels[4 * (i * width + j) + 2], rawPixels[4 * (i * width + j) + 3]);
-                pixels[i][j] = temp;
-            }
-        }
-        file.setFrameBuffer(&pixels[0][0], 1, width);
-        file.writePixels(height);
-        saveRequested = false;
-    }
+        try {
 
-    lhs_tc->setData(rhs_call_input->getData(), rhs_call_input->version());
+            int width = rhs_call_input->getData()->getWidth();
+            int height = rhs_call_input->getData()->getHeight();
+            std::cout << "w:" << width << " h:" << height << std::endl;
+            RgbaOutputFile file(
+                m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), width, height, WRITE_RGBA);
+            std::vector<float> rawPixels(width * height * 4);
+            glGetError();
+            interm->bindTexture();
+            glGetTextureImage(interm->getName(), 0, interm->getFormat(), GL_FLOAT, width * height * 4*4,
+                &rawPixels[0]);
+            printf("\n%i", glGetError());
+            Array2D<Rgba> pixels(width, height);
+            //rawPixels[4 * (i * width + j) + 2]
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    Rgba temp(0.25, 0.25, 1.0, 1.0);
+                    pixels[j][i] = temp;
+                }
+            }
+            file.setFrameBuffer(&pixels[0][0], 1, width);
+            file.writePixels(height);
+            saveRequested = false;
+        } catch (const std::exception& exc) {
+            std::cerr << exc.what() << std::endl;
+        }
+    }
     return true;
 }
 

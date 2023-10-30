@@ -21,6 +21,7 @@
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
 #include "OpenEXRWriter.h"
+#include "OpenEXRReader.h"
 #include "compositing_gl/CompositingCalls.h"
 
 namespace megamol::compositing_gl {
@@ -51,6 +52,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TexInspectModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::ScreenSpaceEdges>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::OpenEXRWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::OpenEXRReader>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::compositing_gl::CallTexture2D>();

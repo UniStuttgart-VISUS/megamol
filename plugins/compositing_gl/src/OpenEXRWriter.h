@@ -65,6 +65,8 @@ private:
     uint32_t m_version;
     bool saveRequested = false;
 
+    uint32_t version_;
+
     bool triggerButtonClicked(core::param::ParamSlot& slot);
 
 
