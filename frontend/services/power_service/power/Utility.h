@@ -27,6 +27,7 @@ using samples_t = std::vector<float>;
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
 using segments_t = std::vector<value_map_t>;
 using writer_func_t = std::function<void(std::filesystem::path const&, std::string const&, segments_t const&, MetaData const*)>;
+using filetime_dur_t = std::chrono::duration<float, std::ratio<1, 10000000>>;
 
 inline int64_t get_highres_timer() {
 #ifdef WIN32
@@ -98,8 +99,8 @@ inline power::timeline_t generate_timestamps_ns(visus::power_overwhelming::oscil
     //auto const t_off = waveform.segment_offset();
     auto const r_length = waveform.record_length();
 
-    auto const t_b_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<float>(t_begin));
-    auto const t_d_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<float>(t_dis));
+    auto const t_b_ns = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<float>(t_begin));
+    auto const t_d_ns = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<float>(t_dis));
 
     power::timeline_t ret(r_length, t_b_ns.count());
 
@@ -114,7 +115,7 @@ inline power::timeline_t generate_timestamps_ns(visus::power_overwhelming::oscil
 inline power::timeline_t offset_timeline(power::timeline_t const& timeline, std::chrono::nanoseconds offset) {
     power::timeline_t ret(timeline.begin(), timeline.end());
 
-    std::transform(ret.begin(), ret.end(), ret.begin(), [o = offset.count()](auto const& val) { return val + o; });
+    std::transform(ret.begin(), ret.end(), ret.begin(), [o = (offset.count()/100)](auto const& val) { return val + o; });
 
     return ret;
 }
@@ -124,7 +125,7 @@ inline int64_t get_tracy_time(int64_t base, int64_t tracy_offset) {
     auto base_ticks =
         static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(frequency));
     return base_ticks + tracy_offset;*/
-    return (base / 100) + tracy_offset;
+    return base + tracy_offset;
 }
 
 } // namespace megamol::power
