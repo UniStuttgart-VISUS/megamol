@@ -27,7 +27,7 @@ using samples_t = std::vector<float>;
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
 using segments_t = std::vector<value_map_t>;
 using writer_func_t = std::function<void(std::filesystem::path const&, std::string const&, segments_t const&, MetaData const*)>;
-using filetime_dur_t = std::chrono::duration<float, std::ratio<1, 10000000>>;
+using filetime_dur_t = std::chrono::duration<int64_t, std::ratio<1, 10000000>>;
 
 inline int64_t get_highres_timer() {
 #ifdef WIN32
@@ -42,6 +42,19 @@ inline int64_t get_highres_timer() {
     QueryPerformanceCounter(&t);
     return t.QuadPart;*/
 #else
+#endif
+}
+
+inline int64_t get_highres_timer_freq() {
+#ifdef WIN32
+    return 1;
+    /*LARGE_INTEGER f;
+    QueryPerformanceFrequency(&f);
+    return f.QuadPart;*/
+#else
+    timespec tp;
+    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
+    return tp.tv_nsec;
 #endif
 }
 
@@ -67,9 +80,9 @@ inline std::string get_identity(visus::power_overwhelming::rtx_instrument& i) {
     return id;
 }
 
-inline std::chrono::nanoseconds tp_dur_to_epoch_ns(std::chrono::system_clock::time_point const& tp) {
+inline filetime_dur_t tp_dur_to_epoch_ft(std::chrono::system_clock::time_point const& tp) {
     static auto epoch = std::chrono::system_clock::from_time_t(0);
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(tp - epoch);
+    return std::chrono::duration_cast<filetime_dur_t>(tp - epoch);
 }
 
 inline std::vector<float> transform_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
@@ -78,20 +91,7 @@ inline std::vector<float> transform_waveform(visus::power_overwhelming::oscillos
     return ret;
 }
 
-inline int64_t get_highres_timer_freq() {
-#ifdef WIN32
-    return 1;
-    /*LARGE_INTEGER f;
-    QueryPerformanceFrequency(&f);
-    return f.QuadPart;*/
-#else
-    timespec tp;
-    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
-    return tp.tv_nsec;
-#endif
-}
-
-inline power::timeline_t generate_timestamps_ns(visus::power_overwhelming::oscilloscope_waveform const& waveform) {
+inline power::timeline_t generate_timestamps_ft(visus::power_overwhelming::oscilloscope_waveform const& waveform) {
 
     auto const t_begin = waveform.time_begin();
     //auto const t_end = waveform.time_end();
@@ -99,34 +99,34 @@ inline power::timeline_t generate_timestamps_ns(visus::power_overwhelming::oscil
     //auto const t_off = waveform.segment_offset();
     auto const r_length = waveform.record_length();
 
-    auto const t_b_ns = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<float>(t_begin));
-    auto const t_d_ns = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<float>(t_dis));
+    auto const t_b_ft = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<float>(t_begin));
+    auto const t_d_ft = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<float>(t_dis));
 
-    power::timeline_t ret(r_length, t_b_ns.count());
+    power::timeline_t ret(r_length, t_b_ft.count());
 
-    auto const t_d_ns_c = t_d_ns.count();
+    auto const t_d_ft_c = t_d_ft.count();
 
     std::inclusive_scan(
-        ret.begin(), ret.end(), ret.begin(), [&t_d_ns_c](auto const& lhs, auto const& rhs) { return lhs + t_d_ns_c; });
+        ret.begin(), ret.end(), ret.begin(), [&t_d_ft_c](auto const& lhs, auto const& rhs) { return lhs + t_d_ft_c; });
 
     return ret;
 }
 
-inline power::timeline_t offset_timeline(power::timeline_t const& timeline, std::chrono::nanoseconds offset) {
+inline power::timeline_t offset_timeline(power::timeline_t const& timeline, filetime_dur_t offset) {
     power::timeline_t ret(timeline.begin(), timeline.end());
 
-    std::transform(ret.begin(), ret.end(), ret.begin(), [o = (offset.count()/100)](auto const& val) { return val + o; });
+    std::transform(ret.begin(), ret.end(), ret.begin(), [o = offset.count()](auto const& val) { return val + o; });
 
     return ret;
 }
 
-inline int64_t get_tracy_time(int64_t base, int64_t tracy_offset) {
-    /*static int64_t const frequency = get_highres_timer_freq();
-    auto base_ticks =
-        static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(frequency));
-    return base_ticks + tracy_offset;*/
-    return base + tracy_offset;
-}
+//inline filetime_dur_t get_tracy_time(filetime_dur_t base, filetime_dur_t tracy_offset) {
+//    /*static int64_t const frequency = get_highres_timer_freq();
+//    auto base_ticks =
+//        static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(frequency));
+//    return base_ticks + tracy_offset;*/
+//    return base + tracy_offset;
+//}
 
 } // namespace megamol::power
 

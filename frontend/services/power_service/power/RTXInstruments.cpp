@@ -107,7 +107,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
         try {
             signal = true;
             std::chrono::system_clock::time_point last_trigger;
-            int64_t last_trigger_qpc;
+            int64_t last_trigger_ft;
 
             waiting_on_trigger();
 
@@ -138,7 +138,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                 core::utility::log::Log::DefaultLog.WriteInfo("Waiting on trigger %d", global_device_counter);
                 if (waiting_on_trigger()) {
                     core::utility::log::Log::DefaultLog.WriteInfo("Trigger!");
-                    std::tie(last_trigger, last_trigger_qpc) = trigger();
+                    std::tie(last_trigger, last_trigger_ft) = trigger();
                 } else {
                     trigger_->DisarmTrigger();
                     break;
@@ -150,7 +150,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
             }
             trigger_->DisarmTrigger();*/
             tp_fut.wait();
-            std::tie(last_trigger, last_trigger_qpc) = tp_fut.get();
+            std::tie(last_trigger, last_trigger_ft) = tp_fut.get();
 
             core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start fetching data");
             auto const start_fetch = std::chrono::steady_clock::now();
@@ -204,18 +204,21 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                 for (std::decay_t<decltype(num_segments)> s_idx = 0; s_idx < num_segments; ++s_idx) {
                     //auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
                     auto const& waveform = all_waveforms[s_idx * num_channels].waveform();
-                    auto const sample_times = generate_timestamps_ns(waveform);
-                    auto const abs_times =
-                        offset_timeline(sample_times, std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    auto const sample_times = generate_timestamps_ft(waveform);
+                    auto const segment_times =
+                        offset_timeline(sample_times, std::chrono::duration_cast<power::filetime_dur_t>(
                                                           std::chrono::duration<float>(waveform.segment_offset())));
-                    auto const ltrg_ns = tp_dur_to_epoch_ns(last_trigger);
-                    auto const wall_times = offset_timeline(abs_times, ltrg_ns);
-                    power::timeline_t timestamps(abs_times.size());
-                    std::transform(abs_times.begin(), abs_times.end(), timestamps.begin(),
-                        [&last_trigger_qpc](auto const& base) { return get_tracy_time(base, last_trigger_qpc); });
+                    auto const ltrg_ft = tp_dur_to_epoch_ft(last_trigger);
+                    auto const wall_times = offset_timeline(segment_times, ltrg_ft);
+                    auto const timestamps = offset_timeline(segment_times, filetime_dur_t{last_trigger_ft});
+                    /*power::timeline_t timestamps(segment_times.size());
+                    std::transform(segment_times.begin(), segment_times.end(), timestamps.begin(),
+                        [&last_trigger_ft](auto const& base) {
+                            return get_tracy_time(filetime_dur_t(base), filetime_dur_t(last_trigger_ft)).count();
+                        });*/
 
                     values_map[s_idx]["sample_times"] = sample_times;
-                    values_map[s_idx]["abs_times"] = abs_times;
+                    values_map[s_idx]["segment_times"] = segment_times;
                     values_map[s_idx]["wall_times"] = wall_times;
                     values_map[s_idx]["timestamps"] = timestamps;
 
