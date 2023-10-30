@@ -29,7 +29,8 @@ vcpkg_cmake_configure(
     OPTIONS ${FEATURE_OPTIONS}
         -DTRACY_DELAYED_INIT=ON
         -DTRACY_MANUAL_LIFETIME=ON
-        -DTRACY_TIMER_QPC=ON
+        -DTRACY_TIMER_QPC=OFF
+        -DTRACY_TIMER_FT=ON
 )
 vcpkg_cmake_install()
 
