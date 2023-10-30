@@ -173,7 +173,7 @@ bool Power_Service::init(void* configPtr) {
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
             str_cont_, do_buffer_, nullptr, tinker_config_func);*/
 
-    samplers = power::SamplersCollectionWrapper(std::move(nvml_samplers), std::move(adl_samplers),
+    samplers = std::make_unique<power::SamplersCollectionWrapper>(std::move(nvml_samplers), std::move(adl_samplers),
         std::move(emi_samplers), std::move(msr_samplers), std::move(tinker_samplers));
 
     try {
@@ -204,6 +204,7 @@ void Power_Service::close() {
     tinker_sensors_.clear();
     adl_sensors_.clear();*/
     hmc_sensors_.clear();
+    samplers.reset();
 }
 
 std::vector<FrontendResource>& Power_Service::getProvidedResources() {
@@ -444,7 +445,7 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
                 dataverse_config_.doi,
                 dataverse_key_->GetToken(), sbroker_.Get(false));*/
 
-        samplers.visit<power::MetaData const*, std::string const&, std::string const&, char const*, char&>(
+        samplers->visit<power::MetaData const*, std::string const&, std::string const&, char const*, char&>(
             &power::ISamplerCollection::WriteBuffers, tpl, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
             dataverse_key_->GetToken(), sbroker_.Get(false));
     } else {
@@ -459,7 +460,7 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
         if (samplers.tinker_samplers_)
             samplers.tinker_samplers_->WriteBuffers(tinker_path, &meta_);*/
 
-        samplers.visit<power::MetaData const*>(&power::ISamplerCollection::WriteBuffers, tpl, &meta_);
+        samplers->visit<power::MetaData const*>(&power::ISamplerCollection::WriteBuffers, tpl, &meta_);
     }
 
     //#if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
@@ -474,7 +475,7 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     //    }
     //#endif
 
-    samplers.visit(&power::ISamplerCollection::ResetBuffers);
+    samplers->visit(&power::ISamplerCollection::ResetBuffers);
 
     /*if (nvml_samplers_)
         nvml_samplers_->ResetBuffers();
@@ -502,7 +503,7 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
 //}
 
 void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) {
-    samplers.visit<std::chrono::milliseconds const&>(&power::ISamplerCollection::SetSegmentRange, range);
+    samplers->visit<std::chrono::milliseconds const&>(&power::ISamplerCollection::SetSegmentRange, range);
 
     /*if (nvml_samplers_)
         nvml_samplers_->SetSegmentRange(range);

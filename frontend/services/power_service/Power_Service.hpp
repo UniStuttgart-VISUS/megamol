@@ -110,7 +110,7 @@ private:
 
     std::vector<visus::power_overwhelming::rtx_instrument> rtx_instr_;
 
-    power::SamplersCollectionWrapper samplers;
+    std::unique_ptr<power::SamplersCollectionWrapper> samplers;
 
     std::unordered_map<std::string, visus::power_overwhelming::hmc8015_sensor> hmc_sensors_;
 
@@ -144,7 +144,7 @@ private:
     void sb_pre_trg() {
         do_buffer_ = true;
 
-        samplers.visit(&power::ISamplerCollection::StartRecording);
+        samplers->visit(&power::ISamplerCollection::StartRecording);
 
         /*if (nvml_samplers_)
             nvml_samplers_->StartRecording();
@@ -165,7 +165,7 @@ private:
     void sb_post_trg() {
         do_buffer_ = false;
 
-        samplers.visit(&power::ISamplerCollection::StopRecording);
+        samplers->visit(&power::ISamplerCollection::StopRecording);
 
         /*if (nvml_samplers_)
             nvml_samplers_->StopRecording();
