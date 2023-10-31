@@ -12,6 +12,7 @@
 #include <chrono>
 #include <fstream>
 #include <list>
+#include <sstream>
 #include <thread>
 
 #include "mmcore/MegaMolGraph.h"
@@ -226,15 +227,37 @@ private:
                 for (unsigned int hmc_m = 0; hmc_m < seg_cnt_; ++hmc_m) {
                     //auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
                     auto blob = s.copy_file_from_instrument(hmc_paths_[n][hmc_m].c_str(), false);
+
+                    std::stringstream hmc_stream(std::string(blob.begin(), blob.end()));
+                    std::stringstream meta_stream;
+                    std::stringstream csv_stream;
+                    std::string line;
+                    while (std::getline(hmc_stream, line)) {
+                        if (line[0] == '#') {
+                            meta_stream << line << '\n';
+                        } else {
+                            if (line[0] != '\n')
+                                csv_stream << line << '\n';
+                        }
+                    }
+
                     /*auto const hmc_path =
                         std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");*/
-                    auto const hmc_path =
+                    auto const csv_path =
                         std::filesystem::path(write_folder_) /
-                        (std::string("hmc") + std::to_string(counter++) + "_s" + std::to_string(hmc_m) + ".csv");
-                    std::ofstream file(hmc_path.string(), std::ios::binary);
-                    file.write(blob.as<char const>(), blob.size());
+                        (std::string("hmc") + std::to_string(counter) + "_s" + std::to_string(hmc_m) + ".csv");
+                    std::ofstream file(csv_path.string(), std::ios::binary);
+                    //file.write(blob.as<char const>(), blob.size());
+                    file.write(csv_stream.str().data(), csv_stream.str().size());
+                    file.close();
+                    auto const meta_path =
+                        std::filesystem::path(write_folder_) /
+                        (std::string("hmc") + std::to_string(counter) + "_s" + std::to_string(hmc_m) + ".meta.csv");
+                    file.open(meta_path.string(), std::ios::binary);
+                    file.write(meta_stream.str().data(), meta_stream.str().size());
                     file.close();
                 }
+                ++counter;
             }
         }
         for (auto& [n, s] : hmc_sensors_) {
