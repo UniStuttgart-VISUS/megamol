@@ -231,7 +231,7 @@ private:
                     auto const hmc_path =
                         std::filesystem::path(write_folder_) /
                         (std::string("hmc") + std::to_string(counter++) + "_s" + std::to_string(hmc_m) + ".csv");
-                    std::ofstream file(hmc_path.string());
+                    std::ofstream file(hmc_path.string(), std::ios::binary);
                     file.write(blob.as<char const>(), blob.size());
                     file.close();
                 }
