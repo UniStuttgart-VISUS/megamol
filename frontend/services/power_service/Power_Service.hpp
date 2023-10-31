@@ -189,6 +189,14 @@ private:
     void hmc_pre_trg() {
         for (auto& [n, s] : hmc_sensors_) {
             s.log_file(gen_hmc_filename(seg_cnt_).c_str(), true, false);
+            auto const path_size = s.log_file((char*)nullptr, 0);
+            std::string path;
+            path.resize(path_size);
+            s.log_file(path.data(), path.size());
+            if (!path.empty()) {
+                path.resize(path.size() - 1);
+            }
+            hmc_paths_[n] = path;
         }
         for (auto& [n, s] : hmc_sensors_) {
             s.log(true);
@@ -205,7 +213,8 @@ private:
         if (write_to_files_) {
             for (auto& [n, s] : hmc_sensors_) {
                 for (unsigned int hmc_m = 0; hmc_m < seg_cnt_; ++hmc_m) {
-                    auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
+                    //auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
+                    auto blob = s.copy_file_from_instrument(hmc_paths_[n].c_str(), false);
                     auto const hmc_path =
                         std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
                     std::ofstream file(hmc_path.string());
@@ -216,7 +225,8 @@ private:
         }
         for (auto& [n, s] : hmc_sensors_) {
             for (unsigned int hmc_m = 0; hmc_m < seg_cnt_; ++hmc_m) {
-                s.delete_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
+                //s.delete_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
+                s.delete_file_from_instrument(hmc_paths_[n].c_str(), false);
             }
         }
     }
@@ -255,6 +265,8 @@ private:
     power::SignalBroker sbroker_;
 
     core::MegaMolGraph* megamolgraph_ptr_;
+
+    std::unordered_map<std::string, std::string> hmc_paths_;
 };
 
 } // namespace frontend
