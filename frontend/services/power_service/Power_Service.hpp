@@ -228,7 +228,10 @@ private:
                     //auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
                     auto blob = s.copy_file_from_instrument(hmc_paths_[n][hmc_m].c_str(), false);
 
-                    std::stringstream hmc_stream(std::string(blob.begin(), blob.end()));
+                    auto hmc_file = std::string(blob.begin(), blob.end());
+                    hmc_file.erase(std::remove_if(
+                        std::begin(hmc_file), std::end(hmc_file), [](auto const& c) { return c == '\r'; }));
+                    std::stringstream hmc_stream(hmc_file);
                     std::stringstream meta_stream;
                     std::stringstream csv_stream;
                     std::string line;
