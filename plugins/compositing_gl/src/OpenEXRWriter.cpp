@@ -86,12 +86,12 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             glGetTextureImage(interm->getName(), 0, interm->getFormat(), GL_FLOAT, width * height * 4*4,
                 &rawPixels[0]);
             printf("\n%i", glGetError());
-            Array2D<Rgba> pixels(width, height);
-            //rawPixels[4 * (i * width + j) + 2]
+            Array2D<Rgba> pixels(height, width);
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
-                    Rgba temp(0.25, 0.25, 1.0, 1.0);
-                    pixels[j][i] = temp;
+                    Rgba temp(rawPixels[4 * (j + i * width)], rawPixels[4* (j + i * width) + 1], rawPixels[4*(j + i * width) + 2],
+                        rawPixels[4 * (j + i * width) + 3]);
+                    pixels[height-i-1][j] = temp;
                 }
             }
             file.setFrameBuffer(&pixels[0][0], 1, width);

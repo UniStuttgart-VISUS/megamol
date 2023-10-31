@@ -77,7 +77,17 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
         file.readPixels(dw.min.y, dw.max.y);
 
         m_output_layout = glowl::TextureLayout(GL_RGBA16F, width, height, 1, GL_RGBA, GL_HALF_FLOAT, 1);
-        m_output_texture->reload(m_output_layout, &pixels[0][0]);
+        Imf::Array2D<Rgba> flippedPixels; // flipped Y
+        flippedPixels.resizeErase(height, width);
+
+        //TODO easier way?
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                flippedPixels[y][x] = pixels[height - 1 - y][x];
+            }
+        }
+
+        m_output_texture->reload(m_output_layout, &flippedPixels[0][0]);
     }
 
     //if (lhs_tc->version() < m_version) {
