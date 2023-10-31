@@ -37,9 +37,9 @@ public:
         std::unique_lock<std::mutex> trg_lock(trg_mtx_);
         while (armed_) {
             fire_pre_trigger();
-            std::this_thread::sleep_for(prefix);
+            std::this_thread::sleep_for(prefix * 6);
             trg_tp = fire_trigger();
-            std::this_thread::sleep_for(postfix);
+            std::this_thread::sleep_for(postfix + prefix * 6);
             fire_post_trigger();
             std::this_thread::sleep_for(wait + prefix);
         }
