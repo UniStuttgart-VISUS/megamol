@@ -201,9 +201,10 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
 
                 power::segments_t values_map(num_segments);
 
-                for (std::decay_t<decltype(num_segments)> s_idx = 0; s_idx < num_segments; ++s_idx) {
+                for (std::decay_t<decltype(num_segments)> s_idx = 0, fetch_idx = num_segments - 1; s_idx < num_segments;
+                     ++s_idx, --fetch_idx) {
                     //auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
-                    auto const& waveform = all_waveforms[s_idx * num_channels].waveform();
+                    auto const& waveform = all_waveforms[fetch_idx * num_channels].waveform();
                     auto const sample_times = generate_timestamps_ft(waveform);
                     auto const segment_times =
                         offset_timeline(sample_times, std::chrono::duration_cast<power::filetime_dur_t>(
@@ -225,7 +226,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
                         auto const tpn = name + "_" + channels[c_idx].label().text();
                         values_map[s_idx][tpn] =
-                            transform_waveform(all_waveforms[s_idx * num_channels + c_idx].waveform());
+                            transform_waveform(all_waveforms[fetch_idx * num_channels + c_idx].waveform());
                     }
 
                     //ParquetWriter(fullpath, values_map[s_idx]);
