@@ -41,7 +41,11 @@ namespace megamol {
 namespace frontend {
 
 inline std::string gen_hmc_filename(unsigned int const cnt) {
-    return std::string("pwr_") + std::to_string(cnt) + std::string(".csv");
+    return std::string("PWR_") + std::to_string(cnt);
+}
+
+inline std::string gen_hmc_filename(std::string const& fix) {
+    return fix + std::string(".CSV");
 }
 
 class Power_Service final : public AbstractFrontendService {
@@ -196,7 +200,11 @@ private:
             if (!path.empty()) {
                 path.resize(path.size() - 1);
             }
-            hmc_paths_[n] = path;
+            std::regex reg(R"(^\"(\w+)\", INT$)");
+            std::smatch match;
+            if (std::regex_match(path, match, reg)) {
+                hmc_paths_[n].push_back(gen_hmc_filename(match[1]));
+            }
         }
         for (auto& [n, s] : hmc_sensors_) {
             s.log(true);
@@ -211,12 +219,18 @@ private:
 
     void hmc_fin_trg() {
         if (write_to_files_) {
+            int counter = 0;
             for (auto& [n, s] : hmc_sensors_) {
+                if (hmc_paths_[n].size() != seg_cnt_)
+                    continue;
                 for (unsigned int hmc_m = 0; hmc_m < seg_cnt_; ++hmc_m) {
                     //auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
-                    auto blob = s.copy_file_from_instrument(hmc_paths_[n].c_str(), false);
+                    auto blob = s.copy_file_from_instrument(hmc_paths_[n][hmc_m].c_str(), false);
+                    /*auto const hmc_path =
+                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");*/
                     auto const hmc_path =
-                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
+                        std::filesystem::path(write_folder_) /
+                        (std::string("hmc") + std::to_string(counter++) + "_s" + std::to_string(hmc_m) + ".csv");
                     std::ofstream file(hmc_path.string());
                     file.write(blob.as<char const>(), blob.size());
                     file.close();
@@ -224,10 +238,15 @@ private:
             }
         }
         for (auto& [n, s] : hmc_sensors_) {
+            if (hmc_paths_[n].size() != seg_cnt_) {
+                hmc_paths_[n].clear();
+                continue;
+            }
             for (unsigned int hmc_m = 0; hmc_m < seg_cnt_; ++hmc_m) {
                 //s.delete_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
-                s.delete_file_from_instrument(hmc_paths_[n].c_str(), false);
+                s.delete_file_from_instrument(hmc_paths_[n][hmc_m].c_str(), false);
             }
+            hmc_paths_[n].clear();
         }
     }
 
@@ -266,7 +285,7 @@ private:
 
     core::MegaMolGraph* megamolgraph_ptr_;
 
-    std::unordered_map<std::string, std::string> hmc_paths_;
+    std::unordered_map<std::string, std::vector<std::string>> hmc_paths_;
 };
 
 } // namespace frontend
