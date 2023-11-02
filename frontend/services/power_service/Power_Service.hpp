@@ -220,6 +220,8 @@ private:
 
     void hmc_fin_trg() {
         if (write_to_files_) {
+            std::regex reg(R"(#Actual Count;(\d+)\s*)");
+            std::smatch match;
             int counter = 0;
             for (auto& [n, s] : hmc_sensors_) {
                 if (hmc_paths_[n].size() != seg_cnt_)
@@ -235,12 +237,21 @@ private:
                     std::stringstream meta_stream;
                     std::stringstream csv_stream;
                     std::string line;
+                    int counter = 0;
+                    int num_counts = 0;
                     while (std::getline(hmc_stream, line)) {
                         if (line[0] == '#') {
                             meta_stream << line << '\n';
+                            if (std::regex_match(line, match, reg)) {
+                                num_counts = std::stoi(match[1].str());
+                            }
                         } else {
-                            if (line[0] != '\n')
+                            if (line[0] != '\n') {
+                                if (counter > num_counts)
+                                    break;
+                                ++counter;
                                 csv_stream << line << '\n';
+                            }
                         }
                     }
 
