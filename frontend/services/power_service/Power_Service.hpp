@@ -255,18 +255,17 @@ private:
                         }
                     }
 
-                    /*auto const hmc_path =
-                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");*/
                     auto const csv_path =
+                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
+                    /*auto const csv_path =
                         std::filesystem::path(write_folder_) /
-                        (std::string("hmc") + std::to_string(counter) + "_s" + std::to_string(hmc_m) + ".csv");
+                        (std::string("hmc") + std::to_string(counter) + "_s" + std::to_string(hmc_m) + ".csv");*/
                     std::ofstream file(csv_path.string(), std::ios::binary);
                     //file.write(blob.as<char const>(), blob.size());
                     file.write(csv_stream.str().data(), csv_stream.str().size());
                     file.close();
                     auto const meta_path =
-                        std::filesystem::path(write_folder_) /
-                        (std::string("hmc") + std::to_string(counter) + "_s" + std::to_string(hmc_m) + ".meta.csv");
+                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".meta.csv");
                     file.open(meta_path.string(), std::ios::binary);
                     file.write(meta_stream.str().data(), meta_stream.str().size());
                     file.close();
