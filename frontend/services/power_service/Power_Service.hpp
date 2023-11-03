@@ -218,11 +218,7 @@ private:
         }
     }
 
-    int64_t timet2ft(time_t t) {
-        return (t * 10000000LL) + 116444736000000000LL;
-    }
-
-    std::tuple<std::string, std::string> parse_hmc_file(std::string hmc_file) {
+    std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::string hmc_file) {
         // some lines have a leading '\r'
         hmc_file.erase(
             std::remove_if(std::begin(hmc_file), std::end(hmc_file), [](auto const& c) { return c == '\r'; }));
@@ -260,19 +256,24 @@ private:
                     if (line_count == 0) {
                         // title line
                         std::string val_str;
-                        while (std::getline(std::istringstream(line), val_str, ';')) {
+                        auto sstream = std::istringstream(line);
+                        while (std::getline(sstream, val_str, ';')) {
                             col_names.push_back(val_str);
                             if (val_str.find("Timestamp") != std::string::npos) {
                                 vals[val_str] = power::timeline_t{};
+                                std::get<power::timeline_t>(vals[val_str]).reserve(num_of_rows);
                             } else {
                                 vals[val_str] = power::samples_t{};
+                                std::get<power::samples_t>(vals[val_str]).reserve(num_of_rows);
                             }
                         }
                     } else {
                         // data line
                         std::string val_str;
                         std::vector<std::string> val_strs;
-                        while (std::getline(std::istringstream(line), val_str, ';')) {
+                        val_strs.reserve(col_names.size());
+                        auto sstream = std::istringstream(line);
+                        while (std::getline(sstream, val_str, ';')) {
                             val_strs.push_back(val_str);
                         }
 
@@ -292,15 +293,19 @@ private:
                                 } else {
                                     std::istringstream(std::string(val_str.begin(), val_str.begin() + ms_pos)) >>
                                         std::get_time(&t, "%H:%M:%S");
-                                    t_ms = std::stoi(std::string(val_str.begin() + ms_pos, val_str.end()));
+                                    auto const ms_str = std::string(val_str.begin() + ms_pos + 1, val_str.end());
+                                    t_ms = std::stoi(ms_str);
                                 }
                                 auto const ts =
-                                    timet2ft(std::mktime(&t)) +
-                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::milliseconds(t_ms))
-                                        .count();
-                                std::get<power::timeline_t>(vals.at(col_names[i])).push_back(ts);
+                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::hours(t.tm_hour)) +
+                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::minutes(t.tm_min)) +
+                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::seconds(t.tm_sec)) +
+                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::milliseconds(t_ms));
+                                std::get<power::timeline_t>(vals.at(col_names[i]))
+                                    .push_back(ts.count() + 116444736000000000LL);
                             } else {
-                                std::get<power::samples_t>(vals.at(col_names[i])).push_back(std::stof(val_strs[i]));
+                                if (!val_strs[i].empty())
+                                    std::get<power::samples_t>(vals.at(col_names[i])).push_back(std::stof(val_strs[i]));
                             }
                         }
                     }
@@ -310,7 +315,7 @@ private:
             }
         }
 
-        return std::make_tuple(meta_stream.str(), csv_stream.str());
+        return std::make_tuple(meta_stream.str(), csv_stream.str(), vals);
     }
 
     void hmc_fin_trg() {
@@ -350,9 +355,9 @@ private:
                             }
                         }
                     }
-                    #endif
+#endif
 
-                    auto const [meta_str, csv_str] = parse_hmc_file(hmc_file);
+                    auto const [meta_str, csv_str, vals] = parse_hmc_file(hmc_file);
 
                     auto const csv_path =
                         std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
@@ -368,6 +373,11 @@ private:
                     file.open(meta_path.string(), std::ios::binary);
                     file.write(meta_str.data(), meta_str.size());
                     file.close();
+
+                    auto const parquet_path =
+                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".parquet");
+
+                    power::ParquetWriter(parquet_path, vals, &meta_);
                 }
             }
         }
