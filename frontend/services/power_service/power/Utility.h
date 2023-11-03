@@ -17,32 +17,13 @@
 #include "MetaData.h"
 #include "Timestamp.h"
 
-
-
 namespace megamol::power {
-
 
 using samples_t = std::vector<float>;
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
 using segments_t = std::vector<value_map_t>;
 using writer_func_t =
     std::function<void(std::filesystem::path const&, std::string const&, segments_t const&, MetaData const*)>;
-
-
-
-
-//inline int64_t get_highres_timer_freq() {
-//#ifdef WIN32
-//    return 1;
-//    /*LARGE_INTEGER f;
-//    QueryPerformanceFrequency(&f);
-//    return f.QuadPart;*/
-//#else
-//    timespec tp;
-//    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
-//    return tp.tv_nsec;
-//#endif
-//}
 
 inline std::string get_name(visus::power_overwhelming::rtx_instrument const& i) {
     auto const name_size = i.name(nullptr, 0);
@@ -65,8 +46,6 @@ inline std::string get_identity(visus::power_overwhelming::rtx_instrument& i) {
     }
     return id;
 }
-
-
 
 inline std::vector<float> copy_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
     std::vector<float> ret(wave.record_length());
@@ -94,17 +73,6 @@ inline power::timeline_t generate_timestamps_ft(visus::power_overwhelming::oscil
 
     return ret;
 }
-
-
-
-//inline filetime_dur_t get_tracy_time(filetime_dur_t base, filetime_dur_t tracy_offset) {
-//    /*static int64_t const frequency = get_highres_timer_freq();
-//    auto base_ticks =
-//        static_cast<int64_t>((static_cast<double>(base) / 1000. / 1000. / 1000.) * static_cast<double>(frequency));
-//    return base_ticks + tracy_offset;*/
-//    return base + tracy_offset;
-//}
-
 } // namespace megamol::power
 
 #endif

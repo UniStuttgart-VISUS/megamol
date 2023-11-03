@@ -32,20 +32,21 @@ inline filetime_dur_t get_highres_timer() {
 #endif
 }
 
-inline filetime_dur_t tp_dur_to_epoch_ft(std::chrono::system_clock::time_point const& tp) {
-    static auto epoch = std::chrono::system_clock::from_time_t(0);
-    return std::chrono::duration_cast<filetime_dur_t>(tp - epoch);
-}
-
 inline timeline_t offset_timeline(timeline_t const& timeline, filetime_dur_t const& offset) {
-    timeline_t ret(timeline.begin(), timeline.end());
+    timeline_t ret(timeline.size());
 
-    std::transform(ret.begin(), ret.end(), ret.begin(), [o = offset.count()](auto const& val) { return val + o; });
+    std::transform(
+        timeline.begin(), timeline.end(), ret.begin(), [o = offset.count()](auto const& val) { return val + o; });
 
     return ret;
 }
 
 inline filetime_dur_t convert_tm2ft(std::tm& t) {
     return filetime_dur_t(std::mktime(&t) * 10000000LL) + ft_offset;
+}
+
+inline filetime_dur_t convert_systemtp2ft(std::chrono::system_clock::time_point const& tp) {
+    static auto epoch = std::chrono::system_clock::from_time_t(0);
+    return std::chrono::duration_cast<filetime_dur_t>(tp - epoch);
 }
 } // namespace megamol::power
