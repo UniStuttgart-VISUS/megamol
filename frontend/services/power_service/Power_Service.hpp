@@ -218,11 +218,105 @@ private:
         }
     }
 
+    int64_t timet2ft(time_t t) {
+        return (t * 10000000LL) + 116444736000000000LL;
+    }
+
+    std::tuple<std::string, std::string> parse_hmc_file(std::string hmc_file) {
+        // some lines have a leading '\r'
+        hmc_file.erase(
+            std::remove_if(std::begin(hmc_file), std::end(hmc_file), [](auto const& c) { return c == '\r'; }));
+
+        std::regex reg(R"(#Actual Count;(\d+)\s*)");
+        std::smatch match;
+
+        std::stringstream hmc_stream(hmc_file);
+        std::stringstream meta_stream;
+        std::stringstream csv_stream;
+
+        power::value_map_t vals;
+
+        std::string line;
+
+        int num_of_rows = 0;
+        int line_count = 0;
+
+        std::vector<std::string> col_names;
+
+        while (std::getline(hmc_stream, line)) {
+            if (line[0] == '#') {
+                // meta information
+                meta_stream << line << '\n';
+                if (std::regex_match(line, match, reg)) {
+                    num_of_rows = std::stoi(match[1].str());
+                }
+            } else {
+                if (line[0] != '\n') {
+                    // csv data
+                    if (num_of_rows == 0)
+                        break;
+                    if (line_count > num_of_rows)
+                        break;
+                    if (line_count == 0) {
+                        // title line
+                        std::string val_str;
+                        while (std::getline(std::istringstream(line), val_str, ';')) {
+                            col_names.push_back(val_str);
+                            if (val_str.find("Timestamp") != std::string::npos) {
+                                vals[val_str] = power::timeline_t{};
+                            } else {
+                                vals[val_str] = power::samples_t{};
+                            }
+                        }
+                    } else {
+                        // data line
+                        std::string val_str;
+                        std::vector<std::string> val_strs;
+                        while (std::getline(std::istringstream(line), val_str, ';')) {
+                            val_strs.push_back(val_str);
+                        }
+
+                        if (val_strs.size() != col_names.size()) {
+                            throw std::runtime_error("unexpected number of values in line");
+                        }
+
+                        for (std::size_t i = 0; i < val_strs.size(); ++i) {
+                            if (col_names[i].find("Timestamp") != std::string::npos) {
+                                // parse UTC timestamp with fractional seconds
+                                auto ms_pos = val_str.find('.');
+                                std::tm t = {};
+                                int64_t t_ms = 0;
+                                if (ms_pos == std::string::npos) {
+                                    // timestamp without ms part
+                                    std::istringstream(val_str) >> std::get_time(&t, "%H:%M:%S");
+                                } else {
+                                    std::istringstream(std::string(val_str.begin(), val_str.begin() + ms_pos)) >>
+                                        std::get_time(&t, "%H:%M:%S");
+                                    t_ms = std::stoi(std::string(val_str.begin() + ms_pos, val_str.end()));
+                                }
+                                auto const ts =
+                                    timet2ft(std::mktime(&t)) +
+                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::milliseconds(t_ms))
+                                        .count();
+                                std::get<power::timeline_t>(vals.at(col_names[i])).push_back(ts);
+                            } else {
+                                std::get<power::samples_t>(vals.at(col_names[i])).push_back(std::stof(val_strs[i]));
+                            }
+                        }
+                    }
+                    csv_stream << line << '\n';
+                    ++line_count;
+                }
+            }
+        }
+
+        return std::make_tuple(meta_stream.str(), csv_stream.str());
+    }
+
     void hmc_fin_trg() {
         if (write_to_files_) {
             std::regex reg(R"(#Actual Count;(\d+)\s*)");
             std::smatch match;
-            int counter = 0;
             for (auto& [n, s] : hmc_sensors_) {
                 if (hmc_paths_[n].size() != seg_cnt_)
                     continue;
@@ -231,6 +325,8 @@ private:
                     auto blob = s.copy_file_from_instrument(hmc_paths_[n][hmc_m].c_str(), false);
 
                     auto hmc_file = std::string(blob.begin(), blob.end());
+
+#if 0
                     hmc_file.erase(std::remove_if(
                         std::begin(hmc_file), std::end(hmc_file), [](auto const& c) { return c == '\r'; }));
                     std::stringstream hmc_stream(hmc_file);
@@ -254,6 +350,9 @@ private:
                             }
                         }
                     }
+                    #endif
+
+                    auto const [meta_str, csv_str] = parse_hmc_file(hmc_file);
 
                     auto const csv_path =
                         std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
@@ -262,15 +361,14 @@ private:
                         (std::string("hmc") + std::to_string(counter) + "_s" + std::to_string(hmc_m) + ".csv");*/
                     std::ofstream file(csv_path.string(), std::ios::binary);
                     //file.write(blob.as<char const>(), blob.size());
-                    file.write(csv_stream.str().data(), csv_stream.str().size());
+                    file.write(csv_str.data(), csv_str.size());
                     file.close();
                     auto const meta_path =
                         std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".meta.csv");
                     file.open(meta_path.string(), std::ios::binary);
-                    file.write(meta_stream.str().data(), meta_stream.str().size());
+                    file.write(meta_str.data(), meta_str.size());
                     file.close();
                 }
-                ++counter;
             }
         }
         for (auto& [n, s] : hmc_sensors_) {
