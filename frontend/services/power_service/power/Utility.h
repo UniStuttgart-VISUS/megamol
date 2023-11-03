@@ -15,48 +15,34 @@
 #include <power_overwhelming/rtx_instrument.h>
 
 #include "MetaData.h"
+#include "Timestamp.h"
 
-#ifdef WIN32
-#include <Windows.h>
-#endif
+
 
 namespace megamol::power {
 
-using timeline_t = std::vector<int64_t>;
+
 using samples_t = std::vector<float>;
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
 using segments_t = std::vector<value_map_t>;
-using writer_func_t = std::function<void(std::filesystem::path const&, std::string const&, segments_t const&, MetaData const*)>;
-using filetime_dur_t = std::chrono::duration<int64_t, std::ratio<1, 10000000>>;
+using writer_func_t =
+    std::function<void(std::filesystem::path const&, std::string const&, segments_t const&, MetaData const*)>;
 
-inline int64_t get_highres_timer() {
-#ifdef WIN32
-    FILETIME f;
-    GetSystemTimePreciseAsFileTime(&f);
-    ULARGE_INTEGER tv;
-    tv.HighPart = f.dwHighDateTime;
-    tv.LowPart = f.dwLowDateTime;
-    return tv.QuadPart;
 
-    /*LARGE_INTEGER t;
-    QueryPerformanceCounter(&t);
-    return t.QuadPart;*/
-#else
-#endif
-}
 
-inline int64_t get_highres_timer_freq() {
-#ifdef WIN32
-    return 1;
-    /*LARGE_INTEGER f;
-    QueryPerformanceFrequency(&f);
-    return f.QuadPart;*/
-#else
-    timespec tp;
-    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
-    return tp.tv_nsec;
-#endif
-}
+
+//inline int64_t get_highres_timer_freq() {
+//#ifdef WIN32
+//    return 1;
+//    /*LARGE_INTEGER f;
+//    QueryPerformanceFrequency(&f);
+//    return f.QuadPart;*/
+//#else
+//    timespec tp;
+//    clock_getres(CLOCK_MONOTONIC_RAW, &tp);
+//    return tp.tv_nsec;
+//#endif
+//}
 
 inline std::string get_name(visus::power_overwhelming::rtx_instrument const& i) {
     auto const name_size = i.name(nullptr, 0);
@@ -80,12 +66,9 @@ inline std::string get_identity(visus::power_overwhelming::rtx_instrument& i) {
     return id;
 }
 
-inline filetime_dur_t tp_dur_to_epoch_ft(std::chrono::system_clock::time_point const& tp) {
-    static auto epoch = std::chrono::system_clock::from_time_t(0);
-    return std::chrono::duration_cast<filetime_dur_t>(tp - epoch);
-}
 
-inline std::vector<float> transform_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
+
+inline std::vector<float> copy_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
     std::vector<float> ret(wave.record_length());
     std::copy(wave.begin(), wave.end(), ret.begin());
     return ret;
@@ -112,13 +95,7 @@ inline power::timeline_t generate_timestamps_ft(visus::power_overwhelming::oscil
     return ret;
 }
 
-inline power::timeline_t offset_timeline(power::timeline_t const& timeline, filetime_dur_t offset) {
-    power::timeline_t ret(timeline.begin(), timeline.end());
 
-    std::transform(ret.begin(), ret.end(), ret.begin(), [o = offset.count()](auto const& val) { return val + o; });
-
-    return ret;
-}
 
 //inline filetime_dur_t get_tracy_time(filetime_dur_t base, filetime_dur_t tracy_offset) {
 //    /*static int64_t const frequency = get_highres_timer_freq();

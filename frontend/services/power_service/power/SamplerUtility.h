@@ -35,10 +35,7 @@ using buffers_t = std::vector<SampleBuffer>;
 
 using context_t = std::tuple<char const*, SampleBuffer*, bool const&>;
 
-inline int64_t convert_walltime_ft(int64_t const& ts_100ns) {
-    constexpr int64_t offset = filetime_dur_t(116444736000000000LL).count();
-    return ts_100ns - offset;
-}
+
 
 inline void tracy_sample(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
@@ -53,7 +50,7 @@ inline void tracy_sample(
 #endif
     if (do_buffer) {
         for (std::size_t i = 0; i < n; ++i) {
-            buffer->Add(m[i].power(), m[i].timestamp(), convert_walltime_ft(m[i].timestamp()));
+            buffer->Add(m[i].power(), m[i].timestamp(), convert_walltime_ft(filetime_dur_t(m[i].timestamp())));
         }
     }
 }

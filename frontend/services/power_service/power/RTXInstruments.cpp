@@ -226,7 +226,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
                         auto const tpn = name + "_" + channels[c_idx].label().text();
                         values_map[s_idx][tpn] =
-                            transform_waveform(all_waveforms[fetch_idx * num_channels + c_idx].waveform());
+                            copy_waveform(all_waveforms[fetch_idx * num_channels + c_idx].waveform());
                     }
 
                     //ParquetWriter(fullpath, values_map[s_idx]);
