@@ -223,7 +223,8 @@ private:
         hmc_file.erase(
             std::remove_if(std::begin(hmc_file), std::end(hmc_file), [](auto const& c) { return c == '\r'; }));
 
-        std::regex reg(R"(#Actual Count;(\d+)\s*)");
+        std::regex count_reg(R"(#Actual Count;(\d+)\s*)");
+        std::regex date_reg(R"(#Date;([\d|-]+)\s*)");
         std::smatch match;
 
         std::stringstream hmc_stream(hmc_file);
@@ -237,14 +238,19 @@ private:
         int num_of_rows = 0;
         int line_count = 0;
 
+        std::tm base_t = {};
+
         std::vector<std::string> col_names;
 
         while (std::getline(hmc_stream, line)) {
             if (line[0] == '#') {
                 // meta information
                 meta_stream << line << '\n';
-                if (std::regex_match(line, match, reg)) {
+                if (std::regex_match(line, match, count_reg)) {
                     num_of_rows = std::stoi(match[1].str());
+                }
+                if (std::regex_match(line, match, date_reg)) {
+                    std::istringstream(match[1].str()) >> std::get_time(&base_t, "%Y-%m-%d");
                 }
             } else {
                 if (line[0] != '\n') {
@@ -296,16 +302,21 @@ private:
                                     auto const ms_str = std::string(val_str.begin() + ms_pos + 1, val_str.end());
                                     t_ms = std::stoi(ms_str);
                                 }
+                                std::tm tt = base_t;
+                                tt.tm_hour = t.tm_hour;
+                                tt.tm_min = t.tm_min;
+                                tt.tm_sec = t.tm_sec;
                                 auto const ts =
-                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::hours(t.tm_hour)) +
-                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::minutes(t.tm_min)) +
-                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::seconds(t.tm_sec)) +
-                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::milliseconds(t_ms));
-                                std::get<power::timeline_t>(vals.at(col_names[i]))
-                                    .push_back(ts.count() + 116444736000000000LL);
+                                    (std::mktime(&tt) * 10000000LL) + 116444736000000000LL +
+                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::milliseconds(t_ms))
+                                        .count();
+                                std::get<power::timeline_t>(vals.at(col_names[i])).push_back(ts);
                             } else {
                                 if (!val_strs[i].empty())
                                     std::get<power::samples_t>(vals.at(col_names[i])).push_back(std::stof(val_strs[i]));
+                                else
+                                    std::get<power::samples_t>(vals.at(col_names[i]))
+                                        .push_back(std::numeric_limits<float>::signaling_NaN());
                             }
                         }
                     }
