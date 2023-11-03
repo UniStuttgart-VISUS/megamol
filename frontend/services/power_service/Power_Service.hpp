@@ -238,7 +238,7 @@ private:
         int num_of_rows = 0;
         int line_count = 0;
 
-        std::tm base_t = {};
+        std::string date_str;
 
         std::vector<std::string> col_names;
 
@@ -250,7 +250,7 @@ private:
                     num_of_rows = std::stoi(match[1].str());
                 }
                 if (std::regex_match(line, match, date_reg)) {
-                    std::istringstream(match[1].str()) >> std::get_time(&base_t, "%Y-%m-%d");
+                    date_str = match[1];
                 }
             } else {
                 if (line[0] != '\n') {
@@ -290,28 +290,30 @@ private:
                         for (std::size_t i = 0; i < val_strs.size(); ++i) {
                             if (col_names[i].find("Timestamp") != std::string::npos) {
                                 // parse UTC timestamp with fractional seconds
-                                auto ms_pos = val_str.find('.');
-                                std::tm t = {};
+                                auto const ms_pos = val_str.find('.');
                                 int64_t t_ms = 0;
+                                std::string time_str;
                                 if (ms_pos == std::string::npos) {
                                     // timestamp without ms part
-                                    std::istringstream(val_str) >> std::get_time(&t, "%H:%M:%S");
+                                    time_str = val_str;
                                 } else {
-                                    std::istringstream(std::string(val_str.begin(), val_str.begin() + ms_pos)) >>
-                                        std::get_time(&t, "%H:%M:%S");
+                                    time_str = std::string(val_str.begin(), val_str.begin() + ms_pos);
                                     auto const ms_str = std::string(val_str.begin() + ms_pos + 1, val_str.end());
                                     t_ms = std::stoi(ms_str);
                                 }
-                                std::tm tt = base_t;
-                                tt.tm_hour = t.tm_hour;
-                                tt.tm_min = t.tm_min;
-                                tt.tm_sec = t.tm_sec;
-                                auto const ts =
-                                    (std::mktime(&tt) * 10000000LL) + 116444736000000000LL +
-                                    std::chrono::duration_cast<power::filetime_dur_t>(std::chrono::milliseconds(t_ms))
-                                        .count();
-                                std::get<power::timeline_t>(vals.at(col_names[i])).push_back(ts);
+                                std::chrono::utc_clock::time_point tp;
+                                std::istringstream time_stream(date_str + "T" + time_str);
+                                if (std::chrono::from_stream(time_stream, "%FT%T", tp)) {
+                                    auto const ts = (power::convert_systemtp2ft(std::chrono::utc_clock::to_sys(tp)) +
+                                                     std::chrono::duration_cast<power::filetime_dur_t>(
+                                                         std::chrono::milliseconds(t_ms)))
+                                                        .count();
+                                    std::get<power::timeline_t>(vals.at(col_names[i])).push_back(ts);
+                                } else {
+                                    throw std::runtime_error("could not parse UTC time");
+                                }
                             } else {
+                                // data
                                 if (!val_strs[i].empty())
                                     std::get<power::samples_t>(vals.at(col_names[i])).push_back(std::stof(val_strs[i]));
                                 else

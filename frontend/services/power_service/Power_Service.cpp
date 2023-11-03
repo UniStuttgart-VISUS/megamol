@@ -181,7 +181,7 @@ bool Power_Service::init(void* configPtr) {
         hmc8015_sensor::for_all(hmc_tmp.data(), hmc_tmp.size());
         hmc_sensors_.reserve(hmc_tmp.size());
         for (auto& s : hmc_tmp) {
-            s.synchronise_clock();
+            s.synchronise_clock(true);
             s.voltage_range(instrument_range::explicitly, 300);
             s.current_range(instrument_range::explicitly, 5);
             s.log_behaviour(std::numeric_limits<float>::lowest(), log_mode::unlimited);
