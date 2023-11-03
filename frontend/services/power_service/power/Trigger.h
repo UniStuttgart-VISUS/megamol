@@ -30,10 +30,9 @@ public:
         armed_ = false;
     }
 
-    std::tuple<std::chrono::system_clock::time_point, int64_t> StartTriggerSequence(
-        std::chrono::milliseconds const& prefix, std::chrono::milliseconds const& postfix,
-        std::chrono::milliseconds const& wait) {
-        std::tuple<std::chrono::system_clock::time_point, int64_t> trg_tp;
+    filetime_dur_t StartTriggerSequence(std::chrono::milliseconds const& prefix,
+        std::chrono::milliseconds const& postfix, std::chrono::milliseconds const& wait) {
+        filetime_dur_t trg_tp;
         std::unique_lock<std::mutex> trg_lock(trg_mtx_);
         while (armed_) {
             fire_pre_trigger();
@@ -47,8 +46,7 @@ public:
         return trg_tp;
     }
 
-    void RegisterSignal(std::string const& name,
-        std::function<void(std::tuple<std::chrono::system_clock::time_point, int64_t> const&)> const& signal) {
+    void RegisterSignal(std::string const& name, std::function<void(filetime_dur_t const&)> const& signal) {
         signals_[name] = signal;
     }
 
@@ -92,7 +90,7 @@ private:
         }
     }
 
-    std::tuple<std::chrono::system_clock::time_point, int64_t> fire_trigger() {
+    filetime_dur_t fire_trigger() {
 #ifdef MEGAMOL_USE_TRACY
         ZoneScopedNC("Trigger::trigger", 0xDB0ABF);
 #endif
@@ -104,13 +102,13 @@ private:
         }
 
 
-        auto ts = std::make_tuple(std::chrono::system_clock::now(), get_highres_timer());
+        auto const ts = get_highres_timer();
         notify_all(ts);
 
         return ts;
     }
 
-    void notify_all(std::tuple<std::chrono::system_clock::time_point, int64_t> const& ts) const {
+    void notify_all(filetime_dur_t const& ts) const {
         for (auto const& [n, s] : signals_) {
             s(ts);
         }
@@ -154,9 +152,7 @@ private:
 
     std::unique_ptr<ParallelPortTrigger> trigger_;
 
-    std::unordered_map<std::string,
-        std::function<void(std::tuple<std::chrono::system_clock::time_point, int64_t> const&)>>
-        signals_;
+    std::unordered_map<std::string, std::function<void(filetime_dur_t const&)>> signals_;
 
     std::unordered_map<std::string, std::function<void()>> sub_trigger_;
 

@@ -106,8 +106,6 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                       power::MetaData const* meta, char& signal) {
         try {
             signal = true;
-            std::chrono::system_clock::time_point last_trigger;
-            int64_t last_trigger_ft;
 
             waiting_on_trigger();
 
@@ -150,7 +148,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
             }
             trigger_->DisarmTrigger();*/
             tp_fut.wait();
-            std::tie(last_trigger, last_trigger_ft) = tp_fut.get();
+            auto const last_trigger_ft = tp_fut.get();
 
             core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start fetching data");
             auto const start_fetch = std::chrono::steady_clock::now();
@@ -209,9 +207,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                     auto const segment_times =
                         offset_timeline(sample_times, std::chrono::duration_cast<power::filetime_dur_t>(
                                                           std::chrono::duration<float>(waveform.segment_offset())));
-                    auto const ltrg_ft = tp_dur_to_epoch_ft(last_trigger);
-                    auto const wall_times = offset_timeline(segment_times, ltrg_ft);
-                    auto const timestamps = offset_timeline(segment_times, filetime_dur_t{last_trigger_ft});
+                    auto const timestamps = offset_timeline(segment_times, last_trigger_ft);
                     /*power::timeline_t timestamps(segment_times.size());
                     std::transform(segment_times.begin(), segment_times.end(), timestamps.begin(),
                         [&last_trigger_ft](auto const& base) {
@@ -220,7 +216,6 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
 
                     values_map[s_idx]["sample_times"] = sample_times;
                     values_map[s_idx]["segment_times"] = segment_times;
-                    values_map[s_idx]["wall_times"] = wall_times;
                     values_map[s_idx]["timestamps"] = timestamps;
 
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {

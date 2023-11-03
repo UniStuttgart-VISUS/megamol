@@ -16,14 +16,14 @@ using filetime_dur_t = std::chrono::duration<timestamp_t, std::ratio<1, 10000000
 
 inline constexpr auto ft_offset = filetime_dur_t(116444736000000000LL);
 
-inline int64_t get_highres_timer() {
+inline filetime_dur_t get_highres_timer() {
 #ifdef WIN32
     FILETIME f;
     GetSystemTimePreciseAsFileTime(&f);
     ULARGE_INTEGER tv;
     tv.HighPart = f.dwHighDateTime;
     tv.LowPart = f.dwLowDateTime;
-    return tv.QuadPart;
+    return filetime_dur_t(tv.QuadPart);
 
     /*LARGE_INTEGER t;
     QueryPerformanceCounter(&t);
