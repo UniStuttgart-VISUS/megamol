@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "Utility.h"
+
 namespace megamol::power {
 
 class SampleBuffer {
@@ -13,20 +15,16 @@ public:
     explicit SampleBuffer(std::string const& name, std::chrono::milliseconds const& sample_range,
         std::chrono::milliseconds const& sample_dis);
 
-    void Add(float const sample, int64_t const timestamp, int64_t const walltime);
+    void Add(float const sample, int64_t const timestamp);
 
     void Clear();
 
-    std::vector<float> const& ReadSamples() const {
+    samples_t const& ReadSamples() const {
         return samples_;
     }
 
-    std::vector<int64_t> const& ReadTimestamps() const {
+    timeline_t const& ReadTimestamps() const {
         return timestamps_;
-    }
-
-    std::vector<int64_t> const& ReadWalltimes() const {
-        return walltimes_;
     }
 
     std::string const& Name() const {
@@ -40,11 +38,9 @@ private:
 
     std::size_t cap_incr_ = 100;
 
-    std::vector<float> samples_;
+    samples_t samples_;
 
-    std::vector<int64_t> timestamps_;
-
-    std::vector<int64_t> walltimes_;
+    timeline_t timestamps_;
 
     std::chrono::milliseconds sample_dis_;
 };

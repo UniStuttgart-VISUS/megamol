@@ -50,7 +50,7 @@ inline void tracy_sample(
 #endif
     if (do_buffer) {
         for (std::size_t i = 0; i < n; ++i) {
-            buffer->Add(m[i].power(), m[i].timestamp(), convert_walltime_ft(filetime_dur_t(m[i].timestamp())));
+            buffer->Add(m[i].power(), m[i].timestamp());
         }
     }
 }

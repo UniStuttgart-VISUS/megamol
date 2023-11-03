@@ -45,10 +45,6 @@ inline timeline_t offset_timeline(timeline_t const& timeline, filetime_dur_t con
     return ret;
 }
 
-inline timestamp_t convert_walltime_ft(filetime_dur_t const& ts) {
-    return (ts - ft_offset).count();
-}
-
 inline filetime_dur_t convert_tm2ft(std::tm& t) {
     return filetime_dur_t(std::mktime(&t) * 10000000LL) + ft_offset;
 }

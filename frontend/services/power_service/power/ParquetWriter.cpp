@@ -131,14 +131,12 @@ void ParquetWriter(
 
         // create scheme
         NodeVector fields;
-        fields.reserve(buffers.size() * 3);
+        fields.reserve(buffers.size() * 2);
         for (auto const& b : buffers) {
             fields.push_back(
                 PrimitiveNode::Make(b.Name() + "_samples", Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
             fields.push_back(
                 PrimitiveNode::Make(b.Name() + "_ts", Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
-            fields.push_back(
-                PrimitiveNode::Make(b.Name() + "_wt", Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
             min_field_size = std::min(min_field_size, b.ReadSamples().size());
         }
         auto schema = std::static_pointer_cast<GroupNode>(GroupNode::Make("schema", Repetition::REQUIRED, fields));
@@ -169,8 +167,6 @@ void ParquetWriter(
             BatchWriter(rg_writer, s_values, c_idx++, min_field_size);
             auto const& t_values = b.ReadTimestamps();
             BatchWriter(rg_writer, t_values, c_idx++, min_field_size);
-            auto const& w_values = b.ReadWalltimes();
-            BatchWriter(rg_writer, w_values, c_idx++, min_field_size);
         }
 
         // close
