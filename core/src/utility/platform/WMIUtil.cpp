@@ -177,20 +177,21 @@ std::string megamol::core::utility::platform::WMIUtil::get_value(
         // Get the value of the Name property
         hr = pclsObj->Get(ws_attribute, 0, &vtProp, nullptr, nullptr);
 
-        if (vtProp.vt == VARENUM::VT_BSTR) {
-            auto wslen = ::SysStringLen(vtProp.bstrVal);
-            auto len = ::WideCharToMultiByte(CP_ACP, 0, vtProp.bstrVal, wslen, nullptr, 0, nullptr, nullptr);
-            std::string dblstr(len, '\0');
-            len = ::WideCharToMultiByte(CP_ACP, 0 /* no flags */, vtProp.bstrVal,
-                wslen /* not necessary NULL-terminated */, &dblstr[0], len, nullptr, nullptr /* no default char */);
-            ret = dblstr;
-        } else if (vtProp.vt == VARENUM::VT_I4) {
-            ret = std::to_string(vtProp.lVal);
-        } else {
-            throw std::runtime_error("WMIUtil: Unsupported ret type");
-        }
+        if (SUCCEEDED(hr)) {
+            if (vtProp.vt == VARENUM::VT_BSTR) {
+                auto wslen = ::SysStringLen(vtProp.bstrVal);
+                auto len = ::WideCharToMultiByte(CP_ACP, 0, vtProp.bstrVal, wslen, nullptr, 0, nullptr, nullptr);
+                std::string dblstr(len, '\0');
+                len = ::WideCharToMultiByte(CP_ACP, 0 /* no flags */, vtProp.bstrVal,
+                    wslen /* not necessary NULL-terminated */, &dblstr[0], len, nullptr, nullptr /* no default char */);
+                ret = dblstr;
+            }
+            if (vtProp.vt == VARENUM::VT_I4) {
+                ret = std::to_string(vtProp.lVal);
+            }
 
-        VariantClear(&vtProp);
+            VariantClear(&vtProp);
+        }
 
         pclsObj->Release();
     }
