@@ -36,7 +36,6 @@ using buffers_t = std::vector<SampleBuffer>;
 using context_t = std::tuple<char const*, SampleBuffer*, bool const&>;
 
 
-
 inline void tracy_sample(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
     auto usr_data = static_cast<context_t*>(usr_ptr);
@@ -56,14 +55,27 @@ inline void tracy_sample(
 }
 
 inline std::string unmueller_string(wchar_t const* name) {
-    std::string no_mueller =
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));
+    /*std::string no_mueller =
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));*/
 
-    /*char* sensor_name = new char[wcslen(name) + 1];
-    wcstombs(sensor_name, name, wcslen(name) + 1);
-    std::string no_mueller(sensor_name);
-    delete[] sensor_name;*/
-    return no_mueller;
+    // https://en.cppreference.com/w/cpp/locale/codecvt/out
+
+    auto const& f = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(std::locale());
+
+    std::wstring internal(name);
+    std::mbstate_t mb = std::mbstate_t();
+    std::string external(internal.size() * f.max_length(), '\0');
+    const wchar_t* from_next;
+    char* to_next;
+
+    auto const res = f.out(
+        mb, &internal[0], &internal[internal.size()], from_next, &external[0], &external[external.size()], to_next);
+    if (res != std::codecvt_base::ok) {
+        throw std::runtime_error("could not convert string");
+    }
+    external.resize(to_next - &external[0]);
+
+    return external;
 }
 
 using discard_func_t = std::function<bool(std::string const&)>;
