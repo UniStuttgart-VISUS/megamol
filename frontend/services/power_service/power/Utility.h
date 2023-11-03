@@ -8,6 +8,7 @@
 #include <functional>
 #include <numeric>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -73,6 +74,9 @@ inline power::timeline_t generate_timestamps_ft(visus::power_overwhelming::oscil
 
     return ret;
 }
+
+std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::string hmc_file);
+
 } // namespace megamol::power
 
 #endif
