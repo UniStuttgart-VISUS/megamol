@@ -26,9 +26,12 @@ RTXInstruments::RTXInstruments(std::shared_ptr<Trigger> trigger) : trigger_(trig
     rtx_instr_.reserve(rtx_instr.size());
 
     std::for_each(rtx_instr.begin(), rtx_instr.end(), [&](rtx_instrument& i) {
-        auto name = get_name(i);
-        core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Found %s as %s", name, get_identity(i));
-        rtx_instr_[get_name(i)] = std::move(i);
+        auto const name = get_pwrowg_str<visus::power_overwhelming::rtx_instrument>(
+            i, &visus::power_overwhelming::rtx_instrument::name);
+        core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Found %s as %s", name,
+            get_pwrowg_str<visus::power_overwhelming::rtx_instrument>(
+                i, &visus::power_overwhelming::rtx_instrument::identify));
+        rtx_instr_[name] = std::move(i);
     });
 
     sol_state_.open_libraries(sol::lib::base);

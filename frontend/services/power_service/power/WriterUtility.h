@@ -15,11 +15,6 @@
 
 namespace megamol::power {
 
-inline std::filesystem::path create_full_path(
-    std::filesystem::path const& output_folder, std::string const& device_name, std::size_t const s_idx) {
-    return output_folder / (device_name + "_s" + std::to_string(s_idx) + ".parquet");
-}
-
 inline void wf_parquet(std::filesystem::path const& output_folder, std::string const& device_name,
     power::segments_t const& values_map, power::MetaData const* meta) {
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {

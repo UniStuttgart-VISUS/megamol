@@ -185,13 +185,14 @@ bool Power_Service::init(void* configPtr) {
             s.voltage_range(instrument_range::explicitly, 300);
             s.current_range(instrument_range::explicitly, 5);
             s.log_behaviour(std::numeric_limits<float>::lowest(), log_mode::unlimited);
-            auto const name_size = s.instrument_name(nullptr, 0);
+            auto const name = power::get_pwrowg_str(s, &hmc8015_sensor::instrument_name);
+            /*auto const name_size = s.instrument_name(nullptr, 0);
             std::string name;
             name.resize(name_size);
             s.instrument_name(name.data(), name.size());
             if (!name.empty()) {
                 name.resize(name.size() - 1);
-            }
+            }*/
             hmc_sensors_[name] = std::move(s);
         }
     } catch (...) {

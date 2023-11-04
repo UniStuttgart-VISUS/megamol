@@ -26,27 +26,38 @@ using segments_t = std::vector<value_map_t>;
 using writer_func_t =
     std::function<void(std::filesystem::path const&, std::string const&, segments_t const&, MetaData const*)>;
 
-inline std::string get_name(visus::power_overwhelming::rtx_instrument const& i) {
-    auto const name_size = i.name(nullptr, 0);
-    std::string name;
-    name.resize(name_size);
-    i.name(name.data(), name.size());
-    if (!name.empty()) {
-        name.resize(name.size() - 1);
-    }
-    return name;
+template<typename T>
+inline std::string get_pwrowg_str(T const& i, std::size_t (T::*func)(char*, std::size_t) const) {
+    auto const name_size = (i.*func)(static_cast<char*>(nullptr), 0);
+    std::vector<char> name(name_size);
+    (i.*func)(name.data(), name.size());
+    return std::string{name.data()};
 }
 
-inline std::string get_identity(visus::power_overwhelming::rtx_instrument& i) {
-    auto const id_size = i.identify(nullptr, 0);
-    std::string id;
-    id.resize(id_size);
-    i.identify(id.data(), id.size());
-    if (!id.empty()) {
-        id.resize(id.size() - 1);
-    }
-    return id;
-}
+//inline std::string get_name(visus::power_overwhelming::rtx_instrument const& i) {
+//    auto const name_size = i.name(static_cast<char*>(nullptr), 0);
+//    std::vector<char> name(name_size);
+//    i.name(name.data(), name.size());
+//    return std::string{name.data()};
+//    /*std::string name;
+//    name.resize(name_size);
+//    i.name(name.data(), name.size());
+//    if (!name.empty()) {
+//        name.resize(name.size() - 1);
+//    }
+//    return name;*/
+//}
+
+//inline std::string get_identity(visus::power_overwhelming::rtx_instrument const& i) {
+//    auto const id_size = i.identify((char*)nullptr, 0);
+//    std::string id;
+//    id.resize(id_size);
+//    i.identify(id.data(), id.size());
+//    if (!id.empty()) {
+//        id.resize(id.size() - 1);
+//    }
+//    return id;
+//}
 
 inline std::vector<float> copy_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
     std::vector<float> ret(wave.record_length());
@@ -76,6 +87,18 @@ inline power::timeline_t generate_timestamps_ft(visus::power_overwhelming::oscil
 }
 
 std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::string hmc_file);
+
+/// <summary>Creates a full file path for a segment file.</summary>
+/// <param name="output_folder">Base output folder.</param>
+/// <param name="device_name">Name of the device the output data is from.
+/// Is used as prefix for the filename.</param>
+/// <param name="s_idx">Segment index. Is included in the filename.</param>
+/// <param name="ext">Extension of the file. (With leading '.')</param>
+/// <returns>Full path to the segment file destination.</returns>
+inline std::filesystem::path create_full_path(std::filesystem::path const& output_folder,
+    std::string const& device_name, std::size_t const s_idx, std::string const& ext = ".parquet") {
+    return output_folder / (device_name + "_s" + std::to_string(s_idx) + ext);
+}
 
 } // namespace megamol::power
 

@@ -259,24 +259,16 @@ private:
 
                     auto const [meta_str, csv_str, vals] = power::parse_hmc_file(hmc_file);
 
-                    auto const csv_path =
-                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".csv");
-                    /*auto const csv_path =
-                        std::filesystem::path(write_folder_) /
-                        (std::string("hmc") + std::to_string(counter) + "_s" + std::to_string(hmc_m) + ".csv");*/
+                    auto const csv_path = power::create_full_path(write_folder_, n, hmc_m, ".csv");
                     std::ofstream file(csv_path.string(), std::ios::binary);
-                    //file.write(blob.as<char const>(), blob.size());
                     file.write(csv_str.data(), csv_str.size());
                     file.close();
-                    auto const meta_path =
-                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".meta.csv");
+                    auto const meta_path = power::create_full_path(write_folder_, n, hmc_m, ".meta.csv");
                     file.open(meta_path.string(), std::ios::binary);
                     file.write(meta_str.data(), meta_str.size());
                     file.close();
 
-                    auto const parquet_path =
-                        std::filesystem::path(write_folder_) / (n + "_s" + std::to_string(hmc_m) + ".parquet");
-
+                    auto const parquet_path = power::create_full_path(write_folder_, n, hmc_m);
                     power::ParquetWriter(parquet_path, vals, &meta_);
                 }
             }
