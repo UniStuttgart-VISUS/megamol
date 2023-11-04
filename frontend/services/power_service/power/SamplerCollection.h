@@ -204,14 +204,14 @@ public:
             , msr_samplers_{std::move(msr_samplers)}
             , tinker_samplers_{std::move(tinker_samplers)} {}
 
-    SamplersCollectionWrapper(SamplersCollectionWrapper&& rhs)
+    SamplersCollectionWrapper(SamplersCollectionWrapper&& rhs) noexcept
             : nvml_samplers_{std::exchange(rhs.nvml_samplers_, nullptr)}
             , adl_samplers_{std::exchange(rhs.adl_samplers_, nullptr)}
             , emi_samplers_{std::exchange(rhs.emi_samplers_, nullptr)}
             , msr_samplers_{std::exchange(rhs.msr_samplers_, nullptr)}
             , tinker_samplers_{std::exchange(rhs.tinker_samplers_, nullptr)} {}
 
-    SamplersCollectionWrapper& operator=(SamplersCollectionWrapper&& rhs) {
+    SamplersCollectionWrapper& operator=(SamplersCollectionWrapper&& rhs) noexcept {
         nvml_samplers_ = std::exchange(rhs.nvml_samplers_, nullptr);
         adl_samplers_ = std::exchange(rhs.adl_samplers_, nullptr);
         emi_samplers_ = std::exchange(rhs.emi_samplers_, nullptr);

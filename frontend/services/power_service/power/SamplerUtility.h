@@ -83,49 +83,49 @@ using discard_func_t = std::function<bool(std::string const&)>;
 template<typename T>
 using config_func_t = std::function<void(T&)>;
 
-template<typename T>
-inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
-    std::chrono::milliseconds const& sample_dis, StringContainer* str_cont, bool const& do_buffer,
-    discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
-    using namespace visus::power_overwhelming;
-    auto sensor_count = T::for_all(nullptr, 0);
-    std::vector<T> tmp_sensors(sensor_count);
-    T::for_all(tmp_sensors.data(), tmp_sensors.size());
-
-    buffers_t buffers;
-    buffers.reserve(sensor_count);
-
-    samplers_t<T> sensors;
-    sensors.reserve(sensor_count);
-
-    for (auto& sensor : tmp_sensors) {
-        auto str_ptr = str_cont->Add(unmueller_string(sensor.name()));
-        if (discard) {
-            if (discard(*str_ptr))
-                continue;
-        }
-
-#ifdef MEGAMOL_USE_TRACY
-        TracyPlotConfig(str_ptr->data(), tracy::PlotFormatType::Number, false, true, 0);
-#endif
-
-        buffers.push_back(SampleBuffer(*str_ptr, sample_range, sample_dis));
-
-        sensors[*str_ptr] = std::move(sensor);
-        if (config) {
-            config(sensors[*str_ptr]);
-        }
-        sensors[*str_ptr].sample(std::move(
-            async_sampling()
-                .delivers_measurement_data_to(&tracy_sample)
-                .stores_and_passes_context(std::make_tuple(str_ptr->data(), &buffers.back(), std::cref(do_buffer)))
-                .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
-                .using_resolution(timestamp_resolution::hundred_nanoseconds)
-                .from_source(tinkerforge_sensor_source::power)));
-    }
-
-    return std::make_tuple(std::move(sensors), std::move(buffers));
-}
+//template<typename T>
+//inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
+//    std::chrono::milliseconds const& sample_dis, StringContainer* str_cont, bool const& do_buffer,
+//    discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
+//    using namespace visus::power_overwhelming;
+//    auto sensor_count = T::for_all(nullptr, 0);
+//    std::vector<T> tmp_sensors(sensor_count);
+//    T::for_all(tmp_sensors.data(), tmp_sensors.size());
+//
+//    buffers_t buffers;
+//    buffers.reserve(sensor_count);
+//
+//    samplers_t<T> sensors;
+//    sensors.reserve(sensor_count);
+//
+//    for (auto& sensor : tmp_sensors) {
+//        auto str_ptr = str_cont->Add(unmueller_string(sensor.name()));
+//        if (discard) {
+//            if (discard(*str_ptr))
+//                continue;
+//        }
+//
+//#ifdef MEGAMOL_USE_TRACY
+//        TracyPlotConfig(str_ptr->data(), tracy::PlotFormatType::Number, false, true, 0);
+//#endif
+//
+//        buffers.push_back(SampleBuffer(*str_ptr, sample_range, sample_dis));
+//
+//        sensors[*str_ptr] = std::move(sensor);
+//        if (config) {
+//            config(sensors[*str_ptr]);
+//        }
+//        sensors[*str_ptr].sample(std::move(
+//            async_sampling()
+//                .delivers_measurement_data_to(&tracy_sample)
+//                .stores_and_passes_context(std::make_tuple(str_ptr->data(), &buffers.back(), std::cref(do_buffer)))
+//                .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
+//                .using_resolution(timestamp_resolution::hundred_nanoseconds)
+//                .from_source(tinkerforge_sensor_source::power)));
+//    }
+//
+//    return std::make_tuple(std::move(sensors), std::move(buffers));
+//}
 
 } // namespace megamol::power
 
