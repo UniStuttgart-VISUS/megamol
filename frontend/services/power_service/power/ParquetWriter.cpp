@@ -9,6 +9,8 @@
 #include <parquet/api/reader.h>
 #include <parquet/api/writer.h>
 
+#include "ColumnNames.h"
+
 namespace megamol::power {
 template<typename T>
 void BatchWriter(parquet::RowGroupWriter* writer, std::vector<T> const& data, int c_idx, std::size_t min_field_size) {
@@ -134,9 +136,9 @@ void ParquetWriter(
         fields.reserve(buffers.size() * 2);
         for (auto const& b : buffers) {
             fields.push_back(
-                PrimitiveNode::Make(b.Name() + "_samples", Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
+                PrimitiveNode::Make(b.Name() + "_" + global_samples_name, Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
             fields.push_back(
-                PrimitiveNode::Make(b.Name() + "_ts", Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
+                PrimitiveNode::Make(b.Name() + "_" + global_ts_name, Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
             min_field_size = std::min(min_field_size, b.ReadSamples().size());
         }
         auto schema = std::static_pointer_cast<GroupNode>(GroupNode::Make("schema", Repetition::REQUIRED, fields));
