@@ -38,9 +38,7 @@ void WriteMetaData(std::unique_ptr<parquet::ParquetFileWriter>& file_writer, Met
     file_writer->AddKeyValueMetadata(md);
 }
 
-void ParquetWriter(std::filesystem::path const& file_path,
-    std::unordered_map<std::string, std::variant<std::vector<float>, std::vector<int64_t>>> const& values_map,
-    MetaData const* meta) {
+void ParquetWriter(std::filesystem::path const& file_path, value_map_t const& values_map, MetaData const* meta) {
     using namespace parquet;
     using namespace parquet::schema;
 
@@ -135,10 +133,10 @@ void ParquetWriter(
         NodeVector fields;
         fields.reserve(buffers.size() * 2);
         for (auto const& b : buffers) {
-            fields.push_back(
-                PrimitiveNode::Make(b.Name() + "_" + global_samples_name, Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
-            fields.push_back(
-                PrimitiveNode::Make(b.Name() + "_" + global_ts_name, Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
+            fields.push_back(PrimitiveNode::Make(
+                b.Name() + "_" + global_samples_name, Repetition::REQUIRED, Type::FLOAT, ConvertedType::NONE));
+            fields.push_back(PrimitiveNode::Make(
+                b.Name() + "_" + global_ts_name, Repetition::REQUIRED, Type::INT64, ConvertedType::NONE));
             min_field_size = std::min(min_field_size, b.ReadSamples().size());
         }
         auto schema = std::static_pointer_cast<GroupNode>(GroupNode::Make("schema", Repetition::REQUIRED, fields));
