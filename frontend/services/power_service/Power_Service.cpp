@@ -292,14 +292,14 @@ void Power_Service::fill_lua_callbacks() {
                         power::writer_func_t parquet_dataverse_writer =
                             std::bind(&power::wf_parquet_dataverse, std::placeholders::_1, std::placeholders::_2,
                                 std::placeholders::_3, std::placeholders::_4, dataverse_writer);
-                        rtx_->StartMeasurement(
-                            path, {parquet_dataverse_writer, &megamol::power::wf_tracy}, &meta_, sbroker_.Get(false));
+                        rtx_->StartMeasurement(path, {parquet_dataverse_writer, &power::wf_tracy_wrapper::wf_tracy},
+                            &meta_, sbroker_.Get(false));
                     } else {
-                        rtx_->StartMeasurement(path, {&megamol::power::wf_parquet, &megamol::power::wf_tracy}, &meta_,
+                        rtx_->StartMeasurement(path, {&power::wf_parquet, &power::wf_tracy_wrapper::wf_tracy}, &meta_,
                             sbroker_.Get(false));
                     }
                 } else {
-                    rtx_->StartMeasurement(path, {&megamol::power::wf_tracy}, &meta_, sbroker_.Get(false));
+                    rtx_->StartMeasurement(path, {&power::wf_tracy_wrapper::wf_tracy}, &meta_, sbroker_.Get(false));
                 }
             }
             return frontend_resources::LuaCallbacksCollection::VoidResult{};

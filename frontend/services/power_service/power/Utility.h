@@ -20,10 +20,11 @@
 
 namespace megamol::power {
 
+using sample_t = float;
 /// <summary>
 /// Container storing a set of samples.
 /// </summary>
-using samples_t = std::vector<float>;
+using samples_t = std::vector<sample_t>;
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
 using segments_t = std::vector<value_map_t>;
 using writer_func_t =
