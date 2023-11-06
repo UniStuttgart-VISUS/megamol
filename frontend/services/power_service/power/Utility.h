@@ -20,12 +20,22 @@
 
 namespace megamol::power {
 
+/// <summary>
+/// Container storing a set of samples.
+/// </summary>
 using samples_t = std::vector<float>;
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
 using segments_t = std::vector<value_map_t>;
 using writer_func_t =
     std::function<void(std::filesystem::path const&, std::string const&, segments_t const&, MetaData const*)>;
 
+/// <summary>
+/// Retrieves a string, such as the name of a device, from the power_overwhelming library.
+/// </summary>
+/// <typeparam name="T">Class type of which the retrieve function is a member.</typeparam>
+/// <param name="i">Instance to invoke the retrive function.</param>
+/// <param name="func">The retrieve function.</param>
+/// <returns>The retrieved string.</returns>
 template<typename T>
 inline std::string get_pwrowg_str(T const& i, std::size_t (T::*func)(char*, std::size_t) const) {
     auto const name_size = (i.*func)(static_cast<char*>(nullptr), 0);
@@ -59,12 +69,23 @@ inline std::string get_pwrowg_str(T const& i, std::size_t (T::*func)(char*, std:
 //    return id;
 //}
 
+/// <summary>
+/// Copy a power_overwhelming waveform into vector.
+/// </summary>
+/// <param name="wave">The waveform.</param>
+/// <returns>Vector with the samples from the waveform.</returns>
 inline std::vector<float> copy_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
     std::vector<float> ret(wave.record_length());
     std::copy(wave.begin(), wave.end(), ret.begin());
     return ret;
 }
 
+/// <summary>
+/// Generates a sequence of timestamps for the given waveform.
+/// The timestamps are in filetime.
+/// </summary>
+/// <param name="waveform">The waveform.</param>
+/// <returns>Vector containing the timestamps.</returns>
 inline power::timeline_t generate_timestamps_ft(visus::power_overwhelming::oscilloscope_waveform const& waveform) {
 
     auto const t_begin = waveform.time_begin();
@@ -86,6 +107,12 @@ inline power::timeline_t generate_timestamps_ft(visus::power_overwhelming::oscil
     return ret;
 }
 
+/// <summary>
+/// Parses the log file retrieved from an HMC device.
+/// </summary>
+/// <param name="hmc_file">The log file as string.</param>
+/// <returns>A tuple containing the meta info portion as string, the csv portion as string, and the parsed csv content as a value map.</returns>
+/// <exception cref="std::runtime_error"/>
 std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::string hmc_file);
 
 /// <summary>Creates a full file path for a segment file.</summary>
