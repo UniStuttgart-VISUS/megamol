@@ -218,8 +218,8 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                             return get_tracy_time(filetime_dur_t(base), filetime_dur_t(last_trigger_ft)).count();
                         });*/
 
-                    values_map[s_idx]["sample_times"] = sample_times;
-                    values_map[s_idx]["segment_times"] = segment_times;
+                    /*values_map[s_idx]["sample_times"] = sample_times;
+                    values_map[s_idx]["segment_times"] = segment_times;*/
                     values_map[s_idx][global_ts_name] = timestamps;
 
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
