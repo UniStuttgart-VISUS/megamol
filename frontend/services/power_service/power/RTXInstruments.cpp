@@ -10,8 +10,8 @@
 
 #include <mmcore/utility/log/Log.h>
 
-#include "sol_rtx_instrument.h"
 #include "ColumnNames.h"
+#include "sol_rtx_instrument.h"
 
 using namespace visus::power_overwhelming;
 
@@ -223,7 +223,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                     values_map[s_idx][global_ts_name] = timestamps;
 
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
-                        auto const tpn = name + "_" + channels[c_idx].label().text();
+                        auto const tpn = channels[c_idx].label().text();
                         values_map[s_idx][tpn] =
                             copy_waveform(all_waveforms[fetch_idx * num_channels + c_idx].waveform());
                     }
