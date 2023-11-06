@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <codecvt>
 #include <filesystem>
 #include <functional>
 #include <numeric>
@@ -76,9 +77,10 @@ inline std::string get_pwrowg_str(T const& i, std::size_t (T::*func)(char*, std:
 /// <param name="wave">The waveform.</param>
 /// <returns>Vector with the samples from the waveform.</returns>
 inline std::vector<float> copy_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
-    std::vector<float> ret(wave.record_length());
+    /*std::vector<float> ret(wave.record_length());
     std::copy(wave.begin(), wave.end(), ret.begin());
-    return ret;
+    return ret;*/
+    return std::vector<float>(wave.begin(), wave.end());
 }
 
 /// <summary>
@@ -87,7 +89,7 @@ inline std::vector<float> copy_waveform(visus::power_overwhelming::oscilloscope_
 /// </summary>
 /// <param name="waveform">The waveform.</param>
 /// <returns>Vector containing the timestamps.</returns>
-inline power::timeline_t generate_timestamps_ft(visus::power_overwhelming::oscilloscope_waveform const& waveform) {
+inline power::timeline_t generate_timeline(visus::power_overwhelming::oscilloscope_waveform const& waveform) {
 
     auto const t_begin = waveform.time_begin();
     //auto const t_end = waveform.time_end();
@@ -126,6 +128,30 @@ std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::str
 inline std::filesystem::path create_full_path(std::filesystem::path const& output_folder,
     std::string const& device_name, std::size_t const s_idx, std::string const& ext = ".parquet") {
     return output_folder / (device_name + "_s" + std::to_string(s_idx) + ext);
+}
+
+inline std::string unmueller_string(wchar_t const* name) {
+    /*std::string no_mueller =
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));*/
+
+    // https://en.cppreference.com/w/cpp/locale/codecvt/out
+
+    auto const& f = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(std::locale());
+
+    std::wstring internal(name);
+    std::mbstate_t mb = std::mbstate_t();
+    std::string external(internal.size() * f.max_length(), '\0');
+    const wchar_t* from_next;
+    char* to_next;
+
+    auto const res = f.out(
+        mb, &internal[0], &internal[internal.size()], from_next, &external[0], &external[external.size()], to_next);
+    if (res != std::codecvt_base::ok) {
+        throw std::runtime_error("could not convert string");
+    }
+    external.resize(to_next - &external[0]);
+
+    return external;
 }
 
 } // namespace megamol::power

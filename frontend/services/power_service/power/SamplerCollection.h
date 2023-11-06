@@ -68,7 +68,7 @@ public:
             }
             sensors_[name].sample(
                 std::move(async_sampling()
-                              .delivers_measurement_data_to(&tracy_sample)
+                              .delivers_measurement_data_to(&sample_func)
                               .stores_and_passes_context(std::make_tuple(name.data(), &buffer, std::cref(do_buffer_)))
                               .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
                               .using_resolution(timestamp_resolution::hundred_nanoseconds)

@@ -207,7 +207,7 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                      ++s_idx, --fetch_idx) {
                     //auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
                     auto const& waveform = all_waveforms[fetch_idx * num_channels].waveform();
-                    auto const sample_times = generate_timestamps_ft(waveform);
+                    auto const sample_times = generate_timeline(waveform);
                     auto const segment_times =
                         offset_timeline(sample_times, std::chrono::duration_cast<power::filetime_dur_t>(
                                                           std::chrono::duration<float>(waveform.segment_offset())));

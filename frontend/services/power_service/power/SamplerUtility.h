@@ -3,7 +3,6 @@
 #if MEGAMOL_USE_POWER
 
 #include <chrono>
-#include <codecvt>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -35,8 +34,14 @@ using buffers_t = std::vector<SampleBuffer>;
 
 using context_t = std::tuple<char const*, SampleBuffer*, bool const&>;
 
+using discard_func_t = std::function<bool(std::string const&)>;
 
-inline void tracy_sample(
+template<typename T>
+using config_func_t = std::function<void(T&)>;
+
+using transform_func_t = std::function<std::string(std::string const&)>;
+
+inline void sample_func(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
     auto usr_data = static_cast<context_t*>(usr_ptr);
     auto name = std::get<0>(*usr_data);
@@ -54,36 +59,9 @@ inline void tracy_sample(
     }
 }
 
-inline std::string unmueller_string(wchar_t const* name) {
-    /*std::string no_mueller =
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));*/
 
-    // https://en.cppreference.com/w/cpp/locale/codecvt/out
 
-    auto const& f = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(std::locale());
 
-    std::wstring internal(name);
-    std::mbstate_t mb = std::mbstate_t();
-    std::string external(internal.size() * f.max_length(), '\0');
-    const wchar_t* from_next;
-    char* to_next;
-
-    auto const res = f.out(
-        mb, &internal[0], &internal[internal.size()], from_next, &external[0], &external[external.size()], to_next);
-    if (res != std::codecvt_base::ok) {
-        throw std::runtime_error("could not convert string");
-    }
-    external.resize(to_next - &external[0]);
-
-    return external;
-}
-
-using discard_func_t = std::function<bool(std::string const&)>;
-
-template<typename T>
-using config_func_t = std::function<void(T&)>;
-
-using transform_func_t = std::function<std::string(std::string const&)>;
 
 //template<typename T>
 //inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
@@ -119,7 +97,7 @@ using transform_func_t = std::function<std::string(std::string const&)>;
 //        }
 //        sensors[*str_ptr].sample(std::move(
 //            async_sampling()
-//                .delivers_measurement_data_to(&tracy_sample)
+//                .delivers_measurement_data_to(&sample_func)
 //                .stores_and_passes_context(std::make_tuple(str_ptr->data(), &buffers.back(), std::cref(do_buffer)))
 //                .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
 //                .using_resolution(timestamp_resolution::hundred_nanoseconds)

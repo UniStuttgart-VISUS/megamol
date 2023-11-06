@@ -10,9 +10,9 @@
 #endif
 
 namespace megamol::power {
-using timestamp_t = int64_t;
-using timeline_t = std::vector<timestamp_t>;
-using filetime_dur_t = std::chrono::duration<timestamp_t, std::ratio<1, 10000000>>;
+using filetime_t = int64_t;
+using timeline_t = std::vector<filetime_t>;
+using filetime_dur_t = std::chrono::duration<filetime_t, std::ratio<1, 10000000>>;
 
 inline constexpr auto ft_offset = filetime_dur_t(116444736000000000LL);
 
