@@ -23,7 +23,10 @@
 #include "ModuleGraphSubscription.h"
 
 #include "power/DataverseWriter.h"
+#include "power/Tinkerforge.h"
 #include "power/WriterUtility.h"
+
+#include <nlohmann/json.hpp>
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -124,6 +127,9 @@ bool Power_Service::init(void* configPtr) {
             sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
     };
 
+    auto const json_data = power::parse_json_file(conf->tinker_map_filename);
+    auto tinker_transform_func = std::bind(&power::transform_tf_name, std::cref(json_data), std::placeholders::_1);
+
     std::unique_ptr<power::SamplerCollection<nvml_sensor>> nvml_samplers = nullptr;
     try {
         nvml_samplers = std::make_unique<power::SamplerCollection<nvml_sensor>>(
@@ -164,8 +170,8 @@ bool Power_Service::init(void* configPtr) {
     }
     std::unique_ptr<power::SamplerCollection<tinkerforge_sensor>> tinker_samplers = nullptr;
     try {
-        tinker_samplers = std::make_unique<power::SamplerCollection<tinkerforge_sensor>>(
-            std::chrono::milliseconds(600), std::chrono::milliseconds(5), nullptr, tinker_config_func);
+        tinker_samplers = std::make_unique<power::SamplerCollection<tinkerforge_sensor>>(std::chrono::milliseconds(600),
+            std::chrono::milliseconds(5), nullptr, tinker_config_func, tinker_transform_func);
     } catch (...) {
         tinker_samplers = nullptr;
     }

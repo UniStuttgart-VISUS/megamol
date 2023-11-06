@@ -126,6 +126,7 @@ static std::string profile_log_include_events_option = "profiling-include-events
 static std::string power_lpt_option = "power-lpt";
 static std::string power_write_file_option = "power-write-file";
 static std::string power_folder_option = "power-folder";
+static std::string power_tinker_map_filename_option = "power-tinker-map-filename";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -214,6 +215,11 @@ static void power_write_file_handler(
 static void power_folder_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.power_folder = parsed_options[option_name].as<std::string>();
+}
+
+static void power_tinker_map_filename_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.tinker_map_filename = parsed_options[option_name].as<std::string>();
 }
 
 static void remote_head_handler(
@@ -604,7 +610,9 @@ std::vector<OptionsListEntry> cli_options_list =
         {power_write_file_option, "Set on if power service should write files to disk", cxxopts::value<bool>(),
             power_write_file_handler},
         {power_folder_option, "Set output folder for power service", cxxopts::value<std::string>(),
-            power_folder_handler}
+            power_folder_handler},
+        {power_tinker_map_filename_option, "Set output folder for power service", cxxopts::value<std::string>(),
+            power_tinker_map_filename_handler}
 #endif
         ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",

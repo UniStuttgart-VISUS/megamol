@@ -55,6 +55,7 @@ public:
         std::string lpt = "lpt1";
         bool write_to_files = false;
         std::string folder = "./";
+        std::string tinker_map_filename = "./tinkerforge.json";
         power::StringContainer* str_container;
     };
 

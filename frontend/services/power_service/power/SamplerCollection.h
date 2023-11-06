@@ -29,7 +29,7 @@ template<typename T>
 class SamplerCollection final : public ISamplerCollection {
 public:
     SamplerCollection(std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis,
-        discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
+        discard_func_t discard = nullptr, config_func_t<T> config = nullptr, transform_func_t transform = nullptr) {
         using namespace visus::power_overwhelming;
 
         auto const sensor_count = T::for_all(nullptr, 0);
@@ -45,7 +45,11 @@ public:
         sensor_names_.reserve(sensor_count);
 
         for (auto& sensor : tmp_sensors) {
-            sensor_names_.push_back(unmueller_string(sensor.name()));
+            auto tmp_name = unmueller_string(sensor.name());
+            if (transform) {
+                tmp_name = transform(tmp_name);
+            }
+            sensor_names_.push_back(tmp_name);
             auto const& name = sensor_names_.back();
             if (discard) {
                 if (discard(name))

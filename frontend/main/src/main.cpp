@@ -195,6 +195,7 @@ int main(const int argc, const char** argv) {
     power_config.lpt = config.power_lpt;
     power_config.write_to_files = config.power_write_file;
     power_config.folder = config.power_folder;
+    power_config.tinker_map_filename = config.tinker_map_filename;
     power_config.str_container = &power_str_container;
     power_service.setPriority(1);
 #endif

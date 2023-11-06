@@ -83,6 +83,8 @@ using discard_func_t = std::function<bool(std::string const&)>;
 template<typename T>
 using config_func_t = std::function<void(T&)>;
 
+using transform_func_t = std::function<std::string(std::string const&)>;
+
 //template<typename T>
 //inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
 //    std::chrono::milliseconds const& sample_dis, StringContainer* str_cont, bool const& do_buffer,

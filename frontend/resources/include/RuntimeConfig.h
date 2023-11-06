@@ -86,6 +86,7 @@ struct RuntimeConfig {
     std::string power_lpt = "lpt1";
     bool power_write_file = false;
     std::string power_folder = "./";
+    std::string tinker_map_filename = "./tinkerforge.json";
 
     struct Tile {
         UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling
