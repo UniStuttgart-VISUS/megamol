@@ -130,10 +130,12 @@ bool Power_Service::init(void* configPtr) {
     auto const json_data = power::parse_json_file(conf->tinker_map_filename);
     auto tinker_transform_func = std::bind(&power::transform_tf_name, std::cref(json_data), std::placeholders::_1);
 
+    auto nvml_transform_func = [](std::string const&) -> std::string { return "NVML"; };
+
     std::unique_ptr<power::SamplerCollection<nvml_sensor>> nvml_samplers = nullptr;
     try {
         nvml_samplers = std::make_unique<power::SamplerCollection<nvml_sensor>>(
-            std::chrono::milliseconds(600), std::chrono::milliseconds(1));
+            std::chrono::milliseconds(600), std::chrono::milliseconds(1), nullptr, nullptr, nvml_transform_func);
     } catch (...) {
         nvml_samplers = nullptr;
     }
