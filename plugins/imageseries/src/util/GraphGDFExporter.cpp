@@ -53,7 +53,7 @@ bool exportToGDF(const GraphData2D& graph, const std::string& outfileName, GDFEx
             file << "s" << idToNum.at(edge.from) << ","
                  << "s" << idToNum.at(edge.to) << ","
                  << "true"
-                 << "," << edge.velocity << "," << edge.velocity << "\n";
+                 << "," << edge.weight << "," << edge.velocity << "\n";
         }
     }
 
