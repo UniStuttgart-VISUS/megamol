@@ -1,0 +1,15 @@
+{
+    "12VHPWR": {
+        "ADD": [ "12VHPWR0", "12VHPWR1", "12VHPWR2", "12VHPWR3", "12VHPWR4", "12VHPWR5" ]
+    },
+    "PEG": {
+        "ADD": [ "PEG0", "PEG1", "PEG2" ]
+    },
+    "12VPEG": { "ADD": [ "12VPEG" ] },
+    "3VPEG": { "ADD": [ "3VPEG" ] },
+    "12VATX": { "ADD": [ "12VATX" ] },
+    "5VATX": { "ADD": [ "5VATX" ] },
+    "3VATX": { "ADD": [ "3VATX" ] },
+    "P8": { "ADD": [ "P8" ] },
+    "P4": { "ADD": [ "P4" ] }
+}
