@@ -27,6 +27,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <queue>
 #include <set>
 #include <sstream>
 #include <string>
@@ -122,19 +123,18 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         }
     }
 
-    std::vector<Index> floodQueue;
-
     auto floodFill = [&](const Index index, const Label label) {
-        floodQueue.clear();
-        floodQueue.push_back(index);
+        std::queue<Index> floodQueue;
+        floodQueue.push(index);
 
         graph::GraphData2D::Node current_region(dataIn[index], label);
         current_region.pixels.push_back(index);
 
         dataOut[index] = label;
 
-        for (std::size_t queueIndex = 0; queueIndex < floodQueue.size(); ++queueIndex) {
-            const auto currentIndex = floodQueue[queueIndex];
+        while (!floodQueue.empty()) {
+            const auto currentIndex = floodQueue.front();
+            floodQueue.pop();
 
             const auto x = currentIndex % width;
             const auto y = currentIndex / width;
@@ -144,7 +144,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                     const auto neighborIndex = (y + j) * width + (x + i);
 
                     if (dataOut[neighborIndex] == LabelUnassigned && dataIn[index] == dataIn[neighborIndex]) {
-                        floodQueue.push_back(neighborIndex);
+                        floodQueue.push(neighborIndex);
                         dataOut[neighborIndex] = label;
 
                         current_region.pixels.push_back(neighborIndex);
