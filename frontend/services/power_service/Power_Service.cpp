@@ -395,6 +395,20 @@ void Power_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string>("mmPowerRecipe",
+        "(string name, string path)",
+        {[&](std::string name, std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
+                auto const size = std::filesystem::file_size(path);
+                std::ifstream f(path);
+                std::vector<char> data(size);
+                f.read(data.data(), data.size());
+                f.close();
+                meta_.analysis_recipes[name] = std::string(data.begin(), data.end());
+            }
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
+
     auto& register_callbacks =
         m_requestedResourceReferences[0]
             .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();

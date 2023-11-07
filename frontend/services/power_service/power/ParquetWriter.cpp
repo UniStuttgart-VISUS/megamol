@@ -35,6 +35,9 @@ void WriteMetaData(std::unique_ptr<parquet::ParquetFileWriter>& file_writer, Met
     for (auto const& [key, value] : meta->hardware_software_info) {
         md->Append(key, value);
     }
+    for (auto const& [key, value] : meta->analysis_recipes) {
+        md->Append(key, value);
+    }
     file_writer->AddKeyValueMetadata(md);
 }
 
