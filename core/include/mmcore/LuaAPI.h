@@ -10,7 +10,8 @@
 #include <string>
 
 #include "LuaCallbacksCollection.h"
-#include "LuaInterpreter.h"
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
 #include "mmcore/MegaMolGraph.h"
 
 struct lua_State; // lua includes should stay in the core
@@ -19,21 +20,12 @@ namespace megamol::core {
 
 /**
  * This class holds a Lua state. It can be used to interact with a MegaMol instance.
- * For sandboxing, a standard environment megamol_env is provided that only
- * allows lua/lib calls that are considered safe and additionally redirects
- * print() to the MegaMol log output. By default only loads base, coroutine,
- * string, table, math, package, and os (see LUA_FULL_ENVIRONMENT define).
+ * No sandboxing is performed, the environment is complete with the exception of
+ * print being redirected to the MegaMol log as information.
  * Lua constants LOGINFO, LOGWARNING, LOGERROR are provided for MegaMol log output.
  */
 class LuaAPI {
 public:
-    static const std::string MEGAMOL_ENV;
-
-    /**
-     * @param imperativeOnly choose whether only reply-less commands will be made available
-     * to avoid having round-trips across frames/threads etc. Basically config/project scripts
-     * are reply-less and the LuaHost can get replies.
-     */
     LuaAPI();
 
     ~LuaAPI();
@@ -41,36 +33,17 @@ public:
     // TODO forbid copy-contructor? assignment?
 
     /**
-     * Run a script file, sandboxed in the environment provided.
+     * Run a script file.
      */
-    bool RunFile(const std::string& envName, const std::string& fileName, std::string& result);
+    sol::safe_function_result RunFile(const std::string& fileName);
     /**
-     * Run a script file, sandboxed in the environment provided.
+     * Run a script file.
      */
-    bool RunFile(const std::string& envName, const std::wstring& fileName, std::string& result);
+    sol::safe_function_result RunFile(const std::wstring& fileName);
     /**
-     * Run a script string, sandboxed in the environment provided.
+     * Run a script string.
      */
-    bool RunString(
-        const std::string& envName, const std::string& script, std::string& result, std::string scriptPath = "");
-
-    /**
-     * Run a script file, sandboxed in the standard megamol_env.
-     */
-    bool RunFile(const std::string& fileName, std::string& result);
-    /**
-     * Run a script file, sandboxed in the standard megamol_env.
-     */
-    bool RunFile(const std::wstring& fileName, std::string& result);
-    /**
-     * Run a script string, sandboxed in the standard megamol_env.
-     */
-    bool RunString(const std::string& script, std::string& result, std::string scriptPath = "");
-
-    /**
-     * Answer whether the wrapped lua state is valid
-     */
-    bool StateOk();
+    sol::safe_function_result RunString(const std::string& script, std::string scriptPath = "");
 
     /**
      * Answers the current project file path
@@ -92,41 +65,37 @@ protected:
     // ** MegaMol API provided for configuration / startup
 
     /** mmGetBithWidth get bits of executable (integer) */
-    int GetBitWidth(lua_State* L);
+    static unsigned int GetBitWidth();
 
     /** mmGetConfiguration: get compile configuration (debug, release) */
-    int GetCompileMode(lua_State* L);
+    static std::string GetCompileMode();
 
     /** mmGetOS: get operating system (windows, linux, unknown) */
-    int GetOS(lua_State* L);
+    static std::string GetOS();
 
     /** mmGetMachineName: get machine name */
-    int GetMachineName(lua_State* L);
+    static std::string GetMachineName();
 
     /**
      * mmGetEnvValue(string name): get the value of environment variable 'name'
      */
-    int GetEnvValue(lua_State* L);
+    static std::string GetEnvValue(const std::string& variable);
 
     /** answer the ProcessID of the running MegaMol */
-    int GetProcessID(lua_State* L);
+    static unsigned int GetProcessID();
 
     int ReadTextFile(lua_State* L);
     int WriteTextFile(lua_State* L);
 
-    int CurrentScriptPath(lua_State* L);
-
-    int Invoke(lua_State* L);
+    /** expose current script path to lua */
+    std::string CurrentScriptPath();
 
 private:
     /** all of the Lua startup code */
     void commonInit();
 
-    /** gets a string from the stack position i. returns false if it's not a string */
-    //bool getString(int i, std::string& out);
-
     /** the one Lua state */
-    LuaInterpreter<LuaAPI> luaApiInterpreter_;
+    sol::state luaApiInterpreter_;
 
     std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
     std::list<std::tuple<std::string, std::function<int(lua_State*)>>> wrapped_lambda_callbacks_;
