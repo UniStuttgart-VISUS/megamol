@@ -93,7 +93,8 @@ std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::str
                             if (std::chrono::from_stream(time_stream, "%FT%T", tp)) {
                                 auto const ts = (power::convert_systemtp2ft(std::chrono::utc_clock::to_sys(tp)) +
                                                  std::chrono::duration_cast<power::filetime_dur_t>(
-                                                     std::chrono::milliseconds(t_ms)))
+                                                     std::chrono::milliseconds(t_ms)) +
+                                                 ft_offset)
                                                     .count();
                                 std::get<power::timeline_t>(vals.at(col_names[i])).push_back(ts);
                             } else {
