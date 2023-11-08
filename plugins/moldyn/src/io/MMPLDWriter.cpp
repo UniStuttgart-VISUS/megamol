@@ -86,7 +86,7 @@ void MMPLDWriter::release() {}
 bool MMPLDWriter::run() {
     using megamol::core::utility::log::Log;
     vislib::TString filename(
-        this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteError("No file name specified. Abort.");
         return false;

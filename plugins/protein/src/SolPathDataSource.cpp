@@ -163,14 +163,14 @@ void SolPathDataSource::loadData() {
     if (file.Open(this->filenameslot.Param<param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY) == false) {
         Log::DefaultLog.WriteError("Unable to open data file %s",
-            this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+            this->filenameslot.Param<param::FilePathParam>()->Value().generic_string().c_str());
         return;
     }
 
     vislib::StringA headerID;
     if (file.Read(headerID.AllocateBuffer(7), 7) != 7) {
         Log::DefaultLog.WriteError("Unable to read data file %s",
-            this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+            this->filenameslot.Param<param::FilePathParam>()->Value().generic_string().c_str());
         return;
     }
 
@@ -181,12 +181,12 @@ void SolPathDataSource::loadData() {
         unsigned int version;
         if (file.Read(&version, 4) != 4) {
             Log::DefaultLog.WriteError("Unable to read data file %s",
-                this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+                this->filenameslot.Param<param::FilePathParam>()->Value().generic_string().c_str());
             return;
         }
         if (version > 1) {
             Log::DefaultLog.WriteError("Data file %s uses unsupported version %u",
-                this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str(), version);
+                this->filenameslot.Param<param::FilePathParam>()->Value().generic_string().c_str(), version);
             return;
         }
 
@@ -221,7 +221,7 @@ void SolPathDataSource::loadData() {
     }
     if (blockInfo == NULL) {
         Log::DefaultLog.WriteError("File %s does not contain a path line data block",
-            this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+            this->filenameslot.Param<param::FilePathParam>()->Value().generic_string().c_str());
         return;
     }
     file.Seek(blockInfo->start, File::BEGIN);

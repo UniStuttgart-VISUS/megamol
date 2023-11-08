@@ -96,7 +96,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
         Log::DefaultLog.WriteError("Unable to open file \"%s\"",
-            this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+            this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         return true; // reset dirty flag!
     }
 
