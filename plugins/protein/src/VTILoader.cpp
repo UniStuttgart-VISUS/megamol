@@ -206,8 +206,7 @@ bool VTILoader::getExtent(core::Call& call) {
     // Check parameters
     if (this->filenameSlot.IsDirty()) { // Files have to be loaded first
         this->filenameSlot.ResetDirty();
-        if (!this->loadFile(
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str())) {
+        if (!this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str())) {
             printf("Loading file failed");
             return false;
         }

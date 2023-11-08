@@ -231,8 +231,7 @@ bool megamol::volume::VolumetricDataSource::onFileNameChanged(core::param::Param
     }
 
     /* Read the header. */
-    vislib::StringA fileName(
-        this->paramFileName.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
+    vislib::StringA fileName(this->paramFileName.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
     if (::datRaw_readHeader(fileName.PeekBuffer(), this->fileInfo, nullptr) != FALSE) {
         Log::DefaultLog.WriteInfo(_T("Successfully loaded dat file %hs."), fileName.PeekBuffer());
 
