@@ -80,16 +80,14 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     m_config = config;
 
-    m_executeLuaScript_resource = [&](std::string const& script) -> std::tuple<bool, std::string> {
-        std::string result_str;
-        bool result_b = luaAPI.RunString(script, result_str);
-        return {result_b, result_str};
+    m_executeLuaScript_resource = [&](std::string const& script) -> sol::safe_function_result {
+        return luaAPI.RunString(script, "magic_exec_inline_lua_script");
     };
 
     m_setScriptPath_resource = [&](std::string const& script_path) -> void { luaAPI.SetScriptPath(script_path); };
 
     m_registerLuaCallbacks_resource = [&](megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
-        luaAPI.AddCallbacks(callbacks);
+        //luaAPI.AddCallbacks(callbacks);
     };
 
     this->m_providedResourceReferences = {
@@ -151,7 +149,7 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     fill_frontend_resources_callbacks(&frontend_resource_callbacks);
     fill_graph_manipulation_callbacks(&frontend_resource_callbacks);
 
-    luaAPI.AddCallbacks(frontend_resource_callbacks);
+    //luaAPI.AddCallbacks(frontend_resource_callbacks);
 
     auto maybe_gui_window_request_resource =
         resources[9].getOptionalResource<megamol::frontend_resources::GUIRegisterWindow>();

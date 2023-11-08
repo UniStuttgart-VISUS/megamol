@@ -261,9 +261,9 @@ void AnimationEditor::RenderAnimation() {
             //        << ".png\")\n";
         }
         auto res = (*input_lua_func)(command.str());
-        if (!std::get<0>(res)) {
+        if (!res.valid()) {
             open_popup_error = true;
-            error_popup_message = std::get<1>(res);
+            error_popup_message = res.get<std::string>();
             playing = 0;
         }
         if (current_frame < animation_bounds[1]) {
@@ -295,9 +295,9 @@ void AnimationEditor::WriteValuesToGraph() {
     if (write_to_graph) {
         const auto lua_commands = GenerateLuaForFrame(current_frame);
         const auto res = (*input_lua_func)(lua_commands);
-        if (!std::get<0>(res)) {
+        if (!res.valid()) {
             open_popup_error = true;
-            error_popup_message = std::get<1>(res);
+            error_popup_message = res.get<std::string>();
             playing = 0;
         }
     }

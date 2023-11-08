@@ -124,8 +124,8 @@ struct LuaCallbacksCollection {
 
     template<typename Result, typename... FuncArgs>
     void add(std::string func_name, std::string func_description, std::function<Result(FuncArgs...)> func) {
-        callbacks.push_back({func_name, func_description,
-            resolve<std::function<Result(FuncArgs...)>, Result, FuncArgs...>(func_name, func)});
+        //callbacks.push_back({func_name, func_description,
+        //    resolve<std::function<Result(FuncArgs...)>, Result, FuncArgs...>(func_name, func)});
     }
 
     using LuaCallbackEntryType = std::function<int(LuaState)>;

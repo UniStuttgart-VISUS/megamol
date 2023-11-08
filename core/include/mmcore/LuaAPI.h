@@ -10,7 +10,9 @@
 #include <string>
 
 #include "LuaCallbacksCollection.h"
-#define SOL_ALL_SAFETIES_ON 1
+//#define SOL_ALL_SAFETIES_ON 1
+#define SOL_NO_EXCEPTIONS 1
+#define SOL_PRINT_ERRORS 0
 #include <sol/sol.hpp>
 #include "mmcore/MegaMolGraph.h"
 
@@ -55,11 +57,24 @@ public:
      */
     void SetScriptPath(std::string const& scriptPath);
 
-    void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
-    void RemoveCallbacks(
-        megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
-    void RemoveCallbacks(std::vector<std::string> const& callback_names);
-    void ClearCallbacks();
+    //void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
+    //void RemoveCallbacks(
+    //    megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
+    //void RemoveCallbacks(std::vector<std::string> const& callback_names);
+    //void ClearCallbacks();
+
+    template<typename... Args>
+    void RegisterCallback(std::string const& name, std::string const& help, Args&&... args) {
+        luaApiInterpreter_.set_function(name, std::forward<Args>(args)...);
+        helpContainer[name] = help;
+    }
+    void UnregisterCallback(std::string const& name) {
+        // TODO: are we sure this nukes the function
+        luaApiInterpreter_[name].set(sol::nil);
+        if (auto const it = helpContainer.find(name); it != helpContainer.end()) {
+            helpContainer.erase(it);
+        }
+    }
 
 protected:
     // ** MegaMol API provided for configuration / startup
@@ -76,13 +91,14 @@ protected:
     /** mmGetMachineName: get machine name */
     static std::string GetMachineName();
 
-    /**
-     * mmGetEnvValue(string name): get the value of environment variable 'name'
-     */
+    /** mmGetEnvValue(string name): get the value of environment variable 'name' */
     static std::string GetEnvValue(const std::string& variable);
 
     /** answer the ProcessID of the running MegaMol */
     static unsigned int GetProcessID();
+
+    /** prints out the help text */
+    std::string Help() const;
 
     int ReadTextFile(lua_State* L);
     int WriteTextFile(lua_State* L);
@@ -94,17 +110,21 @@ private:
     /** all of the Lua startup code */
     void commonInit();
 
+    void checkRes(sol::protected_function_result& res) const;
+
     /** the one Lua state */
     sol::state luaApiInterpreter_;
 
-    std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
-    std::list<std::tuple<std::string, std::function<int(lua_State*)>>> wrapped_lambda_callbacks_;
-    void register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks);
+    //std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
+    //std::list<std::tuple<std::string, std::function<int(lua_State*)>>> wrapped_lambda_callbacks_;
+    //void register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks);
 
     /** no two threads must interfere with the reentrant L */
     std::mutex stateLock;
 
     std::string currentScriptPath = "";
+
+    std::map<std::string, std::string> helpContainer;
 };
 
 } // namespace megamol::core

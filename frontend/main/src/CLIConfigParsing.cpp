@@ -12,6 +12,7 @@
 
 #define CXXOPTS_VECTOR_DELIMITER '\0'
 #include <cxxopts.hpp>
+#include <fstream>
 
 // find user home
 static std::filesystem::path getHomeDir() {
@@ -787,6 +788,12 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
         "()\n\tReturns the directory of the running MegaMol executable.",
         {[&]() { return StringResult{config.megamol_executable_directory}; }});
 
+    //lua.RegisterCallback("mmGetMegaMolExecutableDirectory",
+    //    "()\n\tReturns the directory of the running MegaMol executable.",
+    //    [&]() -> std::string {
+    //        return config.megamol_executable_directory.c_str();
+    //    });
+
     lua_config_callbacks.add<VoidResult, std::string>("mmSetAppDir",
         "(string dir)\n\tSets the path where the mmconsole.exe is located.",
         {make_option_callback(appdir_option, true)});
@@ -813,7 +820,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
             accepted_log_level_strings,
         {make_option_callback(echolevel_option)});
 
-    lua.AddCallbacks(lua_config_callbacks);
+    //lua.AddCallbacks(lua_config_callbacks);
 
     for (auto& file : config.configuration_files) {
         cli_options_from_configs.clear();
@@ -822,11 +829,10 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
             std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 
         // interpret lua config commands as CLI commands
-        std::string lua_result_string;
-        bool lua_config_ok = lua.RunString(file_contents, lua_result_string);
+        auto lua_config_ok = lua.RunString(file_contents, "magic_exec_config");
 
-        if (!lua_config_ok) {
-            exit("Error in Lua config file " + file + "\n Lua Error: " + lua_result_string);
+        if (!lua_config_ok.valid()) {
+            exit("Error in Lua config file " + file + ".\n");
         }
 
         // feed the options coming from Lua into CLI parser, which writes option changes into the RuntimeConfig
@@ -873,7 +879,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
                 [](std::string const& init, std::string const& elem) { return init + elem + " "; }));
     }
 
-    lua.ClearCallbacks();
+    //lua.ClearCallbacks();
 
     return config;
 }

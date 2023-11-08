@@ -13,7 +13,7 @@
 #include <sstream>
 #include <string>
 
-#include <lua.hpp>
+#include <sol/stack.hpp>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -51,17 +51,16 @@
 
 #define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
 #define MMC_LUA_MMWRITETEXTFILE "mmWriteTextFile"
-#define MMC_LUA_MMINVOKE "mmInvoke"
+#define MMC_LUA_MMHELP "mmHelp"
 
 int exceptionHandler(lua_State* L, sol::optional<const std::exception&> maybe_exception, sol::string_view description) {
-        std::stringstream ss;
+    std::stringstream ss;
     ss << "LuaAPI: An exception occurred in a function. ";
     if (maybe_exception) {
         ss << "Exception: ";
         const std::exception& ex = *maybe_exception;
         ss << ex.what() << std::endl;
-    }
-    else {
+    } else {
         ss << "Description: ";
         std::cout.write(description.data(), static_cast<std::streamsize>(description.size()));
         ss << std::endl;
@@ -77,19 +76,43 @@ int exceptionHandler(lua_State* L, sol::optional<const std::exception&> maybe_ex
 
 void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.set_exception_handler(&exceptionHandler);
+    luaApiInterpreter_.open_libraries(); // AKA all of them
+
+    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetCompileMode>(MMC_LUA_MMGETCOMPILEMODE, "()\n\tReturns the compilation mode ('debug' or 'release').");
+    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetOS>(MMC_LUA_MMGETOS, "()\n\tReturns the operating system ('windows', 'linux', or 'unknown').");
+    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetBitWidth>(MMC_LUA_MMGETBITHWIDTH, "()\n\tReturns the bit width of the compiled executable.");
+    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetMachineName>(MMC_LUA_MMGETMACHINENAME, "()\n\tReturns the machine name.");
+    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetProcessID>(MMC_LUA_MMGETPROCESSID, "()\n\tReturns the process id of the running MegaMol.");
+
     // do the class functions also need a bound instance to work?
-    luaApiInterpreter_.set_function(MMC_LUA_MMGETENVVALUE, &LuaAPI::GetEnvValue);
-    luaApiInterpreter_.set_function(MMC_LUA_MMGETCOMPILEMODE, &LuaAPI::GetCompileMode);
-    luaApiInterpreter_.set_function(MMC_LUA_MMGETOS, &LuaAPI::GetOS);
-    luaApiInterpreter_.set_function(MMC_LUA_MMGETBITHWIDTH, &LuaAPI::GetBitWidth);
-    luaApiInterpreter_.set_function(MMC_LUA_MMGETMACHINENAME, &LuaAPI::GetMachineName);
-    luaApiInterpreter_.set_function(MMC_LUA_MMGETPROCESSID, &LuaAPI::GetProcessID);
+    RegisterCallback(MMC_LUA_MMGETENVVALUE, "(string name)\n\tReturn the value of env variable <name>.",
+        &LuaAPI::GetEnvValue);
+    //luaApiInterpreter_.set_function(MMC_LUA_MMGETENVVALUE, &LuaAPI::GetEnvValue);
+    //luaApiInterpreter_.set_function(MMC_LUA_MMGETCOMPILEMODE, &LuaAPI::GetCompileMode);
+    //luaApiInterpreter_.set_function(MMC_LUA_MMGETOS, &LuaAPI::GetOS);
+    //luaApiInterpreter_.set_function(MMC_LUA_MMGETBITHWIDTH, &LuaAPI::GetBitWidth);
+    //luaApiInterpreter_.set_function(MMC_LUA_MMGETMACHINENAME, &LuaAPI::GetMachineName);
+    //luaApiInterpreter_.set_function(MMC_LUA_MMGETPROCESSID, &LuaAPI::GetProcessID);
 
     // these need the instance I think
-    luaApiInterpreter_.set_function(MMC_LUA_MMCURRENTSCRIPTPATH, &LuaAPI::GetScriptPath, this);
+    RegisterCallback(MMC_LUA_MMHELP, "()\n\tReturns MegaMol Lua functions and help text", &LuaAPI::Help, this);
+    RegisterCallback(MMC_LUA_MMCURRENTSCRIPTPATH,
+        "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise.",
+        &LuaAPI::GetScriptPath, this);
 
     //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ReadTextFile>(MMC_LUA_MMREADTEXTFILE, "(string fileName, function func)\n\tReturn the file contents after processing it with func(content).");
     //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::WriteTextFile>(MMC_LUA_MMWRITETEXTFILE, "(string fileName, string content)\n\tWrite content to file. You CANNOT overwrite existing files!");
+}
+
+void megamol::core::LuaAPI::checkRes(sol::protected_function_result& res) const {
+    if (!res.valid()) {
+        auto err = sol::stack::get<sol::optional<std::string>>(luaApiInterpreter_.lua_state());
+        if (err.has_value()) {
+            utility::log::Log::DefaultLog.WriteError(err.value().c_str());
+        } else {
+            utility::log::Log::DefaultLog.WriteError("unspecified sol error");
+        }
+    }
 }
 
 
@@ -104,40 +127,48 @@ megamol::core::LuaAPI::LuaAPI() {
 /*
  * megamol::core::LuaAPI::~LuaAPI
  */
-megamol::core::LuaAPI::~LuaAPI() {
+megamol::core::LuaAPI::~LuaAPI() {}
+
+
+std::string megamol::core::LuaAPI::GetScriptPath() {
+    return this->currentScriptPath;
 }
 
-
-std::string megamol::core::LuaAPI::GetScriptPath() { return this->currentScriptPath; }
-
-void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) { this->currentScriptPath = scriptPath; }
+void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) {
+    this->currentScriptPath = scriptPath;
+}
 
 static auto const tc_lua_cmd = 0x65B5E4;
+static auto const error_handler = sol::script_default_on_error;
 
 sol::safe_function_result megamol::core::LuaAPI::RunFile(const std::string& fileName) {
-    #ifdef MEGAMOL_USE_TRACY
+#ifdef MEGAMOL_USE_TRACY
     ZoneScopedNC("LuaAPI::RunFile", tc_lua_cmd);
-    #endif
-    return luaApiInterpreter_.safe_script_file(fileName);
+#endif
+    auto res = luaApiInterpreter_.safe_script_file(fileName, error_handler);
+    checkRes(res);
+    return res;
 }
 
 
 sol::safe_function_result megamol::core::LuaAPI::RunFile(const std::wstring& fileName) {
-    #ifdef MEGAMOL_USE_TRACY
+#ifdef MEGAMOL_USE_TRACY
     ZoneScopedNC("LuaAPI::RunFile", tc_lua_cmd);
-    #endif
+#endif
     std::string str;
-    std::transform(fileName.begin(), fileName.end(), std::back_inserter(str), [] (wchar_t c) {
+    std::transform(fileName.begin(), fileName.end(), std::back_inserter(str), [](wchar_t c) {
         return static_cast<char>(c);
     });
-    return luaApiInterpreter_.safe_script_file(str);
+    auto res = luaApiInterpreter_.safe_script_file(str, error_handler);
+    checkRes(res);
+    return res;
 }
 
 
 sol::safe_function_result megamol::core::LuaAPI::RunString(const std::string& script, std::string scriptPath) {
-    #ifdef MEGAMOL_USE_TRACY
+#ifdef MEGAMOL_USE_TRACY
     ZoneScopedNC("LuaAPI::RunString", tc_lua_cmd);
-    #endif
+#endif
     // todo: locking!!!
     // no two threads can touch L at the same time
     std::lock_guard<std::mutex> stateGuard(this->stateLock);
@@ -145,7 +176,9 @@ sol::safe_function_result megamol::core::LuaAPI::RunString(const std::string& sc
         // the information got better, at least
         this->currentScriptPath = scriptPath;
     }
-    return luaApiInterpreter_.safe_script(script);
+    auto res = luaApiInterpreter_.safe_script(script, error_handler);
+    checkRes(res);
+    return res;
 }
 
 
@@ -168,10 +201,10 @@ std::string megamol::core::LuaAPI::GetOS() {
     case vislib::sys::SystemInformation::OSTYPE_WINDOWS:
         return "windows";
     case vislib::sys::SystemInformation::OSTYPE_LINUX:
-        return"linux";
+        return "linux";
     case vislib::sys::SystemInformation::OSTYPE_UNKNOWN:
     default:
-        return"unknown";
+        return "unknown";
     }
 }
 
@@ -192,7 +225,7 @@ std::string megamol::core::LuaAPI::GetEnvValue(const std::string& variable) {
 
 unsigned int megamol::core::LuaAPI::GetProcessID() {
     vislib::StringA str;
-#ifdef _WIN32    
+#ifdef _WIN32
     unsigned int id = GetCurrentProcessId();
 #else
     unsigned int id = static_cast<unsigned int>(getpid());
@@ -200,8 +233,17 @@ unsigned int megamol::core::LuaAPI::GetProcessID() {
     return id;
 }
 
+std::string megamol::core::LuaAPI::Help() const {
+    std::stringstream out;
+    out << "MegaMol Lua Help:" << std::endl;
+    for (const auto& item : helpContainer)
+        out << item.first + item.second + "\n";
+    return out.str().c_str();
+}
+
 int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
     // (string fileName, function func)
+
     //int n = lua_gettop(L);
     //if (n == 2) {
     //    const auto filename = luaL_checkstring(L, 1);
@@ -282,153 +324,83 @@ std::string megamol::core::LuaAPI::CurrentScriptPath() {
 }
 
 
-void megamol::core::LuaAPI::AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
-    verbatim_lambda_callbacks_.push_back(callbacks);
-
-    for (auto& c : callbacks.callbacks) {
-        assert(!std::get<0>(c).empty());
-    }
-
-    register_callbacks(verbatim_lambda_callbacks_.back());
-}
-
-static std::vector<std::string> getNames(megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
-    std::vector<std::string> names{};
-    names.reserve(callbacks.callbacks.size());
-
-    for (auto& c : callbacks.callbacks) {
-        names.push_back(std::get<0>(c));
-    }
-
-    return names;
-}
-
-void megamol::core::LuaAPI::RemoveCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim) {
-    RemoveCallbacks( getNames(callbacks) );
-
-    if(delete_verbatim)
-    verbatim_lambda_callbacks_.remove_if([&](auto& item){
-        return item.callbacks.empty() ||
-            (item.callbacks.size() == callbacks.callbacks.size()
-                && std::get<0>(item.callbacks.front()) == std::get<0>(callbacks.callbacks.front()));
-        });
-}
-
-void megamol::core::LuaAPI::RemoveCallbacks(std::vector<std::string> const& callback_names) {
-    for (auto& name : callback_names) {
-        luaApiInterpreter_.UnregisterCallback(name);
-        wrapped_lambda_callbacks_.remove_if([&](auto& item){ return std::get<0>(item) == name; });
-    }
-}
-
-void megamol::core::LuaAPI::ClearCallbacks() {
-    for (auto& callbacks: verbatim_lambda_callbacks_) {
-        RemoveCallbacks( getNames(callbacks) );
-    }
-    assert(wrapped_lambda_callbacks_.empty());
-
-    verbatim_lambda_callbacks_.clear();
-}
-
-void megamol::core::LuaAPI::register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks) {
-    if (!callbacks.is_registered) {
-        for (auto& c : callbacks.callbacks) {
-            auto& name = std::get<0>(c);
-            auto& description = std::get<1>(c);
-            auto& func = std::get<2>(c);
-
-            if (auto found_it = std::find_if(wrapped_lambda_callbacks_.begin(), wrapped_lambda_callbacks_.end(), [&](auto const& elem) { return std::get<0>(elem) == name; });
-                found_it != wrapped_lambda_callbacks_.end()) {
-
-                RemoveCallbacks({std::get<0>(*found_it)});
-            }
-
-            wrapped_lambda_callbacks_.push_back({
-                name,
-                std::function<int(lua_State*)>{
-                    [=](lua_State *L) -> int { return func({L}); }
-            }});
-            luaApiInterpreter_.RegisterCallback(name, description, std::get<1>(wrapped_lambda_callbacks_.back()));
-        }
-        callbacks.is_registered = true;
-    }
-
-}
-
-void megamol::frontend_resources::LuaCallbacksCollection::LuaState::error(std::string reason) {
-    luaApiInterpreter_ptr->ThrowError(reason);
-}
-
-#define lua_state \
-    reinterpret_cast<lua_State*>(this->state_ptr)
-
-int megamol::frontend_resources::LuaCallbacksCollection::LuaState::stack_size() {
-    return lua_gettop(lua_state);
-}
-
-template <>
-typename std::remove_reference<bool>::type
-megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<bool>::type>(size_t index) {
-        bool b = lua_toboolean(lua_state, index);
-        return b;
-}
-template <>
-void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(bool item) {
-    lua_pushboolean(lua_state, static_cast<int>(item));
-}
-
-template <>
-typename std::remove_reference<int>::type
-megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<int>::type>(size_t index) {
-    int i = luaL_checkinteger(lua_state, index);
-    return i;
-}
-template <>
-void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(int item) {
-    lua_pushinteger(lua_state, item);
-}
-
-template <>
-typename std::remove_reference<long>::type
-megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<long>::type>(size_t index) {
-    long l = luaL_checkinteger(lua_state, index);
-    return l;
-}
-template <>
-void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(long item) {
-    lua_pushinteger(lua_state, item);
-}
-
-template <>
-typename std::remove_reference<float>::type
-megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<float>::type>(size_t index) {
-    float f = luaL_checknumber(lua_state, index);
-    return f;
-}
-template <>
-void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(float item) {
-    lua_pushnumber(lua_state, item);
-}
-
-template <>
-typename std::remove_reference<double>::type
-megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<double>::type>(size_t index) {
-    double d = luaL_checknumber(lua_state, index);
-    return d;
-}
-template <>
-void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(double item) {
-    lua_pushnumber(lua_state, item);
-}
-
-template <>
-typename std::remove_reference<std::string>::type
-megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<std::string>::type>(size_t index) {
-    std::string s = luaL_checkstring(lua_state, index);
-    return s;
-}
-template <>
-void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(std::string item) {
-    lua_pushstring(lua_state, item.c_str());
-}
-
+//void megamol::core::LuaAPI::AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
+//    verbatim_lambda_callbacks_.push_back(callbacks);
+//
+//    for (auto& c : callbacks.callbacks) {
+//        assert(!std::get<0>(c).empty());
+//    }
+//
+//    register_callbacks(verbatim_lambda_callbacks_.back());
+//}
+//
+//static std::vector<std::string> getNames(megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
+//    std::vector<std::string> names{};
+//    names.reserve(callbacks.callbacks.size());
+//
+//    for (auto& c : callbacks.callbacks) {
+//        names.push_back(std::get<0>(c));
+//    }
+//
+//    return names;
+//}
+//
+//void megamol::core::LuaAPI::RemoveCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks,
+//    bool delete_verbatim) {
+//    RemoveCallbacks(getNames(callbacks));
+//
+//    if (delete_verbatim)
+//        verbatim_lambda_callbacks_.remove_if([&](auto& item) {
+//            return item.callbacks.empty() ||
+//                   (item.callbacks.size() == callbacks.callbacks.size()
+//                    && std::get<0>(item.callbacks.front()) == std::get<0>(callbacks.callbacks.front()));
+//        });
+//}
+//
+//void megamol::core::LuaAPI::RemoveCallbacks(std::vector<std::string> const& callback_names) {
+//    for (auto& name : callback_names) {
+//        UnregisterCallback(name);
+//        wrapped_lambda_callbacks_.remove_if([&](auto& item) {
+//            return std::get<0>(item) == name;
+//        });
+//    }
+//}
+//
+//void megamol::core::LuaAPI::ClearCallbacks() {
+//    for (auto& callbacks : verbatim_lambda_callbacks_) {
+//        RemoveCallbacks(getNames(callbacks));
+//    }
+//    assert(wrapped_lambda_callbacks_.empty());
+//
+//    verbatim_lambda_callbacks_.clear();
+//}
+//
+//void megamol::core::LuaAPI::register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks) {
+//    if (!callbacks.is_registered) {
+//        for (auto& c : callbacks.callbacks) {
+//            auto& name = std::get<0>(c);
+//            auto& description = std::get<1>(c);
+//            auto& func = std::get<2>(c);
+//
+//            if (auto found_it = std::find_if(wrapped_lambda_callbacks_.begin(), wrapped_lambda_callbacks_.end(),
+//                    [&](auto const& elem) {
+//                        return std::get<0>(elem) == name;
+//                    });
+//                found_it != wrapped_lambda_callbacks_.end()) {
+//
+//                RemoveCallbacks({std::get<0>(*found_it)});
+//            }
+//
+//            wrapped_lambda_callbacks_.push_back({
+//                name,
+//                std::function<int(lua_State*)>{
+//                    [=](lua_State* L) -> int {
+//                        return func({L});
+//                    }
+//                }});
+//            RegisterCallback(name, description, std::get<1>(wrapped_lambda_callbacks_.back()));
+//        }
+//        callbacks.is_registered = true;
+//    }
+//
+//}
