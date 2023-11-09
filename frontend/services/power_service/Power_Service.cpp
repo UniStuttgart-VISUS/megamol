@@ -532,7 +532,9 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
 //}
 
 void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) {
-    samplers->visit<std::chrono::milliseconds const&>(&power::ISamplerCollection::SetSegmentRange, range);
+    auto const [trg_prefix, trg_postfix, trg_wait] = power::get_trigger_timings(range);
+    samplers->visit<std::chrono::milliseconds const&>(
+        &power::ISamplerCollection::SetSegmentRange, trg_prefix + trg_postfix);
 
     /*if (nvml_samplers_)
         nvml_samplers_->SetSegmentRange(range);

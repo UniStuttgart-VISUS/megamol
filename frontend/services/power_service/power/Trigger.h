@@ -64,11 +64,11 @@ public:
         std::unique_lock<std::mutex> trg_lock(trg_mtx_);
         while (armed_) {
             fire_pre_trigger();
-            std::this_thread::sleep_for(prefix * 6);
+            std::this_thread::sleep_for(prefix);
             trg_tp = fire_trigger();
-            std::this_thread::sleep_for(postfix + prefix * 6);
+            std::this_thread::sleep_for(postfix);
             fire_post_trigger();
-            std::this_thread::sleep_for(wait + prefix);
+            std::this_thread::sleep_for(wait);
         }
         fire_fin_trigger();
         return trg_tp;
@@ -83,7 +83,7 @@ public:
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="name"></param>
     /// <param name="pre_trigger"></param>
@@ -92,7 +92,7 @@ public:
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="name"></param>
     /// <param name="post_trigger"></param>
@@ -110,7 +110,7 @@ public:
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="address"></param>
     void SetLPTAddress(std::string const& address) {

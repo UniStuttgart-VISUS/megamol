@@ -154,6 +154,16 @@ inline std::string unmueller_string(wchar_t const* name) {
     return external;
 }
 
+inline std::tuple<std::chrono::milliseconds, std::chrono::milliseconds, std::chrono::milliseconds> get_trigger_timings(
+    std::chrono::milliseconds range) {
+    // config_range_ / 12, config_range_ - config_range_ / 12, std::chrono::milliseconds(1000) + config_range_
+    auto const lw = std::chrono::milliseconds(100);
+    auto const prefix = range / 12 + lw;
+    auto const postfix = range - (range / 12) + lw;
+    auto const wait = range + std::chrono::milliseconds(1000);
+    return std::make_tuple(prefix, postfix, wait);
+}
+
 } // namespace megamol::power
 
 #endif

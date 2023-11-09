@@ -132,10 +132,10 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
 
+            auto const [trg_prefix, trg_postfix, trg_wait] = get_trigger_timings(config_range_);
             trigger_->ArmTrigger();
             auto tp_fut = std::async(std::launch::async,
-                std::bind(&Trigger::StartTriggerSequence, trigger_.get(), config_range_ / 12,
-                    config_range_ - config_range_ / 12, std::chrono::milliseconds(1000) + config_range_));
+                std::bind(&Trigger::StartTriggerSequence, trigger_.get(), trg_prefix, trg_postfix, trg_wait));
             /*while (global_device_counter < rtx_instr_.size()) {
                 core::utility::log::Log::DefaultLog.WriteInfo("Waiting on trigger %d", global_device_counter);
                 if (waiting_on_trigger()) {
