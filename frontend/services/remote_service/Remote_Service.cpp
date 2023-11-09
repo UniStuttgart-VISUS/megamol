@@ -11,9 +11,11 @@
 
 #include "GUIRegisterWindow.h" // register UI window for remote control
 #include "HeadNode.hpp"
+#include "LuaApiResource.h"
 #include "MPI_Context.h"
 #include "MpiNode.hpp"
 #include "RenderNode.hpp"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -117,7 +119,7 @@ bool Remote_Service::init(const Config& config) {
     this->m_providedResourceReferences = {};
 
     this->m_requestedResourcesNames = {"MegaMolGraph",
-        "ExecuteLuaScript" // std::function<std::tuple<bool,std::string>(std::string const&)>
+        frontend_resources::LuaAPI_Req_Name // std::function<std::tuple<bool,std::string>(std::string const&)>
         ,
         "optional<GUIRegisterWindow>"};
 
@@ -426,12 +428,12 @@ void Remote_Service::execute_message(std::vector<char> const& message) {
     commands_string.resize(message.size());
     std::memcpy(commands_string.data(), message.data(), message.size());
 
-    auto& executeLua = m_requestedResourceReferences[1]
-                           .getResource<std::function<std::tuple<bool, std::string>(std::string const&)>>();
-    auto result = executeLua(commands_string);
+    auto& luaApi = m_requestedResourceReferences[1]
+                           .getResource<core::LuaAPI*>();
+    auto result = luaApi->RunString(commands_string);
 
-    if (!std::get<0>(result)) {
-        log_error("Error executing Lua: " + std::get<1>(result));
+    if (!result.valid()) {
+        log_error("Error executing Lua: " + luaApi->GetError(result));
     }
 }
 

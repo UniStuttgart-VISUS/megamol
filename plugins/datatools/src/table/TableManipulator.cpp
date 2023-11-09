@@ -22,14 +22,13 @@ std::string TableManipulator::ModuleName = std::string("TableManipulator");
 std::string TableManipulator::defaultScript = "";
 
 TableManipulator::TableManipulator()
-        : core::Module()
-        , dataOutSlot("dataOut", "Output")
-        , dataInSlot("dataIn", "Input")
-        , scriptSlot("script", "script to execute on incoming table data")
-        , frameID(-1)
-        , in_datahash(std::numeric_limits<unsigned long>::max())
-        , out_datahash(0)
-        , theLua(this) {
+    : core::Module()
+      , dataOutSlot("dataOut", "Output")
+      , dataInSlot("dataIn", "Input")
+      , scriptSlot("script", "script to execute on incoming table data")
+      , frameID(-1)
+      , in_datahash(std::numeric_limits<unsigned long>::max())
+      , out_datahash(0) {
 
     this->dataInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
@@ -94,25 +93,28 @@ TableManipulator::~TableManipulator() {
 }
 
 bool TableManipulator::create() {
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::getInputSize>(
-        "mmGetInputSize", "()\n\treturns the number of rows, columns in the input data");
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::setOutputColumns>(
-        "mmSetOutputColumns", "(int number)\n\tsets the number of columns of the output data");
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::getInputColumnName>(
-        "mmGetInputColumnName", "(int idx)\n\treturns the name of column idx in the input data");
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::setOutputColumnName>(
-        "mmSetOutputColumnName", "(int idx, string name)\n\tsets the name of column idx in the output data");
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::getInputColumnRange>(
-        "mmGetInputColumnRange", "(int idx)\n\treturns min, max of column idx in the input data");
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::setOutputColumnRange>(
-        "mmSetOutputColumnRange", "(int idx, float min, float max)\n\tsets the range of column idx in the output data");
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::addOutputRows>(
-        "mmAddOutputRows", "(int num)\n\tadds and allocates num rows to the output data");
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::getCellValue>(
-        "mmGetCellValue", "(int row, int col)\n\treturns value in cell (row, col) in the input data");
-    theLua.RegisterCallback<TableManipulator, &TableManipulator::setCellValue>(
-        "mmSetCellValue", "(int row, int col, float val)\n\tset cell (row, col) in the output data to val");
-
+    theLua.RegisterCallback("mmGetInputSize", "()\n\treturns the number of rows, columns in the input data",
+        &TableManipulator::getInputSize, this);
+    theLua.RegisterCallback("mmSetOutputColumns", "(int number)\n\tsets the number of columns of the output data",
+        &TableManipulator::setOutputColumns, this);
+    theLua.RegisterCallback("mmGetInputColumnName", "(int idx)\n\treturns the name of column idx in the input data",
+        &TableManipulator::getInputColumnName, this);
+    theLua.RegisterCallback("mmSetOutputColumnName",
+        "(int idx, string name)\n\tsets the name of column idx in the output data",
+        &TableManipulator::setOutputColumnName, this);
+    theLua.RegisterCallback("mmGetInputColumnRange", "(int idx)\n\treturns min, max of column idx in the input data",
+        &TableManipulator::getInputColumnRange, this);
+    theLua.RegisterCallback("mmSetOutputColumnRange",
+        "(int idx, float min, float max)\n\tsets the range of column idx in the output data",
+        &TableManipulator::setOutputColumnRange, this);
+    theLua.RegisterCallback("mmAddOutputRows", "(int num)\n\tadds and allocates num rows to the output data",
+        &TableManipulator::addOutputRows, this);
+    theLua.RegisterCallback("mmGetCellValue",
+        "(int row, int col)\n\treturns value in cell (row, col) in the input data",
+        &TableManipulator::getCellValue, this);
+    theLua.RegisterCallback("mmSetCellValue",
+        "(int row, int col, float val)\n\tset cell (row, col) in the output data to val",
+        &TableManipulator::setCellValue, this);
     return true;
 }
 
@@ -204,122 +206,80 @@ bool TableManipulator::getExtent(core::Call& c) {
     return true;
 }
 
-int TableManipulator::getInputSize(lua_State* L) {
-    lua_pushinteger(L, row_count);
-    lua_pushinteger(L, column_count);
-    return 2;
+std::tuple<size_t, size_t> TableManipulator::getInputSize() {
+    return std::make_tuple(row_count, column_count);
 }
 
-int TableManipulator::setOutputColumns(lua_State* L) {
-    const auto cnt = luaL_checkinteger(L, 1);
-    this->info.resize(cnt);
-    return 0;
+void TableManipulator::setOutputColumns(int cols) {
+    this->info.resize(cols);
 }
 
-int TableManipulator::getInputColumnName(lua_State* L) {
-    const auto idx = luaL_checkinteger(L, 1);
+std::string TableManipulator::getInputColumnName(int idx) {
     if (idx > -1 && idx < column_count) {
-        lua_pushstring(L, column_infos[idx].Name().c_str());
-        return 1;
+        return column_infos[idx].Name();
     } else {
-        lua_pushstring(L, "column index out of range");
-        lua_error(L);
-        return 0;
+        theLua.Error("column index out of range");
     }
 }
 
-int TableManipulator::setOutputColumnName(lua_State* L) {
-    const auto idx = luaL_checkinteger(L, 1);
-    const auto name = luaL_checkstring(L, 2);
+void TableManipulator::setOutputColumnName(int idx, std::string name) {
     if (idx > -1 && idx < this->info.size()) {
         this->info[idx].SetName(name);
         this->info[idx].SetType(TableDataCall::ColumnType::QUANTITATIVE);
-        return 0;
     } else {
-        lua_pushstring(L, "column index out of range");
-        lua_error(L);
-        return 0;
+        theLua.Error("column index out of range");
     }
 }
 
-int TableManipulator::getInputColumnRange(lua_State* L) {
-    const auto idx = luaL_checkinteger(L, 1);
+std::tuple<float, float> TableManipulator::getInputColumnRange(int idx) {
     if (idx > -1 && idx < column_count) {
-        lua_pushnumber(L, column_infos[idx].MinimumValue());
-        lua_pushnumber(L, column_infos[idx].MaximumValue());
-        return 2;
+        return std::make_tuple(column_infos[idx].MinimumValue(), column_infos[idx].MaximumValue());
     } else {
-        lua_pushstring(L, "column index out of range");
-        lua_error(L);
-        return 0;
+        theLua.Error("column index out of range");
+        return std::make_tuple(0.f, 0.f);
     }
 }
 
-int TableManipulator::setOutputColumnRange(lua_State* L) {
-    const auto idx = luaL_checkinteger(L, 1);
-    const auto min = luaL_checknumber(L, 2);
-    const auto max = luaL_checknumber(L, 3);
+void TableManipulator::setOutputColumnRange(int idx, float min, float max) {
     if (idx > -1 && idx < this->info.size()) {
         info[idx].SetMinimumValue(min);
         info[idx].SetMaximumValue(max);
-        return 0;
     } else {
-        lua_pushstring(L, "column index out of range");
-        lua_error(L);
-        return 0;
+        theLua.Error("column index out of range");
     }
 }
 
-int TableManipulator::addOutputRows(lua_State* L) {
-    const auto n = luaL_checkinteger(L, 1);
+void TableManipulator::addOutputRows(int n) {
     if (n > 0) {
         if (!info.empty()) {
             this->data.resize(this->data.size() + n * info.size());
-            return 0;
         } else {
-            lua_pushstring(L, "you need to set the number of output columns first");
-            lua_error(L);
-            return 0;
+            theLua.Error("you need to set the number of output columns first");
         }
     } else {
-        lua_pushstring(L, "you can only add rows");
-        lua_error(L);
-        return 0;
+        theLua.Error("you can only add rows");
     }
 }
 
-int TableManipulator::getCellValue(lua_State* L) {
-    const auto row = luaL_checkinteger(L, 1);
-    const auto col = luaL_checkinteger(L, 2);
+float TableManipulator::getCellValue(int row, int col) {
     if (row > -1 && row < row_count && col > -1 && col < column_count) {
         const uint32_t idx = row * column_count + col;
-        lua_pushnumber(L, in_data[idx]);
-        return 1;
+        return in_data[idx];
     } else {
-        lua_pushstring(L, "illegal cell index");
-        lua_error(L);
-        return 0;
+        theLua.Error("illegal cell index");
+        return 0.f;
     }
 }
 
-int TableManipulator::setCellValue(lua_State* L) {
-    const auto row = luaL_checkinteger(L, 1);
-    const auto col = luaL_checkinteger(L, 2);
-    const auto val = luaL_checknumber(L, 3);
-
+void TableManipulator::setCellValue(int row, int col, float val) {
     if (!info.empty()) {
         const uint32_t idx = row * info.size() + col;
         if (idx >= 0 && idx < data.size()) {
             data[idx] = val;
-            return 0;
         } else {
-            lua_pushstring(L, "illegal cell index");
-            lua_error(L);
-            return 0;
+            theLua.Error("illegal cell index");
         }
     } else {
-        lua_pushstring(L, "you need to set the number of output columns first");
-        lua_error(L);
-        return 0;
+        theLua.Error("you need to set the number of output columns first");
     }
 }

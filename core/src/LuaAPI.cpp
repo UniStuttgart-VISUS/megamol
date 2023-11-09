@@ -78,23 +78,15 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.set_exception_handler(&exceptionHandler);
     luaApiInterpreter_.open_libraries(); // AKA all of them
 
-    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetCompileMode>(MMC_LUA_MMGETCOMPILEMODE, "()\n\tReturns the compilation mode ('debug' or 'release').");
-    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetOS>(MMC_LUA_MMGETOS, "()\n\tReturns the operating system ('windows', 'linux', or 'unknown').");
-    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetBitWidth>(MMC_LUA_MMGETBITHWIDTH, "()\n\tReturns the bit width of the compiled executable.");
-    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetMachineName>(MMC_LUA_MMGETMACHINENAME, "()\n\tReturns the machine name.");
-    //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetProcessID>(MMC_LUA_MMGETPROCESSID, "()\n\tReturns the process id of the running MegaMol.");
-
-    // do the class functions also need a bound instance to work?
     RegisterCallback(MMC_LUA_MMGETENVVALUE, "(string name)\n\tReturn the value of env variable <name>.",
         &LuaAPI::GetEnvValue);
-    //luaApiInterpreter_.set_function(MMC_LUA_MMGETENVVALUE, &LuaAPI::GetEnvValue);
-    //luaApiInterpreter_.set_function(MMC_LUA_MMGETCOMPILEMODE, &LuaAPI::GetCompileMode);
-    //luaApiInterpreter_.set_function(MMC_LUA_MMGETOS, &LuaAPI::GetOS);
-    //luaApiInterpreter_.set_function(MMC_LUA_MMGETBITHWIDTH, &LuaAPI::GetBitWidth);
-    //luaApiInterpreter_.set_function(MMC_LUA_MMGETMACHINENAME, &LuaAPI::GetMachineName);
-    //luaApiInterpreter_.set_function(MMC_LUA_MMGETPROCESSID, &LuaAPI::GetProcessID);
+    RegisterCallback(MMC_LUA_MMGETCOMPILEMODE, "()\n\tReturns the compilation mode ('debug' or 'release').", &LuaAPI::GetCompileMode);
+    RegisterCallback(MMC_LUA_MMGETOS, "()\n\tReturns the operating system ('windows', 'linux', or 'unknown').", &LuaAPI::GetOS);
+    RegisterCallback(MMC_LUA_MMGETBITHWIDTH, "()\n\tReturns the bit width of the compiled executable.", &LuaAPI::GetBitWidth);
+    RegisterCallback(MMC_LUA_MMGETMACHINENAME, "()\n\tReturns the machine name.", &LuaAPI::GetMachineName);
+    RegisterCallback(MMC_LUA_MMGETPROCESSID, "()\n\tReturns the process id of the running MegaMol.", &LuaAPI::GetProcessID);
 
-    // these need the instance I think
+    // these need the instance
     RegisterCallback(MMC_LUA_MMHELP, "()\n\tReturns MegaMol Lua functions and help text", &LuaAPI::Help, this);
     RegisterCallback(MMC_LUA_MMCURRENTSCRIPTPATH,
         "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise.",
@@ -104,15 +96,16 @@ void megamol::core::LuaAPI::commonInit() {
     //luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::WriteTextFile>(MMC_LUA_MMWRITETEXTFILE, "(string fileName, string content)\n\tWrite content to file. You CANNOT overwrite existing files!");
 }
 
-void megamol::core::LuaAPI::checkRes(sol::protected_function_result& res) const {
+std::string megamol::core::LuaAPI::GetError(const sol::protected_function_result& res) const {
     if (!res.valid()) {
         auto err = sol::stack::get<sol::optional<std::string>>(luaApiInterpreter_.lua_state());
         if (err.has_value()) {
-            utility::log::Log::DefaultLog.WriteError(err.value().c_str());
+            return err.value();
         } else {
-            utility::log::Log::DefaultLog.WriteError("unspecified sol error");
+            return"unspecified sol error";
         }
     }
+    return "";
 }
 
 
@@ -141,44 +134,26 @@ void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) {
 static auto const tc_lua_cmd = 0x65B5E4;
 static auto const error_handler = sol::script_default_on_error;
 
-sol::safe_function_result megamol::core::LuaAPI::RunFile(const std::string& fileName) {
-#ifdef MEGAMOL_USE_TRACY
-    ZoneScopedNC("LuaAPI::RunFile", tc_lua_cmd);
-#endif
-    auto res = luaApiInterpreter_.safe_script_file(fileName, error_handler);
-    checkRes(res);
-    return res;
-}
-
-
-sol::safe_function_result megamol::core::LuaAPI::RunFile(const std::wstring& fileName) {
-#ifdef MEGAMOL_USE_TRACY
-    ZoneScopedNC("LuaAPI::RunFile", tc_lua_cmd);
-#endif
-    std::string str;
-    std::transform(fileName.begin(), fileName.end(), std::back_inserter(str), [](wchar_t c) {
-        return static_cast<char>(c);
-    });
-    auto res = luaApiInterpreter_.safe_script_file(str, error_handler);
-    checkRes(res);
-    return res;
-}
-
 
 sol::safe_function_result megamol::core::LuaAPI::RunString(const std::string& script, std::string scriptPath) {
 #ifdef MEGAMOL_USE_TRACY
     ZoneScopedNC("LuaAPI::RunString", tc_lua_cmd);
 #endif
     // todo: locking!!!
-    // no two threads can touch L at the same time
-    std::lock_guard<std::mutex> stateGuard(this->stateLock);
     if (this->currentScriptPath.empty() && !scriptPath.empty()) {
         // the information got better, at least
         this->currentScriptPath = scriptPath;
     }
     auto res = luaApiInterpreter_.safe_script(script, error_handler);
-    checkRes(res);
+    if (!res.valid()) {
+        auto err = GetError(res);
+        utility::log::Log::DefaultLog.WriteError(err.c_str());
+    }
     return res;
+}
+
+void megamol::core::LuaAPI::Error(std::string description) {
+    throw std::runtime_error(description);
 }
 
 

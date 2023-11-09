@@ -18,6 +18,7 @@
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "GUIRegisterWindow.h"
+#include "LuaApiResource.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -25,6 +26,7 @@ static void log(const char* text) {
     const std::string msg = "Lua_Service_Wrapper: " + std::string(text) + "\n";
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
+
 static void log(std::string text) {
     log(text.c_str());
 }
@@ -38,12 +40,15 @@ namespace {
 struct RecursionGuard {
     int& state;
 
-    RecursionGuard(int& s) : state{s} {
+    RecursionGuard(int& s)
+        : state{s} {
         state++;
     }
+
     ~RecursionGuard() {
         state--;
     }
+
     bool abort() {
         return state > 1;
     }
@@ -80,34 +85,30 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     m_config = config;
 
-    m_executeLuaScript_resource = [&](std::string const& script) -> sol::safe_function_result {
-        return luaAPI.RunString(script, "magic_exec_inline_lua_script");
+    m_setScriptPath_resource = [&](std::string const& script_path) -> void {
+        luaAPI.SetScriptPath(script_path);
     };
 
-    m_setScriptPath_resource = [&](std::string const& script_path) -> void { luaAPI.SetScriptPath(script_path); };
-
-    m_registerLuaCallbacks_resource = [&](megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
-        //luaAPI.AddCallbacks(callbacks);
-    };
+    luaApi_resource = config.lua_api_ptr;
 
     this->m_providedResourceReferences = {
         {"LuaScriptPaths", m_scriptpath_resource},
-        {"ExecuteLuaScript", m_executeLuaScript_resource},
+        {frontend_resources::LuaAPI_Req_Name, luaApi_resource},
         {"SetScriptPath", m_setScriptPath_resource},
-        {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
 
     this->m_requestedResourcesNames = {"FrontendResourcesList",
-        "GLFrontbufferToPNG_ScreenshotTrigger",    // for screenshots
-        "FrameStatistics",                         // for LastFrameTime
-        "optional<WindowManipulation>",            // for Framebuffer resize
-        "optional<GUIState>",                      // propagate GUI state and visibility
-        frontend_resources::MegaMolGraph_Req_Name, // LuaAPI manipulates graph
-        "RenderNextFrame",                         // LuaAPI can render one frame
-        "GlobalValueStore",                        // LuaAPI can read and set global values
-        frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
+                                       "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
+                                       "FrameStatistics", // for LastFrameTime
+                                       "optional<WindowManipulation>", // for Framebuffer resize
+                                       "optional<GUIState>", // propagate GUI state and visibility
+                                       frontend_resources::MegaMolGraph_Req_Name, // LuaAPI manipulates graph
+                                       "RenderNextFrame", // LuaAPI can render one frame
+                                       "GlobalValueStore", // LuaAPI can read and set global values
+                                       frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>",
+                                       "RuntimeConfig",
 #ifdef MEGAMOL_USE_PROFILING
-        frontend_resources::PerformanceManager_Req_Name
+                                       frontend_resources::PerformanceManager_Req_Name
 #endif
     }; //= {"ZMQ_Context"};
 
@@ -143,11 +144,8 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     // TODO: do something with ZMQ resource we get here
     m_requestedResourceReferences = resources;
 
-    using megamol::frontend_resources::LuaCallbacksCollection;
-    LuaCallbacksCollection frontend_resource_callbacks;
-
-    fill_frontend_resources_callbacks(&frontend_resource_callbacks);
-    fill_graph_manipulation_callbacks(&frontend_resource_callbacks);
+    fill_frontend_resources_callbacks();
+    fill_graph_manipulation_callbacks();
 
     //luaAPI.AddCallbacks(frontend_resource_callbacks);
 
@@ -233,26 +231,17 @@ void Lua_Service_Wrapper::postGraphRender() {
 }
 
 
-void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_collection_ptr) {
-    using megamol::frontend_resources::LuaCallbacksCollection;
-    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
-    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
-    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
-    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
-    using BoolResult = megamol::frontend_resources::LuaCallbacksCollection::BoolResult;
-
-    auto& callbacks = *reinterpret_cast<LuaCallbacksCollection*>(callbacks_collection_ptr);
-
-    callbacks.add<StringResult>(
-        "mmGetMegaMolExecutableDirectory", "()\n\tReturns the directory of the running MegaMol executable.", {[&]() {
+void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
+    luaApi_resource->RegisterCallback(
+        "mmGetMegaMolExecutableDirectory", "()\n\tReturns the directory of the running MegaMol executable.", [&]() {
             auto& path = m_requestedResourceReferences[10]
-                             .getResource<frontend_resources::RuntimeConfig>()
-                             .megamol_executable_directory;
-            return StringResult{path};
-        }});
+                         .getResource<frontend_resources::RuntimeConfig>()
+                         .megamol_executable_directory;
+            return path;
+        });
 
-    callbacks.add<StringResult>(
-        "mmListResources", "()\n\tReturn a list of available resources in the frontend.", {[&]() -> StringResult {
+    luaApi_resource->RegisterCallback(
+        "mmListResources", "()\n\tReturn a list of available resources in the frontend.", [&]() -> std::string {
             auto resources_list =
                 m_requestedResourceReferences[0].getResource<std::function<std::vector<std::string>(void)>>()();
             std::ostringstream answer;
@@ -265,30 +254,29 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
                 answer << "(none)" << std::endl;
             }
 
-            return StringResult{answer.str().c_str()};
-        }});
+            return answer.str();
+        });
 
-    callbacks.add<VoidResult, std::string>("mmScreenshot",
+    luaApi_resource->RegisterCallback("mmScreenshot",
         "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
-        {[&](std::string file) -> VoidResult {
+        [&](std::string file) -> void {
             m_requestedResourceReferences[1].getResource<std::function<bool(std::filesystem::path const&)>>()(
                 std::filesystem::u8path(file));
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<DoubleResult>(
-        "mmLastFrameTime", "()\n\tReturns the graph execution time of the last frame in ms.", {[&]() -> DoubleResult {
+    luaApi_resource->RegisterCallback(
+        "mmLastFrameTime", "()\n\tReturns the graph execution time of the last frame in ms.", [&]() -> double {
             auto& frame_statistics =
                 m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
-            return DoubleResult{frame_statistics.last_rendered_frame_time_milliseconds};
-        }});
+            return frame_statistics.last_rendered_frame_time_milliseconds;
+        });
 
-    callbacks.add<DoubleResult>("mmLastRenderedFramesCount",
-        "()\n\tReturns the number of rendered frames up until to the last frame.", {[&]() -> DoubleResult {
+    luaApi_resource->RegisterCallback("mmLastRenderedFramesCount",
+        "()\n\tReturns the number of rendered frames up until to the last frame.", [&]() -> double {
             auto& frame_statistics =
                 m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
-            return DoubleResult{static_cast<double>(frame_statistics.rendered_frames_count)};
-        }});
+            return static_cast<double>(frame_statistics.rendered_frames_count);
+        });
 
 
     auto maybe_window_manipulation =
@@ -297,37 +285,33 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
         frontend_resources::WindowManipulation& window_manipulation =
             const_cast<frontend_resources::WindowManipulation&>(maybe_window_manipulation.value().get());
 
-        callbacks.add<VoidResult, int, int>("mmSetWindowFramebufferSize",
+        luaApi_resource->RegisterCallback("mmSetWindowFramebufferSize",
             "(int width, int height)\n\tSet framebuffer dimensions of window to width x height.",
-            {[&](int width, int height) -> VoidResult {
+            [&](int width, int height) -> void {
                 if (width <= 0 || height <= 0) {
-                    return Error{"framebuffer dimensions must be positive, but given values are: " +
-                                 std::to_string(width) + " x " + std::to_string(height)};
+                    luaApi_resource->Error("framebuffer dimensions must be positive, but given values are: " +
+                                           std::to_string(width) + " x " + std::to_string(height));
                 }
 
                 window_manipulation.set_framebuffer_size(width, height);
-                return VoidResult{};
-            }});
+            });
 
-        callbacks.add<VoidResult, int, int>(
-            "mmSetWindowPosition", "(int x, int y)\n\tSet window position to x,y.", {[&](int x, int y) -> VoidResult {
+        luaApi_resource->RegisterCallback(
+            "mmSetWindowPosition", "(int x, int y)\n\tSet window position to x,y.", [&](int x, int y) -> void {
                 window_manipulation.set_window_position(x, y);
-                return VoidResult{};
-            }});
+            });
 
-        callbacks.add<VoidResult, bool>("mmSetFullscreen",
-            "(bool fullscreen)\n\tSet window to fullscreen (or restore).", {[&](bool fullscreen) -> VoidResult {
+        luaApi_resource->RegisterCallback("mmSetFullscreen",
+            "(bool fullscreen)\n\tSet window to fullscreen (or restore).", [&](bool fullscreen) -> void {
                 window_manipulation.set_fullscreen(fullscreen
                                                        ? frontend_resources::WindowManipulation::Fullscreen::Maximize
                                                        : frontend_resources::WindowManipulation::Fullscreen::Restore);
-                return VoidResult{};
-            }});
+            });
 
-        callbacks.add<VoidResult, bool>(
-            "mmSetVSync", "(bool state)\n\tSet window VSync off (false) or on (true).", {[&](bool state) -> VoidResult {
+        luaApi_resource->RegisterCallback(
+            "mmSetVSync", "(bool state)\n\tSet window VSync off (false) or on (true).", [&](bool state) -> void {
                 window_manipulation.set_swap_interval(state ? 1 : 0);
-                return VoidResult{};
-            }});
+            });
     }
 
     auto maybe_gui_state =
@@ -335,99 +319,95 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     if (maybe_gui_state.has_value()) {
         auto& gui_resource = maybe_gui_state.value().get();
 
-        callbacks.add<VoidResult, std::string>("mmSetGUIState",
-            "(string json)\n\tSet GUI state from given 'json' string.", {[&](std::string json) -> VoidResult {
+        luaApi_resource->RegisterCallback("mmSetGUIState",
+            "(string json)\n\tSet GUI state from given 'json' string.", [&](std::string json) -> void {
                 gui_resource.provide_gui_state(json);
-                return VoidResult{};
-            }});
-        callbacks.add<StringResult>(
-            "mmGetGUIState", "()\n\tReturns the GUI state as json string.", {[&]() -> StringResult {
+            });
+        luaApi_resource->RegisterCallback(
+            "mmGetGUIState", "()\n\tReturns the GUI state as json string.", [&]() -> std::string {
                 auto s = gui_resource.request_gui_state(false);
-                return StringResult{s};
-            }});
+                return s;
+            });
 
-        callbacks.add<VoidResult, bool>(
-            "mmSetGUIVisible", "(bool state)\n\tShow (true) or hide (false) the GUI.", {[&](bool show) -> VoidResult {
+        luaApi_resource->RegisterCallback(
+            "mmSetGUIVisible", "(bool state)\n\tShow (true) or hide (false) the GUI.", [&](bool show) -> void {
                 gui_resource.provide_gui_visibility(show);
-                return VoidResult{};
-            }});
-        callbacks.add<StringResult>(
-            "mmGetGUIVisible", "()\n\tReturns whether the GUI is visible (true/false).", {[&]() -> StringResult {
+            });
+        luaApi_resource->RegisterCallback(
+            "mmGetGUIVisible", "()\n\tReturns whether the GUI is visible (true/false).", [&]() -> std::string {
                 const auto visible = gui_resource.request_gui_visibility();
-                return StringResult{visible ? "true" : "false"};
-            }});
+                return visible ? "true" : "false";
+            });
 
-        callbacks.add<VoidResult, float>(
-            "mmSetGUIScale", "(float scale)\n\tSet GUI scaling factor.", {[&](float scale) -> VoidResult {
+        luaApi_resource->RegisterCallback(
+            "mmSetGUIScale", "(float scale)\n\tSet GUI scaling factor.", [&](float scale) -> void {
                 gui_resource.provide_gui_scale(scale);
-                return VoidResult{};
-            }});
-        callbacks.add<StringResult>("mmGetGUIScale", "()\n\tReturns the GUI scaling as float.", {[&]() -> StringResult {
-            const auto scale = gui_resource.request_gui_scale();
-            return StringResult{std::to_string(scale)};
-        }});
+            });
+        luaApi_resource->RegisterCallback(
+            "mmGetGUIScale", "()\n\tReturns the GUI scaling as float.", [&]() -> std::string {
+                const auto scale = gui_resource.request_gui_scale();
+                return std::to_string(scale);
+            });
     }
 
-    callbacks.add<VoidResult>("mmQuit", "()\n\tClose the MegaMol instance.", {[&]() -> VoidResult {
+    luaApi_resource->RegisterCallback("mmQuit", "()\n\tClose the MegaMol instance.", [&]() -> void {
         this->setShutdown();
-        return VoidResult{};
-    }});
+    });
 
-    callbacks.add<VoidResult>("mmRenderNextFrame",
-        "()\n\tAdvances rendering by one frame by poking the main rendering loop.", {[&]() -> VoidResult {
+    luaApi_resource->RegisterCallback("mmRenderNextFrame",
+        "()\n\tAdvances rendering by one frame by poking the main rendering loop.", [&]() -> void {
             auto& render_next_frame = m_requestedResourceReferences[6].getResource<std::function<bool()>>();
             render_next_frame();
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string, std::string>("mmSetGlobalValue",
+    luaApi_resource->RegisterCallback("mmSetGlobalValue",
         "(string key, string value)\n\tSets a global key-value pair. If the key is already present, overwrites the "
         "value.",
-        {[&](std::string key, std::string value) -> VoidResult {
+        [&](std::string key, std::string value) -> void {
             auto& global_value_store = const_cast<megamol::frontend_resources::GlobalValueStore&>(
                 m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>());
             global_value_store.insert(key, value);
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<StringResult, std::string>("mmGetGlobalValue",
+    luaApi_resource->RegisterCallback("mmGetGlobalValue",
         "(string key)\n\tReturns the value for the given global key. If no key with that name is known, returns empty "
         "string.",
-        {[&](std::string key) -> StringResult {
+        [&](std::string key) -> std::string {
             auto& global_value_store =
                 m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>();
             std::optional<std::string> maybe_value = global_value_store.maybe_get(key);
 
             if (maybe_value.has_value()) {
-                return StringResult{maybe_value.value()};
+                return maybe_value.value();
             }
 
             // TODO: maybe we want to LuaError?
-            return StringResult{""};
-        }});
+            return "";
+        });
 
-    callbacks.add<VoidResult, std::string>("mmExecCommand",
+    luaApi_resource->RegisterCallback("mmExecCommand",
         "(string command)\n\tExecutes a command as provided by a hotkey, for example.",
-        {[&](std::string command) -> VoidResult {
+        [&](std::string command) -> void {
             auto& command_registry =
                 m_requestedResourceReferences[8].getResource<megamol::frontend_resources::CommandRegistry>();
             command_registry.exec_command(command);
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<StringResult>("mmListCommands", "()\n\tLists the available commands.", {[&]() -> StringResult {
+    luaApi_resource->RegisterCallback("mmListCommands", "()\n\tLists the available commands.", [&]() -> std::string {
         auto& command_registry =
             m_requestedResourceReferences[8].getResource<megamol::frontend_resources::CommandRegistry>();
         auto& l = command_registry.list_commands();
         std::string output;
         std::for_each(l.begin(), l.end(),
-            [&](const frontend_resources::Command& c) { output = output + c.name + ", " + c.key.ToString() + "\n"; });
-        return StringResult{output};
-    }});
+            [&](const frontend_resources::Command& c) {
+                output = output + c.name + ", " + c.key.ToString() + "\n";
+            });
+        return output;
+    });
 
-    callbacks.add<BoolResult, std::string>("mmCheckVersion",
+    luaApi_resource->RegisterCallback("mmCheckVersion",
         "(string version)\n\tChecks whether the running MegaMol corresponds to version.",
-        {[&](std::string version) -> BoolResult {
+        [&](std::string version) -> bool {
             bool version_ok = version == megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH();
             *open_version_notification = (!version_ok && m_config.show_version_notification);
             if (!version_ok) {
@@ -435,8 +415,8 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
                     "Version info in project (%s) does not match MegaMol version (%s)!", version.c_str(),
                     megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH().c_str());
             }
-            return BoolResult(version_ok);
-        }});
+            return version_ok;
+        });
 
     // mmLoadProject ?
     // the ProjectLoader resource immediately executes the file contents as lua code
@@ -452,96 +432,83 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     //    }});
 }
 
-void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_collection_ptr) {
-    using megamol::frontend_resources::LuaCallbacksCollection;
-    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
-    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
-    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
-    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
-
-    auto& callbacks = *reinterpret_cast<LuaCallbacksCollection*>(callbacks_collection_ptr);
+void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
     auto& graph = const_cast<megamol::core::MegaMolGraph&>(
         m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
 
-    callbacks.add<VoidResult, std::string, std::string, std::string>("mmCreateView",
+    luaApi_resource->RegisterCallback("mmCreateView",
         "(string graphName, string className, string moduleName)\n\tCreate a view module instance of class <className> "
         "called <moduleName>. The view module is registered as graph entry point. <graphName> is ignored.",
-        {[&](std::string baseName, std::string className, std::string instanceName) -> VoidResult {
+        [&](std::string baseName, std::string className, std::string instanceName) -> void {
             if (!graph.CreateModule(className, instanceName)) {
-                return Error{
-                    "graph could not create module for: " + baseName + " , " + className + " , " + instanceName};
+                luaApi_resource->Error(
+                    "graph could not create module for: " + baseName + " , " + className + " , " + instanceName);
             }
 
             if (!graph.SetGraphEntryPoint(instanceName)) {
-                return Error{"graph could not set graph entry point for: " + baseName + " , " + className + " , " +
-                             instanceName};
+                luaApi_resource->Error(
+                    "graph could not set graph entry point for: " + baseName + " , " + className + " , " +
+                    instanceName);
             }
+        });
 
-            return VoidResult{};
-        }});
-
-    callbacks.add<VoidResult, std::string, std::string>("mmCreateModule",
+    luaApi_resource->RegisterCallback("mmCreateModule",
         "(string className, string moduleName)\n\tCreate a module instance of class <className> called <moduleName>.",
-        {[&](std::string className, std::string instanceName) -> VoidResult {
+        [&](std::string className, std::string instanceName) -> void {
             if (!graph.CreateModule(className, instanceName)) {
-                return Error{"graph could not create module: " + className + " , " + instanceName};
+                luaApi_resource->Error("graph could not create module: " + className + " , " + instanceName);
             }
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string>("mmDeleteModule", "(string name)\n\tDelete the module called <name>.",
-        {[&](std::string moduleName) -> VoidResult {
+    luaApi_resource->RegisterCallback("mmDeleteModule", "(string name)\n\tDelete the module called <name>.",
+        [&](std::string moduleName) -> void {
             if (!graph.DeleteModule(moduleName)) {
-                return Error{"graph could not delete module: " + moduleName};
+                luaApi_resource->Error("graph could not delete module: " + moduleName);
             }
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string, std::string>("mmRenameModule",
+    luaApi_resource->RegisterCallback("mmRenameModule",
         "(string oldName, string newName)\n\tRenames the module called <oldname> to <newname>.",
-        {[&](std::string oldName, std::string newName) -> VoidResult {
+        [&](std::string oldName, std::string newName) -> void {
             if (!graph.RenameModule(oldName, newName)) {
-                return Error{"graph could not rename module: " + oldName + " to " + newName};
+                luaApi_resource->Error("graph could not rename module: " + oldName + " to " + newName);
             }
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string, std::string, std::string>("mmCreateCall",
+    luaApi_resource->RegisterCallback("mmCreateCall",
         "(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> "
         "and CalleeSlot <to>.",
-        {[&](std::string className, std::string from, std::string to) -> VoidResult {
+        [&](std::string className, std::string from, std::string to) -> void {
             if (!graph.CreateCall(className, from, to)) {
-                return Error{"graph could not create call: " + className + " , " + from + " -> " + to};
+                luaApi_resource->Error("graph could not create call: " + className + " , " + from + " -> " + to);
             }
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string, std::string>("mmDeleteCall",
+    luaApi_resource->RegisterCallback("mmDeleteCall",
         "(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>.",
-        {[&](std::string from, std::string to) -> VoidResult {
+        [&](std::string from, std::string to) -> void {
             if (!graph.DeleteCall(from, to)) {
-                return Error{"graph could not delete call: " + from + " -> " + to};
+                luaApi_resource->Error("graph could not delete call: " + from + " -> " + to);
             }
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string, std::string, std::string>("mmCreateChainCall",
+    luaApi_resource->RegisterCallback("mmCreateChainCall",
         "(string className, string chainStart, string to)\n\tAppend a call of type <className>, connection the "
         "rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>.",
-        {[&](std::string className, std::string chainStart, std::string to) -> VoidResult {
+        [&](std::string className, std::string chainStart, std::string to) -> void {
             if (!graph.Convenience().CreateChainCall(className, chainStart, to)) {
-                return Error{"graph could not create chain call: " + className + " , " + chainStart + " -> " + to};
+                luaApi_resource->Error(
+                    "graph could not create chain call: " + className + " , " + chainStart + " -> " + to);
             }
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<StringResult, std::string>("mmGetModuleParams",
+    luaApi_resource->RegisterCallback("mmGetModuleParams",
         "(string name)\n\tReturns a 0x1-separated list of module name and all parameters.\n\tFor each parameter the "
         "name, description, definition, and value are returned.",
-        {[&](std::string moduleName) -> StringResult {
+        [&](std::string moduleName) -> std::string {
             auto mod = graph.FindModule(moduleName);
             if (mod == nullptr) {
-                return Error{"graph could not find module: " + moduleName};
+                luaApi_resource->Error("graph could not find module: " + moduleName);
             }
 
             auto slots = graph.EnumerateModuleParameterSlots(moduleName);
@@ -553,107 +520,101 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 answer << ps->Description() << "\1";
                 auto par = ps->Parameter();
                 if (par == nullptr) {
-                    return Error{
-                        "ParamSlot does not seem to hold a parameter: " + std::string(ps->FullName().PeekBuffer())};
+                    luaApi_resource->Error(
+                        "ParamSlot does not seem to hold a parameter: " + std::string(ps->FullName().PeekBuffer()));
                 }
                 answer << par->ValueString() << "\1";
             }
 
-            return StringResult{answer.str()};
-        }});
+            return answer.str();
+        });
 
-    callbacks.add<StringResult, std::string>("mmGetParamDescription",
-        "(string name)\n\tReturn the description of a parameter slot.", {[&](std::string paramName) -> StringResult {
+    luaApi_resource->RegisterCallback("mmGetParamDescription",
+        "(string name)\n\tReturn the description of a parameter slot.", [&](std::string paramName) -> std::string {
             core::param::ParamSlot* ps = graph.FindParameterSlot(paramName);
             if (ps == nullptr) {
-                return Error{"graph could not find parameter: " + paramName};
+                luaApi_resource->Error("graph could not find parameter: " + paramName);
             }
 
             vislib::StringA valUTF8;
             vislib::UTF8Encoder::Encode(valUTF8, ps->Description());
 
-            return StringResult{valUTF8.PeekBuffer()};
-        }});
+            return valUTF8.PeekBuffer();
+        });
 
-    callbacks.add<StringResult, std::string>("mmGetParamValue",
-        "(string name)\n\tReturn the value of a parameter slot.", {[&](std::string paramName) -> StringResult {
+    luaApi_resource->RegisterCallback("mmGetParamValue",
+        "(string name)\n\tReturn the value of a parameter slot.", [&](std::string paramName) -> std::string {
             const auto* param = graph.FindParameter(paramName);
             if (param == nullptr) {
-                return Error{"graph could not find parameter: " + paramName};
+                luaApi_resource->Error("graph could not find parameter: " + paramName);
             }
 
-            return StringResult{param->ValueString()};
-        }});
+            return param->ValueString();
+        });
 
-    callbacks.add<VoidResult, std::string, std::string>("mmSetParamValue",
+    luaApi_resource->RegisterCallback("mmSetParamValue",
         "(string name, string value)\n\tSet the value of a parameter slot.",
-        {[&](std::string paramName, std::string paramValue) -> VoidResult {
+        [&](std::string paramName, std::string paramValue) -> void {
             if (!graph.SetParameter(paramName, paramValue.c_str())) {
-                return Error{"parameter could not be set to value: " + paramName + " : " + paramValue};
+                luaApi_resource->Error("parameter could not be set to value: " + paramName + " : " + paramValue);
             }
 
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string, bool>("mmSetParamHighlight",
+    luaApi_resource->RegisterCallback("mmSetParamHighlight",
         "(string name, bool is_highlight)\n\tHighlight parameter slot.",
-        {[&](std::string paramName, bool is_highlight) -> VoidResult {
+        [&](std::string paramName, bool is_highlight) -> void {
             auto param_ptr = graph.FindParameter(paramName);
 
             if (param_ptr == nullptr) {
-                return Error{
-                    "parameter highlight could not be set: " + paramName + " : " + std::to_string(is_highlight)};
+                luaApi_resource->Error(
+                    "parameter highlight could not be set: " + paramName + " : " + std::to_string(is_highlight));
             }
 
             param_ptr->SetGUIHighlight(is_highlight);
+        });
 
-            return VoidResult{};
-        }});
-
-    callbacks.add<VoidResult, std::string>("mmCreateParamGroup",
+    luaApi_resource->RegisterCallback("mmCreateParamGroup",
         "(string name, string size)\n\tGenerate a param group that can only be set at once. Sets are queued until size "
         "is reached.",
-        {[&](std::string groupName) -> VoidResult {
+        [&](std::string groupName) -> void {
             graph.Convenience().CreateParameterGroup(groupName);
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string, std::string, std::string>("mmSetParamGroupValue",
+    luaApi_resource->RegisterCallback("mmSetParamGroupValue",
         "(string groupname, string paramname, string value)\n\tQueue the value of a grouped parameter.",
-        {[&](std::string paramGroup, std::string paramName, std::string paramValue) -> VoidResult {
+        [&](std::string paramGroup, std::string paramName, std::string paramValue) -> void {
             auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
             if (!groupPtr) {
-                return Error{"graph could not find parameter group: " + paramGroup};
+                luaApi_resource->Error("graph could not find parameter group: " + paramGroup);
             }
 
             bool queued = groupPtr->QueueParameterValue(paramName, paramValue);
             if (!queued) {
-                return Error{
-                    "graph could not queue param group value: " + paramGroup + " , " + paramName + " : " + paramValue};
+                luaApi_resource->Error(
+                    "graph could not queue param group value: " + paramGroup + " , " + paramName + " : " + paramValue);
             }
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<VoidResult, std::string>("mmApplyParamGroupValues",
+    luaApi_resource->RegisterCallback("mmApplyParamGroupValues",
         "(string groupname)\n\tApply queued parameter values of group to graph.",
-        {[&](std::string paramGroup) -> VoidResult {
+        [&](std::string paramGroup) -> void {
             auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
             if (!groupPtr) {
-                return Error{"graph could not apply param group: no such group: " + paramGroup};
+                luaApi_resource->Error("graph could not apply param group: no such group: " + paramGroup);
             }
 
             bool applied = groupPtr->ApplyQueuedParameterValues();
             if (!applied) {
-                return Error{"graph could not apply param group: some parameter values did not parse."};
+                luaApi_resource->Error("graph could not apply param group: some parameter values did not parse.");
             }
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<StringResult, std::string>("mmListModules",
+    luaApi_resource->RegisterCallback("mmListModules",
         "(string basemodule_or_namespace)\n\tReturn a list of instantiated modules (class id, instance id), starting "
         "from a certain module downstream or inside a namespace.\n\tWill use the graph root if an empty string is "
         "passed.",
-        {[&](std::string starting_point) -> StringResult {
+        [&](std::string starting_point) -> std::string {
             // actually putting an empty string as an argument on purpose is OK too
             auto modules_list =
                 starting_point.empty() ? graph.ListModules() : graph.Convenience().ListModules(starting_point);
@@ -667,66 +628,63 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 answer << "(none)" << std::endl;
             }
 
-            return StringResult{answer.str().c_str()};
-        }});
+            return answer.str();
+        });
 
-    callbacks.add<VoidResult>(
-        "mmClearGraph", "()\n\tClear the MegaMol Graph from all Modules and Calls", {[&]() -> VoidResult {
+    luaApi_resource->RegisterCallback(
+        "mmClearGraph", "()\n\tClear the MegaMol Graph from all Modules and Calls", [&]() -> void {
             graph.Clear();
-            return VoidResult{};
-        }});
+        });
 
-    callbacks.add<StringResult>("mmListCalls", "()\n\tReturn a list of instantiated calls.", {[&]() -> StringResult {
-        std::ostringstream answer;
-        auto& calls_list = graph.ListCalls();
-        for (auto& call : calls_list) {
-            answer << call.callPtr->ClassName() << ";" << call.callPtr->PeekCallerSlot()->Parent()->Name() << ","
-                   << call.callPtr->PeekCalleeSlot()->Parent()->Name() << ";" << call.callPtr->PeekCallerSlot()->Name()
-                   << "," << call.callPtr->PeekCalleeSlot()->Name() << std::endl;
-        }
+    luaApi_resource->RegisterCallback(
+        "mmListCalls", "()\n\tReturn a list of instantiated calls.", [&]() -> std::string {
+            std::ostringstream answer;
+            auto& calls_list = graph.ListCalls();
+            for (auto& call : calls_list) {
+                answer << call.callPtr->ClassName() << ";" << call.callPtr->PeekCallerSlot()->Parent()->Name() << ","
+                    << call.callPtr->PeekCalleeSlot()->Parent()->Name() << ";" << call.callPtr->PeekCallerSlot()->Name()
+                    << "," << call.callPtr->PeekCalleeSlot()->Name() << std::endl;
+            }
 
-        if (calls_list.empty()) {
-            answer << "(none)" << std::endl;
-        }
+            if (calls_list.empty()) {
+                answer << "(none)" << std::endl;
+            }
 
-        return StringResult{answer.str().c_str()};
-    }});
+            return answer.str();
+        });
 
-    callbacks.add<VoidResult, std::string>("mmSetGraphEntryPoint",
+    luaApi_resource->RegisterCallback("mmSetGraphEntryPoint",
         "(string moduleName)\n\tSet active graph entry point to one specific module.",
-        {[&](std::string moduleName) -> VoidResult {
+        [&](std::string moduleName) -> void {
             auto res = graph.SetGraphEntryPoint(moduleName);
             if (!res) {
-                return Error{"Could not set graph entry point " + moduleName};
+                luaApi_resource->Error("Could not set graph entry point " + moduleName);
             }
-            return VoidResult{};
-        }});
-    callbacks.add<VoidResult, std::string>("mmRemoveGraphEntryPoint",
+        });
+    luaApi_resource->RegisterCallback("mmRemoveGraphEntryPoint",
         "(string moduleName)\n\tRemove active graph entry point from one specific module.",
-        {[&](std::string moduleName) -> VoidResult {
+        [&](std::string moduleName) -> void {
             auto res = graph.RemoveGraphEntryPoint(moduleName);
             if (!res) {
-                return Error{"Could not remove graph entry point " + moduleName};
+                luaApi_resource->Error("Could not remove graph entry point " + moduleName);
             }
-            return VoidResult{};
-        }});
-    callbacks.add<VoidResult>(
-        "mmRemoveAllGraphEntryPoints", "\n\tRemove any and all active graph entry points.", {[&]() -> VoidResult {
+        });
+    luaApi_resource->RegisterCallback(
+        "mmRemoveAllGraphEntryPoints", "\n\tRemove any and all active graph entry points.", [&]() -> void {
             for (auto& m : graph.ListModules()) {
                 if (m.isGraphEntryPoint) {
                     graph.RemoveGraphEntryPoint(m.modulePtr->FullName().PeekBuffer());
                 }
             }
-            return VoidResult{};
-        }});
+        });
 
 
 #ifdef MEGAMOL_USE_PROFILING
-    callbacks.add<StringResult, std::string>("mmListModuleTimers",
-        "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
+    luaApi_resource->RegisterCallback("mmListModuleTimers",
+        "(string name)\n\tList the registered timers of a module.", [&](std::string name) -> std::string {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
                 &this->m_requestedResourceReferences[11]
-                     .getResource<megamol::frontend_resources::PerformanceManager>());
+                .getResource<megamol::frontend_resources::PerformanceManager>());
             std::stringstream output;
             auto m = graph.FindModule(name);
             if (m) {
@@ -734,21 +692,20 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 for (auto& t : timers) {
                     auto& timer = perf_manager->lookup_config(t);
                     output << t << ": " << timer.name << " ("
-                           << megamol::frontend_resources::PerformanceManager::query_api_string(timer.api) << ")"
-                           << std::endl;
+                        << megamol::frontend_resources::PerformanceManager::query_api_string(timer.api) << ")"
+                        << std::endl;
                 }
             }
-            return StringResult{output.str()};
-        }});
-    callbacks.add<VoidResult, int, std::string>("mmSetTimerComment",
+            return output.str();
+        });
+    luaApi_resource->RegisterCallback("mmSetTimerComment",
         "(int handle, string comment)\n\tSet a transient comment for a timer; will show up in profiling log.",
-        {[&](int handle, std::string comment) -> VoidResult {
+        [&](int handle, std::string comment) -> void {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
                 &this->m_requestedResourceReferences[11]
-                     .getResource<megamol::frontend_resources::PerformanceManager>());
+                .getResource<megamol::frontend_resources::PerformanceManager>());
             perf_manager->set_transient_comment(handle, comment);
-            return VoidResult{};
-        }});
+        });
 #endif
     // TODO
     //const auto fun = [&answer](Module* mod) {

@@ -215,7 +215,7 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , input_shared_data(nullptr)
         , input_reclaim_focus(false)
         , input_buffer()
-        , input_lua_func(nullptr)
+        , luaApi(nullptr)
         , is_autocomplete_popup_open(false) {
     auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(this->echo_log_stream);
     sink->set_pattern(core::utility::log::Log::std_pattern);
@@ -422,7 +422,7 @@ bool megamol::gui::LogConsole::Draw() {
     if (ImGui::InputText("###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback,
             (void*) this->input_shared_data.get())) {
         std::string command = this->input_buffer;
-        auto result = (*this->input_lua_func)(command);
+        auto result = this->luaApi->RunString(command);
         if (result.valid()) {
             // command was fine, no editing required
             auto blah = result.get<std::string>();
@@ -492,11 +492,11 @@ bool megamol::gui::LogConsole::Draw() {
 }
 
 
-void LogConsole::SetLuaFunc(lua_func_type* func) {
-    this->input_lua_func = func;
+void LogConsole::SetLuaAPI(core::LuaAPI* luaApi) {
+    this->luaApi = luaApi;
 
     if (this->input_shared_data->commands.empty()) {
-        auto result = (*this->input_lua_func)("return mmHelp()");
+        auto result = luaApi->RunString("return mmHelp()");
         if (result.valid()) {
             auto res = result.get<std::string>();
             std::regex cmd_regex("mm[A-Z]\\w+(.*)", std::regex_constants::ECMAScript);

@@ -86,8 +86,8 @@ bool AnimationEditor::Draw() {
 }
 
 
-void AnimationEditor::SetLuaFunc(lua_func_type* func) {
-    this->input_lua_func = func;
+void AnimationEditor::SetLuaAPI(core::LuaAPI* api) {
+    this->luaApi = api;
 }
 
 
@@ -260,7 +260,7 @@ void AnimationEditor::RenderAnimation() {
             //command << "mmScreenshotEntryPoint(\"\", \"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame
             //        << ".png\")\n";
         }
-        auto res = (*input_lua_func)(command.str());
+        auto res = luaApi->RunString(command.str());
         if (!res.valid()) {
             open_popup_error = true;
             error_popup_message = res.get<std::string>();
@@ -270,10 +270,10 @@ void AnimationEditor::RenderAnimation() {
             current_frame++;
             // this will set the state for the NEXT frame.
             // but we can grab only the front buffer, so we might need to wait one more frame. argh.
-            (*input_lua_func)(GenerateLuaForFrame(current_frame));
+            luaApi->RunString(GenerateLuaForFrame(current_frame));
         } else {
             rendering = false;
-            auto res = (*input_lua_func)("mmExecCommand(\"_hotkey_gui_window_Animation Editor\")");
+            auto res = luaApi->RunString("mmExecCommand(\"_hotkey_gui_window_Animation Editor\")");
         }
     }
 }
@@ -294,7 +294,7 @@ std::string AnimationEditor::GenerateLuaForFrame(animation::KeyTimeType time) {
 void AnimationEditor::WriteValuesToGraph() {
     if (write_to_graph) {
         const auto lua_commands = GenerateLuaForFrame(current_frame);
-        const auto res = (*input_lua_func)(lua_commands);
+        const auto res = luaApi->RunString(lua_commands);
         if (!res.valid()) {
             open_popup_error = true;
             error_popup_message = res.get<std::string>();
@@ -749,7 +749,7 @@ void AnimationEditor::DrawParams() {
     }
     if (ImGui::Button("render")) {
         current_frame = animation_bounds[0] - 10; // a bit of pre-roll to let the GUI state settle
-        auto res = (*input_lua_func)("mmExecCommand(\"_hotkey_gui_window_Animation Editor\")");
+        auto res = luaApi->RunString("mmExecCommand(\"_hotkey_gui_window_Animation Editor\")");
         write_to_graph = false;
         rendering = true;
     }

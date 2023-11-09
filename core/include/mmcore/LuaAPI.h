@@ -9,7 +9,6 @@
 #include <mutex>
 #include <string>
 
-#include "LuaCallbacksCollection.h"
 //#define SOL_ALL_SAFETIES_ON 1
 #define SOL_NO_EXCEPTIONS 1
 #define SOL_PRINT_ERRORS 0
@@ -35,17 +34,19 @@ public:
     // TODO forbid copy-contructor? assignment?
 
     /**
-     * Run a script file.
-     */
-    sol::safe_function_result RunFile(const std::string& fileName);
-    /**
-     * Run a script file.
-     */
-    sol::safe_function_result RunFile(const std::wstring& fileName);
-    /**
      * Run a script string.
      */
     sol::safe_function_result RunString(const std::string& script, std::string scriptPath = "");
+
+    /**
+     * Invoke the error-generating mechanism of lua
+     */
+    void Error(std::string description);
+
+    /**
+     * Get Lua error if res is not valid
+     */
+    std::string GetError(const sol::protected_function_result& res) const;
 
     /**
      * Answers the current project file path
@@ -56,12 +57,6 @@ public:
      * Sets the current project file path
      */
     void SetScriptPath(std::string const& scriptPath);
-
-    //void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
-    //void RemoveCallbacks(
-    //    megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
-    //void RemoveCallbacks(std::vector<std::string> const& callback_names);
-    //void ClearCallbacks();
 
     template<typename... Args>
     void RegisterCallback(std::string const& name, std::string const& help, Args&&... args) {
@@ -110,17 +105,8 @@ private:
     /** all of the Lua startup code */
     void commonInit();
 
-    void checkRes(sol::protected_function_result& res) const;
-
     /** the one Lua state */
     sol::state luaApiInterpreter_;
-
-    //std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
-    //std::list<std::tuple<std::string, std::function<int(lua_State*)>>> wrapped_lambda_callbacks_;
-    //void register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks);
-
-    /** no two threads must interfere with the reentrant L */
-    std::mutex stateLock;
 
     std::string currentScriptPath = "";
 

@@ -10,6 +10,7 @@
 #include "CommonTypes.h"
 #include "Graph.h"
 #include "PluginsResource.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
@@ -32,7 +33,6 @@ typedef std::vector<GraphPtr_t> GraphPtrVector_t;
  */
 class GraphCollection {
 public:
-    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
 
     GraphCollection();
     ~GraphCollection() = default;
@@ -60,7 +60,7 @@ public:
         return (!this->modules_stock.empty());
     }
 
-    void SetLuaFunc(lua_func_type* func);
+    void SetLuaAPI(core::LuaAPI* api);
 
     // ! Has to be called once before calling SynchronizeGraphs() or NotifyRunningGraph_*()
     bool InitializeGraphSynchronisation(const megamol::frontend_resources::PluginsResource& pluginsRes);
@@ -112,7 +112,7 @@ private:
     FileBrowserWidget gui_file_browser;
     ImGuiID gui_graph_delete_uid;
 
-    lua_func_type* input_lua_func = nullptr;
+    core::LuaAPI* luaApi = nullptr;
 
     bool created_running_graph;
     bool initialized_syncing;

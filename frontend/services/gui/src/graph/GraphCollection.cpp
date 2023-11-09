@@ -259,9 +259,8 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::frontend_re
 }
 
 
-void megamol::gui::GraphCollection::SetLuaFunc(lua_func_type* func) {
-
-    this->input_lua_func = func;
+void megamol::gui::GraphCollection::SetLuaAPI(core::LuaAPI* api) {
+    this->luaApi = api;
 }
 
 
@@ -338,7 +337,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
 
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
-                auto created = (*input_lua_func)(
+                auto created = luaApi->RunString(
                     "mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])").valid();
                 graph_sync_success &= created;
 #ifdef MEGAMOL_USE_PROFILING
@@ -352,7 +351,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
             }
             break;
             case (Graph::QueueAction::RENAME_MODULE): {
-                graph_sync_success &= (*input_lua_func)(
+                graph_sync_success &= luaApi->RunString(
                     "mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])").valid();
             }
             break;
@@ -360,11 +359,11 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
 #ifdef MEGAMOL_USE_PROFILING
                 module_to_module.erase(megamol_graph.FindModule(data.name_id).get());
 #endif
-                graph_sync_success &= (*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])").valid();
+                graph_sync_success &= luaApi->RunString("mmDeleteModule([=[" + data.name_id + "]=])").valid();
             }
             break;
             case (Graph::QueueAction::ADD_CALL): {
-                auto created = (*input_lua_func)(
+                auto created = luaApi->RunString(
                         "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee +
                         "]=])").
                     valid();
@@ -384,18 +383,18 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                 call_to_call.erase(megamol_graph.FindCall(data.caller, data.callee).get());
 #endif
                 graph_sync_success &=
-                    (*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])").valid();
+                    luaApi->RunString("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])").valid();
             }
             break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 // megamol currently does not handle well having multiple entrypoints active
-                (*input_lua_func)("mmRemoveAllGraphEntryPoints()\n"
+                luaApi->RunString("mmRemoveAllGraphEntryPoints()\n"
                                   "mmSetGraphEntryPoint([=[" +
                                   data.name_id + "]=])");
             }
             break;
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
-                (*input_lua_func)("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
+                luaApi->RunString("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
             }
             break;
             default:
@@ -460,7 +459,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                     if (p.IsValueDirty()) {
                         p.ResetValueDirty();
                         // ! Reset before calling lua cmd because of instantly triggered subscription callback
-                        param_sync_success &= (*input_lua_func)(
+                        param_sync_success &= luaApi->RunString(
                             "mmSetParamValue([=[" + p.FullName() + "]=],[=[" + p.GetValueString() + "]=])").valid();
                     }
                 }

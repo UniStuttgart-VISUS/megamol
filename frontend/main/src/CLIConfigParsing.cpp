@@ -150,7 +150,7 @@ static void files_exist(std::vector<std::string> vec, std::string const& type) {
 // option handlers fill the config struct with passed options
 // this is a handler template
 static void empty_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config){
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     // config.option = parsed_options[option_name].as<bool>();
 };
 
@@ -245,7 +245,7 @@ static void remote_head_connect_at_start_handler(
 };
 
 static void config_handler(
-    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config){
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     // is already done by first CLI pass which checks config files before running them through Lua
 };
 
@@ -386,10 +386,12 @@ static void khrdebug_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.opengl_khr_debug = parsed_options[option_name].as<bool>();
 };
+
 static void vsync_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.opengl_vsync = parsed_options[option_name].as<bool>();
 };
+
 static void no_opengl_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     // User cannot overwrite default value when there is no openGL present
@@ -397,26 +399,32 @@ static void no_opengl_handler(
     config.no_opengl = parsed_options[option_name].as<bool>();
 #endif
 };
+
 static void force_window_size_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.force_window_size = parsed_options[option_name].as<bool>();
 };
+
 static void fullscreen_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::fullscreen;
 };
+
 static void nodecoration_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nodecoration;
 };
+
 static void topmost_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::topmost;
 };
+
 static void nocursor_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nocursor;
 };
+
 static void hidden_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::hidden;
@@ -486,7 +494,7 @@ static void viewport_tile_handler(
         config.local_viewport_tile = {global_resolution, start_pixel, local_resolution};
     } else {
         exit("viewport tile option needs to be in the following format: x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT, e.g. "
-             "0,0:200x100:400x200");
+            "0,0:200x100:400x200");
     }
 };
 
@@ -503,14 +511,18 @@ static void vr_service_handler(
     };
 
     auto match = [&](std::string const& string) -> RuntimeConfig::VRMode {
-        auto find = std::find_if(options.begin(), options.end(), [&](auto const& opt) { return opt.first == string; });
+        auto find = std::find_if(options.begin(), options.end(), [&](auto const& opt) {
+            return opt.first == string;
+        });
 
         if (find != options.end())
             return find->second;
 
         exit("vr service cli option needs to be one of the following: " +
              std::accumulate(options.begin(), options.end(), std::string{},
-                 [](auto const& a, auto const& b) { return a + "  " + b.first; }));
+                 [](auto const& a, auto const& b) {
+                     return a + "  " + b.first;
+                 }));
     };
 
     config.vr_mode = match(string);
@@ -520,100 +532,98 @@ using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cx
     std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
 
 std::vector<OptionsListEntry> cli_options_list =
-    { // config name         option description                                                                 type                                        handler
-        {config_option, "Path to Lua configuration file(s)", cxxopts::value<std::vector<std::string>>(),
-            config_handler},
-        {appdir_option, "Set application directory", cxxopts::value<std::string>(), appdir_handler},
-        {resourcedir_option, "Add resource directory(ies)", cxxopts::value<std::vector<std::string>>(),
-            resourcedir_handler},
-        {shaderdir_option, "Add shader directory(ies)", cxxopts::value<std::vector<std::string>>(), shaderdir_handler},
-        {logfile_option, "Set log file", cxxopts::value<std::string>(), logfile_handler},
-        {loglevel_option, "Set logging level, accepted values: " + accepted_log_level_strings,
-            cxxopts::value<std::string>(), loglevel_handler},
-        {echolevel_option, "Set echo level, accepted values see above", cxxopts::value<std::string>(),
-            echolevel_handler},
-        {project_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
-            project_handler},
-        {execute_lua_option, "Execute Lua command(s). Commands separated by ;", cxxopts::value<std::string>(),
-            execute_lua_handler},
-        {global_option, "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value",
-            cxxopts::value<std::vector<std::string>>(), global_value_handler}
-
-        ,
-        {host_option, "Address of lua host server", cxxopts::value<std::string>(), host_handler},
-        {opengl_context_option, "OpenGL context to request: major.minor[core|compat], e.g. --opengl 3.2compat",
-            cxxopts::value<std::string>(), opengl_context_handler},
-        {khrdebug_option, "Enable OpenGL KHR debug messages", cxxopts::value<bool>(), khrdebug_handler},
-        {vsync_option, "Enable VSync in OpenGL window", cxxopts::value<bool>(), vsync_handler},
-        {disable_opengl_option, "Disable OpenGL. Always TRUE if not built with OpenGL", cxxopts::value<bool>(),
-            no_opengl_handler},
-        {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",
-            cxxopts::value<std::string>(), window_handler},
-        {force_window_size_option,
-            "Force size of the window, otherwise the given size is only a recommendation for the window manager",
-            cxxopts::value<bool>(), force_window_size_handler},
-        {fullscreen_option, "Open maximized window", cxxopts::value<bool>(), fullscreen_handler},
-        {nodecoration_option, "Open window without decorations", cxxopts::value<bool>(), nodecoration_handler},
-        {topmost_option, "Open window that stays on top of all others", cxxopts::value<bool>(), topmost_handler},
-        {nocursor_option, "Do not show mouse cursor inside window", cxxopts::value<bool>(), nocursor_handler},
-        {hidden_option, "Do not show the window", cxxopts::value<bool>(), hidden_handler},
-        {interactive_option, "Run MegaMol even if some project file failed to load", cxxopts::value<bool>(),
-            interactive_handler},
-        {project_files_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
-            project_handler},
-        {guishow_option, "Render GUI overlay", cxxopts::value<bool>(), guishow_handler},
-        {nogui_option, "Dont render GUI overlay", cxxopts::value<bool>(), nogui_handler},
-        {guiscale_option, "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",
-            cxxopts::value<float>(), guiscale_handler},
-        {privacynote_option, "Show privacy note when taking screenshot, use '=false' to disable",
-            cxxopts::value<bool>(), privacynote_handler},
-        {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
-            cxxopts::value<bool>(), versionnote_handler},
-        {flush_frequency_option, "Flush logs (performance, power, ...) every that many frames",
-            cxxopts::value<uint32_t>(), flush_frequency_handler}
+{ // config name         option description                                                                 type                                        handler
+    {config_option, "Path to Lua configuration file(s)", cxxopts::value<std::vector<std::string>>(),
+     config_handler},
+    {appdir_option, "Set application directory", cxxopts::value<std::string>(), appdir_handler},
+    {resourcedir_option, "Add resource directory(ies)", cxxopts::value<std::vector<std::string>>(),
+     resourcedir_handler},
+    {shaderdir_option, "Add shader directory(ies)", cxxopts::value<std::vector<std::string>>(), shaderdir_handler},
+    {logfile_option, "Set log file", cxxopts::value<std::string>(), logfile_handler},
+    {loglevel_option, "Set logging level, accepted values: " + accepted_log_level_strings,
+     cxxopts::value<std::string>(), loglevel_handler},
+    {echolevel_option, "Set echo level, accepted values see above", cxxopts::value<std::string>(),
+     echolevel_handler},
+    {project_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
+     project_handler},
+    {execute_lua_option, "Execute Lua command(s). Commands separated by ;", cxxopts::value<std::string>(),
+     execute_lua_handler},
+    {global_option, "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value",
+     cxxopts::value<std::vector<std::string>>(), global_value_handler},
+    {host_option, "Address of lua host server", cxxopts::value<std::string>(), host_handler},
+    {opengl_context_option, "OpenGL context to request: major.minor[core|compat], e.g. --opengl 3.2compat",
+     cxxopts::value<std::string>(), opengl_context_handler},
+    {khrdebug_option, "Enable OpenGL KHR debug messages", cxxopts::value<bool>(), khrdebug_handler},
+    {vsync_option, "Enable VSync in OpenGL window", cxxopts::value<bool>(), vsync_handler},
+    {disable_opengl_option, "Disable OpenGL. Always TRUE if not built with OpenGL", cxxopts::value<bool>(),
+     no_opengl_handler},
+    {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",
+     cxxopts::value<std::string>(), window_handler},
+    {force_window_size_option,
+     "Force size of the window, otherwise the given size is only a recommendation for the window manager",
+     cxxopts::value<bool>(), force_window_size_handler},
+    {fullscreen_option, "Open maximized window", cxxopts::value<bool>(), fullscreen_handler},
+    {nodecoration_option, "Open window without decorations", cxxopts::value<bool>(), nodecoration_handler},
+    {topmost_option, "Open window that stays on top of all others", cxxopts::value<bool>(), topmost_handler},
+    {nocursor_option, "Do not show mouse cursor inside window", cxxopts::value<bool>(), nocursor_handler},
+    {hidden_option, "Do not show the window", cxxopts::value<bool>(), hidden_handler},
+    {interactive_option, "Run MegaMol even if some project file failed to load", cxxopts::value<bool>(),
+     interactive_handler},
+    {project_files_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
+     project_handler},
+    {guishow_option, "Render GUI overlay", cxxopts::value<bool>(), guishow_handler},
+    {nogui_option, "Dont render GUI overlay", cxxopts::value<bool>(), nogui_handler},
+    {guiscale_option, "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",
+     cxxopts::value<float>(), guiscale_handler},
+    {privacynote_option, "Show privacy note when taking screenshot, use '=false' to disable",
+     cxxopts::value<bool>(), privacynote_handler},
+    {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
+     cxxopts::value<bool>(), versionnote_handler},
+    {flush_frequency_option, "Flush logs (performance, power, ...) every that many frames",
+     cxxopts::value<uint32_t>(), flush_frequency_handler}
 #ifdef MEGAMOL_USE_PROFILING
-        ,
-        {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
-            profile_log_handler},
-        {profile_log_no_autostart_option, "Do not automatically start writing the profiling log",
-            cxxopts::value<bool>(), profile_log_autostart_handler},
-        {profile_log_include_events_option, "Include graph events in the profiling log", cxxopts::value<bool>(),
-            profile_log_include_events_handler}
+    ,
+    {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
+     profile_log_handler},
+    {profile_log_no_autostart_option, "Do not automatically start writing the profiling log",
+     cxxopts::value<bool>(), profile_log_autostart_handler},
+    {profile_log_include_events_option, "Include graph events in the profiling log", cxxopts::value<bool>(),
+     profile_log_include_events_handler}
 
 #endif
-        ,
-        {param_option, "Set MegaMol Graph parameter to value: --param param=value",
-            cxxopts::value<std::vector<std::string>>(), param_handler},
-        {remote_head_option, "Start HeadNode server and run Remote_Service test ", cxxopts::value<bool>(),
-            remote_head_handler},
-        {remote_render_option, "Start RenderNode client and run Remote_Service test ", cxxopts::value<bool>(),
-            remote_render_handler},
-        {remote_mpi_option, "Start MPI RenderNode client and run Remote_Service test ", cxxopts::value<bool>(),
-            remote_mpirender_handler},
-        {remote_mpi_broadcast_rank_option, "MPI rank that broadcasts to others, default: 0",
-            cxxopts::value<unsigned int>(), remote_mpirank_handler},
-        {remote_headnode_zmq_target_option, "Address and port where to send state via ZMQ",
-            cxxopts::value<std::string>(), remote_zmqtarget_handler},
-        {remote_rendernode_zmq_source_option, "Address and port where to receive state via ZMQ from",
-            cxxopts::value<std::string>(), remote_zmqsource_handler},
-        {remote_headnode_broadcast_quit_option, "Headnode broadcasts mmQuit to rendernodes on shutdown",
-            cxxopts::value<bool>(), remote_head_broadcast_quit_handler},
-        {remote_headnode_broadcast_project_option,
-            "Headnode broadcasts initial graph state after project loading at startup", cxxopts::value<bool>(),
-            remote_head_broadcast_project_handler},
-        {remote_headnode_connect_at_start_option, "Headnode starts sender thread at startup", cxxopts::value<bool>(),
-            remote_head_connect_at_start_handler},
-        {framebuffer_option, "Size of framebuffer, syntax: --framebuffer WIDTHxHEIGHT", cxxopts::value<std::string>(),
-            framebuffer_handler},
-        {viewport_tile_option,
-            "Geometry of local viewport tile, syntax: --tile x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT"
-            "where x,y is the lower left start pixel of the local tile, "
-            "LWIDTHxLHEIGHT is the local framebuffer resolution, "
-            "GWIDTHxGHEIGHT is the global framebuffer resolution",
-            cxxopts::value<std::string>(), viewport_tile_handler},
-        {vr_service_option, "VR Service mode: --vr=[off|unitykolab], off by default", cxxopts::value<std::string>(),
-            vr_service_handler},
-        {help_option, "Print help message", cxxopts::value<bool>(), empty_handler}};
+    ,
+    {param_option, "Set MegaMol Graph parameter to value: --param param=value",
+     cxxopts::value<std::vector<std::string>>(), param_handler},
+    {remote_head_option, "Start HeadNode server and run Remote_Service test ", cxxopts::value<bool>(),
+     remote_head_handler},
+    {remote_render_option, "Start RenderNode client and run Remote_Service test ", cxxopts::value<bool>(),
+     remote_render_handler},
+    {remote_mpi_option, "Start MPI RenderNode client and run Remote_Service test ", cxxopts::value<bool>(),
+     remote_mpirender_handler},
+    {remote_mpi_broadcast_rank_option, "MPI rank that broadcasts to others, default: 0",
+     cxxopts::value<unsigned int>(), remote_mpirank_handler},
+    {remote_headnode_zmq_target_option, "Address and port where to send state via ZMQ",
+     cxxopts::value<std::string>(), remote_zmqtarget_handler},
+    {remote_rendernode_zmq_source_option, "Address and port where to receive state via ZMQ from",
+     cxxopts::value<std::string>(), remote_zmqsource_handler},
+    {remote_headnode_broadcast_quit_option, "Headnode broadcasts mmQuit to rendernodes on shutdown",
+     cxxopts::value<bool>(), remote_head_broadcast_quit_handler},
+    {remote_headnode_broadcast_project_option,
+     "Headnode broadcasts initial graph state after project loading at startup", cxxopts::value<bool>(),
+     remote_head_broadcast_project_handler},
+    {remote_headnode_connect_at_start_option, "Headnode starts sender thread at startup", cxxopts::value<bool>(),
+     remote_head_connect_at_start_handler},
+    {framebuffer_option, "Size of framebuffer, syntax: --framebuffer WIDTHxHEIGHT", cxxopts::value<std::string>(),
+     framebuffer_handler},
+    {viewport_tile_option,
+     "Geometry of local viewport tile, syntax: --tile x,y:LWIDTHxLHEIGHT:GWIDTHxGHEIGHT"
+     "where x,y is the lower left start pixel of the local tile, "
+     "LWIDTHxLHEIGHT is the local framebuffer resolution, "
+     "GWIDTHxGHEIGHT is the global framebuffer resolution",
+     cxxopts::value<std::string>(), viewport_tile_handler},
+    {vr_service_option, "VR Service mode: --vr=[off|unitykolab], off by default", cxxopts::value<std::string>(),
+     vr_service_handler},
+    {help_option, "Print help message", cxxopts::value<bool>(), empty_handler}};
 
 static std::string loong(std::string const& option) {
     auto f = option.find(',');
@@ -660,15 +670,17 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
         }
 
         // remove empty files: enables to start megamol without config file
-        std::remove_if(config_files.begin(), config_files.end(), [](auto const& file) { return file.empty(); });
+        config_files.erase(std::remove_if(config_files.begin(), config_files.end(), [](auto const& file) {
+            return file.empty();
+        }), config_files.end());
 
         // check remaining files exist
         files_exist(config_files, "Config file");
 
         if (config_files.empty()) {
             std::cout << "WARNING: starting MegaMol without config files! Some MegaMol modules may fail due to missing "
-                         "resource paths."
-                      << std::endl;
+                "resource paths."
+                << std::endl;
         }
 
         return config_files;
@@ -690,31 +702,25 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
     using StringPair = megamol::frontend_resources::RuntimeConfig::StringPair;
     std::vector<StringPair> cli_options_from_configs;
 
-    using megamol::frontend_resources::LuaCallbacksCollection;
-    using Error = megamol::frontend_resources::LuaCallbacksCollection::LuaError;
-    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
-    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
-
 #define sane(s)                                                  \
     if (s.empty() || s.find_first_of(" =") != std::string::npos) \
-        return Error{"Value \"" + s + "\" is empty, has space or ="};
+        lua.Error("Value \"" + s + "\" is empty, has space or =");
 
 #define file_exists(f)               \
     if (!std::filesystem::exists(f)) \
-        return Error{"File does not exist: " + f};
+        lua.Error("File does not exist: " + f);
 
 #define add_cli(o, v) cli_options_from_configs.push_back({loong(o), v});
 
     // helper to make options that take a string and maybe check for a file to exist
     auto make_option_callback = [&](std::string const& optname, bool file_check = false) {
-        return [file_check, optname, &cli_options_from_configs](std::string value) -> VoidResult {
+        return [file_check, optname, &cli_options_from_configs, &lua](std::string value) -> void {
             sane(value);
 
             if (file_check)
                 file_exists(value);
 
             add_cli(optname, value);
-            return VoidResult{};
         };
     };
 
@@ -731,13 +737,11 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
         }
     }
 
-    LuaCallbacksCollection lua_config_callbacks;
-
     // mmSetCliOption
     // VoidResult, std::string, std::string
-    lua_config_callbacks.add<VoidResult, std::string, std::string>("mmSetCliOption",
+    lua.RegisterCallback("mmSetCliOption",
         "(string name, string value)\n\tSet CLI option to a specific value.",
-        {[&](std::string clioption, std::string value) -> VoidResult {
+        [&](std::string clioption, std::string value) -> void {
             // the usual CLI options
             sane(clioption);
             sane(value);
@@ -758,7 +762,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
             auto option_it = std::find(all_options_separate.begin(), all_options_separate.end(), clioption);
             bool option_unknown = option_it == all_options_separate.end();
             if (option_unknown)
-                return Error{"unknown option: " + clioption};
+                lua.Error("unknown option: " + clioption);
 
             // if has option of length one, take the long version
             auto finalopt = clioption;
@@ -766,59 +770,59 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
                 finalopt = *(option_it + 1);
 
             add_cli(finalopt, map_value(value));
-            return VoidResult{};
-        }});
+        });
 
     // mmSetGlobalValue
     // std::string, std::string
-    lua_config_callbacks.add<VoidResult, std::string, std::string>("mmSetGlobalValue",
+    lua.RegisterCallback("mmSetGlobalValue",
         "(string key, string value)\n\tSets the value of name <key> to <value> in the global key-value store.",
-        {[&](std::string key, std::string value) -> VoidResult {
+        [&](std::string key, std::string value) -> void {
             sane(key);
             sane(value);
             add_cli(global_option, key + ":" + value);
-            return VoidResult{};
-        }});
+        });
 
 #undef sane
 #undef file_exists
 #undef add_cli
 
-    lua_config_callbacks.add<StringResult>("mmGetMegaMolExecutableDirectory",
+    lua.RegisterCallback("mmGetMegaMolExecutableDirectory",
         "()\n\tReturns the directory of the running MegaMol executable.",
-        {[&]() { return StringResult{config.megamol_executable_directory}; }});
+        [&]() {
+            return config.megamol_executable_directory;
+        });
 
-    //lua.RegisterCallback("mmGetMegaMolExecutableDirectory",
-    //    "()\n\tReturns the directory of the running MegaMol executable.",
-    //    [&]() -> std::string {
-    //        return config.megamol_executable_directory.c_str();
-    //    });
+    lua.RegisterCallback("mmGetMegaMolExecutableDirectory",
+        "()\n\tReturns the directory of the running MegaMol executable.",
+        [&]() -> std::string {
+            return config.megamol_executable_directory;
+        });
 
-    lua_config_callbacks.add<VoidResult, std::string>("mmSetAppDir",
+    lua.RegisterCallback("mmSetAppDir",
         "(string dir)\n\tSets the path where the mmconsole.exe is located.",
-        {make_option_callback(appdir_option, true)});
+        make_option_callback(appdir_option, true));
 
-    lua_config_callbacks.add<VoidResult, std::string>("mmAddShaderDir",
-        "(string dir)\n\tAdds a shader/btf search path.", {make_option_callback(shaderdir_option, true)});
+    lua.RegisterCallback("mmAddShaderDir",
+        "(string dir)\n\tAdds a shader/btf search path.", make_option_callback(shaderdir_option, true));
 
-    lua_config_callbacks.add<VoidResult, std::string>("mmAddResourceDir",
-        "(string dir)\n\tAdds a resource search path.", {make_option_callback(resourcedir_option, true)});
+    lua.RegisterCallback("mmAddResourceDir",
+        "(string dir)\n\tAdds a resource search path.", make_option_callback(resourcedir_option, true));
 
-    lua_config_callbacks.add<VoidResult, std::string>("mmLoadProject",
+    lua.RegisterCallback("mmLoadProject",
         "(string path)\n\tLoad lua (project) file after MegaMol startup.",
-        {make_option_callback(project_option, true)});
+        make_option_callback(project_option, true));
 
-    lua_config_callbacks.add<VoidResult, std::string>(
-        "mmSetLogFile", "(string path)\n\tSets the full path of the log file.", {make_option_callback(logfile_option)});
+    lua.RegisterCallback(
+        "mmSetLogFile", "(string path)\n\tSets the full path of the log file.", make_option_callback(logfile_option));
 
-    lua_config_callbacks.add<VoidResult, std::string>("mmSetLogLevel",
+    lua.RegisterCallback("mmSetLogLevel",
         "(string level)\n\tSets the level of log events to include. Accepted values: " + accepted_log_level_strings,
-        {make_option_callback(loglevel_option)});
+        make_option_callback(loglevel_option));
 
-    lua_config_callbacks.add<VoidResult, std::string>("mmSetEchoLevel",
+    lua.RegisterCallback("mmSetEchoLevel",
         "(string level)\n\tSets the level of log events to output to the console. Accepted values: " +
-            accepted_log_level_strings,
-        {make_option_callback(echolevel_option)});
+        accepted_log_level_strings,
+        make_option_callback(echolevel_option));
 
     //lua.AddCallbacks(lua_config_callbacks);
 
@@ -876,7 +880,9 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
         config.configuration_file_contents.push_back(file_contents);
         config.configuration_file_contents_as_cli.push_back(
             std::accumulate(file_contents_as_cli.begin(), file_contents_as_cli.end(), std::string(""),
-                [](std::string const& init, std::string const& elem) { return init + elem + " "; }));
+                [](std::string const& init, std::string const& elem) {
+                    return init + elem + " ";
+                }));
     }
 
     //lua.ClearCallbacks();

@@ -12,6 +12,7 @@
 #include "AnimationEditorData.h"
 #include "CommonTypes.h"
 #include "imgui_canvas.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/animation/AnimationData.h"
 #include "widgets/FileBrowserWidget.h"
@@ -30,7 +31,6 @@ enum class InteractionType : int32_t {
 
 class AnimationEditor : public AbstractWindow {
 public:
-    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
 
     explicit AnimationEditor(const std::string& window_name);
     ~AnimationEditor();
@@ -38,7 +38,7 @@ public:
     bool Update() override;
     bool Draw() override;
 
-    void SetLuaFunc(lua_func_type* func);
+    void SetLuaAPI(core::LuaAPI* api);
 
     bool NotifyParamChanged(
         frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param, std::string const& new_value);
@@ -114,7 +114,7 @@ private:
 
     ImVec2 custom_zoom = {1.0f, 1.0f};
 
-    lua_func_type* input_lua_func = nullptr;
+    core::LuaAPI* luaApi = nullptr;
     FileBrowserWidget file_browser;
     bool open_popup_load = false, open_popup_save = false, open_popup_error = false;
     bool open_popup_export = false;
