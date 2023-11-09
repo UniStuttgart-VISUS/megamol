@@ -126,12 +126,12 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     auto result = luaApi->RunString(script);
 
     if (!result.valid()) {
-        log_error("failed to load file " + filename.generic_u8string() + "\n\t" + luaApi->GetError(result));
+        log_error("failed to load file " + filename.generic_string() + "\n\t" + luaApi->GetError(result));
         set_script_path("");
         return false;
     }
 
-    log("loaded file " + filename.generic_u8string());
+    log("loaded file " + filename.generic_string());
     return true;
 }
 
