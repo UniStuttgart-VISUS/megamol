@@ -188,6 +188,7 @@ std::vector<std::vector<GraphData2D::NodeID>> GraphData2D::getInboundEdges() con
 }
 
 GraphData2D::NodeID GraphData2D::getNodeID(Timestamp time, Label label) {
-    static std::hash<std::pair<Timestamp, Label>> hasher;
-    return hasher(std::make_pair(time, label));
+    static_assert(sizeof(Timestamp) + sizeof(Label) <= sizeof(NodeID));
+
+    return (static_cast<NodeID>(time) << sizeof(Label) * 8) | static_cast<NodeID>(label);
 }
