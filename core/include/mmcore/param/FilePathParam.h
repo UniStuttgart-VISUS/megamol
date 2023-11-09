@@ -92,7 +92,7 @@ public:
      * @return The value of the parameter as string.
      */
     std::string ValueString() const override {
-        return this->value.generic_u8string();
+        return this->value.generic_string();
     }
 
     /**

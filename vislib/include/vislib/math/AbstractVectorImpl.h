@@ -212,50 +212,15 @@ public:
     template<class Tp, unsigned int Dp, class Sp>
     AbstractVectorImpl<T, D, S, C>& operator=(const C<Tp, Dp, Sp>& rhs);
 
-    /**
-     * Test for equality. This operation uses the E function which the
-     * template has been instantiated for.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @param true, if 'rhs' and this vector are equal, false otherwise.
-     */
-    bool operator==(const C<T, D, S>& rhs) const;
+    // Replace comparison operators with this as C++20 hotfix
+    friend bool operator==(const C<T, D, S>& lhs, const C<T, D, S>& rhs) {
+        for (unsigned int d = 0; d < D; d++) {
+            if (!IsEqual<T>(lhs.components[d], rhs.components[d])) {
+                return false;
+            }
+        }
 
-    /**
-     * Test for equality of arbitrary vector types. This operation uses the
-     * IsEqual function of the left hand side operand. Note that vectors
-     * with different dimensions are never equal.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @param true, if 'rhs' and this vector are equal, false otherwise.
-     */
-    template<class Tp, unsigned int Dp, class Sp>
-    bool operator==(const C<Tp, Dp, Sp>& rhs) const;
-
-    /**
-     * Test for inequality.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @param true, if 'rhs' and this vector are not equal, false otherwise.
-     */
-    inline bool operator!=(const C<T, D, S>& rhs) const {
-        return !(*this == rhs);
-    }
-
-    /**
-     * Test for inequality of arbitrary vectors. See operator == for further
-     * details.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @param true, if 'rhs' and this vector are not equal, false otherwise.
-     */
-    template<class Tp, unsigned int Dp, class Sp>
-    inline bool operator!=(const C<Tp, Dp, Sp>& rhs) const {
-        return !(*this == rhs);
+        return true;
     }
 
     /**
@@ -653,42 +618,6 @@ AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator=(const 
     }
 
     return *this;
-}
-
-
-/*
- * vislib::math::AbstractVectorImpl<T, D, S, C>::operator ==
- */
-template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-bool AbstractVectorImpl<T, D, S, C>::operator==(const C<T, D, S>& rhs) const {
-
-    for (unsigned int d = 0; d < D; d++) {
-        if (!IsEqual<T>(this->components[d], rhs.components[d])) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-/*
- * vislib::math::AbstractVectorImpl<T, D, S, C>::operator ==
- */
-template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-template<class Tp, unsigned int Dp, class Sp>
-bool AbstractVectorImpl<T, D, S, C>::operator==(const C<Tp, Dp, Sp>& rhs) const {
-    if (D != Dp) {
-        return false;
-    }
-
-    for (unsigned int d = 0; d < D; d++) {
-        if (!IsEqual<T>(this->components[d], rhs[d])) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 

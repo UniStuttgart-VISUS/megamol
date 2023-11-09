@@ -49,7 +49,7 @@ void AbstractTriMeshLoader::assertData() {
         bool retval = false;
         try {
             retval =
-                this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         } catch (vislib::Exception ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
@@ -60,10 +60,10 @@ void AbstractTriMeshLoader::assertData() {
         }
         if (retval) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded file \"%s\"",
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load file \"%s\"",
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
             // ensure there is no partial data
             this->objs.Clear();
             this->mats.Clear();

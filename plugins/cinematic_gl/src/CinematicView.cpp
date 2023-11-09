@@ -602,7 +602,7 @@ bool CinematicView::render_to_file_setup() {
     frameFolder.Format("frames_%i%02i%02i-%02i%02i%02i_%02ifps", (now->tm_year + 1900), (now->tm_mon + 1), now->tm_mday,
         now->tm_hour, now->tm_min, now->tm_sec, this->fps);
     this->png_data.path = static_cast<vislib::StringA>(
-        this->frameFolderParam.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->frameFolderParam.Param<param::FilePathParam>()->Value().generic_string().c_str());
     if (this->png_data.path.IsEmpty()) {
         this->png_data.path = vislib::sys::Path::Concatenate(vislib::sys::Path::GetCurrentDirectoryA(), frameFolder);
     }

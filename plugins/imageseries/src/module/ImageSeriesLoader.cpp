@@ -160,7 +160,7 @@ void ImageSeriesLoader::refreshDirectory() {
     imageFilesUnfiltered.clear();
 
     for (auto& entry : std::filesystem::directory_iterator(path)) {
-        imageFilesUnfiltered.push_back(entry.path().generic_u8string());
+        imageFilesUnfiltered.push_back(entry.path().generic_string());
     }
 
     std::sort(imageFilesUnfiltered.begin(), imageFilesUnfiltered.end(), &lexicalNumericComparator);

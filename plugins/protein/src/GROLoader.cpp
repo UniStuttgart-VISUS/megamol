@@ -811,7 +811,7 @@ bool GROLoader::getData(core::Call& call) {
     if (this->groFilenameSlot.IsDirty() || this->solventResidues.IsDirty()) {
         this->groFilenameSlot.ResetDirty();
         this->solventResidues.ResetDirty();
-        this->loadFile(this->groFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->loadFile(this->groFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
     }
 
     if (this->mDDHostAddressSlot.IsDirty() || this->mDDPortSlot.IsDirty()) {
@@ -970,7 +970,7 @@ bool GROLoader::getExtent(core::Call& call) {
     if (this->groFilenameSlot.IsDirty() || this->solventResidues.IsDirty()) {
         this->groFilenameSlot.ResetDirty();
         this->solventResidues.ResetDirty();
-        this->loadFile(this->groFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->loadFile(this->groFilenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
     }
 
     if (this->mDDHostAddressSlot.IsDirty() || this->mDDPortSlot.IsDirty()) {
