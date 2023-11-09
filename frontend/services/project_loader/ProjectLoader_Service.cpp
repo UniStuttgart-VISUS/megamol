@@ -96,11 +96,11 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
 
     auto found_it = std::find_if(supported_filetypes.begin(), supported_filetypes.end(), [&](auto& item) {
         const std::string suffix = std::get<0>(item);
-        return megamol::core::utility::string::EndsWithAsciiCaseInsensitive(filename.generic_u8string(), suffix);
+        return megamol::core::utility::string::EndsWithAsciiCaseInsensitive(filename.generic_string(), suffix);
     });
 
     if (found_it == supported_filetypes.end()) {
-        log_error("unsupported file type: " + filename.extension().generic_u8string());
+        log_error("unsupported file type: " + filename.extension().generic_string());
         return false;
     }
 
@@ -110,7 +110,7 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     bool file_ok = file_opener(filename, script);
 
     if (!file_ok) {
-        log_error("error opening file: " + filename.generic_u8string());
+        log_error("error opening file: " + filename.generic_string());
         return false;
     }
 
@@ -121,7 +121,7 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     using SetScriptPath = std::function<void(std::string const&)>;
     const SetScriptPath& set_script_path = m_requestedResourceReferences[1].getResource<SetScriptPath>();
 
-    set_script_path(filename.generic_u8string());
+    set_script_path(filename.generic_string());
 
     auto result = luaApi->RunString(script);
 

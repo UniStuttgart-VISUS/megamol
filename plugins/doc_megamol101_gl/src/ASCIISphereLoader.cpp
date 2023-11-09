@@ -66,7 +66,7 @@ void ASCIISphereLoader::assertData() {
         try {
             // load the data from file
             retval =
-                this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         } catch (vislib::Exception ex) {
             // a known vislib exception was raised
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -81,10 +81,10 @@ void ASCIISphereLoader::assertData() {
         if (retval) {
             // standard case. The file has been successfully loaded.
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded %I64u spheres from file \"%s\"", numSpheres,
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load file \"%s\"",
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
             // we are in an erronous state, clean up everything
             this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
             this->numSpheres = 0;

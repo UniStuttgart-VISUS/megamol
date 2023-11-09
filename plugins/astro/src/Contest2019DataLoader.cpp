@@ -641,7 +641,7 @@ bool Contest2019DataLoader::filenameChangedCallback(param::ParamSlot& slot) {
     this->filenames.clear();
     this->resetFrameCache();
     this->data_hash++;
-    std::string firstfile(this->firstFilename.Param<param::FilePathParam>()->Value().generic_u8string());
+    std::string firstfile(this->firstFilename.Param<param::FilePathParam>()->Value().generic_string());
     int toLoadCount = this->filesToLoad.Param<param::IntParam>()->Value();
 
     /* Note for all debugging purposes: The application will land here once on startup with only the default values

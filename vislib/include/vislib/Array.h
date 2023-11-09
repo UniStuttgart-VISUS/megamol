@@ -527,18 +527,6 @@ public:
      */
     bool operator==(const Array& rhs) const;
 
-    /**
-     * Test for inequality. Two arrays are equal if the elements in both
-     * lists are equal and in same order. Runtime complexity: O(n)
-     *
-     * @param rhs The right hand side operand
-     *
-     * @return if the lists are considered not equal
-     */
-    inline bool operator!=(const Array& rhs) const {
-        return !(*this == rhs);
-    }
-
 private:
 #ifdef _WIN32
     /**

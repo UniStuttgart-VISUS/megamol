@@ -201,7 +201,7 @@ bool io::PLYDataSource::assertData() {
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open PLY File \"%s\".",
-            filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+            filename.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         return true;
     }
     // if one of these pointers is not null, we already have read the data
@@ -623,7 +623,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
         Log::DefaultLog.WriteError("Unable to open PLY File \"%s\".",
-            filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+            filename.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         this->clearAllFields();
         return true;
     }
@@ -852,7 +852,7 @@ bool io::PLYDataSource::fileUpdate(core::param::ParamSlot& slot) {
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
         Log::DefaultLog.WriteError("Unable to open PLY File \"%s\".",
-            filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+            filename.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
         this->clearAllFields();
         return true;
     }

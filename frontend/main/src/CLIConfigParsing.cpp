@@ -54,7 +54,7 @@ std::pair<RuntimeConfig, GlobalValueStore> megamol::frontend::handle_cli_and_con
     const int argc, const char** argv, megamol::core::LuaAPI& lua) {
     RuntimeConfig config;
 
-    config.megamol_executable_directory = getExecutableDirectory().u8string();
+    config.megamol_executable_directory = getExecutableDirectory().string();
 
     // config files are already checked to exist in file system
     config.configuration_files = extract_config_file_paths(argc, argv);
