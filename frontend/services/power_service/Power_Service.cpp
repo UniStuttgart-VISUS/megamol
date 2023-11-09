@@ -123,6 +123,7 @@ bool Power_Service::init(void* configPtr) {
 
     auto tinker_config_func = [](tinkerforge_sensor& sensor) {
         sensor.reset();
+        sensor.resync_internal_clock_after(20);
         sensor.configure(
             sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
     };
