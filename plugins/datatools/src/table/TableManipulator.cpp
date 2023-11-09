@@ -153,12 +153,11 @@ bool TableManipulator::processData(core::Call& c) {
             this->data.clear();
             this->data.reserve(column_count * row_count);
 
-            std::string res;
-            const bool ok = theLua.RunString(scriptString, res);
+            auto res = theLua.RunString(scriptString, "tableManip");
 
-            if (!ok) {
+            if (!res.valid()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "TableManipulator: Lua execution is NOT OK and returned '%s'", res.c_str());
+                    "TableManipulator: Lua execution is NOT OK and returned '%s'", theLua.GetError(res).c_str());
             }
         }
 
