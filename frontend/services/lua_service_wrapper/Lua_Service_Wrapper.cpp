@@ -188,8 +188,11 @@ void Lua_Service_Wrapper::updateProvidedResources() {
         while (!lua_requests.empty()) {
             auto& request = lua_requests.front();
 
-            luaAPI.RunString(request.request, result);
-            request.answer_promise.set_value(result);
+            auto res = luaAPI.RunString(request.request, "magic_remote_request");
+            if (res.valid())
+                request.answer_promise.set_value(res.get<std::string>());
+            else
+                request.answer_promise.set_value("error: " + luaAPI.GetError(res));
 
             lua_requests.pop();
             result.clear();
