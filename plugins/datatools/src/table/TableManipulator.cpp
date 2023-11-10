@@ -218,6 +218,7 @@ std::string TableManipulator::getInputColumnName(int idx) {
         return column_infos[idx].Name();
     } else {
         theLua.Error("column index out of range");
+        return "";
     }
 }
 

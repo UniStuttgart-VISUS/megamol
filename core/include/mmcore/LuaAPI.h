@@ -10,7 +10,7 @@
 #include <string>
 
 //#define SOL_ALL_SAFETIES_ON 1
-#define SOL_NO_EXCEPTIONS 1
+//#define SOL_NO_EXCEPTIONS 1
 #define SOL_PRINT_ERRORS 0
 #include <sol/sol.hpp>
 #include "mmcore/MegaMolGraph.h"
@@ -41,7 +41,7 @@ public:
     /**
      * Invoke the error-generating mechanism of lua
      */
-    void Error(std::string description);
+    static void Error(const std::string& description);
 
     /**
      * Get Lua error if res is not valid
@@ -95,8 +95,8 @@ protected:
     /** prints out the help text */
     std::string Help() const;
 
-    int ReadTextFile(lua_State* L);
-    int WriteTextFile(lua_State* L);
+    static std::string ReadTextFile(std::string filename, sol::optional<sol::function> transformation);
+    static void WriteTextFile(std::string filename, std::string content);
 
     /** expose current script path to lua */
     std::string CurrentScriptPath();
