@@ -12,8 +12,8 @@
 //#define SOL_ALL_SAFETIES_ON 1
 //#define SOL_NO_EXCEPTIONS 1
 #define SOL_PRINT_ERRORS 0
-#include <sol/sol.hpp>
 #include "mmcore/MegaMolGraph.h"
+#include <sol/sol.hpp>
 
 struct lua_State; // lua includes should stay in the core
 

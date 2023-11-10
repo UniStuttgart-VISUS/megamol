@@ -12,9 +12,9 @@
 #include <numeric>
 #include <sstream>
 
-#include "mmcore/utility/Timestamp.h"
 #include "LuaApiResource.h"
 #include "mmcore/LuaAPI.h"
+#include "mmcore/utility/Timestamp.h"
 #include "mmcore/utility/log/Log.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
@@ -42,7 +42,7 @@ bool FrameStatistics_Service::init(void* configPtr) {
 
 bool FrameStatistics_Service::init(const Config& config) {
 
-    this->m_requestedResourcesNames = { //"IOpenGL_Context", // for GL-specific measures?
+    this->m_requestedResourcesNames = {//"IOpenGL_Context", // for GL-specific measures?
         frontend_resources::LuaAPI_Req_Name};
 
     m_program_start_time = std::chrono::steady_clock::time_point::clock::now();
@@ -114,13 +114,11 @@ void FrameStatistics_Service::finish_frame() {
 void FrameStatistics_Service::fill_lua_callbacks() {
     auto& luaApi = m_requestedResourceReferences[0].getResource<core::LuaAPI*>();
 
-    luaApi->RegisterCallback("mmGetTimeStamp",
-        "(void)\n\tReturns a timestamp in ISO format.",
-        [&]() -> std::string {
-            auto const tp = std::chrono::system_clock::now();
-            auto const timestamp = core::utility::serialize_timestamp(tp);
-            return timestamp;
-        });
+    luaApi->RegisterCallback("mmGetTimeStamp", "(void)\n\tReturns a timestamp in ISO format.", [&]() -> std::string {
+        auto const tp = std::chrono::system_clock::now();
+        auto const timestamp = core::utility::serialize_timestamp(tp);
+        return timestamp;
+    });
 }
 
 } // namespace megamol::frontend
