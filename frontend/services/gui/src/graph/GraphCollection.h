@@ -33,7 +33,6 @@ typedef std::vector<GraphPtr_t> GraphPtrVector_t;
  */
 class GraphCollection {
 public:
-
     GraphCollection();
     ~GraphCollection() = default;
 

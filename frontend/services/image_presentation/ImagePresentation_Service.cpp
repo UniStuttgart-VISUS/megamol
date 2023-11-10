@@ -440,16 +440,14 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
 }
 
 void ImagePresentation_Service::fill_lua_callbacks() {
-    auto& luaApi =
-        m_requestedResourceReferences[4]
-            .getResource<core::LuaAPI*>();
+    auto& luaApi = m_requestedResourceReferences[4].getResource<core::LuaAPI*>();
 
     luaApi->RegisterCallback("mmSetViewFramebufferSize",
         "(string view, int width, int height)\n\tSet framebuffer dimensions of view to width x height.",
         [&](std::string view, int width, int height) -> void {
             if (width <= 0 || height <= 0) {
-                luaApi->Error("framebuffer dimensions must be positive, but given values are: " + std::to_string(width) +
-                             " x " + std::to_string(height));
+                luaApi->Error("framebuffer dimensions must be positive, but given values are: " +
+                              std::to_string(width) + " x " + std::to_string(height));
             }
 
             auto entry_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
@@ -465,8 +463,7 @@ void ImagePresentation_Service::fill_lua_callbacks() {
             };
         });
 
-    auto handle_screenshot = [&](std::string const& entrypoint,
-                                 std::string file) -> void {
+    auto handle_screenshot = [&](std::string const& entrypoint, std::string file) -> void {
         if (m_entry_points.empty())
             luaApi->Error("no views registered as entry points. nothing to write as screenshot into ");
 
@@ -474,8 +471,7 @@ void ImagePresentation_Service::fill_lua_callbacks() {
             [&](EntryPoint const& elem) { return elem.moduleName == entrypoint; });
 
         if (find_it == m_entry_points.end())
-            luaApi->Error(
-                "error writing screenshot into file " + file + ". no such entry point: " + entrypoint);
+            luaApi->Error("error writing screenshot into file " + file + ". no such entry point: " + entrypoint);
 
         auto& entry_result_image = find_it->execution_result_image;
 
@@ -501,9 +497,8 @@ void ImagePresentation_Service::fill_lua_callbacks() {
 
     luaApi->RegisterCallback("mmScreenshotEntryPoint",
         "(string entrypoint, string filename)\n\tSave a screen shot of entry point view as 'filename'",
-        [handle_screenshot](std::string entrypoint, std::string filename) -> void {
-            handle_screenshot(entrypoint, filename);
-        });
+        [handle_screenshot](
+            std::string entrypoint, std::string filename) -> void { handle_screenshot(entrypoint, filename); });
 }
 
 

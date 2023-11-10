@@ -22,13 +22,13 @@ std::string TableManipulator::ModuleName = std::string("TableManipulator");
 std::string TableManipulator::defaultScript = "";
 
 TableManipulator::TableManipulator()
-    : core::Module()
-      , dataOutSlot("dataOut", "Output")
-      , dataInSlot("dataIn", "Input")
-      , scriptSlot("script", "script to execute on incoming table data")
-      , frameID(-1)
-      , in_datahash(std::numeric_limits<unsigned long>::max())
-      , out_datahash(0) {
+        : core::Module()
+        , dataOutSlot("dataOut", "Output")
+        , dataInSlot("dataIn", "Input")
+        , scriptSlot("script", "script to execute on incoming table data")
+        , frameID(-1)
+        , in_datahash(std::numeric_limits<unsigned long>::max())
+        , out_datahash(0) {
 
     this->dataInSlot.SetCompatibleCall<TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
@@ -110,8 +110,8 @@ bool TableManipulator::create() {
     theLua.RegisterCallback("mmAddOutputRows", "(int num)\n\tadds and allocates num rows to the output data",
         &TableManipulator::addOutputRows, this);
     theLua.RegisterCallback("mmGetCellValue",
-        "(int row, int col)\n\treturns value in cell (row, col) in the input data",
-        &TableManipulator::getCellValue, this);
+        "(int row, int col)\n\treturns value in cell (row, col) in the input data", &TableManipulator::getCellValue,
+        this);
     theLua.RegisterCallback("mmSetCellValue",
         "(int row, int col, float val)\n\tset cell (row, col) in the output data to val",
         &TableManipulator::setCellValue, this);

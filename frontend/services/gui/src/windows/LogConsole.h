@@ -56,7 +56,6 @@ private:
  */
 class LogConsole : public AbstractWindow {
 public:
-
     struct InputSharedData {
         bool move_cursor_to_end;
         std::vector<std::pair<std::string, std::string>> commands; // command, parameter hint

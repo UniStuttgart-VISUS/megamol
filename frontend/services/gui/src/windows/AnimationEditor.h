@@ -31,7 +31,6 @@ enum class InteractionType : int32_t {
 
 class AnimationEditor : public AbstractWindow {
 public:
-
     explicit AnimationEditor(const std::string& window_name);
     ~AnimationEditor();
 

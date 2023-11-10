@@ -428,8 +428,7 @@ void Remote_Service::execute_message(std::vector<char> const& message) {
     commands_string.resize(message.size());
     std::memcpy(commands_string.data(), message.data(), message.size());
 
-    auto& luaApi = m_requestedResourceReferences[1]
-                           .getResource<core::LuaAPI*>();
+    auto& luaApi = m_requestedResourceReferences[1].getResource<core::LuaAPI*>();
     auto result = luaApi->RunString(commands_string);
 
     if (!result.valid()) {

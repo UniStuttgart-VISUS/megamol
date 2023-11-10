@@ -40,8 +40,7 @@ namespace {
 struct RecursionGuard {
     int& state;
 
-    RecursionGuard(int& s)
-        : state{s} {
+    RecursionGuard(int& s) : state{s} {
         state++;
     }
 
@@ -85,9 +84,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     m_config = config;
 
-    m_setScriptPath_resource = [&](std::string const& script_path) -> void {
-        luaAPI.SetScriptPath(script_path);
-    };
+    m_setScriptPath_resource = [&](std::string const& script_path) -> void { luaAPI.SetScriptPath(script_path); };
 
     luaApi_resource = config.lua_api_ptr;
 
@@ -98,17 +95,16 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     };
 
     this->m_requestedResourcesNames = {"FrontendResourcesList",
-                                       "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
-                                       "FrameStatistics", // for LastFrameTime
-                                       "optional<WindowManipulation>", // for Framebuffer resize
-                                       "optional<GUIState>", // propagate GUI state and visibility
-                                       frontend_resources::MegaMolGraph_Req_Name, // LuaAPI manipulates graph
-                                       "RenderNextFrame", // LuaAPI can render one frame
-                                       "GlobalValueStore", // LuaAPI can read and set global values
-                                       frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>",
-                                       "RuntimeConfig",
+        "GLFrontbufferToPNG_ScreenshotTrigger",    // for screenshots
+        "FrameStatistics",                         // for LastFrameTime
+        "optional<WindowManipulation>",            // for Framebuffer resize
+        "optional<GUIState>",                      // propagate GUI state and visibility
+        frontend_resources::MegaMolGraph_Req_Name, // LuaAPI manipulates graph
+        "RenderNextFrame",                         // LuaAPI can render one frame
+        "GlobalValueStore",                        // LuaAPI can read and set global values
+        frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
 #ifdef MEGAMOL_USE_PROFILING
-                                       frontend_resources::PerformanceManager_Req_Name
+        frontend_resources::PerformanceManager_Req_Name
 #endif
     }; //= {"ZMQ_Context"};
 
@@ -238,8 +234,8 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
     luaApi_resource->RegisterCallback(
         "mmGetMegaMolExecutableDirectory", "()\n\tReturns the directory of the running MegaMol executable.", [&]() {
             auto& path = m_requestedResourceReferences[10]
-                         .getResource<frontend_resources::RuntimeConfig>()
-                         .megamol_executable_directory;
+                             .getResource<frontend_resources::RuntimeConfig>()
+                             .megamol_executable_directory;
             return path;
         });
 
@@ -299,10 +295,8 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
                 window_manipulation.set_framebuffer_size(width, height);
             });
 
-        luaApi_resource->RegisterCallback(
-            "mmSetWindowPosition", "(int x, int y)\n\tSet window position to x,y.", [&](int x, int y) -> void {
-                window_manipulation.set_window_position(x, y);
-            });
+        luaApi_resource->RegisterCallback("mmSetWindowPosition", "(int x, int y)\n\tSet window position to x,y.",
+            [&](int x, int y) -> void { window_manipulation.set_window_position(x, y); });
 
         luaApi_resource->RegisterCallback("mmSetFullscreen",
             "(bool fullscreen)\n\tSet window to fullscreen (or restore).", [&](bool fullscreen) -> void {
@@ -311,10 +305,8 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
                                                        : frontend_resources::WindowManipulation::Fullscreen::Restore);
             });
 
-        luaApi_resource->RegisterCallback(
-            "mmSetVSync", "(bool state)\n\tSet window VSync off (false) or on (true).", [&](bool state) -> void {
-                window_manipulation.set_swap_interval(state ? 1 : 0);
-            });
+        luaApi_resource->RegisterCallback("mmSetVSync", "(bool state)\n\tSet window VSync off (false) or on (true).",
+            [&](bool state) -> void { window_manipulation.set_swap_interval(state ? 1 : 0); });
     }
 
     auto maybe_gui_state =
@@ -322,30 +314,24 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
     if (maybe_gui_state.has_value()) {
         auto& gui_resource = maybe_gui_state.value().get();
 
-        luaApi_resource->RegisterCallback("mmSetGUIState",
-            "(string json)\n\tSet GUI state from given 'json' string.", [&](std::string json) -> void {
-                gui_resource.provide_gui_state(json);
-            });
+        luaApi_resource->RegisterCallback("mmSetGUIState", "(string json)\n\tSet GUI state from given 'json' string.",
+            [&](std::string json) -> void { gui_resource.provide_gui_state(json); });
         luaApi_resource->RegisterCallback(
             "mmGetGUIState", "()\n\tReturns the GUI state as json string.", [&]() -> std::string {
                 auto s = gui_resource.request_gui_state(false);
                 return s;
             });
 
-        luaApi_resource->RegisterCallback(
-            "mmSetGUIVisible", "(bool state)\n\tShow (true) or hide (false) the GUI.", [&](bool show) -> void {
-                gui_resource.provide_gui_visibility(show);
-            });
+        luaApi_resource->RegisterCallback("mmSetGUIVisible", "(bool state)\n\tShow (true) or hide (false) the GUI.",
+            [&](bool show) -> void { gui_resource.provide_gui_visibility(show); });
         luaApi_resource->RegisterCallback(
             "mmGetGUIVisible", "()\n\tReturns whether the GUI is visible (true/false).", [&]() -> std::string {
                 const auto visible = gui_resource.request_gui_visibility();
                 return visible ? "true" : "false";
             });
 
-        luaApi_resource->RegisterCallback(
-            "mmSetGUIScale", "(float scale)\n\tSet GUI scaling factor.", [&](float scale) -> void {
-                gui_resource.provide_gui_scale(scale);
-            });
+        luaApi_resource->RegisterCallback("mmSetGUIScale", "(float scale)\n\tSet GUI scaling factor.",
+            [&](float scale) -> void { gui_resource.provide_gui_scale(scale); });
         luaApi_resource->RegisterCallback(
             "mmGetGUIScale", "()\n\tReturns the GUI scaling as float.", [&]() -> std::string {
                 const auto scale = gui_resource.request_gui_scale();
@@ -353,12 +339,11 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
             });
     }
 
-    luaApi_resource->RegisterCallback("mmQuit", "()\n\tClose the MegaMol instance.", [&]() -> void {
-        this->setShutdown();
-    });
+    luaApi_resource->RegisterCallback(
+        "mmQuit", "()\n\tClose the MegaMol instance.", [&]() -> void { this->setShutdown(); });
 
-    luaApi_resource->RegisterCallback("mmRenderNextFrame",
-        "()\n\tAdvances rendering by one frame by poking the main rendering loop.", [&]() -> void {
+    luaApi_resource->RegisterCallback(
+        "mmRenderNextFrame", "()\n\tAdvances rendering by one frame by poking the main rendering loop.", [&]() -> void {
             auto& render_next_frame = m_requestedResourceReferences[6].getResource<std::function<bool()>>();
             render_next_frame();
         });
@@ -402,9 +387,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
         auto& l = command_registry.list_commands();
         std::string output;
         std::for_each(l.begin(), l.end(),
-            [&](const frontend_resources::Command& c) {
-                output = output + c.name + ", " + c.key.ToString() + "\n";
-            });
+            [&](const frontend_resources::Command& c) { output = output + c.name + ", " + c.key.ToString() + "\n"; });
         return output;
     });
 
@@ -449,9 +432,8 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
             }
 
             if (!graph.SetGraphEntryPoint(instanceName)) {
-                luaApi_resource->Error(
-                    "graph could not set graph entry point for: " + baseName + " , " + className + " , " +
-                    instanceName);
+                luaApi_resource->Error("graph could not set graph entry point for: " + baseName + " , " + className +
+                                       " , " + instanceName);
             }
         });
 
@@ -463,8 +445,8 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
             }
         });
 
-    luaApi_resource->RegisterCallback("mmDeleteModule", "(string name)\n\tDelete the module called <name>.",
-        [&](std::string moduleName) -> void {
+    luaApi_resource->RegisterCallback(
+        "mmDeleteModule", "(string name)\n\tDelete the module called <name>.", [&](std::string moduleName) -> void {
             if (!graph.DeleteModule(moduleName)) {
                 luaApi_resource->Error("graph could not delete module: " + moduleName);
             }
@@ -545,8 +527,8 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
             return valUTF8.PeekBuffer();
         });
 
-    luaApi_resource->RegisterCallback("mmGetParamValue",
-        "(string name)\n\tReturn the value of a parameter slot.", [&](std::string paramName) -> std::string {
+    luaApi_resource->RegisterCallback("mmGetParamValue", "(string name)\n\tReturn the value of a parameter slot.",
+        [&](std::string paramName) -> std::string {
             const auto* param = graph.FindParameter(paramName);
             if (param == nullptr) {
                 luaApi_resource->Error("graph could not find parameter: " + paramName);
@@ -561,7 +543,6 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
             if (!graph.SetParameter(paramName, paramValue.c_str())) {
                 luaApi_resource->Error("parameter could not be set to value: " + paramName + " : " + paramValue);
             }
-
         });
 
     luaApi_resource->RegisterCallback("mmSetParamHighlight",
@@ -580,9 +561,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
     luaApi_resource->RegisterCallback("mmCreateParamGroup",
         "(string name, string size)\n\tGenerate a param group that can only be set at once. Sets are queued until size "
         "is reached.",
-        [&](std::string groupName) -> void {
-            graph.Convenience().CreateParameterGroup(groupName);
-        });
+        [&](std::string groupName) -> void { graph.Convenience().CreateParameterGroup(groupName); });
 
     luaApi_resource->RegisterCallback("mmSetParamGroupValue",
         "(string groupname, string paramname, string value)\n\tQueue the value of a grouped parameter.",
@@ -600,8 +579,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         });
 
     luaApi_resource->RegisterCallback("mmApplyParamGroupValues",
-        "(string groupname)\n\tApply queued parameter values of group to graph.",
-        [&](std::string paramGroup) -> void {
+        "(string groupname)\n\tApply queued parameter values of group to graph.", [&](std::string paramGroup) -> void {
             auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
             if (!groupPtr) {
                 luaApi_resource->Error("graph could not apply param group: no such group: " + paramGroup);
@@ -635,9 +613,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         });
 
     luaApi_resource->RegisterCallback(
-        "mmClearGraph", "()\n\tClear the MegaMol Graph from all Modules and Calls", [&]() -> void {
-            graph.Clear();
-        });
+        "mmClearGraph", "()\n\tClear the MegaMol Graph from all Modules and Calls", [&]() -> void { graph.Clear(); });
 
     luaApi_resource->RegisterCallback(
         "mmListCalls", "()\n\tReturn a list of instantiated calls.", [&]() -> std::string {
@@ -645,8 +621,9 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
             auto& calls_list = graph.ListCalls();
             for (auto& call : calls_list) {
                 answer << call.callPtr->ClassName() << ";" << call.callPtr->PeekCallerSlot()->Parent()->Name() << ","
-                    << call.callPtr->PeekCalleeSlot()->Parent()->Name() << ";" << call.callPtr->PeekCallerSlot()->Name()
-                    << "," << call.callPtr->PeekCalleeSlot()->Name() << std::endl;
+                       << call.callPtr->PeekCalleeSlot()->Parent()->Name() << ";"
+                       << call.callPtr->PeekCallerSlot()->Name() << "," << call.callPtr->PeekCalleeSlot()->Name()
+                       << std::endl;
             }
 
             if (calls_list.empty()) {
@@ -683,11 +660,11 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
 
 
 #ifdef MEGAMOL_USE_PROFILING
-    luaApi_resource->RegisterCallback("mmListModuleTimers",
-        "(string name)\n\tList the registered timers of a module.", [&](std::string name) -> std::string {
+    luaApi_resource->RegisterCallback("mmListModuleTimers", "(string name)\n\tList the registered timers of a module.",
+        [&](std::string name) -> std::string {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
                 &this->m_requestedResourceReferences[11]
-                .getResource<megamol::frontend_resources::PerformanceManager>());
+                     .getResource<megamol::frontend_resources::PerformanceManager>());
             std::stringstream output;
             auto m = graph.FindModule(name);
             if (m) {
@@ -695,8 +672,8 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
                 for (auto& t : timers) {
                     auto& timer = perf_manager->lookup_config(t);
                     output << t << ": " << timer.name << " ("
-                        << megamol::frontend_resources::PerformanceManager::query_api_string(timer.api) << ")"
-                        << std::endl;
+                           << megamol::frontend_resources::PerformanceManager::query_api_string(timer.api) << ")"
+                           << std::endl;
                 }
             }
             return output.str();
@@ -706,7 +683,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         [&](int handle, std::string comment) -> void {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
                 &this->m_requestedResourceReferences[11]
-                .getResource<megamol::frontend_resources::PerformanceManager>());
+                     .getResource<megamol::frontend_resources::PerformanceManager>());
             perf_manager->set_transient_comment(handle, comment);
         });
 #endif
