@@ -71,6 +71,8 @@ public:
         }
     }
 
+    static std::string TypeToString(sol::safe_function_result& res, int index_offset = 0);
+
 protected:
     // ** MegaMol API provided for configuration / startup
 

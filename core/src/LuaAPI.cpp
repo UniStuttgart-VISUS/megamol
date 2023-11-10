@@ -74,7 +74,8 @@ int exceptionHandler(lua_State* L, sol::optional<const std::exception&> maybe_ex
     return sol::stack::push(L, description);
 }
 
-int silentExceptionHandler(lua_State* L, sol::optional<const std::exception&> maybe_exception, sol::string_view description) {
+int silentExceptionHandler(lua_State* L, sol::optional<const std::exception&> maybe_exception,
+    sol::string_view description) {
     return sol::stack::push(L, description);
 }
 
@@ -162,6 +163,33 @@ void megamol::core::LuaAPI::Error(const std::string& description) {
     throw std::runtime_error(description);
 }
 
+
+std::string megamol::core::LuaAPI::TypeToString(sol::safe_function_result& res, int index_offset) {
+    switch (res.get_type()) {
+    case sol::type::none:
+        return "none";
+    case sol::type::nil:
+        return "nil";
+    case sol::type::string:
+        return res.get<std::string>(index_offset);
+    case sol::type::number:
+        return std::to_string(res.get<double>(index_offset));
+    case sol::type::thread:
+        return "thread: " + std::to_string(res.get<uint64_t>(index_offset));
+    case sol::type::boolean:
+        return res.get<bool>(index_offset) ? "true" : "false";
+    case sol::type::function:
+        return "thread: " + std::to_string(res.get<uint64_t>(index_offset));
+    case sol::type::userdata:
+        return "(userdata)";
+    case sol::type::lightuserdata:
+        return "(userdata)";
+    case sol::type::table:
+        return "(table)";
+    case sol::type::poly:
+        return "(poly)";
+    }
+}
 
 unsigned int megamol::core::LuaAPI::GetBitWidth() {
     return vislib::sys::SystemInformation::SelfWordSize();
