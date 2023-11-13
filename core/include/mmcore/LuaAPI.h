@@ -64,6 +64,17 @@ public:
         luaApiInterpreter_.set_function(name, std::forward<Args>(args)...);
         helpContainer[name] = help;
     }
+    // something like this to retrofit tracy zones everywhere would be nice.
+    // but I am not able to write this down.
+    //template<typename Func, typename... Args>
+    //void RegisterCallbackWithTracy(std::string const& name, std::string const& help, Func&& func(Args&&...args)) {
+    //    luaApiInterpreter_.set_function(name, [](Func&& func, Args&&... args) {
+    //        printf("Tracy happening");
+    //        return func(args...);
+    //    });
+    //    helpContainer[name] = help;
+    //}
+
     void UnregisterCallback(std::string const& name) {
         // TODO: are we sure this nukes the function
         luaApiInterpreter_[name].set(sol::nil);
