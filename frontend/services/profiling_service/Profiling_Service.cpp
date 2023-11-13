@@ -227,16 +227,16 @@ void Profiling_Service::fill_lua_callbacks() {
         [&graph, &luaApi](std::string entrypoint, std::string camera_path_pattern, int num_samples) -> std::string {
             const auto entry = graph.FindModule(entrypoint);
             if (!entry)
-                luaApi->Error("could not find entrypoint");
+                luaApi->ThrowError("could not find entrypoint");
             auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
             if (!view)
-                luaApi->Error("requested entrypoint is not a view");
+                luaApi->ThrowError("requested entrypoint is not a view");
             auto cam_func = megamol::core::utility::GetCamScenesFunctional(camera_path_pattern);
             if (!cam_func)
-                luaApi->Error("could not request camera path pattern");
+                luaApi->ThrowError("could not request camera path pattern");
             auto camera_samples = megamol::core::utility::SampleCameraScenes(view, cam_func, num_samples);
             if (camera_samples.empty())
-                luaApi->Error("could not sample camera");
+                luaApi->ThrowError("could not sample camera");
             return camera_samples;
         });
 
@@ -246,10 +246,10 @@ void Profiling_Service::fill_lua_callbacks() {
             std::string entrypoint, std::string cameras, int num_frames, bool pretty) -> std::string {
             auto entry = graph.FindModule(entrypoint);
             if (!entry)
-                luaApi->Error("could not find entrypoint");
+                luaApi->ThrowError("could not find entrypoint");
             auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
             if (!view)
-                luaApi->Error("requested entrypoint is not a view");
+                luaApi->ThrowError("requested entrypoint is not a view");
 
             auto serializer = core::view::CameraSerializer();
             std::vector<core::view::Camera> cams;

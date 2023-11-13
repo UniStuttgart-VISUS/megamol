@@ -446,7 +446,7 @@ void ImagePresentation_Service::fill_lua_callbacks() {
         "(string view, int width, int height)\n\tSet framebuffer dimensions of view to width x height.",
         [&](std::string view, int width, int height) -> void {
             if (width <= 0 || height <= 0) {
-                luaApi->Error("framebuffer dimensions must be positive, but given values are: " +
+                luaApi->ThrowError("framebuffer dimensions must be positive, but given values are: " +
                               std::to_string(width) + " x " + std::to_string(height));
             }
 
@@ -454,7 +454,7 @@ void ImagePresentation_Service::fill_lua_callbacks() {
                 [&](EntryPoint& entry) { return entry.moduleName == view; });
 
             if (entry_it == m_entry_points.end()) {
-                luaApi->Error("no view found with name: " + view);
+                luaApi->ThrowError("no view found with name: " + view);
             }
 
             accessViewRenderInput(entry_it->entry_point_data).render_input_framebuffer_size_handler =
@@ -465,13 +465,13 @@ void ImagePresentation_Service::fill_lua_callbacks() {
 
     auto handle_screenshot = [&](std::string const& entrypoint, std::string file) -> void {
         if (m_entry_points.empty())
-            luaApi->Error("no views registered as entry points. nothing to write as screenshot into ");
+            luaApi->ThrowError("no views registered as entry points. nothing to write as screenshot into ");
 
         auto find_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
             [&](EntryPoint const& elem) { return elem.moduleName == entrypoint; });
 
         if (find_it == m_entry_points.end())
-            luaApi->Error("error writing screenshot into file " + file + ". no such entry point: " + entrypoint);
+            luaApi->ThrowError("error writing screenshot into file " + file + ". no such entry point: " + entrypoint);
 
         auto& entry_result_image = find_it->execution_result_image;
 
@@ -481,17 +481,16 @@ void ImagePresentation_Service::fill_lua_callbacks() {
         bool trigger_ok = triggerscreenshot(entry_result_image, file);
 
         if (!trigger_ok)
-            luaApi->Error("error writing screenshot for entry point " + entrypoint + " into file " + file);
+            luaApi->ThrowError("error writing screenshot for entry point " + entrypoint + " into file " + file);
     };
 
     m_entrypointToPNG_trigger = [handle_screenshot](std::string const& entrypoint, std::string const& file) -> bool {
-        handle_screenshot(entrypoint, file);
-
-        //if (!result.exit_success) {
-        //    log_warning(result.exit_reason);
-        //    return false;
-        //}
-
+        try {
+            handle_screenshot(entrypoint, file);
+        } catch (std::runtime_error& err) {
+            log_warning(err.what());
+            return false;
+        }
         return true;
     };
 

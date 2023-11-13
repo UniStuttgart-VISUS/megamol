@@ -217,7 +217,7 @@ std::string TableManipulator::getInputColumnName(int idx) {
     if (idx > -1 && idx < column_count) {
         return column_infos[idx].Name();
     } else {
-        theLua.Error("column index out of range");
+        theLua.ThrowError("column index out of range");
         return "";
     }
 }
@@ -227,7 +227,7 @@ void TableManipulator::setOutputColumnName(int idx, std::string name) {
         this->info[idx].SetName(name);
         this->info[idx].SetType(TableDataCall::ColumnType::QUANTITATIVE);
     } else {
-        theLua.Error("column index out of range");
+        theLua.ThrowError("column index out of range");
     }
 }
 
@@ -235,7 +235,7 @@ std::tuple<float, float> TableManipulator::getInputColumnRange(int idx) {
     if (idx > -1 && idx < column_count) {
         return std::make_tuple(column_infos[idx].MinimumValue(), column_infos[idx].MaximumValue());
     } else {
-        theLua.Error("column index out of range");
+        theLua.ThrowError("column index out of range");
         return std::make_tuple(0.f, 0.f);
     }
 }
@@ -245,7 +245,7 @@ void TableManipulator::setOutputColumnRange(int idx, float min, float max) {
         info[idx].SetMinimumValue(min);
         info[idx].SetMaximumValue(max);
     } else {
-        theLua.Error("column index out of range");
+        theLua.ThrowError("column index out of range");
     }
 }
 
@@ -254,10 +254,10 @@ void TableManipulator::addOutputRows(int n) {
         if (!info.empty()) {
             this->data.resize(this->data.size() + n * info.size());
         } else {
-            theLua.Error("you need to set the number of output columns first");
+            theLua.ThrowError("you need to set the number of output columns first");
         }
     } else {
-        theLua.Error("you can only add rows");
+        theLua.ThrowError("you can only add rows");
     }
 }
 
@@ -266,7 +266,7 @@ float TableManipulator::getCellValue(int row, int col) {
         const uint32_t idx = row * column_count + col;
         return in_data[idx];
     } else {
-        theLua.Error("illegal cell index");
+        theLua.ThrowError("illegal cell index");
         return 0.f;
     }
 }
@@ -277,9 +277,9 @@ void TableManipulator::setCellValue(int row, int col, float val) {
         if (idx >= 0 && idx < data.size()) {
             data[idx] = val;
         } else {
-            theLua.Error("illegal cell index");
+            theLua.ThrowError("illegal cell index");
         }
     } else {
-        theLua.Error("you need to set the number of output columns first");
+        theLua.ThrowError("you need to set the number of output columns first");
     }
 }

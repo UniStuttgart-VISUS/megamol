@@ -231,8 +231,8 @@ void Lua_Service_Wrapper::postGraphRender() {
 
 
 void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
-    luaApi_resource->RegisterCallback(
-        "mmGetMegaMolExecutableDirectory", "()\n\tReturns the directory of the running MegaMol executable.", [&]() {
+    luaApi_resource->RegisterCallback("mmGetMegaMolExecutableDirectory",
+        "()\n\tReturns the directory of the running MegaMol executable.", [&]() -> std::string {
             auto& path = m_requestedResourceReferences[10]
                              .getResource<frontend_resources::RuntimeConfig>()
                              .megamol_executable_directory;
@@ -288,7 +288,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
             "(int width, int height)\n\tSet framebuffer dimensions of window to width x height.",
             [&](int width, int height) -> void {
                 if (width <= 0 || height <= 0) {
-                    luaApi_resource->Error("framebuffer dimensions must be positive, but given values are: " +
+                    luaApi_resource->ThrowError("framebuffer dimensions must be positive, but given values are: " +
                                            std::to_string(width) + " x " + std::to_string(height));
                 }
 
@@ -427,12 +427,12 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "called <moduleName>. The view module is registered as graph entry point. <graphName> is ignored.",
         [&](std::string baseName, std::string className, std::string instanceName) -> void {
             if (!graph.CreateModule(className, instanceName)) {
-                luaApi_resource->Error(
+                luaApi_resource->ThrowError(
                     "graph could not create module for: " + baseName + " , " + className + " , " + instanceName);
             }
 
             if (!graph.SetGraphEntryPoint(instanceName)) {
-                luaApi_resource->Error("graph could not set graph entry point for: " + baseName + " , " + className +
+                luaApi_resource->ThrowError("graph could not set graph entry point for: " + baseName + " , " + className +
                                        " , " + instanceName);
             }
         });
@@ -441,14 +441,14 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "(string className, string moduleName)\n\tCreate a module instance of class <className> called <moduleName>.",
         [&](std::string className, std::string instanceName) -> void {
             if (!graph.CreateModule(className, instanceName)) {
-                luaApi_resource->Error("graph could not create module: " + className + " , " + instanceName);
+                luaApi_resource->ThrowError("graph could not create module: " + className + " , " + instanceName);
             }
         });
 
     luaApi_resource->RegisterCallback(
         "mmDeleteModule", "(string name)\n\tDelete the module called <name>.", [&](std::string moduleName) -> void {
             if (!graph.DeleteModule(moduleName)) {
-                luaApi_resource->Error("graph could not delete module: " + moduleName);
+                luaApi_resource->ThrowError("graph could not delete module: " + moduleName);
             }
         });
 
@@ -456,7 +456,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "(string oldName, string newName)\n\tRenames the module called <oldname> to <newname>.",
         [&](std::string oldName, std::string newName) -> void {
             if (!graph.RenameModule(oldName, newName)) {
-                luaApi_resource->Error("graph could not rename module: " + oldName + " to " + newName);
+                luaApi_resource->ThrowError("graph could not rename module: " + oldName + " to " + newName);
             }
         });
 
@@ -465,7 +465,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "and CalleeSlot <to>.",
         [&](std::string className, std::string from, std::string to) -> void {
             if (!graph.CreateCall(className, from, to)) {
-                luaApi_resource->Error("graph could not create call: " + className + " , " + from + " -> " + to);
+                luaApi_resource->ThrowError("graph could not create call: " + className + " , " + from + " -> " + to);
             }
         });
 
@@ -473,7 +473,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>.",
         [&](std::string from, std::string to) -> void {
             if (!graph.DeleteCall(from, to)) {
-                luaApi_resource->Error("graph could not delete call: " + from + " -> " + to);
+                luaApi_resource->ThrowError("graph could not delete call: " + from + " -> " + to);
             }
         });
 
@@ -482,7 +482,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>.",
         [&](std::string className, std::string chainStart, std::string to) -> void {
             if (!graph.Convenience().CreateChainCall(className, chainStart, to)) {
-                luaApi_resource->Error(
+                luaApi_resource->ThrowError(
                     "graph could not create chain call: " + className + " , " + chainStart + " -> " + to);
             }
         });
@@ -493,7 +493,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         [&](std::string moduleName) -> std::string {
             auto mod = graph.FindModule(moduleName);
             if (mod == nullptr) {
-                luaApi_resource->Error("graph could not find module: " + moduleName);
+                luaApi_resource->ThrowError("graph could not find module: " + moduleName);
             }
 
             auto slots = graph.EnumerateModuleParameterSlots(moduleName);
@@ -505,7 +505,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
                 answer << ps->Description() << "\1";
                 auto par = ps->Parameter();
                 if (par == nullptr) {
-                    luaApi_resource->Error(
+                    luaApi_resource->ThrowError(
                         "ParamSlot does not seem to hold a parameter: " + std::string(ps->FullName().PeekBuffer()));
                 }
                 answer << par->ValueString() << "\1";
@@ -518,7 +518,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "(string name)\n\tReturn the description of a parameter slot.", [&](std::string paramName) -> std::string {
             core::param::ParamSlot* ps = graph.FindParameterSlot(paramName);
             if (ps == nullptr) {
-                luaApi_resource->Error("graph could not find parameter: " + paramName);
+                luaApi_resource->ThrowError("graph could not find parameter: " + paramName);
             }
 
             vislib::StringA valUTF8;
@@ -531,7 +531,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         [&](std::string paramName) -> std::string {
             const auto* param = graph.FindParameter(paramName);
             if (param == nullptr) {
-                luaApi_resource->Error("graph could not find parameter: " + paramName);
+                luaApi_resource->ThrowError("graph could not find parameter: " + paramName);
             }
 
             return param->ValueString();
@@ -541,7 +541,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "(string name, string value)\n\tSet the value of a parameter slot.",
         [&](std::string paramName, std::string paramValue) -> void {
             if (!graph.SetParameter(paramName, paramValue.c_str())) {
-                luaApi_resource->Error("parameter could not be set to value: " + paramName + " : " + paramValue);
+                luaApi_resource->ThrowError("parameter could not be set to value: " + paramName + " : " + paramValue);
             }
         });
 
@@ -551,7 +551,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
             auto param_ptr = graph.FindParameter(paramName);
 
             if (param_ptr == nullptr) {
-                luaApi_resource->Error(
+                luaApi_resource->ThrowError(
                     "parameter highlight could not be set: " + paramName + " : " + std::to_string(is_highlight));
             }
 
@@ -568,12 +568,12 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         [&](std::string paramGroup, std::string paramName, std::string paramValue) -> void {
             auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
             if (!groupPtr) {
-                luaApi_resource->Error("graph could not find parameter group: " + paramGroup);
+                luaApi_resource->ThrowError("graph could not find parameter group: " + paramGroup);
             }
 
             bool queued = groupPtr->QueueParameterValue(paramName, paramValue);
             if (!queued) {
-                luaApi_resource->Error(
+                luaApi_resource->ThrowError(
                     "graph could not queue param group value: " + paramGroup + " , " + paramName + " : " + paramValue);
             }
         });
@@ -582,12 +582,12 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         "(string groupname)\n\tApply queued parameter values of group to graph.", [&](std::string paramGroup) -> void {
             auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
             if (!groupPtr) {
-                luaApi_resource->Error("graph could not apply param group: no such group: " + paramGroup);
+                luaApi_resource->ThrowError("graph could not apply param group: no such group: " + paramGroup);
             }
 
             bool applied = groupPtr->ApplyQueuedParameterValues();
             if (!applied) {
-                luaApi_resource->Error("graph could not apply param group: some parameter values did not parse.");
+                luaApi_resource->ThrowError("graph could not apply param group: some parameter values did not parse.");
             }
         });
 
@@ -638,7 +638,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         [&](std::string moduleName) -> void {
             auto res = graph.SetGraphEntryPoint(moduleName);
             if (!res) {
-                luaApi_resource->Error("Could not set graph entry point " + moduleName);
+                luaApi_resource->ThrowError("Could not set graph entry point " + moduleName);
             }
         });
     luaApi_resource->RegisterCallback("mmRemoveGraphEntryPoint",
@@ -646,7 +646,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         [&](std::string moduleName) -> void {
             auto res = graph.RemoveGraphEntryPoint(moduleName);
             if (!res) {
-                luaApi_resource->Error("Could not remove graph entry point " + moduleName);
+                luaApi_resource->ThrowError("Could not remove graph entry point " + moduleName);
             }
         });
     luaApi_resource->RegisterCallback(

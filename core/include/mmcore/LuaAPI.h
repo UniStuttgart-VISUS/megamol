@@ -31,7 +31,7 @@ public:
 
     ~LuaAPI();
 
-    // TODO forbid copy-contructor? assignment?
+    // TODO forbid copy-constructor? assignment?
 
     /**
      * Run a script string.
@@ -39,9 +39,10 @@ public:
     sol::safe_function_result RunString(const std::string& script, std::string scriptPath = "");
 
     /**
-     * Invoke the error-generating mechanism of lua
+     * Invoke the error-generating mechanism of lua. The current implementation throws an exception
+     * that sol uses to generate into a safe_result.
      */
-    static void Error(const std::string& description);
+    static void ThrowError(const std::string& description);
 
     /**
      * Get Lua error if res is not valid

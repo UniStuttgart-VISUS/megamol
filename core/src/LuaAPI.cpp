@@ -159,7 +159,7 @@ sol::safe_function_result megamol::core::LuaAPI::RunString(const std::string& sc
     return res;
 }
 
-void megamol::core::LuaAPI::Error(const std::string& description) {
+void megamol::core::LuaAPI::ThrowError(const std::string& description) {
     throw std::runtime_error(description);
 }
 
@@ -262,7 +262,7 @@ std::string megamol::core::LuaAPI::ReadTextFile(std::string filename, sol::optio
             return stream.str();
         }
     } else {
-        Error("cannot open file " + filename);
+        ThrowError("cannot open file " + filename);
         return "";
     }
 }
@@ -270,13 +270,13 @@ std::string megamol::core::LuaAPI::ReadTextFile(std::string filename, sol::optio
 
 void megamol::core::LuaAPI::WriteTextFile(std::string filename, std::string content) {
     if (std::filesystem::exists(filename)) {
-        Error("Overwriting existing file " + filename + " is not allowed!");
+        ThrowError("Overwriting existing file " + filename + " is not allowed!");
     } else {
         std::ofstream t(filename, std::ofstream::out);
         if (t.good()) {
             t.write(content.c_str(), content.length());
         } else {
-            Error("Cannot open file " + filename + " for writing.");
+            ThrowError("Cannot open file " + filename + " for writing.");
         }
     }
 }

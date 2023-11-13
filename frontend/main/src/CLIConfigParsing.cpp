@@ -700,11 +700,11 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
 
 #define sane(s)                                                  \
     if (s.empty() || s.find_first_of(" =") != std::string::npos) \
-        lua.Error("Value \"" + s + "\" is empty, has space or =");
+        lua.ThrowError("Value \"" + s + "\" is empty, has space or =");
 
 #define file_exists(f)               \
     if (!std::filesystem::exists(f)) \
-        lua.Error("File does not exist: " + f);
+        lua.ThrowError("File does not exist: " + f);
 
 #define add_cli(o, v) cli_options_from_configs.push_back({loong(o), v});
 
@@ -757,7 +757,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
             auto option_it = std::find(all_options_separate.begin(), all_options_separate.end(), clioption);
             bool option_unknown = option_it == all_options_separate.end();
             if (option_unknown)
-                lua.Error("unknown option: " + clioption);
+                lua.ThrowError("unknown option: " + clioption);
 
             // if has option of length one, take the long version
             auto finalopt = clioption;
