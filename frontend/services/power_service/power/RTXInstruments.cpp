@@ -76,6 +76,7 @@ void RTXInstruments::ApplyConfigs(MetaData* meta) {
                 // need to stop running measurement otherwise wait on trigger cannot be used to guard start of trigger sequence
                 //i.write("STOP\n");
                 //i.operation_complete();
+                fit->second.beep_on_trigger(true).beep_on_apply(true).beep_on_error(true);
                 fit->second.apply(i);
                 if (meta) {
                     auto const cfg_str_size = rtx_instrument_configuration::serialise(nullptr, 0, fit->second);
