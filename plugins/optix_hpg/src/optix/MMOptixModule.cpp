@@ -200,8 +200,13 @@ megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDevi
     std::vector<std::pair<MMOptixNameKind, std::string>> const& names) {
     simple_log<2048> log;
 
+#if OPTIX_VERSION < 80000
     OPTIX_CHECK_ERROR(optixModuleCreateFromPTX(
         ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
+#else
+    OPTIX_CHECK_ERROR(
+        optixModuleCreate(ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
+#endif
 #if DEBUG
     if (log.get_log_size() > 1) {
         core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Optix Module creation info: %s", log.read());
