@@ -166,7 +166,8 @@ megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDevi
     OPTIX_CHECK_ERROR(optixModuleCreateFromPTX(
         ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
 #else
-    optixModuleCreate(ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
+    OPTIX_CHECK_ERROR(
+        optixModuleCreate(ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
 #endif
 #if DEBUG
     if (log.get_log_size() > 1) {
