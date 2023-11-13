@@ -16,7 +16,8 @@ ParallelPortTrigger::ParallelPortTrigger(char const* path) {
 
 void ParallelPortTrigger::Open(char const* path) {
 #ifdef WIN32
-    this->handle_.reset(::CreateFileA(path, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+    this->handle_.reset(::CreateFileA(
+        path, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL));
     if (!this->handle_) {
         //throw std::system_error(::GetLastError(), std::system_category());
         core::utility::log::Log::DefaultLog.WriteWarn("[ParallelPortTriger] Could not open parallel port %s", path);

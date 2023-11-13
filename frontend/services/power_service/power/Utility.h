@@ -130,6 +130,11 @@ inline std::filesystem::path create_full_path(std::filesystem::path const& outpu
     return output_folder / (device_name + "_s" + std::to_string(s_idx) + ext);
 }
 
+inline std::filesystem::path create_full_path(std::filesystem::path const& output_folder,
+    std::string const& device_name, std::string const& ext = ".parquet") {
+    return output_folder / (device_name + ext);
+}
+
 inline std::string unmueller_string(wchar_t const* name) {
     /*std::string no_mueller =
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));*/
@@ -157,9 +162,9 @@ inline std::string unmueller_string(wchar_t const* name) {
 inline std::tuple<std::chrono::milliseconds, std::chrono::milliseconds, std::chrono::milliseconds> get_trigger_timings(
     std::chrono::milliseconds range) {
     // config_range_ / 12, config_range_ - config_range_ / 12, std::chrono::milliseconds(1000) + config_range_
-    auto const lw = std::chrono::milliseconds(100);
-    auto const prefix = range / 12 + lw;
-    auto const postfix = range - (range / 12) + lw;
+    auto const lw = std::chrono::milliseconds(200);
+    auto const prefix = range / 12ll + lw;
+    auto const postfix = range - (range / 12ll) + lw;
     auto const wait = range + std::chrono::milliseconds(1000);
     return std::make_tuple(prefix, postfix, wait);
 }

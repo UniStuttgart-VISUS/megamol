@@ -45,6 +45,10 @@ inline std::string gen_hmc_filename(unsigned int const cnt) {
     return std::string("PWR_") + std::to_string(cnt);
 }
 
+inline std::string gen_hmc_filename() {
+    return std::string("PWR");
+}
+
 inline std::string gen_hmc_filename(std::string const& fix) {
     return fix + std::string(".CSV");
 }
@@ -192,6 +196,29 @@ private:
         }
     }
 
+    void hmc_init_trg() {
+        for (auto& [n, s] : hmc_sensors_) {
+            s.log_file(gen_hmc_filename().c_str(), true, false);
+            auto const path_size = s.log_file((char*)nullptr, 0);
+            std::string path;
+            path.resize(path_size);
+            s.log_file(path.data(), path.size());
+            if (!path.empty()) {
+                path.resize(path.size() - 1);
+            }
+            std::regex reg(R"(^\"(\w+)\", INT$)");
+            std::smatch match;
+            if (std::regex_match(path, match, reg)) {
+                hmc_paths_[n] = gen_hmc_filename(match[1]);
+            }
+        }
+        // TODO: maybe need sleep here
+        for (auto& [n, s] : hmc_sensors_) {
+            s.log(true);
+        }
+    }
+
+#if 0
     void hmc_pre_trg() {
         for (auto& [n, s] : hmc_sensors_) {
             s.log_file(gen_hmc_filename(seg_cnt_).c_str(), true, false);
@@ -218,8 +245,48 @@ private:
             s.log(false);
         }
     }
+#endif
 
     void hmc_fin_trg() {
+        for (auto& [n, s] : hmc_sensors_) {
+            s.log(false);
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        if (write_to_files_) {
+            for (auto& [n, s] : hmc_sensors_) {
+                try {
+                    //auto blob = s.copy_file_from_instrument(gen_hmc_filename(hmc_m).c_str(), false);
+                    auto blob = s.copy_file_from_instrument(hmc_paths_[n].c_str(), false);
+
+                    auto hmc_file = std::string(blob.begin(), blob.end());
+
+                    auto const [meta_str, csv_str, vals] = power::parse_hmc_file(hmc_file);
+
+                    auto const csv_path = power::create_full_path(write_folder_, n, ".csv");
+                    std::ofstream file(csv_path.string(), std::ios::binary);
+                    file.write(csv_str.data(), csv_str.size());
+                    file.close();
+                    auto const meta_path = power::create_full_path(write_folder_, n, ".meta.csv");
+                    file.open(meta_path.string(), std::ios::binary);
+                    file.write(meta_str.data(), meta_str.size());
+                    file.close();
+
+                    auto const parquet_path = power::create_full_path(write_folder_, n);
+                    power::ParquetWriter(parquet_path, vals, &meta_);
+                } catch (...) {
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        "HMC: failed to fetch data {}", hmc_paths_[n].back());
+                }
+            }
+        }
+        for (auto& [n, s] : hmc_sensors_) {
+            s.delete_file_from_instrument(hmc_paths_[n].c_str(), false);
+            hmc_paths_[n].clear();
+        }
+    }
+
+#if 0
+    void hmc_fin_trg_old() {
         if (write_to_files_) {
             std::regex reg(R"(#Actual Count;(\d+)\s*)");
             std::smatch match;
@@ -286,6 +353,7 @@ private:
             hmc_paths_[n].clear();
         }
     }
+#endif
 
     //std::unordered_map<std::string, std::string> exp_map_;
 
@@ -322,7 +390,7 @@ private:
 
     core::MegaMolGraph* megamolgraph_ptr_;
 
-    std::unordered_map<std::string, std::vector<std::string>> hmc_paths_;
+    std::unordered_map<std::string, std::string> hmc_paths_;
 };
 
 } // namespace frontend

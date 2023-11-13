@@ -78,10 +78,11 @@ bool Power_Service::init(void* configPtr) {
 
     main_trigger_ = std::make_shared<megamol::power::Trigger>(lpt);
     main_trigger_->RegisterPreTrigger("Power_Service_sb", std::bind(&Power_Service::sb_pre_trg, this));
-    main_trigger_->RegisterPreTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_pre_trg, this));
+    main_trigger_->RegisterInitTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_init_trg, this));
+    //main_trigger_->RegisterPreTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_pre_trg, this));
     //main_trigger_->RegisterSignal("Power_Service", std::bind(&Power_Service::sb_sgn_trg, this, std::placeholders::_1));
     main_trigger_->RegisterPostTrigger("Power_Service_sb", std::bind(&Power_Service::sb_post_trg, this));
-    main_trigger_->RegisterPostTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_post_trg, this));
+    //main_trigger_->RegisterPostTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_post_trg, this));
     main_trigger_->RegisterPostTrigger("Power_Service_seg", std::bind(&Power_Service::seg_post_trg, this));
     main_trigger_->RegisterFinTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_fin_trg, this));
 
@@ -123,9 +124,9 @@ bool Power_Service::init(void* configPtr) {
 
     auto tinker_config_func = [](tinkerforge_sensor& sensor) {
         sensor.reset();
-        sensor.resync_internal_clock_after(20);
+        //sensor.resync_internal_clock_after(20);
         sensor.configure(
-            sample_averaging::average_of_4, conversion_time::microseconds_588, conversion_time::microseconds_588);
+            sample_averaging::average_of_4, conversion_time::milliseconds_1_1, conversion_time::milliseconds_1_1);
     };
 
     auto const json_data = power::parse_json_file(conf->tinker_map_filename);
@@ -174,7 +175,7 @@ bool Power_Service::init(void* configPtr) {
     std::unique_ptr<power::SamplerCollection<tinkerforge_sensor>> tinker_samplers = nullptr;
     try {
         tinker_samplers = std::make_unique<power::SamplerCollection<tinkerforge_sensor>>(std::chrono::milliseconds(600),
-            std::chrono::milliseconds(5), nullptr, tinker_config_func, tinker_transform_func);
+            std::chrono::milliseconds(10), nullptr, tinker_config_func, tinker_transform_func);
     } catch (...) {
         tinker_samplers = nullptr;
     }

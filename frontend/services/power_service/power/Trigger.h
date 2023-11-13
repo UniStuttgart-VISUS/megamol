@@ -62,6 +62,7 @@ public:
         std::chrono::milliseconds const& postfix, std::chrono::milliseconds const& wait) {
         filetime_dur_t trg_tp;
         std::unique_lock<std::mutex> trg_lock(trg_mtx_);
+        fire_init_trigger();
         while (armed_) {
             fire_pre_trigger();
             std::this_thread::sleep_for(prefix);
@@ -76,6 +77,10 @@ public:
 
     void RegisterSignal(std::string const& name, std::function<void(filetime_dur_t const&)> const& signal) {
         signals_[name] = signal;
+    }
+
+    void RegisterInitTrigger(std::string const& name, std::function<void()> const& trigger) {
+        init_trigger_[name] = trigger;
     }
 
     void RegisterSubTrigger(std::string const& name, std::function<void()> const& trigger) {
@@ -161,6 +166,15 @@ private:
         }
     }
 
+    void fire_init_trigger() const {
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScopedN("Trigger::fire_init_trigger");
+#endif
+        for (auto const& [n, t] : init_trigger_) {
+            t();
+        }
+    }
+
     void fire_sub_trigger() const {
 #ifdef MEGAMOL_USE_TRACY
         ZoneScopedN("Trigger::fire_sub_trigger");
@@ -200,6 +214,8 @@ private:
     std::unique_ptr<ParallelPortTrigger> trigger_;
 
     std::unordered_map<std::string, std::function<void(filetime_dur_t const&)>> signals_;
+
+    std::unordered_map<std::string, std::function<void()>> init_trigger_;
 
     std::unordered_map<std::string, std::function<void()>> sub_trigger_;
 
