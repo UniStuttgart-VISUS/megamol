@@ -38,6 +38,7 @@ void WriteMetaData(std::unique_ptr<parquet::ParquetFileWriter>& file_writer, Met
     for (auto const& [key, value] : meta->analysis_recipes) {
         md->Append(key, value);
     }
+    md->Append(std::string("trigger_ts"), std::to_string(meta->trigger_ts.count()));
     file_writer->AddKeyValueMetadata(md);
 }
 

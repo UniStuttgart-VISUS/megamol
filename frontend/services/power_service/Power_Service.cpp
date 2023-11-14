@@ -85,6 +85,7 @@ bool Power_Service::init(void* configPtr) {
     //main_trigger_->RegisterPostTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_post_trg, this));
     main_trigger_->RegisterPostTrigger("Power_Service_seg", std::bind(&Power_Service::seg_post_trg, this));
     main_trigger_->RegisterFinTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_fin_trg, this));
+    main_trigger_->RegisterSignal("Power_Service_trg", std::bind(&Power_Service::trigger_ts_signal, this, std::placeholders::_1));
 
     try {
         rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);

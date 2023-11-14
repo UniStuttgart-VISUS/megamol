@@ -355,6 +355,10 @@ private:
     }
 #endif
 
+    void trigger_ts_signal(power::filetime_dur_t const& ts) {
+        meta_.trigger_ts = ts;
+    }
+
     //std::unordered_map<std::string, std::string> exp_map_;
 
     //std::vector<float> examine_expression(std::string const& name, std::string const& exp_path, int s_idx);
