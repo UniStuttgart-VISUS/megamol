@@ -150,7 +150,7 @@ private:
 
         if (trigger_) {
             trigger_->SetBit(6, true);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(3));
             trigger_->SetBit(6, false);
         }
 
