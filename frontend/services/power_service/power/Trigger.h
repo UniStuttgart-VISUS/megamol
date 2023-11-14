@@ -148,14 +148,13 @@ private:
 #endif
         fire_sub_trigger();
 
+        auto const ts = get_highres_timer();
         if (trigger_) {
             trigger_->SetBit(6, true);
             std::this_thread::sleep_for(std::chrono::milliseconds(3));
             trigger_->SetBit(6, false);
         }
 
-
-        auto const ts = get_highres_timer();
         notify_all(ts);
 
         return ts;
