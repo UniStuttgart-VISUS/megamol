@@ -40,7 +40,7 @@ void WriteMetaData(std::unique_ptr<parquet::ParquetFileWriter>& file_writer, Met
     }
     std::stringstream ss;
     for (auto const& el : meta->trigger_ts) {
-        ss << el << ";";
+        ss << el.count() << ";";
     }
     auto str = ss.str();
     if (!str.empty())
