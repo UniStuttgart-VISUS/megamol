@@ -447,7 +447,7 @@ void ImagePresentation_Service::fill_lua_callbacks() {
         [&](std::string view, int width, int height) -> void {
             if (width <= 0 || height <= 0) {
                 luaApi->ThrowError("framebuffer dimensions must be positive, but given values are: " +
-                              std::to_string(width) + " x " + std::to_string(height));
+                                   std::to_string(width) + " x " + std::to_string(height));
             }
 
             auto entry_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),

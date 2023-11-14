@@ -289,7 +289,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
             [&](int width, int height) -> void {
                 if (width <= 0 || height <= 0) {
                     luaApi_resource->ThrowError("framebuffer dimensions must be positive, but given values are: " +
-                                           std::to_string(width) + " x " + std::to_string(height));
+                                                std::to_string(width) + " x " + std::to_string(height));
                 }
 
                 window_manipulation.set_framebuffer_size(width, height);
@@ -432,8 +432,8 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
             }
 
             if (!graph.SetGraphEntryPoint(instanceName)) {
-                luaApi_resource->ThrowError("graph could not set graph entry point for: " + baseName + " , " + className +
-                                       " , " + instanceName);
+                luaApi_resource->ThrowError("graph could not set graph entry point for: " + baseName + " , " +
+                                            className + " , " + instanceName);
             }
         });
 
