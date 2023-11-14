@@ -350,6 +350,7 @@ void Power_Service::fill_lua_callbacks() {
                 rtx_->UpdateConfigs(
                     path, points, count, std::chrono::milliseconds(range), std::chrono::milliseconds(timeout));
             }
+            meta_.trigger_ts.reserve(count);
             reset_segment_range(std::chrono::milliseconds(range));
 
             return frontend_resources::LuaCallbacksCollection::VoidResult{};
@@ -560,6 +561,7 @@ void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) 
 void Power_Service::reset_measurement() {
     sbroker_.Reset();
     seg_cnt_ = 0;
+    meta_.trigger_ts.clear();
 }
 
 } // namespace frontend

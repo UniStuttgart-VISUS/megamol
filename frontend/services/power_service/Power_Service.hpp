@@ -356,7 +356,7 @@ private:
 #endif
 
     void trigger_ts_signal(power::filetime_dur_t const& ts) {
-        meta_.trigger_ts = ts;
+        meta_.trigger_ts.push_back(ts);
     }
 
     //std::unordered_map<std::string, std::string> exp_map_;

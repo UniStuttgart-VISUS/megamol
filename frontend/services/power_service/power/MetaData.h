@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "Timestamp.h"
 
@@ -12,6 +13,6 @@ struct MetaData {
     std::string runtime_libs;
     std::unordered_map<std::string, std::string> hardware_software_info;
     std::unordered_map<std::string, std::string> analysis_recipes;
-    filetime_dur_t trigger_ts;
+    std::vector<filetime_dur_t> trigger_ts;
 };
 } // namespace megamol::power
