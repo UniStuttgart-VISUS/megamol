@@ -9,6 +9,7 @@ from plotly.subplots import make_subplots
 import os
 import sys
 import json
+import hvplot.pandas
 
 def read_parquet_files_in_folder(folder_path):
     data_map = {}
@@ -212,16 +213,34 @@ def interpolate_non_rtx(rtx_ts_series, data, ts):
     ret = np.interp(rtx_ts_series, ts, data)
     return ret
 
-def plot_on_rtx_ts(rtx_data, rtx_ts, data):
-    gos = []
-    gos.append(go.Scatter(name="rtx", x=rtx_ts, y=rtx_data))
-    gos.append(go.Scatter(name="data", x=rtx_ts, y=data))
-    gos.append(go.Scatter(name="diff", x=rtx_ts, y=rtx_data-data))
-    plot = go.Figure(gos)
-    plot.show()
+def moving_average(rtx_data, rtx_ts):
+    diff_ms = (rtx_ts.iat[1]-rtx_ts.iat[0])/10000
+    factor = np.int32(np.ceil(10/diff_ms))
+    windows = rtx_data.rolling(factor)
+    ma = windows.mean()
+    ma_list = ma.tolist()
+    rtx_data_conv=ma_list[factor-1:]
+    return rtx_data_conv
+
+def plot_on_rtx_ts(rtx_data, rtx_ts, rtx_data_conv, data, path):
+    # gos = []
+    # gos.append(go.Scatter(name="rtx", x=np.array(rtx_ts)[::6], y=np.array(rtx_data)[::6]))
+    # gos.append(go.Scatter(name="rtx_conv", x=np.array(rtx_ts)[::6], y=np.array(rtx_data_conv)[::6]))
+    # gos.append(go.Scatter(name="data", x=np.array(rtx_ts)[::6], y=np.array(data)[::6]))
+    # # gos.append(go.Scatter(name="diff", x=rtx_ts, y=rtx_data-data))
+    # plot = go.Figure(gos)
+    # # plot.write_html(path)
+    # # plot.write_image(path)
+    # # plot.show(renderer="svg")
+    # plot.show()
+    df = pd.concat([pd.Series(rtx_ts), pd.Series(rtx_data), pd.Series(rtx_data_conv), pd.Series(data)], keys=["timestamps", "rtx", "rtx_conv", "data"], axis=1)
+    plot = df.hvplot(x="timestamps", y=["rtx", "rtx_conv", "data"])
+    # hvplot.show(plot)
+    hvplot.save(plot, path)
 
 
-def plot_timestamps(df, rtx_series, nvml_series, hmc_series, trigger_series, trigger_ts, tinker_inter):
+
+def plot_timestamps(df, rtx_series, nvml_series, hmc_series, trigger_series, trigger_ts, tinker_inter, path):
     gos = []
     counter = 0
     min_val = np.int64(np.iinfo(np.int64).max)
@@ -259,6 +278,9 @@ def plot_timestamps(df, rtx_series, nvml_series, hmc_series, trigger_series, tri
     gos.append(go.Scatter(name="hmc", x=hmc, y=y, mode='markers'))
     plot = go.Figure(gos)
     # plot.update_layout(xaxis=dict(tickmode='linear', tick0=0, dtick=10))
+    # plot.show(renderer="svg")
+    # plot.write_html(path)
+    # plot.write_image(path)
     plot.show()
 
 def main():
@@ -278,6 +300,9 @@ def main():
     # rtx
     print("RTX:")
     get_stats(rtx_data, rtx_df["timestamps"], rtx_first_idx, rtx_last_idx, num_frames)
+
+    rtx_gpu_conv = moving_average(rtx_data["12VHPWR"][rtx_first_idx:rtx_last_idx]+rtx_data["12VPEG"][rtx_first_idx:rtx_last_idx], rtx_df["timestamps"][rtx_first_idx:rtx_last_idx])
+
     # tinker
     # first_idx, last_idx = match_ts_on_df(data_map["tinker_s0"], "12VHPWR0_timestamps", first_ts, last_ts)
     # print(first_idx)
@@ -289,7 +314,7 @@ def main():
     get_stats_tinker(tinker_data, num_frames)
     data_12VHPWR = interpolate_non_rtx(np.array(rtx_df["timestamps"][rtx_first_idx:rtx_last_idx]), tinker_series["12VHPWR"], tinker_inter["timestamps"])
     data_12VPEG = interpolate_non_rtx(np.array(rtx_df["timestamps"][rtx_first_idx:rtx_last_idx]), tinker_series["12VPEG"], tinker_inter["timestamps"])
-    plot_on_rtx_ts(rtx_data["12VHPWR"][rtx_first_idx:rtx_last_idx]+rtx_data["12VPEG"][rtx_first_idx:rtx_last_idx], rtx_df["timestamps"][rtx_first_idx:rtx_last_idx], data_12VHPWR+data_12VPEG)
+    plot_on_rtx_ts(rtx_data["12VHPWR"][rtx_first_idx:rtx_last_idx]+rtx_data["12VPEG"][rtx_first_idx:rtx_last_idx], rtx_df["timestamps"][rtx_first_idx:rtx_last_idx], rtx_gpu_conv, data_12VHPWR+data_12VPEG, "tinker.html")
     
     # nvml
     print("NVML:")
@@ -300,7 +325,7 @@ def main():
 
     # interpolate nvml on rtx timescale
     data = interpolate_non_rtx(np.array(rtx_df["timestamps"][rtx_first_idx:rtx_last_idx]), data_map["nvml_s0"]["NVML_samples"][first_idx:last_idx], data_map["nvml_s0"]["NVML_timestamps"][first_idx:last_idx])
-    plot_on_rtx_ts(rtx_data["12VHPWR"][rtx_first_idx:rtx_last_idx]+rtx_data["12VPEG"][rtx_first_idx:rtx_last_idx], rtx_df["timestamps"][rtx_first_idx:rtx_last_idx], data)
+    plot_on_rtx_ts(rtx_data["12VHPWR"][rtx_first_idx:rtx_last_idx]+rtx_data["12VPEG"][rtx_first_idx:rtx_last_idx], rtx_df["timestamps"][rtx_first_idx:rtx_last_idx], rtx_gpu_conv, data, "nvml.html")
 
     # hmc
     print("HMC:")
@@ -309,7 +334,7 @@ def main():
     print(f"\tEnergy: {ws} Ws")
     print(f"\tEnergy per frame: {ws/num_frames} Ws")
 
-    plot_timestamps(data_map["tinker_s0"], rtx_df["timestamps"], data_map["nvml_s0"]["NVML_timestamps"], data_map["HMC01"]["Timestamp"], rtx_df["trigger"], metadata[b"trigger_ts"][0], tinker_inter["timestamps"])
+    plot_timestamps(data_map["tinker_s0"], rtx_df["timestamps"], data_map["nvml_s0"]["NVML_timestamps"], data_map["HMC01"]["Timestamp"], rtx_df["trigger"], metadata[b"trigger_ts"][0], tinker_inter["timestamps"], "timeline.png")
 
     
 
