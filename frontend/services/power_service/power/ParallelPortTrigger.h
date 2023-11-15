@@ -2,6 +2,7 @@
 
 #ifdef MEGAMOL_USE_POWER
 
+#include <atomic>
 #include <cinttypes>
 #include <limits>
 
@@ -34,7 +35,7 @@ private:
     wil::unique_hfile handle_;
 #endif
 
-    std::uint8_t data_state_;
+    std::atomic<std::uint8_t> data_state_;
 };
 
 } // namespace megamol::power

@@ -47,7 +47,6 @@ DWORD ParallelPortTrigger::Write(std::uint8_t data) {
         if (!::WriteFile(this->handle_.get(), &data, 1, &retval, nullptr)) {
             throw std::system_error(::GetLastError(), std::system_category());
         }
-        data_state_ = data;
     }
 #endif
 
@@ -69,11 +68,16 @@ DWORD ParallelPortTrigger::WriteLow(void) {
 }
 
 
+std::uint8_t set_bit(std::uint8_t data, unsigned char idx, bool state) {
+    std::uint8_t val = state ? 1 : 0;
+    return (data & ~(1UL << idx)) | (val << idx);
+}
+
+
 DWORD ParallelPortTrigger::SetBit(unsigned char idx, bool state) {
     if (idx < 8) {
-        auto data = data_state_;
-        std::uint8_t val = state ? 1 : 0;
-        data = (data & ~(1UL << idx)) | (val << idx);
+        auto data = data_state_.load();
+        while (data_state_.compare_exchange_weak(data, set_bit(data, idx, state))) {}
         return Write(data);
     }
 
