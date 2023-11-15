@@ -77,11 +77,11 @@ static bool write_png_to_file(
         // open final image file
         if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
                 vislib::sys::File::CREATE_OVERWRITE)) {
-            log("Cannot open output file" + filename.generic_u8string());
+            log("Cannot open output file" + filename.generic_string());
             return false;
         }
     } catch (...) {
-        log("Error/Exception opening output file" + filename.generic_u8string());
+        log("Error/Exception opening output file" + filename.generic_string());
         return false;
     }
 
@@ -201,7 +201,7 @@ bool Screenshot_Service::init(const Config& config) {
         frontend_resources::FrameStatistics_Req_Name};
 
     this->m_frontbufferToPNG_trigger = [&](std::filesystem::path const& filename) -> bool {
-        log("write screenshot to " + filename.generic_u8string());
+        log("write screenshot to " + filename.generic_string());
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
 
@@ -209,7 +209,7 @@ bool Screenshot_Service::init(const Config& config) {
 
     this->m_imagewrapperToPNG_trigger = [&](megamol::frontend_resources::ImageWrapper const& image,
                                             std::filesystem::path const& filename) -> bool {
-        log("write screenshot to " + filename.generic_u8string());
+        log("write screenshot to " + filename.generic_string());
         return m_toFileWriter_resource.write_screenshot(
             megamol::frontend_resources::ImageWrapperScreenshotSource(image), filename);
     };

@@ -135,49 +135,15 @@ public:
     template<class Tp, unsigned int Dp, class Sp>
     AbstractPointImpl<T, D, S, C>& operator=(const C<Tp, Dp, Sp>& rhs);
 
-    /**
-     * Test for equality.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @return true, if *this and 'rhs' are equal, false otherwise.
-     */
-    bool operator==(const C<T, D, S>& rhs) const;
+    // Replace comparison operators with this as C++20 hotfix
+    friend bool operator==(const C<T, D, S>& lhs, const C<T, D, S>& rhs) {
+        for (unsigned int d = 0; d < D; d++) {
+            if (!IsEqual<T>(lhs.coordinates[d], rhs.coordinates[d])) {
+                return false;
+            }
+        }
 
-    /**
-     * Test for equality of arbitrary points. This operation uses the
-     * IsEqual function of the left hand side operand. Note that points
-     * with different dimensions are never equal.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @param true, if 'rhs' and this point are equal, false otherwise.
-     */
-    template<class Tp, unsigned int Dp, class Sp>
-    bool operator==(const C<Tp, Dp, Sp>& rhs) const;
-
-    /**
-     * Test for inequality.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @return true, if *this and 'rhs' are not equal, false otherwise.
-     */
-    inline bool operator!=(const C<T, D, S>& rhs) const {
-        return !(*this == rhs);
-    }
-
-    /**
-     * Test for inequality of arbitrary points. See operator == for further
-     * details.
-     *
-     * @param rhs The right hand side operand.
-     *
-     * @param true, if 'rhs' and this vector are not equal, false otherwise.
-     */
-    template<class Tp, unsigned int Dp, class Sp>
-    inline bool operator!=(const C<Tp, Dp, Sp>& rhs) const {
-        return !(*this == rhs);
+        return true;
     }
 
     /**
@@ -402,43 +368,6 @@ AbstractPointImpl<T, D, S, C>& AbstractPointImpl<T, D, S, C>::operator=(const C<
     }
 
     return *this;
-}
-
-
-/*
- * vislib::math::AbstractPointImpl<T, D, S>::operator ==
- */
-template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-bool AbstractPointImpl<T, D, S, C>::operator==(const C<T, D, S>& rhs) const {
-
-    for (unsigned int d = 0; d < D; d++) {
-        if (!IsEqual<T>(this->coordinates[d], rhs.coordinates[d])) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-/*
- * vislib::math::AbstractPointImpl<T, D, S>::operator ==
- */
-template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-template<class Tp, unsigned int Dp, class Sp>
-bool AbstractPointImpl<T, D, S, C>::operator==(const C<Tp, Dp, Sp>& rhs) const {
-
-    if (D != Dp) {
-        return false;
-    }
-
-    for (unsigned int d = 0; d < D; d++) {
-        if (!IsEqual<T>(this->coordinates[d], rhs.coordinates[d])) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 

@@ -86,7 +86,7 @@ std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::files
         if (fp == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "ScreenShotComments::GetProjectFromPNG: Unable to open png file \"%s\"",
-                filename.generic_u8string().c_str());
+                filename.generic_string().c_str());
         } else {
             png_infop info = png_create_info_struct(png);
             if (!info) {
