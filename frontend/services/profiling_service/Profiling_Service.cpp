@@ -7,8 +7,9 @@
 #include "Profiling_Service.hpp"
 
 #include "FrameStatistics.h"
-#include "LuaCallbacksCollection.h"
+#include "LuaApiResource.h"
 #include "ModuleGraphSubscription.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/SampleCameraScenes.h"
 #include "mmcore/view/AbstractViewInterface.h"
@@ -86,8 +87,9 @@ bool Profiling_Service::init(void* configPtr) {
     }
 #endif
 
-    _requestedResourcesNames = {"RegisterLuaCallbacks", frontend_resources::MegaMolGraph_Req_Name, "RenderNextFrame",
-        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, frontend_resources::FrameStatistics_Req_Name};
+    _requestedResourcesNames = {frontend_resources::LuaAPI_Req_Name, frontend_resources::MegaMolGraph_Req_Name,
+        "RenderNextFrame", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
+        frontend_resources::FrameStatistics_Req_Name};
 
     return true;
 }
@@ -224,47 +226,42 @@ void Profiling_Service::resetProvidedResources() {
 }
 
 void Profiling_Service::fill_lua_callbacks() {
-    frontend_resources::LuaCallbacksCollection callbacks;
+    auto luaApi = _requestedResourcesReferences[0].getResource<core::LuaAPI*>();
 
     auto& graph = const_cast<core::MegaMolGraph&>(_requestedResourcesReferences[1].getResource<core::MegaMolGraph>());
     auto& render_next_frame = _requestedResourcesReferences[2].getResource<std::function<bool()>>();
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>(
-        "mmSetProfilingLogging", "(bool on)", {[&](bool on) -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            this->profiling_logging.active = on;
-            return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});
+    luaApi->RegisterCallback(
+        "mmSetProfilingLogging", "(bool on)", [&](bool on) -> void { this->profiling_logging.active = on; });
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
-        "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples)",
-        {[&graph](std::string entrypoint, std::string camera_path_pattern,
-             int num_samples) -> frontend_resources::LuaCallbacksCollection::StringResult {
-            auto entry = graph.FindModule(entrypoint);
+    luaApi->RegisterCallback("mmGenerateCameraScenes",
+        "(string entrypoint, string camera_path_pattern, uint num_samples)",
+        [&graph, &luaApi](std::string entrypoint, std::string camera_path_pattern, int num_samples) -> std::string {
+            const auto entry = graph.FindModule(entrypoint);
             if (!entry)
-                return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
+                luaApi->ThrowError("could not find entrypoint");
             auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
             if (!view)
-                return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
+                luaApi->ThrowError("requested entrypoint is not a view");
             auto cam_func = megamol::core::utility::GetCamScenesFunctional(camera_path_pattern);
             if (!cam_func)
-                return frontend_resources::LuaCallbacksCollection::Error{"could not request camera path pattern"};
+                luaApi->ThrowError("could not request camera path pattern");
             auto camera_samples = megamol::core::utility::SampleCameraScenes(view, cam_func, num_samples);
             if (camera_samples.empty())
-                return frontend_resources::LuaCallbacksCollection::Error{"could not sample camera"};
-            return frontend_resources::LuaCallbacksCollection::StringResult{camera_samples};
-        }});
+                luaApi->ThrowError("could not sample camera");
+            return camera_samples;
+        });
 
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int, bool>(
-        "mmProfile", "(string entrypoint, string cameras, unsigned int num_frames, bool pretty)",
-        {[&graph, &render_next_frame](std::string entrypoint, std::string cameras, int num_frames,
-             bool pretty) -> frontend_resources::LuaCallbacksCollection::StringResult {
+    luaApi->RegisterCallback("mmProfile", "(string entrypoint, string cameras, unsigned int num_frames, bool pretty)",
+        [&graph, &render_next_frame, &luaApi](
+            std::string entrypoint, std::string cameras, int num_frames, bool pretty) -> std::string {
             auto entry = graph.FindModule(entrypoint);
             if (!entry)
-                return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
+                luaApi->ThrowError("could not find entrypoint");
             auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
             if (!view)
-                return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
+                luaApi->ThrowError("requested entrypoint is not a view");
 
             auto serializer = core::view::CameraSerializer();
             std::vector<core::view::Camera> cams;
@@ -302,13 +299,13 @@ void Profiling_Service::fill_lua_callbacks() {
                      << time_per_frame;
             }
 
-            return frontend_resources::LuaCallbacksCollection::StringResult{sstr.str()};
-        }});
+            return sstr.str();
+        });
 
 
 #ifdef MEGAMOL_USE_NVPERF
-    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string>("mmNVPerfInit",
-        "(string outpath)", {[&](std::string const& outpath) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+    luaApi->RegisterCallback("mmNVPerfInit",
+        "(string outpath)", {[&](std::string const& outpath) -> void {
             if (!nvperf.IsCollectingReport()) {
                 nvperf.Reset();
                 nvperf.InitializeReportGenerator();
@@ -317,19 +314,9 @@ void Profiling_Service::fill_lua_callbacks() {
                 nvperf.outputOptions.directoryName = outpath;
                 nvperf.StartCollectionOnNextFrame();
             }
-            return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});
-
-    callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult>("mmNVPerfIsCollecting", "()",
-        {[&]() -> frontend_resources::LuaCallbacksCollection::BoolResult { return nvperf.IsCollectingReport(); }});
+        });
 #endif
 
-
-    auto& register_callbacks =
-        _requestedResourcesReferences[0]
-            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
-
-    register_callbacks(callbacks);
 }
 
 } // namespace megamol::frontend

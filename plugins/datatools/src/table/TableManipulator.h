@@ -10,7 +10,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/LuaInterpreter.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/Module.h"
 
 #include "mmcore/param/ParamSlot.h"
@@ -59,31 +59,31 @@ protected:
     /** Lua Interface */
 
     /** returns incoming rows, columns */
-    int getInputSize(lua_State* L);
+    std::tuple<size_t, size_t> getInputSize();
 
     /** resizes @info */
-    int setOutputColumns(lua_State* L);
+    void setOutputColumns(int cols);
 
     /** (idx) get name of incoming column idx */
-    int getInputColumnName(lua_State* L);
+    std::string getInputColumnName(int idx);
 
     /** (idx, name) set name of column idx */
-    int setOutputColumnName(lua_State* L);
+    void setOutputColumnName(int idx, std::string name);
 
     /** (idx) get min, max of column idx */
-    int getInputColumnRange(lua_State* L);
+    std::tuple<float, float> getInputColumnRange(int idx);
 
     /** (idx, min, max) set min, max of column idx in output data */
-    int setOutputColumnRange(lua_State* L);
+    void setOutputColumnRange(int idx, float min, float max);
 
     /** (num) adds and allocates num rows to output data */
-    int addOutputRows(lua_State* L);
+    void addOutputRows(int num);
 
     /** (row, col) returns incoming value in that cell */
-    int getCellValue(lua_State* L);
+    float getCellValue(int row, int col);
 
     /** (row, col, value) sets value in that cell */
-    int setCellValue(lua_State* L);
+    void setCellValue(int row, int col, float val);
 
 
 private:
@@ -113,7 +113,7 @@ private:
     /** Vector storing information about columns */
     std::vector<TableDataCall::ColumnInfo> info;
 
-    megamol::core::LuaInterpreter<TableManipulator> theLua;
+    core::LuaAPI theLua;
 
     /** number of columns coming in */
     size_t column_count = 0;

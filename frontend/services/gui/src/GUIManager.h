@@ -257,13 +257,13 @@ public:
      */
     void RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
 
-    void SetLuaFunc(megamol::frontend_resources::common_types::lua_func_type* lua_func) {
+    void SetLuaAPI(core::LuaAPI* api) {
         auto cons = win_collection.GetWindow<LogConsole>();
         if (cons) {
-            cons->SetLuaFunc(lua_func);
+            cons->SetLuaAPI(api);
         }
-        this->win_configurator_ptr->GetGraphCollection().SetLuaFunc(lua_func);
-        this->win_animation_editor_ptr->SetLuaFunc(lua_func);
+        this->win_configurator_ptr->GetGraphCollection().SetLuaAPI(api);
+        this->win_animation_editor_ptr->SetLuaAPI(api);
     }
 
 #ifdef MEGAMOL_USE_PROFILING
