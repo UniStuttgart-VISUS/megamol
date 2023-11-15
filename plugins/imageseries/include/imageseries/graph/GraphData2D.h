@@ -215,7 +215,7 @@ public:
     Edge& getEdge(NodeID from, NodeID to);
     const Edge& getEdge(NodeID from, NodeID to) const;
 
-    void removeEdge(NodeID from, NodeID to);
+    void removeEdge(NodeID from, NodeID to, NodeID keep = -1);
     void removeEdge(const Edge& edge);
 
     // Lazy removal
