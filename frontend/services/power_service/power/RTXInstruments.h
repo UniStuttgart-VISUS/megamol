@@ -46,14 +46,17 @@ public:
 
 private:
     void soft_trg() {
-        for (auto& [name, i] : rtx_instr_) {
+        /*for (auto& [name, i] : rtx_instr_) {
             i.trigger_manually();
-        }
+        }*/
+        main_instr_->trigger_manually();
     }
 
     bool waiting_on_trigger() const;
 
     std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument> rtx_instr_;
+
+    visus::power_overwhelming::rtx_instrument* main_instr_ = nullptr;
 
     std::unordered_map<std::string, visus::power_overwhelming::rtx_instrument_configuration> rtx_config_;
 

@@ -77,6 +77,9 @@ void RTXInstruments::ApplyConfigs(MetaData* meta) {
                 //i.write("STOP\n");
                 //i.operation_complete();
                 fit->second.beep_on_trigger(true).beep_on_apply(true).beep_on_error(true);
+                if (!fit->second.slave()) {
+                    main_instr_ = &i;
+                }
                 fit->second.apply(i);
                 if (meta) {
                     auto const cfg_str_size = rtx_instrument_configuration::serialise(nullptr, 0, fit->second);
