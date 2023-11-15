@@ -340,11 +340,11 @@ int main(const int argc, const char** argv) {
     if (graph_resources_ok)
         if (!config.cli_execute_lua_commands.empty()) {
             std::string lua_result;
-            bool cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, lua_result);
-            if (!cli_lua_ok) {
+            auto cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, "magic_cli_exec_param");
+            if (!cli_lua_ok.valid()) {
                 run_megamol = false;
                 ret += 8;
-                log_error("Error in CLI Lua command: " + lua_result);
+                log_error("Error in CLI Lua command: " + lua_api.GetError(cli_lua_ok));
             }
         }
 

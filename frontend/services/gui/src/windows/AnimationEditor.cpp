@@ -263,7 +263,7 @@ void AnimationEditor::RenderAnimation() {
         auto res = luaApi->RunString(command.str());
         if (!res.valid()) {
             open_popup_error = true;
-            error_popup_message = res.get<std::string>();
+            error_popup_message = luaApi->GetError(res);
             playing = 0;
         }
         if (current_frame < animation_bounds[1]) {
@@ -297,7 +297,7 @@ void AnimationEditor::WriteValuesToGraph() {
         const auto res = luaApi->RunString(lua_commands);
         if (!res.valid()) {
             open_popup_error = true;
-            error_popup_message = res.get<std::string>();
+            error_popup_message = luaApi->GetError(res);
             playing = 0;
         }
     }

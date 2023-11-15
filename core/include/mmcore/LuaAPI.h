@@ -66,11 +66,15 @@ public:
     }
     // something like this to retrofit tracy zones everywhere would be nice.
     // but I am not able to write this down.
+  //  		template <typename R, typename... Args, typename Fx, typename Key, typename = std::invoke_result_t<Fx, Args...>>
+        //void set_fx(types<R(Args...)>, Key&& key, Fx&& fx) {
+        //	set_resolved_function<R(Args...)>(std::forward<Key>(key), std::forward<Fx>(fx));
+        //}
     //template<typename Func, typename... Args>
-    //void RegisterCallbackWithTracy(std::string const& name, std::string const& help, Func&& func(Args&&...args)) {
-    //    luaApiInterpreter_.set_function(name, [](Func&& func, Args&&... args) {
+    //void RegisterCallbackWithTracy(std::string const& name, std::string const& help, Func&& func, Args&&... args) {
+    //    luaApiInterpreter_.set_function(name, [&](Args...) -> std::invoke_result_t<Func, Args...> {
     //        printf("Tracy happening");
-    //        return func(args...);
+    //        return std::forward<Func>(func)(std::forward<Args>(args)...);
     //    });
     //    helpContainer[name] = help;
     //}
