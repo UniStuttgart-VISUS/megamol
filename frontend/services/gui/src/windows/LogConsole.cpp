@@ -432,7 +432,7 @@ bool megamol::gui::LogConsole::Draw() {
             this->input_shared_data->history_index = this->input_shared_data->history.size() - 1;
             this->input_buffer.clear();
         } else {
-            auto blah = result.get<std::string>();
+            auto blah = luaApi->GetError(result);
             megamol::core::utility::log::Log::DefaultLog.WriteError(blah.c_str());
         }
         this->input_reclaim_focus = true;
