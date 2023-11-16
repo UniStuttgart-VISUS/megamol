@@ -113,6 +113,10 @@ protected:
     /** prints out the help text */
     std::string Help() const;
 
+    /** Log interface */
+    static void Log(int level, const std::string& message);
+    static void LogInfo(const std::string& message);
+
     static std::string ReadTextFile(std::string filename, sol::optional<sol::function> transformation);
     static void WriteTextFile(std::string filename, std::string content);
 
