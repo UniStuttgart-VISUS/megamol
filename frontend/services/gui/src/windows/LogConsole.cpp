@@ -425,7 +425,7 @@ bool megamol::gui::LogConsole::Draw() {
         auto result = this->luaApi->RunString(command);
         if (result.valid()) {
             // command was fine, no editing required
-            auto blah = result.get<std::string>();
+            auto blah = luaApi->TypeToString(result);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(blah.c_str());
             this->input_shared_data->history.back() = this->input_buffer;
             this->input_shared_data->history.emplace_back("");
