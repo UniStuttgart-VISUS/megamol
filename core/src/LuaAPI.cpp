@@ -45,7 +45,10 @@
 #define MMC_LUA_MMGETMACHINENAME "mmGetMachineName"
 #define MMC_LUA_MMGETPROCESSID "mmGetProcessID"
 
-#define MMC_LUA_MMPLUGINLOADERINFO "mmPluginLoaderInfo"
+#define MMC_LUA_MMLOG "mmLog"
+#define MMC_LUA_MMLOGINFO "mmLogInfo"
+#define MMC_LUA_MMDEBUGPRINT "mmDebugPrint"
+#define MMC_LUA_MMHELP "mmHelp"
 
 #define MMC_LUA_MMCURRENTSCRIPTPATH "mmCurrentScriptPath"
 
@@ -100,6 +103,13 @@ void megamol::core::LuaAPI::commonInit() {
     RegisterCallback(MMC_LUA_MMWRITETEXTFILE,
         "(string fileName, string content)\n\tWrite content to file. You CANNOT overwrite existing files!",
         &LuaAPI::WriteTextFile);
+    RegisterCallback(MMC_LUA_MMLOG, "(int level, ...)\n\tLog to MegaMol console. Level constants are LOGINFO, LOGWARNING, LOGERROR.", &LuaAPI::Log);
+    RegisterCallback(MMC_LUA_MMLOGINFO, "(...)\n\tLog to MegaMol console with LOGINFO level.", &LuaAPI::LogInfo);
+    RegisterCallback(MMC_LUA_MMDEBUGPRINT, "(...)\n\tLog to MegaMol console with LOGINFO level.", &LuaAPI::LogInfo);
+    luaApiInterpreter_["print"] = luaApiInterpreter_[MMC_LUA_MMLOGINFO];
+    luaApiInterpreter_["LOGINFO"] = static_cast<int>(utility::log::Log::log_level::info);
+    luaApiInterpreter_["LOGWARNING"] = static_cast<int>(utility::log::Log::log_level::warn);
+    luaApiInterpreter_["LOGERROR"] = static_cast<int>(utility::log::Log::log_level::error);
 
     // these need the instance
     RegisterCallback(MMC_LUA_MMHELP, "()\n\tReturns MegaMol Lua functions and help text", &LuaAPI::Help, this);
@@ -249,6 +259,17 @@ std::string megamol::core::LuaAPI::Help() const {
         out << item.first + item.second + "\n";
     return out.str().c_str();
 }
+
+
+void megamol::core::LuaAPI::Log(int level, const std::string &message){
+    utility::log::Log::DefaultLog.WriteMsg(static_cast<utility::log::Log::log_level>(level), message.c_str());
+}
+
+
+void megamol::core::LuaAPI::LogInfo(const std::string &message){
+    utility::log::Log::DefaultLog.WriteInfo(message.c_str());
+}
+
 
 std::string megamol::core::LuaAPI::ReadTextFile(std::string filename, sol::optional<sol::function> transformation) {
     std::ifstream t(filename);
