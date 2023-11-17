@@ -2,6 +2,10 @@
 
 #include "optix/CallGeometry.h"
 
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
+
 
 megamol::optix_hpg::AbstractRenderer::AbstractRenderer() : in_geo_slot_("inGeo", "") {
     in_geo_slot_.SetCompatibleCall<CallGeometryDescription>();
@@ -21,6 +25,9 @@ megamol::optix_hpg::AbstractRenderer::~AbstractRenderer() {
 
 
 bool megamol::optix_hpg::AbstractRenderer::Render(CallRender3DCUDA& call) {
+#ifdef MEGAMOL_USE_TRACY
+    ZoneScopedN("AbstractRenderer::Render");
+#endif
     auto const viewport = glm::uvec2(call.GetFramebuffer()->width, call.GetFramebuffer()->height);
 
     call.GetFramebuffer()->data.exec_stream = optix_ctx_->GetExecStream();
