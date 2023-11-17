@@ -19,6 +19,7 @@
 #include "WindowManipulation.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
+#include "FrameStatistics.h"
 #include "LuaApiResource.h"
 #include "mmcore/LuaAPI.h"
 #include "mmcore/utility/log/Log.h"
@@ -89,15 +90,11 @@ bool ImagePresentation_Service::init(const Config& config) {
         {"FramebufferEvents", m_global_framebuffer_events},
     };
 
-    this->m_requestedResourcesNames = {
-        "FrontendResources", // std::vector<FrontendResource>
-        "optional<WindowManipulation>",
-        "FramebufferEvents",
+    this->m_requestedResourcesNames = {"FrontendResources", // std::vector<FrontendResource>
+        "optional<WindowManipulation>", "FramebufferEvents",
         "optional<GUIState>", // TODO: unused?
-        frontend_resources::LuaAPI_Req_Name,
-        "optional<OpenGL_Context>",
-        "ImageWrapperToPNG_ScreenshotTrigger",
-    };
+        frontend_resources::LuaAPI_Req_Name, "optional<OpenGL_Context>", "ImageWrapperToPNG_ScreenshotTrigger",
+        frontend_resources::FrameStatistics_Req_Name};
 
     m_framebuffer_size_handler = [&]() -> UintPair {
         return {m_window_framebuffer_size.first, m_window_framebuffer_size.second};
@@ -496,8 +493,14 @@ void ImagePresentation_Service::fill_lua_callbacks() {
 
     luaApi->RegisterCallback("mmScreenshotEntryPoint",
         "(string entrypoint, string filename)\n\tSave a screen shot of entry point view as 'filename'",
-        [handle_screenshot](
-            std::string entrypoint, std::string filename) -> void { handle_screenshot(entrypoint, filename); });
+        [handle_screenshot, this, luaApi](std::string entrypoint, std::string filename) -> void {
+            auto& framestats = m_requestedResourceReferences[7].getResource<frontend_resources::FrameStatistics>();
+            if (framestats.rendered_frames_count == 0) {
+                luaApi->ThrowError("error capturing screenshot: no frame rendered yet");
+            } else {
+                handle_screenshot(entrypoint, filename);
+            }
+        });
 }
 
 

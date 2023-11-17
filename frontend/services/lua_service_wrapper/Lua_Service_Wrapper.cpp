@@ -259,8 +259,13 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
     luaApi_resource->RegisterCallback("mmScreenshot",
         "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
         [&](std::string file) -> void {
-            m_requestedResourceReferences[1].getResource<std::function<bool(std::filesystem::path const&)>>()(
-                std::filesystem::u8path(file));
+            auto& framestats = m_requestedResourceReferences[2].getResource<frontend_resources::FrameStatistics>();
+            if (framestats.rendered_frames_count == 0) {
+                luaApi_resource->ThrowError("error capturing screenshot: no frame rendered yet");
+            } else {
+                m_requestedResourceReferences[1].getResource<std::function<bool(std::filesystem::path const&)>>()(
+                    std::filesystem::u8path(file));
+            }
         });
 
     luaApi_resource->RegisterCallback(
