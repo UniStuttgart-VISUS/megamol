@@ -538,15 +538,23 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks() {
         });
 
     luaApi_resource->RegisterCallback("mmSetParamValue",
-        "(string name, string value)\n\tSet the value of a parameter slot.",
-        [&](std::string paramName, std::string paramValue) -> void {
-            if (!graph.SetParameter(paramName, paramValue.c_str())) {
-                luaApi_resource->ThrowError("parameter could not be set to value: " + paramName + " : " + paramValue);
-            }
-        });
+        "(string name, string|number value)\n\tSet the value of a parameter slot.",
+        sol::overload(
+            [&](std::string paramName, std::string paramValue) -> void {
+                if (!graph.SetParameter(paramName, paramValue.c_str())) {
+                    luaApi_resource->ThrowError(
+                        "parameter could not be set to value: " + paramName + " : " + paramValue);
+                }
+            },
+            [&](std::string paramName, double paramValue) -> void {
+                if (!graph.SetParameter(paramName, std::to_string(paramValue))) {
+                    luaApi_resource->ThrowError(
+                        "parameter could not be set to value: " + paramName + " : " + std::to_string(paramValue));
+                }
+            }));
 
     luaApi_resource->RegisterCallback("mmSetParamHighlight",
-        "(string name, bool is_highlight)\n\tHighlight parameter slot.",
+        "(string name, bool is_highlighted)\n\tHighlight parameter slot.",
         [&](std::string paramName, bool is_highlight) -> void {
             auto param_ptr = graph.FindParameter(paramName);
 
