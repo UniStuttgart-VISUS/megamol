@@ -54,6 +54,12 @@ private:
     /** Slot for showing the image height. Read-only */
     core::param::ParamSlot m_image_height_slot;
 
+    /** Slots to choose channel mappings (Input file to output Texture) */
+    core::param::ParamSlot red_mapping_slot;
+    core::param::ParamSlot green_mapping_slot;
+    core::param::ParamSlot blue_mapping_slot;
+    core::param::ParamSlot alpha_mapping_slot;
+
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
 
