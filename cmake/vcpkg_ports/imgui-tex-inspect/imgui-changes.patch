@@ -1,0 +1,73 @@
+diff --git a/imgui_tex_inspect.cpp b/imgui_tex_inspect.cpp
+index 7f96710..2c9976d 100644
+--- a/imgui_tex_inspect.cpp
++++ b/imgui_tex_inspect.cpp
+@@ -218,8 +218,8 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
+         if (textureSizePixels.x < availablePanelSize.x)
+         {
+             // Not big enough to horizontally fill view
+-            viewSize.x = ImFloor(textureSizePixels.x);
+-            drawImageOffset.x += ImFloor((availablePanelSize.x - textureSizePixels.x) / 2);
++            viewSize.x = ImTrunc(textureSizePixels.x);
++            drawImageOffset.x += ImTrunc((availablePanelSize.x - textureSizePixels.x) / 2);
+             uv0.x = 0;
+             uv1.x = 1;
+             viewSizeUV.x = 1;
+@@ -228,8 +228,8 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
+         if (textureSizePixels.y < availablePanelSize.y)
+         {
+             // Not big enough to vertically fill view
+-            viewSize.y = ImFloor(textureSizePixels.y);
+-            drawImageOffset.y += ImFloor((availablePanelSize.y - textureSizePixels.y) / 2);
++            viewSize.y = ImTrunc(textureSizePixels.y);
++            drawImageOffset.y += ImTrunc((availablePanelSize.y - textureSizePixels.y) / 2);
+             uv0.y = 0;
+             uv1.y = 1;
+             viewSizeUV.y = 1;
+@@ -352,7 +352,7 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
+                 {
+                     // See comment above. We're doing a floor this time to make
+                     // sure the scale always changes when scrolling
+-                    scale = ImFloorSigned(scale);
++                    scale = ImFloor(scale);
+                 }
+             }
+             /* To make it easy to get back to 1:1 size we ensure that we stop 
+@@ -949,8 +949,8 @@ bool GetVisibleTexelRegionAndGetData(Inspector *inspector, ImVec2 &texelTL, ImVe
+      * corners of the texture view.  The plus + ImVec2(1,1) is because we
+      * want to draw partially visible texels on the bottom and right edges.
+      */
+-    texelTL = ImFloor(inspector->PixelsToTexels * inspector->ViewTopLeftPixel);
+-    texelBR = ImFloor(inspector->PixelsToTexels * (inspector->ViewTopLeftPixel + inspector->ViewSize));
++    texelTL = ImTrunc(inspector->PixelsToTexels * inspector->ViewTopLeftPixel);
++    texelBR = ImTrunc(inspector->PixelsToTexels * (inspector->ViewTopLeftPixel + inspector->ViewSize));
+ 
+     if (texelTL.x > texelBR.x)
+     {
+diff --git a/imgui_tex_inspect_internal.h b/imgui_tex_inspect_internal.h
+index 8fb3735..96f0059 100644
+--- a/imgui_tex_inspect_internal.h
++++ b/imgui_tex_inspect_internal.h
+@@ -35,19 +35,19 @@ static inline void ClearFlag(TSet &set, TFlag flag)
+ template <typename T>
+ static inline T Modulus(T a, T b)
+ {
+-    return a - b * ImFloorSigned(a / b);
++    return a - b * ImFloor(a / b);
+ }
+ 
+ // Defined in recent versions of imgui_internal.h.  Included here in case user is on older
+ // imgui version.
+-static inline float ImFloorSigned(float f)
++static inline float ImFloor(float f)
+ {
+     return (float)((f >= 0 || (int)f == f) ? (int)f : (int)f - 1);
+ }
+ 
+ static inline float Round(float f)
+ {
+-    return ImFloorSigned(f + 0.5f);
++    return ImFloor(f + 0.5f);
+ }
+ 
+ static inline ImVec2 Abs(ImVec2 v)
