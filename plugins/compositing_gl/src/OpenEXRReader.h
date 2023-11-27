@@ -45,6 +45,12 @@ protected:
 private:
     bool getDataCallback(core::Call& caller);
     bool getMetaDataCallback(core::Call& caller);
+
+    int typeStringToIndex(const std::string str);
+
+    template<typename T>
+    std::shared_ptr<glowl::Texture2D> readToTex2D();
+
     /** Slot for loading the file */
     core::param::ParamSlot m_filename_slot;
 
@@ -59,6 +65,7 @@ private:
     core::param::ParamSlot green_mapping_slot;
     core::param::ParamSlot blue_mapping_slot;
     core::param::ParamSlot alpha_mapping_slot;
+    core::param::ParamSlot type_mapping_slot;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;

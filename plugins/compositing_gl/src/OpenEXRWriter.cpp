@@ -10,11 +10,14 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 #include <vector>
 
 #include <OpenEXR/ImfArray.h>
+#include <OpenEXR/ImfChannelList.h>
+#include <OpenEXR/ImfImageChannel.h>
 #include <OpenEXR/ImfMatrixAttribute.h>
-#include <OpenEXR/ImfRgbaFile.h>
+#include <OpenEXR/ImfOutputFile.h>
 #include <OpenEXR/ImfStringAttribute.h>
 
 using namespace megamol;
@@ -26,6 +29,14 @@ OpenEXRWriter::OpenEXRWriter()
         : mmstd_gl::ModuleGL()
         , version_(0)
         , m_filename_slot("Filename", "Filename to read from")
+        , m_channel_name_red("First Channel Name", "Name of first Channel in exr file. The red component of the input "
+                                                   "texture will be written to this channel.")
+        , m_channel_name_green("Second Channel Name", "Name of second Channel in exr file. The green component of the "
+                                                      "input texture will be written to this channel.")
+        , m_channel_name_blue("Third Channel Name", "Name of third Channel in exr file. The blue component of the "
+                                                    "input texture will be written to this channel.")
+        , m_channel_name_alpha("Forth Channel Name", "Name of forth Channel in exr file. The alpha component of the "
+                                                     "input texture will be written to this channel.")
         , m_button_slot("Screenshot Button", "Button triggering writing of input texture to file")
         , m_input_tex_slot("ColorTexture", "Texture to be written to file")
         , m_texture_pipe_out("Passthrough", "slot to pass texture through to calling module")
@@ -43,6 +54,16 @@ OpenEXRWriter::OpenEXRWriter()
     this->m_texture_pipe_out.SetCallback(
         compositing_gl::CallTexture2D::ClassName(), "GetMetaData", &OpenEXRWriter::getMetaDataCallback);
     this->MakeSlotAvailable(&m_texture_pipe_out);
+
+    this->m_channel_name_red << new core::param::StringParam("R");
+    this->m_channel_name_green << new core::param::StringParam("G");
+    this->m_channel_name_blue << new core::param::StringParam("B");
+    this->m_channel_name_alpha << new core::param::StringParam("A");
+
+    this->MakeSlotAvailable(&this->m_channel_name_red);
+    this->MakeSlotAvailable(&this->m_channel_name_green);
+    this->MakeSlotAvailable(&this->m_channel_name_blue);
+    this->MakeSlotAvailable(&this->m_channel_name_alpha);
 
     this->m_input_tex_slot.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_tex_slot);
@@ -74,27 +95,74 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
 
     if (saveRequested) {
         try {
-
             int width = rhs_call_input->getData()->getWidth();
             int height = rhs_call_input->getData()->getHeight();
             std::cout << "w:" << width << " h:" << height << std::endl;
-            RgbaOutputFile file(
-                m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), width, height, WRITE_RGBA);
+            Header header(width, height);
+
+            std::vector<float> rPixels(width * height);
+            std::vector<float> gPixels(width * height);
+            std::vector<float> bPixels(width * height);
+            std::vector<float> aPixels(width * height);
+
+            int inputTextureChNum = formatToChannelNumber(interm->getFormat());
+
+            FrameBuffer fb;
+            std::vector<std::vector<float>> channelsToBeWritten{rPixels, gPixels, bPixels, aPixels};
+            PixelType headerType;
+            switch (interm->getType()) {
+            case GL_FLOAT:
+                headerType = PixelType::FLOAT;
+                break;
+            case GL_HALF_FLOAT:
+                headerType = PixelType::HALF;
+                break;
+            case GL_INT:
+                headerType = PixelType::UINT;
+            }
+            if (m_channel_name_red.Param<core::param::StringParam>()->Value() != "") {
+                rPixels.resize(width * height);
+                header.channels().insert(
+                    m_channel_name_red.Param<core::param::StringParam>()->Value(), Channel(headerType));
+                fb.insert(m_channel_name_red.Param<core::param::StringParam>()->Value(),
+                    Slice(headerType, (char*)&rPixels, sizeof(rPixels[0]) * 1, sizeof((rPixels[0]) * width)));
+            }
+            if (m_channel_name_green.Param<core::param::StringParam>()->Value() != "") {
+                gPixels.resize(width * height);
+                header.channels().insert(
+                    m_channel_name_green.Param<core::param::StringParam>()->Value(), Channel(headerType));
+                fb.insert(m_channel_name_green.Param<core::param::StringParam>()->Value(),
+                    Slice(headerType, (char*)&gPixels, sizeof(gPixels[0]) * 1, sizeof((gPixels[0]) * width)));
+            }
+            if (m_channel_name_blue.Param<core::param::StringParam>()->Value() != "") {
+                bPixels.resize(width * height);
+                header.channels().insert(
+                    m_channel_name_blue.Param<core::param::StringParam>()->Value(), Channel(headerType));
+                fb.insert(m_channel_name_blue.Param<core::param::StringParam>()->Value(),
+                    Slice(headerType, (char*)&bPixels, sizeof(bPixels[0]) * 1, sizeof((bPixels[0]) * width)));
+            }
+            if (m_channel_name_alpha.Param<core::param::StringParam>()->Value() != "") {
+                aPixels.resize(width * height);
+                header.channels().insert(
+                    m_channel_name_alpha.Param<core::param::StringParam>()->Value(), Channel(headerType));
+                fb.insert(m_channel_name_alpha.Param<core::param::StringParam>()->Value(),
+                    Slice(headerType, (char*)&aPixels, sizeof(aPixels[0]) * 1, sizeof((aPixels[0]) * width)));
+            }
+
+            OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
             std::vector<float> rawPixels(width * height * 4);
-            glGetError();
             interm->bindTexture();
-            glGetTextureImage(interm->getName(), 0, interm->getFormat(), GL_FLOAT, width * height * 4*4,
-                &rawPixels[0]);
-            printf("\n%i", glGetError());
-            Array2D<Rgba> pixels(height, width);
+            glGetTextureImage(
+                interm->getName(), 0, interm->getFormat(), GL_FLOAT, width * height * 4 * 4, &rawPixels[0]);
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
-                    Rgba temp(rawPixels[4 * (j + i * width)], rawPixels[4* (j + i * width) + 1], rawPixels[4*(j + i * width) + 2],
-                        rawPixels[4 * (j + i * width) + 3]);
-                    pixels[height-i-1][j] = temp;
+                    for (int c = 0; c < inputTextureChNum; c++) {
+                        // the number of channels in the texture determines the stride in raw pixels and how many single-channel vectors can be filed with pixel data.
+                        channelsToBeWritten[c][j + i * width] = rawPixels[(j + i * width) * inputTextureChNum];
+                    }
                 }
             }
-            file.setFrameBuffer(&pixels[0][0], 1, width);
+            file.setFrameBuffer(fb);
             file.writePixels(height);
             saveRequested = false;
         } catch (const std::exception& exc) {
@@ -118,4 +186,29 @@ bool OpenEXRWriter::textureFormatUpdate() {
     m_output_texture = std::make_shared<glowl::Texture2D>("exr_tx2D", m_output_layout, nullptr);
 
     return true;
+}
+
+int OpenEXRWriter::formatToChannelNumber(GLenum format) {
+    switch (format) {
+    case GL_RED:
+    case GL_STENCIL_INDEX:
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+    case GL_DEPTH_COMPONENT32:
+    case GL_DEPTH_COMPONENT32F:
+        return 1;
+        break;
+    case GL_RG:
+    case GL_DEPTH24_STENCIL8:
+    case GL_DEPTH32F_STENCIL8:
+        return 2;
+        break;
+    case GL_RGB:
+        return 3;
+        break;
+    case GL_RGBA:
+        return 4;
+        break;
+    }
+    return 0;
 }

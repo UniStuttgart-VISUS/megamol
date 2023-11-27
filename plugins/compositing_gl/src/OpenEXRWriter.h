@@ -49,8 +49,14 @@ private:
     /** Slot for loading the file */
     core::param::ParamSlot m_filename_slot;
 
-    /** Button triggering writing of exr file*/
+    /** Button triggering writing of exr file */
     core::param::ParamSlot m_button_slot;
+
+    /** String Input Slots to set channel names of output file */
+    core::param::ParamSlot m_channel_name_red;
+    core::param::ParamSlot m_channel_name_green;
+    core::param::ParamSlot m_channel_name_blue;
+    core::param::ParamSlot m_channel_name_alpha;
 
     /** Slot for requesting the textures from another module, i.e. rhs connection */
     megamol::core::CallerSlot m_input_tex_slot;
@@ -68,7 +74,7 @@ private:
     uint32_t version_;
 
     bool triggerButtonClicked(core::param::ParamSlot& slot);
-
+    int formatToChannelNumber(GLenum format);
 
 };
 } // namespace megamol::compositing_gl
