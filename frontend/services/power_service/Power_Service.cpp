@@ -85,7 +85,8 @@ bool Power_Service::init(void* configPtr) {
     //main_trigger_->RegisterPostTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_post_trg, this));
     main_trigger_->RegisterPostTrigger("Power_Service_seg", std::bind(&Power_Service::seg_post_trg, this));
     main_trigger_->RegisterFinTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_fin_trg, this));
-    main_trigger_->RegisterSignal("Power_Service_trg", std::bind(&Power_Service::trigger_ts_signal, this, std::placeholders::_1));
+    main_trigger_->RegisterSignal(
+        "Power_Service_trg", std::bind(&Power_Service::trigger_ts_signal, this, std::placeholders::_1));
 
     try {
         rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);
@@ -123,6 +124,15 @@ bool Power_Service::init(void* configPtr) {
 
     auto msr_discard_func = [](std::string const& name) { return name.find("msr/0/package") == std::string::npos; };
 
+    auto adl_discard_func = [](std::string const& name) {
+        static int counter = 0;
+        bool discard = false;
+        if (counter > 0)
+            discard = true;
+        ++counter;
+        return discard;
+    };
+
     auto tinker_config_func = [](tinkerforge_sensor& sensor) {
         sensor.reset();
         //sensor.resync_internal_clock_after(20);
@@ -135,6 +145,8 @@ bool Power_Service::init(void* configPtr) {
 
     auto nvml_transform_func = [](std::string const&) -> std::string { return "NVML"; };
 
+    auto adl_transform_func = [](std::string const&) -> std::string { return "ADL"; };
+
     std::unique_ptr<power::SamplerCollection<nvml_sensor>> nvml_samplers = nullptr;
     try {
         nvml_samplers = std::make_unique<power::SamplerCollection<nvml_sensor>>(
@@ -146,8 +158,8 @@ bool Power_Service::init(void* configPtr) {
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
     std::unique_ptr<power::SamplerCollection<adl_sensor>> adl_samplers = nullptr;
     try {
-        adl_samplers = std::make_unique<power::SamplerCollection<adl_sensor>>(
-            std::chrono::milliseconds(600), std::chrono::milliseconds(10));
+        adl_samplers = std::make_unique<power::SamplerCollection<adl_sensor>>(std::chrono::milliseconds(600),
+            std::chrono::milliseconds(10), adl_discard_func, nullptr, adl_transform_func);
     } catch (...) {
         adl_samplers = nullptr;
     }

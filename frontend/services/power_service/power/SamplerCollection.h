@@ -46,8 +46,12 @@ public:
 
         for (auto& sensor : tmp_sensors) {
             auto tmp_name = unmueller_string(sensor.name());
-            if (transform) {
-                tmp_name = transform(tmp_name);
+            try {
+                if (transform) {
+                    tmp_name = transform(tmp_name);
+                }
+            } catch (...) {
+                continue;
             }
             sensor_names_.push_back(tmp_name);
             auto const& name = sensor_names_.back();
