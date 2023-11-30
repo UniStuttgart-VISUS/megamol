@@ -9,7 +9,6 @@ megamol_plugin(optix_hpg
     cuda
   DEPENDS_PLUGINS
     mmstd
-    mmstd_gl
     mesh
     geometry_calls)
 
@@ -53,4 +52,7 @@ if (optix_hpg_PLUGIN_ENABLED)
 
   target_include_directories(optix_hpg PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cuda_resources/")
   target_link_libraries(optix_hpg PRIVATE CUDA::cuda_driver)
+  if (MEGAMOL_USE_OPENGL)
+    target_link_libraries(optix_hpg PRIVATE mmstd_gl)
+  endif ()
 endif ()

@@ -4,8 +4,6 @@
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
-#include <glad/gl.h>
-#include <tracy/TracyOpenGL.hpp>
 #endif
 
 
@@ -105,14 +103,7 @@ bool megamol::optix_hpg::AbstractRenderer::Render(CallRender3DCUDA& call) {
         on_change_sbt(in_geo->get_record());
     }
 
-#ifdef MEGAMOL_USE_TRACY
-    {
-        TracyGpuZone("Optix::Launch");
-#endif
-        OPTIX_CHECK_ERROR(optixLaunch(pipeline_, optix_ctx_->GetExecStream(), 0, 0, sbt_, viewport.x, viewport.y, 1));
-#ifdef MEGAMOL_USE_TRACY
-    }
-#endif
+    OPTIX_CHECK_ERROR(optixLaunch(pipeline_, optix_ctx_->GetExecStream(), 0, 0, sbt_, viewport.x, viewport.y, 1));
 
     ++frame_state_.frameIdx;
 

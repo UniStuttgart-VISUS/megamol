@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef MEGAMOL_USE_OPENGL
+
 #include <glad/wgl.h>
 
 #include <cuda.h>
@@ -109,4 +111,7 @@ inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<glowl::GLSLProgra
 using CUDAToGL =
     mmstd_gl::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name, cudatogl_desc>;
 
+
 } // namespace megamol::optix_hpg
+
+#endif
