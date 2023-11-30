@@ -97,8 +97,8 @@ inline power::timeline_t generate_timeline(visus::power_overwhelming::oscillosco
     //auto const t_off = waveform.segment_offset();
     auto const r_length = waveform.record_length();
 
-    auto const t_b_ft = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<float>(t_begin));
-    auto const t_d_ft = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<float>(t_dis));
+    auto const t_b_ft = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<double>(t_begin));
+    auto const t_d_ft = std::chrono::duration_cast<filetime_dur_t>(std::chrono::duration<double>(t_dis));
 
     power::timeline_t ret(r_length, t_b_ft.count());
 
