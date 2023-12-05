@@ -9,6 +9,10 @@
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd/renderer/Renderer3DModule.h"
 
+#ifdef MEGAMOL_USE_POWER
+#include "PowerCallbacks.h"
+#endif
+
 namespace megamol::mmstd {
 
 template<typename FBO>
@@ -21,6 +25,13 @@ template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typ
     char const* CN, char const* DESC>
 class ContextToCPU : public core::view::Renderer3DModule {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        core::view::Renderer3DModule::requested_lifetime_resources(req);
+#ifdef MEGAMOL_USE_POWER
+        req.require<frontend_resources::PowerCallbacks>();
+#endif
+    }
+
     /**
      * Answer the name of this module.
      *
@@ -60,6 +71,12 @@ public:
         this->Release();
     }
 
+#ifdef MEGAMOL_USE_POWER
+    void signal_frame() {
+        power_res_->signal_frame();
+    }
+#endif
+
 protected:
     /**
      * Implementation of 'Create'.
@@ -67,6 +84,8 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     bool create() override {
+        power_res_ = &frontend_resources.get<frontend_resources::PowerCallbacks>();
+
         return true;
     }
 
@@ -169,6 +188,10 @@ private:
     std::shared_ptr<typename CALL::FBO_TYPE> _framebuffer;
 
     glm::uvec2 viewport = {0, 0};
+
+#ifdef MEGAMOL_USE_POWER
+    frontend_resources::PowerCallbacks const* power_res_;
+#endif
 };
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,

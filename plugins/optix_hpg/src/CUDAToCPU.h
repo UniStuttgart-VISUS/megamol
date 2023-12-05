@@ -60,8 +60,15 @@ inline constexpr auto cuda_to_cpu_init_func = [](std::shared_ptr<core::view::CPU
     fbo->height = height;
 };
 
+#ifdef MEGAMOL_USE_POWER
+inline void CUDA_CB signal_frame(CUstream hStream, CUresult status, void* userData);
+#endif
+
 inline constexpr auto cuda_to_cpu_ren_func = [](std::shared_ptr<core::view::CPUFramebuffer>& lhs_fbo,
                                                  std::shared_ptr<CUDAFramebuffer>& fbo, int width, int height) -> void {
+#ifdef MEGAMOL_USE_POWER
+    cuStreamAddCallback(fbo->data.exec_stream, signal_frame, nullptr, 0);
+#endif
     //#ifdef MEGAMOL_USE_TRACY
     //    ZoneScopedN("CUDAToGL::Blit");
     //    TracyGpuZone("CUDAToGL::Blit");
@@ -77,5 +84,12 @@ inline constexpr auto cuda_to_cpu_ren_func = [](std::shared_ptr<core::view::CPUF
 
 using CUDAToCPU =
     mmstd::ContextToCPU<CallRender3DCUDA, cuda_to_cpu_init_func, cuda_to_cpu_ren_func, cudatocpu_name, cudatocpu_desc>;
+
+#ifdef MEGAMOL_USE_POWER
+inline void CUDA_CB signal_frame(CUstream hStream, CUresult status, void* userData) {
+    auto that = static_cast<CUDAToCPU*>(userData);
+    that->signal_frame();
+}
+#endif
 
 } // namespace megamol::optix_hpg
