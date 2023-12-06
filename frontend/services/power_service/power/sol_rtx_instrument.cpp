@@ -94,6 +94,10 @@ void sol_oscilloscope_channel(sol::state& lua) {
 
     channel_table["range"] = static_cast<oscilloscope_channel& (oscilloscope_channel::*)(const oscilloscope_quantity&)>(
         &oscilloscope_channel::range);
+
+    channel_table["offset"] =
+        static_cast<oscilloscope_channel& (oscilloscope_channel::*)(const oscilloscope_quantity&)>(
+            &oscilloscope_channel::offset);
 }
 
 
