@@ -4,6 +4,9 @@ trigger:level(5, oscilloscope_quantity:new(2500.0, "mV")):slope(oscilloscope_tri
 quant = oscilloscope_quantity:new(range, "ms")
 rta01 = rtx_instrument_configuration:new(quant, acq, trigger, timeout);
 chan_1 = oscilloscope_channel:new(1)
-chan_1:state(true):attenuation(oscilloscope_quantity:new(1, "A")):range(oscilloscope_quantity:new(110, "A")):label(oscilloscope_label:new("A_12VHPWR", true))
+chan_1:state(true):attenuation(oscilloscope_quantity:new(1, "A")):range(oscilloscope_quantity:new(60, "A")):offset(oscilloscope_quantity:new(30, "A")):label(oscilloscope_label:new("A_12VHPWR", true))
+chan_2 = oscilloscope_channel:new(2)
+chan_2:state(true):attenuation(oscilloscope_quantity:new(10, "V")):range(oscilloscope_quantity:new(2, "V")):offset(oscilloscope_quantity:new(12, "V")):label(oscilloscope_label:new("V_12VHPWR", true))
 rta01:channel(chan_1)
+rta01:channel(chan_2)
 rta01 = as_slave(rta01, oscilloscope_quantity:new(2500.0, "mV"))
