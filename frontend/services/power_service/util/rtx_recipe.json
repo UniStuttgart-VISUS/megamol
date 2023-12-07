@@ -1,38 +1,47 @@
 {
   "12VHPWR": {
     "ADD": [ "A_12VHPWR" ],
-    "MUL": [ "ADD", "V_12VHPWR" ]
+    "SUB": [],
+    "MUL": [ "V_12VHPWR" ]
   },
   "PEG": {
     "ADD": [],
+    "SUB": [],
     "MUL": []
   },
   "12VPEG": {
     "ADD": [ "A_PEG12" ],
-    "MUL": [ "ADD", "V_PEG12" ]
+    "SUB": [],
+    "MUL": [ "V_PEG12" ]
   },
   "3VPEG": {
     "ADD": [],
+    "SUB": [],
     "MUL": []
   },
   "12VATX": {
-    "ADD": [],
-    "MUL": []
+    "ADD": [ "A_ATX12" ],
+    "SUB": [ "A_PEG12" ],
+    "MUL": [ "V_ATX12" ]
   },
   "5VATX": {
-    "ADD": [],
-    "MUL": []
+    "ADD": [ "A_ATX5" ],
+    "SUB": [],
+    "MUL": [ "V_ATX5" ]
   },
   "3VATX": {
     "ADD": [],
+    "SUB": [],
     "MUL": []
   },
   "P8": {
     "ADD": [ "A_P8" ],
-    "MUL": [ "ADD", "V_P8" ]
+    "SUB": [],
+    "MUL": [ "V_P8" ]
   },
   "P4": {
     "ADD": [ "A_P4" ],
-    "MUL": [ "ADD", "V_P4" ]
+    "SUB": [],
+    "MUL": [ "V_P4" ]
   }
 }
