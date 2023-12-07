@@ -46,6 +46,10 @@ public:
 
         for (auto& sensor : tmp_sensors) {
             auto tmp_name = unmueller_string(sensor.name());
+            if (discard) {
+                if (discard(tmp_name))
+                    continue;
+            }
             try {
                 if (transform) {
                     tmp_name = transform(tmp_name);
@@ -55,10 +59,6 @@ public:
             }
             sensor_names_.push_back(tmp_name);
             auto const& name = sensor_names_.back();
-            if (discard) {
-                if (discard(name))
-                    continue;
-            }
 
 #ifdef MEGAMOL_USE_TRACY
             TracyPlotConfig(name.data(), tracy::PlotFormatType::Number, false, true, 0);

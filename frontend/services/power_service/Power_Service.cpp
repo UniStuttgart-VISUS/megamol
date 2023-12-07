@@ -147,6 +147,8 @@ bool Power_Service::init(void* configPtr) {
 
     auto adl_transform_func = [](std::string const&) -> std::string { return "ADL"; };
 
+    auto msr_transform_func = [](std::string const&) -> std::string { return "MSR"; };
+
     std::unique_ptr<power::SamplerCollection<nvml_sensor>> nvml_samplers = nullptr;
     try {
         nvml_samplers = std::make_unique<power::SamplerCollection<nvml_sensor>>(
@@ -177,8 +179,8 @@ bool Power_Service::init(void* configPtr) {
     std::unique_ptr<power::SamplerCollection<msr_sensor>> msr_samplers = nullptr;
     if (!emi_samplers) {
         try {
-            msr_samplers = std::make_unique<power::SamplerCollection<msr_sensor>>(
-                std::chrono::milliseconds(600), std::chrono::milliseconds(1), msr_discard_func);
+            msr_samplers = std::make_unique<power::SamplerCollection<msr_sensor>>(std::chrono::milliseconds(600),
+                std::chrono::milliseconds(1), msr_discard_func, nullptr, msr_transform_func);
         } catch (...) {
             msr_samplers = nullptr;
         }
