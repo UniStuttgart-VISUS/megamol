@@ -18,7 +18,7 @@ target_include_directories(mwk-mint-interop
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-target_compile_features(mwk-mint-interop PRIVATE cxx_std_14)
+target_compile_features(mwk-mint-interop PRIVATE cxx_std_17)
 
 target_link_libraries(mwk-mint-interop
   PRIVATE
