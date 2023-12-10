@@ -196,15 +196,15 @@ void VR_Service::postGraphRender() {
 
 #ifdef MEGAMOL_USE_VR_INTEROP
 namespace {
-glm::vec4 toGlm(const interop::vec4& v) {
+glm::vec4 toGlm(const mint::vec4& v) {
     return glm::vec4{v.x, v.y, v.z, v.w};
 }
 } // namespace
 
 struct megamol::frontend::VR_Service::KolabBW::PimplData {
-    interop::StereoCameraView stereoCameraView;
-    interop::CameraProjection cameraProjection;
-    interop::BoundingBoxCorners bboxCorners;
+    mint::StereoCameraViewRelative stereoCameraView;
+    mint::CameraProjection cameraProjection;
+    mint::BoundingBoxCorners bboxCorners;
     bool has_camera_view = false;
     bool has_camera_proj = false;
     bool has_bbox = false;
@@ -217,22 +217,20 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
     frontend_resources::gl_texture left_ep_result;
     frontend_resources::gl_texture right_ep_result;
 
-    interop::TextureSender left_texturesender;
-    interop::TextureSender right_texturesender;
-    interop::TexturePackageSender singlestereo_texturesender;
+    mint::TextureSender left_texturesender;
+    mint::TextureSender right_texturesender;
+    mint::StereoTextureSender singlestereo_texturesender;
 
-    interop::DataReceiver stereoCameraViewReceiver_relative;
-    interop::DataReceiver cameraProjectionReceiver;
-    interop::DataSender bboxSender;
+    mint::DataSender sender;
+    mint::DataReceiver receiver;
+
+    bool has_plane_position = false, has_plane_normal = false, has_plane_state = false;
+    mint::vec4 clip_plane_point, clip_plane_normal;
+    bool clip_plane_state = false;
 
     std::function<void()> update_entry_point_inputs;
 
     core::MegaMolGraph* graph_ptr = nullptr;
-
-    interop::DataReceiver clip_plane_positionReceiver, clip_plane_normalReceiver, clip_plane_stateReceiver;
-    bool has_plane_position = false, has_plane_normal = false, has_plane_state = false;
-    interop::vec4 clip_plane_point, clip_plane_normal;
-    bool clip_plane_state = false;
     core::Module* clip_module_ptr = nullptr;
 
     std::function<core::param::ParamSlot*(std::string const&, core::Module*)> get_param_slot =
@@ -241,7 +239,7 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
     };
 
     // overwrite clip plane position/normal with state received from outside
-    void update_clip_plane_state(interop::vec4 const& pos, interop::vec4 const& normal, bool const state) {
+    void update_clip_plane_state(mint::vec4 const& pos, mint::vec4 const& normal, bool const state) {
         if (!graph_ptr)
             return;
 
@@ -281,7 +279,6 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
         enable_slot->Param<core::param::BoolParam>()->SetValue(state, true);
     }
 
-    interop::DataReceiver view_animation_stateReceiver;
     bool view_animation_state = false;
     bool has_animation_state = false;
     core::Module* view_module_ptr = nullptr;
@@ -338,15 +335,8 @@ megamol::frontend::VR_Service::KolabBW::KolabBW() {
     m_pimpl = std::unique_ptr<PimplData, std::function<void(PimplData*)>>(new PimplData,
         // destructor function for pimpl
         std::function<void(PimplData*)>([](PimplData* ptr) {
-            ptr->cameraProjectionReceiver.stop();
-            ptr->stereoCameraViewReceiver_relative.stop();
-            ptr->bboxSender.stop();
-
-            ptr->clip_plane_positionReceiver.stop();
-            ptr->clip_plane_normalReceiver.stop();
-            ptr->clip_plane_stateReceiver.stop();
-
-            ptr->view_animation_stateReceiver.stop();
+            ptr->receiver.stop();
+            ptr->sender.stop();
 
             ptr->left_texturesender.destroy();
             ptr->right_texturesender.destroy();
@@ -355,20 +345,16 @@ megamol::frontend::VR_Service::KolabBW::KolabBW() {
             delete ptr;
         }));
 
-    std::string default_name = "/UnityInterop/DefaultName";
-    pimpl.left_texturesender.init(default_name + "Left");
-    pimpl.right_texturesender.init(default_name + "Right");
-    pimpl.singlestereo_texturesender.init(default_name + "SingleStereo", 400, 600);
+    mint::init(mint::Role::Rendering, mint::DataProtocol::TCP, mint::ImageProtocol::GPU);
+    pimpl.left_texturesender.init(mint::ImageType::LeftEye);
+    pimpl.right_texturesender.init(mint::ImageType::RightEye);
+    pimpl.singlestereo_texturesender.init();
 
-    pimpl.stereoCameraViewReceiver_relative.start("tcp://localhost:12345", "StereoCameraViewRelative");
-    pimpl.cameraProjectionReceiver.start("tcp://localhost:12345", "CameraProjection");
-    pimpl.bboxSender.start("tcp://127.0.0.1:12346", "BoundingBoxCorners");
-
-    pimpl.clip_plane_positionReceiver.start("tcp://localhost:12345", "CuttingPlanePoint");
-    pimpl.clip_plane_normalReceiver.start("tcp://localhost:12345", "CuttingPlaneNormal");
-    pimpl.clip_plane_stateReceiver.start("tcp://localhost:12345", "CuttingPlaneState");
-
-    pimpl.view_animation_stateReceiver.start("tcp://localhost:12345", "AnimationRemoteControl");
+    // due to a bug in the mint lib, we need to explicitly set the ZMQ addresses
+    pimpl.receiver.m_address = "tcp://localhost:12345";
+    pimpl.receiver.start();
+    pimpl.sender.m_address = "tcp://127.0.0.1:12346";
+    pimpl.sender.start();
 }
 
 megamol::frontend::VR_Service::KolabBW::~KolabBW() {}
@@ -384,23 +370,22 @@ void megamol::frontend::VR_Service::KolabBW::receive_camera_data() {
     if (!pimpl.left_ep || !pimpl.right_ep)
         return;
 
-    pimpl.has_camera_view |=
-        pimpl.stereoCameraViewReceiver_relative.getData<interop::StereoCameraView>(pimpl.stereoCameraView);
-    pimpl.has_camera_proj |= pimpl.cameraProjectionReceiver.getData<interop::CameraProjection>(pimpl.cameraProjection);
+    pimpl.has_camera_view |= pimpl.receiver.receive(pimpl.stereoCameraView);
+    pimpl.has_camera_proj |= pimpl.receiver.receive(pimpl.cameraProjection);
 
     if (!pimpl.ep_handles_installed && pimpl.has_camera_view && pimpl.has_camera_proj)
         pimpl.update_entry_point_inputs();
 
 
-    pimpl.has_plane_position |= pimpl.clip_plane_positionReceiver.getData<interop::vec4>(pimpl.clip_plane_point);
-    pimpl.has_plane_normal |= pimpl.clip_plane_normalReceiver.getData<interop::vec4>(pimpl.clip_plane_normal);
-    pimpl.has_plane_state |= pimpl.clip_plane_stateReceiver.getData<bool>(pimpl.clip_plane_state);
+    pimpl.has_plane_position |= pimpl.receiver.receive(pimpl.clip_plane_point, "CuttingPlanePoint");
+    pimpl.has_plane_normal |= pimpl.receiver.receive(pimpl.clip_plane_normal, "CuttingPlaneNormal");
+    pimpl.has_plane_state |= pimpl.receiver.receive(pimpl.clip_plane_state, "CuttingPlaneState");
 
     if (pimpl.has_plane_position && pimpl.has_plane_normal && pimpl.has_plane_state) {
         pimpl.update_clip_plane_state(pimpl.clip_plane_point, pimpl.clip_plane_normal, pimpl.clip_plane_state);
     }
 
-    pimpl.has_animation_state |= pimpl.view_animation_stateReceiver.getData<bool>(pimpl.view_animation_state);
+    pimpl.has_animation_state |= pimpl.receiver.receive(pimpl.view_animation_state, "AnimationRemoteControl");
     if (pimpl.has_animation_state) {
         pimpl.update_view_animation_state(pimpl.view_animation_state);
     }
@@ -413,10 +398,10 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
     auto& left = pimpl.left_ep_result;
     auto& right = pimpl.right_ep_result;
 
-    pimpl.left_texturesender.sendTexture(left.as_gl_handle(), left.size.width, left.size.height);
-    pimpl.right_texturesender.sendTexture(right.as_gl_handle(), right.size.width, right.size.height);
+    pimpl.left_texturesender.send(left.as_gl_handle(), left.size.width, left.size.height);
+    pimpl.right_texturesender.send(right.as_gl_handle(), right.size.width, right.size.height);
 
-    pimpl.singlestereo_texturesender.sendTexturePackage(
+    pimpl.singlestereo_texturesender.send(
         left.as_gl_handle(), right.as_gl_handle(), 0, 0, left.size.width, left.size.height);
 
     if (!pimpl.has_bbox) {
@@ -427,16 +412,16 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
 
         auto bbox = maybe_bbox.BoundingBox();
 
-        pimpl.bboxCorners.min = interop::vec4{
+        pimpl.bboxCorners.min = mint::vec4{
             bbox.GetLeftBottomBack().GetX(), bbox.GetLeftBottomBack().GetY(), bbox.GetLeftBottomBack().GetZ(), 0.0f};
 
-        pimpl.bboxCorners.max = interop::vec4{
+        pimpl.bboxCorners.max = mint::vec4{
             bbox.GetRightTopFront().GetX(), bbox.GetRightTopFront().GetY(), bbox.GetRightTopFront().GetZ(), 0.0f};
 
         //pimpl.has_bbox = true;
     }
 
-    pimpl.bboxSender.sendData<interop::BoundingBoxCorners>("BoundingBoxCorners", pimpl.bboxCorners);
+    pimpl.sender.send(pimpl.bboxCorners);
 }
 
 // what we do with incoming view entry points is to register them a second time as entry point
@@ -494,7 +479,7 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
     pimpl.rig_ep_rendering_result_texture_copy();
 
     // outputs a function that returns camera matrices built from current pimpl camera data
-    auto make_matrices = [&](interop::CameraView const& iview, interop::CameraProjection const& iproj)
+    auto make_matrices = [&](mint::CameraView const& iview, mint::CameraProjection const& iproj)
         -> std::function<std::optional<frontend_resources::RenderInput::CameraMatrices>()> {
         // captures iview and iproj by reference, directly accessing current pimpl data
         // note that these matrices do not account for any tiling!
@@ -509,7 +494,7 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
         };
     };
 
-    auto make_view_projection_parameters = [&](interop::CameraView const& iview, interop::CameraProjection const& iproj)
+    auto make_view_projection_parameters = [&](mint::CameraView const& iview, mint::CameraProjection const& iproj)
         -> std::function<std::optional<frontend_resources::RenderInput::CameraViewProjectionParameters>()> {
         return [&]() {
             return std::make_optional(frontend_resources::RenderInput::CameraViewProjectionParameters{
