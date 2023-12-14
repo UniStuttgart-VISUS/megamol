@@ -125,12 +125,31 @@ bool Power_Service::init(void* configPtr) {
     auto msr_discard_func = [](std::string const& name) { return name.find("msr/0/package") == std::string::npos; };
 
     auto adl_discard_func = [](std::string const& name) {
+#if 0
         static int counter = 0;
         bool discard = false;
         if (counter > 0)
             discard = true;
         ++counter;
         return discard;
+#endif
+        static std::unordered_set<std::string> types;
+        std::stringstream ss(name);
+        std::string token;
+        while (std::getline(ss, token, '/')) {
+            if (token.find("ADL") == std::string::npos && token.find("AMD") == std::string::npos) {
+                if (token.find("ASIC") != std::string::npos) {
+                    return false;
+                }
+                auto fit = types.find(token);
+                if (fit == types.end()) {
+                    types.insert(token);
+                    return false;
+                }
+                return true;
+            }
+        }
+        return true;
     };
 
     auto tinker_config_func = [](tinkerforge_sensor& sensor) {
@@ -145,14 +164,29 @@ bool Power_Service::init(void* configPtr) {
 
     auto nvml_transform_func = [](std::string const&) -> std::string { return "NVML"; };
 
-    auto adl_transform_func = [](std::string const&) -> std::string { return "ADL"; };
+    auto adl_transform_func = [](std::string const& name) -> std::string {
+#if 0 return "ADL";
+#endif
+        static int asic_counter = 0;
+        std::stringstream ss(name);
+        std::string token;
+        while (std::getline(ss, token, '/')) {
+            if (token.find("ADL") == std::string::npos && token.find("AMD") == std::string::npos) {
+                if (token.find("ASIC") != std::string::npos) {
+                    return token + std::to_string(asic_counter++);
+                }
+                return token;
+            }
+        }
+        return "ADL";
+    };
 
     auto msr_transform_func = [](std::string const&) -> std::string { return "MSR"; };
 
     std::unique_ptr<power::SamplerCollection<nvml_sensor>> nvml_samplers = nullptr;
     try {
         nvml_samplers = std::make_unique<power::SamplerCollection<nvml_sensor>>(
-            std::chrono::milliseconds(600), std::chrono::milliseconds(50), nullptr, nullptr, nvml_transform_func);
+            std::chrono::milliseconds(600), std::chrono::milliseconds(10), nullptr, nullptr, nvml_transform_func);
     } catch (...) {
         nvml_samplers = nullptr;
     }

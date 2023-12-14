@@ -214,6 +214,8 @@ private:
         }
         // TODO: maybe need sleep here
         for (auto& [n, s] : hmc_sensors_) {
+            s.reset_integrator();
+            s.start_integrator();
             s.log(true);
         }
     }
@@ -250,6 +252,7 @@ private:
     void hmc_fin_trg() {
         for (auto& [n, s] : hmc_sensors_) {
             s.log(false);
+            s.stop_integrator();
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
         if (write_to_files_) {
