@@ -47,6 +47,8 @@ private:
     bool getMetaDataCallback(core::Call& caller);
 
     int typeStringToIndex(const std::string str);
+    GLenum internalFromTypeFormat(GLenum format, GLenum type);
+    void setRelevantParamState();
 
     template<typename T>
     std::shared_ptr<glowl::Texture2D> readToTex2D();
@@ -73,6 +75,9 @@ private:
     /** Texture that holds the data from the loaded .exr file */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
     glowl::TextureLayout m_output_layout;
+
+    std::vector<std::vector<std::string>> channelNamesByType;
+
 
     uint32_t m_version;
 };

@@ -89,36 +89,60 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
 
     if (lhs_tc == NULL)
         return false;
-
+    if (m_filename_slot.Param<core::param::FilePathParam>()->Value() == "")
+        return false;
     /**
      *  When input file changes EnumParams need to be updated.
      *  Updates in actual mapping and output texture are handled later.
      */
     if (m_filename_slot.IsDirty()) {
         m_filename_slot.ResetDirty();
-        InputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str()); //(filename)
 
         red_mapping_slot.Param<core::param::FlexEnumParam>()->ClearValues();
         green_mapping_slot.Param<core::param::FlexEnumParam>()->ClearValues();
         blue_mapping_slot.Param<core::param::FlexEnumParam>()->ClearValues();
         alpha_mapping_slot.Param<core::param::FlexEnumParam>()->ClearValues();
 
-        red_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("-");
-        green_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("-");
-        blue_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("-");
-        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("-");
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
 
-        std::vector<string> nochannel{"-"};
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("-");
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->SetValue("-");
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("-");
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->SetValue("-");
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("-");
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->SetValue("-");
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("-");
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->SetValue("-");
+
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("0");
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("0");
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("0");
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("0");
+
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("1");
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("1");
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("1");
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue("1");
+
+        std::vector<std::string> nochannel{"-"};
         // 0 = uint, 1=half, 2=float
-        std::vector<std::vector<string>> channelNamesByType{nochannel, nochannel, nochannel};
+        channelNamesByType.push_back(nochannel);
+        channelNamesByType.push_back(nochannel);
+        channelNamesByType.push_back(nochannel);
 
         try {
+            InputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str()); //(filename)
             const ChannelList& channels = file.header().channels();
             for (ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i) {
                 channelNamesByType[i.channel().type].push_back(i.name());
+                std::cout << i.name() << std::endl;
             }
         } catch (std::exception const& ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("OpenEXR Reader Exception: %s", ex.what());
+            return false;
         }
 
         int typeIdx = typeStringToIndex(type_mapping_slot.Param<core::param::FlexEnumParam>()->Value());
@@ -128,7 +152,7 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
             blue_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue(channelNamesByType[typeIdx][i]);
             alpha_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue(channelNamesByType[typeIdx][i]);
         }
-
+        type_mapping_slot.ResetDirty();
         red_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
         green_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
         blue_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
@@ -140,11 +164,19 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
      */
     if (type_mapping_slot.IsDirty()) {
         type_mapping_slot.ResetDirty();
-        red_mapping_slot.Param<core::param::FlexEnumParam>()->SetValue("-");
-        blue_mapping_slot.Param<core::param::FlexEnumParam>()->SetValue("-");
-        green_mapping_slot.Param<core::param::FlexEnumParam>()->SetValue("-");
-        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->SetValue("-");
+        int typeIdx = typeStringToIndex(type_mapping_slot.Param<core::param::FlexEnumParam>()->Value());
+
+        for (int i = 0; i < channelNamesByType[typeIdx].size(); i++) {
+            red_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue(channelNamesByType[typeIdx][i]);
+            green_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue(channelNamesByType[typeIdx][i]);
+            blue_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue(channelNamesByType[typeIdx][i]);
+            alpha_mapping_slot.Param<core::param::FlexEnumParam>()->AddValue(channelNamesByType[typeIdx][i]);
+        }
         //also sets slots dirty
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->setDirty();
     }
 
     /***
@@ -157,6 +189,10 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
         green_mapping_slot.ResetDirty();
         blue_mapping_slot.ResetDirty();
         alpha_mapping_slot.ResetDirty();
+
+        setRelevantParamState();
+        
+
         m_output_texture = readToTex2D<float>();
     }
 
@@ -208,18 +244,19 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
 
     PixelType sliceType;
     auto outTexType = GL_FLOAT;
-    if (typeof(T) == float) {
+    if (typeid(T) == typeid(float)) {
         sliceType = PixelType::FLOAT;
         outTexType = GL_FLOAT;
-    } else if (typeof(T) == half) {
+    } else if (typeid(T) == typeid(half)) {
         sliceType = PixelType::HALF;
         outTexType = GL_HALF_FLOAT;
-    } else if (typeof(T) == unsigned int) {
+    } else if (typeid(T) == typeid(unsigned int)) {
         sliceType = PixelType::UINT;
-        outTexType = GL_INT;
+        outTexType = GL_UNSIGNED_INT;
     } else {
         sliceType = PixelType::NUM_PIXELTYPES;
-        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenEXR Reader Exception: Custom data types not supported.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "OpenEXR Reader Exception: Custom data types not supported.");
         return nullptr;
     }
     FrameBuffer fb;
@@ -230,8 +267,14 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
         numOutChannels++;
         rPixels.resizeErase(height, width);
         //file.header().channels().find(currentChannelName).channel().type;
-        fb.insert(currentChannelName, Slice(sliceType, (char*)&rPixels[-dw.min.y][-dw.min.x],
-                                          sizeof(rPixels[0][0]) * 1, sizeof(rPixels[0][0]) * width));
+        if (currentChannelName == "0" || currentChannelName == "1") {
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                    rPixels[y][x] = static_cast<T>(stoi(currentChannelName));
+        } else {
+            fb.insert(currentChannelName, Slice(sliceType, (char*)&rPixels[-dw.min.y][-dw.min.x],
+                                              sizeof(rPixels[0][0]) * 1, sizeof(rPixels[0][0]) * width));
+        }
     }
 
     //GREEN
@@ -239,28 +282,48 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
     if (currentChannelName != "-") {
         numOutChannels++;
         gPixels.resizeErase(height, width);
-        fb.insert(currentChannelName, Slice(sliceType, (char*)&gPixels[-dw.min.y][-dw.min.x], sizeof(gPixels[0][0]) * 1,
-                                          sizeof(gPixels[0][0]) * width));
+        if (currentChannelName == "0" || currentChannelName == "1") {
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                    gPixels[y][x] = static_cast<T>(stoi(currentChannelName));
+        } else {
+            fb.insert(currentChannelName, Slice(sliceType, (char*)&gPixels[-dw.min.y][-dw.min.x],
+                                              sizeof(gPixels[0][0]) * 1, sizeof(gPixels[0][0]) * width));
+        }
     }
+
     //BLUE
     currentChannelName = blue_mapping_slot.Param<core::param::FlexEnumParam>()->Value();
     if (currentChannelName != "-") {
         numOutChannels++;
         bPixels.resizeErase(height, width);
-        fb.insert(currentChannelName, Slice(sliceType, (char*)&bPixels[-dw.min.y][-dw.min.x], sizeof(bPixels[0][0]) * 1,
-                                          sizeof(bPixels[0][0]) * width));
+        if (currentChannelName == "0" || currentChannelName == "1") {
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                    bPixels[y][x] = static_cast<T>(stoi(currentChannelName));
+        } else {
+            fb.insert(currentChannelName, Slice(sliceType, (char*)&bPixels[-dw.min.y][-dw.min.x],
+                                              sizeof(bPixels[0][0]) * 1, sizeof(bPixels[0][0]) * width));
+        }
     }
     //ALPHA
     currentChannelName = alpha_mapping_slot.Param<core::param::FlexEnumParam>()->Value();
     if (currentChannelName != "-") {
         numOutChannels++;
         aPixels.resizeErase(height, width);
-        fb.insert(currentChannelName, Slice(sliceType, (char*) & aPixels[-dw.min.y][-dw.min.x], sizeof(aPixels[0][0]) * 1,
-                                          sizeof(aPixels[0][0]) * width));
+        if (currentChannelName == "0" || currentChannelName == "1") {
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                    aPixels[y][x] = static_cast<T>(stoi(currentChannelName));
+        } else {
+            fb.insert(currentChannelName, Slice(sliceType, (char*)&aPixels[-dw.min.y][-dw.min.x],
+                                              sizeof(aPixels[0][0]) * 1, sizeof(aPixels[0][0]) * width));
+        }
     }
     auto outTexFormat = GL_RGBA;
 
-    switch (numOutChannels) { case 1:
+    switch (numOutChannels) {
+    case 1:
         outTexFormat = GL_RED;
         break;
     case 2:
@@ -268,11 +331,12 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
         break;
     case 3:
         outTexFormat = GL_RGB;
+        break;
     case 4:
+        outTexFormat = GL_RGBA;
         break;
     case 0:
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "OpenEXR Reader Exception: No channels defined.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenEXR Reader Exception: No channels defined.");
         return nullptr;
         break;
     }
@@ -288,22 +352,36 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
         megamol::core::utility::log::Log::DefaultLog.WriteError("OpenEXR Reader Exception: %s", ex.what());
     }
     //TODO out tex format and type
-    m_output_layout = glowl::TextureLayout(GL_RGBA16F, width, height, 1, outTexFormat, outTexType, 1);
-    Imf::Array2D<Rgba> flippedPixels; // flipped Y
-    flippedPixels.resizeErase(height, width);
+    m_output_layout = glowl::TextureLayout(
+        internalFromTypeFormat(outTexFormat, outTexType), width, height, 1, outTexFormat, outTexType, 1);
+    std::vector<T> flippedPixels; // flipped Y
+    flippedPixels.resize(height * width * numOutChannels);
 
     //TODO easier way?
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            flippedPixels[y][x] = pixels[height - 1 - y][x];
+            //std::cout << (height - y-1) * width + x << std::endl;
+            //std::cout << y << " " << x << std::endl;
+            switch (numOutChannels) {
+            case 4:
+                flippedPixels[numOutChannels * ((height - y-1) * width + x) + 3] = aPixels[y][x];
+            case 3:
+                flippedPixels[numOutChannels * ((height - y-1) * width + x) + 2] = bPixels[y][x];
+            case 2:
+                flippedPixels[numOutChannels * ((height - y-1) * width + x) + 1] = gPixels[y][x];
+            case 1:
+                flippedPixels[numOutChannels * ((height - y-1) * width + x)] = rPixels[y][x];
+                break;
+            }
         }
     }
-    m_output_texture->reload(m_output_layout, &flippedPixels[0][0]);
+    m_output_texture = std::make_shared<glowl::Texture2D>("exr_tx2D", m_output_layout, nullptr);
+    m_output_texture->reload(m_output_layout, &flippedPixels[0]);
     // TODO: void return type?
     return m_output_texture;
 }
 
-GLenum internalFromTypeFormat(GLenum format, GLenum type) {
+GLenum OpenEXRReader::internalFromTypeFormat(GLenum format, GLenum type) {
     if (type == GL_FLOAT) {
         if (format == GL_RGBA) {
             return GL_RGBA32F;
@@ -326,13 +404,42 @@ GLenum internalFromTypeFormat(GLenum format, GLenum type) {
         }
     } else if (type == GL_INT) {
         if (format == GL_RGBA) {
-            return GL_RGBA;
+            return GL_RGBA32UI;
         } else if (format == GL_RGB) {
-            return GL_RGB32F;
+            return GL_RGB32UI;
         } else if (format == GL_RG) {
-            return GL_RG32F;
+            return GL_RG32UI;
         } else if (format == GL_RED) {
-            return GL_R32F;
+            return GL_R32UI;
         }
+    }
+}
+
+void OpenEXRReader::setRelevantParamState() {
+    if (alpha_mapping_slot.Param<core::param::FlexEnumParam>()->Value() != "-") {
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(false);
+    } else if (blue_mapping_slot.Param<core::param::FlexEnumParam>()->Value() != "-") {
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(false);
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(false);
+    } else if (green_mapping_slot.Param<core::param::FlexEnumParam>()->Value() != "-") {
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(false);
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(false);
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+    } else if (red_mapping_slot.Param<core::param::FlexEnumParam>()->Value() != "-") {
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(false);
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(false);
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+    } else {
+        red_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(false);
+        green_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        blue_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
+        alpha_mapping_slot.Param<core::param::FlexEnumParam>()->SetGUIReadOnly(true);
     }
 }
