@@ -165,7 +165,8 @@ bool Power_Service::init(void* configPtr) {
     auto nvml_transform_func = [](std::string const&) -> std::string { return "NVML"; };
 
     auto adl_transform_func = [](std::string const& name) -> std::string {
-#if 0 return "ADL";
+#if 0
+        return "ADL";
 #endif
         static int asic_counter = 0;
         std::stringstream ss(name);

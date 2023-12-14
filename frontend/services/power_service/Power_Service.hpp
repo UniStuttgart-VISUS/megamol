@@ -154,6 +154,7 @@ private:
     void sb_pre_trg() {
         do_buffer_ = true;
 
+        samplers->visit(&power::ISamplerCollection::Reset);
         samplers->visit(&power::ISamplerCollection::StartRecording);
 
         /*if (nvml_samplers_)

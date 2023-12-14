@@ -18,6 +18,8 @@ struct ISamplerCollection {
         std::string const& dataverse_path, std::string const& dataverse_doi, char const* dataverse_token,
         char& fin_signal) const = 0;
 
+    virtual void Reset() = 0;
+
     virtual void StartRecording() = 0;
 
     virtual void StopRecording() = 0;
@@ -117,6 +119,15 @@ public:
         std::string const& dataverse_doi, char const* dataverse_token, char& fin_signal) const override {
         ParquetWriter(path, buffers_, meta);
         DataverseWriter(dataverse_path, dataverse_doi, path.string(), dataverse_token, fin_signal);
+    }
+
+    void Reset() override {
+        if constexpr (std::is_same_v<T, tinkerforge_sensor>) {
+            core::utility::log::Log::DefaultLog.WriteInfo("[Tinkerforge]: reset clock compensation");
+            for (auto& [n, s] : sensors_) {
+                s.resync_internal_clock();
+            }
+        }
     }
 
     void StartRecording() override {
