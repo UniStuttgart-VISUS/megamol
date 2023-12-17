@@ -76,5 +76,13 @@ private:
     bool triggerButtonClicked(core::param::ParamSlot& slot);
     int formatToChannelNumber(GLenum format);
 
+    /**
+    * \brief Method sets interface to only allow editing of the last currently named channel or adding a new one.
+    * This prevents cases like Red and alpha channel being mapped without mapping green and blue.
+    * 
+    * 
+    */
+    void setRelevantParamState();
+
 };
 } // namespace megamol::compositing_gl

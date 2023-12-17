@@ -93,13 +93,17 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
     ++version_;
     lhs_tc->setData(rhs_call_input->getData(), version_);
 
+    setRelevantParamState();
+
     if (saveRequested) {
+        saveRequested = false;
         try {
             int width = rhs_call_input->getData()->getWidth();
             int height = rhs_call_input->getData()->getHeight();
             std::cout << "w:" << width << " h:" << height << std::endl;
             Header header(width, height);
 
+            //TODO only init used vectors
             std::vector<float> rPixels(width * height);
             std::vector<float> gPixels(width * height);
             std::vector<float> bPixels(width * height);
@@ -108,7 +112,6 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             int inputTextureChNum = formatToChannelNumber(interm->getFormat());
 
             FrameBuffer fb;
-            std::vector<std::vector<float>> channelsToBeWritten{rPixels, gPixels, bPixels, aPixels};
             PixelType headerType;
             switch (interm->getType()) {
             case GL_FLOAT:
@@ -120,51 +123,81 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             case GL_INT:
                 headerType = PixelType::UINT;
             }
-            if (m_channel_name_red.Param<core::param::StringParam>()->Value() != "") {
+            //TODO remove
+            headerType = PixelType::FLOAT;
+
+            m_channel_name_red.Param<core::param::StringParam>()->SetGUIVisible(false);
+            m_channel_name_green.Param<core::param::StringParam>()->SetGUIVisible(false);
+            m_channel_name_blue.Param<core::param::StringParam>()->SetGUIVisible(false);
+            m_channel_name_alpha.Param<core::param::StringParam>()->SetGUIVisible(false);
+
+            switch (inputTextureChNum) {
+            case 4:
+                m_channel_name_alpha.Param<core::param::StringParam>()->SetGUIVisible(true);
+            case 3:
+                m_channel_name_blue.Param<core::param::StringParam>()->SetGUIVisible(true);
+            case 2:
+                m_channel_name_green.Param<core::param::StringParam>()->SetGUIVisible(true);
+            case 1:
+                m_channel_name_red.Param<core::param::StringParam>()->SetGUIVisible(true);
+                break;
+            default:
+                // errorstate
+                break;
+            }
+
+            if (m_channel_name_red.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 1) {
                 rPixels.resize(width * height);
                 header.channels().insert(
                     m_channel_name_red.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_red.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*)&rPixels, sizeof(rPixels[0]) * 1, sizeof((rPixels[0]) * width)));
+                    Slice(PixelType::FLOAT, (char*)&rPixels[0], sizeof(rPixels[0]), sizeof(rPixels[0]) * width));
             }
-            if (m_channel_name_green.Param<core::param::StringParam>()->Value() != "") {
+            if (m_channel_name_green.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 2) {
                 gPixels.resize(width * height);
                 header.channels().insert(
                     m_channel_name_green.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_green.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*)&gPixels, sizeof(gPixels[0]) * 1, sizeof((gPixels[0]) * width)));
+                    Slice(headerType, (char*)&gPixels[0], sizeof(gPixels[0]) * 1, sizeof(gPixels[0]) * width));
             }
-            if (m_channel_name_blue.Param<core::param::StringParam>()->Value() != "") {
+            if (m_channel_name_blue.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 3) {
                 bPixels.resize(width * height);
                 header.channels().insert(
                     m_channel_name_blue.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_blue.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*)&bPixels, sizeof(bPixels[0]) * 1, sizeof((bPixels[0]) * width)));
+                    Slice(headerType, (char*)&bPixels[0], sizeof(bPixels[0]) * 1, sizeof(bPixels[0]) * width));
             }
-            if (m_channel_name_alpha.Param<core::param::StringParam>()->Value() != "") {
+            if (m_channel_name_alpha.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum == 4) {
                 aPixels.resize(width * height);
                 header.channels().insert(
                     m_channel_name_alpha.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_alpha.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*)&aPixels, sizeof(aPixels[0]) * 1, sizeof((aPixels[0]) * width)));
+                    Slice(headerType, (char*)&aPixels[0], sizeof(aPixels[0]) * 1, sizeof(aPixels[0]) * width));
             }
 
             OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
-            std::vector<float> rawPixels(width * height * 4);
+            std::vector<float> rawPixels(width * height * inputTextureChNum);
             interm->bindTexture();
-            glGetTextureImage(
-                interm->getName(), 0, interm->getFormat(), GL_FLOAT, width * height * 4 * 4, &rawPixels[0]);
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    for (int c = 0; c < inputTextureChNum; c++) {
-                        // the number of channels in the texture determines the stride in raw pixels and how many single-channel vectors can be filed with pixel data.
-                        channelsToBeWritten[c][j + i * width] = rawPixels[(j + i * width) * inputTextureChNum];
+            glGetTextureImage(interm->getName(), 0, interm->getFormat(), interm->getType(),
+                width * height * inputTextureChNum * 4, &rawPixels[0]);
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    // the number of channels in the texture determines the stride in raw pixels and how many single-channel vectors can be filed with pixel data.
+                    switch (inputTextureChNum) {
+                    case 4:
+                        aPixels[x + y * width] = rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 3];
+                    case 3:
+                        bPixels[x + y * width] = rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 2];
+                    case 2:
+                        gPixels[x + y * width] = rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 1];
+                    case 1:
+                        rPixels[x + y * width] = rawPixels[(x + (height - y - 1) * width) * inputTextureChNum];
+                        break;
                     }
                 }
             }
             file.setFrameBuffer(fb);
             file.writePixels(height);
-            saveRequested = false;
         } catch (const std::exception& exc) {
             std::cerr << exc.what() << std::endl;
         }
@@ -192,6 +225,7 @@ int OpenEXRWriter::formatToChannelNumber(GLenum format) {
     switch (format) {
     case GL_RED:
     case GL_STENCIL_INDEX:
+    case GL_DEPTH_COMPONENT:
     case GL_DEPTH_COMPONENT16:
     case GL_DEPTH_COMPONENT24:
     case GL_DEPTH_COMPONENT32:
@@ -199,6 +233,7 @@ int OpenEXRWriter::formatToChannelNumber(GLenum format) {
         return 1;
         break;
     case GL_RG:
+    case GL_DEPTH_STENCIL:
     case GL_DEPTH24_STENCIL8:
     case GL_DEPTH32F_STENCIL8:
         return 2;
@@ -211,4 +246,34 @@ int OpenEXRWriter::formatToChannelNumber(GLenum format) {
         break;
     }
     return 0;
+}
+
+void OpenEXRWriter::setRelevantParamState() {
+    if (m_channel_name_red.Param<core::param::StringParam>()->Value() == "") {
+        m_channel_name_red.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_green.Param<core::param::StringParam>()->SetGUIReadOnly(true);
+        m_channel_name_blue.Param<core::param::StringParam>()->SetGUIReadOnly(true);
+        m_channel_name_alpha.Param<core::param::StringParam>()->SetGUIReadOnly(true);
+        m_channel_name_green.Param<core::param::StringParam>()->SetValue("");
+        m_channel_name_blue.Param<core::param::StringParam>()->SetValue("");
+        m_channel_name_alpha.Param<core::param::StringParam>()->SetValue("");
+    } else if (m_channel_name_green.Param<core::param::StringParam>()->Value() == "") {
+        m_channel_name_red.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_green.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_blue.Param<core::param::StringParam>()->SetGUIReadOnly(true);
+        m_channel_name_alpha.Param<core::param::StringParam>()->SetGUIReadOnly(true);
+        m_channel_name_blue.Param<core::param::StringParam>()->SetValue("");
+        m_channel_name_alpha.Param<core::param::StringParam>()->SetValue("");
+    } else if (m_channel_name_blue.Param<core::param::StringParam>()->Value() == "") {
+        m_channel_name_red.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_green.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_blue.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_alpha.Param<core::param::StringParam>()->SetGUIReadOnly(true);
+        m_channel_name_alpha.Param<core::param::StringParam>()->SetValue("");
+    } else {
+        m_channel_name_red.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_green.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_blue.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+        m_channel_name_alpha.Param<core::param::StringParam>()->SetGUIReadOnly(false);
+    }
 }
