@@ -36,8 +36,6 @@ void sol_rtx_instrument(sol::state& lua) {
         static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_reference_point)>(
             &rtx_instrument::reference_position);
 
-    rtx_instrument_table["trigger_position"] = &rtx_instrument::trigger_position;
-
     rtx_instrument_table["trigger"] =
         static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_trigger&)>(&rtx_instrument::trigger);
 
@@ -98,6 +96,9 @@ void sol_oscilloscope_channel(sol::state& lua) {
     channel_table["offset"] =
         static_cast<oscilloscope_channel& (oscilloscope_channel::*)(const oscilloscope_quantity&)>(
             &oscilloscope_channel::offset);
+
+    channel_table["zero_adjust"] =
+        static_cast<oscilloscope_channel& (oscilloscope_channel::*)(float const)>(&oscilloscope_channel::zero_adjust);
 }
 
 
@@ -148,6 +149,10 @@ void sol_rtx_instrument_configuration(sol::state& lua) {
                                                 std::reference_wrapper<const oscilloscope_trigger>, std::uint32_t)>());
 
     config_table["channel"] = &rtx_instrument_configuration::channel;
+
+    config_table["trigger_position"] =
+        static_cast<rtx_instrument_configuration& (rtx_instrument_configuration::*)(oscilloscope_quantity const&)>(
+            &rtx_instrument_configuration::trigger_position);
 
     //config_table["as_slave"] = &rtx_instrument_configuration::as_slave;
     lua.set_function("as_slave",
