@@ -66,7 +66,7 @@ public:
         fire_init_trigger();
         while (armed_) {
             fire_pre_trigger();
-            std::this_thread::sleep_for(prefix + std::chrono::seconds(1));
+            std::this_thread::sleep_for(prefix + std::chrono::seconds(1)); //< additional second for NVML runup
             trg_tp = fire_trigger();
             std::this_thread::sleep_for(postfix);
             fire_post_trigger();

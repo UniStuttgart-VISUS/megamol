@@ -27,11 +27,11 @@ void BatchWriter(parquet::RowGroupWriter* writer, std::vector<T> const& data, in
 
 void WriteMetaData(std::unique_ptr<parquet::ParquetFileWriter>& file_writer, MetaData const* meta) {
     auto md = std::make_shared<parquet::KeyValueMetadata>();
-    md->Append(std::string("project_file"), meta->project_file);
+    //md->Append(std::string("project_file"), meta->project_file);
     for (auto const& [key, value] : meta->oszi_configs) {
         md->Append(key, value);
     }
-    md->Append(std::string("runtime_libraries"), meta->runtime_libs);
+    //md->Append(std::string("runtime_libraries"), meta->runtime_libs);
     for (auto const& [key, value] : meta->hardware_software_info) {
         md->Append(key, value);
     }

@@ -123,7 +123,6 @@ public:
 
     void Reset() override {
         if constexpr (std::is_same_v<T, tinkerforge_sensor>) {
-            core::utility::log::Log::DefaultLog.WriteInfo("[Tinkerforge]: reset clock compensation");
             for (auto& [n, s] : sensors_) {
                 s.resync_internal_clock();
             }
