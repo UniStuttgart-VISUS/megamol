@@ -273,7 +273,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks() {
         "mmLastFrameTime", "()\n\tReturns the graph execution time of the last frame in ms.", [&]() -> double {
             auto& frame_statistics =
                 m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
-            return frame_statistics.last_rendered_frame_time_milliseconds;
+            return frame_statistics.last_rendered_frame_time_microseconds.count() / 1000.0;
         });
 
     luaApi_resource->RegisterCallback("mmLastRenderedFramesCount",

@@ -87,21 +87,19 @@ void FrameStatistics_Service::postGraphRender() {}
 void FrameStatistics_Service::mark_frame_cb() {
     auto now = std::chrono::steady_clock::time_point::clock::now();
 
-    m_statistics.rendered_frames_count++;
+    ++m_statistics.rendered_frames_count;
 
-    using double_seconds = std::chrono::duration<double>;
-    using double_microseconds = std::chrono::duration<double, std::micro>;
+    m_statistics.elapsed_program_time_milliseconds =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now - m_program_start_time);
 
-    m_statistics.elapsed_program_time_seconds = double_seconds(now - m_program_start_time).count();
-    const auto last_frame_till_now_micro = double_microseconds(now - m_frame_start_time).count();
+    m_statistics.last_rendered_frame_time_microseconds =
+        std::chrono::duration_cast<std::chrono::microseconds>(now - m_frame_start_time);
 
-    m_statistics.last_rendered_frame_time_milliseconds = last_frame_till_now_micro / 1000.0;
-
-    m_frame_times_micro[m_ring_buffer_ptr] = static_cast<long long>(last_frame_till_now_micro);
+    m_frame_times_micro[m_ring_buffer_ptr] = m_statistics.last_rendered_frame_time_microseconds.count();
     m_ring_buffer_ptr = (m_ring_buffer_ptr + 1) % m_frame_times_micro.size();
 
     m_statistics.last_averaged_mspf = std::accumulate(m_frame_times_micro.begin(), m_frame_times_micro.end(), 0) /
-                                      m_frame_times_micro.size() / static_cast<double>(1000);
+                                      static_cast<double>(m_frame_times_micro.size()) / 1000.0;
     m_statistics.last_averaged_fps = 1000.0 / m_statistics.last_averaged_mspf;
     m_frame_start_time = now;
 }

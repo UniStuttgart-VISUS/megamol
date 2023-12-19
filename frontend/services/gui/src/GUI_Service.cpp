@@ -251,7 +251,8 @@ void GUI_Service::digestChangedRequestedResources() {
     /// Get current FPS and MS frame statistic = resource index 9
     auto& frame_statistics = frontend_resources->get<megamol::frontend_resources::FrameStatistics>();
     this->m_gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf,
-        frame_statistics.rendered_frames_count, frame_statistics.last_rendered_frame_time_milliseconds);
+        frame_statistics.rendered_frames_count,
+        frame_statistics.last_rendered_frame_time_microseconds.count() / 1000.0);
 
     /// Get window manipulation resource = resource index 11
     auto maybe_window_manipulation = frontend_resources->getOptional<megamol::frontend_resources::WindowManipulation>();
