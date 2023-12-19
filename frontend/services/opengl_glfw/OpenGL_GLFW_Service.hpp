@@ -16,6 +16,7 @@
 #include "OpenGL_Helper.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
+#include "FrameStatsCallbacks.h"
 
 namespace megamol::frontend {
 

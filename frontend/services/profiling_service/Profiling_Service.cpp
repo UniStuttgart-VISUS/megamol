@@ -214,8 +214,8 @@ void Profiling_Service::updateProvidedResources() {
 void Profiling_Service::resetProvidedResources() {
     const auto rfc =
         _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count;
-    _perf_man.endFrame(rfc);
-    _perf_man.startFrame(static_cast<megamol::frontend_resources::performance::frame_type>(rfc + 1));
+    _perf_man.endFrame(rfc-1);
+    _perf_man.startFrame(static_cast<megamol::frontend_resources::performance::frame_type>(rfc));
 
 #ifdef MEGAMOL_USE_TRACY
     FrameMarkEnd(sl_innerframe);

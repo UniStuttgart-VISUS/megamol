@@ -50,6 +50,8 @@ bool FrameStatistics_Service::init(const Config& config) {
     // the first frame is bogus, sorry.
     m_frame_start_time = std::chrono::steady_clock::time_point::clock::now();
 
+    frame_stats_cb_.mark_frame = std::bind(&FrameStatistics_Service::mark_frame_cb, this);
+
     log("initialized successfully");
     return true;
 }
@@ -57,7 +59,8 @@ bool FrameStatistics_Service::init(const Config& config) {
 void FrameStatistics_Service::close() {}
 
 std::vector<FrontendResource>& FrameStatistics_Service::getProvidedResources() {
-    m_providedResourceReferences = {{frontend_resources::FrameStatistics_Req_Name, m_statistics}};
+    m_providedResourceReferences = {{frontend_resources::FrameStatistics_Req_Name, m_statistics},
+        {frontend_resources::FrameStatsCallbacks_Req_Name, frame_stats_cb_}};
 
     return m_providedResourceReferences;
 }
@@ -71,25 +74,17 @@ void FrameStatistics_Service::setRequestedResources(std::vector<FrontendResource
     fill_lua_callbacks();
 }
 
-void FrameStatistics_Service::updateProvidedResources() {
-    start_frame();
-}
+void FrameStatistics_Service::updateProvidedResources() {}
 
 void FrameStatistics_Service::digestChangedRequestedResources() {}
 
-void FrameStatistics_Service::resetProvidedResources() {
-    finish_frame();
-}
+void FrameStatistics_Service::resetProvidedResources() {}
 
 void FrameStatistics_Service::preGraphRender() {}
 
 void FrameStatistics_Service::postGraphRender() {}
 
-// TODO: maybe port FPS Counter from
-// #include "vislib/graphics/FpsCounter.h"
-void FrameStatistics_Service::start_frame() {}
-
-void FrameStatistics_Service::finish_frame() {
+void FrameStatistics_Service::mark_frame_cb() {
     auto now = std::chrono::steady_clock::time_point::clock::now();
 
     m_statistics.rendered_frames_count++;
