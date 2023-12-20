@@ -197,12 +197,7 @@ void Profiling_Service::close() {
 #endif
 }
 
-static const char* const sl_innerframe = "InnerFrame";
-
 void Profiling_Service::markFrameStart() {
-#ifdef MEGAMOL_USE_TRACY
-    FrameMarkStart(sl_innerframe);
-#endif
     if (first_frame) {
         // for the first frame, we cannot do proper end-to-end measurements :(
         const auto rfc =
@@ -220,10 +215,6 @@ void Profiling_Service::markFrameEnd() {
         _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count;
     _perf_man.endFrame(rfc - 1);
     _perf_man.startFrame(static_cast<megamol::frontend_resources::performance::frame_type>(rfc));
-
-#ifdef MEGAMOL_USE_TRACY
-    FrameMarkEnd(sl_innerframe);
-#endif
 #ifdef MEGAMOL_USE_NVPERF
     nvperf.OnFrameEnd();
 #endif
