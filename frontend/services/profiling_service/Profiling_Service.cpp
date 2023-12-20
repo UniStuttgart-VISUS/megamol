@@ -26,8 +26,12 @@ bool Profiling_Service::init(void* configPtr) {
     nv::perf::InitializeNvPerf();
 #endif
 #ifdef MEGAMOL_USE_PROFILING
+    profiling_callbacks.mark_frame_start = [this] { markFrameStart(); };
+    profiling_callbacks.mark_frame_end = [this] { markFrameEnd(); };
+
     _providedResourceReferences = {{frontend_resources::performance::PerformanceManager_Req_Name, _perf_man},
-        {frontend_resources::performance::Performance_Logging_Status_Req_Name, profiling_logging}};
+        {frontend_resources::performance::Performance_Logging_Status_Req_Name, profiling_logging},
+    {frontend_resources::performance::Profiling_Callbacks_Req_Name, profiling_callbacks}};
 
     const auto conf = static_cast<Config*>(configPtr);
     profiling_logging.active = conf->autostart_profiling;
@@ -195,7 +199,7 @@ void Profiling_Service::close() {
 
 static const char* const sl_innerframe = "InnerFrame";
 
-void Profiling_Service::updateProvidedResources() {
+void Profiling_Service::markFrameStart() {
 #ifdef MEGAMOL_USE_TRACY
     FrameMarkStart(sl_innerframe);
 #endif
@@ -211,7 +215,7 @@ void Profiling_Service::updateProvidedResources() {
 #endif
 }
 
-void Profiling_Service::resetProvidedResources() {
+void Profiling_Service::markFrameEnd() {
     const auto rfc =
         _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count;
     _perf_man.endFrame(rfc - 1);

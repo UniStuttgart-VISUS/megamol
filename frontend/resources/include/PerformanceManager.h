@@ -36,6 +36,13 @@ struct ProfilingLoggingStatus {
     bool active = true;
 };
 
+static std::string Profiling_Callbacks_Req_Name = "ProfilingCallbacks";
+
+struct ProfilingCallbacks {
+    std::function<void()> mark_frame_start;
+    std::function<void()> mark_frame_end;
+};
+
 static std::string PerformanceManager_Req_Name = "PerformanceManager";
 
 // this thing must only exist ONCE.

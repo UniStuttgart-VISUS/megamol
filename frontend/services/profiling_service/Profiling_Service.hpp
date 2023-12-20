@@ -33,13 +33,17 @@ public:
     }
     bool init(void* configPtr) override;
     void close() override;
-    void updateProvidedResources() override;
+    void updateProvidedResources() override {}
     void digestChangedRequestedResources() override {}
 
-    void resetProvidedResources() override;
+    void resetProvidedResources() override {}
 
     void preGraphRender() override {}
     void postGraphRender() override {}
+
+    void markFrameStart();
+    void markFrameEnd();
+
     std::vector<FrontendResource>& getProvidedResources() override {
         return _providedResourceReferences;
     }
@@ -63,6 +67,7 @@ private:
     bool include_graph_events = false;
     bool first_frame = true;
     frontend_resources::performance::ProfilingLoggingStatus profiling_logging;
+    frontend_resources::performance::ProfilingCallbacks profiling_callbacks;
 #ifdef MEGAMOL_USE_NVPERF
     nv::perf::profiler::ReportGeneratorOpenGL nvperf;
 #endif

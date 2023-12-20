@@ -300,7 +300,6 @@ void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
     TracyGpuCollect;
     FrameMark;
 #endif
-    frame_stats_cb_->mark_frame();
 }
 
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
@@ -794,8 +793,6 @@ void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> re
 
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
         resources[2].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
-
-    m_windowManipulation.frame_stats_cb_ = &resources[3].getResource<frontend_resources::FrameStatsCallbacks>();
 
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
     frontend_resources::ModuleGraphSubscription debug_helper_subscription("OpenGL Debug Helper");

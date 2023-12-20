@@ -262,9 +262,18 @@ int main(const int argc, const char** argv) {
     };
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
+#ifdef MEGAMOL_USE_PROFILING
+    megamol::frontend_resources::performance::ProfilingCallbacks profiling_callbacks;
+#endif
+    megamol::frontend_resources::FrameStatsCallbacks frame_stats_callbacks;
+
     const auto render_next_frame = [&]() -> bool {
 #ifdef MEGAMOL_USE_TRACY
+        // I guess this is redundant now
         ZoneScopedNC("RenderNextFrame", 0x0000FF);
+#endif
+#ifdef MEGAMOL_USE_PROFILING
+        profiling_callbacks.mark_frame_start();
 #endif
 
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
@@ -294,6 +303,10 @@ int main(const int argc, const char** argv) {
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
+        frame_stats_callbacks.mark_frame();
+#ifdef MEGAMOL_USE_PROFILING
+        profiling_callbacks.mark_frame_end();
+#endif
         return true;
     };
 
@@ -325,6 +338,12 @@ int main(const int argc, const char** argv) {
         run_megamol = false;
         ret += 2;
     }
+
+    auto resources_map = megamol::frontend_resources::FrontendResourcesMap(services.getProvidedResources());
+#ifdef MEGAMOL_USE_PROFILING
+    profiling_callbacks = resources_map.get<megamol::frontend_resources::performance::ProfilingCallbacks>();
+#endif
+    frame_stats_callbacks = resources_map.get<megamol::frontend_resources::FrameStatsCallbacks>();
 
     // load project files via lua
     if (run_megamol && graph_resources_ok)
