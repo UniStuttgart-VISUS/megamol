@@ -110,8 +110,9 @@ void FrameStatistics_Service::mark_frame_cb() {
     // drop the oldest, add the newest: moving sum
     m_frame_times_sum = m_frame_times_sum + m_statistics.last_rendered_frame_time_microseconds.count() - oldest_sample;
     // which do we want, the one where an expensive first frame creates a visible perf dip that is not mitigated by "zero cost" previous frames...
-    m_statistics.last_averaged_mspf = static_cast<double>(m_frame_times_sum) /
-                                      static_cast<double>(std::min(m_frame_times_micro.size(), m_statistics.rendered_frames_count)) / 1000.0;
+    m_statistics.last_averaged_mspf =
+        static_cast<double>(m_frame_times_sum) /
+        static_cast<double>(std::min(m_frame_times_micro.size(), m_statistics.rendered_frames_count)) / 1000.0;
     // ... or the old implementation, that starts averaging over the whole buffer from the beginning
     //m_statistics.last_averaged_mspf = static_cast<double>(m_frame_times_sum) /
     //                                  static_cast<double>(m_frame_times_micro.size()) / 1000.0;

@@ -31,7 +31,7 @@ bool Profiling_Service::init(void* configPtr) {
 
     _providedResourceReferences = {{frontend_resources::performance::PerformanceManager_Req_Name, _perf_man},
         {frontend_resources::performance::Performance_Logging_Status_Req_Name, profiling_logging},
-    {frontend_resources::performance::Profiling_Callbacks_Req_Name, profiling_callbacks}};
+        {frontend_resources::performance::Profiling_Callbacks_Req_Name, profiling_callbacks}};
 
     const auto conf = static_cast<Config*>(configPtr);
     profiling_logging.active = conf->autostart_profiling;

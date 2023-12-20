@@ -269,7 +269,6 @@ int main(const int argc, const char** argv) {
 
     const auto render_next_frame = [&]() -> bool {
 #ifdef MEGAMOL_USE_TRACY
-        // I guess this is redundant now
         ZoneScopedNC("RenderNextFrame", 0x0000FF);
 #endif
 #ifdef MEGAMOL_USE_PROFILING
