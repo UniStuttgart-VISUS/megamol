@@ -103,6 +103,7 @@ void Profiling_Service::log_graph_event(
     if (this->include_graph_events) {
         const auto frames_rendered = static_cast<int64_t>(
             _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
+        //core::utility::log::Log::DefaultLog.WriteInfo("profiler logging graph change for frame %u", frames_rendered);
         log_buffer << frames_rendered << ";Graph;" << parent << ";" << name << ";" << comment << ";0;0;GraphEvent;;;"
                    << std::endl;
     }

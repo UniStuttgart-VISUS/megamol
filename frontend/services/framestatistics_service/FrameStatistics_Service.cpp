@@ -90,7 +90,8 @@ void FrameStatistics_Service::mark_frame_cb() {
     auto now = std::chrono::steady_clock::time_point::clock::now();
 
     ++m_statistics.rendered_frames_count;
-    core::utility::log::Log::DefaultLog.WriteInfo("rendered_frames_count is now %u", m_statistics.rendered_frames_count);
+    //core::utility::log::Log::DefaultLog.WriteInfo(
+    //    "rendered_frames_count is now %u", m_statistics.rendered_frames_count);
 
     m_statistics.elapsed_program_time_milliseconds =
         std::chrono::duration_cast<std::chrono::milliseconds>(now - m_program_start_time);
