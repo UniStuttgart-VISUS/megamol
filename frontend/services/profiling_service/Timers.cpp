@@ -59,7 +59,7 @@ void Itimer::end() {
 bool cpu_timer::start(frame_type frame) {
     const auto ret = Itimer::start(frame);
     //printf("starting region %s as %u\n", parent_name(this->conf).c_str(), current_global_index);
-    timer_region r{time_point::clock::now(), time_point(), current_global_index++};
+    timer_region r{time_point::clock::now(), time_point(), current_global_index++, frame};
     regions.emplace_back(r);
     return ret;
 }
@@ -110,7 +110,8 @@ void gl_timer::end() {
 
 void gl_timer::wait_for_frame_end(frame_type frame) {
     auto lq = get_last_query(choose_collect_buffer(frame));
-    //printf("blocking for frame %u (buffer %u)\n", frame, choose_collect_buffer(frame));
+    core::utility::log::Log::DefaultLog.WriteInfo(
+        "blocking for frame %u (buffer %u)\n", frame, choose_collect_buffer(frame));
     int done = (lq == 0);
     //if (done)
     //    printf("actually, not blocking\n");
@@ -145,13 +146,13 @@ void gl_timer::collect(frame_type frame) {
     GLuint64 start_time, end_time;
     // we are already informed which frame we need to *really* collect
     const auto frame_to_collect = choose_launch_buffer(frame);
-    //printf("collecting frame %u (buffer %u)\n", frame, frame_to_collect);
+    core::utility::log::Log::DefaultLog.WriteInfo("collecting frame %u (buffer %u)\n", frame, frame_to_collect);
     for (uint32_t index = 0; index < frame_data[frame_to_collect].query_index; ++index) {
         const auto& [start, end] = frame_data[frame_to_collect].query_ids[index];
         glGetQueryObjectui64v(start, GL_QUERY_RESULT, &start_time);
         glGetQueryObjectui64v(end, GL_QUERY_RESULT, &end_time);
         timer_region r{time_point{std::chrono::nanoseconds(start_time)}, time_point{std::chrono::nanoseconds(end_time)},
-            frame_data[frame_to_collect].frame_indices[index]};
+            frame_data[frame_to_collect].frame_indices[index], frame_data[frame_to_collect].frame};
         //printf("got %lld - %lld\n", r.start.time_since_epoch().count(), r.end.time_since_epoch().count());
         regions.emplace_back(r);
     }

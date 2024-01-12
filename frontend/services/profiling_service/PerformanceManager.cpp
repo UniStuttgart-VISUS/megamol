@@ -159,7 +159,7 @@ handle_type PerformanceManager::add_timer(std::unique_ptr<Itimer> t) {
 
 void PerformanceManager::startFrame(frame_type frame) {
     current_frame = frame;
-    //core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: starting frame %u", frame);
+    core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: starting frame %u", frame);
     //gl_timer::last_query = 0;
     gl_timer::new_frame(frame);
     // we never reset the global counter!
@@ -180,6 +180,9 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
     e.parent = tconf.timer_config::parent;
 
     for (uint32_t region = 0; region < timer->Itimer::get_region_count(); ++region) {
+        if (timer->Itimer::get_frame(region) != the_frame.frame) {
+            throw std::runtime_error("PerformanceManager: frame inconsistency detected in region!");
+        }
         e.frame_index = region;
         e.api = tconf.basic_timer_config::api;
 
@@ -195,7 +198,7 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
 }
 
 void PerformanceManager::endFrame(frame_type frame) {
-    //core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: ending frame %u", frame);
+    core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: ending frame %u", frame);
 #ifdef MEGAMOL_USE_OPENGL
     stop_timer(whole_frame_gl);
 

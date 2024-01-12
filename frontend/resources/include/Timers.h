@@ -49,6 +49,7 @@ static constexpr const char* parent_type_string(parent_type parent) {
 struct timer_region {
     time_point start, end;
     int64_t global_index = -1;
+    frame_type frame;
 };
 
 struct basic_timer_config {
@@ -105,6 +106,9 @@ public:
     }
     [[nodiscard]] int64_t get_global_index(uint32_t index) const {
         return regions[index].global_index;
+    }
+    [[nodiscard]] frame_type get_frame(uint32_t index) const {
+        return regions[index].frame;
     }
     [[nodiscard]] frame_type get_start_frame() const {
         return start_frame;
