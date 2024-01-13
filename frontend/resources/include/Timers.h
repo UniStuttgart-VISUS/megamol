@@ -50,6 +50,7 @@ struct timer_region {
     time_point start, end;
     int64_t global_index = -1;
     frame_type frame;
+    std::array<uint32_t, 2> qids;
 };
 
 struct basic_timer_config {
@@ -75,6 +76,7 @@ struct timer_entry {
     parent_type parent = parent_type::BUILTIN;
     time_point start, end, duration;
     int64_t global_index = 0;
+    frame_type frame = 0;
 };
 
 struct frame_info {
@@ -97,6 +99,9 @@ public:
     }
     [[nodiscard]] uint32_t get_region_count() const {
         return regions.size();
+    }
+    [[nodiscard]] bool get_ready(uint32_t index) const {
+        return regions[index].qids[0] == 0 && regions[index].qids[1] == 0;
     }
     [[nodiscard]] time_point get_start(uint32_t index) const {
         return regions[index].start;
@@ -166,33 +171,9 @@ public:
 
     void end() override;
 
-    static void wait_for_frame_end(frame_type frame);
-
 protected:
     void collect(frame_type frame) override;
     void clear(frame_type frame) override;
-
-private:
-    static void new_frame(frame_type frame);
-    static uint32_t get_last_query(int32_t chosen_frame_buffer);
-
-    static int32_t choose_launch_buffer(frame_type frame);
-    static int32_t choose_collect_buffer(frame_type frame);
-
-
-    std::pair<uint32_t, uint32_t> assert_query(uint32_t index);
-
-    // we need all of these for even and odd frames, I think
-    struct frame_data_ {
-        std::vector<std::pair<uint32_t, uint32_t>> query_ids;
-        std::vector<int32_t> frame_indices;
-        uint32_t query_index = 0;
-        frame_type frame = 0;
-        //inline static uint32_t last_query = 0;
-    };
-    std::array<frame_data_, 2> frame_data;
-    inline static std::array<uint32_t, 2> last_query = {0, 0};
-    int32_t frame_chooser = 0;
 };
 
 } // namespace megamol::frontend_resources::performance

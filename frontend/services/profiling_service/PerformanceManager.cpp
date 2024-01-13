@@ -161,7 +161,6 @@ void PerformanceManager::startFrame(frame_type frame) {
     current_frame = frame;
     core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: starting frame %u", frame);
     //gl_timer::last_query = 0;
-    gl_timer::new_frame(frame);
     // we never reset the global counter!
     //current_global_index = 0;
     start_timer(whole_frame_cpu);
@@ -179,10 +178,19 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
     e.user_index = tconf.basic_timer_config::user_index;
     e.parent = tconf.timer_config::parent;
 
+    core::utility::log::Log::DefaultLog.WriteInfo(
+        "PerformanceManager: pushing data for frame %u with %u regions", the_frame.frame, timer->Itimer::get_region_count());
+
     for (uint32_t region = 0; region < timer->Itimer::get_region_count(); ++region) {
-        if (timer->Itimer::get_frame(region) != the_frame.frame) {
+        /*if (timer->Itimer::get_frame(region) != the_frame.frame) {
             throw std::runtime_error("PerformanceManager: frame inconsistency detected in region!");
-        }
+        }*/
+
+        if (!timer->Itimer::get_ready(region))
+            continue;
+
+        e.frame = timer->Itimer::get_frame(region);
+
         e.frame_index = region;
         e.api = tconf.basic_timer_config::api;
 
@@ -201,10 +209,6 @@ void PerformanceManager::endFrame(frame_type frame) {
     core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: ending frame %u", frame);
 #ifdef MEGAMOL_USE_OPENGL
     stop_timer(whole_frame_gl);
-
-    if (!subscribers.empty()) {
-        gl_timer::wait_for_frame_end(frame);
-    }
 #endif
     stop_timer(whole_frame_cpu);
 
@@ -231,8 +235,8 @@ void PerformanceManager::endFrame(frame_type frame) {
             }
         }
 
-        frame_info& previous_frame = frame_double_buffer[(current_frame + 1) % 2];
-        frame_info& this_frame = frame_double_buffer[current_frame % 2];
+        //frame_info& previous_frame = frame_double_buffer[(current_frame + 1) % 2];
+        frame_info& this_frame = frame_double_buffer[0];
 
         this_frame.frame = current_frame;
         this_frame.entries.clear();
@@ -240,7 +244,7 @@ void PerformanceManager::endFrame(frame_type frame) {
         for (auto& [key, timer] : timers) {
             if (timer->conf.api == query_api::OPENGL) {
                 // get GPU stuff from previous frame
-                collect_timer_and_append(timer.get(), previous_frame);
+                collect_timer_and_append(timer.get(), this_frame);
             } else {
                 // currently equivalent to if (timer->conf.api == query_api::CPU)
                 // get CPU stuff from current frame
@@ -250,11 +254,15 @@ void PerformanceManager::endFrame(frame_type frame) {
 
         // report previous frame, because only that is complete
         // this causes a 1-frame delay in the GUI but that should be OK
-        std::sort(previous_frame.entries.begin(), previous_frame.entries.end(),
+        std::sort(this_frame.entries.begin(), this_frame.entries.end(),
             [](const timer_entry& a, const timer_entry& b) { return a.global_index < b.global_index; });
 
+         /*megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "PerformanceManager: in frame %u report on frame %u while current frame is %u", frame, previous_frame.frame,
+            current_frame);*/
+
         for (auto& subscriber : subscribers) {
-            subscriber(previous_frame);
+            subscriber(this_frame);
         }
     }
 }
