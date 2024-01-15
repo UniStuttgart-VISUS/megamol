@@ -8,8 +8,11 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
+
+#include "GLQuery.h"
 
 namespace megamol::frontend_resources::performance {
 
@@ -50,7 +53,8 @@ struct timer_region {
     time_point start, end;
     int64_t global_index = -1;
     frame_type frame;
-    std::array<uint32_t, 2> qids;
+    std::array<std::shared_ptr<GLQuery>, 2> qids;
+    bool ready = false;
 };
 
 struct basic_timer_config {
@@ -101,7 +105,7 @@ public:
         return regions.size();
     }
     [[nodiscard]] bool get_ready(uint32_t index) const {
-        return regions[index].qids[0] == 0 && regions[index].qids[1] == 0;
+        return regions[index].ready;
     }
     [[nodiscard]] time_point get_start(uint32_t index) const {
         return regions[index].start;
@@ -174,6 +178,9 @@ public:
 protected:
     void collect(frame_type frame) override;
     void clear(frame_type frame) override;
+
+private:
+    bool first_frame_ = true;
 };
 
 } // namespace megamol::frontend_resources::performance
