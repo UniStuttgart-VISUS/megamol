@@ -106,7 +106,7 @@ private:
     frame_type current_frame = 0;
     std::vector<update_callback> subscribers;
 
-    std::array<frame_info, 2> frame_double_buffer;
+    frame_info frame_buffer;
 
 #ifdef MEGAMOL_USE_OPENGL
     handle_type whole_frame_gl;

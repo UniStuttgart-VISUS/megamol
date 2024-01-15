@@ -178,8 +178,8 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
     e.user_index = tconf.basic_timer_config::user_index;
     e.parent = tconf.timer_config::parent;
 
-    core::utility::log::Log::DefaultLog.WriteInfo(
-        "PerformanceManager: pushing data for frame %u with %u regions", the_frame.frame, timer->Itimer::get_region_count());
+    core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: pushing data for frame %u with %u regions",
+        the_frame.frame, timer->Itimer::get_region_count());
 
     for (uint32_t region = 0; region < timer->Itimer::get_region_count(); ++region) {
         /*if (timer->Itimer::get_frame(region) != the_frame.frame) {
@@ -235,34 +235,18 @@ void PerformanceManager::endFrame(frame_type frame) {
             }
         }
 
-        //frame_info& previous_frame = frame_double_buffer[(current_frame + 1) % 2];
-        frame_info& this_frame = frame_double_buffer[0];
-
-        this_frame.frame = current_frame;
-        this_frame.entries.clear();
+        frame_buffer.frame = current_frame;
+        frame_buffer.entries.clear();
 
         for (auto& [key, timer] : timers) {
-            if (timer->conf.api == query_api::OPENGL) {
-                // get GPU stuff from previous frame
-                collect_timer_and_append(timer.get(), this_frame);
-            } else {
-                // currently equivalent to if (timer->conf.api == query_api::CPU)
-                // get CPU stuff from current frame
-                collect_timer_and_append(timer.get(), this_frame);
-            }
+            collect_timer_and_append(timer.get(), frame_buffer);
         }
 
-        // report previous frame, because only that is complete
-        // this causes a 1-frame delay in the GUI but that should be OK
-        std::sort(this_frame.entries.begin(), this_frame.entries.end(),
+        std::sort(frame_buffer.entries.begin(), frame_buffer.entries.end(),
             [](const timer_entry& a, const timer_entry& b) { return a.global_index < b.global_index; });
 
-         /*megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "PerformanceManager: in frame %u report on frame %u while current frame is %u", frame, previous_frame.frame,
-            current_frame);*/
-
         for (auto& subscriber : subscribers) {
-            subscriber(this_frame);
+            subscriber(frame_buffer);
         }
     }
 }
