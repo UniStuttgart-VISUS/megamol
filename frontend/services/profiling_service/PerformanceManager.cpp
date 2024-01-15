@@ -186,7 +186,7 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
             throw std::runtime_error("PerformanceManager: frame inconsistency detected in region!");
         }*/
 
-        if (!timer->Itimer::get_ready(region))
+        if (!timer->Itimer::is_finished(region))
             continue;
 
         e.frame = timer->Itimer::get_frame(region);

@@ -54,7 +54,7 @@ struct timer_region {
     int64_t global_index = -1;
     frame_type frame;
     std::array<std::shared_ptr<GLQuery>, 2> qids;
-    bool ready = false;
+    bool finished = false;
 };
 
 struct basic_timer_config {
@@ -104,8 +104,8 @@ public:
     [[nodiscard]] uint32_t get_region_count() const {
         return regions.size();
     }
-    [[nodiscard]] bool get_ready(uint32_t index) const {
-        return regions[index].ready;
+    [[nodiscard]] bool is_finished(uint32_t index) const {
+        return regions[index].finished;
     }
     [[nodiscard]] time_point get_start(uint32_t index) const {
         return regions[index].start;
@@ -168,8 +168,6 @@ class gl_timer : public Itimer {
 
 public:
     gl_timer(const timer_config& cfg) : Itimer(cfg) {}
-
-    ~gl_timer() override;
 
     bool start(frame_type frame) override;
 

@@ -68,14 +68,12 @@ bool cpu_timer::start(frame_type frame) {
 void cpu_timer::end() {
     Itimer::end();
     regions.back().end = time_point::clock::now();
-    regions.back().ready = true;
+    regions.back().finished = true;
 }
 
 void cpu_timer::clear(frame_type frame) {
     this->regions.clear();
 }
-
-gl_timer::~gl_timer() {}
 
 bool gl_timer::start(frame_type frame) {
     const auto new_frame = Itimer::start(frame);
@@ -88,10 +86,6 @@ bool gl_timer::start(frame_type frame) {
         regions.emplace_back(r);
         first_frame_ = false;
     }
-    //#ifdef MEGAMOL_USE_OPENGL
-    //    glGenQueries(2, r.qids.data());
-    //    glQueryCounter(r.qids[0], GL_TIMESTAMP);
-    //#endif
 
     return new_frame;
 }
@@ -102,13 +96,10 @@ void gl_timer::end() {
     regions.back().qids[1] = std::make_shared<GLQuery>();
     regions.back().qids[1]->Counter();
 
-    timer_region r{time_point(), time_point(), current_global_index++, regions.back().frame + 1, {nullptr, nullptr}, false};
+    timer_region r{
+        time_point(), time_point(), current_global_index++, regions.back().frame + 1, {nullptr, nullptr}, false};
     r.qids[0] = regions.back().qids[1];
     regions.emplace_back(r);
-
-    //#ifdef MEGAMOL_USE_OPENGL
-    //    glQueryCounter(regions.back().qids[1], GL_TIMESTAMP);
-    //#endif
 }
 
 //int32_t gl_timer::choose_launch_buffer(frame_type frame) {
@@ -138,12 +129,9 @@ void gl_timer::collect(frame_type frame) {
         if (r.start == time_point()) {
             if (r.qids[0])
                 start_time = r.qids[0]->GetNW();
-            //glGetQueryObjectui64v(r.qids[0], GL_QUERY_RESULT_NO_WAIT, &start_time);
 
             if (start_time) {
                 r.start = time_point{std::chrono::nanoseconds(start_time)};
-                /*glDeleteQueries(1, &r.qids[0]);
-                r.qids[0] = 0;*/
                 start_ready = true;
             }
         } else {
@@ -152,24 +140,22 @@ void gl_timer::collect(frame_type frame) {
         if (r.end == time_point()) {
             if (r.qids[1])
                 end_time = r.qids[1]->GetNW();
-            //glGetQueryObjectui64v(r.qids[1], GL_QUERY_RESULT_NO_WAIT, &end_time);
 
             if (end_time) {
                 r.end = time_point{std::chrono::nanoseconds(end_time)};
-                /*glDeleteQueries(1, &r.qids[1]);
-                r.qids[1] = 0;*/
                 end_ready = true;
             }
         } else {
             end_ready = true;
         }
-        r.ready = start_ready && end_ready;
+        r.finished = start_ready && end_ready;
     }
 #endif
 }
 
 void gl_timer::clear(frame_type frame) {
-    regions.erase(std::remove_if(regions.begin(), regions.end(), [](auto const& r) { return r.ready; }), regions.end());
+    regions.erase(
+        std::remove_if(regions.begin(), regions.end(), [](auto const& r) { return r.finished; }), regions.end());
 }
 
 } // namespace megamol::frontend_resources::performance
