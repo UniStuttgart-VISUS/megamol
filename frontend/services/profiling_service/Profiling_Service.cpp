@@ -61,7 +61,7 @@ bool Profiling_Service::init(void* configPtr) {
             if (frame > 0) {
                 auto& _frame_stats =
                     _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
-                log_buffer << (frame - 1) << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
+                log_buffer << frame << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
                            << _frame_stats.last_rendered_frame_time_microseconds.count() / 1000.0 << std::endl;
             }
             for (auto& e : fi.entries) {
