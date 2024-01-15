@@ -102,25 +102,6 @@ void gl_timer::end() {
     regions.emplace_back(r);
 }
 
-//int32_t gl_timer::choose_launch_buffer(frame_type frame) {
-//#ifdef TIMERS_USE_DOUBLE_BUFFERING
-//    // the "one" frame
-//    return frame % 2;
-//#else
-//    // this should be identical to the basic implementation
-//    return 0;
-//#endif
-//}
-//
-//int32_t gl_timer::choose_collect_buffer(frame_type frame) {
-//#ifdef TIMERS_USE_DOUBLE_BUFFERING
-//    // the "other" frame (see above)
-//    return (frame + 1) % 2;
-//#else
-//    return 0;
-//#endif
-//}
-
 void gl_timer::collect(frame_type frame) {
 #ifdef MEGAMOL_USE_OPENGL
     for (auto& r : regions) {
