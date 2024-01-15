@@ -104,10 +104,10 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             Header header(width, height);
 
             //TODO only init used vectors
-            std::vector<float> rPixels(width * height);
-            std::vector<float> gPixels(width * height);
-            std::vector<float> bPixels(width * height);
-            std::vector<float> aPixels(width * height);
+            std::vector<half> rPixels(width * height);
+            std::vector<half> gPixels(width * height);
+            std::vector<half> bPixels(width * height);
+            std::vector<half> aPixels(width * height);
 
             int inputTextureChNum = formatToChannelNumber(interm->getFormat());
 
@@ -116,15 +116,18 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             switch (interm->getType()) {
             case GL_FLOAT:
                 headerType = PixelType::FLOAT;
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenEXRWriter: Float input texture detected");
                 break;
             case GL_HALF_FLOAT:
                 headerType = PixelType::HALF;
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenEXRWriter: Half input texture detected");
                 break;
             case GL_INT:
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenEXRWriter: Int input texture detected");
                 headerType = PixelType::UINT;
             }
             //TODO remove
-            headerType = PixelType::FLOAT;
+            //headerType = PixelType::FLOAT;
 
             m_channel_name_red.Param<core::param::StringParam>()->SetGUIVisible(false);
             m_channel_name_green.Param<core::param::StringParam>()->SetGUIVisible(false);
@@ -149,9 +152,9 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             gPixels.resize(width * height);
             bPixels.resize(width * height);
             aPixels.resize(width * height);
-            std::vector<float> rawPixels(width * height * inputTextureChNum);
+            std::vector<half> rawPixels(width * height * inputTextureChNum);
             interm->bindTexture();
-            glGetTextureImage(interm->getName(), 0, interm->getFormat(), GL_FLOAT,
+            glGetTextureImage(interm->getName(), 0, interm->getFormat(), interm->getType(),
                 width * height * inputTextureChNum * 4, &rawPixels[0]);
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
@@ -174,7 +177,7 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
                 header.channels().insert(
                     m_channel_name_red.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_red.Param<core::param::StringParam>()->Value(),
-                    Slice(PixelType::FLOAT, (char*)&rPixels[0], sizeof(rPixels[0]), sizeof(rPixels[0]) * width));
+                    Slice(headerType, (char*)&rPixels[0], sizeof(rPixels[0]), sizeof(rPixels[0]) * width));
             }
             if (m_channel_name_green.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 2) {
                 header.channels().insert(

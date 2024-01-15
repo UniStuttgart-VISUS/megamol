@@ -95,7 +95,7 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
      *  When input file changes EnumParams need to be updated.
      *  Updates in actual mapping and output texture are handled later.
      */
-    if (m_filename_slot.IsDirty()) {
+    if (m_filename_slot.IsDirty() || type_mapping_slot.IsDirty()) {
         m_filename_slot.ResetDirty();
 
         red_mapping_slot.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -191,7 +191,7 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
         alpha_mapping_slot.ResetDirty();
 
         setRelevantParamState();
-        
+
 
         m_output_texture = readToTex2D<float>();
     }
@@ -364,13 +364,13 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
             //std::cout << y << " " << x << std::endl;
             switch (numOutChannels) {
             case 4:
-                flippedPixels[numOutChannels * ((height - y-1) * width + x) + 3] = aPixels[y][x];
+                flippedPixels[numOutChannels * ((height - y - 1) * width + x) + 3] = aPixels[y][x];
             case 3:
-                flippedPixels[numOutChannels * ((height - y-1) * width + x) + 2] = bPixels[y][x];
+                flippedPixels[numOutChannels * ((height - y - 1) * width + x) + 2] = bPixels[y][x];
             case 2:
-                flippedPixels[numOutChannels * ((height - y-1) * width + x) + 1] = gPixels[y][x];
+                flippedPixels[numOutChannels * ((height - y - 1) * width + x) + 1] = gPixels[y][x];
             case 1:
-                flippedPixels[numOutChannels * ((height - y-1) * width + x)] = rPixels[y][x];
+                flippedPixels[numOutChannels * ((height - y - 1) * width + x)] = rPixels[y][x];
                 break;
             }
         }

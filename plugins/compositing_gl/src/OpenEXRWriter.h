@@ -7,10 +7,10 @@
 
 #include <glowl/Texture2D.hpp>
 
-#include "mmstd_gl/ModuleGL.h"
-#include "OpenEXR/openexr.h"
-#include "OpenEXR/ImfRgbaFile.h"
 #include "Imath/ImathBox.h"
+#include "OpenEXR/ImfRgbaFile.h"
+#include "OpenEXR/openexr.h"
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 class OpenEXRWriter : public mmstd_gl::ModuleGL {
@@ -77,12 +77,11 @@ private:
     int formatToChannelNumber(GLenum format);
 
     /**
-    * \brief Method sets interface to only allow editing of the last currently named channel or adding a new one.
-    * This prevents cases like Red and alpha channel being mapped without mapping green and blue.
-    * 
-    * 
-    */
+     * \brief Method sets interface to only allow editing of the last currently named channel or adding a new one.
+     * This prevents cases like Red and alpha channel being mapped without mapping green and blue.
+     *
+     *
+     */
     void setRelevantParamState();
-
 };
 } // namespace megamol::compositing_gl
