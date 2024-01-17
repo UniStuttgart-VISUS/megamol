@@ -347,7 +347,7 @@ bool megamol::gui::LogConsole::Draw() {
     ImGui::BeginChild("log_messages",
         ImVec2(0.0f,
             ImGui::GetWindowHeight() - (3.0f * ImGui::GetFrameHeightWithSpacing()) - (3.0f * style.FramePadding.y)),
-        true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar);
+        ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
     auto message_count = 0ull;
     if (this->win_log_level != megamol::core::utility::log::Log::log_level::none) {
