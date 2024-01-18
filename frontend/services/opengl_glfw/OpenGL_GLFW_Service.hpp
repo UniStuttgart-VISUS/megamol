@@ -11,11 +11,15 @@
 #include "AbstractFrontendService.hpp"
 #include "Framebuffer_Events.h"
 #include "GL_STUB.h"
+#include "GamepadState.h"
 #include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
 #include "OpenGL_Helper.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
+
+#include <memory>
+#include <unordered_map>
 
 namespace megamol::frontend {
 
@@ -103,6 +107,9 @@ public:
     // framebuffer events
     void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
+    // gamepad/joystick events
+    void glfw_onJoystickConnect_func(const int jid, const int event);
+
 private:
     void register_glfw_callbacks();
     void do_every_second();
@@ -128,6 +135,39 @@ private:
     std::vector<FrontendResource> m_renderResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    using GamepadState = megamol::frontend_resources::GamepadState;
+
+    struct Joystick {
+        int id = -1;
+
+        bool is_gamepad = false;
+        std::string gamepad_name;
+
+        GamepadState gamepad_state;
+
+        std::string joystick_name;
+        std::string joystick_GUID;
+
+        float* joystick_axes = nullptr;            // owned by GLFW
+        unsigned char* joystick_buttons = nullptr; // owned by GLFW
+        unsigned char* joystick_hats = nullptr;    // owned by GLFW
+
+        int joystick_axes_count = 0;
+        int joystick_buttons_count = 0;
+        int joystick_hats_count = 0;
+
+        int gamepad_axes_count = 0;
+        int gamepad_buttons_count = 0;
+
+        void* user_ptr = nullptr;
+    };
+    std::unordered_map<int, Joystick> m_joysticks;
+    std::optional<Joystick> make_joystick(const int jid);
+    int poll_joystick_state(Joystick& j);
+    void poll_joysticks();
+
+    frontend_resources::Connected_Gamepads m_connected_gamepads_resource;
 };
 
 } // namespace megamol::frontend

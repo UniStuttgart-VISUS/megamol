@@ -106,37 +106,35 @@ void view_poke_rendering(AbstractViewInterface& view, megamol::frontend_resource
 
     bool camera_state_mutable_by_view = true;
 
-    if (renderinput.camera_view_projection_parameters_override.has_value()) {
-        auto& proj_parameters = renderinput.camera_view_projection_parameters_override.value();
-
-        auto& in_pose = proj_parameters.pose;
-        auto cam_pose = Camera::Pose{
+    if (renderinput.camera_view_pose_parameters_override.has_value()) {
+        auto& in_pose = renderinput.camera_view_pose_parameters_override.value();
+        camera.setPose(Camera::Pose{
             in_pose.position, in_pose.direction, in_pose.up,
-            glm::cross(in_pose.direction, in_pose.up) // right, as computed by Camrea
-        };
+            glm::cross(in_pose.direction, in_pose.up), // right, as computed by Camrea
+        });
+    }
 
-        auto& in_proj = proj_parameters.projection;
+    if (renderinput.camera_view_projection_parameters_override.has_value()) {
+        auto& in_proj = renderinput.camera_view_projection_parameters_override.value();
         switch (in_proj.type) {
-        case RenderInput::CameraViewProjectionParameters::ProjectionType::PERSPECTIVE:
-            camera = Camera{cam_pose,
-                Camera::PerspectiveParameters{
-                    in_proj.fovy,       // FieldOfViewY fovy;    //< vertical field of view
-                    in_proj.aspect,     // AspectRatio aspect;   //< aspect ratio of the camera frustrum
-                    in_proj.near_plane, // NearPlane near_plane; //< near clipping plane
-                    in_proj.far_plane,  // FarPlane far_plane;   //< far clipping plane
-                    tile // ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
-                }};
+        case RenderInput::CameraProjection::ProjectionType::PERSPECTIVE:
+            camera.setPerspectiveProjection(Camera::PerspectiveParameters{
+                in_proj.fovy,       // FieldOfViewY fovy;    //< vertical field of view
+                in_proj.aspect,     // AspectRatio aspect;   //< aspect ratio of the camera frustrum
+                in_proj.near_plane, // NearPlane near_plane; //< near clipping plane
+                in_proj.far_plane,  // FarPlane far_plane;   //< far clipping plane
+                tile,               // ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
+            });
             break;
-        case RenderInput::CameraViewProjectionParameters::ProjectionType::ORTHOGRAPHIC:
-            camera = Camera{cam_pose,
-                Camera::OrthographicParameters{
-                    in_proj
-                        .fovy, // FrustrumHeight frustrum_height; //< vertical size of the orthographic frustrum in world space
-                    in_proj.aspect,     // AspectRatio aspect;             //< aspect ratio of the camera frustrum
-                    in_proj.near_plane, // NearPlane near_plane;           //< near clipping plane
-                    in_proj.far_plane,  // FarPlane far_plane;             //< far clipping plane
-                    tile // ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
-                }};
+        case RenderInput::CameraProjection::ProjectionType::ORTHOGRAPHIC:
+            camera.setOrthographicProjection(Camera::OrthographicParameters{
+                in_proj
+                    .fovy, // FrustrumHeight frustrum_height; //< vertical size of the orthographic frustrum in world space
+                in_proj.aspect,     // AspectRatio aspect;             //< aspect ratio of the camera frustrum
+                in_proj.near_plane, // NearPlane near_plane;           //< near clipping plane
+                in_proj.far_plane,  // FarPlane far_plane;             //< far clipping plane
+                tile,               // ImagePlaneTile image_plane_tile; //< tile on the image plane displayed by camera
+            });
             break;
         }
 

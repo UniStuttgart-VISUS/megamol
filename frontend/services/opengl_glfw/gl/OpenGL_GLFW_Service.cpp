@@ -316,6 +316,16 @@ void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fulls
 
 namespace megamol::frontend {
 
+// to register joysticks from the glfw callback with the opengl/glfw service, we sadly need this detour via the static ptr
+static megamol::frontend::OpenGL_GLFW_Service* glfw_service_ptr = nullptr;
+
+static void glfw_joystick_callback(const int jid, const int event) {
+    if (!glfw_service_ptr)
+        return;
+
+    glfw_service_ptr->glfw_onJoystickConnect_func(jid, event);
+}
+
 struct OpenGL_GLFW_Service::PimplData {
     GLFWwindow* glfwContextWindowPtr{nullptr};
     OpenGL_GLFW_Service::Config config; // keep copy of user-provided config
@@ -552,6 +562,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     if (m_pimpl->config.windowPlacement.pos || m_pimpl->config.windowPlacement.fullScreen)
         ::glfwSetWindowPos(window_ptr, m_pimpl->config.windowPlacement.x, m_pimpl->config.windowPlacement.y);
 
+    // static ptr to glfw service to register connected joysticks
+    // this ptr is used in the joystick registration callback
+    glfw_service_ptr = this;
     register_glfw_callbacks();
 
     int vsync = (m_pimpl->config.enableVsync) ? 1 : 0;
@@ -576,16 +589,21 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void { update_glfw_mouse_cursors(cursor_id); };
 
     // make the events and resources managed/provided by this service available to the outside world
-    m_renderResourceReferences = {{frontend_resources::KeyboardEvents_Req_Name, m_keyboardEvents},
+    m_renderResourceReferences = {
+        {frontend_resources::KeyboardEvents_Req_Name, m_keyboardEvents},
         {frontend_resources::MouseEvents_Req_Name, m_mouseEvents},
         {frontend_resources::WindowEvents_Req_Name, m_windowEvents},
-        //{"FramebufferEvents", m_framebufferEvents}, // pushes own events into global FramebufferEvents
         {frontend_resources::OpenGL_Context_Req_Name, m_opengl_context},
         {frontend_resources::WindowManipulation_Req_Name, m_windowManipulation},
-        {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
+        {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper},
+        {"Connected_Gamepads", m_connected_gamepads_resource},
+    };
 
     m_requestedResourcesNames = {
-        "FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
+        "FrameStatistics",
+        "FramebufferEvents",
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
+    };
 
     m_pimpl->last_time = std::chrono::system_clock::now();
 
@@ -700,6 +718,15 @@ void OpenGL_GLFW_Service::register_glfw_callbacks() {
     ::glfwSetFramebufferSizeCallback(window_ptr,
         [](GLFWwindow* wnd, int widthpx, int heightpx) { that->glfw_onFramebufferSize_func(widthpx, heightpx); });
 
+    ::glfwSetJoystickCallback(glfw_joystick_callback);
+    // GLFW does not issue callbacks for joypads already present upon startup
+    // check present joysticks manually
+    for (auto i = GLFW_JOYSTICK_1; i <= GLFW_JOYSTICK_LAST; i++) {
+        if (::glfwJoystickPresent(i) == GLFW_TRUE && m_joysticks.find(i) == m_joysticks.end()) {
+            this->glfw_onJoystickConnect_func(i, GLFW_CONNECTED);
+        }
+    }
+
     // set current framebuffer state as pending event
     glfwGetFramebufferSize(
         window_ptr, &this->m_framebufferEvents.previous_state.width, &this->m_framebufferEvents.previous_state.height);
@@ -735,6 +762,8 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
     // note at this point there is no GL context active.
     // event struct get filled via GLFW callbacks when new input events come in during glfwPollEvents()
     ::glfwPollEvents(); // may only be called from main thread
+
+    poll_joysticks();
 
     m_windowEvents.time = glfwGetTime();
     // from GLFW Docs:
@@ -871,6 +900,152 @@ void OpenGL_GLFW_Service::glfw_onMouseCursorEnter_func(const bool entered) {
 
 void OpenGL_GLFW_Service::glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {
     this->m_framebufferEvents.size_events.emplace_back(frontend_resources::FramebufferState{widthpx, heightpx});
+}
+
+#define checked(X)    \
+    if (!(X)) {       \
+        return -j.id; \
+    }
+
+// if joystick is not connected anymore, returns negative number
+// else returns current id of joystick
+int OpenGL_GLFW_Service::poll_joystick_state(Joystick& j) {
+    checked(j.joystick_axes = const_cast<float*>(glfwGetJoystickAxes(j.id, &j.joystick_axes_count)));
+    checked(j.joystick_buttons = const_cast<unsigned char*>(glfwGetJoystickButtons(j.id, &j.joystick_buttons_count)));
+    checked(j.joystick_hats = const_cast<unsigned char*>(glfwGetJoystickHats(j.id, &j.joystick_hats_count)));
+
+    j.gamepad_state.hats.resize(j.joystick_hats_count);
+    std::memcpy(j.gamepad_state.hats.data(), j.joystick_hats, sizeof(j.joystick_hats[0]) * j.joystick_hats_count);
+
+    if (j.is_gamepad) {
+        GLFWgamepadstate state;
+        j.is_gamepad = (glfwGetGamepadState(j.id, &state) == GLFW_TRUE);
+
+        j.gamepad_axes_count = sizeof(state.axes) / sizeof(state.axes[0]);
+        j.gamepad_buttons_count = sizeof(state.buttons) / sizeof(state.buttons[0]);
+
+        j.gamepad_state.axes.resize(j.gamepad_axes_count);
+        std::memcpy(j.gamepad_state.axes.data(), state.axes, sizeof(state.axes));
+
+        j.gamepad_state.buttons.resize(j.gamepad_buttons_count);
+        std::memcpy(j.gamepad_state.buttons.data(), state.buttons, sizeof(state.buttons));
+    }
+
+    return j.id;
+}
+#undef checked
+
+std::optional<OpenGL_GLFW_Service::Joystick> OpenGL_GLFW_Service::make_joystick(const int jid) {
+    // during setup of the joystick the device may disconnect again, e.g. due to bluetooth or cable problems
+    // so every time we query GLFW for info we need to make sure whether the device is still connected
+    // and optionally return no joystick at all
+    Joystick j;
+
+    j.id = jid;
+
+    auto jname = glfwGetJoystickName(jid);
+    if (!jname)
+        return std::nullopt;
+
+    j.joystick_name = std::string{jname};
+
+    auto jguid = glfwGetJoystickGUID(jid);
+    if (!jguid)
+        return std::nullopt;
+
+    j.joystick_GUID = std::string{jguid};
+
+    j.is_gamepad = (glfwJoystickIsGamepad(jid) == GLFW_TRUE);
+
+    if (j.is_gamepad) {
+        auto gname = glfwGetGamepadName(jid);
+        if (!gname)
+            return std::nullopt;
+
+        j.gamepad_name = std::string{gname};
+        j.gamepad_state.name = j.gamepad_name;
+        j.gamepad_state.guid = j.joystick_GUID;
+    }
+
+    if (glfwJoystickPresent(jid) != GLFW_TRUE)
+        return std::nullopt;
+
+    if (poll_joystick_state(j) < 0)
+        return std::nullopt;
+
+    if (j.is_gamepad) {
+        if (j.joystick_axes_count != j.gamepad_axes_count)
+            log("Joystick axes count " + std::to_string(j.joystick_axes_count) + " but Gamepad axes count " +
+                std::to_string(j.gamepad_axes_count));
+
+        if (j.joystick_buttons_count != j.gamepad_buttons_count)
+            log("Joystick buttons count " + std::to_string(j.joystick_buttons_count) + " but Gamepad buttons count " +
+                std::to_string(j.gamepad_buttons_count));
+    }
+
+    return j;
+}
+
+void OpenGL_GLFW_Service::poll_joysticks() {
+    std::vector<int> erase_ids;
+
+    for (auto& kj : m_joysticks) {
+        auto& j = kj.second;
+
+        // controller may be marked as disconnected by joystick callback
+        if (j.id >= 0)
+            j.id = poll_joystick_state(j);
+
+        // joystick turned out to be disconnected during state polling or by GLFW callback
+        // dont erase elemets during traversal of the map, delete later
+        if (j.id < 0)
+            erase_ids.push_back(kj.first);
+    }
+
+    for (auto id : erase_ids) {
+        auto& j = m_joysticks.at(id);
+
+        if (j.is_gamepad)
+            m_connected_gamepads_resource.gamepads.remove_if(
+                [&](GamepadState const& p) { return p.guid == j.joystick_GUID; });
+
+        m_joysticks.erase(id);
+    }
+}
+
+void OpenGL_GLFW_Service::glfw_onJoystickConnect_func(const int jid, const int event) {
+    if (event == GLFW_CONNECTED) {
+        auto j = make_joystick(jid);
+        if (!j.has_value())
+            return;
+
+        this->m_joysticks.insert({jid, std::move(j.value())});
+
+        const auto& joystick = m_joysticks.at(jid);
+        log("connected joystick " + std::to_string(jid) + ": " + joystick.joystick_name + "  GUID " +
+            joystick.joystick_GUID);
+        log("joystick axes: " + std::to_string(joystick.joystick_axes_count) +
+            ", buttons: " + std::to_string(joystick.joystick_buttons_count) +
+            ", hats: " + std::to_string(joystick.joystick_hats_count));
+        if (joystick.is_gamepad) {
+            log("joystick is gamepad: " + joystick.gamepad_name);
+            m_connected_gamepads_resource.gamepads.push_back(std::reference_wrapper{joystick.gamepad_state});
+        }
+    } else if (event == GLFW_DISCONNECTED) {
+        if (m_joysticks.count(jid) > 0) {
+            auto& j = m_joysticks.at(jid);
+            log("removed joystick " + std::to_string(jid) + ": " + j.joystick_name +
+                (j.is_gamepad ? "/" + j.gamepad_name : ""));
+
+            // polling GLFW joystick state (in the main loop) checks whether the joystick is still available
+            // if the joystick turns out to be disconnected, GLFW triggers this disconnect-callback within the state polling callback
+            // this would lead to the size of the joystick map to change (invalidating memory) during the actual looping through joysticks!
+            // so here, instead of deleting it, we mark a joystick for deletion, and it gets deleted in the state polling loop
+            j.id = -1;
+        }
+    } else {
+        log_error("GLFW joystick event unknown: " + std::to_string(event));
+    }
 }
 
 void OpenGL_GLFW_Service::glfw_onWindowSize_func(
