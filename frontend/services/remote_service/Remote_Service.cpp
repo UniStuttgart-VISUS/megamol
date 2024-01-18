@@ -12,6 +12,7 @@
 #include "GUIRegisterWindow.h" // register UI window for remote control
 #include "HeadNode.hpp"
 #include "MPI_Context.h"
+#include "ModuleGraphSubscription.h"
 #include "MpiNode.hpp"
 #include "RenderNode.hpp"
 #include "mmcore/MegaMolGraph.h"
@@ -116,10 +117,12 @@ bool Remote_Service::init(const Config& config) {
 
     this->m_providedResourceReferences = {};
 
-    this->m_requestedResourcesNames = {"MegaMolGraph",
-        "ExecuteLuaScript" // std::function<std::tuple<bool,std::string>(std::string const&)>
-        ,
-        "optional<GUIRegisterWindow>"};
+    this->m_requestedResourcesNames = {
+        "MegaMolGraph",
+        "ExecuteLuaScript", // std::function<std::tuple<bool,std::string>(std::string const&)>
+        "optional<GUIRegisterWindow>",
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
+    };
 
     m_do_remote_things = std::function{[&]() {}};
 
@@ -196,9 +199,82 @@ const std::vector<std::string> Remote_Service::getRequestedResourceNames() const
 void Remote_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     this->m_requestedResourceReferences = resources;
 
+    auto& graph_subscription_registry =
+        m_requestedResourceReferences[3].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>();
+    subscribe_megamol_graph(
+        (void*)&const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(graph_subscription_registry));
+
     if (m_config.role == Role::HeadNode) {
         remote_control_window();
     }
+}
+
+void Remote_Service::subscribe_megamol_graph(void* registry) {
+    frontend_resources::ModuleGraphSubscription subscription("Remote_Service");
+
+    auto lua_cmd = [](std::string const& cmd, std::string const& args) -> std::string {
+        return cmd + "(" + args + ")";
+    };
+
+    auto cmd = [this, lua_cmd](std::string const& cmd, std::string const& args) {
+        this->m_headnode_remote_control.subscription_graph_commands += ("\n" + lua_cmd(cmd, args));
+    };
+
+    auto q = [](std::string const& str) { return std::string{"[=[" + str + "]=]"}; };
+
+    subscription.AddModule = [cmd, q](core::ModuleInstance_t const& module_inst) {
+        cmd("mmCreateModule", q(module_inst.request.className) + ", " + q(module_inst.request.id));
+        return true;
+    };
+    subscription.DeleteModule = [cmd, q](core::ModuleInstance_t const& module_inst) {
+        cmd("mmDeleteModule", q(module_inst.request.id));
+        return true;
+    };
+    subscription.RenameModule = [cmd, q](std::string const& old_name, std::string const& new_name,
+                                    core::ModuleInstance_t const& module_inst) {
+        cmd("mmRenameModule", q(old_name) + ", " + q(new_name));
+        return true;
+    };
+
+    subscription.AddParameters =
+        [&](std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
+            return true;
+        };
+    subscription.RemoveParameters =
+        [&](std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
+            return true;
+        };
+    subscription.ParameterChanged =
+        [cmd, q](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
+            std::string const& new_value) {
+            cmd("mmSetParamValue", q(std::string{param_slot->FullName().PeekBuffer()}) + ", " + q(new_value));
+            return true;
+        };
+
+    subscription.ParameterPresentationChanged =
+        [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot) { return true; };
+
+    subscription.AddCall = [cmd, q](core::CallInstance_t const& call_inst) {
+        cmd("mmCreateCall",
+            q(call_inst.request.className) + ", " + q(call_inst.request.from) + ", " + q(call_inst.request.to));
+        return true;
+    };
+    subscription.DeleteCall = [cmd, q](core::CallInstance_t const& call_inst) {
+        cmd("mmDeleteCall", q(call_inst.request.from) + ", " + q(call_inst.request.to));
+        return true;
+    };
+
+    subscription.EnableEntryPoint = [cmd, q](core::ModuleInstance_t const& module_inst) {
+        cmd("mmSetGraphEntryPoint", q(module_inst.request.id));
+        return true;
+    };
+    subscription.DisableEntryPoint = [cmd, q](core::ModuleInstance_t const& module_inst) {
+        cmd("mmRemoveGraphEntryPoint", q(module_inst.request.id));
+        return true;
+    };
+
+    auto& sub_registry = *reinterpret_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry*>(registry);
+    sub_registry.subscribe(subscription);
 }
 
 void Remote_Service::updateProvidedResources() {}
@@ -220,6 +296,7 @@ void Remote_Service::postGraphRender() {}
 void Remote_Service::do_headnode_things() {
     auto& graph = m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
 
+    // one-time commands
     for (auto command : m_headnode_remote_control.commands_queue)
         switch (command) {
         case HeadNodeRemoteControl::Command::ClearGraph:
@@ -234,7 +311,12 @@ void Remote_Service::do_headnode_things() {
         default:
             break;
         }
+
     m_headnode_remote_control.commands_queue.clear();
+
+    auto graph_changes = m_headnode_remote_control.sync_graph_subscription();
+    if (!graph_changes.empty())
+        head_send_message(graph_changes);
 
     auto split_module_names = [&](std::string const& modules_list_string, auto& module_list) {
         if (modules_list_string.empty())
@@ -301,6 +383,19 @@ void Remote_Service::add_headnode_remote_command(HeadNodeRemoteControl::Command 
     case HeadNodeRemoteControl::Command::SendLuaCommand:
         m_headnode_remote_control.lua_command = value;
         break;
+    case HeadNodeRemoteControl::Command::SyncGraphChanges:
+        m_headnode_remote_control.sync_graph_subscription = [&]() {
+            auto r = m_headnode_remote_control.subscription_graph_commands;
+            m_headnode_remote_control.subscription_graph_commands.clear();
+            return std::move(r);
+        };
+        break;
+    case HeadNodeRemoteControl::Command::DontSyncGraphChanges:
+        m_headnode_remote_control.sync_graph_subscription = [this]() {
+            m_headnode_remote_control.subscription_graph_commands.clear();
+            return std::string{};
+        };
+        break;
     default:
         break;
     }
@@ -322,6 +417,7 @@ void Remote_Service::remote_control_window() {
         "Head Node Remote Control", [&](megamol::gui::AbstractWindow::BasicConfig& window_config) {
             window_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
 
+            static bool sync_graph_subscription = false;
             static bool keep_sending_params = false;
             static std::string param_send_modules = "all";
             static std::string lua_command = "mmQuit()";
@@ -351,10 +447,17 @@ void Remote_Service::remote_control_window() {
                 keep_sending_params = false;
             }
 
+            if (ImGui::RadioButton("Sync Graph Subscription", sync_graph_subscription)) {
+                sync_graph_subscription = !sync_graph_subscription;
+                add_headnode_remote_command(sync_graph_subscription
+                                                ? HeadNodeRemoteControl::Command::SyncGraphChanges
+                                                : HeadNodeRemoteControl::Command::DontSyncGraphChanges);
+            }
+
             if (ImGui::RadioButton("Sync Module Params", keep_sending_params)) {
                 keep_sending_params = !keep_sending_params;
-                keep_sending_params ? add_headnode_remote_command(HeadNodeRemoteControl::Command::KeepSendingParams)
-                                    : add_headnode_remote_command(HeadNodeRemoteControl::Command::DontSendParams);
+                add_headnode_remote_command(keep_sending_params ? HeadNodeRemoteControl::Command::KeepSendingParams
+                                                                : HeadNodeRemoteControl::Command::DontSendParams);
             }
             ImGui::SameLine();
             if (ImGui::InputText("Sync Modules", &param_send_modules, ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -432,6 +535,7 @@ void Remote_Service::execute_message(std::vector<char> const& message) {
 
     if (!std::get<0>(result)) {
         log_error("Error executing Lua: " + std::get<1>(result));
+        log_error("Error Script: " + commands_string);
     }
 }
 

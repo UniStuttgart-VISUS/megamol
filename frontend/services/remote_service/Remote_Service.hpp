@@ -101,6 +101,8 @@ private:
             CloseHeadNode,
             ClearGraph,
             SendGraph,
+            SyncGraphChanges,
+            DontSyncGraphChanges,
             KeepSendingParams,
             DontSendParams,
             SetParamSendingModules,
@@ -111,6 +113,12 @@ private:
         std::string modules_to_send_params_of = "all";
         std::string lua_command = "";
 
+        std::function<std::string()> sync_graph_subscription = [this]() {
+            this->subscription_graph_commands.clear();
+            return std::string{};
+        };
+        std::string subscription_graph_commands;
+
         std::vector<Command> commands_queue;
     };
     HeadNodeRemoteControl m_headnode_remote_control;
@@ -118,6 +126,8 @@ private:
     void remote_control_window();
 
     bool start_headnode(bool start_or_shutdown = true);
+
+    void subscribe_megamol_graph(void* registry);
 };
 
 std::string handle_remote_session_config(

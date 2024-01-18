@@ -659,7 +659,9 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
         }
 
         // remove empty files: enables to start megamol without config file
-        std::remove_if(config_files.begin(), config_files.end(), [](auto const& file) { return file.empty(); });
+        config_files.erase(
+            std::remove_if(config_files.begin(), config_files.end(), [](auto const& file) { return file.empty(); }),
+            config_files.end());
 
         // check remaining files exist
         files_exist(config_files, "Config file");
