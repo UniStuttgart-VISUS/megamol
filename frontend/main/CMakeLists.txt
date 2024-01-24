@@ -14,6 +14,15 @@ if (MSVC)
   set(resource_files "${CMAKE_CURRENT_SOURCE_DIR}/extra/metadata.rc")
 endif ()
 
+# Icons
+find_package(CMakeRC CONFIG REQUIRED)
+set(icons
+  "${CMAKE_CURRENT_SOURCE_DIR}/extra/icon_016.bin"
+  "${CMAKE_CURRENT_SOURCE_DIR}/extra/icon_032.bin"
+  "${CMAKE_CURRENT_SOURCE_DIR}/extra/icon_048.bin"
+  "${CMAKE_CURRENT_SOURCE_DIR}/extra/icon_256.bin")
+cmrc_add_resource_library(megamol_icons WHENCE "${CMAKE_CURRENT_SOURCE_DIR}/extra" ${icons})
+
 # Add target
 add_executable(megamol ${header_files} ${source_files} "${resource_files}")
 target_include_directories(megamol PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -21,6 +30,7 @@ target_link_libraries(megamol
   PRIVATE
     core
     frontend_services
+    megamol_icons
     cxxopts::cxxopts
     ${CMAKE_DL_LIBS})
 

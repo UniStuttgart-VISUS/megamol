@@ -7,6 +7,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "AbstractFrontendService.hpp"
 #include "Framebuffer_Events.h"
@@ -30,6 +31,12 @@ struct WindowPlacement {
     bool hidden = false;
 };
 
+struct WindowIcon {
+    int width;
+    int height;
+    const char* pixels;
+};
+
 class OpenGL_GLFW_Service final : public AbstractFrontendService {
     using KeyboardEvents = megamol::frontend_resources::KeyboardEvents;
     using MouseEvents = megamol::frontend_resources::MouseEvents;
@@ -43,8 +50,9 @@ public:
         int versionMinor = 6;
         std::string windowTitlePrefix = "MegaMol";
         WindowPlacement windowPlacement{}; // window position, glfw creation hints // TODO: sane defaults??
-        bool enableKHRDebug = true;        // max error reporting
-        bool enableVsync = false;          // max frame rate
+        std::vector<WindowIcon> windowIcons{};
+        bool enableKHRDebug = true; // max error reporting
+        bool enableVsync = false;   // max frame rate
         bool glContextCoreProfile = false;
         bool forceWindowSize = false;
     };

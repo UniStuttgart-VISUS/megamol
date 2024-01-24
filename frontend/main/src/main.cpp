@@ -4,6 +4,8 @@
  * All rights reserved.
  */
 
+#include <cmrc/cmrc.hpp>
+
 #include "CLIConfigParsing.h"
 #include "CUDA_Service.hpp"
 #include "Command_Service.hpp"
@@ -49,6 +51,8 @@ static void log_error(std::string const& text) {
 }
 
 void loadPlugins(megamol::frontend_resources::PluginsResource& pluginsRes);
+
+CMRC_DECLARE(megamol_icons);
 
 int main(const int argc, const char** argv) {
 #ifdef MEGAMOL_USE_TRACY
@@ -98,6 +102,11 @@ int main(const int argc, const char** argv) {
     openglConfig.windowPlacement.noCursor = config.window_mode & RuntimeConfig::WindowMode::nocursor;
     openglConfig.windowPlacement.hidden = config.window_mode & RuntimeConfig::WindowMode::hidden;
     openglConfig.forceWindowSize = config.force_window_size;
+    static const auto icons_fs = cmrc::megamol_icons::get_filesystem();
+    openglConfig.windowIcons.push_back({16, 16, icons_fs.open("icon_016.bin").begin()});
+    openglConfig.windowIcons.push_back({32, 32, icons_fs.open("icon_032.bin").begin()});
+    openglConfig.windowIcons.push_back({48, 48, icons_fs.open("icon_048.bin").begin()});
+    openglConfig.windowIcons.push_back({256, 256, icons_fs.open("icon_256.bin").begin()});
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
