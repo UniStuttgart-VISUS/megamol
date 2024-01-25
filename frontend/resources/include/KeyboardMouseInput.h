@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <cstdint>
 #include <iterator>
 #include <ostream>
 #include <sstream> // stringstream
