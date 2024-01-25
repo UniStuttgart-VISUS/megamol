@@ -1,0 +1,12 @@
+diff --git a/include/thinks/obj_io/obj_io.h b/include/thinks/obj_io/obj_io.h
+index 0ea8ec7..19e3dcf 100644
+--- a/include/thinks/obj_io/obj_io.h
++++ b/include/thinks/obj_io/obj_io.h
+@@ -5,6 +5,7 @@
+ #pragma once
+ 
+ #include <array>
++#include <cstdint>
+ #include <exception>
+ #include <iostream>
+ #include <sstream>
