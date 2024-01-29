@@ -94,35 +94,35 @@ typedef struct {
 } wkf_timer;
 
 void wkf_timer_start(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     t->starttime = GetTickCount();
 }
 
 void wkf_timer_stop(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     t->endtime = GetTickCount();
 }
 
 double wkf_timer_time(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     double ttime;
 
-    ttime = ((double)(t->endtime - t->starttime)) / 1000.0;
+    ttime = ((double) (t->endtime - t->starttime)) / 1000.0;
 
     return ttime;
 }
 
 double wkf_timer_start_time(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     double ttime;
-    ttime = ((double)(t->starttime)) / 1000.0;
+    ttime = ((double) (t->starttime)) / 1000.0;
     return ttime;
 }
 
 double wkf_timer_stop_time(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     double ttime;
-    ttime = ((double)(t->endtime)) / 1000.0;
+    ttime = ((double) (t->endtime)) / 1000.0;
     return ttime;
 }
 
@@ -135,34 +135,34 @@ typedef struct {
 } wkf_timer;
 
 void wkf_timer_start(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     gettimeofday(&t->starttime, &t->tz);
 }
 
 void wkf_timer_stop(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     gettimeofday(&t->endtime, &t->tz);
 }
 
 double wkf_timer_time(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     double ttime;
-    ttime = ((double)(t->endtime.tv_sec - t->starttime.tv_sec)) +
-            ((double)(t->endtime.tv_usec - t->starttime.tv_usec)) / 1000000.0;
+    ttime = ((double) (t->endtime.tv_sec - t->starttime.tv_sec)) +
+            ((double) (t->endtime.tv_usec - t->starttime.tv_usec)) / 1000000.0;
     return ttime;
 }
 
 double wkf_timer_start_time(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     double ttime;
-    ttime = ((double)t->starttime.tv_sec) + ((double)t->starttime.tv_usec) / 1000000.0;
+    ttime = ((double) t->starttime.tv_sec) + ((double) t->starttime.tv_usec) / 1000000.0;
     return ttime;
 }
 
 double wkf_timer_stop_time(wkf_timerhandle v) {
-    wkf_timer* t = (wkf_timer*)v;
+    wkf_timer* t = (wkf_timer*) v;
     double ttime;
-    ttime = ((double)t->endtime.tv_sec) + ((double)t->endtime.tv_usec) / 1000000.0;
+    ttime = ((double) t->endtime.tv_sec) + ((double) t->endtime.tv_usec) / 1000000.0;
     return ttime;
 }
 
@@ -171,7 +171,7 @@ double wkf_timer_stop_time(wkf_timerhandle v) {
 // system independent routines to create and destroy timers
 wkf_timerhandle wkf_timer_create(void) {
     wkf_timer* t;
-    t = (wkf_timer*)malloc(sizeof(wkf_timer));
+    t = (wkf_timer*) malloc(sizeof(wkf_timer));
     memset(t, 0, sizeof(wkf_timer));
     return t;
 }
@@ -188,7 +188,7 @@ double wkf_timer_timenow(wkf_timerhandle v) {
 /// initialize status message timer
 wkfmsgtimer* wkf_msg_timer_create(double updatetime) {
     wkfmsgtimer* mt;
-    mt = (wkfmsgtimer*)malloc(sizeof(wkfmsgtimer));
+    mt = (wkfmsgtimer*) malloc(sizeof(wkfmsgtimer));
     if (mt != NULL) {
         mt->timer = wkf_timer_create();
         mt->updatetime = updatetime;

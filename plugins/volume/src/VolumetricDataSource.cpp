@@ -231,8 +231,7 @@ bool megamol::volume::VolumetricDataSource::onFileNameChanged(core::param::Param
     }
 
     /* Read the header. */
-    vislib::StringA fileName(
-        this->paramFileName.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+    vislib::StringA fileName(this->paramFileName.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
     if (::datRaw_readHeader(fileName.PeekBuffer(), this->fileInfo, nullptr) != FALSE) {
         Log::DefaultLog.WriteInfo(_T("Successfully loaded dat file %hs."), fileName.PeekBuffer());
 
@@ -534,7 +533,7 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
 
                     /* Request follow-up frames. */
                     for (size_t i = 1; (i < this->metadata.NumberOfFrames) && (i < this->buffers.Count() - 1); ++i) {
-                        unsigned int frameID = (c.FrameID() + i) % (unsigned int)this->metadata.NumberOfFrames;
+                        unsigned int frameID = (c.FrameID() + i) % (unsigned int) this->metadata.NumberOfFrames;
                         if (this->bufferForFrameIDUnsafe(frameID) < 0) {
                             BufferSlot* bs = nullptr;
                             if (!unusedBuffers.IsEmpty()) {
@@ -623,7 +622,7 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
 
                     for (size_t i = loadStart; i < dst.Count(); ++i) {
                         size_t idx = i % dst.Count();
-                        this->buffers[idx]->FrameID = c.FrameID() + (unsigned int)i;
+                        this->buffers[idx]->FrameID = c.FrameID() + (unsigned int) i;
                         this->buffers[idx]->Buffer.AssertSize(frameSize);
                         this->buffers[idx]->status.store(BUFFER_STATUS_READY);
                         dst[i] = this->buffers[idx]->Buffer.At(0);
@@ -742,7 +741,7 @@ bool megamol::volume::VolumetricDataSource::onGetExtents(core::Call& call) {
          */
 
         /* Complete request. */
-        c.SetExtent((unsigned int)this->metadata.NumberOfFrames, this->metadata.Origin[0], this->metadata.Origin[1],
+        c.SetExtent((unsigned int) this->metadata.NumberOfFrames, this->metadata.Origin[0], this->metadata.Origin[1],
             this->metadata.Origin[2], this->metadata.Extents[0] + this->metadata.Origin[0],
             this->metadata.Extents[1] + this->metadata.Origin[1], this->metadata.Extents[2] + this->metadata.Origin[2]);
 

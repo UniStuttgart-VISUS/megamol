@@ -106,7 +106,7 @@ bool VMDDXLoader::getData(core::Call& call) {
     // Generate filename based on frame idx and pattern
     vislib::StringA frameFile;
     if (this->filenamesDigits == 0) {
-        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str();
     } else {
         std::stringstream ss;
         ss.width(this->filenamesDigits);
@@ -291,7 +291,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
     // Setup data array
     this->imgdata.SetNumberOfPieces(1);
     this->imgdata.SetPointData(
-        (const char*)this->data.Peek(), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
+        (const char*) this->data.Peek(), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
 
     Log::DefaultLog.WriteInfo("%s: ... done (%f s)", this->ClassName(),
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
@@ -333,7 +333,7 @@ void VMDDXLoader::readDataAscii2Float(char* buffIn, float* buffOut, SIZE_T sizeO
 void VMDDXLoader::scanFolder() {
     using namespace vislib;
 
-    TString filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+    TString filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str();
 
     vislib::sys::File testFile;
 

@@ -206,8 +206,7 @@ bool VTILoader::getExtent(core::Call& call) {
     // Check parameters
     if (this->filenameSlot.IsDirty()) { // Files have to be loaded first
         this->filenameSlot.ResetDirty();
-        if (!this->loadFile(
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str())) {
+        if (!this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str())) {
             printf("Loading file failed");
             return false;
         }
@@ -384,7 +383,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
 #endif
 
     // Read data file to char buffer
-    char* buffer = new char[(unsigned int)fileSize];
+    char* buffer = new char[(unsigned int) fileSize];
     if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY))
         return false;
@@ -406,7 +405,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
         while (*pt_end != '>') {
             pt_end++;
         }
-        entity = vislib::StringA(pt + 1, (int)(pt_end - pt));
+        entity = vislib::StringA(pt + 1, (int) (pt_end - pt));
 
         // Parse and store relevant attributes
         if (entity.StartsWith("VTKFile")) {
@@ -420,7 +419,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
             dataType = dataType.Substring(0, dataType.Find("\"", 0));
             if (dataType != vislib::StringA("ImageData")) {
                 Log::DefaultLog.WriteError("%s: Unable to load file '%s' (wrong 'type' attribute)", this->ClassName(),
-                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(),
                     fileSize); // DEBUG
                 return false;
             }
@@ -432,7 +431,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
             if (version.Length() > 3) {
                 Log::DefaultLog.WriteError("%s: Unable to load file '%s' (wrong 'version' attribute)",
                     this->ClassName(),
-                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(),
                     fileSize); // DEBUG
                 return false;
             }
@@ -450,7 +449,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
             } else {
                 Log::DefaultLog.WriteError("%s: Unable to load file '%s' (wrong 'byte_order' attribute)",
                     this->ClassName(),
-                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(),
                     fileSize); // DEBUG
                 return false;
             }
@@ -574,7 +573,7 @@ void VTILoader::readDataBinary2Float(char* buffIn, float* buffOut, // TODO Other
     // TODO Decode first 8 bytes (=size of the data following in bytes)
     //pt_end +=8;
     // Decode actual data
-    Base64::Decode(pt_end, (char*)buffOut, sizeOut * sizeof(float));
+    Base64::Decode(pt_end, (char*) buffOut, sizeOut * sizeof(float));
 }
 
 
@@ -605,7 +604,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) 
     // Generate filename based on frame idx and pattern
     vislib::StringA frameFile;
     if (this->filenamesDigits == 0) {
-        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+        frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str();
     } else {
         std::stringstream ss;
         ss.width(this->filenamesDigits);
@@ -628,7 +627,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) 
 #endif // defined(VERBOSE)
 
     // Read data file to char buffer
-    char* buffer = new char[(unsigned int)fileSize];
+    char* buffer = new char[(unsigned int) fileSize];
     file.Open(
         frameFile, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY);
     file.Read(buffer, fileSize);
@@ -754,7 +753,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) 
             } else {
                 Log::DefaultLog.WriteError("%s: Unable to load file '%s' (wrong data type in data array)",
                     this->ClassName(),
-                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(),
                     fileSize); // DEBUG
                 return;
             }
@@ -777,7 +776,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) 
             } else {
                 Log::DefaultLog.WriteError("%s: Unable to load file '%s' (unsupported data format %s)",
                     this->ClassName(),
-                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
+                    this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str(),
                     format.PeekBuffer()); // DEBUG
                 return;
             }
@@ -823,13 +822,13 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame* frame, unsigned int idx) 
             if (f == protein_calls::VTKImageData::VTISOURCE_ASCII) {
                 data = new float[gridSize];
                 this->readDataAscii2Float(pt_end, data, gridSize);
-                fr->SetPointData((const char*)data, min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, name,
+                fr->SetPointData((const char*) data, min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, name,
                     1, pieceCounter - 1); // TODO Use real ID AND NUMBER OF COMPONENTS!!
             } else if (f == protein_calls::VTKImageData::VTISOURCE_BINARY) {
                 data = new float[gridSize + 1];
                 this->readDataBinary2Float(pt_end, data, gridSize);
                 const float* dataplus = data + 1;
-                fr->SetPointData((const char*)(dataplus), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT,
+                fr->SetPointData((const char*) (dataplus), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT,
                     name, numComponents, pieceCounter - 1); // TODO Use real ID AND NUMBER OF COMPONENTS!!
 
                 //                // DEBUG print texture values

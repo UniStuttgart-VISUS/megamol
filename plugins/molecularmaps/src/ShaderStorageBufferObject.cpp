@@ -61,7 +61,7 @@ void ShaderStorageBufferObject::BindAtomicCounter() {
 GLuint ShaderStorageBufferObject::GetAtomicCounterVal() {
     GLuint value;
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomic_counter_buffer);
-    GLuint* ptr = (GLuint*)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), GL_MAP_READ_BIT);
+    GLuint* ptr = (GLuint*) glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), GL_MAP_READ_BIT);
     value = ptr[0];
     glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
     return value;
@@ -72,7 +72,7 @@ GLuint ShaderStorageBufferObject::GetAtomicCounterVal() {
  */
 void ShaderStorageBufferObject::ResetAtomicCounter(GLuint p_value) {
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomic_counter_buffer);
-    GLuint* ptr = (GLuint*)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint),
+    GLuint* ptr = (GLuint*) glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint),
         GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
     ptr[0] = p_value;
     glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);

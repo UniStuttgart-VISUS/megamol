@@ -19,7 +19,9 @@ megamol::compositing_gl::TextureCombine::TextureCombine()
         , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
         , m_input_tex_0_slot(
               "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
-        , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture") {
+        , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture")
+        , out_handler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+              std::function<bool()>(std::bind(&TextureCombine::textureFormatUpdate, this))) {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Add");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Multiply");
@@ -43,6 +45,8 @@ megamol::compositing_gl::TextureCombine::TextureCombine()
 
     this->m_input_tex_1_slot.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_tex_1_slot);
+
+    this->MakeSlotAvailable(out_handler_.getFormatSelectorSlot());
 }
 
 megamol::compositing_gl::TextureCombine::~TextureCombine() {
@@ -50,29 +54,7 @@ megamol::compositing_gl::TextureCombine::~TextureCombine() {
 }
 
 bool megamol::compositing_gl::TextureCombine::create() {
-
-    auto const shader_options =
-        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-
-    try {
-        m_add_prgm = core::utility::make_glowl_shader(
-            "Compositing_textureAdd", shader_options, "compositing_gl/textureAdd.comp.glsl");
-
-        m_mult_prgm = core::utility::make_glowl_shader(
-            "Compositing_textureMultiply", shader_options, "compositing_gl/textureMultiply.comp.glsl");
-
-        m_over_prgm = core::utility::make_glowl_shader(
-            "Compositing_textureAlphaOver", shader_options, "compositing_gl/textureAlphaCompositing.comp.glsl");
-
-    } catch (std::exception& e) {
-        Log::DefaultLog.WriteError(("TextureCombine: " + std::string(e.what())).c_str());
-        return false;
-    }
-
-    glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
-    m_output_texture = std::make_shared<glowl::Texture2D>("textureCombine_output", tx_layout, nullptr);
-
-    return true;
+    return textureFormatUpdate();
 }
 
 void megamol::compositing_gl::TextureCombine::release() {}
@@ -108,8 +90,8 @@ bool megamol::compositing_gl::TextureCombine::getDataCallback(core::Call& caller
 
         if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
             m_output_texture->getHeight() != std::get<1>(texture_res)) {
-            glowl::TextureLayout tx_layout(
-                GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
+            glowl::TextureLayout tx_layout(out_handler_.getInternalFormat(), std::get<0>(texture_res),
+                std::get<1>(texture_res), 1, out_handler_.getFormat(), out_handler_.getType(), 1);
             m_output_texture->reload(tx_layout, nullptr);
         }
 
@@ -198,6 +180,32 @@ bool megamol::compositing_gl::TextureCombine::modeCallback(core::param::ParamSlo
         m_weight_0.Param<core::param::FloatParam>()->SetGUIVisible(false);
         m_weight_1.Param<core::param::FloatParam>()->SetGUIVisible(false);
     }
+
+    return true;
+}
+
+bool megamol::compositing_gl::TextureCombine::textureFormatUpdate() {
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto shader_options_flags = out_handler_.addDefinitions(shader_options);
+    try {
+        m_add_prgm = core::utility::make_glowl_shader(
+            "Compositing_textureAdd", *shader_options_flags, "compositing_gl/textureAdd.comp.glsl");
+
+        m_mult_prgm = core::utility::make_glowl_shader(
+            "Compositing_textureMultiply", *shader_options_flags, "compositing_gl/textureMultiply.comp.glsl");
+
+        m_over_prgm = core::utility::make_glowl_shader(
+            "Compositing_textureAlphaOver", *shader_options_flags, "compositing_gl/textureAlphaCompositing.comp.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("TextureCombine: " + std::string(e.what())).c_str());
+        return false;
+    }
+
+    glowl::TextureLayout tx_layout(
+        out_handler_.getInternalFormat(), 1, 1, 1, out_handler_.getFormat(), out_handler_.getType(), 1);
+    m_output_texture = std::make_shared<glowl::Texture2D>("textureCombine_output", tx_layout, nullptr);
 
     return true;
 }

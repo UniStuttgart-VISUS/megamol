@@ -652,7 +652,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     if (this->fileNameParam.IsDirty()) {
         this->fileNameParam.ResetDirty();
 
-        this->filename = this->fileNameParam.Param<param::FilePathParam>()->Value().generic_u8string();
+        this->filename = this->fileNameParam.Param<param::FilePathParam>()->Value().generic_string();
     }
     // saveKeyframesParam -----------------------------------------------------
     if (this->saveKeyframesParam.IsDirty()) {
@@ -731,14 +731,14 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
 
     // Remove all already undone actions in list
     if (!this->undoQueue.empty() && (this->undoQueueIndex >= -1)) {
-        if (this->undoQueueIndex < (int)(this->undoQueue.size() - 1)) {
+        if (this->undoQueueIndex < (int) (this->undoQueue.size() - 1)) {
             this->undoQueue.erase(this->undoQueue.begin() + (this->undoQueueIndex + 1), this->undoQueue.end());
         }
     }
 
     this->undoQueue.emplace_back(Undo(act, kf, prev_kf, first_controlpoint, last_controlpoint,
         previous_first_controlpoint, previous_last_controlpoint));
-    this->undoQueueIndex = (int)(this->undoQueue.size()) - 1;
+    this->undoQueueIndex = (int) (this->undoQueue.size()) - 1;
     retVal = true;
 
     if (!retVal) {
@@ -808,7 +808,7 @@ bool KeyframeKeeper::redoAction() {
 
     bool retVal = false;
 
-    if (!this->undoQueue.empty() && (this->undoQueueIndex < (int)(this->undoQueue.size() - 1))) {
+    if (!this->undoQueue.empty() && (this->undoQueueIndex < (int) (this->undoQueue.size() - 1))) {
 
         this->undoQueueIndex++;
         if (this->undoQueueIndex < 0) {
@@ -910,7 +910,7 @@ void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& inout_kf) {
         return;
     }
 
-    float fpsFrac = 1.0f / (float)(this->fps);
+    float fpsFrac = 1.0f / (float) (this->fps);
     float t = std::round(inout_kf.GetAnimTime() / fpsFrac) * fpsFrac;
     if (std::abs(t - std::round(t)) < (fpsFrac / 2.0)) {
         t = std::round(t);
@@ -964,7 +964,7 @@ void KeyframeKeeper::setSameSpeed() {
                                0)) { // skip checking for first keyframe (last keyframe is skipped by prior loop)
                 kfTime = kfDist / totalVelocity;
 
-                unsigned int index = static_cast<unsigned int>(floorf(((float)i / (float)this->interpolSteps)));
+                unsigned int index = static_cast<unsigned int>(floorf(((float) i / (float) this->interpolSteps)));
                 float t = this->keyframes[index - 1].GetAnimTime() + kfTime;
                 t = (t < 0.0f) ? (0.0f) : (t);
                 t = (t > this->totalAnimTime) ? (this->totalAnimTime) : (t);
@@ -1005,10 +1005,10 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
     if (this->keyframes.size() > 1) {
         for (unsigned int i = 0; i < this->keyframes.size() - 1; i++) {
             startTime = this->keyframes[i].GetAnimTime();
-            deltaTimeStep = (this->keyframes[i + 1].GetAnimTime() - startTime) / (float)s;
+            deltaTimeStep = (this->keyframes[i + 1].GetAnimTime() - startTime) / (float) s;
 
             for (unsigned int j = 0; j < s; j++) {
-                kf = this->interpolateKeyframe(startTime + deltaTimeStep * (float)j);
+                kf = this->interpolateKeyframe(startTime + deltaTimeStep * (float) j);
                 auto p = kf.GetCamera().get<view::Camera::Pose>().position;
                 this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
             }
@@ -1220,7 +1220,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         int i1 = 0;
         int i2 = 0;
         int i3 = 0;
-        int kfIdxCnt = (int)this->keyframes.size() - 1;
+        int kfIdxCnt = (int) this->keyframes.size() - 1;
         float iT = 0.0f;
         for (int i = 0; i < kfIdxCnt; i++) {
             float tMin = this->keyframes[i].GetAnimTime();

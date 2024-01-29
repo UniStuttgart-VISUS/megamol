@@ -130,7 +130,7 @@ bool OSPRayMeshGLGeometry::readData(megamol::core::Call& call) {
                 case geocalls_gl::CallTriMeshDataGL::Mesh::DT_BYTE:
                     _color.reserve(vertexCount * 4);
                     for (unsigned int i = 0; i < 3 * obj.GetVertexCount(); i++) {
-                        _color.push_back((float)obj.GetColourPointerByte()[i] / 255.0f);
+                        _color.push_back((float) obj.GetColourPointerByte()[i] / 255.0f);
                         if ((i + 1) % 3 == 0) {
                             _color.push_back(1.0f);
                         }

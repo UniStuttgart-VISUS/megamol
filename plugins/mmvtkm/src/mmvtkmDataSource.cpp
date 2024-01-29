@@ -223,7 +223,7 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
 
             for (int i = 0; i < numElements; ++i) {
-                std::vector<int> labels = {(int)nodeA[i], (int)nodeB[i], (int)nodeC[i], (int)nodeD[i]};
+                std::vector<int> labels = {(int) nodeA[i], (int) nodeB[i], (int) nodeC[i], (int) nodeD[i]};
                 std::vector<vtkm::Id> indexBuffer(4);
 
                 bool notFound = false;

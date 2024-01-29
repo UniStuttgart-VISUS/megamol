@@ -24,16 +24,25 @@
 
 #include <variant>
 
+#include "CompositingOutHandler.h"
 #include <glm/glm.hpp>
 #include <glowl/Sampler.hpp>
 #include <glowl/Texture2DView.hpp>
 #include <glowl/glowl.h>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd_gl/ModuleGL.h"
+
+#include "glowl/Sampler.hpp"
+#include "glowl/Texture2DView.hpp"
+#include "glowl/glowl.h"
+
+#include <glm/glm.hpp>
+
 
 namespace megamol::compositing_gl {
 
@@ -358,6 +367,13 @@ private:
     bool settingsCallback(core::param::ParamSlot& slot);
     bool ssaoModeCallback(core::param::ParamSlot& slot);
 
+    /**
+     * \brief Updates texture format variables and recompiles shaders.
+     *
+     * @return 'true' if successfully updated, 'false' otherwise
+     */
+    bool textureFormatUpdate();
+
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timers_;
@@ -502,6 +518,8 @@ private:
 
     /** Parameter for selecting the ssao sample count */
     megamol::core::param::ParamSlot ps_ssao_sample_cnt_;
+
+    CompositingOutHandler out_format_handler_;
 
     bool settings_have_changed_;
     bool slot_is_active_;

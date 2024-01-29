@@ -370,7 +370,7 @@ private:
             //            printf("%c\n", buffPt[len1]);
             len1++;
         }
-        vislib::StringA line(buffPt, (int)len1);
+        vislib::StringA line(buffPt, (int) len1);
         return line;
     }
 
@@ -394,7 +394,7 @@ private:
             len++;
         }
         //        printf("TOKENSTR %s\n", vislib::StringA(buffPt, len).PeekBuffer());
-        return vislib::StringA(buffPt, (int)len);
+        return vislib::StringA(buffPt, (int) len);
     }
 
     /** TODO */

@@ -1421,7 +1421,7 @@ bool MapGenerator::GetMeshExtents(Call& call) {
         return false;
 
     if (this->store_new_mesh) {
-        MeshMode selected = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+        MeshMode selected = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
         geocalls_gl::CallTriMeshDataGL::Mesh themesh;
         if (selected == MeshMode::MESH_ORIGINAL) {
             themesh.SetVertexData(static_cast<uint>(this->vertices.size() / 3), this->vertices.data(),
@@ -3619,7 +3619,7 @@ bool MapGenerator::Render(core_gl::view::CallRender3DGL& call) {
         shaderReloaded = true;
     }
 
-    MeshMode meshMode = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+    MeshMode meshMode = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
     if (this->out_mesh_selection_slot.IsDirty()) {
         store_new_mesh = true;
         this->out_mesh_selection_slot.ResetDirty();

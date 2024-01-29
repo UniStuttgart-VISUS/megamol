@@ -402,7 +402,7 @@ public:
          * @return The number of data arrays.
          */
         unsigned int GetArrayCnt() {
-            return (unsigned int)this->dataArrays.Count();
+            return (unsigned int) this->dataArrays.Count();
         }
 
         /**

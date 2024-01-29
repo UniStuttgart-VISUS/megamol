@@ -140,7 +140,7 @@ public:
                 nBitsPerElement = 8;
                 break;
             }
-            size_t memSize = (size_t)ceil(nElements * nComponents * nBitsPerElement / 8);
+            size_t memSize = (size_t) ceil(nElements * nComponents * nBitsPerElement / 8);
 
             // (Re)allocate memory if necessary
             if (this->allocated < memSize) {

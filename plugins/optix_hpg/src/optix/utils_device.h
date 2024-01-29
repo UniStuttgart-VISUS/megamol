@@ -104,7 +104,7 @@ typedef struct Ray {
 
 template<typename T>
 inline __device__ T const& getProgramData() {
-    return *(T const*)optixGetSbtDataPointer();
+    return *(T const*) optixGetSbtDataPointer();
 }
 
 
@@ -130,7 +130,7 @@ inline __device__ void* getPerRayDataPointer() {
 
 template<typename T>
 inline __device__ T& getPerRayData() {
-    return *(T*)getPerRayDataPointer();
+    return *(T*) getPerRayDataPointer();
 }
 
 /** Faceforward
@@ -300,7 +300,7 @@ inline __device__ void lighting(PerRayData& prd, glm::vec3 const& geo_col, glm::
         float3 Pn = make_float3(P.x, P.y, P.z);
         float3 Ln = make_float3(L.x, L.y, L.z);
         unsigned int occluded = 0;
-        optixTrace(prd.world, Pn, Ln, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask)-1,
+        optixTrace(prd.world, Pn, Ln, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask) -1,
             OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, 2, 1, occluded);
 
         if (!occluded) {

@@ -225,9 +225,9 @@ inline void vec_scale(float* a, float b, const float* c) {
 
 /// a = b*c
 inline void vec_scale(float* a, float b, const double* c) {
-    a[0] = b * (float)c[0];
-    a[1] = b * (float)c[1];
-    a[2] = b * (float)c[2];
+    a[0] = b * (float) c[0];
+    a[1] = b * (float) c[1];
+    a[2] = b * (float) c[2];
 }
 
 /// a = -b

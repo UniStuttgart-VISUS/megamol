@@ -19,29 +19,14 @@
 #include <utility>
 #include <vector>
 
-namespace {
-using Label_ = std::uint16_t;
-using Timestamp_ = std::uint16_t;
-using TimeLabelPair = std::pair<Timestamp_, Label_>;
-} // namespace
-
-namespace std {
-template<>
-struct hash<TimeLabelPair> {
-    inline std::size_t operator()(const TimeLabelPair& val) const {
-        return megamol::ImageSeries::util::computeHash(val.first, val.second);
-    }
-};
-} // namespace std
-
 namespace megamol::ImageSeries::graph {
 
 class GraphData2D {
 public:
     using NodeID = std::size_t;
     using Pixel = std::uint32_t;
-    using Label = Label_;
-    using Timestamp = Timestamp_;
+    using Label = std::uint16_t;
+    using Timestamp = std::uint16_t;
 
     struct Rect {
         int x1 = 0;
@@ -230,7 +215,7 @@ public:
     Edge& getEdge(NodeID from, NodeID to);
     const Edge& getEdge(NodeID from, NodeID to) const;
 
-    void removeEdge(NodeID from, NodeID to);
+    void removeEdge(NodeID from, NodeID to, NodeID keep = -1);
     void removeEdge(const Edge& edge);
 
     // Lazy removal

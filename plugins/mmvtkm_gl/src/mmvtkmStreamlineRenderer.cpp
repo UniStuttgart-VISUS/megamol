@@ -86,7 +86,7 @@ void megamol::mmvtkm_gl::mmvtkmStreamlineRenderer::updateRenderTaskCollection(
         for (int i = 0; i < batch_meshes.size(); ++i) {
             auto const& shader = material_collection_->getMaterials().begin()->second.shader_program;
 
-            std::string ghostIdentifier = (std::string)this->FullName() + "ghostplane";
+            std::string ghostIdentifier = (std::string) this->FullName() + "ghostplane";
             std::vector<std::string>::iterator it =
                 std::find(identifiers[i].begin(), identifiers[i].end(), ghostIdentifier.c_str());
 

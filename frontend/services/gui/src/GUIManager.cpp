@@ -469,7 +469,7 @@ bool GUIManager::OnChar(unsigned int codePoint) {
     ImGuiIO& io = ImGui::GetIO();
     io.ClearInputCharacters();
     if (codePoint > 0 && codePoint < 0x10000) {
-        io.AddInputCharacter((unsigned short)codePoint);
+        io.AddInputCharacter((unsigned short) codePoint);
     }
 
     return false;
@@ -601,7 +601,7 @@ bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph& me
             }
             if (!script_filename.empty()) {
                 auto script_path = std::filesystem::u8path(script_filename);
-                graph_ptr->SetFilename(script_path.generic_u8string(), false);
+                graph_ptr->SetFilename(script_path.generic_string(), false);
             }
         }
 
@@ -1556,7 +1556,7 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
                     filename + id_separator + std::to_string(this->gui_state.screenshot_filepath_id) + ".png";
             }
         } while (megamol::core::utility::FileUtils::FileExists<std::string>(ret_filepath));
-        inout_filepath = std::filesystem::u8path(ret_filepath).generic_u8string();
+        inout_filepath = std::filesystem::u8path(ret_filepath).generic_string();
         created_filepath = true;
     }
     return created_filepath;

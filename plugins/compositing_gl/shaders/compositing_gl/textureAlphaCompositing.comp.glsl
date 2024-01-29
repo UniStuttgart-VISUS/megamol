@@ -6,7 +6,7 @@ uniform sampler2D src1_tx2D; // secondary source texture, is read from using nor
 uniform float src0_opacity;
 uniform float src1_opacity;
 
-layout(rgba16) writeonly uniform image2D tgt_tx2D;
+layout(OUTFORMAT) writeonly uniform image2D tgt_tx2D;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 

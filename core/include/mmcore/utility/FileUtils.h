@@ -138,7 +138,7 @@ bool megamol::core::utility::FileUtils::FileWithExtensionExists(const T& path_st
     try {
         if (FileUtils::FileExists<T>(path_str)) {
             auto filepath = std::filesystem::u8path(path_str);
-            return (filepath.extension().generic_u8string() == std::string("." + ext));
+            return (filepath.extension().generic_string() == std::string("." + ext));
         }
     } catch (std::filesystem::filesystem_error const& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -151,7 +151,7 @@ bool megamol::core::utility::FileUtils::FileWithExtensionExists(const T& path_st
 template<typename T>
 bool megamol::core::utility::FileUtils::FileHasExtension(const T& path_str, const std::string& ext) {
     auto filepath = std::filesystem::u8path(path_str);
-    return (filepath.extension().generic_u8string() == ext);
+    return (filepath.extension().generic_string() == ext);
 }
 
 
@@ -161,7 +161,7 @@ std::string megamol::core::utility::FileUtils::GetFileNameStem(const T& path_str
         auto filepath = std::filesystem::u8path(path_str);
         std::string filename;
         if (filepath.has_stem()) {
-            filename = filepath.stem().generic_u8string();
+            filename = filepath.stem().generic_string();
         }
         return filename;
     } catch (std::filesystem::filesystem_error const& e) {
@@ -179,9 +179,9 @@ std::string megamol::core::utility::FileUtils::GetFilePathStem(const T& path_str
         std::string filename;
         if (filepath.has_stem()) {
             if (filepath.has_parent_path()) {
-                filename = (filepath.parent_path() / filepath.stem()).generic_u8string();
+                filename = (filepath.parent_path() / filepath.stem()).generic_string();
             } else {
-                filename = filepath.stem().generic_u8string();
+                filename = filepath.stem().generic_string();
             }
         }
         return filename;
@@ -201,7 +201,7 @@ std::string megamol::core::utility::FileUtils::SearchFileRecursive(const T& sear
         std::string found_path;
         for (const auto& entry : std::filesystem::recursive_directory_iterator(search_path)) {
             if (entry.path().filename() == file_path) {
-                found_path = entry.path().generic_u8string();
+                found_path = entry.path().generic_string();
                 break;
             }
         }

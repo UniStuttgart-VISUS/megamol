@@ -176,7 +176,7 @@ inline bool __loadPPM(
             std::cerr << "__LoadPPM() : Invalid image dimensions." << std::endl;
         }
     } else {
-        *data = (unsigned char*)malloc(sizeof(unsigned char) * width * height * *channels);
+        *data = (unsigned char*) malloc(sizeof(unsigned char) * width * height * *channels);
         *w = width;
         *h = height;
     }
@@ -205,7 +205,7 @@ inline bool sdkLoadPGM(const char* file, T** data, unsigned int* w, unsigned int
     // initialize mem if necessary
     // the correct size is checked / set in loadPGMc()
     if (NULL == *data) {
-        *data = (T*)malloc(sizeof(T) * size);
+        *data = (T*) malloc(sizeof(T) * size);
     }
 
     // copy and cast data
@@ -226,7 +226,7 @@ inline bool sdkLoadPPM4(const char* file, T** data, unsigned int* w, unsigned in
         int size = *w * *h;
         // keep the original pointer
         unsigned char* idata_orig = idata;
-        *data = (T*)malloc(sizeof(T) * size * 4);
+        *data = (T*) malloc(sizeof(T) * size * 4);
         unsigned char* ptr = *data;
 
         for (int i = 0; i < size; i++) {
@@ -286,7 +286,7 @@ inline bool __savePPM(const char* file, unsigned char* data, unsigned int w, uns
 template<class T>
 inline bool sdkSavePGM(const char* file, T* data, unsigned int w, unsigned int h) {
     unsigned int size = w * h;
-    unsigned char* idata = (unsigned char*)malloc(sizeof(unsigned char) * size);
+    unsigned char* idata = (unsigned char*) malloc(sizeof(unsigned char) * size);
 
     std::transform(data, data + size, idata, ConverterToUByte<T>());
 
@@ -302,7 +302,7 @@ inline bool sdkSavePGM(const char* file, T* data, unsigned int w, unsigned int h
 inline bool sdkSavePPM4ub(const char* file, unsigned char* data, unsigned int w, unsigned int h) {
     // strip 4th component
     int size = w * h;
-    unsigned char* ndata = (unsigned char*)malloc(sizeof(unsigned char) * size * 3);
+    unsigned char* ndata = (unsigned char*) malloc(sizeof(unsigned char) * size * 3);
     unsigned char* ptr = ndata;
 
     for (int i = 0; i < size; i++) {
@@ -361,14 +361,14 @@ inline bool sdkReadFile(const char* filename, T** data, unsigned int* len, bool 
         if (*len != data_read.size()) {
             std::cerr << "sdkReadFile() : Initialized memory given but "
                       << "size  mismatch with signal read "
-                      << "(data read / data init = " << (unsigned int)data_read.size() << " / " << *len << ")"
+                      << "(data read / data init = " << (unsigned int) data_read.size() << " / " << *len << ")"
                       << std::endl;
 
             return false;
         }
     } else {
         // allocate storage for the data read
-        *data = (T*)malloc(sizeof(T) * data_read.size());
+        *data = (T*) malloc(sizeof(T) * data_read.size());
         // store signal size
         *len = static_cast<unsigned int>(data_read.size());
     }
@@ -404,7 +404,7 @@ inline bool sdkReadFileBlocks(
 
     // check if the given handle is already initialized
     // allocate storage for the data read
-    data[block_num] = (T*)malloc(block_size);
+    data[block_num] = (T*) malloc(block_size);
 
     // read all data elements
     fseek(fh, block_num * block_size, SEEK_SET);
@@ -494,7 +494,7 @@ inline bool compareData(
     unsigned int error_count = 0;
 
     for (unsigned int i = 0; i < len; ++i) {
-        float diff = (float)reference[i] - (float)data[i];
+        float diff = (float) reference[i] - (float) data[i];
         bool comp = (diff <= epsilon) && (diff >= -epsilon);
         result &= comp;
 
@@ -517,7 +517,7 @@ inline bool compareData(
         return (result) ? true : false;
     } else {
         if (error_count) {
-            printf("%4.2f(%%) of bytes mismatched (count=%d)\n", (float)error_count * 100 / (float)len, error_count);
+            printf("%4.2f(%%) of bytes mismatched (count=%d)\n", (float) error_count * 100 / (float) len, error_count);
         }
 
         return (len * threshold > error_count) ? true : false;
@@ -543,12 +543,12 @@ inline bool compareDataAsFloatThreshold(
     assert(epsilon >= 0);
 
     // If we set epsilon to be 0, let's set a minimum threshold
-    float max_error = MAX((float)epsilon, __MIN_EPSILON_ERROR);
+    float max_error = MAX((float) epsilon, __MIN_EPSILON_ERROR);
     int error_count = 0;
     bool result = true;
 
     for (unsigned int i = 0; i < len; ++i) {
-        float diff = fabs((float)reference[i] - (float)data[i]);
+        float diff = fabs((float) reference[i] - (float) data[i]);
         bool comp = (diff < max_error);
         result &= comp;
 
@@ -577,7 +577,7 @@ inline bool compareDataAsFloatThreshold(
         return (error_count == 0) ? true : false;
     } else {
         if (error_count) {
-            printf("%4.2f(%%) of bytes mismatched (count=%d)\n", (float)error_count * 100 / (float)len, error_count);
+            printf("%4.2f(%%) of bytes mismatched (count=%d)\n", (float) error_count * 100 / (float) len, error_count);
         }
 
         return ((len * threshold > error_count) ? true : false);
@@ -629,16 +629,16 @@ inline bool sdkCompareBin2BinUint(const char* src_file, const char* ref_file, un
         }
 
         if (src_fp && ref_fp) {
-            src_buffer = (unsigned int*)malloc(nelements * sizeof(unsigned int));
-            ref_buffer = (unsigned int*)malloc(nelements * sizeof(unsigned int));
+            src_buffer = (unsigned int*) malloc(nelements * sizeof(unsigned int));
+            ref_buffer = (unsigned int*) malloc(nelements * sizeof(unsigned int));
 
             fsize = fread(src_buffer, nelements, sizeof(unsigned int), src_fp);
             fsize = fread(ref_buffer, nelements, sizeof(unsigned int), ref_fp);
 
             printf("> compareBin2Bin <unsigned int> nelements=%d, epsilon=%4.2f, threshold=%4.2f\n", nelements, epsilon,
                 threshold);
-            printf("   src_file <%s>, size=%d bytes\n", src_file, (int)fsize);
-            printf("   ref_file <%s>, size=%d bytes\n", ref_file_path, (int)fsize);
+            printf("   src_file <%s>, size=%d bytes\n", src_file, (int) fsize);
+            printf("   ref_file <%s>, size=%d bytes\n", ref_file_path, (int) fsize);
 
             if (!compareData<unsigned int, float>(ref_buffer, src_buffer, nelements, epsilon, threshold)) {
                 error_count++;
@@ -663,7 +663,7 @@ inline bool sdkCompareBin2BinUint(const char* src_file, const char* ref_file, un
     if (error_count == 0) {
         printf("  OK\n");
     } else {
-        printf("  FAILURE: %d errors...\n", (unsigned int)error_count);
+        printf("  FAILURE: %d errors...\n", (unsigned int) error_count);
     }
 
     return (error_count == 0); // returns true if all pixels pass
@@ -705,16 +705,16 @@ inline bool sdkCompareBin2BinFloat(const char* src_file, const char* ref_file, u
         }
 
         if (src_fp && ref_fp) {
-            src_buffer = (float*)malloc(nelements * sizeof(float));
-            ref_buffer = (float*)malloc(nelements * sizeof(float));
+            src_buffer = (float*) malloc(nelements * sizeof(float));
+            ref_buffer = (float*) malloc(nelements * sizeof(float));
 
             fsize = fread(src_buffer, nelements, sizeof(float), src_fp);
             fsize = fread(ref_buffer, nelements, sizeof(float), ref_fp);
 
             printf("> compareBin2Bin <float> nelements=%d, epsilon=%4.2f, threshold=%4.2f\n", nelements, epsilon,
                 threshold);
-            printf("   src_file <%s>, size=%d bytes\n", src_file, (int)fsize);
-            printf("   ref_file <%s>, size=%d bytes\n", ref_file_path, (int)fsize);
+            printf("   src_file <%s>, size=%d bytes\n", src_file, (int) fsize);
+            printf("   ref_file <%s>, size=%d bytes\n", ref_file_path, (int) fsize);
 
             if (!compareDataAsFloatThreshold<float, float>(ref_buffer, src_buffer, nelements, epsilon, threshold)) {
                 error_count++;
@@ -739,7 +739,7 @@ inline bool sdkCompareBin2BinFloat(const char* src_file, const char* ref_file, u
     if (error_count == 0) {
         printf("  OK\n");
     } else {
-        printf("  FAILURE: %d errors...\n", (unsigned int)error_count);
+        printf("  FAILURE: %d errors...\n", (unsigned int) error_count);
     }
 
     return (error_count == 0); // returns true if all pixels pass
@@ -795,7 +795,7 @@ inline bool sdkLoadPPM4ub(const char* file, unsigned char** data, unsigned int* 
         int size = *w * *h;
         // keep the original pointer
         unsigned char* idata_orig = idata;
-        *data = (unsigned char*)malloc(sizeof(unsigned char) * size * 4);
+        *data = (unsigned char*) malloc(sizeof(unsigned char) * size * 4);
         unsigned char* ptr = *data;
 
         for (int i = 0; i < size; i++) {

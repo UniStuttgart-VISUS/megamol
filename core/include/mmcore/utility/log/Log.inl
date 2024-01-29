@@ -16,7 +16,7 @@ void Log::writeMessage(log_level level, std::string const& msg, Args&&... args) 
     auto fmsg = msg;
     if constexpr (sizeof...(Args) > 0) {
         if (msg.find("%") == std::string::npos) {
-            fmsg = fmt::format(msg, std::forward<Args>(args)...);
+            fmsg = fmt::format(fmt::runtime(msg), std::forward<Args>(args)...);
         } else {
             fmsg = fmt::sprintf(msg, std::forward<Args>(args)...);
         }
@@ -25,16 +25,16 @@ void Log::writeMessage(log_level level, std::string const& msg, Args&&... args) 
     switch (level) {
     case log_level::error: {
         logger->error(fmsg);
-        (echo_logger ? echo_logger->error(fmsg) : (void)(0));
+        (echo_logger ? echo_logger->error(fmsg) : (void) (0));
     } break;
     case log_level::warn: {
         logger->warn(fmsg);
-        (echo_logger ? echo_logger->warn(fmsg) : (void)(0));
+        (echo_logger ? echo_logger->warn(fmsg) : (void) (0));
     } break;
     case log_level::info:
     default: {
         logger->info(fmsg);
-        (echo_logger ? echo_logger->info(fmsg) : (void)(0));
+        (echo_logger ? echo_logger->info(fmsg) : (void) (0));
     }
     }
 }

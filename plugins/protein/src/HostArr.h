@@ -81,7 +81,7 @@ public:
      * @param c The byte value
      */
     void Set(char c) {
-        memset((char*)(this->pt), c, this->GetSize() * sizeof(T));
+        memset((char*) (this->pt), c, this->GetSize() * sizeof(T));
     }
 
     /**
@@ -94,7 +94,7 @@ public:
         if ((this->pt == nullptr) || (sizeNew > this->size)) {
             this->Release();
             //this->pt = new T[sizeNew];
-            this->pt = (T*)malloc(sizeNew * sizeof(T));
+            this->pt = (T*) malloc(sizeNew * sizeof(T));
             this->size = sizeNew;
         }
         this->count = sizeNew;

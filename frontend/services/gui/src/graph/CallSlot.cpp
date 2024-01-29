@@ -361,7 +361,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
             // Drag & Drop
             if (ImGui::BeginDragDropTarget()) {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE)) {
-                    auto* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
+                    auto* dragged_slot_uid_ptr = (ImGuiID*) payload->Data;
                     state.interact.slot_drag_drop_uids.first = (*dragged_slot_uid_ptr);
                     state.interact.slot_drag_drop_uids.second = this->uid;
                 }
@@ -519,6 +519,6 @@ void megamol::gui::CallSlot::Update(const GraphItemsState_t& state) {
         module_size.y -= line_height;
         ImVec2 size = module_size * state.canvas.zooming;
         this->gui_position = ImVec2(pos.x + ((this->type == CallSlotType::CALLER) ? (size.x) : (0.0f)),
-            pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
+            pos.y + size.y * ((float) slot_idx + 1) / ((float) slot_count + 1));
     }
 }

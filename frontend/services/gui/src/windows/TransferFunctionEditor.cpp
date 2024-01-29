@@ -537,9 +537,9 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
         const size_t opts_cnt = opts.size();
         if (ImGui::BeginCombo("Interpolation", opts[this->interpolation_mode].c_str())) {
             for (size_t i = 0; i < opts_cnt; ++i) {
-                if (ImGui::Selectable(opts[(TransferFunctionParam::InterpolationMode)i].c_str(),
-                        (this->interpolation_mode == (TransferFunctionParam::InterpolationMode)i))) {
-                    this->interpolation_mode = (TransferFunctionParam::InterpolationMode)i;
+                if (ImGui::Selectable(opts[(TransferFunctionParam::InterpolationMode) i].c_str(),
+                        (this->interpolation_mode == (TransferFunctionParam::InterpolationMode) i))) {
+                    this->interpolation_mode = (TransferFunctionParam::InterpolationMode) i;
                     this->reload_texture = true;
                 }
             }
@@ -951,8 +951,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 float x, g;
                 ImVec2 pos;
 
-                for (int p = 0; p < (int)canvas_size.x + step; p += step) {
-                    x = (float)(p) / canvas_size.x;
+                for (int p = 0; p < (int) canvas_size.x + step; p += step) {
+                    x = (float) (p) / canvas_size.x;
                     g = TransferFunctionParam::gauss(x, ga, gb, gc);
                     pos =
                         ImVec2(canvas_pos.x + (x * canvas_size.x), canvas_pos.y + canvas_size.y - (g * canvas_size.y));

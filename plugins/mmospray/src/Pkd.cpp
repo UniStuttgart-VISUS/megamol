@@ -75,8 +75,8 @@ void ospray::Pkd::setDim(size_t ID, int dim) const {
 #if DIM_FROM_DEPTH
     return;
 #else
-    rkcommon::math::vec3f& particle = (rkcommon::math::vec3f&)this->model->position[ID];
-    int& pxAsInt = (int&)particle.x;
+    rkcommon::math::vec3f& particle = (rkcommon::math::vec3f&) this->model->position[ID];
+    int& pxAsInt = (int&) particle.x;
     pxAsInt = (pxAsInt & ~3) | dim;
 #endif
 }
@@ -167,8 +167,8 @@ void ospray::Pkd::buildRec(const size_t nodeID, const rkcommon::math::box3f& bou
         SubtreeIterator l0(leftChildOf(nodeID));
         SubtreeIterator r0(rightChildOf(nodeID));
 
-        SubtreeIterator l((size_t)l0); //(leftChildOf(nodeID));
-        SubtreeIterator r((size_t)r0); //(rightChildOf(nodeID));
+        SubtreeIterator l((size_t) l0); //(leftChildOf(nodeID));
+        SubtreeIterator r((size_t) r0); //(rightChildOf(nodeID));
 
         // size_t numSwaps = 0, numComps = 0;
         float rootPos = POS(nodeID, dim);

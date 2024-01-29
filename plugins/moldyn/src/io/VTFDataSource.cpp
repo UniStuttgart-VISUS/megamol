@@ -121,12 +121,12 @@ bool io::VTFDataSource::Frame::LoadFrame(vislib::sys::File* file, unsigned int i
             break;
         }
 
-        int clusterId = (int)vislib::CharTraitsA::ParseInt(shreds[1]);
+        int clusterId = (int) vislib::CharTraitsA::ParseInt(shreds[1]);
         this->clusterInfos.data[clusterId].Append(id);
 
         vislib::math::Vector<float, 3> pos;
-        pos.Set((float)vislib::CharTraitsA::ParseDouble(shreds[2]), (float)vislib::CharTraitsA::ParseDouble(shreds[3]),
-            (float)vislib::CharTraitsA::ParseDouble(shreds[4]));
+        pos.Set((float) vislib::CharTraitsA::ParseDouble(shreds[2]),
+            (float) vislib::CharTraitsA::ParseDouble(shreds[3]), (float) vislib::CharTraitsA::ParseDouble(shreds[4]));
 
         vislib::math::Vector<float, 4> col;
         col.Set(0.0f, // type
@@ -144,7 +144,7 @@ bool io::VTFDataSource::Frame::LoadFrame(vislib::sys::File* file, unsigned int i
     // count + start + data
     this->clusterInfos.sizeofPlainData =
         2 * this->clusterInfos.data.Count() * sizeof(int) + this->partCnt[0] * sizeof(int);
-    this->clusterInfos.plainData = (unsigned int*)malloc(this->clusterInfos.sizeofPlainData);
+    this->clusterInfos.plainData = (unsigned int*) malloc(this->clusterInfos.sizeofPlainData);
     this->clusterInfos.numClusters = static_cast<unsigned int>(this->clusterInfos.data.Count());
     unsigned int ptr = 0;
     unsigned int summedSizesSoFar = static_cast<unsigned int>(2 * this->clusterInfos.data.Count());
@@ -237,8 +237,8 @@ const io::VTFDataSource::Frame* io::VTFDataSource::Frame::MakeInterpolationFrame
 
     for (unsigned int t = 0; t < a.typeCnt; t++) {
         for (unsigned int i = 0; i < this->partCnt[t]; i++) {
-            vislib::math::ShallowPoint<float, 3> av((float*)a.pos[t].As<float>() + i * 3);
-            vislib::math::ShallowPoint<float, 3> bv((float*)b.pos[t].As<float>() + i * 3);
+            vislib::math::ShallowPoint<float, 3> av((float*) a.pos[t].As<float>() + i * 3);
+            vislib::math::ShallowPoint<float, 3> bv((float*) b.pos[t].As<float>() + i * 3);
             vislib::math::ShallowPoint<float, 3> tv(this->pos[t].As<float>() + i * 3);
 
             if (av.SquareDistance(bv) > 0.01) {
@@ -350,7 +350,7 @@ io::VTFDataSource::~VTFDataSource() {
  */
 view::AnimDataModule::Frame* io::VTFDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<io::VTFDataSource*>(this));
-    f->SetTypeCount((unsigned int)this->types.Count());
+    f->SetTypeCount((unsigned int) this->types.Count());
     return f;
 }
 
@@ -393,11 +393,11 @@ void io::VTFDataSource::preprocessFrame(Frame& frame) {
         const float* v = frame.PartPoss(t);
         for (unsigned int p = 0; p < frame.PartCnt(t); ++p) {
             // HAZARD: This cast brackets might be wrong
-            unsigned int x = static_cast<unsigned int>(floorf((float)N * v[3 * p + 0])) /
+            unsigned int x = static_cast<unsigned int>(floorf((float) N * v[3 * p + 0])) /
                              static_cast<unsigned int>(this->extents.GetX());
-            unsigned int y = static_cast<unsigned int>(floorf((float)N * v[3 * p + 1])) /
+            unsigned int y = static_cast<unsigned int>(floorf((float) N * v[3 * p + 1])) /
                              static_cast<unsigned int>(this->extents.GetY());
-            unsigned int z = static_cast<unsigned int>(floorf((float)N * v[3 * p + 2])) /
+            unsigned int z = static_cast<unsigned int>(floorf((float) N * v[3 * p + 2])) /
                              static_cast<unsigned int>(this->extents.GetZ());
             vislib::Array<int>& cell = frame.particleGridCell(x, y, z);
             cell.Add(p);
@@ -412,11 +412,11 @@ void io::VTFDataSource::preprocessFrame(Frame& frame) {
         for (unsigned int p = 0; p < frame.PartCnt(t); ++p) {
             vislib::math::ShallowVector<float, 3> pos(const_cast<float*>(&v[3 * p]));
 
-            unsigned int x = static_cast<unsigned int>(floorf((float)N * pos.GetX())) /
+            unsigned int x = static_cast<unsigned int>(floorf((float) N * pos.GetX())) /
                              static_cast<unsigned int>(this->extents.GetX());
-            unsigned int y = static_cast<unsigned int>(floorf((float)N * pos.GetY())) /
+            unsigned int y = static_cast<unsigned int>(floorf((float) N * pos.GetY())) /
                              static_cast<unsigned int>(this->extents.GetY());
-            unsigned int z = static_cast<unsigned int>(floorf((float)N * pos.GetZ())) /
+            unsigned int z = static_cast<unsigned int>(floorf((float) N * pos.GetZ())) /
                              static_cast<unsigned int>(this->extents.GetZ());
 
             // over each neighboring cell
@@ -477,7 +477,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open VTF-File \"%s\": %s",
-            this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
+            this->filename.Param<param::FilePathParam>()->Value().generic_string().c_str(),
             static_cast<const char*>(err));
 
         SAFE_DELETE(this->file);
@@ -488,10 +488,10 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
     if (!this->parseHeaderAndFrameIndices(
-            this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str())) {
+            this->filename.Param<param::FilePathParam>()->Value().generic_string().c_str())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to read VTF-Header from file \"%s\". Wrong format?",
-            this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
+            this->filename.Param<param::FilePathParam>()->Value().generic_string().c_str());
 
         this->file->Close();
         SAFE_DELETE(this->file);
@@ -502,7 +502,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     }
 
     Frame tmpFrame(*this);
-    tmpFrame.SetTypeCount((unsigned int)this->types.Count());
+    tmpFrame.SetTypeCount((unsigned int) this->types.Count());
     // use frame zero to estimate the frame size in memory to calculate the
     // frame cache size
     this->loadFrame(&tmpFrame, 0);
@@ -574,9 +574,9 @@ bool io::VTFDataSource::parseHeaderAndFrameIndices(const vislib::TString& filena
 
         if (!haveBoundingBox) {
             if (shreds[0].Compare("pbc", false)) {
-                extents.Set((float)vislib::CharTraitsA::ParseDouble(shreds[1]),
-                    (float)vislib::CharTraitsA::ParseDouble(shreds[2]),
-                    (float)vislib::CharTraitsA::ParseDouble(shreds[3]));
+                extents.Set((float) vislib::CharTraitsA::ParseDouble(shreds[1]),
+                    (float) vislib::CharTraitsA::ParseDouble(shreds[2]),
+                    (float) vislib::CharTraitsA::ParseDouble(shreds[3]));
 
                 haveBoundingBox = true;
                 continue;
@@ -588,7 +588,7 @@ bool io::VTFDataSource::parseHeaderAndFrameIndices(const vislib::TString& filena
 
                 SimpleType type;
                 type.SetID(vislib::CharTraitsA::ParseInt(shreds[7]));
-                type.SetRadius((float)vislib::CharTraitsA::ParseDouble(shreds[3]));
+                type.SetRadius((float) vislib::CharTraitsA::ParseDouble(shreds[3]));
                 type.SetCount(vislib::CharTraitsA::ParseInt(counts[1]) - vislib::CharTraitsA::ParseInt(counts[0]) + 1);
                 this->types.Append(type);
                 haveAtomType = true;
@@ -664,7 +664,7 @@ if (line.IsEmpty()) {
 }
         */
     }
-    this->setFrameCount((unsigned int)this->frameIdx.Count());
+    this->setFrameCount((unsigned int) this->frameIdx.Count());
     //this->initFrameCache(1);
 
     return true;
@@ -685,7 +685,7 @@ bool io::VTFDataSource::getDataCallback(Call& caller) {
             return false;
         c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
         c2->SetUnlocker(new Unlocker(*f));
-        c2->SetParticleListCount((unsigned int)this->types.Count());
+        c2->SetParticleListCount((unsigned int) this->types.Count());
         for (unsigned int i = 0; i < this->types.Count(); i++) {
             c2->AccessParticles(i).SetGlobalRadius(this->types[i].Radius() /* / this->boxScaling*/);
             c2->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());

@@ -63,7 +63,7 @@ bool CrystalDataSource::getData(core::Call& c) {
 
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
-        this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
+        this->loadFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_string().c_str());
     }
 
     cdc->SetDataHash(this->datahash);

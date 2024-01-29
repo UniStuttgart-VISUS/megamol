@@ -11,6 +11,7 @@
 
 #include <glowl/glowl.h>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -48,6 +49,13 @@ public:
     static bool IsAvailable() {
         return true;
     }
+
+    /**
+     * Recompiles relevant shaders and updates relevant output texture formats.
+     *
+     * @return 'true' if updates sucessfull, 'false' otherwise
+     */
+    bool textureFormatUpdate();
 
     TextureCombine();
     ~TextureCombine() override;
@@ -109,6 +117,8 @@ private:
 
     /** Slot for querying secondary input texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_input_tex_1_slot;
+
+    CompositingOutHandler out_handler_;
 };
 
 } // namespace megamol::compositing_gl

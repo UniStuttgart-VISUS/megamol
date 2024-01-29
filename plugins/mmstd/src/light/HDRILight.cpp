@@ -53,7 +53,7 @@ void HDRILight::readParams() {
     std::copy(hdriup, hdriup + 3, light->up.begin());
     auto hdri_dir = this->direction.Param<core::param::Vector3fParam>()->Value().PeekComponents();
     std::copy(hdri_dir, hdri_dir + 3, light->direction.begin());
-    light->evnfile = this->evnfile.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
+    light->evnfile = this->evnfile.Param<core::param::FilePathParam>()->Value().generic_string().c_str();
 }
 
 /*

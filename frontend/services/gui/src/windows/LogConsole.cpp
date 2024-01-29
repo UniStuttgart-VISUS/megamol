@@ -70,7 +70,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
         }
 
         // Build a list of candidates
-        const std::string input = std::string(word_start, (int)(word_end - word_start));
+        const std::string input = std::string(word_start, (int) (word_end - word_start));
         user_data->autocomplete_candidates.clear();
         for (int i = 0; i < user_data->commands.size(); i++) {
             if (gui_utils::CaseInsensitiveStringContain(user_data->commands[i].first, input)) {
@@ -89,7 +89,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
         } else {
             // Multiple matches. Complete as much as we can..
             // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
-            int match_len = (int)(word_end - word_start);
+            int match_len = (int) (word_end - word_start);
             for (;;) {
                 int c = 0;
                 bool all_candidates_matches = true;
@@ -104,7 +104,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
             }
 
             if (match_len > 0) {
-                data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+                data->DeleteChars((int) (word_start - data->Buf), (int) (word_end - word_start));
                 data->InsertChars(data->CursorPos, user_data->autocomplete_candidates[0].first.data(),
                     user_data->autocomplete_candidates[0].first.data() + match_len);
             }
@@ -347,7 +347,7 @@ bool megamol::gui::LogConsole::Draw() {
     ImGui::BeginChild("log_messages",
         ImVec2(0.0f,
             ImGui::GetWindowHeight() - (3.0f * ImGui::GetFrameHeightWithSpacing()) - (3.0f * style.FramePadding.y)),
-        true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar);
+        ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
     auto message_count = 0ull;
     if (this->win_log_level != megamol::core::utility::log::Log::log_level::none) {
@@ -420,7 +420,7 @@ bool megamol::gui::LogConsole::Draw() {
                                            ImGuiInputTextFlags_CallbackCompletion |
                                            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
     if (ImGui::InputText("###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback,
-            (void*)this->input_shared_data.get())) {
+            (void*) this->input_shared_data.get())) {
         std::string command = this->input_buffer;
         auto result = (*this->input_lua_func)(command);
         if (std::get<0>(result)) {

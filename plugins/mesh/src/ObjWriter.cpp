@@ -40,7 +40,7 @@ bool megamol::mesh::ObjWriter::run() {
 
     auto mac = rhs_mesh_call->getData();
 
-    std::string fname = _filename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string();
+    std::string fname = _filename_slot.Param<core::param::FilePathParam>()->Value().generic_string();
 
     auto meshes = mac->accessMeshes();
     auto num_meshes = meshes.size();

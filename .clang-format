@@ -12,7 +12,6 @@ AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
 AlignEscapedNewlines: Left
 AllowAllArgumentsOnNextLine: true # 'false' has different behavior between clang-format 11 and 12, therefore use 'true'.
-AllowAllConstructorInitializersOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortFunctionsOnASingleLine: Empty
@@ -22,13 +21,13 @@ AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Attach
 BreakConstructorInitializers: BeforeComma
 CommentPragmas: '^.*'
-ConstructorInitializerAllOnOneLineOrOnePerLine: true # Replace with "PackConstructorInitializers: Never", when switching to clang-format 14.
 ConstructorInitializerIndentWidth: 8
 DerivePointerAlignment: false
 MaxEmptyLinesToKeep: 2
 NamespaceIndentation: None
+PackConstructorInitializers: CurrentLine
 PointerAlignment: Left
-SpaceAfterCStyleCast: false # want true, but has issues with clang-format-12
+SpaceAfterCStyleCast: true
 SpaceAfterTemplateKeyword: false
 Standard: c++17
 # TODO Does not work reliable, yet. Do not use in automatic CI pipeline!

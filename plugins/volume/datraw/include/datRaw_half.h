@@ -53,7 +53,7 @@ extern __inline__ DR_HALF floatToHalf(DR_FLOAT val) INLINE_ATTRIB;
 */
 
 extern __inline__ float halfToFloat(DR_HALF val) {
-    const DR_INT h = 0x0 | (DR_UINT)val;
+    const DR_INT h = 0x0 | (DR_UINT) val;
     const DR_INT h_m = h & 0x3ff;
     const DR_INT h_e = (h >> 10) & 0x1f;
     const DR_INT h_s = (h >> 15) & 0x1;
@@ -69,7 +69,7 @@ extern __inline__ float halfToFloat(DR_HALF val) {
     } else if (h_e == 0 && h_m != 0) {
         /* denorm -- denorm half will fit in non-denorm float */
         const float half_denorm = (1.0f / 16384.0f); /* 2^-14 */
-        float mantissa = ((float)h_m) / 1024.0f;
+        float mantissa = ((float) h_m) / 1024.0f;
         float sgn = h_s ? -1.0f : 1.0f;
         return sgn * mantissa * half_denorm;
     } else if ((h_e == 31) && (h_m == 0)) {
@@ -86,12 +86,12 @@ extern __inline__ float halfToFloat(DR_HALF val) {
     }
     result = (h_s << 31) | (f_e << 23) | f_m;
 
-    pfresult = (float*)&result;
+    pfresult = (float*) &result;
     return *pfresult;
 }
 
 extern __inline__ DR_HALF floatToHalf(float val) {
-    const DR_INT* pf = (DR_INT*)&val;
+    const DR_INT* pf = (DR_INT*) &val;
     const DR_INT f = *pf;
     const DR_INT f_m = f & 0x7fffff;
     const DR_INT f_e = (f >> 23) & 0xff;
@@ -126,7 +126,7 @@ extern __inline__ DR_HALF floatToHalf(float val) {
         if (new_exp < -14) {
             /* this maps to a denorm */
             /* h_e = 0; already set */
-            DR_UINT exp_val = (DR_UINT)(-14 - new_exp); /* 2^-exp_val */
+            DR_UINT exp_val = (DR_UINT) (-14 - new_exp); /* 2^-exp_val */
             switch (exp_val) {
             case 0:
                 datRaw_logError("logical error in denorm creation!\n");

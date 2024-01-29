@@ -16,6 +16,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "CompositingOutHandler.h"
 #include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
@@ -92,6 +93,16 @@ private:
 
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot m_camera_slot;
+
+
+    /**
+     * \brief Updates texture format variables and recompiles shaders.
+     *
+     * @return 'true' if successfully updated, 'false' otherwise
+     */
+    bool textureFormatUpdate();
+
+    CompositingOutHandler outHandler_;
 };
 
 } // namespace megamol::compositing_gl

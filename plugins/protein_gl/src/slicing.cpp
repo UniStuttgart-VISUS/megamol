@@ -46,7 +46,7 @@ int ViewSlicing::setupSlicing(float* mvMatrix, float sampDist, float* extents) {
     float v[3];
 
     _sampDist = sampDist;
-    memcpy((void*)_m, (void*)mvMatrix, 16 * sizeof(float));
+    memcpy((void*) _m, (void*) mvMatrix, 16 * sizeof(float));
     _ext[0] = xMax = 0.5f * extents[0];
     _ext[1] = yMax = 0.5f * extents[1];
     _ext[2] = zMax = 0.5f * extents[2];
@@ -108,7 +108,7 @@ int ViewSlicing::setupSlicing(float* mvMatrix, float sampDist, float* extents) {
 
     _d *= 2.0;
 
-    _numSlices = (int)(_d / _sampDist) + 1;
+    _numSlices = (int) (_d / _sampDist) + 1;
     return _numSlices;
 }
 
@@ -119,7 +119,7 @@ void ViewSlicing::drawSlice(int slice) {
     char edgeCode[12] = {cubeEdges[0], cubeEdges[1], cubeEdges[2], cubeEdges[3], cubeEdges[4], cubeEdges[5],
         cubeEdges[6], cubeEdges[7], cubeEdges[8], cubeEdges[9], cubeEdges[10], cubeEdges[11]};
     float d = -0.5f * _d + (slice + 0.5f) * _d / _numSlices;
-    char actEdge = (char)0xff;
+    char actEdge = (char) 0xff;
     int numIntersect = 0, oldInt;
     int idx;
     int tmp[6];
@@ -181,7 +181,7 @@ void ViewSlicing::drawSlice(int slice) {
         for (int i = 0; i < 12; ++i) {
             for (int j = i + 1; j < 12; ++j) {
                 if (validHit[i] && validHit[j]) {
-                    if (pointCmp(_p[i], _p[j], (float)VS_EPS)) {
+                    if (pointCmp(_p[i], _p[j], (float) VS_EPS)) {
                         validHit[j] = 0;
                         numIntersect--;
                         edgeCode[i] |= edgeCode[j];
@@ -320,9 +320,9 @@ void ViewSlicing::setupSingleSlice(double* viewVec, float* ext) {
         viewVec[0] = viewVec[1] = viewVec[2] = 0.0;
     }
 
-    _v[0] = (float)viewVec[0];
-    _v[1] = (float)viewVec[1];
-    _v[2] = (float)viewVec[2];
+    _v[0] = (float) viewVec[0];
+    _v[1] = (float) viewVec[1];
+    _v[2] = (float) viewVec[2];
 
     v[0] = fabs(_v[0]);
     v[1] = fabs(_v[1]);
@@ -343,7 +343,7 @@ void ViewSlicing::drawSingleSlice(float dist) {
     char validHit[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     char edgeCode[12] = {cubeEdges[0], cubeEdges[1], cubeEdges[2], cubeEdges[3], cubeEdges[4], cubeEdges[5],
         cubeEdges[6], cubeEdges[7], cubeEdges[8], cubeEdges[9], cubeEdges[10], cubeEdges[11]};
-    char actEdge = (char)0xff;
+    char actEdge = (char) 0xff;
     int numIntersect = 0, oldInt;
     int idx;
     int tmp[6];
@@ -409,7 +409,7 @@ void ViewSlicing::drawSingleSlice(float dist) {
     for (int i = 0; i < 12; ++i) {
         for (int j = i + 1; j < 12; ++j) {
             if (validHit[i] && validHit[j]) {
-                if (pointCmp(_p[i], _p[j], (float)VS_EPS)) {
+                if (pointCmp(_p[i], _p[j], (float) VS_EPS)) {
                     validHit[j] = 0;
                     numIntersect--;
                     edgeCode[i] |= edgeCode[j];

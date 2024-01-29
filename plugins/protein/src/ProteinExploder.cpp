@@ -220,7 +220,7 @@ void ProteinExploder::computeMidPoint(MolecularDataCall& call) {
         midpoint.SetY(midpoint.GetY() + call.AtomPositions()[i * 3 + 1]);
         midpoint.SetZ(midpoint.GetZ() + call.AtomPositions()[i * 3 + 2]);
     }
-    midpoint /= (float)call.AtomCount();
+    midpoint /= (float) call.AtomCount();
 
     if (useMassCenterParam.Param<param::BoolParam>()->Value()) {
         float weightSum = 0.0f;
