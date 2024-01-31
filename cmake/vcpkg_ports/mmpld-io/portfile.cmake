@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO UniStuttgart-VISUS/mmpld_io
-    REF 45febfc22c326ce170bd7313149fe99c0cb73048
-    SHA512 bb1d4f000bc78d2141656846b675df4bdba62d9686dc444edc6ac33bdd10f81a9f3752f9d0569773230b46232d08768b0c0956408717b3816868575daeda999a
+    REF ad5243607b62adff6be84880c0ba9c08873161f6
+    SHA512 7415a5bf9a7c3b72c529ed77fb016bcc9d5e10370fddb94a609e14c75940eb4f8966970de6da830b1bfbb92aeba755aaa7ca47a4e277429c209bb0ebd96ffeae
     HEAD_REF master
 )
 
@@ -12,5 +12,10 @@ vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
 )
 vcpkg_cmake_install()
+vcpkg_cmake_config_fixup(
+    PACKAGE_NAME mmpld_io
+    CONFIG_PATH lib/cmake/mmpld_io
+)
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/lib")
 
 vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
