@@ -12,28 +12,12 @@
 #include <string>
 #include <vector>
 
+#include <TimeTypes.h>
+
+#include "CPUQuery.h"
 #include "GLQuery.h"
 
 namespace megamol::frontend_resources::performance {
-
-using handle_type = uint32_t;
-using timer_index = uint32_t;
-using handle_vector = std::vector<handle_type>;
-using frame_type = uint32_t;
-using user_index_type = uint32_t;
-using time_point = std::chrono::steady_clock::time_point;
-
-enum class query_api { CPU, OPENGL }; // TODO: CUDA, OpenCL, Vulkan, whatnot
-
-static constexpr const char* query_api_string(query_api api) {
-    switch (api) {
-    case query_api::CPU:
-        return "CPU";
-    case query_api::OPENGL:
-        return "OpenGL";
-    }
-    return "unknown";
-}
 
 enum class parent_type { CALL, USER_REGION, BUILTIN };
 
@@ -50,10 +34,10 @@ static constexpr const char* parent_type_string(parent_type parent) {
 }
 
 struct timer_region {
-    time_point start, end;
+    time_point start = zero_time, end = zero_time;
     int64_t global_index = -1;
     frame_type frame;
-    std::array<std::shared_ptr<GLQuery>, 2> qids;
+    std::array<std::shared_ptr<AnyQuery>, 2> qids;
     bool finished = false;
 };
 
@@ -150,35 +134,78 @@ protected:
     inline static int64_t current_global_index = 0;
 };
 
-class cpu_timer : public Itimer {
+template<class Q>
+class any_timer : public Itimer {
+    static_assert(std::is_base_of_v<AnyQuery, Q>, "Q must inherit from AnyQuery");
 public:
-    cpu_timer(const timer_config& cfg) : Itimer(cfg) {}
+    any_timer(const timer_config& cfg) : Itimer(cfg) {}
 
-    bool start(frame_type frame) override;
+    bool start(frame_type frame) override {
+        const auto new_frame = Itimer::start(frame);
 
-    void end() override;
+        if (first_frame_) {
+            timer_region r{zero_time, zero_time, current_global_index++, frame, {nullptr, nullptr}, false};
+            r.qids[0] = std::make_shared<Q>();
+            r.qids[0]->Counter();
+            regions.emplace_back(r);
+            first_frame_ = false;
+        }
 
-protected:
-    void collect(frame_type frame) override {}
-    void clear(frame_type frame) override;
-};
+        return new_frame;
+    }
 
-class gl_timer : public Itimer {
-    friend class PerformanceManager;
+    void end() override {
+        Itimer::end();
 
-public:
-    gl_timer(const timer_config& cfg) : Itimer(cfg) {}
+        regions.back().qids[1] = std::make_shared<Q>();
+        regions.back().qids[1]->Counter();
 
-    bool start(frame_type frame) override;
+        timer_region r{
+            zero_time, zero_time, current_global_index++, regions.back().frame + 1, {nullptr, nullptr}, false};
+        r.qids[0] = regions.back().qids[1];
+        regions.emplace_back(r);
+    }
 
-    void end() override;
+    void collect(frame_type frame) override {
+        for (auto& r : regions) {
+            time_point start_time = zero_time, end_time = zero_time;
+            bool start_ready = false, end_ready = false;
+            if (r.start == zero_time) {
+                if (r.qids[0])
+                    start_time = r.qids[0]->GetNW();
 
-protected:
-    void collect(frame_type frame) override;
-    void clear(frame_type frame) override;
+                if (start_time != zero_time) {
+                    r.start = start_time;
+                    start_ready = true;
+                }
+            } else {
+                start_ready = true;
+            }
+            if (r.end == zero_time) {
+                if (r.qids[1])
+                    end_time = r.qids[1]->GetNW();
+
+                if (end_time != zero_time) {
+                    r.end = end_time;
+                    end_ready = true;
+                }
+            } else {
+                end_ready = true;
+            }
+            r.finished = start_ready && end_ready;
+        }
+    }
+
+    void clear(frame_type frame) override {
+        regions.erase(
+            std::remove_if(regions.begin(), regions.end(), [](auto const& r) { return r.finished; }), regions.end());
+    }
 
 private:
     bool first_frame_ = true;
 };
+
+using cpu_timer = any_timer<CPUQuery>;
+using gl_timer = any_timer<GLQuery>;
 
 } // namespace megamol::frontend_resources::performance

@@ -159,7 +159,7 @@ handle_type PerformanceManager::add_timer(std::unique_ptr<Itimer> t) {
 
 void PerformanceManager::startFrame(frame_type frame) {
     current_frame = frame;
-    core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: starting frame %u", frame);
+    //core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: starting frame %u", frame);
     //gl_timer::last_query = 0;
     // we never reset the global counter!
     //current_global_index = 0;
@@ -178,8 +178,8 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
     e.user_index = tconf.basic_timer_config::user_index;
     e.parent = tconf.timer_config::parent;
 
-    core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: pushing data for frame %u with %u regions",
-        the_frame.frame, timer->Itimer::get_region_count());
+    //core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: pushing data for frame %u with %u regions",
+    //    the_frame.frame, timer->Itimer::get_region_count());
 
     for (uint32_t region = 0; region < timer->Itimer::get_region_count(); ++region) {
         /*if (timer->Itimer::get_frame(region) != the_frame.frame) {
@@ -206,7 +206,7 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
 }
 
 void PerformanceManager::endFrame(frame_type frame) {
-    core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: ending frame %u", frame);
+    //core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: ending frame %u", frame);
 #ifdef MEGAMOL_USE_OPENGL
     stop_timer(whole_frame_gl);
 #endif

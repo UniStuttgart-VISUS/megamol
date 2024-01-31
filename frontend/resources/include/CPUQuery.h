@@ -4,13 +4,13 @@
 
 namespace megamol::frontend_resources::performance {
 /// <summary>
-/// Wrapper for OpenGL timer query.
+/// Wrapper for CPU timer query.
 /// </summary>
-class GLQuery : public AnyQuery {
+class CPUQuery : public AnyQuery {
 public:
-    GLQuery();
+    CPUQuery();
 
-    ~GLQuery() override;
+    ~CPUQuery() override;
 
     /// <summary>
     /// Set timestamp query.
@@ -25,7 +25,5 @@ public:
     /// <returns>Queried timestamp or zero if value is not ready</returns>
     time_point GetNW() override;
 
-private:
-    uint32_t handle_;
 };
 } // namespace megamol::frontend_resources::performance

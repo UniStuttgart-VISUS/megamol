@@ -1,21 +1,21 @@
 #pragma once
 
-#include <AnyQuery.h>
+#include <TimeTypes.h>
 
 namespace megamol::frontend_resources::performance {
 /// <summary>
-/// Wrapper for OpenGL timer query.
+/// Wrapper for generic timer query.
 /// </summary>
-class GLQuery : public AnyQuery {
+class AnyQuery {
 public:
-    GLQuery();
+    AnyQuery() = default;
 
-    ~GLQuery() override;
+    virtual ~AnyQuery() = default;
 
     /// <summary>
     /// Set timestamp query.
     /// </summary>
-    void Counter() override;
+    virtual void Counter() = 0;
 
     /// <summary>
     /// Try to retrieve the timestamp.
@@ -23,9 +23,9 @@ public:
     /// After successful retrieval will return acquired timestamp and not try again.
     /// </summary>
     /// <returns>Queried timestamp or zero if value is not ready</returns>
-    time_point GetNW() override;
+    virtual time_point GetNW() = 0;
 
-private:
-    uint32_t handle_;
+protected:
+    time_point value_ = zero_time;
 };
 } // namespace megamol::frontend_resources::performance

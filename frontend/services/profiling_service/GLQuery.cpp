@@ -17,16 +17,20 @@ GLQuery::~GLQuery() {
 #endif
 }
 
-void GLQuery::Counter() const {
+void GLQuery::Counter() {
 #ifdef MEGAMOL_USE_OPENGL
     glQueryCounter(handle_, GL_TIMESTAMP);
 #endif
 }
 
-uint64_t GLQuery::GetNW() {
+time_point GLQuery::GetNW() {
 #ifdef MEGAMOL_USE_OPENGL
-    if (!value_) {
-        glGetQueryObjectui64v(handle_, GL_QUERY_RESULT_NO_WAIT, &value_);
+    if (value_ == zero_time) {
+        uint64_t val;
+        glGetQueryObjectui64v(handle_, GL_QUERY_RESULT_NO_WAIT, &val);
+        if (val != 0) {
+            value_ = time_point{std::chrono::nanoseconds(val)};
+        }
     }
 #endif
     return value_;
