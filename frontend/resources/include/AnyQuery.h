@@ -17,6 +17,8 @@ public:
     /// </summary>
     virtual void Counter() = 0;
 
+    virtual std::shared_ptr<AnyQuery> MakeAnother() = 0;
+
     /// <summary>
     /// Try to retrieve the timestamp.
     /// Does not wait if value is not ready.

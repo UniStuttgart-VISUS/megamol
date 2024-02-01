@@ -87,8 +87,7 @@ public:
 
     void subscribe_to_updates(update_callback cb);
 
-    void start_timer(handle_type h);
-    void stop_timer(handle_type h);
+    timer_region& start_timer(handle_type h);
 
 private:
     friend class frontend::Profiling_Service;
@@ -110,8 +109,11 @@ private:
 
 #ifdef MEGAMOL_USE_OPENGL
     handle_type whole_frame_gl;
+    timer_region *whole_frame_gl_region = nullptr;
 #endif
     handle_type whole_frame_cpu;
+    timer_region *whole_frame_cpu_region = nullptr;
+    bool first_frame = true;
 };
 
 } // namespace megamol::frontend_resources::performance

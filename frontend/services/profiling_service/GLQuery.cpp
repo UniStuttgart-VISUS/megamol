@@ -26,7 +26,7 @@ void GLQuery::Counter() {
 time_point GLQuery::GetNW() {
 #ifdef MEGAMOL_USE_OPENGL
     if (value_ == zero_time) {
-        uint64_t val;
+        uint64_t val = 0;
         glGetQueryObjectui64v(handle_, GL_QUERY_RESULT_NO_WAIT, &val);
         if (val != 0) {
             value_ = time_point{std::chrono::nanoseconds(val)};

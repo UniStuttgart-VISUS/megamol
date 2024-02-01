@@ -17,6 +17,10 @@ public:
     /// </summary>
     void Counter() override;
 
+    std::shared_ptr<AnyQuery> MakeAnother() override {
+        return std::make_shared<GLQuery>();
+    }
+
     /// <summary>
     /// Try to retrieve the timestamp.
     /// Does not wait if value is not ready.

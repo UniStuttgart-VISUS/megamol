@@ -18,10 +18,17 @@
 namespace megamol::frontend_resources::performance {
 
 PerformanceManager::PerformanceManager() {
+    timer_config conf;
+    conf.parent = parent_type::BUILTIN;
+    conf.user_index = 0;
 #ifdef MEGAMOL_USE_OPENGL
-    whole_frame_gl = add_timer("FrameTimeGL", query_api::OPENGL);
+    conf.name = "FrameTimeGL";
+    conf.api = query_api::OPENGL;
+    whole_frame_gl = add_timer(std::make_unique<gl_timer>(conf));
 #endif
-    whole_frame_cpu = add_timer("FrameTime", query_api::CPU);
+    conf.name = "FrameTime";
+    conf.api = query_api::CPU;
+    whole_frame_cpu = add_timer(std::make_unique<cpu_timer>(conf));
 }
 
 handle_vector PerformanceManager::add_timers(megamol::core::Module* m, std::vector<basic_timer_config> timer_list) {
@@ -134,12 +141,8 @@ void PerformanceManager::subscribe_to_updates(update_callback cb) {
     subscribers.push_back(cb);
 }
 
-void PerformanceManager::start_timer(handle_type h) {
-    timers[h]->start(current_frame);
-}
-
-void PerformanceManager::stop_timer(handle_type h) {
-    timers[h]->end();
+timer_region& PerformanceManager::start_timer(handle_type h) {
+    return timers[h]->start(current_frame);
 }
 
 handle_type PerformanceManager::add_timer(std::unique_ptr<Itimer> t) {
@@ -163,10 +166,13 @@ void PerformanceManager::startFrame(frame_type frame) {
     //gl_timer::last_query = 0;
     // we never reset the global counter!
     //current_global_index = 0;
-    start_timer(whole_frame_cpu);
+    if (first_frame) {
+        whole_frame_cpu_region = &start_timer(whole_frame_cpu);
 #ifdef MEGAMOL_USE_OPENGL
-    start_timer(whole_frame_gl);
+        whole_frame_gl_region = &start_timer(whole_frame_gl);
 #endif
+        first_frame = false;
+    }
 }
 
 void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the_frame) {
@@ -181,23 +187,24 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
     //core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: pushing data for frame %u with %u regions",
     //    the_frame.frame, timer->Itimer::get_region_count());
 
-    for (uint32_t region = 0; region < timer->Itimer::get_region_count(); ++region) {
+    for (auto region = timer->regions_begin(); region != timer->regions_end(); ++region) {
         /*if (timer->Itimer::get_frame(region) != the_frame.frame) {
             throw std::runtime_error("PerformanceManager: frame inconsistency detected in region!");
         }*/
 
-        if (!timer->Itimer::is_finished(region))
+        if (!region->finished) {
             continue;
+        }
 
-        e.frame = timer->Itimer::get_frame(region);
+        e.frame = region->frame;
 
-        e.frame_index = region;
+        e.frame_index = region->frame_index;
         e.api = tconf.basic_timer_config::api;
 
-        e.global_index = timer->Itimer::get_global_index(region);
-        e.start = timer->Itimer::get_start(region);
-        e.end = timer->Itimer::get_end(region);
-        e.duration = time_point{timer->Itimer::get_end(region) - timer->Itimer::get_start(region)};
+        e.global_index = region->global_index;
+        e.start = region->start;
+        e.end = region->end;
+        e.duration = time_point{region->end - region->start};
         the_frame.entries.push_back(e);
     }
     // we cannot wait for a timer to be re-started to remove the regions lying around there:
@@ -208,9 +215,16 @@ void PerformanceManager::collect_timer_and_append(Itimer* timer, frame_info& the
 void PerformanceManager::endFrame(frame_type frame) {
     //core::utility::log::Log::DefaultLog.WriteInfo("PerformanceManager: ending frame %u", frame);
 #ifdef MEGAMOL_USE_OPENGL
-    stop_timer(whole_frame_gl);
+    whole_frame_gl_region->end_region();
 #endif
-    stop_timer(whole_frame_cpu);
+    whole_frame_cpu_region->end_region();
+
+    // and start again for next frame
+    whole_frame_cpu_region = &timers[whole_frame_cpu]->start(current_frame + 1);
+#ifdef MEGAMOL_USE_OPENGL
+    whole_frame_gl_region = &timers[whole_frame_gl]->start(current_frame + 1);
+#endif
+
 
     if (current_frame != frame) {
         throw std::runtime_error(("PerformanceManager: ending frame " + std::to_string(frame) +
@@ -225,13 +239,14 @@ void PerformanceManager::endFrame(frame_type frame) {
                 // timer did not start this frame
                 continue;
             } else {
-                if (timer->started) {
-                    // timer was not ended this frame, that is not nice
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "PerformanceManager: timer %s was not properly ended in frame %u",
-                        timer->get_conf().name.c_str(), current_frame);
-                    continue;
-                }
+                // we cannot check this anymore, sad.
+                //if (timer->started) {
+                //    // timer was not ended this frame, that is not nice
+                //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                //        "PerformanceManager: timer %s was not properly ended in frame %u",
+                //        timer->get_conf().name.c_str(), current_frame);
+                //    continue;
+                //}
             }
         }
 

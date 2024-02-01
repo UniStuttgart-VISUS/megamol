@@ -31,30 +31,14 @@ std::string Itimer::parent_name(const timer_config& conf) {
     }
 }
 
-bool Itimer::start(frame_type frame) {
-    auto new_frame = false;
+timer_region& Itimer::start(frame_type frame) {
     if (frame != start_frame) {
-        new_frame = true;
-        //regions.clear();
+        frame_index = 0;
     }
-    if (!started) {
-        started = true;
-        start_frame = frame;
-    } else {
-        throw std::runtime_error(
-            ("timer: region " + parent_name(conf) + "::" + conf.name + " needs to be ended before being started")
-                .c_str());
-    }
-    return new_frame;
-}
+    timer_region r{zero_time, zero_time, current_global_index++, frame_index++, frame, {nullptr, nullptr}, false};
 
-void Itimer::end() {
-    if (!started) {
-        throw std::runtime_error(
-            ("timer: region " + parent_name(conf) + "::" + conf.name + " needs to be started before being ended")
-                .c_str());
-    }
-    started = false;
+    start_frame = frame;
+    return regions.emplace_back(r);
 }
 
 } // namespace megamol::frontend_resources::performance

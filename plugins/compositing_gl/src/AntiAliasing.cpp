@@ -568,7 +568,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
 
     if (something_has_changed) {
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->start_timer(timers_[0]);
+        auto& region0 = perf_manager_->start_timer(timers_[0]);
 #endif
 
         // get input
@@ -633,7 +633,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
         }
 
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->stop_timer(timers_[0]);
+        region0.end_region();
 #endif
 
         ++version_;

@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
+#include <list>
 
 #include <TimeTypes.h>
 
@@ -36,9 +36,15 @@ static constexpr const char* parent_type_string(parent_type parent) {
 struct timer_region {
     time_point start = zero_time, end = zero_time;
     int64_t global_index = -1;
+    uint32_t frame_index = 0;
     frame_type frame;
     std::array<std::shared_ptr<AnyQuery>, 2> qids;
     bool finished = false;
+
+    void end_region() {
+        this->qids[1] = this->qids[0]->MakeAnother();
+        this->qids[1]->Counter();
+    }
 };
 
 struct basic_timer_config {
@@ -88,21 +94,15 @@ public:
     [[nodiscard]] uint32_t get_region_count() const {
         return regions.size();
     }
-    [[nodiscard]] bool is_finished(uint32_t index) const {
-        return regions[index].finished;
+ 
+    std::list<timer_region>::iterator regions_begin() {
+        return regions.begin();
     }
-    [[nodiscard]] time_point get_start(uint32_t index) const {
-        return regions[index].start;
+
+    std::list<timer_region>::iterator regions_end() {
+        return regions.end();
     }
-    [[nodiscard]] time_point get_end(uint32_t index) const {
-        return regions[index].end;
-    }
-    [[nodiscard]] int64_t get_global_index(uint32_t index) const {
-        return regions[index].global_index;
-    }
-    [[nodiscard]] frame_type get_frame(uint32_t index) const {
-        return regions[index].frame;
-    }
+
     [[nodiscard]] frame_type get_start_frame() const {
         return start_frame;
     }
@@ -116,9 +116,7 @@ public:
 
 protected:
     // returns whether this is a new frame from what has been seen
-    virtual bool start(frame_type frame);
-
-    virtual void end();
+    virtual timer_region& start(frame_type frame);
 
     virtual void collect(frame_type frame) = 0;
 
@@ -126,10 +124,11 @@ protected:
 
     timer_config conf;
     //time_point last_start;
-    std::vector<timer_region> regions;
+    std::list<timer_region> regions;
     bool started = false;
     frame_type start_frame = std::numeric_limits<frame_type>::max();
     handle_type h = 0;
+    uint32_t frame_index = 0;
     // there can only be one PerformanceManager currently.
     inline static int64_t current_global_index = 0;
 };
@@ -140,30 +139,13 @@ class any_timer : public Itimer {
 public:
     any_timer(const timer_config& cfg) : Itimer(cfg) {}
 
-    bool start(frame_type frame) override {
-        const auto new_frame = Itimer::start(frame);
+    timer_region& start(frame_type frame) override {
+        auto& region = Itimer::start(frame);
 
-        if (first_frame_) {
-            timer_region r{zero_time, zero_time, current_global_index++, frame, {nullptr, nullptr}, false};
-            r.qids[0] = std::make_shared<Q>();
-            r.qids[0]->Counter();
-            regions.emplace_back(r);
-            first_frame_ = false;
-        }
+        region.qids[0] = std::make_shared<Q>();
+        region.qids[0]->Counter();
 
-        return new_frame;
-    }
-
-    void end() override {
-        Itimer::end();
-
-        regions.back().qids[1] = std::make_shared<Q>();
-        regions.back().qids[1]->Counter();
-
-        timer_region r{
-            zero_time, zero_time, current_global_index++, regions.back().frame + 1, {nullptr, nullptr}, false};
-        r.qids[0] = regions.back().qids[1];
-        regions.emplace_back(r);
+        return region;
     }
 
     void collect(frame_type frame) override {
@@ -197,12 +179,8 @@ public:
     }
 
     void clear(frame_type frame) override {
-        regions.erase(
-            std::remove_if(regions.begin(), regions.end(), [](auto const& r) { return r.finished; }), regions.end());
+        std::erase_if(regions, [](auto const& r) { return r.finished; });
     }
-
-private:
-    bool first_frame_ = true;
 };
 
 using cpu_timer = any_timer<CPUQuery>;

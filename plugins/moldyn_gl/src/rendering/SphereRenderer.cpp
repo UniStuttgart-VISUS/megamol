@@ -1202,11 +1202,11 @@ bool SphereRenderer::renderSimple(mmstd_gl::CallRender3DGL& call, MultiParticleD
         }
 
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->start_timer(timers_[1]);
+        auto& region1 = perf_manager_->start_timer(timers_[1]);
 #endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->stop_timer(timers_[1]);
+        region1.end_region();
 #endif
 
         if (this->render_mode_ == RenderMode::SIMPLE_CLUSTERED) {

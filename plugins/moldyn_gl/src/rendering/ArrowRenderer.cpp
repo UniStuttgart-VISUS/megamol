@@ -402,13 +402,13 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
             //glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 99, 25, "ArrowRenderer:DrawCommand");
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->start_timer(timers_[0]);
+            auto& region0 = perf_manager_->start_timer(timers_[0]);
 #endif
 
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->stop_timer(timers_[0]);
+            region0.end_region();
 #endif
             //glPopDebugGroup();
 
