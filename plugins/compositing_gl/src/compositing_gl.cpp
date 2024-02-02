@@ -8,6 +8,7 @@
 #include "mmcore/factories/PluginRegister.h"
 
 #include "AntiAliasing.h"
+#include "DepthOfField.h"
 #include "DepthDarkening.h"
 #include "DrawToScreen.h"
 #include "InteractionRenderTarget.h"
@@ -46,6 +47,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::NormalFromDepth>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::SSAO>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::AntiAliasing>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::DepthOfField>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::PNGDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TexInspectModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::ScreenSpaceEdges>();
