@@ -8,12 +8,12 @@
 
 uniform float blend;
 
-uniform sampler2D color_tx2D;
-uniform sampler2D coc_tx2D;
-uniform sampler2D coc_4_tx2D;
-uniform sampler2D coc_near_blurred_4_tx2D;
-uniform sampler2D near_fill_4_tx2D;
-uniform sampler2D far_fill_4_tx2D;
+uniform sampler2D color_point_tx2D;
+uniform sampler2D coc_point_tx2D;
+uniform sampler2D coc_4_point_tx2D;
+uniform sampler2D coc_near_blurred_4_linear_tx2D;
+uniform sampler2D near_fill_4_linear_tx2D;
+uniform sampler2D far_fill_4_point_tx2D;
 
 layout(binding = 0, rgba32f) writeonly uniform image2D depth_of_field_tx2D; // TODO: layout qualifier correct?
 
@@ -29,24 +29,24 @@ void main() {
     }
 
     // far field
-    vec3 result = texelFetch(color_tx2D, pixel_coords, 0);
+    vec3 result = texelFetch(color_point_tx2D, pixel_coords, 0);
 
     vec2 pixel_coord_00 = pixel_coords;
     vec2 pixel_coord_10 = pixel_coords + ivec2(1, 0); // TODO: correct?
     vec2 pixel_coord_01 = pixel_coords + ivec2(0, 1); // TODO: correct?
     vec2 pixel_coord_11 = pixel_coords + ivec2(1, 1); // TODO: correct?
 
-    float coc_far = texelFetch(coc_tx2D, pixel_coords, 0).y; // TODO: pointSampler
+    float coc_far = texelFetch(coc_point_tx2D, pixel_coords, 0).y;
     // vec4(top_left, top_right, bottom_left, bottom_right)
-    vec4 coc_far_x4 = textureGather(coc_4_tx2D, pixel_coord_00, 1).xywz; // TODO: pointSampler, TODO: order of gather (.xywz) correct?
+    vec4 coc_far_x4 = textureGather(coc_4_point_tx2D, pixel_coord_00, 1).xywz; // TODO: order of gather (.xywz) correct?
     vec4 coc_far_diffs = abs(vec4(coc_far) - coc_far_x4);
 
     // TODO: there might be a problem with sampling here
     // we use full resolution pixel_coords to sample a quarter resolution buffer
-    vec3 dof_far_00 = texelFetch(far_fill_4_tx2D, pixel_coord_00, 0); // TODO: pointSampler
-    vec3 dof_far_10 = texelFetch(far_fill_4_tx2D, pixel_coord_10, 0); // TODO: pointSampler
-    vec3 dof_far_01 = texelFetch(far_fill_4_tx2D, pixel_coord_01, 0); // TODO: pointSampler
-    vec3 dof_far_11 = texelFetch(far_fill_4_tx2D, pixel_coord_11, 0); // TODO: pointSampler
+    vec3 dof_far_00 = texelFetch(far_fill_4_point_tx2D, pixel_coord_00, 0);
+    vec3 dof_far_10 = texelFetch(far_fill_4_point_tx2D, pixel_coord_10, 0);
+    vec3 dof_far_01 = texelFetch(far_fill_4_point_tx2D, pixel_coord_01, 0);
+    vec3 dof_far_11 = texelFetch(far_fill_4_point_tx2D, pixel_coord_11, 0);
 
     // TODO: this breaks when only using pixel_coords, need to use uv texture coordinates
     // maybe there is still a solution only using pixel_corods
@@ -82,8 +82,8 @@ void main() {
 
 
     // near field
-    float coc_near = texelFetch(coc_near_blurred_4_tx2D, pixel_coords, 0).x; // TODO: linearSampler
-    vec3 dof_near = texelFetch(near_fill_4_tx2D, pixel_coords, 0); // TODO: linearSampler
+    float coc_near = texelFetch(coc_near_blurred_4_linear_tx2D, pixel_coords, 0).x;
+    vec3 dof_near = texelFetch(near_fill_4_linear_tx2D, pixel_coords, 0);
 
     result = lerp(result, dof_near, blend * coc_near);
 

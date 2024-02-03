@@ -6,11 +6,11 @@
 
 #version 450
 
-uniform sampler2D depth_tx2D;   // TODO: samplerPoint
+uniform sampler2D depth_point_tx2D;
 uniform vec2 proj_params;
 uniform vec4 fields; // vec4(ne, nb, fb, fe)
 
-layout(binding = 0, rg8ui) writeonly uniform image2D coc_tx2D;
+layout(binding = 0, rg8) writeonly uniform image2D coc_tx2D;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -28,8 +28,7 @@ void main() {
         return;
     }
 
-    // pointsampler in direct3d, is texelfetch correct then?
-    float ndc_depth = texelFetch(depth_tx2D, pixel_coords);
+    float ndc_depth = texelFetch(depth_point_tx2D, pixel_coords);
     float view_depth = DepthNDCToView(ndc_depth);
     float near = (fields[0] - view_depth) / (fields[0] - fields[1]);
     float far  = (view_depth - fields[2]) / (fields[3] - fields[2]);

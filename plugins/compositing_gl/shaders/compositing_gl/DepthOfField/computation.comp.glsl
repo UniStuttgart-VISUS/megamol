@@ -6,10 +6,15 @@
 
 #version 450
 
-uniform sampler2D color_4_tx2D;
-uniform sampler2D color_mul_coc_far_4_tx2D;
-uniform sampler2D coc_4_tx2D;
-uniform sampler2D coc_near_blurred_4_tx2D;
+uniform sampler2D color_4_point_tx2D;
+uniform sampler2D color_4_linear_tx2D;
+uniform sampler2D color_mul_coc_far_4_point_tx2D;
+uniform sampler2D color_mul_coc_far_4_linear_tx2D;
+uniform sampler2D coc_4_point_tx2D;
+uniform sampler2D coc_4_linear_tx2D;
+uniform sampler2D coc_near_blurred_4_point_tx2D;
+
+uniform float kernel_scale;
 
 layout(binding = 0, r11f_g11f_b10f) writeonly uniform image2D near_4_tx2D;
 layout(binding = 1, r11f_g11f_b10f) writeonly uniform image2D far_4_tx2D;
@@ -74,25 +79,25 @@ static const vec2 offsets[] = {
 };
 
 vec3 Near(ivec2 coords) {
-    vec3 result = texelFetch(color_4_tx2D, coords, 0); // TODO: pointSampler
+    vec3 result = texelFetch(color_4_point_tx2D, coords, 0);
 
     for(int i = 0; i < 48; ++i) {
         vec2 offset = kernel_scale * offsets[i];
-        result += texelFetch(color_4_tx2D, coords + offset, 0); // TODO: linearSampler
+        result += texelFetch(color_4_linear_tx2D, coords + offset, 0);
     }
 
     return result / 49.0;
 }
 
 vec3 Far(ivec2 coords) {
-    vec3 result = texelFetch(color_mul_coc_far_4_tx2D, coords, 0); // TODO: pointSampler
-    float weight_sum = texelFetch(coc_4_tx2D, coords, 0); // TODO: pointSampler
+    vec3 result = texelFetch(color_mul_coc_far_4_point_tx2D, coords, 0);
+    float weight_sum = texelFetch(coc_4_point_tx2D, coords, 0);
 
     for(int i = 0; i < 48; ++i) {
         vec2 offset = kernel_scale * offsets[i];
 
-        float coc_sample = texelFetch(coc_4_tx2D, coords + offset, 0).y; // far value, TODO: pointSampler
-        vec3 sample = texelFetch(color_mul_coc_far_4_tx2D, coords + offset, 0); // TODO: linearSampler
+        float coc_sample = texelFetch(coc_4_linear_tx2D, coords + offset, 0).y; // far value
+        vec3 sample = texelFetch(color_mul_coc_far_4_linear_tx2D, coords + offset, 0);
 
         result += sample;
         weight_sum += coc_sample;
@@ -110,14 +115,14 @@ void main() {
         return;
     }
 
-    float coc_near_blurred = texelFetch(coc_near_blurred_4_tx2D, pixel_coords, 0).x; // near value, TODO: pointSampler
-    float coc_far = texelFetch(coc_4_tx2D, pixel_coords, 0).y; // far value, TODO: pointSampler
+    float coc_near_blurred = texelFetch(coc_near_blurred_4_point_tx2D, pixel_coords, 0).x; // near value
+    float coc_far = texelFetch(coc_4_point_tx2D, pixel_coords, 0).y; // far value
 
     vec3 near = vec3(0.0);
     if(coc_near_blurred > 0.0) {
         near = Near(pixel_coords);
     } else {
-        near = texelFetch(color_4_tx2D, pixel_coords, 0);
+        near = texelFetch(color_4_point_tx2D, pixel_coords, 0);
     }
 
     vec3 far = vec3(0.0);

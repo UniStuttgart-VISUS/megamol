@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2021, MegaMol Dev Team
+ * Copyright (c) 2024, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -106,8 +106,26 @@ bool megamol::compositing_gl::DepthOfField::create() {
         downsample_prgm_ = core::utility::make_glowl_shader(
             "downsample/*", *shader_options_flags, "compositing_gl/DepthOfField/downsample.comp.glsl");
 
-        near_coc_blur_prgm_ = core::utility::make_glowl_shader(
-            "near_coc_blur/*", *shader_options_flags, "compositing_gl/DepthOfField/near_coc_blur.comp.glsl");
+        // TODO: removeDefinition() for shader_options
+        auto shader_options_max_filter_horizontal = shader_options;
+        shader_options_max_filter_horizontal.addDefinition("MAX_FILTER_HORIZONTAL");
+        coc_near_blur_prgm_[0] = core::utility::make_glowl_shader("coc_near_blur[0]/*",
+            shader_options_max_filter_horizontal, "compositing_gl/DepthOfField/near_coc_blur.comp.glsl");
+
+        auto shader_options_max_filter_vertical = shader_options;
+        shader_options_max_filter_vertical.addDefinition("MAX_FILTER_VERTICAL");
+        coc_near_blur_prgm_[1] = core::utility::make_glowl_shader("coc_near_blur[1]/*",
+            shader_options_max_filter_vertical, "compositing_gl/DepthOfField/near_coc_blur.comp.glsl");
+
+        auto shader_options_blur_filter_horizontal = shader_options;
+        shader_options_blur_filter_horizontal.addDefinition("BLUR_FILTER_HORIZONTAL");
+        coc_near_blur_prgm_[2] = core::utility::make_glowl_shader("coc_near_blur[2]/*",
+            shader_options_blur_filter_horizontal, "compositing_gl/DepthOfField/near_coc_blur.comp.glsl");
+
+        auto shader_options_blur_filter_vertical = shader_options;
+        shader_options_blur_filter_vertical.addDefinition("BLUR_FILTER_VERTICAL");
+        coc_near_blur_prgm_[3] = core::utility::make_glowl_shader("coc_near_blur[3]/*",
+            shader_options_blur_filter_vertical, "compositing_gl/DepthOfField/near_coc_blur.comp.glsl");
 
         computation_prgm_ = core::utility::make_glowl_shader(
             "computation/*", *shader_options_flags, "compositing_gl/DepthOfField/computation.comp.glsl");
@@ -121,31 +139,47 @@ bool megamol::compositing_gl::DepthOfField::create() {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("DepthOfField: " + std::string(e.what())).c_str());
     }
 
-    // init all textures
+    // layouts
     glowl::TextureLayout tx_layout_base = glowl::TextureLayout(GL_RGBA32F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1);
     glowl::TextureLayout tx_layout_r10f_g11f_b10f = glowl::TextureLayout(GL_R11F_G11F_B10F, 1, 1, 1, GL_RGB, GL_FLOAT, 1);
     glowl::TextureLayout tx_layout_r8_g8_unorm = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_FLOAT, 1);
     glowl::TextureLayout tx_layout_r8_unorm = glowl::TextureLayout(GL_R8, 1, 1, 1, GL_RED, GL_FLOAT, 1);
 
-    // textures for dof
+    // textures
     //color_tx2D_               = std::make_shared<glowl::Texture2D>("color", tx_layout_base, nullptr);
     //depth_tx2D_               = std::make_shared<glowl::Texture2D>("depth", depth_layout_lol, nullptr);
     coc_tx2D_                   = std::make_shared<glowl::Texture2D>("coc", tx_layout_r8_g8_unorm, nullptr);
     color_4_tx2D_               = std::make_shared<glowl::Texture2D>("color_4", tx_layout_r10f_g11f_b10f, nullptr);
     color_mul_coc_far_4_tx2D_   = std::make_shared<glowl::Texture2D>("color_mul_coc_far_4", tx_layout_r10f_g11f_b10f, nullptr);
     coc_4_tx2D_                 = std::make_shared<glowl::Texture2D>("coc_4", tx_layout_r8_g8_unorm, nullptr);
-    coc_near_blurred_4_tx2D_    = std::make_shared<glowl::Texture2D>("coc_near_blurred_4", tx_layout_r8_unorm, nullptr);
+    coc_near_blurred_4_tx2D_[0] = std::make_shared<glowl::Texture2D>("coc_near_blurred_max_x_4", tx_layout_r8_unorm, nullptr);
+    coc_near_blurred_4_tx2D_[1] = std::make_shared<glowl::Texture2D>("coc_near_blurred_max_4", tx_layout_r8_unorm, nullptr);
+    coc_near_blurred_4_tx2D_[2] = std::make_shared<glowl::Texture2D>("coc_near_blurred_blur_x_4", tx_layout_r8_unorm, nullptr);
+    coc_near_blurred_4_tx2D_[3] = std::make_shared<glowl::Texture2D>("coc_near_blurred_4", tx_layout_r8_unorm, nullptr);
     near_4_tx2D_                = std::make_shared<glowl::Texture2D>("near_4", tx_layout_r10f_g11f_b10f, nullptr);
     far_4_tx2D_                 = std::make_shared<glowl::Texture2D>("far_4", tx_layout_r10f_g11f_b10f, nullptr);
     near_fill_4_tx2D_           = std::make_shared<glowl::Texture2D>("near_fill_4", tx_layout_r10f_g11f_b10f, nullptr);
     far_fill_4_tx2D_            = std::make_shared<glowl::Texture2D>("far_fill_4", tx_layout_r10f_g11f_b10f, nullptr);
     output_tx2D_                = std::make_shared<glowl::Texture2D>("dof_output", tx_layout_base, nullptr);
 
-    // TODO: create 2 samplers for linear and point sampling
-    std::vector<std::pair<GLenum, GLint>> int_params = {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
-        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST},
-        {GL_TEXTURE_MAG_FILTER, GL_LINEAR}};
-    //smaa_layout_ = glowl::TextureLayout(GL_RGBA8, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, 1, int_params, {});
+    // point sampler
+    std::vector<std::pair<GLenum, GLint>> int_params = {
+        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+        {GL_TEXTURE_MAG_FILTER, GL_NEAREST}
+    };
+    point_sampler_ = std::make_shared<glowl::Sampler>("point_sampler", glowl::SamplerLayout(int_params));
+
+    // linear sampler
+    int_params.clear();
+    int_params = {
+        {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE},
+        {GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR},
+        {GL_TEXTURE_MAG_FILTER, GL_LINEAR}
+    };
+    bilinear_sampler_ = std::make_shared<glowl::Sampler>("bilinear_sampler", glowl::SamplerLayout(int_params));
 
     return true;
 }
@@ -161,17 +195,24 @@ void megamol::compositing_gl::DepthOfField::release() {
 }
 
 // TODO: make output texture also as function parameter?
+// TODO: get camera for proj/view matrix and ne,fe,nb,fb values
+// TODO: kernelScale and blend uniform
 /*
  * @megamol::compositing_gl::DepthOfField::cocGeneration
  */
 void megamol::compositing_gl::DepthOfField::cocGeneration(
-    const std::shared_ptr<glowl::Texture2D>& depth
+    const std::shared_ptr<glowl::Texture2D>& depth,
+    const glm::vec2& proj_params,
+    const glm::vec4& fields
 ) {
     coc_generation_prgm_->use();
 
     glActiveTexture(GL_TEXTURE0);
-    depth->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("depth_tx2D"), 0);
+    bindTextureWithPointSampler(depth, 0);
+    glUniform1i(coc_generation_prgm_->getUniformLocation("depth_point_tx2D"), 0);
+
+    glUniform2fv(coc_generation_prgm_->getUniformLocation("proj_params"), 1, glm::value_ptr(proj_params));
+    glUniform4fv(coc_generation_prgm_->getUniformLocation("fields"), 1, glm::value_ptr(fields));
 
     coc_tx2D_->bindImage(0, GL_WRITE_ONLY);
 
@@ -182,7 +223,7 @@ void megamol::compositing_gl::DepthOfField::cocGeneration(
     );
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    resetGLStates();
+    resetGLStates(1);
 }
 
 
@@ -196,11 +237,16 @@ void megamol::compositing_gl::DepthOfField::downsample(
     downsample_prgm_->use();
 
     glActiveTexture(GL_TEXTURE0);
-    color->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("color_tx2D"), 0);
+    bindTextureWithPointSampler(color, 0);
+    glUniform1i(downsample_prgm_->getUniformLocation("color_point_tx2D"), 0);
+
     glActiveTexture(GL_TEXTURE1);
-    coc->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("coc_tx2D"), 1);
+    bindTextureWithBilinearSampler(color, 1);
+    glUniform1i(downsample_prgm_->getUniformLocation("color_linear_tx2D"), 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    bindTextureWithPointSampler(coc, 2);
+    glUniform1i(downsample_prgm_->getUniformLocation("coc_point_tx2D"), 2);
 
     color_4_tx2D_->bindImage(0, GL_WRITE_ONLY);
     color_mul_coc_far_4_tx2D_->bindImage(1, GL_WRITE_ONLY);
@@ -213,7 +259,7 @@ void megamol::compositing_gl::DepthOfField::downsample(
     );
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    resetGLStates();
+    resetGLStates(3);
 }
 
 
@@ -223,13 +269,14 @@ void megamol::compositing_gl::DepthOfField::downsample(
 void megamol::compositing_gl::DepthOfField::nearCoCBlur(
     const std::shared_ptr<glowl::Texture2D>& coc_4
 ) {
-    near_coc_blur_prgm_->use();
+    // FIRST PASS - HORIZONTAL MAX
+    coc_near_blur_prgm_[0]->use();
 
     glActiveTexture(GL_TEXTURE0);
-    coc_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("coc_4_tx2D"), 0);
+    bindTextureWithPointSampler(coc_4, 0);
+    glUniform1i(coc_near_blur_prgm_[0]->getUniformLocation("coc_4_point_tx2D"), 0);
 
-    coc_near_blurred_4_tx2D_->bindImage(0, GL_WRITE_ONLY);
+    coc_near_blurred_4_tx2D_[0]->bindImage(0, GL_WRITE_ONLY);
 
     glDispatchCompute(
         static_cast<int>(std::ceil(getHalfWidth() / 8.0f)),
@@ -238,7 +285,58 @@ void megamol::compositing_gl::DepthOfField::nearCoCBlur(
     );
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    resetGLStates();
+
+    // SECOND PASS - VERTICAL MAX
+    coc_near_blur_prgm_[1]->use();
+
+    glActiveTexture(GL_TEXTURE0);
+    bindTextureWithPointSampler(coc_near_blurred_4_tx2D_[0], 0);
+    glUniform1i(coc_near_blur_prgm_[1]->getUniformLocation("coc_4_point_tx2D"), 0);
+
+    coc_near_blurred_4_tx2D_[1]->bindImage(0, GL_WRITE_ONLY);
+
+    glDispatchCompute(
+        static_cast<int>(std::ceil(getHalfWidth() / 8.0f)),
+        static_cast<int>(std::ceil(getHalfHeight() / 8.0f)),
+        1
+    );
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+
+    // THIRD PASS - HORIZONTAL BLUR
+    coc_near_blur_prgm_[2]->use();
+
+    glActiveTexture(GL_TEXTURE0);
+    bindTextureWithPointSampler(coc_near_blurred_4_tx2D_[1], 0);
+    glUniform1i(coc_near_blur_prgm_[2]->getUniformLocation("coc_4_point_tx2D"), 0);
+
+    coc_near_blurred_4_tx2D_[2]->bindImage(0, GL_WRITE_ONLY);
+
+    glDispatchCompute(
+        static_cast<int>(std::ceil(getHalfWidth() / 8.0f)),
+        static_cast<int>(std::ceil(getHalfHeight() / 8.0f)),
+        1
+    );
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+
+    // FINAL PASS - VERTICAL BLUR
+    coc_near_blur_prgm_[3]->use();
+
+    glActiveTexture(GL_TEXTURE0);
+    bindTextureWithPointSampler(coc_near_blurred_4_tx2D_[2], 0);
+    glUniform1i(coc_near_blur_prgm_[3]->getUniformLocation("coc_4_point_tx2D"), 0);
+
+    coc_near_blurred_4_tx2D_[3]->bindImage(0, GL_WRITE_ONLY);
+
+    glDispatchCompute(
+        static_cast<int>(std::ceil(getHalfWidth() / 8.0f)),
+        static_cast<int>(std::ceil(getHalfHeight() / 8.0f)),
+        1
+    );
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    resetGLStates(1);
 }
 
 
@@ -249,22 +347,37 @@ void megamol::compositing_gl::DepthOfField::computation(
     const std::shared_ptr<glowl::Texture2D>& color_4,
     const std::shared_ptr<glowl::Texture2D>& color_mul_coc_far_4,
     const std::shared_ptr<glowl::Texture2D>& coc_4,
-    const std::shared_ptr<glowl::Texture2D>& coc_near_blurred_4
+    const std::shared_ptr<glowl::Texture2D>& coc_near_blurred_4,
+    float kernel_scale
 ) {
     computation_prgm_->use();
 
     glActiveTexture(GL_TEXTURE0);
-    color_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("color_4_tx2D"), 0);
+    bindTextureWithPointSampler(color_4, 0);
+    glUniform1i(computation_prgm_->getUniformLocation("color_4_point_tx2D"), 0);
     glActiveTexture(GL_TEXTURE1);
-    color_mul_coc_far_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("color_mul_coc_far_4_tx2D"), 1);
+    bindTextureWithBilinearSampler(color_4, 1);
+    glUniform1i(computation_prgm_->getUniformLocation("color_4_linear_tx2D"), 1);
+
     glActiveTexture(GL_TEXTURE2);
-    coc_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("coc_4_tx2D"), 2);
+    bindTextureWithPointSampler(color_mul_coc_far_4, 2);
+    glUniform1i(computation_prgm_->getUniformLocation("color_mul_coc_far_4_point_tx2D"), 2);
     glActiveTexture(GL_TEXTURE3);
-    coc_near_blurred_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("coc_near_blurred_4_tx2D"), 3);
+    bindTextureWithBilinearSampler(color_mul_coc_far_4, 3);
+    glUniform1i(computation_prgm_->getUniformLocation("color_mul_coc_far_4_linear_tx2D"), 3);
+
+    glActiveTexture(GL_TEXTURE4);
+    bindTextureWithPointSampler(coc_4, 4);
+    glUniform1i(computation_prgm_->getUniformLocation("coc_4_point_tx2D"), 4);
+    glActiveTexture(GL_TEXTURE5);
+    bindTextureWithBilinearSampler(coc_4, 5);
+    glUniform1i(computation_prgm_->getUniformLocation("coc_4_linear_tx2D"), 5);
+
+    glActiveTexture(GL_TEXTURE6);
+    bindTextureWithPointSampler(coc_near_blurred_4, 6);
+    glUniform1i(computation_prgm_->getUniformLocation("coc_near_blurred_4_point_tx2D"), 6);
+
+    glUniform1f(computation_prgm_->getUniformLocation("kernel_scale"), kernel_scale);
 
     near_4_tx2D_->bindImage(0, GL_WRITE_ONLY);
     far_4_tx2D_->bindImage(1, GL_WRITE_ONLY);
@@ -276,7 +389,7 @@ void megamol::compositing_gl::DepthOfField::computation(
     );
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    resetGLStates();
+    resetGLStates(7);
 }
 
 
@@ -292,17 +405,20 @@ void megamol::compositing_gl::DepthOfField::fill(
     fill_prgm_->use();
 
     glActiveTexture(GL_TEXTURE0);
-    coc_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("coc_4_tx2D"), 0);
+    bindTextureWithPointSampler(coc_4, 0);
+    glUniform1i(fill_prgm_->getUniformLocation("coc_4_point_tx2D"), 0);
+
     glActiveTexture(GL_TEXTURE1);
-    coc_near_blurred_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("coc_near_blurred_4_tx2D"), 1);
+    bindTextureWithPointSampler(coc_near_blurred_4, 1);
+    glUniform1i(fill_prgm_->getUniformLocation("coc_near_blurred_4_point_tx2D"), 1);
+
     glActiveTexture(GL_TEXTURE2);
-    near_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("near_4_tx2D"), 2);
+    bindTextureWithPointSampler(near_4, 2);
+    glUniform1i(fill_prgm_->getUniformLocation("near_4_point_tx2D"), 2);
+
     glActiveTexture(GL_TEXTURE3);
-    far_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("far_4_tx2D"), 3);
+    bindTextureWithPointSampler(far_4, 3);
+    glUniform1i(fill_prgm_->getUniformLocation("far_4_point_tx2D"), 3);
 
     near_fill_4_tx2D_->bindImage(0, GL_WRITE_ONLY);
     far_fill_4_tx2D_->bindImage(1, GL_WRITE_ONLY);
@@ -314,7 +430,7 @@ void megamol::compositing_gl::DepthOfField::fill(
     );
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    resetGLStates();
+    resetGLStates(4);
 }
 
 
@@ -324,31 +440,39 @@ void megamol::compositing_gl::DepthOfField::fill(
 void megamol::compositing_gl::DepthOfField::composite(
     const std::shared_ptr<glowl::Texture2D>& color,
     const std::shared_ptr<glowl::Texture2D>& coc,
-    const std::shared_ptr<glowl::Texture2D>& near_4,
-    const std::shared_ptr<glowl::Texture2D>& far_4,
+    const std::shared_ptr<glowl::Texture2D>& coc_4,
+    const std::shared_ptr<glowl::Texture2D>& coc_near_blurred_4,
     const std::shared_ptr<glowl::Texture2D>& near_fill_4,
-    const std::shared_ptr<glowl::Texture2D>& far_fill_4
+    const std::shared_ptr<glowl::Texture2D>& far_fill_4,
+    float blend
 ) {
     composite_prgm_->use();
 
     glActiveTexture(GL_TEXTURE0);
-    color->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("coc_4_tx2D"), 0);
+    bindTextureWithPointSampler(color, 0);
+    glUniform1i(composite_prgm_->getUniformLocation("color_point_tx2D"), 0);
+
     glActiveTexture(GL_TEXTURE1);
-    coc->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("coc_near_blurred_4_tx2D"), 1);
+    bindTextureWithPointSampler(coc, 1);
+    glUniform1i(composite_prgm_->getUniformLocation("coc_point_tx2D"), 1);
+
     glActiveTexture(GL_TEXTURE2);
-    near_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("near_4_tx2D"), 2);
+    bindTextureWithPointSampler(coc_4, 2);
+    glUniform1i(composite_prgm_->getUniformLocation("coc_4_point_tx2D"), 2);
+
     glActiveTexture(GL_TEXTURE3);
-    far_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("far_4_tx2D"), 3);
+    bindTextureWithBilinearSampler(coc_near_blurred_4, 3);
+    glUniform1i(composite_prgm_->getUniformLocation("coc_near_blurred_4_linear_tx2D"), 3);
+
     glActiveTexture(GL_TEXTURE4);
-    near_fill_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("near_fill_4_tx2D"), 4);
+    bindTextureWithBilinearSampler(near_fill_4, 4);
+    glUniform1i(composite_prgm_->getUniformLocation("near_fill_4_linear_tx2D"), 4);
+
     glActiveTexture(GL_TEXTURE5);
-    far_fill_4->bindTexture();
-    glUniform1i(coc_generation_prgm_->getUniformLocation("far_fill_4_tx2D"), 5);
+    bindTextureWithPointSampler(far_fill_4, 5);
+    glUniform1i(composite_prgm_->getUniformLocation("far_fill_4_point_tx2D"), 5);
+
+    glUniform1f(composite_prgm_->getUniformLocation("blend"), blend);
 
     output_tx2D_->bindImage(0, GL_WRITE_ONLY);
 
@@ -359,7 +483,7 @@ void megamol::compositing_gl::DepthOfField::composite(
     );
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    resetGLStates();
+    resetGLStates(6);
 }
 
 
@@ -372,7 +496,10 @@ void megamol::compositing_gl::DepthOfField::clearAllTextures() {
     color_4_tx2D_->clearTexImage(col);
     color_mul_coc_far_4_tx2D_->clearTexImage(col);
     coc_4_tx2D_->clearTexImage(col);
-    coc_near_blurred_4_tx2D_->clearTexImage(col);
+    coc_near_blurred_4_tx2D_[0]->clearTexImage(col);
+    coc_near_blurred_4_tx2D_[1]->clearTexImage(col);
+    coc_near_blurred_4_tx2D_[2]->clearTexImage(col);
+    coc_near_blurred_4_tx2D_[3]->clearTexImage(col);
     near_4_tx2D_->clearTexImage(col);
     far_4_tx2D_->clearTexImage(col);
     near_fill_4_tx2D_->clearTexImage(col);
@@ -382,35 +509,36 @@ void megamol::compositing_gl::DepthOfField::clearAllTextures() {
 
 
 /*
- * @megamol::compositing_gl::DepthOfField::reloadAllTextures
+ * @megamol::compositing_gl::DepthOfField::resizeTexture
  */
-void megamol::compositing_gl::DepthOfField::reloadAllTextures() {
-    resizeTexture(coc_tx2D_,                 res_[0], res_[1]);
-    resizeTexture(color_4_tx2D_,             res_[2], res_[3]);
-    resizeTexture(color_mul_coc_far_4_tx2D_, res_[2], res_[3]);
-    resizeTexture(coc_4_tx2D_,               res_[2], res_[3]);
-    resizeTexture(coc_near_blurred_4_tx2D_,  res_[2], res_[3]);
-    resizeTexture(near_4_tx2D_,              res_[2], res_[3]);
-    resizeTexture(far_4_tx2D_,               res_[2], res_[3]);
-    resizeTexture(near_fill_4_tx2D_,         res_[2], res_[3]);
-    resizeTexture(far_fill_4_tx2D_,          res_[2], res_[3]);
-    resizeTexture(output_tx2D_,              res_[0], res_[1]);
-}
-
-
-/*
-* @megamol::compositing_gl::DepthOfField::resizeTexture
-*/
 void megamol::compositing_gl::DepthOfField::resizeTexture(
-    const std::shared_ptr<glowl::Texture2D>& tex,
-    int width,
-    int height)
-{
+    const std::shared_ptr<glowl::Texture2D>& tex, int width, int height) {
     auto tl = tex->getTextureLayout();
     tl.width = width;
     tl.height = height;
     tex->reload(tl, nullptr);
 }
+
+
+/*
+ * @megamol::compositing_gl::DepthOfField::reloadAllTextures
+ */
+void megamol::compositing_gl::DepthOfField::reloadAllTextures() {
+    resizeTexture(coc_tx2D_,                   res_[0], res_[1]);
+    resizeTexture(color_4_tx2D_,               res_[2], res_[3]);
+    resizeTexture(color_mul_coc_far_4_tx2D_,   res_[2], res_[3]);
+    resizeTexture(coc_4_tx2D_,                 res_[2], res_[3]);
+    resizeTexture(coc_near_blurred_4_tx2D_[0], res_[2], res_[3]);
+    resizeTexture(coc_near_blurred_4_tx2D_[1], res_[2], res_[3]);
+    resizeTexture(coc_near_blurred_4_tx2D_[2], res_[2], res_[3]);
+    resizeTexture(coc_near_blurred_4_tx2D_[3], res_[2], res_[3]);
+    resizeTexture(near_4_tx2D_,                res_[2], res_[3]);
+    resizeTexture(far_4_tx2D_,                 res_[2], res_[3]);
+    resizeTexture(near_fill_4_tx2D_,           res_[2], res_[3]);
+    resizeTexture(far_fill_4_tx2D_,            res_[2], res_[3]);
+    resizeTexture(output_tx2D_,                res_[0], res_[1]);
+}
+
 
 /*
  * @megamol::compositing_gl::DepthOfField::getDataCallback
@@ -461,14 +589,23 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
         // TODO: always? or just in case of resize? probably always
         clearAllTextures();
 
+        float kernel_scale = 1.f;
+        float blend = 1.f;
+        glm::vec4 fields(0.0);
+        glm::vec4 proj_params(0.0);
+
+        // TODO: get paramslot values for focal_distance and strength
+        // TODO: get camera
+
+
 
         // actual dof
-        cocGeneration(depth_tx2D);
+        cocGeneration(depth_tx2D, proj_params, fields);
         downsample(input_tx2D, coc_tx2D_);
         nearCoCBlur(coc_4_tx2D_);
-        computation(color_4_tx2D_, color_mul_coc_far_4_tx2D_, coc_4_tx2D_, coc_near_blurred_4_tx2D_);
-        fill(coc_4_tx2D_, coc_near_blurred_4_tx2D_, near_4_tx2D_, far_4_tx2D_);
-        composite(input_tx2D, coc_tx2D_, near_4_tx2D_, far_4_tx2D_, near_fill_4_tx2D_, far_fill_4_tx2D_);
+        computation(color_4_tx2D_, color_mul_coc_far_4_tx2D_, coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], kernel_scale);
+        fill(coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], near_4_tx2D_, far_4_tx2D_);
+        composite(input_tx2D, coc_tx2D_, near_4_tx2D_, far_4_tx2D_, near_fill_4_tx2D_, far_fill_4_tx2D_, blend);
 
 
 #ifdef MEGAMOL_USE_PROFILING
@@ -509,8 +646,8 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
             tex_dim = glm::vec2(coc_4_tx2D_->getWidth(), coc_4_tx2D_->getHeight());
             break;
         case 6:
-            tex_to_show = coc_near_blurred_4_tx2D_->getName();
-            tex_dim = glm::vec2(coc_near_blurred_4_tx2D_->getWidth(), coc_near_blurred_4_tx2D_->getHeight());
+            tex_to_show = coc_near_blurred_4_tx2D_[3]->getName();
+            tex_dim = glm::vec2(coc_near_blurred_4_tx2D_[3]->getWidth(), coc_near_blurred_4_tx2D_[3]->getHeight());
             break;
         case 7:
             tex_to_show = near_4_tx2D_->getName();

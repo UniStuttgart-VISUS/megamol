@@ -6,9 +6,9 @@
 
 #version 450
 
-uniform sampler2D coc_4_tx2D;
+uniform sampler2D coc_4_point_tx2D;
 
-layout(binding = 0, r8ui) writeonly uniform image2D coc_near_blurred_4_tx2D;
+layout(binding = 0, r8) writeonly uniform image2D coc_near_blurred_4_tx2D;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -24,11 +24,11 @@ void main() {
 #ifdef MAX_FILTER_HORIZONTAL
     // PASS 1: horizontal max filter
 
-    int mx = INT_MIN;
+    float mx = FLT_MIN;
     ivec2 step = ivec2(-6, 0);
 
     for(int i = -6; i <= 6; ++i) {
-        mx = max(mx, texture(coc_4_tx2D, pixel_coords + step).r);
+        mx = max(mx, texture(coc_4_point_tx2D, pixel_coords + step).x);
         step.x++;
     }
 
@@ -37,11 +37,11 @@ void main() {
 #elif MAX_FILTER_VERTICAL
     // PASS 2: veritcal max filter
 
-    int mx = INT_MIN
+    float mx = FLT_MIN
     ivec2 step = ivec2(0, -6);
 
     for(int i = -6; i <= 6; ++i) {
-        mx = max(mx, texture(coc_4_tx2D, pixel_coords + step).r);
+        mx = max(mx, texture(coc_4_point_tx2D, pixel_coords + step).x);
         step.y++;
     }
 
@@ -50,28 +50,28 @@ void main() {
 #elif BLUR_FILTER_HORIZONTAL
     // PASS 3: horizontal blur filter
 
-    int blur = 0;
-    ivec2 step = ivec2(0, 0);
+    float blur = 0;
+    ivec2 step = ivec2(-6, 0);
 
-    for(int i = 0; i <= 12; ++i) {
-        blur += texture(coc_4_tx2D, pixel_coords + step).r;
+    for(int i = -6; i <= 6; ++i) {
+        blur += texture(coc_4_point_tx2D, pixel_coords + step).x;
         step.x++;
     }
 
-    imageStore(coc_near_blurred_4_tx2D, pixel_coords, blur / 13);
+    imageStore(coc_near_blurred_4_tx2D, pixel_coords, blur / 13.0);
 
 #else
     // PASS 4: vertical blur filter
 
-    int blur = 0;
-    ivec2 step = ivec2(0, 0);
+    float blur = 0;
+    ivec2 step = ivec2(0, -6);
 
-    for(int i = 0; i <= 12; ++i) {
-        blur += texture(coc_4_tx2D, pixel_coords + step).r;
+    for(int i = -6; i <= 6; ++i) {
+        blur += texture(coc_4_point_tx2D, pixel_coords + step).x;
         step.y++;
     }
 
-    imageStore(coc_near_blurred_4_tx2D, pixel_coords, blur / 13);
+    imageStore(coc_near_blurred_4_tx2D, pixel_coords, blur / 13.0);
 
 #endif
 

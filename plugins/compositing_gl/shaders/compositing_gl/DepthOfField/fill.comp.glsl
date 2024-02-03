@@ -6,10 +6,10 @@
 
 #version 450
 
-uniform sampler2D coc_4_tx2D;
-uniform sampler2D coc_near_blurred_4_tx2D;
-uniform sampler2D near_4_tx2D;
-uniform sampler2D far_4_tx2D;
+uniform sampler2D coc_4_point_tx2D;
+uniform sampler2D coc_near_blurred_4_point_tx2D;
+uniform sampler2D near_4_point_tx2D;
+uniform sampler2D far_4_point_tx2D;
 
 layout(binding = 0, r11f_g11f_b10f) writeonly uniform image2D near_fill_4_tx2D;
 layout(binding = 1, r11f_g11f_b10f) writeonly uniform image2D far_fill_4_tx2D;
@@ -25,22 +25,22 @@ void main() {
     }
 
     vec3 near_fill = vec3(0.0);
-    float coc_near_blurred = texelFetch(coc_near_blurred_4_tx2D, pixel_coords, 0).x; // TODO: pointSampler
+    float coc_near_blurred = texelFetch(coc_near_blurred_4_point_tx2D, pixel_coords, 0).x;
     if(coc_near_blurred > 0.0) {
         for(int i = -1; i <= 1; ++i) {
             for(int j = -1; j <= 1; ++j) {
-                vec3 sample = texelFetch(near_4_tx2D, pixel_coords + ivec2(i, j), 0); // TODO: pointSampler
+                vec3 sample = texelFetch(near_4_point_tx2D, pixel_coords + ivec2(i, j), 0);
                 near_fill = max(near_fill, sample);
             }
         }
     }
 
     vec3 far_fill = vec3(0.0);
-    float coc_far = texelFetch(coc_4_tx2D, pixel_coords, 0).y; // TODO: pointSampler
+    float coc_far = texelFetch(coc_4_point_tx2D, pixel_coords, 0).y;
     if(coc_far > 0.0) {
         for(int i = -1; i <= 1; ++i) {
             for(int j = -1; j <= 1; ++j) {
-                vec3 sample = texelFetch(far_4_tx2D, pixel_coords + ivec2(i, j), 0); // TODO: pointSampler
+                vec3 sample = texelFetch(far_4_point_tx2D, pixel_coords + ivec2(i, j), 0);
                 far_fill = max(far_fill, sample);
             }
         }
