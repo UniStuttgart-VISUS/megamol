@@ -99,11 +99,6 @@ private:
     }
 
     /**
-     * \brief Sets GUI parameter slot visibility depending on antialiasing technique.
-     */
-    bool visibilityCallback(core::param::ParamSlot& slot);
-
-    /**
      * \brief Sets texture format variables and recompiles shaders.
      *
      *  @return 'true' if updates sucessfull, 'false' otherwise
@@ -324,6 +319,15 @@ private:
     // ivec4(full_width, full_height, half_width, half_height)
     glm::ivec4 res_;
 
+    /** Paramslot for strength. Used for determining kernel scale and blend values */
+    megamol::core::param::ParamSlot ps_strength_;
+
+    /** Paramslot for focal distance. Used for ne, nb, fb, fe */
+    megamol::core::param::ParamSlot ps_focal_distance_;
+
+    /** Paramslot for focal range. Used for ne, nb, fb, fe. Determines the range between in-focus and out-focus. */
+    megamol::core::param::ParamSlot ps_focal_range_;
+
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot output_tex_slot_;
 
@@ -332,6 +336,9 @@ private:
 
     /** Slot for optionally querying a depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot depth_tex_slot_;
+
+    /** Slot for camera */
+    megamol::core::CallerSlot camera_slot_;
 
     CompositingOutHandler out_format_handler_;
 

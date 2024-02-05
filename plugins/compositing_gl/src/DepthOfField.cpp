@@ -28,11 +28,16 @@ megamol::compositing_gl::DepthOfField::DepthOfField()
         : mmstd_gl::ModuleGL()
         , version_(0)
         , res_(0)
+        , ps_strength_("Strength", "Used to determine the kernel scale and blend values.")
+        , ps_focal_distance_("FocalDistance", "Used to determine ne, nb, fb, fe values for coc generation.")
+        , ps_focal_range_("FocalRange",
+              "Range between in-focus and out-focus. Used to determine ne, nb, fb, fe values for coc generation.")
         , tex_inspector_({"Color/Input", "Depth", "CoC", "Color_4", "Color_mul_coc_far_4", "CoC_4", "CoC_near_blurred_4",
               "Near_4", "Far_4", "Near_fill_4", "Far_fill_4", "Output"})
         , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")
         , input_tex_slot_("InputTexture", "Connects the input texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth texture")
+        , camera_slot_("Camera", "Connects the camera")
         , settings_have_changed_(false)
         , out_format_handler_("OUTFORMAT",
               {
@@ -42,32 +47,39 @@ megamol::compositing_gl::DepthOfField::DepthOfField()
               },
               std::function<bool()>(std::bind(&DepthOfField::textureFormatUpdate, this))) {
 
-    /*auto aa_modes = new core::param::EnumParam(1);
-    aa_modes->SetTypePair(0, "SMAA");
-    aa_modes->SetTypePair(1, "FXAA");
-    aa_modes->SetTypePair(2, "None");
-    this->mode_.SetParameter(aa_modes);
-    this->mode_.SetUpdateCallback(&megamol::compositing_gl::DepthOfField::visibilityCallback);
-    this->MakeSlotAvailable(&this->mode_);*/
+    ps_strength_ << new core::param::FloatParam(1.f);
+    ps_strength_.SetUpdateCallback(&megamol::compositing_gl::DepthOfField::setSettingsCallback);
+    MakeSlotAvailable(&ps_strength_);
 
-    auto tex_inspector_slots = this->tex_inspector_.GetParameterSlots();
+    ps_focal_distance_ << new core::param::FloatParam(40.f);
+    ps_focal_distance_.SetUpdateCallback(&megamol::compositing_gl::DepthOfField::setSettingsCallback);
+    MakeSlotAvailable(&ps_focal_distance_);
+
+    ps_focal_range_ << new core::param::FloatParam(20.f);
+    ps_focal_range_.SetUpdateCallback(&megamol::compositing_gl::DepthOfField::setSettingsCallback);
+    MakeSlotAvailable(&ps_focal_range_);
+
+    auto tex_inspector_slots = tex_inspector_.GetParameterSlots();
     for (auto& tex_slot : tex_inspector_slots) {
-        this->MakeSlotAvailable(tex_slot);
+        MakeSlotAvailable(tex_slot);
     }
 
-    this->MakeSlotAvailable(out_format_handler_.getFormatSelectorSlot());
+    MakeSlotAvailable(out_format_handler_.getFormatSelectorSlot());
 
-    this->output_tex_slot_.SetCallback(
+    output_tex_slot_.SetCallback(
         compositing_gl::CallTexture2D::ClassName(), "GetData", &DepthOfField::getDataCallback);
-    this->output_tex_slot_.SetCallback(
+    output_tex_slot_.SetCallback(
         compositing_gl::CallTexture2D::ClassName(), "GetMetaData", &DepthOfField::getMetaDataCallback);
-    this->MakeSlotAvailable(&this->output_tex_slot_);
+    MakeSlotAvailable(&output_tex_slot_);
 
-    this->input_tex_slot_.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
-    this->MakeSlotAvailable(&this->input_tex_slot_);
+    input_tex_slot_.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
+    MakeSlotAvailable(&input_tex_slot_);
 
-    this->depth_tex_slot_.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
-    this->MakeSlotAvailable(&this->depth_tex_slot_);
+    depth_tex_slot_.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
+    MakeSlotAvailable(&depth_tex_slot_);
+
+    camera_slot_.SetCompatibleCall<CallCameraDescription>();
+    MakeSlotAvailable(&camera_slot_);
 }
 
 
@@ -75,7 +87,7 @@ megamol::compositing_gl::DepthOfField::DepthOfField()
  * @megamol::compositing_gl::DepthOfField::~DepthOfField
  */
 megamol::compositing_gl::DepthOfField::~DepthOfField() {
-    this->Release();
+    Release();
 }
 
 /*
@@ -194,9 +206,17 @@ void megamol::compositing_gl::DepthOfField::release() {
 #endif
 }
 
+
+/*
+ * @megamol::compositing_gl::AntiAliasing::setSettingsCallback
+ */
+bool megamol::compositing_gl::DepthOfField::setSettingsCallback(core::param::ParamSlot& slot) {
+    settings_have_changed_ = true;
+    return true;
+}
+
+
 // TODO: make output texture also as function parameter?
-// TODO: get camera for proj/view matrix and ne,fe,nb,fb values
-// TODO: kernelScale and blend uniform
 /*
  * @megamol::compositing_gl::DepthOfField::cocGeneration
  */
@@ -545,8 +565,9 @@ void megamol::compositing_gl::DepthOfField::reloadAllTextures() {
  */
 bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<compositing_gl::CallTexture2D*>(&caller);
-    auto rhs_call_input = input_tex_slot_.CallAs<compositing_gl::CallTexture2D>();
-    auto rhs_call_depth = depth_tex_slot_.CallAs<compositing_gl::CallTexture2D>();
+    auto rhs_call_input =  input_tex_slot_.CallAs<compositing_gl::CallTexture2D>();
+    auto rhs_call_depth =  depth_tex_slot_.CallAs<compositing_gl::CallTexture2D>();
+    auto rhs_call_camera = camera_slot_.CallAs<compositing_gl::CallCamera>();
 
     if (lhs_tc == NULL)
         return false;
@@ -563,7 +584,13 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
             return false;
     }
 
+    if (rhs_call_camera != NULL) {
+        if (!(*rhs_call_camera)(0))
+            return false; 
+    }
+
     bool something_has_changed = (rhs_call_input != NULL ? rhs_call_input->hasUpdate() : false) ||
+                                 (rhs_call_input != NULL ? rhs_call_camera->hasUpdate() : false) ||
                                  settings_have_changed_;
 
     // get input
@@ -589,23 +616,48 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
         // TODO: always? or just in case of resize? probably always
         clearAllTextures();
 
-        float kernel_scale = 1.f;
+        // set kernel_scale and blend based on param strength from ps_strength_
+        float strength = ps_strength_.Param<core::param::FloatParam>()->Value();
+        float kernel_scale = strength >= 0.25f ? strength : 0.25f;
         float blend = 1.f;
-        glm::vec4 fields(0.0);
-        glm::vec4 proj_params(0.0);
 
-        // TODO: get paramslot values for focal_distance and strength
-        // TODO: get camera
+        if (strength >= 0.25f) {
+            kernel_scale = strength;
+            //blend = 1.f;
+        } else {
+            kernel_scale = 0.25f;
+            blend = 4.f * strength;
+        }
+
+        // calculate ne, nb, fb, fe based on focal distance and focal range
+        float focal_distance = ps_focal_distance_.Param<core::param::FloatParam>()->Value();
+        float focal_range = ps_focal_range_.Param<core::param::FloatParam>()->Value();
+
+        float ne = std::max(0.f, focal_distance - focal_range);
+        float nb = focal_distance;
+        float fb = focal_distance;
+        float fe = focal_distance + focal_range;
+
+        glm::vec4 fields(ne, nb, fb, fe);
+
+        // get camera to retrieve projection transformation matrix
+        // needed to calc viewspace depth from ndc depth in coc generation pass
+        core::view::Camera cam = rhs_call_camera->getData();
+        glm::mat4 proj_mx = cam.getProjectionMatrix();
+        // TODO: actually correct? might be wrong row-major order
+        // TODO: possibly try proj_mx[2][3] for the second parameter
+        glm::vec2 proj_params(proj_mx[2][2], proj_mx[3][2]);
 
 
-
-        // actual dof
+        // ACTUAL DEPTH OF FIELD CALCULATION
+        // ---------------------------------
         cocGeneration(depth_tx2D, proj_params, fields);
         downsample(input_tx2D, coc_tx2D_);
         nearCoCBlur(coc_4_tx2D_);
         computation(color_4_tx2D_, color_mul_coc_far_4_tx2D_, coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], kernel_scale);
         fill(coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], near_4_tx2D_, far_4_tx2D_);
         composite(input_tx2D, coc_tx2D_, near_4_tx2D_, far_4_tx2D_, near_fill_4_tx2D_, far_fill_4_tx2D_, blend);
+        // ---------------------------------
 
 
 #ifdef MEGAMOL_USE_PROFILING
