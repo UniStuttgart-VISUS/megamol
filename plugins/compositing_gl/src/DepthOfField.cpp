@@ -33,7 +33,7 @@ megamol::compositing_gl::DepthOfField::DepthOfField()
         , ps_focal_range_("FocalRange",
               "Range between in-focus and out-focus. Used to determine ne, nb, fb, fe values for coc generation.")
         , tex_inspector_({"Color/Input", "Depth", "CoC", "Color_4", "Color_mul_coc_far_4", "CoC_4", "CoC_near_blurred_4",
-              "Near_4", "Far_4", "Near_fill_4", "Far_fill_4", "Output"})
+              "Near_field_4", "Far_field_4", "Near_field_filled_4", "Far_field_filled_4", "Output"})
         , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")
         , input_tex_slot_("InputTexture", "Connects the input texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth texture")
@@ -106,7 +106,6 @@ bool megamol::compositing_gl::DepthOfField::create() {
 #endif
 
     // create shader programs
-    // TODO: need to use out_format_handler_?
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     auto shader_options_flags = out_format_handler_.addDefinitions(shader_options);
@@ -152,8 +151,9 @@ bool megamol::compositing_gl::DepthOfField::create() {
     }
 
     // layouts
+    // TODO: use out_format_handler_ for output
     glowl::TextureLayout tx_layout_base = glowl::TextureLayout(GL_RGBA32F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1);
-    glowl::TextureLayout tx_layout_r10f_g11f_b10f = glowl::TextureLayout(GL_R11F_G11F_B10F, 1, 1, 1, GL_RGB, GL_FLOAT, 1);
+    glowl::TextureLayout tx_layout_r11f_g11f_b10f = glowl::TextureLayout(GL_R11F_G11F_B10F, 1, 1, 1, GL_RGB, GL_FLOAT, 1);
     glowl::TextureLayout tx_layout_r8_g8_unorm = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_FLOAT, 1);
     glowl::TextureLayout tx_layout_r8_unorm = glowl::TextureLayout(GL_R8, 1, 1, 1, GL_RED, GL_FLOAT, 1);
 
@@ -161,17 +161,17 @@ bool megamol::compositing_gl::DepthOfField::create() {
     //color_tx2D_               = std::make_shared<glowl::Texture2D>("color", tx_layout_base, nullptr);
     //depth_tx2D_               = std::make_shared<glowl::Texture2D>("depth", depth_layout_lol, nullptr);
     coc_tx2D_                   = std::make_shared<glowl::Texture2D>("coc", tx_layout_r8_g8_unorm, nullptr);
-    color_4_tx2D_               = std::make_shared<glowl::Texture2D>("color_4", tx_layout_r10f_g11f_b10f, nullptr);
-    color_mul_coc_far_4_tx2D_   = std::make_shared<glowl::Texture2D>("color_mul_coc_far_4", tx_layout_r10f_g11f_b10f, nullptr);
+    color_4_tx2D_               = std::make_shared<glowl::Texture2D>("color_4", tx_layout_r11f_g11f_b10f, nullptr);
+    color_mul_coc_far_4_tx2D_   = std::make_shared<glowl::Texture2D>("color_mul_coc_far_4", tx_layout_r11f_g11f_b10f, nullptr);
     coc_4_tx2D_                 = std::make_shared<glowl::Texture2D>("coc_4", tx_layout_r8_g8_unorm, nullptr);
     coc_near_blurred_4_tx2D_[0] = std::make_shared<glowl::Texture2D>("coc_near_blurred_max_x_4", tx_layout_r8_unorm, nullptr);
     coc_near_blurred_4_tx2D_[1] = std::make_shared<glowl::Texture2D>("coc_near_blurred_max_4", tx_layout_r8_unorm, nullptr);
     coc_near_blurred_4_tx2D_[2] = std::make_shared<glowl::Texture2D>("coc_near_blurred_blur_x_4", tx_layout_r8_unorm, nullptr);
     coc_near_blurred_4_tx2D_[3] = std::make_shared<glowl::Texture2D>("coc_near_blurred_4", tx_layout_r8_unorm, nullptr);
-    near_4_tx2D_                = std::make_shared<glowl::Texture2D>("near_4", tx_layout_r10f_g11f_b10f, nullptr);
-    far_4_tx2D_                 = std::make_shared<glowl::Texture2D>("far_4", tx_layout_r10f_g11f_b10f, nullptr);
-    near_fill_4_tx2D_           = std::make_shared<glowl::Texture2D>("near_fill_4", tx_layout_r10f_g11f_b10f, nullptr);
-    far_fill_4_tx2D_            = std::make_shared<glowl::Texture2D>("far_fill_4", tx_layout_r10f_g11f_b10f, nullptr);
+    near_field_4_tx2D_          = std::make_shared<glowl::Texture2D>("near_field_4", tx_layout_r11f_g11f_b10f, nullptr);
+    far_field_4_tx2D_           = std::make_shared<glowl::Texture2D>("far_field_4", tx_layout_r11f_g11f_b10f, nullptr);
+    near_field_filled_4_tx2D_   = std::make_shared<glowl::Texture2D>("near_field_filled_4", tx_layout_r11f_g11f_b10f, nullptr);
+    far_field_filled_4_tx2D_    = std::make_shared<glowl::Texture2D>("far_field_filled_4", tx_layout_r11f_g11f_b10f, nullptr);
     output_tx2D_                = std::make_shared<glowl::Texture2D>("dof_output", tx_layout_base, nullptr);
 
     // point sampler
@@ -399,8 +399,8 @@ void megamol::compositing_gl::DepthOfField::computation(
 
     glUniform1f(computation_prgm_->getUniformLocation("kernel_scale"), kernel_scale);
 
-    near_4_tx2D_->bindImage(0, GL_WRITE_ONLY);
-    far_4_tx2D_->bindImage(1, GL_WRITE_ONLY);
+    near_field_4_tx2D_->bindImage(0, GL_WRITE_ONLY);
+    far_field_4_tx2D_->bindImage(1, GL_WRITE_ONLY);
 
     glDispatchCompute(
         static_cast<int>(std::ceil(getHalfWidth() / 8.0f)),
@@ -434,14 +434,14 @@ void megamol::compositing_gl::DepthOfField::fill(
 
     glActiveTexture(GL_TEXTURE2);
     bindTextureWithPointSampler(near_4, 2);
-    glUniform1i(fill_prgm_->getUniformLocation("near_4_point_tx2D"), 2);
+    glUniform1i(fill_prgm_->getUniformLocation("near_field_4_point_tx2D"), 2);
 
     glActiveTexture(GL_TEXTURE3);
     bindTextureWithPointSampler(far_4, 3);
-    glUniform1i(fill_prgm_->getUniformLocation("far_4_point_tx2D"), 3);
+    glUniform1i(fill_prgm_->getUniformLocation("far_field_4_point_tx2D"), 3);
 
-    near_fill_4_tx2D_->bindImage(0, GL_WRITE_ONLY);
-    far_fill_4_tx2D_->bindImage(1, GL_WRITE_ONLY);
+    near_field_filled_4_tx2D_->bindImage(0, GL_WRITE_ONLY);
+    far_field_filled_4_tx2D_->bindImage(1, GL_WRITE_ONLY);
 
     glDispatchCompute(
         static_cast<int>(std::ceil(getHalfWidth() / 8.0f)),
@@ -486,11 +486,11 @@ void megamol::compositing_gl::DepthOfField::composite(
 
     glActiveTexture(GL_TEXTURE4);
     bindTextureWithBilinearSampler(near_fill_4, 4);
-    glUniform1i(composite_prgm_->getUniformLocation("near_fill_4_linear_tx2D"), 4);
+    glUniform1i(composite_prgm_->getUniformLocation("near_field_filled_4_linear_tx2D"), 4);
 
     glActiveTexture(GL_TEXTURE5);
     bindTextureWithPointSampler(far_fill_4, 5);
-    glUniform1i(composite_prgm_->getUniformLocation("far_fill_4_point_tx2D"), 5);
+    glUniform1i(composite_prgm_->getUniformLocation("far_field_filled_4_point_tx2D"), 5);
 
     glUniform1f(composite_prgm_->getUniformLocation("blend"), blend);
 
@@ -520,10 +520,10 @@ void megamol::compositing_gl::DepthOfField::clearAllTextures() {
     coc_near_blurred_4_tx2D_[1]->clearTexImage(col);
     coc_near_blurred_4_tx2D_[2]->clearTexImage(col);
     coc_near_blurred_4_tx2D_[3]->clearTexImage(col);
-    near_4_tx2D_->clearTexImage(col);
-    far_4_tx2D_->clearTexImage(col);
-    near_fill_4_tx2D_->clearTexImage(col);
-    far_fill_4_tx2D_->clearTexImage(col);
+    near_field_4_tx2D_->clearTexImage(col);
+    far_field_4_tx2D_->clearTexImage(col);
+    near_field_filled_4_tx2D_->clearTexImage(col);
+    far_field_filled_4_tx2D_->clearTexImage(col);
     output_tx2D_->clearTexImage(col);
 }
 
@@ -552,10 +552,10 @@ void megamol::compositing_gl::DepthOfField::reloadAllTextures() {
     resizeTexture(coc_near_blurred_4_tx2D_[1], res_[2], res_[3]);
     resizeTexture(coc_near_blurred_4_tx2D_[2], res_[2], res_[3]);
     resizeTexture(coc_near_blurred_4_tx2D_[3], res_[2], res_[3]);
-    resizeTexture(near_4_tx2D_,                res_[2], res_[3]);
-    resizeTexture(far_4_tx2D_,                 res_[2], res_[3]);
-    resizeTexture(near_fill_4_tx2D_,           res_[2], res_[3]);
-    resizeTexture(far_fill_4_tx2D_,            res_[2], res_[3]);
+    resizeTexture(near_field_4_tx2D_,          res_[2], res_[3]);
+    resizeTexture(far_field_4_tx2D_,           res_[2], res_[3]);
+    resizeTexture(near_field_filled_4_tx2D_,   res_[2], res_[3]);
+    resizeTexture(far_field_filled_4_tx2D_,    res_[2], res_[3]);
     resizeTexture(output_tx2D_,                res_[0], res_[1]);
 }
 
@@ -618,9 +618,10 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
 
         // set kernel_scale and blend based on param strength from ps_strength_
         float strength = ps_strength_.Param<core::param::FloatParam>()->Value();
-        float kernel_scale = strength >= 0.25f ? strength : 0.25f;
+        float kernel_scale = 1.f;
         float blend = 1.f;
-
+        // TODO: strength might need to be restricted to some range (possibly [0.25, 1.0]?)
+        // otherwise it could blow the texture coordinates out of the park
         if (strength >= 0.25f) {
             kernel_scale = strength;
             //blend = 1.f;
@@ -655,8 +656,8 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
         downsample(input_tx2D, coc_tx2D_);
         nearCoCBlur(coc_4_tx2D_);
         computation(color_4_tx2D_, color_mul_coc_far_4_tx2D_, coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], kernel_scale);
-        fill(coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], near_4_tx2D_, far_4_tx2D_);
-        composite(input_tx2D, coc_tx2D_, near_4_tx2D_, far_4_tx2D_, near_fill_4_tx2D_, far_fill_4_tx2D_, blend);
+        fill(coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], near_field_4_tx2D_, far_field_4_tx2D_);
+        composite(input_tx2D, coc_tx2D_, near_field_4_tx2D_, far_field_4_tx2D_, near_field_filled_4_tx2D_, far_field_filled_4_tx2D_, blend);
         // ---------------------------------
 
 
@@ -702,20 +703,20 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
             tex_dim = glm::vec2(coc_near_blurred_4_tx2D_[3]->getWidth(), coc_near_blurred_4_tx2D_[3]->getHeight());
             break;
         case 7:
-            tex_to_show = near_4_tx2D_->getName();
-            tex_dim = glm::vec2(near_4_tx2D_->getWidth(), near_4_tx2D_->getHeight());
+            tex_to_show = near_field_4_tx2D_->getName();
+            tex_dim = glm::vec2(near_field_4_tx2D_->getWidth(), near_field_4_tx2D_->getHeight());
             break;
         case 8:
-            tex_to_show = far_4_tx2D_->getName();
-            tex_dim = glm::vec2(far_4_tx2D_->getWidth(), far_4_tx2D_->getHeight());
+            tex_to_show = far_field_4_tx2D_->getName();
+            tex_dim = glm::vec2(far_field_4_tx2D_->getWidth(), far_field_4_tx2D_->getHeight());
             break;
         case 9:
-            tex_to_show = near_fill_4_tx2D_->getName();
-            tex_dim = glm::vec2(near_fill_4_tx2D_->getWidth(), near_fill_4_tx2D_->getHeight());
+            tex_to_show = near_field_filled_4_tx2D_->getName();
+            tex_dim = glm::vec2(near_field_filled_4_tx2D_->getWidth(), near_field_filled_4_tx2D_->getHeight());
             break;
         case 10:
-            tex_to_show = far_fill_4_tx2D_->getName();
-            tex_dim = glm::vec2(far_fill_4_tx2D_->getWidth(), far_fill_4_tx2D_->getHeight());
+            tex_to_show = far_field_filled_4_tx2D_->getName();
+            tex_dim = glm::vec2(far_field_filled_4_tx2D_->getWidth(), far_field_filled_4_tx2D_->getHeight());
             break;
         case 11:
             tex_to_show = output_tx2D_->getName();

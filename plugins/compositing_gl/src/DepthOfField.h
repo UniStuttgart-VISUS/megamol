@@ -157,7 +157,7 @@ private:
      * \param color_mul_coc_far_4 The downsampled color texture multiplied by far coc values generated in the second pass.
      * \param coc_4               The downsampled coc texture generated in the second pass.
      * \param coc_near_blurred_4  The downsampled blurred near coc texture generated in the third pass.
-     * \param kernel_scale        TODO
+     * \param kernel_scale        Scales the ring sample size. Practically shifts the ring samples to make the sample ring bigger/smaller.
      */
     void computation(
         const std::shared_ptr<glowl::Texture2D>& color_4,
@@ -245,7 +245,8 @@ private:
     /**
      * \brief Bind a texture with an external bilinear sampler (GL_LINEAR and GL_LINEAR_MIPMAP_LINEAR for min/mag filters).
      *        This is pure texture/sampler binding, so practically only replacing a
-     *        glowl::Texture2D::bindingTexture() call; no glActiveTexture or similar is called.
+     *        glowl::Texture2D::bindingTexture() call.
+     *        No glActiveTexture or similar is called!
      *
      * \param tex The texture to bind when point sampling is needed.
      * \param tex_unit The texture unit tex is bound to.
@@ -306,10 +307,10 @@ private:
     std::shared_ptr<glowl::Texture2D> color_mul_coc_far_4_tx2D_;
     std::shared_ptr<glowl::Texture2D> coc_4_tx2D_;
     std::shared_ptr<glowl::Texture2D> coc_near_blurred_4_tx2D_[4];
-    std::shared_ptr<glowl::Texture2D> near_4_tx2D_;
-    std::shared_ptr<glowl::Texture2D> far_4_tx2D_;
-    std::shared_ptr<glowl::Texture2D> near_fill_4_tx2D_;
-    std::shared_ptr<glowl::Texture2D> far_fill_4_tx2D_;
+    std::shared_ptr<glowl::Texture2D> near_field_4_tx2D_;
+    std::shared_ptr<glowl::Texture2D> far_field_4_tx2D_;
+    std::shared_ptr<glowl::Texture2D> near_field_filled_4_tx2D_;
+    std::shared_ptr<glowl::Texture2D> far_field_filled_4_tx2D_;
     std::shared_ptr<glowl::Texture2D> output_tx2D_;
 
     /** Sampler for different texture sampling */

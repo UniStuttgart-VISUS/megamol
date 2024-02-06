@@ -16,13 +16,13 @@ uniform sampler2D coc_near_blurred_4_point_tx2D;
 
 uniform float kernel_scale;
 
-layout(binding = 0, r11f_g11f_b10f) writeonly uniform image2D near_4_tx2D;
-layout(binding = 1, r11f_g11f_b10f) writeonly uniform image2D far_4_tx2D;
+layout(binding = 0, r11f_g11f_b10f) writeonly uniform image2D near_field_4_tx2D;
+layout(binding = 1, r11f_g11f_b10f) writeonly uniform image2D far_field_4_tx2D;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 // https://github.com/maxest/MaxestFramework/blob/master/samples/dof/data/dof_ps.hlsl
-static const vec2 offsets[] = {
+const vec2 offsets[] = {
     // first ring
 	2.0 * vec2(1.000000f, 0.000000f),
 	2.0 * vec2(0.707107f, 0.707107f),
@@ -78,28 +78,28 @@ static const vec2 offsets[] = {
 	6.0 * vec2(0.965926f, -0.258818f),
 };
 
-vec3 Near(ivec2 coords) {
-    vec3 result = texelFetch(color_4_point_tx2D, coords, 0);
+vec4 Near(vec2 coords, vec2 pixel_size) {
+    vec4 result = textureLod(color_4_point_tx2D, coords, 0);
 
     for(int i = 0; i < 48; ++i) {
-        vec2 offset = kernel_scale * offsets[i];
-        result += texelFetch(color_4_linear_tx2D, coords + offset, 0);
+        vec2 offset = kernel_scale * offsets[i] * pixel_size;
+        result += textureLod(color_4_linear_tx2D, coords + offset, 0);
     }
 
     return result / 49.0;
 }
 
-vec3 Far(ivec2 coords) {
-    vec3 result = texelFetch(color_mul_coc_far_4_point_tx2D, coords, 0);
-    float weight_sum = texelFetch(coc_4_point_tx2D, coords, 0);
+vec4 Far(vec2 coords, vec2 pixel_size) {
+    vec4 result = textureLod(color_mul_coc_far_4_point_tx2D, coords, 0);
+    float weight_sum = textureLod(coc_4_point_tx2D, coords, 0).y;
 
     for(int i = 0; i < 48; ++i) {
-        vec2 offset = kernel_scale * offsets[i];
+        vec2 offset = kernel_scale * offsets[i] * pixel_size;
 
-        float coc_sample = texelFetch(coc_4_linear_tx2D, coords + offset, 0).y; // far value
-        vec3 sample = texelFetch(color_mul_coc_far_4_linear_tx2D, coords + offset, 0);
+        float coc_sample = textureLod(coc_4_linear_tx2D, coords + offset, 0).y; // far value
+        vec4 smpl = textureLod(color_mul_coc_far_4_linear_tx2D, coords + offset, 0);
 
-        result += sample;
+        result += smpl;
         weight_sum += coc_sample;
     }
 
@@ -109,27 +109,25 @@ vec3 Far(ivec2 coords) {
 void main() {
     uvec3 gID = gl_GlobalInvocationID.xyz;
     ivec2 pixel_coords = ivec2(gID.xy);
-    ivec2 tgt_resolution = imageSize(tgt_tx2D);
+    ivec2 tgt_res = imageSize(near_field_4_tx2D);
+    vec2 tex_coords = (vec2(pixel_coords) + vec2(0.5)) / vec2(tgt_res);
+    vec2 pixel_size = vec2(1.0) / vec2(tgt_res);
 
-    if (pixel_coords.x >= tgt_resolution.x || pixel_coords.y >= tgt_resolution.y) {
-        return;
-    }
+    float coc_near_blurred = textureLod(coc_near_blurred_4_point_tx2D, tex_coords, 0).x; // near value
+    float coc_far = textureLod(coc_4_point_tx2D, tex_coords, 0).y; // far value
 
-    float coc_near_blurred = texelFetch(coc_near_blurred_4_point_tx2D, pixel_coords, 0).x; // near value
-    float coc_far = texelFetch(coc_4_point_tx2D, pixel_coords, 0).y; // far value
-
-    vec3 near = vec3(0.0);
+    vec4 near_field = vec4(0.0);
     if(coc_near_blurred > 0.0) {
-        near = Near(pixel_coords);
+        near_field = Near(pixel_coords, pixel_size);
     } else {
-        near = texelFetch(color_4_point_tx2D, pixel_coords, 0);
+        near_field = textureLod(color_4_point_tx2D, pixel_coords, 0);
     }
 
-    vec3 far = vec3(0.0);
+    vec4 far_field = vec4(0.0);
     if(coc_far > 0.0) {
-        far = Far(pixel_coords);
+        far_field = Far(pixel_coords, pixel_size);
     }
 
-    imageStore(near_4_tx2D, pixel_coords, near);
-    imageStore(far_4_tx2D, pixel_coords, far);
+    imageStore(near_field_4_tx2D, pixel_coords, near_field);
+    imageStore(far_field_4_tx2D, pixel_coords, far_field);
 }

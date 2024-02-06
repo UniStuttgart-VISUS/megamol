@@ -15,63 +15,64 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 void main() {
     uvec3 gID = gl_GlobalInvocationID.xyz;
     ivec2 pixel_coords = ivec2(gID.xy);
-    ivec2 tgt_resolution = imageSize(tgt_tx2D);
-
-    if (pixel_coords.x >= tgt_resolution.x || pixel_coords.y >= tgt_resolution.y) {
-        return;
-    }
+    ivec2 tgt_res = imageSize(coc_near_blurred_4_tx2D);
+    vec2 tex_coords = (vec2(pixel_coords) + vec2(0.5)) / vec2(tgt_res);
 
 #ifdef MAX_FILTER_HORIZONTAL
     // PASS 1: horizontal max filter
 
-    float mx = FLT_MIN;
+    float mx = -1.0; // 0.0 should be sufficient, since coc values get clamped in first pass to [0.0, 1.0]
     ivec2 step = ivec2(-6, 0);
 
     for(int i = -6; i <= 6; ++i) {
-        mx = max(mx, texture(coc_4_point_tx2D, pixel_coords + step).x);
+        mx = max(mx, textureLodOffset(coc_4_point_tx2D, tex_coords, 0, step).x);
         step.x++;
     }
 
-    imageStore(coc_near_blurred_4_tx2D, pixel_coords, (uint)mx);
+    imageStore(coc_near_blurred_4_tx2D, pixel_coords, mx.xxxx);
 
-#elif MAX_FILTER_VERTICAL
+#elif defined(MAX_FILTER_VERTICAL)
     // PASS 2: veritcal max filter
 
-    float mx = FLT_MIN
+    float mx = -1.0;
     ivec2 step = ivec2(0, -6);
 
     for(int i = -6; i <= 6; ++i) {
-        mx = max(mx, texture(coc_4_point_tx2D, pixel_coords + step).x);
+        mx = max(mx, textureLodOffset(coc_4_point_tx2D, tex_coords, 0, step).x);
         step.y++;
     }
 
-    imageStore(coc_near_blurred_4_tx2D, pixel_coords, (uint)mx);
+    imageStore(coc_near_blurred_4_tx2D, pixel_coords, mx.xxxx);
 
-#elif BLUR_FILTER_HORIZONTAL
+#elif defined(BLUR_FILTER_HORIZONTAL)
     // PASS 3: horizontal blur filter
 
-    float blur = 0;
+    float blur = 0.0;
     ivec2 step = ivec2(-6, 0);
 
     for(int i = -6; i <= 6; ++i) {
-        blur += texture(coc_4_point_tx2D, pixel_coords + step).x;
+        blur += textureLodOffset(coc_4_point_tx2D, tex_coords, 0, step).x;
         step.x++;
     }
 
-    imageStore(coc_near_blurred_4_tx2D, pixel_coords, blur / 13.0);
+    blur /= 13.0;
 
-#else
+    imageStore(coc_near_blurred_4_tx2D, pixel_coords, blur.xxxx);
+
+#elif defined(BLUR_FILTER_VERTICAL)
     // PASS 4: vertical blur filter
 
-    float blur = 0;
+    float blur = 0.0;
     ivec2 step = ivec2(0, -6);
 
     for(int i = -6; i <= 6; ++i) {
-        blur += texture(coc_4_point_tx2D, pixel_coords + step).x;
+        blur += textureLodOffset(coc_4_point_tx2D, tex_coords, 0, step).x;
         step.y++;
     }
 
-    imageStore(coc_near_blurred_4_tx2D, pixel_coords, blur / 13.0);
+    blur /= 13.0;
+
+    imageStore(coc_near_blurred_4_tx2D, pixel_coords, blur.xxxx);
 
 #endif
 
