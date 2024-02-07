@@ -48,14 +48,17 @@ megamol::compositing_gl::DepthOfField::DepthOfField()
               std::function<bool()>(std::bind(&DepthOfField::textureFormatUpdate, this))) {
 
     ps_strength_ << new core::param::FloatParam(1.f);
+    ps_strength_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
     ps_strength_.SetUpdateCallback(&megamol::compositing_gl::DepthOfField::setSettingsCallback);
     MakeSlotAvailable(&ps_strength_);
 
     ps_focal_distance_ << new core::param::FloatParam(40.f);
+    ps_focal_distance_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
     ps_focal_distance_.SetUpdateCallback(&megamol::compositing_gl::DepthOfField::setSettingsCallback);
     MakeSlotAvailable(&ps_focal_distance_);
 
     ps_focal_range_ << new core::param::FloatParam(20.f);
+    ps_focal_range_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Drag);
     ps_focal_range_.SetUpdateCallback(&megamol::compositing_gl::DepthOfField::setSettingsCallback);
     MakeSlotAvailable(&ps_focal_range_);
 
@@ -630,24 +633,24 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
             blend = 4.f * strength;
         }
 
-        // calculate ne, nb, fb, fe based on focal distance and focal range
+        // calculate nb, ne, fb, fe based on focal distance and focal range
         float focal_distance = ps_focal_distance_.Param<core::param::FloatParam>()->Value();
         float focal_range = ps_focal_range_.Param<core::param::FloatParam>()->Value();
 
-        float ne = std::max(0.f, focal_distance - focal_range);
-        float nb = focal_distance;
+        float nb = std::max(0.f, focal_distance - focal_range);
+        float ne = focal_distance;
         float fb = focal_distance;
         float fe = focal_distance + focal_range;
 
-        glm::vec4 fields(ne, nb, fb, fe);
+        glm::vec4 fields(nb, ne, fb, fe);
 
         // get camera to retrieve projection transformation matrix
         // needed to calc viewspace depth from ndc depth in coc generation pass
         core::view::Camera cam = rhs_call_camera->getData();
         glm::mat4 proj_mx = cam.getProjectionMatrix();
-        // TODO: actually correct? might be wrong row-major order
-        // TODO: possibly try proj_mx[2][3] for the second parameter
         glm::vec2 proj_params(proj_mx[2][2], proj_mx[3][2]);
+        /*if (depthLinearizeMul * depthLinearizeAdd < 0)
+            depthLinearizeAdd = -depthLinearizeAdd;*/
 
 
         // ACTUAL DEPTH OF FIELD CALCULATION
