@@ -118,14 +118,14 @@ void main() {
 
     vec4 near_field = vec4(0.0);
     if(coc_near_blurred > 0.0) {
-        near_field = Near(pixel_coords, pixel_size);
+        near_field = Near(tex_coords, pixel_size);
     } else {
         near_field = textureLod(color_4_point_tx2D, pixel_coords, 0);
     }
 
     vec4 far_field = vec4(0.0);
     if(coc_far > 0.0) {
-        far_field = Far(pixel_coords, pixel_size);
+        far_field = Far(tex_coords, pixel_size);
     }
 
     imageStore(near_field_4_tx2D, pixel_coords, near_field);
