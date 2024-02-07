@@ -15,7 +15,7 @@ uniform sampler2D far_field_filled_4_point_tx2D;
 
 uniform float blend;
 
-layout(binding = 0, rgba32f) writeonly uniform image2D depth_of_field_tx2D; // TODO: use outformat handler from host code
+layout(binding = 0, OUTFORMAT) writeonly uniform image2D depth_of_field_tx2D;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 

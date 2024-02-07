@@ -120,7 +120,6 @@ bool megamol::compositing_gl::DepthOfField::create() {
         downsample_prgm_ = core::utility::make_glowl_shader(
             "downsample/*", *shader_options_flags, "compositing_gl/DepthOfField/downsample.comp.glsl");
 
-        // TODO: removeDefinition() for shader_options
         auto shader_options_max_filter_horizontal = shader_options;
         shader_options_max_filter_horizontal.addDefinition("MAX_FILTER_HORIZONTAL");
         coc_near_blur_prgm_[0] = core::utility::make_glowl_shader("coc_near_blur[0]/*",
@@ -154,12 +153,13 @@ bool megamol::compositing_gl::DepthOfField::create() {
     }
 
     // layouts
-    // TODO: use out_format_handler_ for output
-    glowl::TextureLayout tx_layout_base = glowl::TextureLayout(GL_RGBA32F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1);
+    glowl::TextureLayout tx_layout_base(out_format_handler_.getInternalFormat(), 1, 1, 1, out_format_handler_.getFormat(),
+        out_format_handler_.getType(), 1);
+    //glowl::TextureLayout tx_layout_base(GL_RGBA32F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1);
     glowl::TextureLayout tx_layout_r11f_g11f_b10f = glowl::TextureLayout(GL_R11F_G11F_B10F, 1, 1, 1, GL_RGB, GL_FLOAT, 1);
     glowl::TextureLayout tx_layout_r8_g8_unorm = glowl::TextureLayout(GL_RG8, 1, 1, 1, GL_RG, GL_FLOAT, 1);
     glowl::TextureLayout tx_layout_r8_unorm = glowl::TextureLayout(GL_R8, 1, 1, 1, GL_RED, GL_FLOAT, 1);
-
+    
     // textures
     //color_tx2D_               = std::make_shared<glowl::Texture2D>("color", tx_layout_base, nullptr);
     //depth_tx2D_               = std::make_shared<glowl::Texture2D>("depth", depth_layout_lol, nullptr);
@@ -527,7 +527,7 @@ void megamol::compositing_gl::DepthOfField::clearAllTextures() {
     far_field_4_tx2D_->clearTexImage(col);
     near_field_filled_4_tx2D_->clearTexImage(col);
     far_field_filled_4_tx2D_->clearTexImage(col);
-    output_tx2D_->clearTexImage(col);
+    //output_tx2D_->clearTexImage(col);
 }
 
 
@@ -576,13 +576,11 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
         return false;
 
     if (rhs_call_input != NULL) {
-        // TODO: what does (0) call again?
         if (!(*rhs_call_input)(0))
             return false;
     }
 
     if (rhs_call_depth != NULL) {
-        // TODO: what does (0) call again?
         if (!(*rhs_call_depth)(0))
             return false;
     }
@@ -615,9 +613,9 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
             reloadAllTextures();
         }
 
-        // always clear them to guarantee correct textures
-        // TODO: always? or just in case of resize? probably always
-        clearAllTextures();
+        // TODO: always clear them to guarantee correct textures?
+        // necessary if no discards are used?
+        //clearAllTextures();
 
         // set kernel_scale and blend based on param strength from ps_strength_
         float strength = ps_strength_.Param<core::param::FloatParam>()->Value();
@@ -745,22 +743,26 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
 
 
 bool megamol::compositing_gl::DepthOfField::textureFormatUpdate() {
-    /*glowl::TextureLayout tx_layout(out_format_handler_.getInternalFormat(), 1, 1, 1, out_format_handler_.getFormat(),
-        out_format_handler_.getType(), 1);
-    output_tx2D_ = std::make_shared<glowl::Texture2D>("screenspace_effect_output", tx_layout, nullptr);
+    auto tx_ly = output_tx2D_->getTextureLayout();
+    tx_ly.internal_format = out_format_handler_.getInternalFormat();
+    tx_ly.format = out_format_handler_.getFormat();
+    tx_ly.type = out_format_handler_.getType();
+    output_tx2D_->reload(tx_ly, nullptr);
+
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     auto shader_options_flags = out_format_handler_.addDefinitions(shader_options);
 
     try {
-        fxaa_prgm_ = core::utility::make_glowl_shader(
-            "fxaa", *shader_options_flags, "compositing_gl/DepthOfField/fxaa.comp.glsl");
-        smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader("smaa_neighborhood_blending",
-            *shader_options_flags, "compositing_gl/DepthOfField/smaa_neighborhood_blending.comp.glsl");
+        composite_prgm_ = core::utility::make_glowl_shader(
+            "composite/*", *shader_options_flags, "compositing_gl/DepthOfField/composite.comp.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("DepthOfField: " + std::string(e.what())).c_str());
         return false;
-    }*/
+    }
+
+    settings_have_changed_ = true;
+
     return true;
 }
 
