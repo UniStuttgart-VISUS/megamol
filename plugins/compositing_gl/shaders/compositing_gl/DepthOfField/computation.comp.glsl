@@ -120,7 +120,7 @@ void main() {
     if(coc_near_blurred > 0.0) {
         near_field = Near(tex_coords, pixel_size);
     } else {
-        near_field = textureLod(color_4_point_tx2D, pixel_coords, 0);
+        near_field = textureLod(color_4_point_tx2D, tex_coords, 0);
     }
 
     vec4 far_field = vec4(0.0);

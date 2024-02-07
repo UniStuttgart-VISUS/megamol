@@ -158,6 +158,7 @@ private:
      * \param coc_4               The downsampled coc texture generated in the second pass.
      * \param coc_near_blurred_4  The downsampled blurred near coc texture generated in the third pass.
      * \param kernel_scale        Scales the ring sample size. Practically shifts the ring samples to make the sample ring bigger/smaller.
+     *                            Controlled by the strength paramslot.
      */
     void computation(
         const std::shared_ptr<glowl::Texture2D>& color_4,
@@ -194,7 +195,8 @@ private:
      * \param far_4       Downsampled far field texture from the fourth pass.
      * \param near_fill_4 Downsampled filled near field texture generated in the fifth pass.
      * \param far_fill_4  Downsampled filled far field texture generated in the fifth pass.
-     * \param blend       TODO
+     * \param blend       Controles blending of near field, far field and original color buffer.
+     *                    Controlled by the strength paramslot. Setting strength to 0 practically nulls the dof.
      */
     void composite(
         const std::shared_ptr<glowl::Texture2D>& color,

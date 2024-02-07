@@ -623,7 +623,7 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
         float strength = ps_strength_.Param<core::param::FloatParam>()->Value();
         float kernel_scale = 1.f;
         float blend = 1.f;
-        // TODO: strength might need to be restricted to some range (possibly [0.25, 1.0]?)
+        // TODO: strength might need to be restricted to some range (possibly [0.0, 1.0]?)
         // otherwise it could blow the texture coordinates out of the park
         if (strength >= 0.25f) {
             kernel_scale = strength;
@@ -649,8 +649,9 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
         core::view::Camera cam = rhs_call_camera->getData();
         glm::mat4 proj_mx = cam.getProjectionMatrix();
         glm::vec2 proj_params(proj_mx[2][2], proj_mx[3][2]);
-        /*if (depthLinearizeMul * depthLinearizeAdd < 0)
-            depthLinearizeAdd = -depthLinearizeAdd;*/
+        /*if (proj_params.x * proj_params.y < 0.f) {
+            proj_params.x = -proj_params.x;
+        }*/
 
 
         // ACTUAL DEPTH OF FIELD CALCULATION
