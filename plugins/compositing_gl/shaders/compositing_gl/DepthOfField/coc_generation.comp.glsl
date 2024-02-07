@@ -29,17 +29,13 @@ void main() {
     float depth_view = -DepthNDCToView(depth_screen);
 
     float near_coc = 0.0;
-    if(depth_view < fields[0]) {
-        near_coc = 1.0;
-    } else if( depth_view < fields[1]) {
-        near_coc = (depth_view - fields[0]) / (fields[1] - fields[0]);
+    if(depth_view < fields[1]) {
+        near_coc = (fields[1] - depth_view) / (fields[1] - fields[0]);
         near_coc = clamp(near_coc, 0.0, 1.0);
     }
 
     float far_coc = 1.0;
-    if(depth_view < fields[2]) {
-        far_coc = 0.0;
-    } else if(depth_view < fields[3]) {
+    if(depth_view < fields[3]) {
         far_coc = (depth_view - fields[2]) / (fields[3] - fields[2]);
         far_coc = clamp(far_coc, 0.0, 1.0);
     }

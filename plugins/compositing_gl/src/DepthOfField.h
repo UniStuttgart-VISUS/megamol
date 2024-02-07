@@ -308,6 +308,7 @@ private:
     std::shared_ptr<glowl::Texture2D> color_4_tx2D_;
     std::shared_ptr<glowl::Texture2D> color_mul_coc_far_4_tx2D_;
     std::shared_ptr<glowl::Texture2D> coc_4_tx2D_;
+    // the final result that we want to use is in [3]
     std::shared_ptr<glowl::Texture2D> coc_near_blurred_4_tx2D_[4];
     std::shared_ptr<glowl::Texture2D> near_field_4_tx2D_;
     std::shared_ptr<glowl::Texture2D> far_field_4_tx2D_;

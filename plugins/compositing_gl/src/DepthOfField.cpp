@@ -659,7 +659,8 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
         nearCoCBlur(coc_4_tx2D_);
         computation(color_4_tx2D_, color_mul_coc_far_4_tx2D_, coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], kernel_scale);
         fill(coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], near_field_4_tx2D_, far_field_4_tx2D_);
-        composite(input_tx2D, coc_tx2D_, near_field_4_tx2D_, far_field_4_tx2D_, near_field_filled_4_tx2D_, far_field_filled_4_tx2D_, blend);
+        composite(input_tx2D, coc_tx2D_, coc_4_tx2D_, coc_near_blurred_4_tx2D_[3], near_field_filled_4_tx2D_,
+            far_field_filled_4_tx2D_, blend);
         // ---------------------------------
 
 
