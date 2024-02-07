@@ -10,8 +10,6 @@
 #include <msf/ShaderFactory.h>
 #include <msf/ShaderFactoryUtils.h>
 
-static msf::ShaderFactory msf_factory;
-
 msf::ShaderFactoryOptionsOpenGL megamol::core::utility::make_path_shader_options(
     megamol::frontend_resources::RuntimeConfig const& conf) {
     std::vector<std::filesystem::path> paths;
@@ -25,6 +23,8 @@ msf::ShaderFactoryOptionsOpenGL megamol::core::utility::make_path_shader_options
 glowl::GLSLProgram::ShaderSourceList::value_type megamol::core::utility::make_glowl_shader_source(
     std::filesystem::path const& shader_source_path, msf::ShaderFactoryOptionsOpenGL const& options,
     msf::LineTranslator& translator) {
+    static msf::ShaderFactory msf_factory;
+
     auto const shader_string = translator.cleanupShader(msf_factory.preprocess(shader_source_path, options));
     auto const type = msf::getShaderTypeInt(shader_source_path);
 
