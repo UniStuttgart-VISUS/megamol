@@ -26,7 +26,7 @@ void main() {
 
     vec2 tex_coord_00 = tex_coords + vec2(-quarter_shift.x, -quarter_shift.y);
     vec2 tex_coord_10 = tex_coords + vec2( quarter_shift.x, -quarter_shift.y);
-    vec2 tex_coord_01 = tex_coords + vec2(-quarter_shift.x,  quarter_shift.y);
+    vec2 tex_coord_01 = tex_coords + vec2(-quarter_shift.x,  quarter_shift.y); // top left
     vec2 tex_coord_11 = tex_coords + vec2( quarter_shift.x,  quarter_shift.y);
 
     vec4 color = textureLod(color_linear_tx2D, tex_coords, 0);
@@ -41,19 +41,23 @@ void main() {
     float coc_far_01 = textureLod(coc_point_tx2D, tex_coord_01, 0).y;
     float coc_far_11 = textureLod(coc_point_tx2D, tex_coord_11, 0).y;
 
-    float weight_00 = 1000.0;
-    vec4 color_mul_coc_far = weight_00 * textureLod(color_point_tx2D, tex_coord_00, 0);
-    float weight_sum = weight_00;
+    // top left
+    float weight_01 = 1000.0;
+    vec4 color_mul_coc_far = weight_01 * textureLod(color_point_tx2D, tex_coord_01, 0);
+    float weight_sum = weight_01;
 
-    float weight_10 = 1.0 / (abs(coc_far_00 - coc_far_10) + 0.001);
+    // bottom left
+    float weight_00 = 1.0 / (abs(coc_far_01 - coc_far_00) + 0.001);
+    color_mul_coc_far += weight_00 * textureLod(color_point_tx2D, tex_coord_00, 0);
+    weight_sum += weight_00;
+
+    // bottom right
+    float weight_10 = 1.0 / (abs(coc_far_01 - coc_far_10) + 0.001);
     color_mul_coc_far += weight_10 * textureLod(color_point_tx2D, tex_coord_10, 0);
     weight_sum += weight_10;
 
-    float weight_01 = 1.0 / (abs(coc_far_00 - coc_far_01) + 0.001);
-    color_mul_coc_far += weight_01 * textureLod(color_point_tx2D, tex_coord_01, 0);
-    weight_sum += weight_01;
-
-    float weight_11 = 1.0 / (abs(coc_far_00 - coc_far_11) + 0.001);
+    // top right
+    float weight_11 = 1.0 / (abs(coc_far_01 - coc_far_11) + 0.001);
     color_mul_coc_far += weight_11 * textureLod(color_point_tx2D, tex_coord_11, 0);
     weight_sum += weight_11;
 
