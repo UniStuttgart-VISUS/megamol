@@ -29,9 +29,9 @@ megamol::compositing_gl::DepthOfField::DepthOfField()
         , version_(0)
         , res_(0)
         , ps_strength_("Strength", "Used to determine the kernel scale and blend values.")
-        , ps_focal_distance_("FocalDistance", "Used to determine ne, nb, fb, fe values for coc generation.")
+        , ps_focal_distance_("FocalDistance", "Used to determine nb, ne, fb, fe values for coc generation.")
         , ps_focal_range_("FocalRange",
-              "Range between in-focus and out-focus. Used to determine ne, nb, fb, fe values for coc generation.")
+              "Range between in-focus and out-focus. Used to determine nb, ne, fb, fe values for coc generation.")
         , tex_inspector_({"Color/Input", "Depth", "CoC", "Color_4", "Color_mul_coc_far_4", "CoC_4", "CoC_near_blurred_4",
               "Near_field_4", "Far_field_4", "Near_field_filled_4", "Far_field_filled_4", "Output"})
         , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")

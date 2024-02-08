@@ -326,10 +326,10 @@ private:
     /** Paramslot for strength. Used for determining kernel scale and blend values */
     megamol::core::param::ParamSlot ps_strength_;
 
-    /** Paramslot for focal distance. Used for ne, nb, fb, fe */
+    /** Paramslot for focal distance. Used for nb, ne, fb, fe */
     megamol::core::param::ParamSlot ps_focal_distance_;
 
-    /** Paramslot for focal range. Used for ne, nb, fb, fe. Determines the range between in-focus and out-focus. */
+    /** Paramslot for focal range. Used for nb, ne, fb, fe. Determines the range between in-focus and out-focus. */
     megamol::core::param::ParamSlot ps_focal_range_;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
