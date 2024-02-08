@@ -5,9 +5,9 @@
     "MUL": [ "V_12VHPWR" ]
   },
   "PEG": {
-    "ADD": [],
+    "ADD": [ "A_PEG12AUX" ],
     "SUB": [],
-    "MUL": []
+    "MUL": [ "V_PEG12AUX" ]
   },
   "12VPEG": {
     "ADD": [ "A_PEG12" ],
