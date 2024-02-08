@@ -159,8 +159,12 @@ bool Power_Service::init(void* configPtr) {
             sample_averaging::average_of_4, conversion_time::milliseconds_1_1, conversion_time::milliseconds_1_1);
     };
 
-    auto const json_data = power::parse_json_file(conf->tinker_map_filename);
-    auto tinker_transform_func = std::bind(&power::transform_tf_name, std::cref(json_data), std::placeholders::_1);
+    std::function<std::string(std::string const&)> tinker_transform_func = [](std::string const& name) { return name; };
+
+    try {
+        auto const json_data = power::parse_json_file(conf->tinker_map_filename);
+        tinker_transform_func = std::bind(&power::transform_tf_name, std::cref(json_data), std::placeholders::_1);
+    } catch (...) {}
 
     auto nvml_transform_func = [](std::string const&) -> std::string { return "NVML"; };
 
