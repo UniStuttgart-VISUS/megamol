@@ -22,11 +22,11 @@ void main() {
     // PASS 1: horizontal max filter
 
     float mx = -1.0; // 0.0 should be sufficient, since coc values get clamped in first pass to [0.0, 1.0]
-    ivec2 step = ivec2(-6, 0);
+    vec2 step = vec2(1.0 / tgt_res.x, 0);
 
     for(int i = -6; i <= 6; ++i) {
-        mx = max(mx, textureLodOffset(coc_4_point_tx2D, tex_coords, 0, step).x);
-        step.x++;
+        vec2 offset_coords = tex_coords + i * step;
+        mx = max(mx, textureLod(coc_4_point_tx2D, offset_coords, 0).x);
     }
 
     imageStore(coc_near_blurred_4_tx2D, pixel_coords, mx.xxxx);
@@ -35,11 +35,11 @@ void main() {
     // PASS 2: veritcal max filter
 
     float mx = -1.0;
-    ivec2 step = ivec2(0, -6);
+    vec2 step = vec2(0, 1.0 / tgt_res.y);
 
     for(int i = -6; i <= 6; ++i) {
-        mx = max(mx, textureLodOffset(coc_4_point_tx2D, tex_coords, 0, step).x);
-        step.y++;
+        vec2 offset_coords = tex_coords + i * step;
+        mx = max(mx, textureLod(coc_4_point_tx2D, offset_coords, 0).x);
     }
 
     imageStore(coc_near_blurred_4_tx2D, pixel_coords, mx.xxxx);
@@ -48,11 +48,11 @@ void main() {
     // PASS 3: horizontal blur filter
 
     float blur = 0.0;
-    ivec2 step = ivec2(-6, 0);
+    vec2 step = vec2(1.0 / tgt_res.x, 0);
 
     for(int i = -6; i <= 6; ++i) {
-        blur += textureLodOffset(coc_4_point_tx2D, tex_coords, 0, step).x;
-        step.x++;
+        vec2 offset_coords = tex_coords + i * step;
+        blur += textureLod(coc_4_point_tx2D, offset_coords, 0).x;
     }
 
     blur /= 13.0;
@@ -63,11 +63,11 @@ void main() {
     // PASS 4: vertical blur filter
 
     float blur = 0.0;
-    ivec2 step = ivec2(0, -6);
+    vec2 step = vec2(0, 1.0 / tgt_res.y);
 
     for(int i = -6; i <= 6; ++i) {
-        blur += textureLodOffset(coc_4_point_tx2D, tex_coords, 0, step).x;
-        step.y++;
+        vec2 offset_coords = tex_coords + i * step;
+        blur += textureLod(coc_4_point_tx2D, offset_coords, 0).x;
     }
 
     blur /= 13.0;
