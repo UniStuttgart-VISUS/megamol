@@ -26,13 +26,17 @@ void main() {
     float coc_near_blurred = textureLod(coc_near_blurred_4_point_tx2D, tex_coords, 0).x;
     if(coc_near_blurred > 0.0)
     {
+        ivec2 offset = ivec2(-1, -1);
         for(int i = -1; i <= 1; ++i)
         {
             for(int j = -1; j <= 1; ++j)
             {
-                vec4 smpl = textureLodOffset(near_field_4_point_tx2D, tex_coords, 0, ivec2(i, j));
+                offset.y++;
+                vec4 smpl = textureLodOffset(near_field_4_point_tx2D, tex_coords, 0, offset);
                 near_filled = max(near_filled, smpl);
             }
+            offset.x++;
+            offset.y = -1;
         }
     }
 
@@ -40,13 +44,17 @@ void main() {
     float coc_far = textureLod(coc_4_point_tx2D, tex_coords, 0).y;
     if(coc_far > 0.0)
     {
+        ivec2 offset = ivec2(-1, -1);
         for(int i = -1; i <= 1; ++i)
         {
             for(int j = -1; j <= 1; ++j)
             {
-                vec4 smpl = textureLodOffset(far_field_4_point_tx2D, tex_coords, 0, ivec2(i, j));
+                vec4 smpl = textureLodOffset(far_field_4_point_tx2D, tex_coords, 0, offset);
                 far_filled = max(far_filled, smpl);
+                offset.y++;
             }
+            offset.x++;
+            offset.y = -1;
         }
     }
 

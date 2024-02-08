@@ -219,7 +219,6 @@ bool megamol::compositing_gl::DepthOfField::setSettingsCallback(core::param::Par
 }
 
 
-// TODO: make output texture also as function parameter?
 /*
  * @megamol::compositing_gl::DepthOfField::cocGeneration
  */
@@ -613,7 +612,6 @@ bool megamol::compositing_gl::DepthOfField::getDataCallback(core::Call& caller) 
             reloadAllTextures();
         }
 
-        // TODO: always clear them to guarantee correct textures?
         // necessary if no discards are used?
         //clearAllTextures();
 
