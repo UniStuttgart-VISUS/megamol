@@ -298,9 +298,20 @@ void megamol::frontend_resources::WindowManipulation::set_swap_interval(const un
 }
 
 void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
+#ifdef MEGAMOL_USE_TRACY
+    ZoneScopedN("swap_buffers");
+#endif
+#if MEGAMOL_GL_FLUSH_FINISH
+    glFlush();
+    glFinish();
+#endif
     glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
 #ifdef MEGAMOL_USE_TRACY
-    TracyGpuCollect;
+    static unsigned int collect_cnt = 0;
+    if (collect_cnt % 10 == 0) {
+        TracyGpuCollect;
+    }
+    ++collect_cnt;
     FrameMark;
 #endif
 #ifdef MEGAMOL_USE_POWER
