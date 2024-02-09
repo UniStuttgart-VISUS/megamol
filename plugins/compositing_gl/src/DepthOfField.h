@@ -93,7 +93,7 @@ private:
         glUseProgram(0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
-        for(int i = 0; i < cnt; ++i) {
+        for (int i = 0; i < cnt; ++i) {
             glBindSampler(i, 0);
         }
     }
@@ -121,10 +121,7 @@ private:
      * \param fields      Parameters to calculate the circle of confusion.
      */
     void cocGeneration(
-        const std::shared_ptr<glowl::Texture2D>& depth,
-        const glm::vec2& proj_params,
-        const glm::vec4& fields
-    );
+        const std::shared_ptr<glowl::Texture2D>& depth, const glm::vec2& proj_params, const glm::vec4& fields);
 
     /**
      * \brief Second pass. Downsampling of the color (input) and the coc texture.
@@ -136,10 +133,7 @@ private:
      * \param color The input texture (texture to blur).
      * \param coc   The coc texture generated in the first pass.
      */
-    void downsample(
-        const std::shared_ptr<glowl::Texture2D>& color,
-        const std::shared_ptr<glowl::Texture2D>& coc
-    );
+    void downsample(const std::shared_ptr<glowl::Texture2D>& color, const std::shared_ptr<glowl::Texture2D>& coc);
 
     /**
      * \brief Third pass. Generates a blurred version of the near coc values.
@@ -152,7 +146,7 @@ private:
     /**
      * \brief Fourth pass. The actual depth of field calculation.
      *                     The result is 2 quarter-sized textures: one for the near and one for the far field.
-     * 
+     *
      * \param color_4             The downsampled color texture generated in the second pass.
      * \param color_mul_coc_far_4 The downsampled color texture multiplied by far coc values generated in the second pass.
      * \param coc_4               The downsampled coc texture generated in the second pass.
@@ -160,31 +154,24 @@ private:
      * \param kernel_scale        Scales the ring sample size. Practically shifts the ring samples to make the sample ring bigger/smaller.
      *                            Controlled by the strength paramslot.
      */
-    void computation(
-        const std::shared_ptr<glowl::Texture2D>& color_4,
-        const std::shared_ptr<glowl::Texture2D>& color_mul_coc_far_4,
-        const std::shared_ptr<glowl::Texture2D>& coc_4,
-        const std::shared_ptr<glowl::Texture2D>& coc_near_blurred_4,
-        float kernel_scale
-    );
+    void computation(const std::shared_ptr<glowl::Texture2D>& color_4,
+        const std::shared_ptr<glowl::Texture2D>& color_mul_coc_far_4, const std::shared_ptr<glowl::Texture2D>& coc_4,
+        const std::shared_ptr<glowl::Texture2D>& coc_near_blurred_4, float kernel_scale);
 
     /**
      * \brief Fifth pass. Since the computation pass undersamples the color buffers, the near and far fields need to be filled.
      *                    The result is 2 quarter-sized textures: one for the filled near field and one for the filled far field.
-     * 
+     *
      * \param coc_4               The downsampled coc texture generated in the second pass.
      * \param coc_near_blurred_4  The downsampled blurred near coc texture generated in the third pass.
      * \param near_4              The downsampled near field texture generated in the fourth pass.
      * \param far_4               The downsampled far field texture generated in the fourth pass.
      */
-    void fill(
-        const std::shared_ptr<glowl::Texture2D>& coc_4,
-        const std::shared_ptr<glowl::Texture2D>& coc_near_blurred_4,
-        const std::shared_ptr<glowl::Texture2D>& near_4,
-        const std::shared_ptr<glowl::Texture2D>& far_4
-    );
+    void fill(const std::shared_ptr<glowl::Texture2D>& coc_4,
+        const std::shared_ptr<glowl::Texture2D>& coc_near_blurred_4, const std::shared_ptr<glowl::Texture2D>& near_4,
+        const std::shared_ptr<glowl::Texture2D>& far_4);
 
-    
+
     /**
      * \brief Sixth and final pass. Merges the results from the previous passes to a final image.
      *                              The result is a single full resolution output texture
@@ -198,19 +185,14 @@ private:
      * \param blend       Controles blending of near field, far field and original color buffer.
      *                    Controlled by the strength paramslot. Setting strength to 0 practically nulls the dof.
      */
-    void composite(
-        const std::shared_ptr<glowl::Texture2D>& color,
-        const std::shared_ptr<glowl::Texture2D>& coc,
-        const std::shared_ptr<glowl::Texture2D>& near_4,
-        const std::shared_ptr<glowl::Texture2D>& far_4,
-        const std::shared_ptr<glowl::Texture2D>& near_fill_4,
-        const std::shared_ptr<glowl::Texture2D>& far_fill_4,
-        float blend
-    );
+    void composite(const std::shared_ptr<glowl::Texture2D>& color, const std::shared_ptr<glowl::Texture2D>& coc,
+        const std::shared_ptr<glowl::Texture2D>& near_4, const std::shared_ptr<glowl::Texture2D>& far_4,
+        const std::shared_ptr<glowl::Texture2D>& near_fill_4, const std::shared_ptr<glowl::Texture2D>& far_fill_4,
+        float blend);
 
     /**
-    * \brief Clears all used textures to black to ensure correctness of the textures.
-    */
+     * \brief Clears all used textures to black to ensure correctness of the textures.
+     */
     void clearAllTextures();
 
     /**
@@ -223,8 +205,8 @@ private:
     void resizeTexture(const std::shared_ptr<glowl::Texture2D>& tex, int width, int height);
 
     /**
-    * \brief Reloads all textures if input size changes. TODO: also if format of texture changes?
-    */
+     * \brief Reloads all textures if input size changes. TODO: also if format of texture changes?
+     */
     void reloadAllTextures();
 
     /**
@@ -237,9 +219,7 @@ private:
      *
      * TODO: might be dangerous
      */
-    inline void bindTextureWithPointSampler(
-        const std::shared_ptr<glowl::Texture2D>& tex,
-        GLuint tex_unit) {
+    inline void bindTextureWithPointSampler(const std::shared_ptr<glowl::Texture2D>& tex, GLuint tex_unit) {
         tex->bindTexture();
         point_sampler_->bindSampler(tex_unit);
     }
@@ -255,33 +235,39 @@ private:
      *
      * TODO: might be dangerous
      */
-    inline void bindTextureWithBilinearSampler(
-        const std::shared_ptr<glowl::Texture2D>& tex,
-        GLuint tex_unit) {
+    inline void bindTextureWithBilinearSampler(const std::shared_ptr<glowl::Texture2D>& tex, GLuint tex_unit) {
         tex->bindTexture();
         bilinear_sampler_->bindSampler(tex_unit);
     }
 
     /**
-    * Returns a resolution dimension if c is in [0, 3]:
-    * 0 - full width
-    * 1 - full height
-    * 2 - half width
-    * 3 - half height
-    * 
-    * \param c Determines which width or height to return
-    *
-    * \return Returns the requested dimension, or -1 if c is outside of [0, 3].
-    */
+     * Returns a resolution dimension if c is in [0, 3]:
+     * 0 - full width
+     * 1 - full height
+     * 2 - half width
+     * 3 - half height
+     *
+     * \param c Determines which width or height to return
+     *
+     * \return Returns the requested dimension, or -1 if c is outside of [0, 3].
+     */
     inline int getRes(int c) {
         if (c < 0 || c > 3)
             return -1;
         return res_[c];
     }
-    inline int getWidth() { return res_[0]; }
-    inline int getHeight() { return res_[1]; }
-    inline int getHalfWidth() { return res_[2]; }
-    inline int getHalfHeight() { return res_[3]; }
+    inline int getWidth() {
+        return res_[0];
+    }
+    inline int getHeight() {
+        return res_[1];
+    }
+    inline int getHalfWidth() {
+        return res_[2];
+    }
+    inline int getHalfHeight() {
+        return res_[3];
+    }
 
     // profiling
 #ifdef MEGAMOL_USE_PROFILING

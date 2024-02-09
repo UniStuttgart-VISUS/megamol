@@ -8,8 +8,8 @@
 #include "mmcore/factories/PluginRegister.h"
 
 #include "AntiAliasing.h"
-#include "DepthOfField.h"
 #include "DepthDarkening.h"
+#include "DepthOfField.h"
 #include "DrawToScreen.h"
 #include "InteractionRenderTarget.h"
 #include "LocalLighting.h"
