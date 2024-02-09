@@ -114,11 +114,10 @@ bool megamol::compositing_gl::DepthOfField::create() {
     auto shader_options_flags = out_format_handler_.addDefinitions(shader_options);
 
     try {
-        coc_generation_prgm_ = core::utility::make_glowl_shader("coc_generation/*",
-            *shader_options_flags, "compositing_gl/DepthOfField/coc_generation.comp.glsl");
+        coc_generation_prgm_ = core::utility::make_glowl_shader("coc_generation/*", shader_options, "compositing_gl/DepthOfField/coc_generation.comp.glsl");
 
         downsample_prgm_ = core::utility::make_glowl_shader(
-            "downsample/*", *shader_options_flags, "compositing_gl/DepthOfField/downsample.comp.glsl");
+            "downsample/*", shader_options, "compositing_gl/DepthOfField/downsample.comp.glsl");
 
         auto shader_options_max_filter_horizontal = shader_options;
         shader_options_max_filter_horizontal.addDefinition("MAX_FILTER_HORIZONTAL");
@@ -141,10 +140,10 @@ bool megamol::compositing_gl::DepthOfField::create() {
             shader_options_blur_filter_vertical, "compositing_gl/DepthOfField/near_coc_blur.comp.glsl");
 
         computation_prgm_ = core::utility::make_glowl_shader(
-            "computation/*", *shader_options_flags, "compositing_gl/DepthOfField/computation.comp.glsl");
+            "computation/*", shader_options, "compositing_gl/DepthOfField/computation.comp.glsl");
 
         fill_prgm_ = core::utility::make_glowl_shader(
-            "fill/*", *shader_options_flags, "compositing_gl/DepthOfField/fill.comp.glsl");
+            "fill/*", shader_options, "compositing_gl/DepthOfField/fill.comp.glsl");
 
         composite_prgm_ = core::utility::make_glowl_shader(
             "composite/*", *shader_options_flags, "compositing_gl/DepthOfField/composite.comp.glsl");
