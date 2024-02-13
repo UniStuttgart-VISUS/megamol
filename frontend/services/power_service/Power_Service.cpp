@@ -133,6 +133,14 @@ bool Power_Service::init(void* configPtr) {
         ++counter;
         return discard;
 #endif
+        static bool first = false;
+        if (name.find("Radeon") == std::string::npos || first) {
+            return true;
+        } else {
+            first = true;
+            return false;
+        }
+#if 0
         static std::unordered_set<std::string> types;
         std::stringstream ss(name);
         std::string token;
@@ -150,6 +158,7 @@ bool Power_Service::init(void* configPtr) {
             }
         }
         return true;
+#endif
     };
 
     auto tinker_config_func = [](tinkerforge_sensor& sensor) {
@@ -166,12 +175,14 @@ bool Power_Service::init(void* configPtr) {
         tinker_transform_func = std::bind(&power::transform_tf_name, std::cref(json_data), std::placeholders::_1);
     } catch (...) {}
 
-    auto nvml_transform_func = [](std::string const&) -> std::string { return "NVML"; };
+    auto nvml_transform_func = [](std::string const& name) -> std::string { return "NVML[" + name + "]"; };
 
     auto adl_transform_func = [](std::string const& name) -> std::string {
 #if 0
         return "ADL";
 #endif
+        return "ADL[" + name + "]";
+#if 0
         static int asic_counter = 0;
         std::stringstream ss(name);
         std::string token;
@@ -184,9 +195,10 @@ bool Power_Service::init(void* configPtr) {
             }
         }
         return "ADL";
+#endif
     };
 
-    auto msr_transform_func = [](std::string const&) -> std::string { return "MSR"; };
+    auto msr_transform_func = [](std::string const& name) -> std::string { return "MSR[" + name + "]"; };
 
     std::unique_ptr<power::SamplerCollection<nvml_sensor>> nvml_samplers = nullptr;
     try {
