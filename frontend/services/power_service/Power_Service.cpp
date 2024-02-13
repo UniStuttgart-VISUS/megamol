@@ -169,11 +169,13 @@ bool Power_Service::init(void* configPtr) {
     };
 
     std::function<std::string(std::string const&)> tinker_transform_func = [](std::string const& name) { return name; };
-
+    nlohmann::json json_data;
     try {
-        auto const json_data = power::parse_json_file(conf->tinker_map_filename);
+        json_data = power::parse_json_file(conf->tinker_map_filename);
         tinker_transform_func = std::bind(&power::transform_tf_name, std::cref(json_data), std::placeholders::_1);
-    } catch (...) {}
+    } catch (...) {
+        core::utility::log::Log::DefaultLog.WriteError("[Power_Service] Could not parse Tinker json file");
+    }
 
     auto nvml_transform_func = [](std::string const& name) -> std::string { return "NVML[" + name + "]"; };
 
@@ -206,6 +208,7 @@ bool Power_Service::init(void* configPtr) {
             std::chrono::milliseconds(600), std::chrono::milliseconds(10), nullptr, nullptr, nvml_transform_func);
     } catch (...) {
         nvml_samplers = nullptr;
+        core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No NVML sensors available");
     }
     /*std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
@@ -215,6 +218,7 @@ bool Power_Service::init(void* configPtr) {
             std::chrono::milliseconds(10), adl_discard_func, nullptr, adl_transform_func);
     } catch (...) {
         adl_samplers = nullptr;
+        core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No ADL sensors available");
     }
     /*std::tie(adl_sensors_, adl_buffers_) = megamol::power::InitSampler<adl_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
@@ -224,6 +228,7 @@ bool Power_Service::init(void* configPtr) {
             std::chrono::milliseconds(600), std::chrono::milliseconds(1), emi_discard_func);
     } catch (...) {
         emi_samplers = nullptr;
+        core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No EMI sensors available");
     }
     /*std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
         std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);*/
@@ -234,6 +239,7 @@ bool Power_Service::init(void* configPtr) {
                 std::chrono::milliseconds(1), msr_discard_func, nullptr, msr_transform_func);
         } catch (...) {
             msr_samplers = nullptr;
+            core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No MSR sensors available");
         }
         /*std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
             std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);*/
@@ -244,6 +250,7 @@ bool Power_Service::init(void* configPtr) {
             std::chrono::milliseconds(10), nullptr, tinker_config_func, tinker_transform_func);
     } catch (...) {
         tinker_samplers = nullptr;
+        core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No Tinkerforge sensors available");
     }
     /*std::tie(tinker_sensors_, tinker_buffers_) =
         megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
