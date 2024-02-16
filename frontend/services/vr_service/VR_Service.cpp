@@ -19,6 +19,7 @@
 
 #include "ImageWrapper_to_GLTexture.hpp"
 #include "ViewRenderInputs.h"
+#include "FrameStatistics.h"
 #include "mmcore/Module.h"
 #include "mmcore/view/AbstractViewInterface.h"
 #endif // MEGAMOL_USE_VR_INTEROP
@@ -58,6 +59,7 @@ bool VR_Service::init(const Config& config) {
     m_requestedResourcesNames = {
         "ImagePresentationEntryPoints",
         frontend_resources::MegaMolGraph_Req_Name,
+        frontend_resources::FrameStatistics_Req_Name,
 #ifdef MEGAMOL_USE_VR_INTEROP
         "OpenGL_Context",
 #endif // MEGAMOL_USE_VR_INTEROP
@@ -170,10 +172,15 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
     m_entry_points_registry.get_entry_point = [&](std::string const& name) -> auto { return std::nullopt; };
 
     auto& megamol_graph = m_requestedResourceReferences[1].getResource<core::MegaMolGraph>();
+
+    auto& frame_statistics = m_requestedResourceReferences[2].getResource<frontend_resources::FrameStatistics>();
+
 #ifdef MEGAMOL_USE_VR_INTEROP
     // Unity Kolab wants to manipulate graph modules like clipping plane or views
     static_cast<VR_Service::KolabBW*>(m_vr_device_ptr.get())
         ->add_graph(const_cast<core::MegaMolGraph*>(&megamol_graph));
+    static_cast<VR_Service::KolabBW*>(m_vr_device_ptr.get())
+        ->add_frame_stats(const_cast<frontend_resources::FrameStatistics*>(&frame_statistics));
 #endif // MEGAMOL_USE_VR_INTEROP
 }
 
@@ -232,6 +239,7 @@ struct megamol::frontend::VR_Service::KolabBW::PimplData {
 
     core::MegaMolGraph* graph_ptr = nullptr;
     core::Module* clip_module_ptr = nullptr;
+    frontend_resources::FrameStatistics* frame_stats_ptr = nullptr;
 
     std::function<core::param::ParamSlot*(std::string const&, core::Module*)> get_param_slot =
         [&](std::string const& name, core::Module* module_ptr) -> core::param::ParamSlot* {
@@ -366,6 +374,13 @@ void megamol::frontend::VR_Service::KolabBW::add_graph(void* ptr) {
     pimpl.graph_ptr = static_cast<core::MegaMolGraph*>(ptr);
 }
 
+void megamol::frontend::VR_Service::KolabBW::add_frame_stats(void* ptr) {
+    if (!m_pimpl)
+        return;
+
+    pimpl.frame_stats_ptr = static_cast<frontend_resources::FrameStatistics*>(ptr);
+}
+
 void megamol::frontend::VR_Service::KolabBW::receive_camera_data() {
     if (!pimpl.left_ep || !pimpl.right_ep)
         return;
@@ -401,8 +416,15 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
     pimpl.left_texturesender.send(left.as_gl_handle(), left.size.width, left.size.height);
     pimpl.right_texturesender.send(right.as_gl_handle(), right.size.width, right.size.height);
 
+    // embedd frame id from steering in texture
+    mint::uint steering_frame_id = 0;
+    steering_frame_id = glm::floatBitsToUint(pimpl.stereoCameraView.leftEyeView.eyePos.w);
+    mint::uint rendering_last_frame_ms = 0;
+    float last_frame_ms = static_cast<float>(pimpl.frame_stats_ptr->last_rendered_frame_time_milliseconds);
+    rendering_last_frame_ms = glm::floatBitsToUint(last_frame_ms);
+
     pimpl.singlestereo_texturesender.send(
-        left.as_gl_handle(), right.as_gl_handle(), 0, 0, left.size.width, left.size.height);
+        left.as_gl_handle(), right.as_gl_handle(), 0, 0, left.size.width, left.size.height, steering_frame_id, rendering_last_frame_ms);
 
     if (!pimpl.has_bbox) {
         auto maybe_bbox = static_cast<core::view::AbstractViewInterface*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();

@@ -123,6 +123,7 @@ private:
 
         // to implement clipping plane and view animation manipulation we need access to the MegaMol Graph
         void add_graph(void* ptr);
+        void add_frame_stats(void* ptr);
 
         // actual implementation details are in the .cpp file
         struct PimplData;
