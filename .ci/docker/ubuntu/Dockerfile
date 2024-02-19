@@ -2,7 +2,7 @@
 
 FROM ubuntu:22.04
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   build-essential \
   cmake \
   ninja-build \
@@ -12,9 +12,10 @@ RUN apt-get update && apt-get install -y \
   libomp-dev \
 # vcpkg:
   curl zip unzip tar \
+# vcpkg meson (for libsystemd):
+  python3-distutils python3-jinja2 \
 # ci checks:
-  clang-format \
-  clang-tidy \
+  clang-format clang-tidy \
 # glfw:
   xorg-dev \
 # gmp:
