@@ -5,6 +5,7 @@
   "homepage": "https://github.com/Dav1dde/glad",
   "license": "MIT",
   "dependencies": [
+    "egl-registry",
     {
       "name": "vcpkg-cmake",
       "host": true
