@@ -501,6 +501,43 @@ def plot_gpuz(start, end, gpuz_time, gpuz_gpu_temp, gpuz_hotspot_temp, gpuz_mem_
 
     plt.savefig(path+"/"+filename+".pdf", bbox_inches="tight")
     plt.close()
+
+def plot_hwinfo(start, end, data, temp_cols, perf_cols, percentage, filename, path):
+    min_ts = data["Timestamps"][start:end].min()
+    ts = data["Timestamps"].subtract(min_ts).divide(10000)
+
+    # fig = plt.figure(figsize=(16,9))
+    
+    plt.rcParams['figure.constrained_layout.use'] = True
+    fig, ax = plt.subplots(1+len(perf_cols.items()), 1, figsize=(16,16))
+    # fig.tight_layout()
+
+    ax_counter = 0
+
+    ax[ax_counter].set_xlabel("time [ms]")
+    ax[ax_counter].set_ylabel("temp [°C]")
+
+    for key, val in temp_cols.items():
+        ax[ax_counter].plot(ts[start:end], data[val][start:end], label=key)
+
+    ax[ax_counter].legend(loc="upper left")
+    ax_counter = ax_counter + 1
+
+    if percentage:
+        y_label_name = "perf cap [%]"
+    else:
+        y_label_name = "perf cap [yes/no]"
+
+    for key, val in perf_cols.items():
+        ax[ax_counter].set_title(key)
+        ax[ax_counter].set_xlabel("time [ms]")
+        ax[ax_counter].set_ylabel(y_label_name)
+        ax[ax_counter].plot(ts[start:end], data[val][start:end])
+        ax_counter = ax_counter + 1
+
+    # plt.legend(loc="upper right")
+    plt.savefig(path+"/"+filename+".pdf", bbox_inches="tight")
+    plt.close()
     
 def plot_time(A, B):
     # Ay = np.full(len(A), 1)
@@ -543,7 +580,7 @@ def main():
     matplotlib.rc('font', **font)
 
     base_path = sys.argv[1]
-    gpu = sys.argv[2]
+    gpu_id = sys.argv[2]
     show = False
     if sys.argv[3] == "true":
         show = True
@@ -554,6 +591,33 @@ def main():
 
     msr_field_name = sys.argv[8]
     gpu_field_name = sys.argv[9]
+
+    percentage = True
+    if (gpu_id == "4090" or gpu_id == "4080" or gpu_id == "3090Ti"):
+        gpu = "nvidia"
+        temperature_vals = {"GPU": 'GPU-Temperatur [°C]', "Memory": 'GPU-Speicher Sperrschicht-Temperatur [°C]', "Hotspot": 'GPU-Hot-Spot-Temperatur [°C]'}
+        percentage = False
+        if (gpu_id == "3090Ti"):
+            perfcap_vals = {"Power Throttling (avg)": 'GPU Leistungsbegrenzer (avg) [Yes/No]', "Power Throttling": 'Leistungsgrenzwert - Leistung [Yes/No]', "Temp Throttling": 'Leistungsgrenzwert - Thermisch [Yes/No]', "Voltage Reliability Throttling": 'Leistungsgrenzwert - Spannungs-Zuverlässigkeit [Yes/No]', "Max Voltage Throttling": 'Leistungsgrenzwert - Max. Betriebsspannung [Yes/No]', "Utilization Throttling": 'Leistungsgrenzwert - Auslastung [Yes/No]', "SLI GPUBoost Sync Throttling": 'Leistungsgrenzwert - SLI GPUBoost Sync [Yes/No]'}
+        if (gpu_id == "4090"):
+            perfcap_vals = {"Power Throttling": 'Leistungsgrenzwert - Leistung [Yes/No]', "Temp Throttling": 'Leistungsgrenzwert - Thermisch [Yes/No]', "Voltage Reliability Throttling": 'Leistungsgrenzwert - Spannungs-Zuverlässigkeit [Yes/No]', "Max Voltage Throttling": 'Leistungsgrenzwert - Max. Betriebsspannung [Yes/No]', "Utilization Throttling": 'Leistungsgrenzwert - Auslastung [Yes/No]', "SLI GPUBoost Sync Throttling": 'Leistungsgrenzwert - SLI GPUBoost Sync [Yes/No]'}
+
+
+    if (gpu_id == "6900XT" or gpu_id == "7900XT" or gpu_id == "7900XTX"):
+        gpu = "amd"
+        temperature_vals = {"GPU":  'GPU Temperature [°C]', "Memory": 'GPU Memory Junction Temperature [°C]', "Hotspot": 'GPU-Hot-Spot-Temperatur [°C]'}
+        if (gpu_id == "6900XT"):
+            perfcap_vals = {"PPT": 'GPU PPT-Limit [%]', "Core TDC": 'GPU-Kern TDC-Limit [%]', "SOC TDC": 'GPU-SOC-TDC-Limit [%]', "GPU Temp (avg)": 'Thermische Grenzen der GPU (avg) [%]', "GPU Edge Temp": 'Thermischer Grenzwert der GPU-Kante [%]', "GPU Hotspot Temp": 'Thermischer Grenzwert für GPU-Hotspot [%]', "Memory Temp": 'Thermischer Grenzwert des GPU-Speichers [%]', "GPU VR GFX Temp": 'GPU VR GFX thermischer Grenzwert [%]', "GPU VR SOC Temp": 'Thermischer Grenzwert des GPU VR-SOC [%]', "GPU VR Memory Temp": 'GPU VR MEM Thermischer Grenzwert [%]'}
+        if (gpu_id == "7900XT"):
+            perfcap_vals = {"PPT": 'GPU PPT-Limit (Anhaltend) [%]', "Core TDC": 'GPU-Kern TDC-Limit [%]', "SOC TDC": 'GPU-SOC-TDC-Limit [%]', "GPU Temp (avg)": 'Thermische Grenzen der GPU (avg) [%]', "GPU Hotspot Temp": 'Thermischer Grenzwert für GPU-Hotspot [%]', "Memory Temp": 'Thermischer Grenzwert des GPU-Speichers [%]', "GPU VR GFX Temp": 'GPU VR GFX thermischer Grenzwert [%]', "GPU VR Memory Temp": 'GPU VR MEM Thermischer Grenzwert [%]'} #"GPU VR SOC Temp": 'Thermischer Grenzwert des  GPU VR-SOC [%]', 
+        if (gpu_id == "7900XTX"):
+            perfcap_vals = {"PPT": 'GPU PPT-Limit (Anhaltend) [%]', "Core TDC": 'GPU-Kern TDC-Limit [%]', "SOC TDC": 'GPU-SOC-TDC-Limit [%]', "GPU Temp (avg)": 'Thermische Grenzen der GPU (avg) [%]', "GPU Hotspot Temp": 'Thermischer Grenzwert für GPU-Hotspot [%]', "Memory Temp": 'Thermischer Grenzwert des GPU-Speichers [%]'}
+
+    if (gpu_id == "A770"):
+        gpu = "intel"
+        temperature_vals = {"GPU":  'Globale GPU-Temperatur [°C]', "Memory": 'GPU-Speichertemperatur [°C]', "Hotspot": 'GPU Core Temperatur [°C]'}
+        percentage = False
+        perfcap_vals = {"Throttling (avg)": 'Gründe für GPU-Drosselung (avg) [Yes/No]', "Power Throttling": 'Durchschnittliche Leistung (PL1) [Yes/No]', "Burst Power Throttling": 'Burst-Leistung (PL2) [Yes/No]', "Current Throttling": 'Current (PL4) [Yes/No]', "Temp Throttling": 'Thermisch [Yes/No]', "Power Supply Throttling": 'Energieversorgung [Yes/No]', "Software Throttling": 'Softwarelimit [Yes/No]', "Hardware Throttling": 'Hardwarelimit [Yes/No]', "Memory Throttling (avg)": 'Gründe für Speicherdrosselung (avg) [Yes/No]', "Power Throttling 1": 'Durchschnittliche Leistung (PL1) [Yes/No].1', "Burst Power Throttling 1": 'Burst-Leistung (PL2) [Yes/No].1', "Current Throttling 1": 'Current (PL4) [Yes/No].1', "Temp Throttling 1": 'Thermisch [Yes/No].1', "Power Supply Throttling 1": 'Energieversorgung [Yes/No].1', "Software Throttling 1": 'Softwarelimit [Yes/No].1', "Hardware Throttling 1": 'Hardwarelimit [Yes/No].1'}
 
     if (gpu == "nvidia"):
         nvml_name = gpu_field_name + "_samples" 
@@ -588,7 +652,8 @@ def main():
     csv_file = io.open(csv_path, "a", encoding="utf-8")
     tex_file = io.open(tex_path, "a", encoding="utf-8")
 
-    gpuz_data = pd.read_parquet(gpuz_path)
+    # gpuz_data = pd.read_parquet(gpuz_path)
+    hwinfo_data = pd.read_parquet(gpuz_path)
 
     if header:
         csv_file.write("gpu, method, num_frames, rtx_gpu, tinker_gpu, soft_gpu, rtx_cpu, tinker_cpu, msr, hmc_p, hmc_s, hmc_p_int, total_rtx, total_tinker\n")
@@ -768,9 +833,12 @@ def main():
             
         # gpuz
         # plot temperature and perf cap over measurement time
-        first_idx, last_idx = match_ts_on_df(gpuz_data, "Timestamps", first_ts, last_ts)
-        plot_gpuz(first_idx, last_idx, gpuz_data["Timestamps"], gpuz_data["GPU Temperature [°C]"], gpuz_data["Hot Spot [°C]"], gpuz_data["Memory Temperature [°C]"], gpuz_data["CPU Temperature [°C]"], gpuz_data["PerfCap Reason []"], "gpuz", folder_path)
+        # first_idx, last_idx = match_ts_on_df(gpuz_data, "Timestamps", first_ts, last_ts)
+        # plot_gpuz(first_idx, last_idx, gpuz_data["Timestamps"], gpuz_data["GPU Temperature [°C]"], gpuz_data["Hot Spot [°C]"], gpuz_data["Memory Temperature [°C]"], gpuz_data["CPU Temperature [°C]"], gpuz_data["PerfCap Reason []"], "gpuz", folder_path)
 
+        # hwinfo
+        first_idx, last_idx = match_ts_on_df(hwinfo_data, "Timestamps", first_ts, last_ts)
+        plot_hwinfo(first_idx, last_idx, hwinfo_data, temperature_vals, perfcap_vals, percentage, "hwinfo", folder_path)
 
         tex_sf = sf.replace('_', '\\_')
         csv_text = f"{gpu} {gpu_name}, {sf}, {num_frames}, {rtx_gpu_ws}, {tinker_gpu_ws}, {soft_gpu_ws}, {rtx_cpu_ws}, {tinker_cpu_ws}, {msr_ws}, {hmc_p_ws}, {hmc_s_ws}, {hmc_p_int_ws}, {rtx_total_ws}, {tinker_total_ws}\n"
