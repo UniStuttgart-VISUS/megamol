@@ -58,10 +58,10 @@ GraphData2D::Node GraphData2D::removeNode(NodeID id, bool lazy) {
         nodes.at(id).removed = true;
     } else {
         for (auto& parent : nodes.at(id).parentNodes) {
-            removeEdge(parent, id);
+            removeEdge(parent, id, id);
         }
         for (auto& child : nodes.at(id).childNodes) {
-            removeEdge(id, child);
+            removeEdge(id, child, id);
         }
 
         nodes.erase(id);
@@ -117,9 +117,13 @@ const GraphData2D::Edge& GraphData2D::getEdge(NodeID from, NodeID to) const {
     throw std::runtime_error("Edge not found for given nodes.");
 }
 
-void GraphData2D::removeEdge(NodeID from, NodeID to) {
-    getNode(from).childNodes.erase(to);
-    getNode(to).parentNodes.erase(from);
+void GraphData2D::removeEdge(NodeID from, NodeID to, NodeID keep) {
+    if (from != keep) {
+        getNode(from).childNodes.erase(to);
+    }
+    if (to != keep) {
+        getNode(to).parentNodes.erase(from);
+    }
 
     for (auto it = edges.begin(); it != edges.end(); ++it) {
         if (it->from == from && it->to == to) {
@@ -138,10 +142,10 @@ void GraphData2D::finalizeLazyRemoval() {
     for (auto it = nodes.begin(); it != nodes.end();) {
         if (it->second.removed) {
             for (auto& parent : it->second.parentNodes) {
-                removeEdge(parent, it->first);
+                removeEdge(parent, it->first, it->first);
             }
             for (auto& child : it->second.childNodes) {
-                removeEdge(it->first, child);
+                removeEdge(it->first, child, it->first);
             }
 
             it = nodes.erase(it);
@@ -188,6 +192,7 @@ std::vector<std::vector<GraphData2D::NodeID>> GraphData2D::getInboundEdges() con
 }
 
 GraphData2D::NodeID GraphData2D::getNodeID(Timestamp time, Label label) {
-    static std::hash<std::pair<Timestamp, Label>> hasher;
-    return hasher(std::make_pair(time, label));
+    static_assert(sizeof(Timestamp) + sizeof(Label) <= sizeof(NodeID));
+
+    return (static_cast<NodeID>(time) << sizeof(Label) * 8) | static_cast<NodeID>(label);
 }
