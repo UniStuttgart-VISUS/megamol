@@ -341,6 +341,7 @@ def sep_plot(start, end, ts, frame, rtx, data, data_name, tinker, filename, path
     fig = plt.figure(figsize=(16,9))
     plt.xlabel("time [ms]")
     plt.ylabel("P[W]")
+    plt.title(filename)
     if bin:
         plt.fill_between(bin_centers, rtx_min, rtx_max, alpha=0.2, label="osci", color=osci_band_color)
         plt.plot(bin_centers, rtx_mean, label="osci", color=osci_color)
@@ -391,6 +392,7 @@ def combined_plot(start, end, ts, frame, rtx_gpu, rtx_cpu, data_gpu, data_gpu_na
     fig = plt.figure(figsize=(16,9))
     plt.xlabel("time [ms]")
     plt.ylabel("P[W]")
+    plt.title(filename)
     if gpu_bin:
         plt.fill_between(gpu_bin_centers, rtx_gpu_min, rtx_gpu_max, alpha=0.2, label="osci gpu", color=osci_band_color)
         plt.plot(gpu_bin_centers, rtx_gpu_mean, label="osci gpu", color=osci_band_color)
@@ -448,6 +450,7 @@ def combined_plot_hmc(start, end, ts, frame, rtx_gpu, rtx_cpu, data_gpu, data_gp
     fig = plt.figure(figsize=(16,9))
     plt.xlabel("time [ms]")
     plt.ylabel("P[W]")
+    plt.title(filename)
     if gpu_bin:
         plt.fill_between(gpu_bin_centers, rtx_gpu_min, rtx_gpu_max, alpha=0.2, label="osci gpu", color=osci_band_color)
         plt.plot(gpu_bin_centers, rtx_gpu_mean, label="osci gpu", color=osci_color)
@@ -653,7 +656,7 @@ def main():
     tex_file = io.open(tex_path, "a", encoding="utf-8")
 
     # gpuz_data = pd.read_parquet(gpuz_path)
-    hwinfo_data = pd.read_parquet(gpuz_path)
+    # hwinfo_data = pd.read_parquet(gpuz_path)
 
     if header:
         csv_file.write("gpu, method, num_frames, rtx_gpu, tinker_gpu, soft_gpu, rtx_cpu, tinker_cpu, msr, hmc_p, hmc_s, hmc_p_int, total_rtx, total_tinker\n")
@@ -746,10 +749,10 @@ def main():
             # plot(rtx_df["12VHPWR"][start_idx_1:end_idx_1]+rtx_df["12VPEG"][start_idx_1:end_idx_1], rtx_df["timestamps"][start_idx_1:end_idx_1], rtx_df["frame"][start_idx_1:end_idx_1], rtx_gpu_conv[start_idx_1:end_idx_1], tinker_df["12VHPWR"][start_idx_1:end_idx_1]+tinker_df["12VPEG"][start_idx_1:end_idx_1], "tinker", "f1", folder_path, show)
             # plot(rtx_df["12VHPWR"][start_idx_3:end_idx_3]+rtx_df["12VPEG"][start_idx_3:end_idx_3], rtx_df["timestamps"][start_idx_3:end_idx_3], rtx_df["frame"][start_idx_3:end_idx_3], rtx_gpu_conv[start_idx_3:end_idx_3], tinker_df["12VHPWR"][start_idx_3:end_idx_3]+tinker_df["12VPEG"][start_idx_3:end_idx_3], "tinker", "f3", folder_path, show)
             
-            sep_plot(start_idx_100, end_idx_100, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[nvml_name], "nvml", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f50", folder_path, show, not(show))
+            sep_plot(start_idx_100, end_idx_100, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[nvml_name], "nvml", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f50", folder_path, show, not(show))
             # relay_plot_bin(start_idx_100, end_idx_100, rtx_df["12VHPWR"]+rtx_df["12VPEG"], rtx_df["timestamps"], rtx_df["frame"], rtx_gpu_conv, "osci ma", tinker_df["12VHPWR"]+tinker_df["12VPEG"], "tinker", "f50", folder_path, show)
-            sep_plot(start_idx_1, end_idx_1, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[nvml_name], "nvml", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f1", folder_path, show, False)
-            sep_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[nvml_name], "nvml", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f3", folder_path, show, False)
+            sep_plot(start_idx_1, end_idx_1, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[nvml_name], "nvml", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f1", folder_path, show, False)
+            sep_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[nvml_name], "nvml", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f3", folder_path, show, False)
             tinker_peg_name = gpu_rtx_ident
         if gpu == "amd":
             # plot(rtx_df["12VHPWR"][start_idx_100:end_idx_100]+rtx_df["12VPEG"][start_idx_100:end_idx_100], rtx_df["timestamps"][start_idx_100:end_idx_100], rtx_df["frame"][start_idx_100:end_idx_100], rtx_gpu_conv[start_idx_100:end_idx_100], tinker_df["PEG"][start_idx_100:end_idx_100]+tinker_df["12VPEG"][start_idx_100:end_idx_100], "tinker", "f50", folder_path, show)
@@ -757,40 +760,43 @@ def main():
             # plot(rtx_df["12VHPWR"][start_idx_1:end_idx_1]+rtx_df["12VPEG"][start_idx_1:end_idx_1], rtx_df["timestamps"][start_idx_1:end_idx_1], rtx_df["frame"][start_idx_1:end_idx_1], rtx_gpu_conv[start_idx_1:end_idx_1], tinker_df["PEG"][start_idx_1:end_idx_1]+tinker_df["12VPEG"][start_idx_1:end_idx_1], "tinker", "f1", folder_path, show)
             # plot(rtx_df["12VHPWR"][start_idx_3:end_idx_3]+rtx_df["12VPEG"][start_idx_3:end_idx_3], rtx_df["timestamps"][start_idx_3:end_idx_3], rtx_df["frame"][start_idx_3:end_idx_3], rtx_gpu_conv[start_idx_3:end_idx_3], tinker_df["PEG"][start_idx_3:end_idx_3]+tinker_df["12VPEG"][start_idx_3:end_idx_3], "tinker", "f3", folder_path, show)
 
-            sep_plot(start_idx_100, end_idx_100, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[adl_name], "adl", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f50", folder_path, show, not(show))
+            sep_plot(start_idx_100, end_idx_100, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[adl_name], "adl", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f50", folder_path, show, not(show))
             # relay_plot_bin(start_idx_100, end_idx_100, rtx_df["12VHPWR"]+rtx_df["12VPEG"], rtx_df["timestamps"], rtx_df["frame"], rtx_gpu_conv, "osci ma", tinker_df["PEG"]+tinker_df["12VPEG"], "tinker", "f50", folder_path, show)
-            sep_plot(start_idx_1, end_idx_1, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[adl_name], "adl", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f1", folder_path, show, False)
-            sep_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[adl_name], "adl", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f3", folder_path, show, False)
+            sep_plot(start_idx_1, end_idx_1, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[adl_name], "adl", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f1", folder_path, show, False)
+            sep_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], soft_df[adl_name], "adl", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f3", folder_path, show, False)
             tinker_peg_name = gpu_rtx_ident
         if gpu == "intel":
-            sep_plot(start_idx_100, end_idx_100, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], "None", "intel", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f50", folder_path, show, not(show))
-            sep_plot(start_idx_1, end_idx_1, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], "None", "intel", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f1", folder_path, show, False)
-            sep_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], "None", "intel", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], "f3", folder_path, show, False)
+            sep_plot(start_idx_100, end_idx_100, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], "None", "intel", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f50", folder_path, show, not(show))
+            sep_plot(start_idx_1, end_idx_1, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], "None", "intel", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f1", folder_path, show, False)
+            sep_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"], rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], "None", "intel", tinker_df[gpu_rtx_ident]+tinker_df["12VPEG"], f"{gpu_id}_f3", folder_path, show, False)
             tinker_peg_name = gpu_rtx_ident
 
+
+        osci_cpu = rtx_df["P8"]+rtx_df["P4"] #+rtx_df["12VATX"]-rtx_df["12VPEG"]
+        tinker_cpu = tinker_df["P8"]+tinker_df["P4"] #+tinker_df["12VATX"]-tinker_df["12VPEG"]+tinker_df["3VATX"]+tinker_df["5VATX"]-tinker_df["3VPEG"]
         # msr
         print("MSR:")
         indices = remove_outlier_indices(data_map["msr_s0"], msr_field_name + "_samples")
         data_map["msr_s0"] = data_map["msr_s0"][indices]
         msr_df = interpolate(data_map["msr_s0"], rtx_df["timestamps"])
         first_idx, last_idx = match_ts_on_df(msr_df, f"timestamps", first_ts, last_ts)
-        sep_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"], rtx_df["P8"]+rtx_df["P4"]+rtx_df["12VATX"]-rtx_df["12VPEG"], msr_df[msr_field_name + "_samples"], "msr", tinker_df["P8"]+tinker_df["P4"]+tinker_df["12VATX"]-tinker_df["12VPEG"], "cpu_f3", folder_path, show, False)
+        sep_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"], osci_cpu, msr_df[msr_field_name + "_samples"], "msr", tinker_cpu, f"{gpu_id}_cpu_f3", folder_path, show, False)
         if gpu == "amd" or gpu == "nvidia":
             combined_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"],\
                       rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], \
-                       rtx_df["P8"]+rtx_df["P4"]+rtx_df["12VATX"]-rtx_df["12VPEG"], \
+                       osci_cpu, \
                        soft_df[soft_sample_name], soft_name, \
                         msr_df[msr_field_name + "_samples"], "msr", \
                         tinker_df[tinker_peg_name]+tinker_df["12VPEG"], \
-                             tinker_df["P8"]+tinker_df["P4"]+tinker_df["12VATX"]-tinker_df["12VPEG"], "gpu_cpu_f3", folder_path, show, True, True)
+                             tinker_cpu, f"{gpu_id}_gpu_cpu_f3", folder_path, show, True, True)
         else:
             combined_plot(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"],\
                       rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], \
-                       rtx_df["P8"]+rtx_df["P4"]+rtx_df["12VATX"]-rtx_df["12VPEG"], \
+                       osci_cpu, \
                        "None", "None", \
                         msr_df[msr_field_name + "_samples"], "msr", \
                         tinker_df[tinker_peg_name]+tinker_df["12VPEG"], \
-                             tinker_df["P8"]+tinker_df["P4"]+tinker_df["12VATX"]-tinker_df["12VPEG"], "gpu_cpu_f3", folder_path, show, True, True)
+                             tinker_cpu, f"{gpu_id}_gpu_cpu_f3", folder_path, show, True, True)
         # relay_plot_bin(start_idx_3, end_idx_3, rtx_df["P8"]+rtx_df["P4"]+rtx_df["12VATX"], rtx_df["timestamps"], rtx_df["frame"], msr_df["MSR_samples"], "msr", tinker_df["P8"]+tinker_df["P4"]+tinker_df["12VATX"], "tinker", "cpu_f3", folder_path, show)
         ws = integrate(msr_df[f"timestamps"], msr_df[msr_field_name + "_samples"], first_idx, last_idx)
         print(f"\tEnergy: {np.round(ws,2)} ({np.round(ws/num_frames,2)}) Ws")
@@ -815,21 +821,21 @@ def main():
         if gpu == "amd" or gpu == "nvidia":
             combined_plot_hmc(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"],\
                       rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], \
-                       rtx_df["P8"]+rtx_df["P4"]+rtx_df["12VATX"]-rtx_df["12VPEG"], \
+                       osci_cpu, \
                        soft_df[soft_sample_name], soft_name, \
                         msr_df[msr_field_name + "_samples"], "msr", \
                         hmc_df["P[W]"], "hmc", \
                         tinker_df[tinker_peg_name]+tinker_df["12VPEG"], \
-                             tinker_df["P8"]+tinker_df["P4"]+tinker_df["12VATX"]-tinker_df["12VPEG"], "gpu_cpu_hmc_f3", folder_path, show, True, True)
+                             tinker_cpu, f"{gpu_id}_gpu_cpu_hmc_f3", folder_path, show, True, True)
         else:
             combined_plot_hmc(start_idx_3, end_idx_3, rtx_df["timestamps"], rtx_df["frame"],\
                       rtx_df[gpu_rtx_ident]+rtx_df["12VPEG"], \
-                       rtx_df["P8"]+rtx_df["P4"]+rtx_df["12VATX"]-rtx_df["12VPEG"], \
+                       osci_cpu, \
                        "None", "None", \
                         msr_df[msr_field_name + "_samples"], "msr", \
                         hmc_df["P[W]"], "hmc", \
                         tinker_df[tinker_peg_name]+tinker_df["12VPEG"], \
-                             tinker_df["P8"]+tinker_df["P4"]+tinker_df["12VATX"]-tinker_df["12VPEG"], "gpu_cpu_hmc_f3", folder_path, show, True, True)
+                             tinker_cpu, f"{gpu_id}_gpu_cpu_hmc_f3", folder_path, show, True, True)
             
         # gpuz
         # plot temperature and perf cap over measurement time
@@ -837,8 +843,8 @@ def main():
         # plot_gpuz(first_idx, last_idx, gpuz_data["Timestamps"], gpuz_data["GPU Temperature [°C]"], gpuz_data["Hot Spot [°C]"], gpuz_data["Memory Temperature [°C]"], gpuz_data["CPU Temperature [°C]"], gpuz_data["PerfCap Reason []"], "gpuz", folder_path)
 
         # hwinfo
-        first_idx, last_idx = match_ts_on_df(hwinfo_data, "Timestamps", first_ts, last_ts)
-        plot_hwinfo(first_idx, last_idx, hwinfo_data, temperature_vals, perfcap_vals, percentage, "hwinfo", folder_path)
+        #first_idx, last_idx = match_ts_on_df(hwinfo_data, "Timestamps", first_ts, last_ts)
+        #plot_hwinfo(first_idx, last_idx, hwinfo_data, temperature_vals, perfcap_vals, percentage, "hwinfo", folder_path)
 
         tex_sf = sf.replace('_', '\\_')
         csv_text = f"{gpu} {gpu_name}, {sf}, {num_frames}, {rtx_gpu_ws}, {tinker_gpu_ws}, {soft_gpu_ws}, {rtx_cpu_ws}, {tinker_cpu_ws}, {msr_ws}, {hmc_p_ws}, {hmc_s_ws}, {hmc_p_int_ws}, {rtx_total_ws}, {tinker_total_ws}\n"
