@@ -177,29 +177,29 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
                 header.channels().insert(
                     m_channel_name_red.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_red.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*)&rPixels[0], sizeof(rPixels[0]), sizeof(rPixels[0]) * width));
+                    Slice(headerType, (char*) &rPixels[0], sizeof(rPixels[0]), sizeof(rPixels[0]) * width));
             }
             if (m_channel_name_green.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 2) {
                 header.channels().insert(
                     m_channel_name_green.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_green.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*)&gPixels[0], sizeof(gPixels[0]) * 1, sizeof(gPixels[0]) * width));
+                    Slice(headerType, (char*) &gPixels[0], sizeof(gPixels[0]) * 1, sizeof(gPixels[0]) * width));
             }
             if (m_channel_name_blue.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 3) {
                 header.channels().insert(
                     m_channel_name_blue.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_blue.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*)&bPixels[0], sizeof(bPixels[0]) * 1, sizeof(bPixels[0]) * width));
+                    Slice(headerType, (char*) &bPixels[0], sizeof(bPixels[0]) * 1, sizeof(bPixels[0]) * width));
             }
             if (m_channel_name_alpha.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum == 4) {
                 header.channels().insert(
                     m_channel_name_alpha.Param<core::param::StringParam>()->Value(), Channel(headerType));
                 fb.insert(m_channel_name_alpha.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*)&aPixels[0], sizeof(aPixels[0]) * 1, sizeof(aPixels[0]) * width));
+                    Slice(headerType, (char*) &aPixels[0], sizeof(aPixels[0]) * 1, sizeof(aPixels[0]) * width));
             }
 
             OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
-            
+
             file.setFrameBuffer(fb);
             file.writePixels(height);
         } catch (const std::exception& exc) {

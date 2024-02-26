@@ -272,7 +272,7 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
                 for (int x = 0; x < width; x++)
                     rPixels[y][x] = static_cast<T>(stoi(currentChannelName));
         } else {
-            fb.insert(currentChannelName, Slice(sliceType, (char*)&rPixels[-dw.min.y][-dw.min.x],
+            fb.insert(currentChannelName, Slice(sliceType, (char*) &rPixels[-dw.min.y][-dw.min.x],
                                               sizeof(rPixels[0][0]) * 1, sizeof(rPixels[0][0]) * width));
         }
     }
@@ -287,7 +287,7 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
                 for (int x = 0; x < width; x++)
                     gPixels[y][x] = static_cast<T>(stoi(currentChannelName));
         } else {
-            fb.insert(currentChannelName, Slice(sliceType, (char*)&gPixels[-dw.min.y][-dw.min.x],
+            fb.insert(currentChannelName, Slice(sliceType, (char*) &gPixels[-dw.min.y][-dw.min.x],
                                               sizeof(gPixels[0][0]) * 1, sizeof(gPixels[0][0]) * width));
         }
     }
@@ -302,7 +302,7 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
                 for (int x = 0; x < width; x++)
                     bPixels[y][x] = static_cast<T>(stoi(currentChannelName));
         } else {
-            fb.insert(currentChannelName, Slice(sliceType, (char*)&bPixels[-dw.min.y][-dw.min.x],
+            fb.insert(currentChannelName, Slice(sliceType, (char*) &bPixels[-dw.min.y][-dw.min.x],
                                               sizeof(bPixels[0][0]) * 1, sizeof(bPixels[0][0]) * width));
         }
     }
@@ -316,7 +316,7 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
                 for (int x = 0; x < width; x++)
                     aPixels[y][x] = static_cast<T>(stoi(currentChannelName));
         } else {
-            fb.insert(currentChannelName, Slice(sliceType, (char*)&aPixels[-dw.min.y][-dw.min.x],
+            fb.insert(currentChannelName, Slice(sliceType, (char*) &aPixels[-dw.min.y][-dw.min.x],
                                               sizeof(aPixels[0][0]) * 1, sizeof(aPixels[0][0]) * width));
         }
     }

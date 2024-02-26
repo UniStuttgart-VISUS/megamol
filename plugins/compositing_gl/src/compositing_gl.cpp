@@ -13,6 +13,8 @@
 #include "InteractionRenderTarget.h"
 #include "LocalLighting.h"
 #include "NormalFromDepth.h"
+#include "OpenEXRReader.h"
+#include "OpenEXRWriter.h"
 #include "PNGDataSource.h"
 #include "SSAO.h"
 #include "ScreenSpaceEdges.h"
@@ -20,8 +22,6 @@
 #include "TexInspectModule.h"
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
-#include "OpenEXRWriter.h"
-#include "OpenEXRReader.h"
 #include "compositing_gl/CompositingCalls.h"
 
 namespace megamol::compositing_gl {
