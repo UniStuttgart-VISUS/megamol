@@ -1,15 +1,20 @@
+/**
+ * MegaMol
+ * Copyright (c) 2023, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
+
+#include <Imath/ImathBox.h>
+#include <OpenEXR/ImfRgbaFile.h>
+#include <OpenEXR/openexr.h>
+#include <glowl/Texture2D.hpp>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-
-#include <glowl/Texture2D.hpp>
-
-#include "Imath/ImathBox.h"
-#include "OpenEXR/ImfRgbaFile.h"
-#include "OpenEXR/openexr.h"
 #include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {

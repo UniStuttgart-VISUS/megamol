@@ -1,4 +1,3 @@
-#include "OpenEXRWriter.h"
 /**
  * MegaMol
  * Copyright (c) 2023, MegaMol Dev Team
@@ -6,11 +5,7 @@
  */
 
 #include "OpenEXRWriter.h"
-#include "compositing_gl/CompositingCalls.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/StringParam.h"
+
 #include <vector>
 
 #include <OpenEXR/ImfArray.h>
@@ -19,6 +14,12 @@
 #include <OpenEXR/ImfMatrixAttribute.h>
 #include <OpenEXR/ImfOutputFile.h>
 #include <OpenEXR/ImfStringAttribute.h>
+
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 
 using namespace megamol;
 using namespace megamol::compositing_gl;

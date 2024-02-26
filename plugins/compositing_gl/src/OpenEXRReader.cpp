@@ -1,4 +1,3 @@
-#include "OpenEXRReader.h"
 /**
  * MegaMol
  * Copyright (c) 2023, MegaMol Dev Team
@@ -6,10 +5,6 @@
  */
 
 #include "OpenEXRReader.h"
-#include "compositing_gl/CompositingCalls.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FlexEnumParam.h"
-#include "mmcore/param/IntParam.h"
 
 #include <OpenEXR/ImfArray.h>
 #include <OpenEXR/ImfChannelList.h>
@@ -20,6 +15,10 @@
 #include <OpenEXR/ImfRgbaFile.h>
 #include <OpenEXR/ImfStringAttribute.h>
 
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/param/IntParam.h"
 
 using namespace megamol;
 using namespace megamol::compositing_gl;
