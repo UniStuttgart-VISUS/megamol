@@ -13,6 +13,8 @@ megamol_plugin(compositing_gl
 
 if (compositing_gl_PLUGIN_ENABLED)
   # Additional sources
+  find_package(OpenEXR CONFIG REQUIRED)
+  target_link_libraries(compositing_gl PRIVATE OpenEXR::OpenEXR)
   file(GLOB_RECURSE extra_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.h")
   file(GLOB_RECURSE extra_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.cpp")
   target_sources(compositing_gl PRIVATE ${extra_header_files} ${extra_source_files})
