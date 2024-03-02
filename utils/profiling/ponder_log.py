@@ -1,5 +1,6 @@
 import argparse
 import pandas
+import csv
 import os.path
 import pathlib
 from joblib import Parallel, delayed, cpu_count
@@ -12,7 +13,7 @@ parser.add_argument('-w', action='store_true', help="write result to file", dest
 parser.add_argument('-f', action='store_true', help="overwrite file if existing", dest='overwrite_output')
 parser.add_argument('-s', type=int, help="override start frame", dest='start_frame')
 parser.add_argument('-e', type=int, help="override end frame", dest='end_frame')
-parser.add_argument('-a', type=str, help="filter by API (CPU or OpenGL)", dest='api', default="CPU")
+parser.add_argument('-a', type=str, help="filter by API (CPU or OpenGL)", dest='api', default="all")
 args = parser.parse_args()
 
 df: pandas.DataFrame
@@ -52,6 +53,7 @@ def process_stack(dataframe, stack_start, stack_end):
 
     verbose_print(f"I am {parent} : {callback} and cost {dur}")
     valid_end = stack_end
+    called_stuff = False
     for row_it in range(stack_start + 1, stack_end + 1):
         r2 = dataframe.iloc[row_it]
         p2 = r2["parent"]
@@ -66,34 +68,90 @@ def process_stack(dataframe, stack_start, stack_end):
             break
         if sm == dest_mod:
             # we called stuff
+            called_stuff = True
             dur = dur - d2
             verbose_print(f"I called {p2} : {c2}, subtracting, remaining cost = {dur}")
     verbose_print("stopping.\n")
-    assert dur >= 0
+    #assert dur >= 0, f"duration should be positive, but is {dur} for {parent} in frame {row['frame']}"
+    if dur < 0:
+        print(f"duration should be positive, but is {dur} for {parent};{callback} in frame {row['frame']} and api {row['api']}")
     #show_stack_frame(dataframe, stack_start + 1, valid_end, "children")
     #print(f"name {row.name} vs. stack_start {stack_start}")
     df.iat[row.name, self_time_col] = dur
     # TODO print in source format?
     #verbose_print(row.to_csv(index=False, header=False, line_terminator=''))
     # recurse children
-    if (stack_start + 1 <= valid_end):
-        verbose_print("recurse children")
+    if called_stuff and (stack_start + 1 <= valid_end):
+        verbose_print(f"recurse children of {parent}")
         process_stack(dataframe, stack_start + 1, valid_end)
+
+    if not called_stuff:
+        valid_end = stack_start
 
     # process rest at same level
     if (valid_end + 1 <= stack_end):
-        verbose_print("rest of level")
+        verbose_print(f"rest of level for {parent}")
         process_stack(dataframe, valid_end + 1, stack_end)
 
+def process_fullframe(dataframe, stack_start, stack_end):
+    verbose_print(f"process_fullframe {stack_start} - {stack_end}")
+
+    tasks = []
+    for row_it in range(stack_start, stack_end + 1):
+        tasks.append(row_it)
+    
+    while len(tasks) > 0:
+        task = tasks.pop(0)
+        row = dataframe.iloc[task]
+        dur = row["duration (ns)"]
+        parent = row["parent"]
+        callback = row["name"]
+        source_mod, source_slot, dest_mod, dest_slot = extract_call_pieces(parent)
+        
+        verbose_print(f"\nI am {parent} : {callback} and cost {dur}")
+        #if f"{parent} : {callback}" == "::View3DGL_1::rendering->::RaycastVolumeRenderer1::rendering : GetExtents":
+        #    print("Heinzor")
+
+        for row_it in range(task + 1, stack_end + 1):
+            r2 = dataframe.iloc[row_it]
+            p2 = r2["parent"]
+            c2 = r2["name"]
+            d2 = r2["duration (ns)"]
+            sm, ss, dm, ds = extract_call_pieces(p2)
+            if dm == dest_mod:
+                # we got called again ourselves, stack was closed
+                verbose_print(f"{parent} called again: {p2}, ")
+                break
+            if sm == dest_mod:
+                if r2["start (ns)"] >= row["start (ns)"] and r2["end (ns)"] <= row["end (ns)"]:
+                    # we called stuff
+                    dur = dur - d2
+                    verbose_print(f"I called {p2} : {c2}, subtracting, remaining cost = {dur}")
+                else:
+                    verbose_print(f"stray call to {p2} : {c2} from nowhere detected")
+        
+        if dur < 0:
+            print(f"duration should be positive, but is {dur} for {parent};{callback} in frame {row['frame']} and api {row['api']}")
+        df.iat[row.name, self_time_col] = dur
+
+
 def analyze_frame(curr_frame):
-    print(f"Analyzing Frame {curr_frame} for api {args.api}")
-    dataframe = df.loc[(df["frame"] == curr_frame) & (df["type"] == "Call") & (df["api"] == args.api)]
+    if args.api == "all":
+        apis = ["CPU", "OpenGL"]
+    else:
+        apis = [args.api]
 
-    stack_start = 0
-    stack_end = len(dataframe.index) - 1
+    for api in apis:
+        print(f"Analyzing Frame {curr_frame} for api {api}")
+        dataframe = df.loc[(df["frame"] == curr_frame) & (df["type"] == "Call") & (df["api"] == api)]
+        dataframe = dataframe.sort_values(by=["global_index"])
 
-    #show_stack_frame(curr_df, stack_start, stack_end, "stack")
-    process_stack(dataframe, stack_start, stack_end)
+        if len(dataframe.index) > 0:
+            stack_start = 0
+            stack_end = len(dataframe.index) - 1
+            #show_stack_frame(curr_df, stack_start, stack_end, "stack")
+            #process_stack(dataframe, stack_start, stack_end)
+            process_fullframe(dataframe, stack_start, stack_end)
 
 for file in args.files:
     df = pandas.read_csv(file, header=0, sep=';', quotechar="'")
@@ -129,7 +187,7 @@ for file in args.files:
         outfile = os.path.splitext(outfile)[0] + "_self.csv"
         if not os.path.exists(outfile) or args.overwrite_output:
             print(f"writing {outfile}...")
-            df.to_csv(outfile, index=False, sep=';', quotechar="'")
+            df.to_csv(outfile, index=False, sep=';', quotechar="'", quoting=csv.QUOTE_NONNUMERIC)
         else:
             print(f"warning: not overwriting {outfile}!")
 

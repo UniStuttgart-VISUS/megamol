@@ -10,6 +10,7 @@
 #include "CommonTypes.h"
 #include "Graph.h"
 #include "PluginsResource.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
@@ -32,8 +33,6 @@ typedef std::vector<GraphPtr_t> GraphPtrVector_t;
  */
 class GraphCollection {
 public:
-    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
-
     GraphCollection();
     ~GraphCollection() = default;
 
@@ -60,7 +59,7 @@ public:
         return (!this->modules_stock.empty());
     }
 
-    void SetLuaFunc(lua_func_type* func);
+    void SetLuaAPI(core::LuaAPI* api);
 
     // ! Has to be called once before calling SynchronizeGraphs() or NotifyRunningGraph_*()
     bool InitializeGraphSynchronisation(const megamol::frontend_resources::PluginsResource& pluginsRes);
@@ -79,10 +78,10 @@ public:
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
+    void SetPerformanceManager(frontend_resources::performance::PerformanceManager* perf_manager) {
         this->perf_manager = perf_manager;
     }
-    void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi);
+    void AppendPerformanceData(const frontend_resources::performance::frame_info& fi);
 #endif
 
     bool NotifyRunningGraph_AddModule(core::ModuleInstance_t const& module_inst);
@@ -112,7 +111,7 @@ private:
     FileBrowserWidget gui_file_browser;
     ImGuiID gui_graph_delete_uid;
 
-    lua_func_type* input_lua_func = nullptr;
+    core::LuaAPI* luaApi = nullptr;
 
     bool created_running_graph;
     bool initialized_syncing;
@@ -151,7 +150,7 @@ private:
 #ifdef MEGAMOL_USE_PROFILING
     std::unordered_map<void*, std::weak_ptr<megamol::gui::Call>> call_to_call;
     std::unordered_map<void*, std::weak_ptr<megamol::gui::Module>> module_to_module;
-    frontend_resources::PerformanceManager* perf_manager = nullptr;
+    frontend_resources::performance::PerformanceManager* perf_manager = nullptr;
 #endif
 };
 

@@ -18,14 +18,22 @@ void to_json(nlohmann::json& j, const StringKey& k);
 void from_json(const nlohmann::json& j, StringKey& k);
 void to_json(nlohmann::json& j, const VectorKey<FloatKey>& k);
 void from_json(const nlohmann::json& j, VectorKey<FloatKey>& k);
+void to_json(nlohmann::json& j, const ScriptedFloatKey& k);
+void from_json(const nlohmann::json& j, ScriptedFloatKey& k);
+void to_json(nlohmann::json& j, const ScriptedStringKey& k);
+void from_json(const nlohmann::json& j, ScriptedStringKey& k);
 
 void to_json(nlohmann::json& j, const FloatAnimation& f);
 void from_json(const nlohmann::json& j, FloatAnimation& f);
 void to_json(nlohmann::json& j, const StringAnimation& s);
 void from_json(const nlohmann::json& j, StringAnimation& s);
 void to_json(nlohmann::json& j, const FloatVectorAnimation& v);
-void from_json(const nlohmann::json& j, FloatVectorAnimation& s);
+void from_json(const nlohmann::json& j, FloatVectorAnimation& v);
 
+void to_json(nlohmann::json& j, const ScriptedFloatAnimation& f);
+void from_json(const nlohmann::json& j, ScriptedFloatAnimation& f);
+void to_json(nlohmann::json& j, const ScriptedStringAnimation& s);
+void from_json(const nlohmann::json& j, ScriptedStringAnimation& s);
 
 // this does not seem okay
 // PD code from https://github.com/ocornut/imgui/issues/1496#issuecomment-1287772456

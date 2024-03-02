@@ -76,10 +76,10 @@ unsigned int vislib::VersionNumber::Parse(const char* verStr) {
             if ((charValue < 0) || (charValue > 9)) {
                 switch (retval) {
                 case 0:
-                    this->majorNumber = value;
+                    this->majorNumber = static_cast<VersionInt>(value);
                     break;
                 case 1:
-                    this->minorNumber = value;
+                    this->minorNumber = static_cast<VersionInt>(value);
                     break;
                 case 3:
                     this->revisionNumber = (const char*) value;

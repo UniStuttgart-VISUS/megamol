@@ -57,6 +57,26 @@ void animation::from_json(const nlohmann::json& j, VectorKey<FloatKey>& k) {
     }
 }
 
+void animation::to_json(nlohmann::json& j, const ScriptedFloatKey& k) {
+    j = nlohmann::json{{"time", k.time}, {"value", k.value}, {"script", k.script}};
+}
+
+void animation::from_json(const nlohmann::json& j, ScriptedFloatKey& k) {
+    j["time"].get_to(k.time);
+    j["value"].get_to(k.value);
+    j["script"].get_to(k.script);
+}
+
+void animation::to_json(nlohmann::json& j, const ScriptedStringKey& k) {
+    j = nlohmann::json{{"time", k.time}, {"value", k.value}, {"script", k.script}};
+}
+
+void animation::from_json(const nlohmann::json& j, ScriptedStringKey& k) {
+    j["time"].get_to(k.time);
+    j["value"].get_to(k.value);
+    j["script"].get_to(k.script);
+}
+
 
 void animation::to_json(nlohmann::json& j, const FloatAnimation& f) {
     j = nlohmann::json{{"name", f.GetName()}, {"type", "float"}};
@@ -113,6 +133,44 @@ void animation::from_json(const nlohmann::json& j, FloatVectorAnimation& v) {
         FloatVectorAnimation::KeyType k;
         j.get_to(k);
         v.AddKey(k);
+    }
+}
+
+void animation::to_json(nlohmann::json& j, const ScriptedFloatAnimation& f) {
+    j = nlohmann::json{{"name", f.GetName()}, {"type", "scripted_float"}};
+    auto v_array = nlohmann::json::array();
+    for (auto& k : f.GetAllKeys()) {
+        v_array.push_back(f[k]);
+    }
+    j["keys"] = v_array;
+}
+
+void animation::from_json(const nlohmann::json& j, ScriptedFloatAnimation& f) {
+    f = ScriptedFloatAnimation{j.at("name")};
+    assert(j.at("type") == "scripted_float");
+    for (auto& j : j["keys"]) {
+        ScriptedFloatKey k;
+        j.get_to(k);
+        f.AddKey(k);
+    }
+}
+
+void animation::to_json(nlohmann::json& j, const ScriptedStringAnimation& s) {
+    j = nlohmann::json{{"name", s.GetName()}, {"type", "scripted_string"}};
+    auto v_array = nlohmann::json::array();
+    for (auto& k : s.GetAllKeys()) {
+        v_array.push_back(s[k]);
+    }
+    j["keys"] = v_array;
+}
+
+void animation::from_json(const nlohmann::json& j, ScriptedStringAnimation& s) {
+    s = ScriptedStringAnimation{j.at("name")};
+    assert(j.at("type") == "scripted_string");
+    for (auto& j : j["keys"]) {
+        ScriptedStringKey k;
+        j.get_to(k);
+        s.AddKey(k);
     }
 }
 

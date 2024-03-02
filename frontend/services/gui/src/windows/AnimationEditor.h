@@ -12,6 +12,7 @@
 #include "AnimationEditorData.h"
 #include "CommonTypes.h"
 #include "imgui_canvas.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/animation/AnimationData.h"
 #include "widgets/FileBrowserWidget.h"
@@ -30,15 +31,13 @@ enum class InteractionType : int32_t {
 
 class AnimationEditor : public AbstractWindow {
 public:
-    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
-
     explicit AnimationEditor(const std::string& window_name);
     ~AnimationEditor();
 
     bool Update() override;
     bool Draw() override;
 
-    void SetLuaFunc(lua_func_type* func);
+    void SetLuaAPI(core::LuaAPI* api);
 
     bool NotifyParamChanged(
         frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param, std::string const& new_value);
@@ -55,8 +54,8 @@ public:
     }
 
 private:
-    using animations =
-        std::variant<animation::FloatAnimation, animation::StringAnimation, animation::FloatVectorAnimation>;
+    using animations = std::variant<animation::FloatAnimation, animation::StringAnimation,
+        animation::FloatVectorAnimation, animation::ScriptedFloatAnimation, animation::ScriptedStringAnimation>;
 
     void WriteValuesToGraph();
     bool SaveToFile(const std::string& file);
@@ -69,11 +68,14 @@ private:
     void DrawToolbar();
     void CenterAnimation(const animations& anim);
     void SelectAnimation(int32_t a);
+    void set_as_position(int32_t anim_index);
+    void set_as_orientation(int32_t anim_index);
     void DrawParams();
     void DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& k2,
         ImU32 col = ImGui::GetColorU32(ImGuiCol_NavHighlight));
     void DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU32 col = IM_COL32(255, 128, 0, 255),
         animation::VectorKey<animation::FloatKey>* parent = nullptr);
+    void DrawScriptedFloat(ImDrawList* dl, const animation::ScriptedFloatKey& key);
     void DrawPlayhead(ImDrawList* drawList);
     void DrawStringKey(ImDrawList* im_draws, animation::StringKey& key, ImU32 col = IM_COL32(255, 128, 0, 255));
     void DrawCurves();
@@ -88,6 +90,7 @@ private:
 
     std::vector<animations> allAnimations;
     int32_t selectedAnimation = -1;
+    int32_t animationToChange = -1;
     animation::FloatKey* selectedFloatKey = nullptr;
     animation::FloatKey* draggingFloatKey = nullptr;
     animation::StringKey* selectedStringKey = nullptr;
@@ -101,6 +104,7 @@ private:
     animation::KeyTimeType drag_start_time = 0;
     bool auto_capture = false;
     bool write_to_graph = false;
+    bool compact_view = false;
     InteractionType curr_interaction = InteractionType::None;
 
     animation::KeyTimeType current_frame = 0;
@@ -114,7 +118,7 @@ private:
 
     ImVec2 custom_zoom = {1.0f, 1.0f};
 
-    lua_func_type* input_lua_func = nullptr;
+    core::LuaAPI* luaApi = nullptr;
     FileBrowserWidget file_browser;
     bool open_popup_load = false, open_popup_save = false, open_popup_error = false;
     bool open_popup_export = false;
@@ -124,6 +128,8 @@ private:
     bool save_state = false, save_all_params = false;
     std::string animation_file, export_file;
     std::string output_prefix;
+    std::string edit_buffer;
+    int32_t pos_source_index = -1, orient_source_index = -1;
 
     frontend_resources::AnimationEditorData animEditorData;
 };

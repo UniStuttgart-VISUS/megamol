@@ -276,6 +276,7 @@ bool ParallelCoordinatesRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
         filtersBuffer_->rebuffer(filters_);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         storeFilters();
+        //filterStateParam_.ResetDirty();
 
         useProgramAndBindCommon(filterProgram_);
 
@@ -533,6 +534,8 @@ bool ParallelCoordinatesRenderer2D::assertData(mmstd_gl::CallRender2DGL& call) {
 
         dimensionIndex_.clear();
         auto* dimensionNameParam = dimensionNameParam_.Param<core::param::FlexEnumParam>();
+        auto oldDimName = dimensionNameParam->Value();
+        bool oldNameOK = false;
         dimensionNameParam->ClearValues();
         dimensionNameParam->AddValue("[none]");
         for (int i = 0; i < dimensionCount_; i++) {
@@ -546,7 +549,16 @@ bool ParallelCoordinatesRenderer2D::assertData(mmstd_gl::CallRender2DGL& call) {
             axisIndirection_[i] = i;
             dimensionIndex_[colInfo.Name()] = i;
             dimensionNameParam->AddValue(colInfo.Name());
+            if (oldDimName == colInfo.Name()) {
+                oldNameOK = true;
+            }
+            // only adjust filters if they are not legal ?
+            //filters_[i].min = std::max(filters_[i].min, dimensionRanges_[i].min);
+            //filters_[i].max = std::min(filters_[i].max, dimensionRanges_[i].max);
             filters_[i] = dimensionRanges_[i];
+        }
+        if (oldNameOK) {
+            dimensionNameParam->SetValue(oldDimName);
         }
 
         dataBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, floatTableCall->GetData(),

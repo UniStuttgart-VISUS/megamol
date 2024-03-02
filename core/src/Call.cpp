@@ -75,17 +75,18 @@ bool Call::operator()(unsigned int func) {
         }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
-        perf_man->start_timer(cpu_queries[func]);
+        auto& cpu_region = perf_man->start_timer(cpu_queries[func]);
+        frontend_resources::performance::timer_region *gpu_region = nullptr;
         if (caps.OpenGLRequired()) {
-            perf_man->start_timer(gl_queries[func]);
+            gpu_region = &perf_man->start_timer(gl_queries[func]);
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef MEGAMOL_USE_PROFILING
         if (caps.OpenGLRequired()) {
-            perf_man->stop_timer(gl_queries[func]);
+            gpu_region->end_region();
         }
-        perf_man->stop_timer(cpu_queries[func]);
+        cpu_region.end_region();
 #endif
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {

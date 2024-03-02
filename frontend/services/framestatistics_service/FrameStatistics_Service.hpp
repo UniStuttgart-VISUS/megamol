@@ -11,6 +11,7 @@
 
 #include "AbstractFrontendService.hpp"
 #include "FrameStatistics.h"
+#include "FrameStatsCallbacks.h"
 
 namespace megamol::frontend {
 
@@ -58,16 +59,17 @@ public:
     // void setShutdown(const bool s = true);
 
 private:
+    void mark_frame_cb();
+    frontend_resources::FrameStatsCallbacks frame_stats_cb_;
+
     megamol::frontend_resources::FrameStatistics m_statistics;
 
     std::chrono::steady_clock::time_point m_program_start_time;
     std::chrono::steady_clock::time_point m_frame_start_time;
 
-    std::array<long long, 30> m_frame_times_micro = {};
+    std::array<long long, 30> m_frame_times_micro;
+    long long m_frame_times_sum = 0;
     unsigned int m_ring_buffer_ptr = 0;
-
-    void start_frame();
-    void finish_frame();
 
     void fill_lua_callbacks();
 

@@ -186,7 +186,7 @@ bool megamol::mmstd_gl::AnimationRenderer::GetExtents(mmstd_gl::CallRender3DGL& 
 
 bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     bool make_snapshot = snapshotSlot.IsDirty();
-
+    //make_snapshot = true;
     auto const incoming_fbo = call.GetFramebuffer();
     auto const actual_snaps_to_take =
         std::min<int>(snaps_to_take.size(), numberOfViewsSlot.Param<core::param::IntParam>()->Value());

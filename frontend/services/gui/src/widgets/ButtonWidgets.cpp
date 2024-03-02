@@ -299,6 +299,10 @@ bool megamol::gui::ButtonWidgets::LuaButton(
             lua_param_cmd = "mmGetParamValue(\"" + param_fullname + "\")";
             copy_to_clipboard = true;
         }
+        if (ImGui::MenuItem("Copy Param Fullname")) {
+            lua_param_cmd = param_fullname;
+            copy_to_clipboard = true;
+        }
 
         if (copy_to_clipboard) {
             ImGui::SetClipboardText(lua_param_cmd.c_str());

@@ -93,6 +93,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <zlib.h>
 
 #ifdef _WIN32
 typedef __int8 DR_CHAR;
@@ -179,7 +180,7 @@ typedef struct {
     int numTetrahedra;
     /* internal data; do not change! */
     int multiDataFiles;
-    FILE* fd_dataFile;
+    gzFile fd_dataFile;
     int currentStep;
     int byteOrder;
     int dataOffset;

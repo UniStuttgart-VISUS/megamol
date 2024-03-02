@@ -137,8 +137,8 @@ private:
     // and thereby linking the frontend service headers into the core
     // so make the perf queries public when profiling is active...
 public:
-    frontend_resources::PerformanceManager* perf_man = nullptr;
-    frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
+    frontend_resources::performance::PerformanceManager* perf_man = nullptr;
+    frontend_resources::performance::handle_vector cpu_queries, gl_queries;
 #endif // MEGAMOL_USE_PROFILING
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
 public:

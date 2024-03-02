@@ -257,26 +257,26 @@ public:
      */
     void RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
 
-    void SetLuaFunc(megamol::frontend_resources::common_types::lua_func_type* lua_func) {
+    void SetLuaAPI(core::LuaAPI* api) {
         auto cons = win_collection.GetWindow<LogConsole>();
         if (cons) {
-            cons->SetLuaFunc(lua_func);
+            cons->SetLuaAPI(api);
         }
-        this->win_configurator_ptr->GetGraphCollection().SetLuaFunc(lua_func);
-        this->win_animation_editor_ptr->SetLuaFunc(lua_func);
+        this->win_configurator_ptr->GetGraphCollection().SetLuaAPI(api);
+        this->win_animation_editor_ptr->SetLuaAPI(api);
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
+    void SetPerformanceManager(frontend_resources::performance::PerformanceManager* perf_manager) {
         this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
     }
 
-    frontend_resources::ProfilingLoggingStatus* perf_logging;
+    frontend_resources::performance::ProfilingLoggingStatus* perf_logging;
 
-    void SetProfilingLoggingStatus(frontend_resources::ProfilingLoggingStatus* perf_logging_status) {
+    void SetProfilingLoggingStatus(frontend_resources::performance::ProfilingLoggingStatus* perf_logging_status) {
         this->perf_logging = perf_logging_status;
     }
-    void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi) {
+    void AppendPerformanceData(const frontend_resources::performance::frame_info& fi) {
         this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi);
     }
 #endif

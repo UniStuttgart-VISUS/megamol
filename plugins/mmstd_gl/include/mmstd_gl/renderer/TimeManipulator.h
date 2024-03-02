@@ -1,11 +1,12 @@
 /**
  * MegaMol
- * Copyright (c) 2022, MegaMol Dev Team
+ * Copyright (c) 2022, 2023, MegaMol Dev Team
  * All rights reserved.
  */
 
 #pragma once
 
+#include "FrameStatistics.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
@@ -17,15 +18,20 @@ namespace megamol::mmstd_gl {
  * Pseudo-Renderer that manipulates time to quickly synchronize data that has only a subset of timesteps
  * with respect to another.
  */
-class TimeMultiplier : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
+class TimeManipulator : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        ModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
+    }
+
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
     static const char* ClassName() {
-        return "TimeMultiplier";
+        return "TimeManipulator";
     }
 
     /**
@@ -47,10 +53,10 @@ public:
     }
 
     /** Ctor. */
-    TimeMultiplier();
+    TimeManipulator();
 
     /** Dtor. */
-    ~TimeMultiplier() override;
+    ~TimeManipulator() override;
 
 protected:
     /**
@@ -82,7 +88,23 @@ private:
      */
     bool Render(CallRender3DGL& call) final;
 
+    bool ManipulateTime(CallRender3DGL& call, CallRender3DGL* chainedCall, uint32_t idx);
+
     /** Parameter for the time multiplier */
     core::param::ParamSlot multiplierSlot;
+
+    /** Parameters for the length */
+    core::param::ParamSlot overrideLengthSlot;
+    core::param::ParamSlot resultingLengthSlot;
+
+    core::param::ParamSlot pinTimeSlot;
+    core::param::ParamSlot pinnedTimeSlot;
+
+    core::param::ParamSlot showDebugSlot;
+    float incomingTime = 0.0f, outgoingTime = 0.0f;
+    uint32_t reportedFrameCount = 0;
+
+
+    uint32_t lastDrawnFrame = std::numeric_limits<uint32_t>::max();
 };
 } // namespace megamol::mmstd_gl
