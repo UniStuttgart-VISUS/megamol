@@ -82,6 +82,7 @@ int silentExceptionHandler(lua_State* L, sol::optional<const std::exception&> ma
     return sol::stack::push(L, description);
 }
 
+#ifdef MEGAMOL_USE_TRACY
 void megamol::core::LuaAPI::luaProfilingHook(lua_State* L, lua_Debug* ar) {
     sol::state_view S{L};
     LuaAPI* that = S["__LuaAPI_this"];
@@ -107,13 +108,16 @@ void megamol::core::LuaAPI::luaProfilingHook(lua_State* L, lua_Debug* ar) {
         }
     }
 }
+#endif
 
 void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.set_exception_handler(&silentExceptionHandler);
     luaApiInterpreter_.open_libraries(); // AKA all of them
+#ifdef MEGAMOL_USE_TRACY
     luaApiInterpreter_["__LuaAPI_this"] = this;
     lua_sethook(luaApiInterpreter_.lua_state(), &luaProfilingHook, LUA_MASKCALL | LUA_MASKRET, 0);
     luaHookEnabled_ = true;
+#endif
 
     RegisterCallback(MMC_LUA_MMGETENVVALUE, "(string name)\n\tReturn the value of env variable <name>.",
         &LuaAPI::GetEnvValue);
@@ -172,9 +176,11 @@ megamol::core::LuaAPI::LuaAPI() {
  * megamol::core::LuaAPI::~LuaAPI
  */
 megamol::core::LuaAPI::~LuaAPI() {
+#ifdef MEGAMOL_USE_TRACY
     luaHookEnabled_ = false;
     luaApiInterpreter_["__LuaAPI_this"] = nullptr;
     lua_sethook(luaApiInterpreter_.lua_state(), nullptr, 0, 0);
+#endif
 }
 
 

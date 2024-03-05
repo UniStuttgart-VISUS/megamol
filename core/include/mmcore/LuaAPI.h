@@ -10,14 +10,16 @@
 #include <stack>
 #include <string>
 
-#include <tracy/TracyC.h>
-
 //#define SOL_ALL_SAFETIES_ON 1
 //#define SOL_NO_EXCEPTIONS 1
 #define SOL_PRINT_ERRORS 0
 #include <sol/sol.hpp>
 
 #include "mmcore/MegaMolGraph.h"
+
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/TracyC.h>
+#endif
 
 struct lua_State; // lua includes should stay in the core
 
@@ -131,12 +133,16 @@ private:
     /** all of the Lua startup code */
     void commonInit();
 
+#ifdef MEGAMOL_USE_TRACY
     static void luaProfilingHook(lua_State* L, lua_Debug* ar);
+#endif
 
     /** the one Lua state */
     sol::state luaApiInterpreter_;
+#ifdef MEGAMOL_USE_TRACY
     bool luaHookEnabled_ = false;
     std::stack<TracyCZoneCtx> luaZoneStack_;
+#endif
 
     std::string currentScriptPath = "";
 
