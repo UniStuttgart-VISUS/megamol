@@ -82,9 +82,38 @@ int silentExceptionHandler(lua_State* L, sol::optional<const std::exception&> ma
     return sol::stack::push(L, description);
 }
 
+void megamol::core::LuaAPI::luaProfilingHook(lua_State* L, lua_Debug* ar) {
+    sol::state_view S{L};
+    LuaAPI* that = S["__LuaAPI_this"];
+    if (that == nullptr || !that->luaHookEnabled_) {
+        return;
+    }
+    if (ar->event == LUA_HOOKCALL || ar->event == LUA_HOOKRET) {
+        const bool isCall = (ar->event == LUA_HOOKCALL);
+        lua_getinfo(L, "n", ar);
+        if (ar->name) {
+            if (isCall) {
+                TracyCZoneN(ctx, "Lua Function", true);
+                std::string name(std::string("Lua::") + ar->name);
+                TracyCZoneName(ctx, name.c_str(), name.size());
+                that->luaZoneStack_.push(std::move(ctx));
+            } else {
+                TracyCZoneEnd(that->luaZoneStack_.top());
+                that->luaZoneStack_.pop();
+            }
+            // TODO currently it is trusted that lua calls return events in the correct order to just to stack.pop().
+            // Maybe we want to add some extra safety by checking the names. Further, in error cases we need to cleanup
+            // the stack.
+        }
+    }
+}
+
 void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.set_exception_handler(&silentExceptionHandler);
     luaApiInterpreter_.open_libraries(); // AKA all of them
+    luaApiInterpreter_["__LuaAPI_this"] = this;
+    lua_sethook(luaApiInterpreter_.lua_state(), &luaProfilingHook, LUA_MASKCALL | LUA_MASKRET, 0);
+    luaHookEnabled_ = true;
 
     RegisterCallback(MMC_LUA_MMGETENVVALUE, "(string name)\n\tReturn the value of env variable <name>.",
         &LuaAPI::GetEnvValue);
@@ -142,7 +171,11 @@ megamol::core::LuaAPI::LuaAPI() {
 /*
  * megamol::core::LuaAPI::~LuaAPI
  */
-megamol::core::LuaAPI::~LuaAPI() {}
+megamol::core::LuaAPI::~LuaAPI() {
+    luaHookEnabled_ = false;
+    luaApiInterpreter_["__LuaAPI_this"] = nullptr;
+    lua_sethook(luaApiInterpreter_.lua_state(), nullptr, 0, 0);
+}
 
 
 std::string megamol::core::LuaAPI::GetScriptPath() {

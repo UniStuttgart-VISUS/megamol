@@ -7,13 +7,17 @@
 #pragma once
 
 #include <mutex>
+#include <stack>
 #include <string>
+
+#include <tracy/TracyC.h>
 
 //#define SOL_ALL_SAFETIES_ON 1
 //#define SOL_NO_EXCEPTIONS 1
 #define SOL_PRINT_ERRORS 0
-#include "mmcore/MegaMolGraph.h"
 #include <sol/sol.hpp>
+
+#include "mmcore/MegaMolGraph.h"
 
 struct lua_State; // lua includes should stay in the core
 
@@ -127,8 +131,12 @@ private:
     /** all of the Lua startup code */
     void commonInit();
 
+    static void luaProfilingHook(lua_State* L, lua_Debug* ar);
+
     /** the one Lua state */
     sol::state luaApiInterpreter_;
+    bool luaHookEnabled_ = false;
+    std::stack<TracyCZoneCtx> luaZoneStack_;
 
     std::string currentScriptPath = "";
 
