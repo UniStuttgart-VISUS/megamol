@@ -92,7 +92,7 @@ void megamol::core::LuaAPI::luaProfilingHook(lua_State* L, lua_Debug* ar) {
     if (ar->event == LUA_HOOKCALL || ar->event == LUA_HOOKRET) {
         const bool isCall = (ar->event == LUA_HOOKCALL);
         lua_getinfo(L, "n", ar);
-        if (ar->name) {
+        if (ar->name && std::strncmp(ar->name, "mm", 2) == 0) {
             if (isCall) {
                 TracyCZoneN(ctx, "Lua Function", true);
                 std::string name(std::string("Lua::") + ar->name);
