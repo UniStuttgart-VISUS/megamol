@@ -783,10 +783,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
 
     lua.RegisterCallback("mmGetMegaMolExecutableDirectory",
         "()\n\tReturns the directory of the running MegaMol executable.",
-        [&]() { return config.megamol_executable_directory; });
-
-    lua.RegisterCallback("mmGetMegaMolExecutableDirectory",
-        "()\n\tReturns the directory of the running MegaMol executable.",
         [&]() -> std::string { return config.megamol_executable_directory; });
 
     lua.RegisterCallback("mmSetAppDir", "(string dir)\n\tSets the path where the mmconsole.exe is located.",
