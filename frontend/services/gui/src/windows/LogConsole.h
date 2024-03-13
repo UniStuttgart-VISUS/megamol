@@ -9,6 +9,7 @@
 
 #include "AbstractWindow.h"
 #include "CommonTypes.h"
+#include "mmcore/LuaAPI.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 
@@ -55,8 +56,6 @@ private:
  */
 class LogConsole : public AbstractWindow {
 public:
-    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
-
     struct InputSharedData {
         bool move_cursor_to_end;
         std::vector<std::pair<std::string, std::string>> commands; // command, parameter hint
@@ -76,7 +75,7 @@ public:
     void SpecificStateFromJSON(const nlohmann::json& in_json) override;
     void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
-    void SetLuaFunc(lua_func_type* func);
+    void SetLuaAPI(core::LuaAPI* api);
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -101,7 +100,7 @@ private:
     bool input_reclaim_focus;
     std::string input_buffer;
     // where would I get this from? and the autocomplete stuff?
-    lua_func_type* input_lua_func;
+    core::LuaAPI* luaApi;
     bool is_autocomplete_popup_open;
 
     std::size_t sink_idx_;

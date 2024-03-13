@@ -12,6 +12,7 @@
 #include "GUIManager.h"
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
+#include "LuaApiResource.h"
 #include "ModuleGraphSubscription.h"
 #include "OpenGL_Context.h"
 #include "PluginsResource.h"
@@ -59,7 +60,7 @@ bool GUI_Service::init(const Config& config) {
         "optional<WindowManipulation>",                                 // 11 - GLFW window pointer
         frontend_resources::CommandRegistry_Req_Name,                   // 12 - Command registry
         "ImagePresentationEntryPoints",                                 // 13 - Entry point
-        "ExecuteLuaScript",                                             // 14 - Execute Lua Scripts (from Console)
+        frontend_resources::LuaAPI_Req_Name,                            // 14 - Execute Lua Scripts (from Console)
         frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, // 15 MegaMol Graph subscription
         "PluginsResource",                                              // 16 - Plugins
 #ifdef MEGAMOL_USE_PROFILING
@@ -367,9 +368,8 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
             "GUI_Service: error adding graph entry point ... image presentation service rejected GUI Service.");
     }
 
-    m_exec_lua = const_cast<megamol::frontend_resources::common_types::lua_func_type*>(
-        &frontend_resources->get<frontend_resources::common_types::lua_func_type>());
-    m_gui->SetLuaFunc(m_exec_lua);
+    luaApi = frontend_resources->get<core::LuaAPI*>();
+    m_gui->SetLuaAPI(luaApi);
 
     // MegaMol Graph Subscription
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(

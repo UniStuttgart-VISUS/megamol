@@ -7,11 +7,20 @@
 #pragma once
 
 #include <mutex>
+#include <stack>
 #include <string>
 
-#include "LuaCallbacksCollection.h"
-#include "LuaInterpreter.h"
+//#define SOL_ALL_SAFETIES_ON 1
+//#define SOL_NO_EXCEPTIONS 1
+#define SOL_PRINT_ERRORS 0
+#include <sol/sol.hpp>
+
 #include "mmcore/MegaMolGraph.h"
+
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#include <tracy/TracyC.h>
+#endif
 
 struct lua_State; // lua includes should stay in the core
 
@@ -19,58 +28,33 @@ namespace megamol::core {
 
 /**
  * This class holds a Lua state. It can be used to interact with a MegaMol instance.
- * For sandboxing, a standard environment megamol_env is provided that only
- * allows lua/lib calls that are considered safe and additionally redirects
- * print() to the MegaMol log output. By default only loads base, coroutine,
- * string, table, math, package, and os (see LUA_FULL_ENVIRONMENT define).
+ * No sandboxing is performed, the environment is complete with the exception of
+ * print being redirected to the MegaMol log as information.
  * Lua constants LOGINFO, LOGWARNING, LOGERROR are provided for MegaMol log output.
  */
 class LuaAPI {
 public:
-    static const std::string MEGAMOL_ENV;
-
-    /**
-     * @param imperativeOnly choose whether only reply-less commands will be made available
-     * to avoid having round-trips across frames/threads etc. Basically config/project scripts
-     * are reply-less and the LuaHost can get replies.
-     */
     LuaAPI();
 
     ~LuaAPI();
 
-    // TODO forbid copy-contructor? assignment?
+    // TODO forbid copy-constructor? assignment?
 
     /**
-     * Run a script file, sandboxed in the environment provided.
+     * Run a script string.
      */
-    bool RunFile(const std::string& envName, const std::string& fileName, std::string& result);
-    /**
-     * Run a script file, sandboxed in the environment provided.
-     */
-    bool RunFile(const std::string& envName, const std::wstring& fileName, std::string& result);
-    /**
-     * Run a script string, sandboxed in the environment provided.
-     */
-    bool RunString(
-        const std::string& envName, const std::string& script, std::string& result, std::string scriptPath = "");
+    sol::safe_function_result RunString(const std::string& script, std::string scriptPath = "");
 
     /**
-     * Run a script file, sandboxed in the standard megamol_env.
+     * Invoke the error-generating mechanism of lua. The current implementation throws an exception
+     * that sol uses to generate into a safe_result.
      */
-    bool RunFile(const std::string& fileName, std::string& result);
-    /**
-     * Run a script file, sandboxed in the standard megamol_env.
-     */
-    bool RunFile(const std::wstring& fileName, std::string& result);
-    /**
-     * Run a script string, sandboxed in the standard megamol_env.
-     */
-    bool RunString(const std::string& script, std::string& result, std::string scriptPath = "");
+    static void ThrowError(const std::string& description);
 
     /**
-     * Answer whether the wrapped lua state is valid
+     * Get Lua error if res is not valid
      */
-    bool StateOk();
+    std::string GetError(const sol::protected_function_result& res) const;
 
     /**
      * Answers the current project file path
@@ -82,60 +66,139 @@ public:
      */
     void SetScriptPath(std::string const& scriptPath);
 
-    void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
-    void RemoveCallbacks(
-        megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
-    void RemoveCallbacks(std::vector<std::string> const& callback_names);
-    void ClearCallbacks();
+#ifndef MEGAMOL_USE_TRACY
+    template<typename... Args>
+    void RegisterCallback(std::string const& name, std::string const& help, Args&&... args) {
+        luaApiInterpreter_.set_function(name, std::forward<Args>(args)...);
+        helpContainer[name] = help;
+    }
+#else
+    // something like this to retrofit tracy zones everywhere would be nice.
+    // but I am not able to write this down.
+    //          template <typename R, typename... Args, typename Fx, typename Key, typename = std::invoke_result_t<Fx, Args...>>
+    //void set_fx(types<R(Args...)>, Key&& key, Fx&& fx) {
+    //  set_resolved_function<R(Args...)>(std::forward<Key>(key), std::forward<Fx>(fx));
+    //}
+    //template<typename Func, typename... Args>
+    //void RegisterCallbackWithTracy(std::string const& name, std::string const& help, Func&& func, Args&&... args) {
+    //    luaApiInterpreter_.set_function(name, [&](Args...) -> std::invoke_result_t<Func, Args...> {
+    //        printf("Tracy happening");
+    //        return std::forward<Func>(func)(std::forward<Args>(args)...);
+    //    });
+    //    helpContainer[name] = help;
+    //}
+
+    template<typename Callable>
+    auto RegisterCallback(std::string const& name, std::string const& help, Callable&& callback) {
+        std::string lua_name = "Lua::" + name;
+        std::function<typename sol::meta::bind_traits<Callable>::function_type> profiledCallback =
+            [lua_name, callback = std::forward<Callable>(callback)](auto&&... args) {
+                ZoneScoped;
+                ZoneName(lua_name.c_str(), lua_name.size());
+                return std::invoke(callback, std::forward<decltype(args)>(args)...);
+            };
+        luaApiInterpreter_.set_function(name, profiledCallback);
+        helpContainer[name] = help;
+    }
+
+    template<typename ReturnType, typename T, typename... Args>
+    void RegisterCallback(
+        std::string const& name, std::string const& help, ReturnType (T::*callable)(Args...), T*&& that) {
+        std::string lua_name = "Lua::" + name;
+        luaApiInterpreter_.set_function(name,
+            [lua_name, callable = std::forward<decltype(callable)>(callable),
+                that = std::forward<decltype(that)>(that)](Args... args) -> ReturnType {
+                ZoneScoped;
+                ZoneName(lua_name.c_str(), lua_name.size());
+                return (that->*callable)(std::forward<Args>(args)...);
+            });
+        helpContainer[name] = help;
+    }
+
+    template<typename ReturnType, typename T, typename... Args>
+    void RegisterCallback(
+        std::string const& name, std::string const& help, ReturnType (T::*callable)(Args...) const, T*&& that) {
+        std::string lua_name = "Lua::" + name;
+        luaApiInterpreter_.set_function(name,
+            [lua_name, callable = std::forward<decltype(callable)>(callable),
+                that = std::forward<decltype(that)>(that)](Args... args) -> ReturnType {
+                ZoneScoped;
+                ZoneName(lua_name.c_str(), lua_name.size());
+                return (that->*callable)(std::forward<Args>(args)...);
+            });
+        helpContainer[name] = help;
+    }
+
+    template<typename... Functions>
+    auto RegisterCallback(std::string const& name, std::string const& help, sol::overload_set<Functions...> callback) {
+        // TODO implement Tracy wrapper!
+        luaApiInterpreter_.set_function(name, callback);
+        helpContainer[name] = help;
+    }
+#endif
+
+    void UnregisterCallback(std::string const& name) {
+        // TODO: are we sure this nukes the function
+        luaApiInterpreter_[name].set(sol::nil);
+        if (auto const it = helpContainer.find(name); it != helpContainer.end()) {
+            helpContainer.erase(it);
+        }
+    }
+
+    static std::string TypeToString(sol::safe_function_result& res, int index_offset = 0);
 
 protected:
     // ** MegaMol API provided for configuration / startup
 
     /** mmGetBithWidth get bits of executable (integer) */
-    int GetBitWidth(lua_State* L);
+    static unsigned int GetBitWidth();
 
     /** mmGetConfiguration: get compile configuration (debug, release) */
-    int GetCompileMode(lua_State* L);
+    static std::string GetCompileMode();
 
     /** mmGetOS: get operating system (windows, linux, unknown) */
-    int GetOS(lua_State* L);
+    static std::string GetOS();
 
     /** mmGetMachineName: get machine name */
-    int GetMachineName(lua_State* L);
+    static std::string GetMachineName();
 
-    /**
-     * mmGetEnvValue(string name): get the value of environment variable 'name'
-     */
-    int GetEnvValue(lua_State* L);
+    /** mmGetEnvValue(string name): get the value of environment variable 'name' */
+    static std::string GetEnvValue(const std::string& variable);
 
     /** answer the ProcessID of the running MegaMol */
-    int GetProcessID(lua_State* L);
+    static unsigned int GetProcessID();
 
-    int ReadTextFile(lua_State* L);
-    int WriteTextFile(lua_State* L);
+    /** prints out the help text */
+    std::string Help() const;
 
-    int CurrentScriptPath(lua_State* L);
+    /** Log interface */
+    static void Log(int level, const std::string& message);
+    static void LogInfo(const std::string& message);
 
-    int Invoke(lua_State* L);
+    static std::string ReadTextFile(std::string filename, sol::optional<sol::function> transformation);
+    static void WriteTextFile(std::string filename, std::string content);
+
+    /** expose current script path to lua */
+    std::string CurrentScriptPath();
 
 private:
     /** all of the Lua startup code */
     void commonInit();
 
-    /** gets a string from the stack position i. returns false if it's not a string */
-    //bool getString(int i, std::string& out);
+#ifdef MEGAMOL_USE_TRACY
+    static void luaProfilingHook(lua_State* L, lua_Debug* ar);
+#endif
 
     /** the one Lua state */
-    LuaInterpreter<LuaAPI> luaApiInterpreter_;
-
-    std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
-    std::list<std::tuple<std::string, std::function<int(lua_State*)>>> wrapped_lambda_callbacks_;
-    void register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks);
-
-    /** no two threads must interfere with the reentrant L */
-    std::mutex stateLock;
+    sol::state luaApiInterpreter_;
+#ifdef MEGAMOL_USE_TRACY
+    bool luaHookEnabled_ = false;
+    std::stack<TracyCZoneCtx> luaZoneStack_;
+#endif
 
     std::string currentScriptPath = "";
+
+    std::map<std::string, std::string> helpContainer;
 };
 
 } // namespace megamol::core

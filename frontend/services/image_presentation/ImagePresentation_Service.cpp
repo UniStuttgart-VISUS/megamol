@@ -13,13 +13,15 @@
 #include "GUIState.h"
 #include "ImagePresentation_Sinks.hpp"
 #include "ImageWrapper_to_GLTexture.hpp"
-#include "LuaCallbacksCollection.h"
 #include "OpenGL_Context.h"
 #include "RenderInput.h"
 #include "ViewRenderInputs.h"
 #include "WindowManipulation.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
+#include "FrameStatistics.h"
+#include "LuaApiResource.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/utility/log/Log.h"
 
 static const std::string service_name = "ImagePresentation_Service: ";
@@ -88,15 +90,11 @@ bool ImagePresentation_Service::init(const Config& config) {
         {"FramebufferEvents", m_global_framebuffer_events},
     };
 
-    this->m_requestedResourcesNames = {
-        "FrontendResources", // std::vector<FrontendResource>
-        "optional<WindowManipulation>",
-        "FramebufferEvents",
+    this->m_requestedResourcesNames = {"FrontendResources", // std::vector<FrontendResource>
+        "optional<WindowManipulation>", "FramebufferEvents",
         "optional<GUIState>", // TODO: unused?
-        "RegisterLuaCallbacks",
-        "optional<OpenGL_Context>",
-        "ImageWrapperToPNG_ScreenshotTrigger",
-    };
+        frontend_resources::LuaAPI_Req_Name, "optional<OpenGL_Context>", "ImageWrapperToPNG_ScreenshotTrigger",
+        frontend_resources::FrameStatistics_Req_Name};
 
     m_framebuffer_size_handler = [&]() -> UintPair {
         return {m_window_framebuffer_size.first, m_window_framebuffer_size.second};
@@ -439,48 +437,38 @@ void ImagePresentation_Service::present_images_to_glfw_window(std::vector<ImageW
 }
 
 void ImagePresentation_Service::fill_lua_callbacks() {
-    using megamol::frontend_resources::LuaCallbacksCollection;
-    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
-    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
-    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
-    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
-    using BoolResult = megamol::frontend_resources::LuaCallbacksCollection::BoolResult;
+    auto& luaApi = m_requestedResourceReferences[4].getResource<core::LuaAPI*>();
 
-    LuaCallbacksCollection callbacks;
-
-    callbacks.add<VoidResult, std::string, int, int>("mmSetViewFramebufferSize",
+    luaApi->RegisterCallback("mmSetViewFramebufferSize",
         "(string view, int width, int height)\n\tSet framebuffer dimensions of view to width x height.",
-        {[&](std::string view, int width, int height) -> VoidResult {
+        [&](std::string view, int width, int height) -> void {
             if (width <= 0 || height <= 0) {
-                return Error{"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) +
-                             " x " + std::to_string(height)};
+                luaApi->ThrowError("framebuffer dimensions must be positive, but given values are: " +
+                                   std::to_string(width) + " x " + std::to_string(height));
             }
 
             auto entry_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
                 [&](EntryPoint& entry) { return entry.moduleName == view; });
 
             if (entry_it == m_entry_points.end()) {
-                return Error{"no view found with name: " + view};
+                luaApi->ThrowError("no view found with name: " + view);
             }
 
             accessViewRenderInput(entry_it->entry_point_data).render_input_framebuffer_size_handler =
                 [=]() -> UintPair {
                 return {width, height};
             };
+        });
 
-            return VoidResult{};
-        }});
-
-    auto handle_screenshot = [&](std::string const& entrypoint,
-                                 std::string file) -> megamol::frontend_resources::LuaCallbacksCollection::VoidResult {
+    auto handle_screenshot = [&](std::string const& entrypoint, std::string file) -> void {
         if (m_entry_points.empty())
-            return Error{"no views registered as entry points. nothing to write as screenshot into "};
+            luaApi->ThrowError("no views registered as entry points. nothing to write as screenshot into ");
 
         auto find_it = std::find_if(m_entry_points.begin(), m_entry_points.end(),
             [&](EntryPoint const& elem) { return elem.moduleName == entrypoint; });
 
         if (find_it == m_entry_points.end())
-            return Error{"error writing screenshot into file " + file + ". no such entry point: " + entrypoint};
+            luaApi->ThrowError("error writing screenshot into file " + file + ". no such entry point: " + entrypoint);
 
         auto& entry_result_image = find_it->execution_result_image;
 
@@ -490,33 +478,29 @@ void ImagePresentation_Service::fill_lua_callbacks() {
         bool trigger_ok = triggerscreenshot(entry_result_image, file);
 
         if (!trigger_ok)
-            return Error{"error writing screenshot for entry point " + entrypoint + " into file " + file};
-
-        return VoidResult{};
+            luaApi->ThrowError("error writing screenshot for entry point " + entrypoint + " into file " + file);
     };
 
     m_entrypointToPNG_trigger = [handle_screenshot](std::string const& entrypoint, std::string const& file) -> bool {
-        auto result = handle_screenshot(entrypoint, file);
-
-        if (!result.exit_success) {
-            log_warning(result.exit_reason);
+        try {
+            handle_screenshot(entrypoint, file);
+        } catch (std::runtime_error& err) {
+            log_warning(err.what());
             return false;
         }
-
         return true;
     };
 
-    callbacks.add<VoidResult, std::string, std::string>("mmScreenshotEntryPoint",
+    luaApi->RegisterCallback("mmScreenshotEntryPoint",
         "(string entrypoint, string filename)\n\tSave a screen shot of entry point view as 'filename'",
-        {[handle_screenshot](std::string entrypoint, std::string filename) -> VoidResult {
-            return handle_screenshot(entrypoint, filename);
-        }});
-
-    auto& register_callbacks =
-        m_requestedResourceReferences[4]
-            .getResource<std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)>>();
-
-    register_callbacks(callbacks);
+        [handle_screenshot, this, luaApi](std::string entrypoint, std::string filename) -> void {
+            auto& framestats = m_requestedResourceReferences[7].getResource<frontend_resources::FrameStatistics>();
+            if (framestats.rendered_frames_count == 0) {
+                luaApi->ThrowError("error capturing screenshot: no frame rendered yet");
+            } else {
+                handle_screenshot(entrypoint, filename);
+            }
+        });
 }
 
 

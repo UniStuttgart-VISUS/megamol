@@ -49,6 +49,7 @@
     "quickhull",
     "simultaneous-sort",
     "snappy",
+    "sol2",
     "spdlog",
     {
       "name": "tbb",

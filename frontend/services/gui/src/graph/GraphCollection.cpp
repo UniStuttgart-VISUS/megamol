@@ -259,9 +259,8 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::frontend_re
 }
 
 
-void megamol::gui::GraphCollection::SetLuaFunc(lua_func_type* func) {
-
-    this->input_lua_func = func;
+void megamol::gui::GraphCollection::SetLuaAPI(core::LuaAPI* api) {
+    this->luaApi = api;
 }
 
 
@@ -338,8 +337,9 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
 
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
-                auto created = std::get<0>(
-                    (*input_lua_func)("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])"));
+                auto created =
+                    luaApi->RunString("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])")
+                        .valid();
                 graph_sync_success &= created;
 #ifdef MEGAMOL_USE_PROFILING
                 if (created) {
@@ -351,18 +351,21 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
 #endif
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
-                graph_sync_success &= std::get<0>(
-                    (*input_lua_func)("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])"));
+                graph_sync_success &=
+                    luaApi->RunString("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])")
+                        .valid();
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
 #ifdef MEGAMOL_USE_PROFILING
                 module_to_module.erase(megamol_graph.FindModule(data.name_id).get());
 #endif
-                graph_sync_success &= std::get<0>((*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])"));
+                graph_sync_success &= luaApi->RunString("mmDeleteModule([=[" + data.name_id + "]=])").valid();
             } break;
             case (Graph::QueueAction::ADD_CALL): {
-                auto created = std::get<0>((*input_lua_func)(
-                    "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
+                auto created = luaApi
+                                   ->RunString("mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller +
+                                               "]=],[=[" + data.callee + "]=])")
+                                   .valid();
                 graph_sync_success &= created;
 #ifdef MEGAMOL_USE_PROFILING
                 if (created) {
@@ -378,16 +381,16 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                 call_to_call.erase(megamol_graph.FindCall(data.caller, data.callee).get());
 #endif
                 graph_sync_success &=
-                    std::get<0>((*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
+                    luaApi->RunString("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])").valid();
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 // megamol currently does not handle well having multiple entrypoints active
-                (*input_lua_func)("mmRemoveAllGraphEntryPoints()\n"
+                luaApi->RunString("mmRemoveAllGraphEntryPoints()\n"
                                   "mmSetGraphEntryPoint([=[" +
                                   data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
-                (*input_lua_func)("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
+                luaApi->RunString("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
             } break;
             default:
                 break;
@@ -442,15 +445,19 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
                 if (p.CoreParamPtr() != nullptr) {
                     // Write changed gui state to core parameter
                     if (p.IsGUIStateDirty()) {
-                        p.ResetGUIStateDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
+                        p.ResetGUIStateDirty();
+                        // ! Reset before calling lua cmd because of instantly triggered subscription callback
                         // TODO what gets logged in the historian here?
                         param_sync_success &= megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
                     }
                     // Write changed parameter value to core parameter
                     if (p.IsValueDirty()) {
-                        p.ResetValueDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
-                        param_sync_success &= std::get<0>((*input_lua_func)(
-                            "mmSetParamValue([=[" + p.FullName() + "]=],[=[" + p.GetValueString() + "]=])"));
+                        p.ResetValueDirty();
+                        // ! Reset before calling lua cmd because of instantly triggered subscription callback
+                        param_sync_success &= luaApi
+                                                  ->RunString("mmSetParamValue([=[" + p.FullName() + "]=],[=[" +
+                                                              p.GetValueString() + "]=])")
+                                                  .valid();
                     }
                 }
             }
@@ -1442,12 +1449,14 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
         if (t == frontend_resources::PerformanceManager::parent_type::CALL) {
             auto c = static_cast<megamol::core::Call*>(p);
             // printf("looking up call map for @ %p = %s \n", c, c->GetDescriptiveText().c_str());
-            if (call_to_call[p].lock() != nullptr) { // XXX Consider delayed clean-up
+            if (call_to_call[p].lock() != nullptr) {
+                // XXX Consider delayed clean-up
                 call_to_call[p].lock()->AppendPerformanceData(frame, e);
             }
         } else if (t == frontend_resources::PerformanceManager::parent_type::USER_REGION) {
             // Region in a Module
-            if (module_to_module[p].lock() != nullptr) { // XXX Consider delayed clean-up
+            if (module_to_module[p].lock() != nullptr) {
+                // XXX Consider delayed clean-up
                 module_to_module[p].lock()->AppendPerformanceData(frame, e);
             }
         }
