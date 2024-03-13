@@ -18,6 +18,7 @@
 #include "mmcore/MegaMolGraph.h"
 
 #ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
 #include <tracy/TracyC.h>
 #endif
 
@@ -65,11 +66,13 @@ public:
      */
     void SetScriptPath(std::string const& scriptPath);
 
+#ifndef MEGAMOL_USE_TRACY
     template<typename... Args>
     void RegisterCallback(std::string const& name, std::string const& help, Args&&... args) {
         luaApiInterpreter_.set_function(name, std::forward<Args>(args)...);
         helpContainer[name] = help;
     }
+#else
     // something like this to retrofit tracy zones everywhere would be nice.
     // but I am not able to write this down.
     //          template <typename R, typename... Args, typename Fx, typename Key, typename = std::invoke_result_t<Fx, Args...>>
@@ -84,6 +87,55 @@ public:
     //    });
     //    helpContainer[name] = help;
     //}
+
+    template<typename Callable>
+    auto RegisterCallback(std::string const& name, std::string const& help, Callable&& callback) {
+        std::string lua_name = "Lua::" + name;
+        std::function<typename sol::meta::bind_traits<Callable>::function_type> profiledCallback =
+            [lua_name, callback = std::forward<Callable>(callback)](auto&&... args) {
+                ZoneScoped;
+                ZoneName(lua_name.c_str(), lua_name.size());
+                return std::invoke(callback, std::forward<decltype(args)>(args)...);
+            };
+        luaApiInterpreter_.set_function(name, profiledCallback);
+        helpContainer[name] = help;
+    }
+
+    template<typename ReturnType, typename T, typename... Args>
+    void RegisterCallback(
+        std::string const& name, std::string const& help, ReturnType (T::*callable)(Args...), T*&& that) {
+        std::string lua_name = "Lua::" + name;
+        luaApiInterpreter_.set_function(name,
+            [lua_name, callable = std::forward<decltype(callable)>(callable),
+                that = std::forward<decltype(that)>(that)](Args... args) -> ReturnType {
+                ZoneScoped;
+                ZoneName(lua_name.c_str(), lua_name.size());
+                return (that->*callable)(std::forward<Args>(args)...);
+            });
+        helpContainer[name] = help;
+    }
+
+    template<typename ReturnType, typename T, typename... Args>
+    void RegisterCallback(
+        std::string const& name, std::string const& help, ReturnType (T::*callable)(Args...) const, T*&& that) {
+        std::string lua_name = "Lua::" + name;
+        luaApiInterpreter_.set_function(name,
+            [lua_name, callable = std::forward<decltype(callable)>(callable),
+                that = std::forward<decltype(that)>(that)](Args... args) -> ReturnType {
+                ZoneScoped;
+                ZoneName(lua_name.c_str(), lua_name.size());
+                return (that->*callable)(std::forward<Args>(args)...);
+            });
+        helpContainer[name] = help;
+    }
+
+    template<typename... Functions>
+    auto RegisterCallback(std::string const& name, std::string const& help, sol::overload_set<Functions...> callback) {
+        // TODO implement Tracy wrapper!
+        luaApiInterpreter_.set_function(name, callback);
+        helpContainer[name] = help;
+    }
+#endif
 
     void UnregisterCallback(std::string const& name) {
         // TODO: are we sure this nukes the function
