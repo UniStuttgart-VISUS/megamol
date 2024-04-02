@@ -1,5 +1,7 @@
 #include "DataverseWriter.h"
 
+#ifdef MEGAMOL_USE_POWER
+
 #include <atomic>
 #include <chrono>
 #include <iostream>
@@ -64,3 +66,5 @@ void DataverseWriter(std::string const& dataverse_path, std::string const& doi, 
     //t.detach();
 }
 } // namespace megamol::power
+
+#endif

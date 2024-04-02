@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef MEGAMOL_USE_POWER
+
 #include <chrono>
 #include <string>
 #include <vector>
@@ -46,3 +48,5 @@ private:
 };
 
 } // namespace megamol::power
+
+#endif

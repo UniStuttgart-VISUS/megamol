@@ -1,5 +1,7 @@
 #include "SampleBuffer.h"
 
+#ifdef MEGAMOL_USE_POWER
+
 namespace megamol::power {
 
 SampleBuffer::SampleBuffer(
@@ -33,3 +35,5 @@ void SampleBuffer::SetSampleRange(std::chrono::milliseconds const& sample_range)
 }
 
 } // namespace megamol::power
+
+#endif

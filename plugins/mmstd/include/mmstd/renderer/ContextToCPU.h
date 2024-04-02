@@ -84,7 +84,9 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     bool create() override {
+#ifdef MEGAMOL_USE_POWER
         power_res_ = &frontend_resources.get<frontend_resources::PowerCallbacks>();
+#endif
 
         return true;
     }
