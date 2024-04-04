@@ -202,14 +202,14 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             };
 
             if (interm->getType() == GL_FLOAT) {
-                copyTextureData.template operator()<float>();
                 headerType = PixelType::FLOAT;
+                copyTextureData.template operator()<float>();
             } else if (interm->getType() == GL_HALF_FLOAT) {
-                copyTextureData.template operator()<half>();
                 headerType = PixelType::HALF;
+                copyTextureData.template operator()<half>();
             } else if (interm->getType() == GL_INT) { //TODO: what about unsigned byte etc. ?
-                copyTextureData.template operator()<unsigned int>();
                 headerType = PixelType::UINT;
+                copyTextureData.template operator()<unsigned int>();
             }
 
 
