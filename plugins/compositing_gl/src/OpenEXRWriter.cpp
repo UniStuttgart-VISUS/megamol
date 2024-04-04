@@ -153,25 +153,36 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             gPixels.resize(width * height);
             bPixels.resize(width * height);
             aPixels.resize(width * height);
-            std::vector<half> rawPixels(width * height * inputTextureChNum);
-            interm->bindTexture();
-            glGetTextureImage(interm->getName(), 0, interm->getFormat(), interm->getType(),
-                width * height * inputTextureChNum * 4, &rawPixels[0]);
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    // the number of channels in the texture determines the stride in raw pixels and how many single-channel vectors can be filed with pixel data.
-                    switch (inputTextureChNum) {
-                    case 4:
-                        aPixels[x + y * width] = rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 3];
-                    case 3:
-                        bPixels[x + y * width] = rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 2];
-                    case 2:
-                        gPixels[x + y * width] = rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 1];
-                    case 1:
-                        rPixels[x + y * width] = rawPixels[(x + (height - y - 1) * width) * inputTextureChNum];
-                        break;
+
+            auto copyTextureData = [&]<typename PixelFormat>() {
+                std::vector<PixelFormat> rawPixels(width * height * inputTextureChNum);
+                interm->bindTexture();
+                glGetTextureImage(interm->getName(), 0, interm->getFormat(), interm->getType(),
+                    width * height * inputTextureChNum * sizeof(PixelFormat), rawPixels.data());
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        // the number of channels in the texture determines the stride in raw pixels and how many single-channel vectors can be filed with pixel data.
+                        switch (inputTextureChNum) {
+                        case 4:
+                            aPixels[x + y * width] = static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 3]);
+                        case 3:
+                            bPixels[x + y * width] = static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 2]);
+                        case 2:
+                            gPixels[x + y * width] = static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 1]);
+                        case 1:
+                            rPixels[x + y * width] = static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum]);
+                            break;
+                        }
                     }
                 }
+            };
+
+            if (interm->getType() == GL_FLOAT) {
+                copyTextureData.template operator()<float>();
+            } else if (interm->getType() == GL_HALF_FLOAT){
+                copyTextureData.template operator()<half>();
+            } else if (interm->getType() == GL_INT){ //TODO: what about unsigned byte etc. ?
+                copyTextureData.template operator()<int>();
             }
 
             if (m_channel_name_red.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 1) {
