@@ -104,29 +104,11 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             std::cout << "w:" << width << " h:" << height << std::endl;
             Header header(width, height);
 
-            //TODO only init used vectors
-            std::vector<half> rPixels(width * height);
-            std::vector<half> gPixels(width * height);
-            std::vector<half> bPixels(width * height);
-            std::vector<half> aPixels(width * height);
-
             int inputTextureChNum = formatToChannelNumber(interm->getFormat());
 
             FrameBuffer fb;
             PixelType headerType;
-            switch (interm->getType()) {
-            case GL_FLOAT:
-                headerType = PixelType::FLOAT;
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenEXRWriter: Float input texture detected");
-                break;
-            case GL_HALF_FLOAT:
-                headerType = PixelType::HALF;
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenEXRWriter: Half input texture detected");
-                break;
-            case GL_INT:
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("OpenEXRWriter: Int input texture detected");
-                headerType = PixelType::UINT;
-            }
+
             //TODO remove
             //headerType = PixelType::FLOAT;
 
@@ -149,13 +131,26 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
                 // errorstate
                 break;
             }
-            rPixels.resize(width * height);
-            gPixels.resize(width * height);
-            bPixels.resize(width * height);
-            aPixels.resize(width * height);
 
             auto copyTextureData = [&]<typename PixelFormat>() {
                 std::vector<PixelFormat> rawPixels(width * height * inputTextureChNum);
+                std::vector<PixelFormat> rPixels(0);
+                std::vector<PixelFormat> gPixels(0);
+                std::vector<PixelFormat> bPixels(0);
+                std::vector<PixelFormat> aPixels(0);
+                //only Init needed channels
+                switch (inputTextureChNum) {
+                case 4:
+                    aPixels.resize(width * height);
+                case 3:
+                    bPixels.resize(width * height);
+                case 2:
+                    gPixels.resize(width * height);
+                case 1:
+                    rPixels.resize(width * height);
+                    break;
+                }
+
                 interm->bindTexture();
                 glGetTextureImage(interm->getName(), 0, interm->getFormat(), interm->getType(),
                     width * height * inputTextureChNum * sizeof(PixelFormat), rawPixels.data());
@@ -164,51 +159,59 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
                         // the number of channels in the texture determines the stride in raw pixels and how many single-channel vectors can be filed with pixel data.
                         switch (inputTextureChNum) {
                         case 4:
-                            aPixels[x + y * width] = static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 3]);
+                            aPixels[x + y * width] = static_cast<PixelFormat>(
+                                rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 3]);
                         case 3:
-                            bPixels[x + y * width] = static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 2]);
+                            bPixels[x + y * width] = static_cast<PixelFormat>(
+                                rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 2]);
                         case 2:
-                            gPixels[x + y * width] = static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 1]);
+                            gPixels[x + y * width] = static_cast<PixelFormat>(
+                                rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 1]);
                         case 1:
-                            rPixels[x + y * width] = static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum]);
+                            rPixels[x + y * width] =
+                                static_cast<PixelFormat>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum]);
                             break;
                         }
                     }
+                }
+
+                if (m_channel_name_red.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 1) {
+                    header.channels().insert(
+                        m_channel_name_red.Param<core::param::StringParam>()->Value(), Channel(headerType));
+                    fb.insert(m_channel_name_red.Param<core::param::StringParam>()->Value(),
+                        Slice(headerType, (char*) &rPixels[0], sizeof(rPixels[0]), sizeof(rPixels[0]) * width));
+                }
+                if (m_channel_name_green.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 2) {
+                    header.channels().insert(
+                        m_channel_name_green.Param<core::param::StringParam>()->Value(), Channel(headerType));
+                    fb.insert(m_channel_name_green.Param<core::param::StringParam>()->Value(),
+                        Slice(headerType, (char*) &gPixels[0], sizeof(gPixels[0]) * 1, sizeof(gPixels[0]) * width));
+                }
+                if (m_channel_name_blue.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 3) {
+                    header.channels().insert(
+                        m_channel_name_blue.Param<core::param::StringParam>()->Value(), Channel(headerType));
+                    fb.insert(m_channel_name_blue.Param<core::param::StringParam>()->Value(),
+                        Slice(headerType, (char*) &bPixels[0], sizeof(bPixels[0]) * 1, sizeof(bPixels[0]) * width));
+                }
+                if (m_channel_name_alpha.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum == 4) {
+                    header.channels().insert(
+                        m_channel_name_alpha.Param<core::param::StringParam>()->Value(), Channel(headerType));
+                    fb.insert(m_channel_name_alpha.Param<core::param::StringParam>()->Value(),
+                        Slice(headerType, (char*) &aPixels[0], sizeof(aPixels[0]) * 1, sizeof(aPixels[0]) * width));
                 }
             };
 
             if (interm->getType() == GL_FLOAT) {
                 copyTextureData.template operator()<float>();
-            } else if (interm->getType() == GL_HALF_FLOAT){
+                headerType = PixelType::FLOAT;
+            } else if (interm->getType() == GL_HALF_FLOAT) {
                 copyTextureData.template operator()<half>();
-            } else if (interm->getType() == GL_INT){ //TODO: what about unsigned byte etc. ?
-                copyTextureData.template operator()<int>();
+                headerType = PixelType::HALF;
+            } else if (interm->getType() == GL_INT) { //TODO: what about unsigned byte etc. ?
+                copyTextureData.template operator()<unsigned int>();
+                headerType = PixelType::UINT;
             }
 
-            if (m_channel_name_red.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 1) {
-                header.channels().insert(
-                    m_channel_name_red.Param<core::param::StringParam>()->Value(), Channel(headerType));
-                fb.insert(m_channel_name_red.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*) &rPixels[0], sizeof(rPixels[0]), sizeof(rPixels[0]) * width));
-            }
-            if (m_channel_name_green.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 2) {
-                header.channels().insert(
-                    m_channel_name_green.Param<core::param::StringParam>()->Value(), Channel(headerType));
-                fb.insert(m_channel_name_green.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*) &gPixels[0], sizeof(gPixels[0]) * 1, sizeof(gPixels[0]) * width));
-            }
-            if (m_channel_name_blue.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 3) {
-                header.channels().insert(
-                    m_channel_name_blue.Param<core::param::StringParam>()->Value(), Channel(headerType));
-                fb.insert(m_channel_name_blue.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*) &bPixels[0], sizeof(bPixels[0]) * 1, sizeof(bPixels[0]) * width));
-            }
-            if (m_channel_name_alpha.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum == 4) {
-                header.channels().insert(
-                    m_channel_name_alpha.Param<core::param::StringParam>()->Value(), Channel(headerType));
-                fb.insert(m_channel_name_alpha.Param<core::param::StringParam>()->Value(),
-                    Slice(headerType, (char*) &aPixels[0], sizeof(aPixels[0]) * 1, sizeof(aPixels[0]) * width));
-            }
 
             OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
 
