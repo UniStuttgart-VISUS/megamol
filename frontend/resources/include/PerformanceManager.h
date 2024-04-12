@@ -109,10 +109,10 @@ private:
 
 #ifdef MEGAMOL_USE_OPENGL
     handle_type whole_frame_gl;
-    timer_region *whole_frame_gl_region = nullptr;
+    timer_region* whole_frame_gl_region = nullptr;
 #endif
     handle_type whole_frame_cpu;
-    timer_region *whole_frame_cpu_region = nullptr;
+    timer_region* whole_frame_cpu_region = nullptr;
     bool first_frame = true;
 };
 

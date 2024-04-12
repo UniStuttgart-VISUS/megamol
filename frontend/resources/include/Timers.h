@@ -8,9 +8,9 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <list>
 #include <memory>
 #include <string>
-#include <list>
 
 #include <TimeTypes.h>
 
@@ -94,7 +94,7 @@ public:
     [[nodiscard]] uint32_t get_region_count() const {
         return regions.size();
     }
- 
+
     std::list<timer_region>::iterator regions_begin() {
         return regions.begin();
     }
@@ -136,6 +136,7 @@ protected:
 template<class Q>
 class any_timer : public Itimer {
     static_assert(std::is_base_of_v<AnyQuery, Q>, "Q must inherit from AnyQuery");
+
 public:
     any_timer(const timer_config& cfg) : Itimer(cfg) {}
 

@@ -76,7 +76,7 @@ bool Call::operator()(unsigned int func) {
 #endif
 #ifdef MEGAMOL_USE_PROFILING
         auto& cpu_region = perf_man->start_timer(cpu_queries[func]);
-        frontend_resources::performance::timer_region *gpu_region = nullptr;
+        frontend_resources::performance::timer_region* gpu_region = nullptr;
         if (caps.OpenGLRequired()) {
             gpu_region = &perf_man->start_timer(gl_queries[func]);
         }

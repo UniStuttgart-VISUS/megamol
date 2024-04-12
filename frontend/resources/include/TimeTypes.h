@@ -25,4 +25,4 @@ static constexpr const char* query_api_string(query_api api) {
     return "unknown";
 }
 
-}
+} // namespace megamol::frontend_resources::performance

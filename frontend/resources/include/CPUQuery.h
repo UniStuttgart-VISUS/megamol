@@ -28,6 +28,5 @@ public:
     /// </summary>
     /// <returns>Queried timestamp or zero if value is not ready</returns>
     time_point GetNW() override;
-
 };
 } // namespace megamol::frontend_resources::performance
