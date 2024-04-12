@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <TimeTypes.h>
 
 namespace megamol::frontend_resources::performance {

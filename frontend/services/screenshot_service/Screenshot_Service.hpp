@@ -7,10 +7,10 @@
 #pragma once
 
 #include "AbstractFrontendService.hpp"
-
-// ImageData struct and interfaces for screenshot sources/writers
 #include "FrameStatistics.h"
 #include "FrontendResourcesMap.h"
+
+// ImageData struct and interfaces for screenshot sources/writers
 #include "Screenshots.h"
 
 namespace megamol::frontend {

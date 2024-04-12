@@ -10,18 +10,18 @@
 #include <filesystem>
 #include <utility>
 
+#include "FrameStatistics.h"
 #include "GUIState.h"
 #include "ImagePresentation_Sinks.hpp"
 #include "ImageWrapper_to_GLTexture.hpp"
+#include "LuaApiResource.h"
 #include "OpenGL_Context.h"
 #include "RenderInput.h"
 #include "ViewRenderInputs.h"
 #include "WindowManipulation.h"
+#include "mmcore/LuaAPI.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
-#include "FrameStatistics.h"
-#include "LuaApiResource.h"
-#include "mmcore/LuaAPI.h"
 #include "mmcore/utility/log/Log.h"
 
 static const std::string service_name = "ImagePresentation_Service: ";

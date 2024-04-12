@@ -9,10 +9,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 
 #define CXXOPTS_VECTOR_DELIMITER '\0'
 #include <cxxopts.hpp>
-#include <fstream>
 
 // find user home
 static std::filesystem::path getHomeDir() {

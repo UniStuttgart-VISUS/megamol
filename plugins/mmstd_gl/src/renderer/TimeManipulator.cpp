@@ -6,14 +6,15 @@
 
 #include "mmstd_gl/renderer/TimeManipulator.h"
 
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
-
 #include <cmath>
+
 #include <glm/glm.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
+
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 using namespace megamol::mmstd_gl;
 

@@ -1,7 +1,7 @@
 #include "GLQuery.h"
 
 #ifdef MEGAMOL_USE_OPENGL
-#include "glad/gl.h"
+#include <glad/gl.h>
 #endif
 
 namespace megamol::frontend_resources::performance {

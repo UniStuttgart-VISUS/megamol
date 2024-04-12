@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <vector>
 
 namespace megamol::frontend_resources::performance {
 

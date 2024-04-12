@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "Timers.h"
-
 #include <chrono>
 #include <exception>
 #include <functional>
@@ -17,6 +15,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include "Timers.h"
 
 namespace megamol {
 namespace core {

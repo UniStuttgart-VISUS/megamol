@@ -7,9 +7,10 @@
 
 #pragma once
 
+#include <limits>
+
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
-#include <limits>
 
 namespace megamol::datatools {
 

@@ -4,10 +4,13 @@
  * Copyright (C) 2014 by S. Grottel
  * Alle Rechte vorbehalten.
  */
+
 #include "CopyParticleGlobals.h"
-#include "mmcore/param/BoolParam.h"
+
 #include <algorithm>
 #include <cstdint>
+
+#include "mmcore/param/BoolParam.h"
 
 using namespace megamol;
 

@@ -6,11 +6,10 @@
 
 #include "ProjectLoader_Service.hpp"
 
-#include "LuaApiResource.h"
-
 #include <fstream>
 #include <sstream>
 
+#include "LuaApiResource.h"
 #include "Window_Events.h"
 #include "mmcore/LuaAPI.h"
 #include "mmcore/utility/String.h"

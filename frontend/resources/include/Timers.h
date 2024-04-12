@@ -12,10 +12,9 @@
 #include <memory>
 #include <string>
 
-#include <TimeTypes.h>
-
 #include "CPUQuery.h"
 #include "GLQuery.h"
+#include "TimeTypes.h"
 
 namespace megamol::frontend_resources::performance {
 
