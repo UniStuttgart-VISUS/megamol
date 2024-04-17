@@ -1,6 +1,6 @@
 {
   "name": "obj-io",
-  "version-date": "2019-05-19",
+  "version-date": "2024-01-25",
   "description": "Single-file, header-only, no dependencies C++ implementation of the Wavefront obj file format.",
   "homepage": "https://github.com/thinks/obj-io",
   "license": "MIT",

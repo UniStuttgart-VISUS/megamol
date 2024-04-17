@@ -16,7 +16,7 @@ jobs:
         run: |
           mkdir bin
           wget "https://github.com/KhronosGroup/glslang/releases/download/main-tot/glslang-main-linux-Release.zip"
-          unzip -j "glslang-main-linux-Release.zip" "bin/glslangValidator" -d ./bin
+          unzip -j "glslang-main-linux-Release.zip" "bin/glslang" -d ./bin
           rm "glslang-main-linux-Release.zip"
           echo "./bin" >> $GITHUB_PATH
       - name: Run shader check
