@@ -13,7 +13,7 @@ using namespace megamol::mmstd_gl;
  * view::CallGetTransferFunctionGL::CallGetTransferFunctionGL
  */
 CallGetTransferFunctionGL::CallGetTransferFunctionGL() : AbstractCallGetTransferFunction(), texID(0) {
-    // intentionally empty
+    this->caps.RequireOpenGL();
 }
 
 /*
