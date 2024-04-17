@@ -1,16 +1,9 @@
 #include "Timers.h"
 
-#include <algorithm>
 #include <array>
 
 #include "mmcore/Call.h"
 #include "mmcore/Module.h"
-
-#ifdef MEGAMOL_USE_OPENGL
-#include <glad/gl.h>
-#endif
-
-#define TIMERS_USE_DOUBLE_BUFFERING
 
 namespace megamol::frontend_resources::performance {
 
