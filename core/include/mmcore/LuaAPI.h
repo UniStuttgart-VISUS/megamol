@@ -73,21 +73,6 @@ public:
         helpContainer[name] = help;
     }
 #else
-    // something like this to retrofit tracy zones everywhere would be nice.
-    // but I am not able to write this down.
-    //          template <typename R, typename... Args, typename Fx, typename Key, typename = std::invoke_result_t<Fx, Args...>>
-    //void set_fx(types<R(Args...)>, Key&& key, Fx&& fx) {
-    //  set_resolved_function<R(Args...)>(std::forward<Key>(key), std::forward<Fx>(fx));
-    //}
-    //template<typename Func, typename... Args>
-    //void RegisterCallbackWithTracy(std::string const& name, std::string const& help, Func&& func, Args&&... args) {
-    //    luaApiInterpreter_.set_function(name, [&](Args...) -> std::invoke_result_t<Func, Args...> {
-    //        printf("Tracy happening");
-    //        return std::forward<Func>(func)(std::forward<Args>(args)...);
-    //    });
-    //    helpContainer[name] = help;
-    //}
-
     template<typename Callable>
     auto RegisterCallback(std::string const& name, std::string const& help, Callable&& callback) {
         std::string lua_name = "Lua::" + name;
@@ -126,13 +111,6 @@ public:
                 ZoneName(lua_name.c_str(), lua_name.size());
                 return (that->*callable)(std::forward<Args>(args)...);
             });
-        helpContainer[name] = help;
-    }
-
-    template<typename... Functions>
-    auto RegisterCallback(std::string const& name, std::string const& help, sol::overload_set<Functions...> callback) {
-        // TODO implement Tracy wrapper!
-        luaApiInterpreter_.set_function(name, callback);
         helpContainer[name] = help;
     }
 #endif
