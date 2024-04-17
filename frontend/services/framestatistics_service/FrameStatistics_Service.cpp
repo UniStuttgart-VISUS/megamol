@@ -12,16 +12,17 @@
 #include <numeric>
 #include <sstream>
 
-#include "LuaCallbacksCollection.h"
+#include "LuaApiResource.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/utility/Timestamp.h"
-
+#include "mmcore/utility/log/Log.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
-#include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
     const std::string msg = "FrameStatistics_Service: " + std::string(text);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
+
 static void log(std::string text) {
     log(text.c_str());
 }
@@ -42,7 +43,7 @@ bool FrameStatistics_Service::init(void* configPtr) {
 bool FrameStatistics_Service::init(const Config& config) {
 
     this->m_requestedResourcesNames = {//"IOpenGL_Context", // for GL-specific measures?
-        "RegisterLuaCallbacks"};
+        frontend_resources::LuaAPI_Req_Name};
 
     m_program_start_time = std::chrono::steady_clock::time_point::clock::now();
 
@@ -111,21 +112,13 @@ void FrameStatistics_Service::finish_frame() {
 }
 
 void FrameStatistics_Service::fill_lua_callbacks() {
-    frontend_resources::LuaCallbacksCollection callbacks;
+    auto& luaApi = m_requestedResourceReferences[0].getResource<core::LuaAPI*>();
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult>("mmGetTimeStamp",
-        "(void)\n\tReturns a timestamp in ISO format.",
-        {[&]() -> frontend_resources::LuaCallbacksCollection::StringResult {
-            auto const tp = std::chrono::system_clock::now();
-            auto const timestamp = core::utility::serialize_timestamp(tp);
-            return frontend_resources::LuaCallbacksCollection::StringResult(timestamp);
-        }});
-
-    auto& register_callbacks =
-        m_requestedResourceReferences[0]
-            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
-
-    register_callbacks(callbacks);
+    luaApi->RegisterCallback("mmGetTimeStamp", "(void)\n\tReturns a timestamp in ISO format.", [&]() -> std::string {
+        auto const tp = std::chrono::system_clock::now();
+        auto const timestamp = core::utility::serialize_timestamp(tp);
+        return timestamp;
+    });
 }
 
 } // namespace megamol::frontend
