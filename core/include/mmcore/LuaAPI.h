@@ -7,7 +7,6 @@
 #pragma once
 
 #include <mutex>
-#include <stack>
 #include <string>
 
 //#define SOL_ALL_SAFETIES_ON 1
@@ -19,7 +18,6 @@
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
-#include <tracy/TracyC.h>
 #endif
 
 struct lua_State; // lua includes should stay in the core
@@ -163,16 +161,8 @@ private:
     /** all of the Lua startup code */
     void commonInit();
 
-#ifdef MEGAMOL_USE_TRACY
-    static void luaProfilingHook(lua_State* L, lua_Debug* ar);
-#endif
-
     /** the one Lua state */
     sol::state luaApiInterpreter_;
-#ifdef MEGAMOL_USE_TRACY
-    bool luaHookEnabled_ = false;
-    std::stack<TracyCZoneCtx> luaZoneStack_;
-#endif
 
     std::string currentScriptPath = "";
 
