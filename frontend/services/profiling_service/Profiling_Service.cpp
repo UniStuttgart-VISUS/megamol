@@ -26,8 +26,12 @@ bool Profiling_Service::init(void* configPtr) {
     nv::perf::InitializeNvPerf();
 #endif
 #ifdef MEGAMOL_USE_PROFILING
-    _providedResourceReferences = {{frontend_resources::PerformanceManager_Req_Name, _perf_man},
-        {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}};
+    profiling_callbacks.mark_frame_start = [this] { markFrameStart(); };
+    profiling_callbacks.mark_frame_end = [this] { markFrameEnd(); };
+
+    _providedResourceReferences = {{frontend_resources::performance::PerformanceManager_Req_Name, _perf_man},
+        {frontend_resources::performance::Performance_Logging_Status_Req_Name, profiling_logging},
+        {frontend_resources::performance::Profiling_Callbacks_Req_Name, profiling_callbacks}};
 
     const auto conf = static_cast<Config*>(configPtr);
     profiling_logging.active = conf->autostart_profiling;
@@ -35,6 +39,7 @@ bool Profiling_Service::init(void* configPtr) {
 
     const auto unit_name = "ns";
     using timer_ratio = std::nano;
+    using timer_datatype = uint64_t;
     //const auto unit_name = "us";
     //using timer_ratio = std::micro;
     //const auto unit_name = "ms";
@@ -48,7 +53,7 @@ bool Profiling_Service::init(void* configPtr) {
         // header
         log_buffer << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end ("
                    << unit_name << ");duration (" << unit_name << ")" << std::endl;
-        _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
+        _perf_man.subscribe_to_updates([&](const frontend_resources::performance::frame_info& fi) {
             if (!profiling_logging.active) {
                 return;
             }
@@ -56,8 +61,8 @@ bool Profiling_Service::init(void* configPtr) {
             if (frame > 0) {
                 auto& _frame_stats =
                     _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
-                log_buffer << (frame - 1) << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
-                           << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
+                log_buffer << frame << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
+                           << _frame_stats.last_rendered_frame_time_microseconds.count() / 1000.0 << std::endl;
             }
             for (auto& e : fi.entries) {
                 auto conf = _perf_man.lookup_config(e.handle);
@@ -65,16 +70,16 @@ bool Profiling_Service::init(void* configPtr) {
                 auto parent = _perf_man.lookup_parent(e.handle);
                 auto comment = conf.comment;
 
-                const auto the_start = std::chrono::duration<double, timer_ratio>(e.start.time_since_epoch()).count();
-                const auto the_end = std::chrono::duration<double, timer_ratio>(e.end.time_since_epoch()).count();
+                const auto the_start =
+                    std::chrono::duration<timer_datatype, timer_ratio>(e.start.time_since_epoch()).count();
+                const auto the_end =
+                    std::chrono::duration<timer_datatype, timer_ratio>(e.end.time_since_epoch()).count();
                 const auto the_duration =
-                    std::chrono::duration<double, timer_ratio>(e.duration.time_since_epoch()).count();
+                    std::chrono::duration<timer_datatype, timer_ratio>(e.duration.time_since_epoch()).count();
 
-                log_buffer << frame << ";" << frontend_resources::PerformanceManager::parent_type_string(e.parent_type)
-                           << ";" << parent << ";" << name << ";" << comment << ";" << e.global_index << ";"
-                           << e.frame_index << ";"
-                           << megamol::frontend_resources::PerformanceManager::query_api_string(e.api) << ";"
-                           << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
+                log_buffer << e.frame << ";" << parent_type_string(e.parent) << ";" << parent << ";" << name << ";"
+                           << comment << ";" << e.global_index << ";" << e.frame_index << ";" << query_api_string(e.api)
+                           << ";" << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
                            << std::to_string(the_duration) << std::endl;
             }
             if (frame % flush_frequency == flush_frequency - 1) {
@@ -98,8 +103,9 @@ void Profiling_Service::log_graph_event(
     if (this->include_graph_events) {
         const auto frames_rendered = static_cast<int64_t>(
             _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
-        log_buffer << frames_rendered - 1 << ";Graph;" << parent << ";" << name << ";" << comment
-                   << ";0;0;GraphEvent;;;" << std::endl;
+        //core::utility::log::Log::DefaultLog.WriteInfo("profiler logging graph change for frame %u", frames_rendered);
+        log_buffer << frames_rendered << ";Graph;" << parent << ";" << name << ";" << comment << ";0;0;GraphEvent;;;"
+                   << std::endl;
     }
 }
 
@@ -115,10 +121,9 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
     profiling_manager_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
         auto the_call = call_inst.callPtr.get();
         //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
-        the_call->cpu_queries = _perf_man.add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
+        the_call->cpu_queries = _perf_man.add_timers(the_call, frontend_resources::performance::query_api::CPU);
         if (the_call->GetCapabilities().OpenGLRequired()) {
-            the_call->gl_queries =
-                _perf_man.add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
+            the_call->gl_queries = _perf_man.add_timers(the_call, frontend_resources::performance::query_api::OPENGL);
         }
         the_call->perf_man = &_perf_man;
 
@@ -185,29 +190,32 @@ void Profiling_Service::close() {
         log_file.close();
     }
 #endif
+    // at this point, there is not enough MegaMol left to produce an OpenGL marker
+    // so we better not close this cleanly :(
+    //_perf_man.endFrame();
 #ifdef MEGAMOL_USE_NVPERF
     nvperf.Reset();
 #endif
 }
 
-static const char* const sl_innerframe = "InnerFrame";
-
-void Profiling_Service::updateProvidedResources() {
-#ifdef MEGAMOL_USE_TRACY
-    FrameMarkStart(sl_innerframe);
-#endif
-    _perf_man.startFrame(
-        _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
+void Profiling_Service::markFrameStart() {
+    if (first_frame) {
+        // for the first frame, we cannot do proper end-to-end measurements :(
+        const auto rfc =
+            _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count;
+        _perf_man.startFrame(static_cast<megamol::frontend_resources::performance::frame_type>(rfc));
+        first_frame = false;
+    }
 #ifdef MEGAMOL_USE_NVPERF
     nvperf.OnFrameStart();
 #endif
 }
 
-void Profiling_Service::resetProvidedResources() {
-    _perf_man.endFrame();
-#ifdef MEGAMOL_USE_TRACY
-    FrameMarkEnd(sl_innerframe);
-#endif
+void Profiling_Service::markFrameEnd() {
+    const auto rfc =
+        _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count;
+    _perf_man.endFrame(rfc - 1);
+    _perf_man.startFrame(static_cast<megamol::frontend_resources::performance::frame_type>(rfc));
 #ifdef MEGAMOL_USE_NVPERF
     nvperf.OnFrameEnd();
 #endif

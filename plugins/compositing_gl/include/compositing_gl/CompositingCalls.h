@@ -19,7 +19,9 @@ namespace megamol::compositing_gl {
 
 class CallTexture2D : public core::GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData> {
 public:
-    inline CallTexture2D() : GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData>() {}
+    inline CallTexture2D() : GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData>() {
+        this->caps.RequireOpenGL();
+    }
     ~CallTexture2D() override = default;
 
     static const char* ClassName() {
@@ -73,7 +75,9 @@ class CallFramebufferGL
         : public core::GenericVersionedCall<std::shared_ptr<glowl::FramebufferObject>, core::EmptyMetaData> {
 public:
     inline CallFramebufferGL()
-            : GenericVersionedCall<std::shared_ptr<glowl::FramebufferObject>, core::EmptyMetaData>() {}
+            : GenericVersionedCall<std::shared_ptr<glowl::FramebufferObject>, core::EmptyMetaData>() {
+        this->caps.RequireOpenGL();
+    }
     ~CallFramebufferGL() override = default;
 
     static const char* ClassName() {

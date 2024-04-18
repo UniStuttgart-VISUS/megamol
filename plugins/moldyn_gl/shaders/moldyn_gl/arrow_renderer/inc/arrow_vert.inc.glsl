@@ -1,15 +1,17 @@
 attribute float colIdx;
+attribute vec4 pos_attrib;
+attribute vec4 col_attrib;
 attribute vec3 dir;
 attribute uint flags;
 
 void main(void) {
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_Vertex;
+    vec4 inPos = pos_attrib;
     rad.x = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;
     inPos.w = 1.0;
     float cid = MAX_COLV - MIN_COLV;
     if (cid < 0.000001) {
-        gl_FrontColor = gl_Color;
+        gl_FrontColor = col_attrib;
     } else {
         cid = (colIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
@@ -23,10 +25,10 @@ void main(void) {
     //const vec4 quatConst = vec4(1.0, -1.0, 0.5, 0.0);
     vec4 tmp, tmp1;
 
-    vec3 fromPos = gl_Vertex.xyz + (dir * 0.5) * lengthScale;
-    vec3 toPos = gl_Vertex.xyz - (dir * 0.5) * lengthScale;
+    vec3 fromPos = pos_attrib.xyz + (dir * 0.5) * lengthScale;
+    vec3 toPos = pos_attrib.xyz - (dir * 0.5) * lengthScale;
 
-    inPos = vec4(gl_Vertex.xyz, 1.0);
+    inPos = vec4(pos_attrib.xyz, 1.0);
 
     rad.y = rad.x * rad.x;
     //rad.z = 1.0; // half cylinder length

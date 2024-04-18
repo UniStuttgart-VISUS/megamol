@@ -308,12 +308,12 @@ megamol::compositing_gl::SSAO::~SSAO() {
 bool megamol::compositing_gl::SSAO::create() {
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
-    perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
-        &frontend_resources.get<frontend_resources::PerformanceManager>());
+    perf_manager_ = const_cast<frontend_resources::performance::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::performance::PerformanceManager>());
 
-    frontend_resources::PerformanceManager::basic_timer_config render_timer;
+    frontend_resources::performance::basic_timer_config render_timer;
     render_timer.name = "render";
-    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.api = frontend_resources::performance::query_api::OPENGL;
     timers_ = perf_manager_->add_timers(this, {render_timer});
 #endif
 
@@ -564,7 +564,7 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
 
         if (somethingHasChanged) {
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->start_timer(timers_[0]);
+            auto& region0 = perf_manager_->start_timer(timers_[0]);
 #endif
             ++version_;
 
@@ -712,7 +712,7 @@ bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
             }
 
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->stop_timer(timers_[0]);
+            region0.end_region();
 #endif
         }
     }

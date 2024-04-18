@@ -32,6 +32,20 @@ AnimationEditor::AnimationEditor(const std::string& window_name)
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_MenuBar;
     this->win_config.hotkey = core::view::KeyCode(core::view::Key::KEY_F5, core::view::Modifier::NONE);
+
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_PLAY_ANIMATION] = {"_hotkey_gui_animationeditor_play_animation",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_STOP_ANIMATION] = {"_hotkey_gui_animationeditor_stop_animation",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_REVERSE_PLAY_ANIMATION] = {
+        "_hotkey_gui_animationeditor_reverse_play_animation",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_START] = {
+        "_hotkey_gui_animationeditor_move_to_animation_start",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
+    this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_END] = {
+        "_hotkey_gui_animationeditor_move_to_animation_end",
+        core::view::KeyCode(core::view::Key::KEY_UNKNOWN, core::view::Modifier::NONE), false};
 }
 
 
@@ -45,6 +59,27 @@ bool AnimationEditor::Update() {
 
 
 bool AnimationEditor::Draw() {
+
+    if (this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_PLAY_ANIMATION].is_pressed ||
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_REVERSE_PLAY_ANIMATION].is_pressed) {
+        playing = this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_PLAY_ANIMATION].is_pressed ? 1 : -1;
+        accumulated_ms = 0.0f;
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_PLAY_ANIMATION].is_pressed = false;
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_REVERSE_PLAY_ANIMATION].is_pressed = false;
+    }
+    if (this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_STOP_ANIMATION].is_pressed) {
+        playing = 0;
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_STOP_ANIMATION].is_pressed = false;
+    }
+    if (this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_START].is_pressed) {
+        current_frame = animation_bounds[0];
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_START].is_pressed = false;
+    }
+    if (this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_END].is_pressed) {
+        current_frame = animation_bounds[1];
+        this->win_hotkeys[HOTKEY_ANIMATIONEDITOR_MOVE_TO_ANIMATION_END].is_pressed = false;
+    }
+
     if (playing != 0) {
         accumulated_ms += last_frame_ms;
         if (accumulated_ms > targeted_frame_time) {
@@ -67,20 +102,25 @@ bool AnimationEditor::Draw() {
             }
         }
     }
-    DrawToolbar();
-    DrawPopups();
 
-    ImGui::BeginChild("AnimEditorContent");
-    ImGui::Columns(3, "AnimEditorColumns", false);
-    ImGui::SetColumnWidth(0, ImGui::GetWindowSize().x / 5.0f);
-    ImGui::SetColumnWidth(1, ImGui::GetWindowSize().x * (3.0f / 5.0f));
-    ImGui::SetColumnWidth(2, ImGui::GetWindowSize().x / 5.0f);
-    DrawParams();
-    ImGui::NextColumn();
-    DrawCurves();
-    ImGui::NextColumn();
-    DrawProperties();
-    ImGui::EndChild();
+    if (compact_view) {
+        DrawParams();
+    } else {
+        DrawToolbar();
+        DrawPopups();
+
+        ImGui::BeginChild("AnimEditorContent");
+        ImGui::Columns(3, "AnimEditorColumns", false);
+        ImGui::SetColumnWidth(0, ImGui::GetWindowSize().x / 5.0f);
+        ImGui::SetColumnWidth(1, ImGui::GetWindowSize().x * (3.0f / 5.0f));
+        ImGui::SetColumnWidth(2, ImGui::GetWindowSize().x / 5.0f);
+        DrawParams();
+        ImGui::NextColumn();
+        DrawCurves();
+        ImGui::NextColumn();
+        DrawProperties();
+        ImGui::EndChild();
+    }
 
     return true;
 }
@@ -96,9 +136,10 @@ bool AnimationEditor::NotifyParamChanged(
     if (auto_capture) {
         std::string the_name = param_slot->FullName().PeekBuffer();
         int found_idx = -1;
+        bool found = false;
         for (auto i = 0; i < allAnimations.size(); ++i) {
             auto& anim = allAnimations[i];
-            bool found = std::visit(
+            found = std::visit(
                 [&](auto&& arg) -> bool {
                     if (arg.GetName() == the_name) {
                         found_idx = i;
@@ -115,7 +156,7 @@ bool AnimationEditor::NotifyParamChanged(
 
         if (param_slot->Param<FloatParam>() || param_slot->Param<IntParam>()) {
             const float the_val = std::stof(new_value);
-            if (found_idx == -1) {
+            if (!found) {
                 animation::FloatAnimation f = {the_name};
                 allAnimations.emplace_back(f);
                 found_idx = static_cast<int>(allAnimations.size()) - 1;
@@ -133,7 +174,7 @@ bool AnimationEditor::NotifyParamChanged(
         }
         if (param_slot->Param<EnumParam>() || param_slot->Param<FlexEnumParam>() || param_slot->Param<StringParam>() ||
             param_slot->Param<FilePathParam>()) {
-            if (found_idx == -1) {
+            if (!found) {
                 animation::StringAnimation s = {the_name};
                 allAnimations.emplace_back(s);
                 found_idx = static_cast<int>(allAnimations.size()) - 1;
@@ -152,7 +193,7 @@ bool AnimationEditor::NotifyParamChanged(
         if (param_slot->Param<Vector2fParam>() || param_slot->Param<Vector3fParam>() ||
             param_slot->Param<Vector4fParam>()) {
             const auto vec = animation::GetFloats(new_value);
-            if (found_idx == -1) {
+            if (!found) {
                 animation::FloatVectorAnimation v{the_name};
                 allAnimations.emplace_back(v);
                 found_idx = static_cast<int>(allAnimations.size()) - 1;
@@ -196,13 +237,26 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
         in_json["animation_bounds"].get_to(animation_bounds);
         in_json["current_frame"].get_to(current_frame);
         in_json["output_prefix"].get_to(output_prefix);
+        if (in_json.contains("compact_view")) {
+            in_json["compact_view"].get_to(compact_view);
+        } else {
+            compact_view = false;
+        }
         if (in_json.contains("animation_file")) {
             in_json["animation_file"].get_to(animation_file);
+        }
+        if (in_json.contains("pos_source_index")) {
+            in_json["pos_source_index"].get_to(pos_source_index);
+        }
+        if (in_json.contains("orient_source_index")) {
+            in_json["orient_source_index"].get_to(orient_source_index);
         }
 
         animation::FloatAnimation f_dummy("dummy");
         animation::StringAnimation s_dummy("dummy");
         animation::FloatVectorAnimation v_dummy("dummy");
+        animation::ScriptedStringAnimation ssa_dummy("dummy");
+        animation::ScriptedFloatAnimation sfa_dummy("dummy");
         if (!in_json.contains("animations")) {
             error_popup_message = "Loading failed: cannot find 'animations'";
             open_popup_error = true;
@@ -218,10 +272,22 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
             } else if (j["type"] == "float_vector") {
                 from_json(j, v_dummy);
                 allAnimations.emplace_back(v_dummy);
+            } else if (j["type"] == "scripted_string") {
+                from_json(j, ssa_dummy);
+                allAnimations.emplace_back(ssa_dummy);
+            } else if (j["type"] == "scripted_float") {
+                from_json(j, sfa_dummy);
+                allAnimations.emplace_back(sfa_dummy);
             } else {
                 error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no known type";
                 open_popup_error = true;
             }
+        }
+        if (pos_source_index != -1) {
+            set_as_position(pos_source_index);
+        }
+        if (orient_source_index != -1) {
+            set_as_orientation(orient_source_index);
         }
     }
 }
@@ -236,6 +302,9 @@ void AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json_all) {
     inout_json["current_frame"] = current_frame;
     inout_json["animation_file"] = animation_file;
     inout_json["output_prefix"] = output_prefix;
+    inout_json["compact_view"] = compact_view;
+    inout_json["pos_source_index"] = pos_source_index;
+    inout_json["orient_source_index"] = orient_source_index;
 
     nlohmann::json anims;
     for (auto& fa : allAnimations) {
@@ -478,15 +547,57 @@ void AnimationEditor::DrawToolbar() {
     DrawVerticalSeparator();
 
     ImGui::SameLine();
+    const auto cursor_pos = ImGui::GetCursorScreenPos();
+    if (ImGui::Button("add animation")) {
+        ImGui::OpenPopup("add_animation_button_context");
+        ImGui::SetNextWindowPos(cursor_pos + ImVec2(0.0f, ImGui::GetFrameHeight()));
+    }
+    if (ImGui::BeginPopup("add_animation_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
+        auto any_clicked = false;
+        if (ImGui::MenuItem("Float")) {
+            animation::FloatAnimation fa = {"unnamed"};
+            allAnimations.emplace_back(fa);
+            any_clicked = true;
+        }
+        if (ImGui::MenuItem("String")) {
+            animation::StringAnimation sa = {"unnamed"};
+            allAnimations.emplace_back(sa);
+            any_clicked = true;
+        }
+        if (ImGui::MenuItem("Float Expression")) {
+            animation::ScriptedFloatAnimation sfa = {"unnamed"};
+            animation::ScriptedFloatKey sfk = {0, 0, "return time"};
+            sfa.AddKey(sfk);
+            allAnimations.emplace_back(sfa);
+            any_clicked = true;
+        }
+        if (ImGui::MenuItem("String Expression")) {
+            animation::ScriptedStringAnimation ssa = {"unnamed"};
+            animation::ScriptedStringKey ssk = {0, "", "return tostring(time)"};
+            ssa.AddKey(ssk);
+            allAnimations.emplace_back(ssa);
+            any_clicked = true;
+        }
+        ImGui::EndPopup();
+        if (any_clicked) {
+            selectedFloatKey = nullptr;
+            selectedStringKey = nullptr;
+            selectedAnimation = allAnimations.size() - 1;
+        }
+    }
+
+    ImGui::SameLine();
     if (ImGui::Button("delete animation")) {
         if (selectedAnimation != -1) {
             if (std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
                 const auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 if (animEditorData.orientation_animation == &anim) {
                     animEditorData.orientation_animation = nullptr;
+                    orient_source_index = -1;
                 }
                 if (animEditorData.pos_animation == &anim) {
                     animEditorData.pos_animation = nullptr;
+                    pos_source_index = -1;
                 }
             }
             allAnimations.erase(allAnimations.begin() + selectedAnimation);
@@ -653,64 +764,81 @@ void AnimationEditor::SelectAnimation(int32_t a) {
     //selectedVec3Key = nullptr;
 }
 
-void AnimationEditor::DrawParams() {
-    ImGui::Text("Available Parameters");
-    bool have_pos = false, have_orient = false;
-    if (selectedAnimation > -1 &&
-        std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
-        const auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
-        have_pos = fva.VectorLength() == 3;
-        have_orient = fva.VectorLength() == 4;
-    }
-    if (!have_pos) {
-        ImGui::BeginDisabled();
-    }
-    if (ImGui::Button("use as 3D position")) {
-        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+void AnimationEditor::set_as_position(int32_t anim_index) {
+    if (anim_index < static_cast<int32_t>(allAnimations.size())) {
+        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[anim_index]);
+        pos_source_index = selectedAnimation;
         animEditorData.pos_animation = &fva;
         animEditorData.active_region.first = animation_bounds[0];
         animEditorData.active_region.second = animation_bounds[1];
     }
-    if (!have_pos) {
-        ImGui::EndDisabled();
-    }
-    ImGui::SameLine();
-    if (!have_orient) {
-        ImGui::BeginDisabled();
-    }
-    if (ImGui::Button("use as orientation")) {
-        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+}
+
+void AnimationEditor::set_as_orientation(int32_t anim_index) {
+    if (anim_index < static_cast<int32_t>(allAnimations.size())) {
+        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[anim_index]);
+        orient_source_index = selectedAnimation;
         animEditorData.orientation_animation = &fva;
         animEditorData.active_region.first = animation_bounds[0];
         animEditorData.active_region.second = animation_bounds[1];
     }
-    if (!have_orient) {
-        ImGui::EndDisabled();
-    }
-    ImGui::BeginChild(
-        "anim_params", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
-    for (int32_t a = 0; a < allAnimations.size(); ++a) {
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth |
-                                   ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_FramePadding |
-                                   ImGuiTreeNodeFlags_AllowItemOverlap;
-        if (selectedAnimation == a) {
-            flags |= ImGuiTreeNodeFlags_Selected;
+}
+
+void AnimationEditor::DrawParams() {
+    if (!compact_view) {
+        ImGui::Text("Available Parameters");
+        bool have_pos = false, have_orient = false;
+        if (selectedAnimation > -1 &&
+            std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
+            const auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+            have_pos = fva.VectorLength() == 3;
+            have_orient = fva.VectorLength() == 4;
         }
-        const auto& anim = allAnimations[a];
-        std::visit([&](auto&& arg) -> void { ImGui::TreeNodeEx(arg.GetName().c_str(), flags); }, anim);
-        if (ImGui::IsItemActivated()) {
-            SelectAnimation(a);
-            if (canvas_visible) {
-                CenterAnimation(allAnimations[selectedAnimation]);
+        if (!have_pos) {
+            ImGui::BeginDisabled();
+        }
+        if (ImGui::Button("use as 3D position")) {
+            set_as_position(selectedAnimation);
+        }
+        if (!have_pos) {
+            ImGui::EndDisabled();
+        }
+        ImGui::SameLine();
+        if (!have_orient) {
+            ImGui::BeginDisabled();
+        }
+        if (ImGui::Button("use as orientation")) {
+            set_as_orientation(selectedAnimation);
+        }
+        if (!have_orient) {
+            ImGui::EndDisabled();
+        }
+        ImGui::BeginChild(
+            "anim_params", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
+        for (int32_t a = 0; a < allAnimations.size(); ++a) {
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth |
+                                       ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_FramePadding |
+                                       ImGuiTreeNodeFlags_AllowItemOverlap;
+            if (selectedAnimation == a) {
+                flags |= ImGuiTreeNodeFlags_Selected;
+            }
+            const auto& anim = allAnimations[a];
+            std::visit([&](auto&& arg) -> void { ImGui::TreeNodeEx(arg.GetName().c_str(), flags); }, anim);
+            if (ImGui::IsItemActivated()) {
+                SelectAnimation(a);
+                if (canvas_visible) {
+                    CenterAnimation(allAnimations[selectedAnimation]);
+                }
             }
         }
+        ImGui::EndChild();
     }
-    ImGui::EndChild();
 
     //animation::BeginGroupPanel("Animation", ImVec2(0.0f, 0.0f));
     ImGui::Text("Animation");
-    ImGui::BeginChild(
-        "Animation_SubWin", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
+    //ImGui::BeginChild(
+    //    "Animation_SubWin", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
+    ImGui::BeginChild("Animation_SubWin", ImVec2(0.f, 0.f), true);
     if (ImGui::Button("start")) {
         current_frame = animation_bounds[0];
     }
@@ -732,6 +860,8 @@ void AnimationEditor::DrawParams() {
     if (ImGui::Button("end")) {
         current_frame = animation_bounds[1];
     }
+    ImGui::SameLine();
+    ImGui::Checkbox("compact", &compact_view);
     if (ImGui::InputInt("Playback fps target", &playback_fps)) {
         targeted_frame_time = 1000.0f / static_cast<float>(playback_fps);
     }
@@ -924,6 +1054,17 @@ void AnimationEditor::DrawFloatKey(
 }
 
 
+void AnimationEditor::DrawScriptedFloat(ImDrawList* dl, const animation::ScriptedFloatKey& key) {
+    auto& inst = animation::ExpressionInterpreter::getInstance();
+    const auto reference_col = IM_COL32(255, 0, 0, 255);
+    for (auto t = animation_bounds[0]; t < animation_bounds[1]; ++t) {
+        auto v1 = inst.EvaluateFloat(key.script, t);
+        auto v2 = inst.EvaluateFloat(key.script, t + 1);
+        dl->AddLine(ImVec2(t, v1 * -1.0f) * custom_zoom, ImVec2(t + 1, v2 * -1.0f) * custom_zoom, reference_col);
+    }
+}
+
+
 void AnimationEditor::DrawPlayhead(ImDrawList* drawList) {
     const ImVec2 playhead_size = {12.0f, 12.0f};
     auto playhead_color = IM_COL32(255, 128, 0, 255);
@@ -1035,6 +1176,9 @@ void AnimationEditor::DrawCurves() {
                         DrawFloatKey(drawList, k);
                     }
                 }
+            } else if (std::holds_alternative<animation::ScriptedFloatAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::ScriptedFloatAnimation>(allAnimations[selectedAnimation]);
+                DrawScriptedFloat(drawList, anim[0]);
             } else if (std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
                 auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 if (anim.GetSize() > 0) {
@@ -1135,6 +1279,17 @@ void AnimationEditor::DrawProperties() {
         "key_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     if (selectedAnimation > -1) {
         auto& anim = allAnimations[selectedAnimation];
+        std::visit(
+            [&](auto&& arg) -> void {
+                std::string buffer = arg.GetName();
+                if (ImGui::InputText("Parameter", &buffer)) {
+                    if (!buffer.empty()) {
+                        arg.SetName(buffer);
+                    }
+                }
+            },
+            anim);
+
         if ((std::holds_alternative<animation::FloatAnimation>(anim) ||
                 std::holds_alternative<animation::FloatVectorAnimation>(anim)) &&
             selectedFloatKey != nullptr) {
@@ -1230,6 +1385,22 @@ void AnimationEditor::DrawProperties() {
                 }
             }
             ImGui::InputText("Value", &selectedStringKey->value);
+        } else if (std::holds_alternative<animation::ScriptedStringAnimation>(anim)) {
+            auto& ssa = std::get<animation::ScriptedStringAnimation>(anim);
+            ImGui::InputText("Script", &edit_buffer);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                ssa[0].script = edit_buffer;
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                edit_buffer = ssa[0].script;
+            }
+        } else if (std::holds_alternative<animation::ScriptedFloatAnimation>(anim)) {
+            auto& sfa = std::get<animation::ScriptedFloatAnimation>(anim);
+            ImGui::InputText("Script", &edit_buffer);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                sfa[0].script = edit_buffer;
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                edit_buffer = sfa[0].script;
+            }
         }
     }
     ImGui::EndChild();

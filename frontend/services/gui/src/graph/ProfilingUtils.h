@@ -39,8 +39,7 @@ public:
 
     public:
         ProxyVector() = default;
-        void append(
-            std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>&
+        void append(std::unordered_map<frontend_resources::performance::handle_type, core::MultiPerformanceHistory>&
                 histories) {
             for (auto& item : histories) {
                 my_histories.push_back(&(item.second));

@@ -78,10 +78,10 @@ public:
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
+    void SetPerformanceManager(frontend_resources::performance::PerformanceManager* perf_manager) {
         this->perf_manager = perf_manager;
     }
-    void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi);
+    void AppendPerformanceData(const frontend_resources::performance::frame_info& fi);
 #endif
 
     bool NotifyRunningGraph_AddModule(core::ModuleInstance_t const& module_inst);
@@ -150,7 +150,7 @@ private:
 #ifdef MEGAMOL_USE_PROFILING
     std::unordered_map<void*, std::weak_ptr<megamol::gui::Call>> call_to_call;
     std::unordered_map<void*, std::weak_ptr<megamol::gui::Module>> module_to_module;
-    frontend_resources::PerformanceManager* perf_manager = nullptr;
+    frontend_resources::performance::PerformanceManager* perf_manager = nullptr;
 #endif
 };
 

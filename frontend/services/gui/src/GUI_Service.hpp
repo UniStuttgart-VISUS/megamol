@@ -77,8 +77,8 @@ private:
     glm::vec2 m_window_size;
     Config m_config;
     megamol::core::MegaMolGraph* m_megamol_graph;
-    megamol::frontend_resources::PerformanceManager* perf_manager = nullptr;
-    frontend_resources::ProfilingLoggingStatus* perf_logging = nullptr;
+    megamol::frontend_resources::performance::PerformanceManager* perf_manager = nullptr;
+    frontend_resources::performance::ProfilingLoggingStatus* perf_logging = nullptr;
     std::shared_ptr<megamol::gui::GUIManager> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
 

@@ -18,6 +18,7 @@
 // clang-format on
 
 #include "FrameStatistics.h"
+#include "FrameStatsCallbacks.h"
 #include "ModuleGraphSubscription.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -596,8 +597,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {frontend_resources::WindowManipulation_Req_Name, m_windowManipulation},
         {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
 
-    m_requestedResourcesNames = {
-        "FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
+    m_requestedResourcesNames = {"FrameStatistics", "FramebufferEvents",
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
+        frontend_resources::FrameStatsCallbacks_Req_Name};
 
     m_pimpl->last_time = std::chrono::system_clock::now();
 

@@ -174,18 +174,18 @@ public:
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    void SetProfilingData(void* ptr, frontend_resources::PerformanceManager* perf_manager) {
+    void SetProfilingData(void* ptr, frontend_resources::performance::PerformanceManager* perf_manager) {
         this->profiling_parent_pointer = ptr;
 
         auto handles = perf_manager->lookup_timers(ptr);
         for (auto& h : handles) {
             auto& conf = perf_manager->lookup_config(h);
             switch (conf.api) {
-            case frontend_resources::PerformanceManager::query_api::CPU:
+            case frontend_resources::performance::query_api::CPU:
                 this->cpu_perf_history.emplace(std::make_pair(h, core::MultiPerformanceHistory()));
                 this->cpu_perf_history[h].set_name(conf.name);
                 break;
-            case frontend_resources::PerformanceManager::query_api::OPENGL:
+            case frontend_resources::performance::query_api::OPENGL:
                 this->gl_perf_history.emplace(std::make_pair(h, core::MultiPerformanceHistory()));
                 this->gl_perf_history[h].set_name(conf.name);
                 break;
@@ -197,8 +197,8 @@ public:
         return this->profiling_parent_pointer;
     }
 
-    void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
-        const frontend_resources::PerformanceManager::timer_entry& entry);
+    void AppendPerformanceData(
+        frontend_resources::performance::frame_type frame, const frontend_resources::performance::timer_entry& entry);
 
     bool ShowProfiling() {
         return this->show_profiling_data;
@@ -250,10 +250,8 @@ private:
 
 #ifdef MEGAMOL_USE_PROFILING
 
-    std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
-        cpu_perf_history;
-    std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
-        gl_perf_history;
+    std::unordered_map<frontend_resources::performance::handle_type, core::MultiPerformanceHistory> cpu_perf_history;
+    std::unordered_map<frontend_resources::performance::handle_type, core::MultiPerformanceHistory> gl_perf_history;
     void* profiling_parent_pointer;
     float profiling_window_height; // determine dynamically
     bool show_profiling_data;

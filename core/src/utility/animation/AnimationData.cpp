@@ -23,6 +23,33 @@ std::ostream& megamol::core::utility::operator<<(
     return outs << ss.str();
 }
 
+float ExpressionInterpreter::EvaluateFloat(const std::string& script, KeyTimeType t) {
+    lua.set("time", t);
+    // I think this makes it too complicated
+    //sol::table in_t = lua["in_tangent"];
+    //in_t.clear();
+    //in_t.add(in_tangent[0], in_tangent[1]);
+    //sol::table out_t = lua["out_tangent"];
+    //out_t.clear();
+    //out_t.add(in_tangent[0], in_tangent[1]);
+    try {
+        const float res = lua.script(script);
+        return res;
+    } catch (sol::error& e) {
+        return 0.0f;
+    }
+}
+
+std::string ExpressionInterpreter::EvaluateString(const std::string& script, KeyTimeType t) {
+    lua.set("time", t);
+    try {
+        std::string res = lua.script(script);
+        return res;
+    } catch (sol::error& e) {
+        return "";
+    }
+}
+
 FloatKey::ValueType FloatKey::InterpolateForTime(FloatKey first, FloatKey second, KeyTimeType time) {
     FloatKey my_first = first;
     FloatKey my_second = second;
@@ -264,13 +291,13 @@ GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::Get
         if (keys.empty()) {
             return ValueType::ValueType();
         }
-        return keys.begin()->second.value;
+        return FloatKey::InterpolateForTime(keys.begin()->second, keys.begin()->second, time);
     }
     FloatKey before_key = keys.begin()->second, after_key = keys.begin()->second;
     bool ok = false;
     for (auto it = keys.begin(); it != keys.end(); ++it) {
         if (it->second.time == time) {
-            return it->second.value;
+            return FloatKey::InterpolateForTime(it->second, it->second, time);
         }
         if (it->second.time < time) {
             before_key = it->second;
@@ -284,7 +311,7 @@ GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::Get
     if (ok) {
         return FloatKey::InterpolateForTime(before_key, after_key, time);
     } else {
-        return before_key.value;
+        return FloatKey::InterpolateForTime(before_key, before_key, time);
     }
 }
 
@@ -293,7 +320,7 @@ template<>
 ImVec2 GenericAnimation<FloatKey>::GetTangent(KeyTimeType time) const {
     if (keys.size() < 2) {
         if (keys.empty()) {
-            return ImVec2();
+            return ImVec2(1.0, 0.0);
         }
         return keys.begin()->second.out_tangent;
     }
@@ -339,7 +366,7 @@ InterpolationType GenericAnimation<FloatKey>::GetInterpolation(KeyTimeType time)
 
 
 template<>
-float GenericAnimation<FloatKey>::GetMinValue() const {
+GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::GetMinValue() const {
     if (!keys.empty()) {
         auto min = std::numeric_limits<float>::max();
         for (auto& k : keys) {
@@ -352,7 +379,7 @@ float GenericAnimation<FloatKey>::GetMinValue() const {
 }
 
 template<>
-float GenericAnimation<FloatKey>::GetMaxValue() const {
+GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::GetMaxValue() const {
     if (!keys.empty()) {
         auto max = std::numeric_limits<float>::lowest();
         for (auto& k : keys) {
@@ -362,4 +389,16 @@ float GenericAnimation<FloatKey>::GetMaxValue() const {
     } else {
         return 1.0f;
     }
+}
+
+template<>
+GenericAnimation<ScriptedStringKey>::ValueType::ValueType GenericAnimation<ScriptedStringKey>::GetValue(
+    KeyTimeType time) const {
+    return ExpressionInterpreter::getInstance().EvaluateString(keys.begin()->second.script, time);
+}
+
+template<>
+GenericAnimation<ScriptedFloatKey>::ValueType::ValueType GenericAnimation<ScriptedFloatKey>::GetValue(
+    KeyTimeType time) const {
+    return ExpressionInterpreter::getInstance().EvaluateFloat(keys.begin()->second.script, time);
 }

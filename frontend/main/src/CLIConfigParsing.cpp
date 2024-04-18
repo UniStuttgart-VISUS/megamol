@@ -9,10 +9,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 
 #define CXXOPTS_VECTOR_DELIMITER '\0'
 #include <cxxopts.hpp>
-#include <fstream>
 
 // find user home
 static std::filesystem::path getHomeDir() {
@@ -809,8 +809,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
             accepted_log_level_strings,
         make_option_callback(echolevel_option));
 
-    //lua.AddCallbacks(lua_config_callbacks);
-
     for (auto& file : config.configuration_files) {
         cli_options_from_configs.clear();
         std::ifstream stream(file);
@@ -867,8 +865,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
             std::accumulate(file_contents_as_cli.begin(), file_contents_as_cli.end(), std::string(""),
                 [](std::string const& init, std::string const& elem) { return init + elem + " "; }));
     }
-
-    //lua.ClearCallbacks();
 
     return config;
 }

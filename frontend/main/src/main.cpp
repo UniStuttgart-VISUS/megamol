@@ -60,6 +60,12 @@ int main(const int argc, const char** argv) {
 #endif
     megamol::core::LuaAPI lua_api;
 
+    // when you have a REALLY bad day...
+    //int tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+    //tmpDbgFlag |= _CRTDBG_CHECK_ALWAYS_DF;
+    //tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
+    //_CrtSetDbgFlag(tmpDbgFlag);
+
     auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 
     const bool with_gl = !config.no_opengl;
@@ -265,9 +271,17 @@ int main(const int argc, const char** argv) {
     };
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
+#ifdef MEGAMOL_USE_PROFILING
+    megamol::frontend_resources::performance::ProfilingCallbacks profiling_callbacks;
+#endif
+    megamol::frontend_resources::FrameStatsCallbacks frame_stats_callbacks;
+
     const auto render_next_frame = [&]() -> bool {
 #ifdef MEGAMOL_USE_TRACY
         ZoneScopedNC("RenderNextFrame", 0x0000FF);
+#endif
+#ifdef MEGAMOL_USE_PROFILING
+        profiling_callbacks.mark_frame_start();
 #endif
 
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
@@ -297,6 +311,10 @@ int main(const int argc, const char** argv) {
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
+        frame_stats_callbacks.mark_frame();
+#ifdef MEGAMOL_USE_PROFILING
+        profiling_callbacks.mark_frame_end();
+#endif
         return true;
     };
 
@@ -328,6 +346,12 @@ int main(const int argc, const char** argv) {
         run_megamol = false;
         ret += 2;
     }
+
+    auto resources_map = megamol::frontend_resources::FrontendResourcesMap(services.getProvidedResources());
+#ifdef MEGAMOL_USE_PROFILING
+    profiling_callbacks = resources_map.get<megamol::frontend_resources::performance::ProfilingCallbacks>();
+#endif
+    frame_stats_callbacks = resources_map.get<megamol::frontend_resources::FrameStatsCallbacks>();
 
     // load project files via lua
     if (run_megamol && graph_resources_ok)
