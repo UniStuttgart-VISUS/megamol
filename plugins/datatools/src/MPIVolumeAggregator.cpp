@@ -79,12 +79,12 @@ bool datatools::MPIVolumeAggregator::manipulateData(
 
     if (metadata.GridType != geocalls::CARTESIAN && metadata.GridType != geocalls::RECTILINEAR) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "MPIVolumeAggregator cannot work with grid type %d", metadata.GridType);
+            "MPIVolumeAggregator cannot work with grid type %d", static_cast<int>(metadata.GridType));
         return false;
     }
     if (metadata.ScalarType != geocalls::FLOATING_POINT) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "MPIVolumeAggregator cannot work with scalar type %d", metadata.ScalarType);
+            "MPIVolumeAggregator cannot work with scalar type %d", static_cast<int>(metadata.ScalarType));
         return false;
     }
 

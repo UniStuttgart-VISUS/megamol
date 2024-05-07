@@ -18,6 +18,7 @@
 // clang-format on
 
 #include "FrameStatistics.h"
+#include "FrameStatsCallbacks.h"
 #include "ModuleGraphSubscription.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -552,6 +553,18 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     if (m_pimpl->config.windowPlacement.pos || m_pimpl->config.windowPlacement.fullScreen)
         ::glfwSetWindowPos(window_ptr, m_pimpl->config.windowPlacement.x, m_pimpl->config.windowPlacement.y);
 
+    if (!m_pimpl->config.windowIcons.empty()) {
+        std::vector<GLFWimage> images;
+        for (const auto& icon : m_pimpl->config.windowIcons) {
+            // const_cast is super annoying, but making an extra copy of the data just to remove const would be not
+            // better. Cast is required because GLFWimage member is defined non const, but glfwSetWindowIcon does only
+            // read the data and makes an internal copy anyway.
+            images.push_back(
+                {icon.width, icon.height, reinterpret_cast<unsigned char*>(const_cast<char*>(icon.pixels))});
+        }
+        glfwSetWindowIcon(window_ptr, images.size(), images.data());
+    }
+
     register_glfw_callbacks();
 
     int vsync = (m_pimpl->config.enableVsync) ? 1 : 0;
@@ -584,8 +597,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {frontend_resources::WindowManipulation_Req_Name, m_windowManipulation},
         {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
 
-    m_requestedResourcesNames = {
-        "FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
+    m_requestedResourcesNames = {"FrameStatistics", "FramebufferEvents",
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
+        frontend_resources::FrameStatsCallbacks_Req_Name};
 
     m_pimpl->last_time = std::chrono::system_clock::now();
 

@@ -4,6 +4,8 @@
  * All rights reserved.
  */
 
+#include <cmrc/cmrc.hpp>
+
 #include "CLIConfigParsing.h"
 #include "CUDA_Service.hpp"
 #include "Command_Service.hpp"
@@ -50,11 +52,19 @@ static void log_error(std::string const& text) {
 
 void loadPlugins(megamol::frontend_resources::PluginsResource& pluginsRes);
 
+CMRC_DECLARE(megamol_icons);
+
 int main(const int argc, const char** argv) {
 #ifdef MEGAMOL_USE_TRACY
     ZoneScoped;
 #endif
     megamol::core::LuaAPI lua_api;
+
+    // when you have a REALLY bad day...
+    //int tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+    //tmpDbgFlag |= _CRTDBG_CHECK_ALWAYS_DF;
+    //tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
+    //_CrtSetDbgFlag(tmpDbgFlag);
 
     auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 
@@ -98,6 +108,11 @@ int main(const int argc, const char** argv) {
     openglConfig.windowPlacement.noCursor = config.window_mode & RuntimeConfig::WindowMode::nocursor;
     openglConfig.windowPlacement.hidden = config.window_mode & RuntimeConfig::WindowMode::hidden;
     openglConfig.forceWindowSize = config.force_window_size;
+    static const auto icons_fs = cmrc::megamol_icons::get_filesystem();
+    openglConfig.windowIcons.push_back({16, 16, icons_fs.open("icon_016.bin").begin()});
+    openglConfig.windowIcons.push_back({32, 32, icons_fs.open("icon_032.bin").begin()});
+    openglConfig.windowIcons.push_back({48, 48, icons_fs.open("icon_048.bin").begin()});
+    openglConfig.windowIcons.push_back({256, 256, icons_fs.open("icon_256.bin").begin()});
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
@@ -256,9 +271,17 @@ int main(const int argc, const char** argv) {
     };
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
+#ifdef MEGAMOL_USE_PROFILING
+    megamol::frontend_resources::performance::ProfilingCallbacks profiling_callbacks;
+#endif
+    megamol::frontend_resources::FrameStatsCallbacks frame_stats_callbacks;
+
     const auto render_next_frame = [&]() -> bool {
 #ifdef MEGAMOL_USE_TRACY
         ZoneScopedNC("RenderNextFrame", 0x0000FF);
+#endif
+#ifdef MEGAMOL_USE_PROFILING
+        profiling_callbacks.mark_frame_start();
 #endif
 
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
@@ -288,6 +311,10 @@ int main(const int argc, const char** argv) {
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
+        frame_stats_callbacks.mark_frame();
+#ifdef MEGAMOL_USE_PROFILING
+        profiling_callbacks.mark_frame_end();
+#endif
         return true;
     };
 
@@ -320,6 +347,12 @@ int main(const int argc, const char** argv) {
         ret += 2;
     }
 
+    auto resources_map = megamol::frontend_resources::FrontendResourcesMap(services.getProvidedResources());
+#ifdef MEGAMOL_USE_PROFILING
+    profiling_callbacks = resources_map.get<megamol::frontend_resources::performance::ProfilingCallbacks>();
+#endif
+    frame_stats_callbacks = resources_map.get<megamol::frontend_resources::FrameStatsCallbacks>();
+
     // load project files via lua
     if (run_megamol && graph_resources_ok)
         for (auto& file : config.project_files) {
@@ -340,11 +373,11 @@ int main(const int argc, const char** argv) {
     if (graph_resources_ok)
         if (!config.cli_execute_lua_commands.empty()) {
             std::string lua_result;
-            bool cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, lua_result);
-            if (!cli_lua_ok) {
+            auto cli_lua_ok = lua_api.RunString(config.cli_execute_lua_commands, "magic_cli_exec_param");
+            if (!cli_lua_ok.valid()) {
                 run_megamol = false;
                 ret += 8;
-                log_error("Error in CLI Lua command: " + lua_result);
+                log_error("Error in CLI Lua command: " + lua_api.GetError(cli_lua_ok));
             }
         }
 

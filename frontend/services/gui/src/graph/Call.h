@@ -115,8 +115,8 @@ public:
         return this->profiling_parent_pointer;
     }
 
-    void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
-        const frontend_resources::PerformanceManager::timer_entry& entry);
+    void AppendPerformanceData(
+        frontend_resources::performance::frame_type frame, const frontend_resources::performance::timer_entry& entry);
 
     bool ShowProfiling() {
         return this->show_profiling_data;
