@@ -231,15 +231,15 @@ bool megamol::test_gl::rendering::SRTest::updateUploadSetting() {
 
 bool megamol::test_gl::rendering::SRTest::create() {
 #ifdef MEGAMOL_USE_PROFILING
-    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
-        frontend_resources.get<frontend_resources::PerformanceManager>());
-    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer, compute_timer;
+    auto& pm = const_cast<frontend_resources::performance::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::performance::PerformanceManager>());
+    frontend_resources::performance::basic_timer_config upload_timer, render_timer, compute_timer;
     upload_timer.name = "upload";
-    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    upload_timer.api = frontend_resources::performance::query_api::OPENGL;
     render_timer.name = "render";
-    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.api = frontend_resources::performance::query_api::OPENGL;
     compute_timer.name = "compute";
-    compute_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    compute_timer.api = frontend_resources::performance::query_api::OPENGL;
     timing_handles_ = pm.add_timers(this, {upload_timer, render_timer, compute_timer});
 #endif
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -318,8 +318,8 @@ void blit_fbo(std::shared_ptr<glowl::FramebufferObject>& org, std::shared_ptr<gl
 
 bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3DGL& cr) {
 #ifdef MEGAMOL_USE_PROFILING
-    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
-        frontend_resources.get<frontend_resources::PerformanceManager>());
+    auto& pm = const_cast<frontend_resources::performance::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::performance::PerformanceManager>());
 #endif
 
 #ifdef USE_NVPERF
@@ -452,19 +452,21 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
         pm.set_transient_comment(
             timing_handles_[0], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
-        pm.start_timer(timing_handles_[0]);
+        {
+            auto tm = pm.start_timer(timing_handles_[0]);
 #endif
-        //#ifdef USE_NVPERF
-        //        nvperf.PushRange("Upload");
-        //#endif
+            //#ifdef USE_NVPERF
+            //        nvperf.PushRange("Upload");
+            //#endif
 
-        rt->upload(data_);
+            rt->upload(data_);
 
 //#ifdef USE_NVPERF
 //        nvperf.PopRange();
 //#endif
 #ifdef MEGAMOL_USE_PROFILING
-        pm.stop_timer(timing_handles_[0]);
+            tm.end_region();
+        }
 #endif
 
         new_data = false;
@@ -482,23 +484,25 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
 #ifdef MEGAMOL_USE_PROFILING
     pm.set_transient_comment(timing_handles_[1], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
                                                      upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
-    pm.start_timer(timing_handles_[1]);
+    {
+        auto tm = pm.start_timer(timing_handles_[1]);
 #endif
 
 #ifdef USE_NVPERF
-    nvperf.PushRange((method_strings[static_cast<method_ut>(method)] + std::string(" ") +
-                      upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())])
-                         .c_str());
+        nvperf.PushRange((method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                          upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())])
+                             .c_str());
 #endif
 
-    rt->render(ubo_);
+        rt->render(ubo_);
 
 #ifdef USE_NVPERF
-    nvperf.PopRange();
+        nvperf.PopRange();
 #endif
 
 #ifdef MEGAMOL_USE_PROFILING
-    pm.stop_timer(timing_handles_[1]);
+        tm.end_region();
+    }
 #endif
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
