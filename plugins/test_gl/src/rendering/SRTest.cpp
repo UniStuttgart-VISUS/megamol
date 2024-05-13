@@ -453,7 +453,7 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
             timing_handles_[0], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
         {
-            auto tm = pm.start_timer(timing_handles_[0]);
+            auto& tm = pm.start_timer(timing_handles_[0]);
 #endif
             //#ifdef USE_NVPERF
             //        nvperf.PushRange("Upload");
@@ -482,10 +482,14 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
     }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
-    pm.set_transient_comment(timing_handles_[1], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
-                                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
+    
     {
-        auto tm = pm.start_timer(timing_handles_[1]);
+        GLuint qid = 0, fid = 0;
+        glCreateQueries(GL_SAMPLES_PASSED, 1, &qid);
+        glCreateQueries(GL_FRAGMENT_SHADER_INVOCATIONS, 1, &fid);
+        glBeginQuery(GL_SAMPLES_PASSED, qid);
+        glBeginQuery(GL_FRAGMENT_SHADER_INVOCATIONS, fid);
+        auto& tm = pm.start_timer(timing_handles_[1]);
 #endif
 
 #ifdef USE_NVPERF
@@ -502,6 +506,20 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
 
 #ifdef MEGAMOL_USE_PROFILING
         tm.end_region();
+        glEndQuery(GL_SAMPLES_PASSED);
+        glEndQuery(GL_FRAGMENT_SHADER_INVOCATIONS);
+        GLuint samples_passed = 0, frag_invoc = 0;
+        glGetQueryObjectuiv(qid, GL_QUERY_RESULT, &samples_passed);
+        //core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Num passed samples: %d", samples_passed);
+        glGetQueryObjectuiv(fid, GL_QUERY_RESULT, &frag_invoc);
+        //core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Fragment shader invocations: %d", frag_invoc);
+        glDeleteQueries(1, &qid);
+        glDeleteQueries(1, &fid);
+
+        pm.set_transient_comment(
+            timing_handles_[1], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                                    upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())] + std::string(" ") +
+                                    std::to_string(samples_passed) + std::string(" ") + std::to_string(frag_invoc));
     }
 #endif
     glDisable(GL_DEPTH_TEST);
