@@ -538,10 +538,12 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
         glDeleteQueries(1, &qid);
         glDeleteQueries(1, &fid);
 
-        pm.set_transient_comment(
-            timing_handles_[1], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
-                                    upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())] + std::string(" ") +
-                                    std::to_string(samples_passed) + std::string(" ") + std::to_string(frag_invoc));
+        pm.set_transient_comment(timing_handles_[1],
+            method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())] + std::string(" ") +
+                std::to_string(samples_passed) + std::string(" ") + std::to_string(frag_invoc) + std::string(" ") +
+                std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()) + std::string(" ") +
+                std::to_string(cam_aligned_slot_.Param<core::param::BoolParam>()->Value()));
     }
 #endif
     glDisable(GL_DEPTH_TEST);
