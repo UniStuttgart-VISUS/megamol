@@ -53,8 +53,12 @@ megamol::test_gl::rendering::SRTest::SRTest()
         method_strings[static_cast<method_ut>(method_e::SSBO_VERT)].c_str());
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_QUAD),
         method_strings[static_cast<method_ut>(method_e::SSBO_QUAD)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_QUAD_INST),
+        method_strings[static_cast<method_ut>(method_e::SSBO_QUAD_INST)].c_str());
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_STRIP),
         method_strings[static_cast<method_ut>(method_e::SSBO_STRIP)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_STRIP_DRAW),
+        method_strings[static_cast<method_ut>(method_e::SSBO_STRIP_DRAW)].c_str());
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_MUZIC),
         method_strings[static_cast<method_ut>(method_e::SSBO_MUZIC)].c_str());
     ep->SetTypePair(
@@ -128,11 +132,29 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
         shdr_ssbo_quads_options.addDefinition("INV_IDX", QUADS_INV_IDX);
         shdr_ssbo_quads_options.addDefinition("BUMP_IDX", QUADS_BUMP_IDX);
 
+        auto shdr_ssbo_quads_inst_options = base_options;
+        shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_QUAD__");
+        core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SRTest] Cam aligned {}", cam_aligned_slot_.Param<core::param::BoolParam>()->Value());
+        if (cam_aligned_slot_.Param<core::param::BoolParam>()->Value()) {
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        }
+        shdr_ssbo_quads_inst_options.addDefinition("BASE_IDX", QUADS_INST_BASE_IDX);
+        shdr_ssbo_quads_inst_options.addDefinition("INV_IDX", QUADS_INST_INV_IDX);
+        shdr_ssbo_quads_inst_options.addDefinition("BUMP_IDX", QUADS_INST_BUMP_IDX);
+
         auto shdr_ssbo_strip_options = base_options;
         shdr_ssbo_strip_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_strip_options.addDefinition("BASE_IDX", STRIP_BASE_IDX);
         shdr_ssbo_strip_options.addDefinition("INV_IDX", STRIP_INV_IDX);
         shdr_ssbo_strip_options.addDefinition("BUMP_IDX", STRIP_BUMP_IDX);
+
+        auto shdr_ssbo_strip_draw_options = base_options;
+        shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_strip_draw_options.addDefinition("BASE_IDX", STRIP_DRAW_BASE_IDX);
+        shdr_ssbo_strip_draw_options.addDefinition("INV_IDX", STRIP_DRAW_INV_IDX);
+        shdr_ssbo_strip_draw_options.addDefinition("BUMP_IDX", STRIP_DRAW_BUMP_IDX);
 
         auto shdr_ssbo_muzic_options = base_options;
         shdr_ssbo_muzic_options.addDefinition("__SRTEST_SSBO__");
@@ -162,7 +184,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
@@ -171,7 +195,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
@@ -180,7 +206,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
@@ -189,7 +217,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
@@ -199,7 +229,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
@@ -216,7 +248,11 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_QUAD, std::make_shared<ssbo_quad_rt>(mode, shdr_ssbo_quads_options)));
         rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_QUAD_INST, std::make_shared<ssbo_quad_inst_rt>(mode, shdr_ssbo_quads_inst_options)));
+        rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_STRIP, std::make_shared<ssbo_strip_rt>(mode, shdr_ssbo_strip_options)));
+        rendering_tasks_.insert(
+            std::make_pair(method_e::SSBO_STRIP_DRAW, std::make_shared<ssbo_strip_draw_rt>(mode, shdr_ssbo_strip_draw_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_MUZIC, std::make_shared<ssbo_muzic_rt>(mode, shdr_ssbo_muzic_options)));
 
@@ -893,9 +929,23 @@ megamol::test_gl::rendering::ssbo_quad_rt::ssbo_quad_rt(
               std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
 
+megamol::test_gl::rendering::ssbo_quad_inst_rt::ssbo_quad_inst_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_quads_inst, "SRTestSSBOQuadInst", options,
+              std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
+
+
 megamol::test_gl::rendering::ssbo_strip_rt::ssbo_strip_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_strip, "SRTestSSBOStrip", options,
+              std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
+
+
+megamol::test_gl::rendering::ssbo_strip_draw_rt::ssbo_strip_draw_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_strip_draw, "SRTestSSBOStripDraw", options,
               std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
               std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
