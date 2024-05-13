@@ -246,6 +246,8 @@ private:
 
     core::param::ParamSlot mesh_warp_size_slot_;
 
+    core::param::ParamSlot cam_aligned_slot_;
+
     // core::param::ParamSlot clip_thres_slot_;
 
     std::unordered_map<method_e, std::shared_ptr<rendering_task>> rendering_tasks_;

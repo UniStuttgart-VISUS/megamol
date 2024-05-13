@@ -32,6 +32,7 @@ megamol::test_gl::rendering::SRTest::SRTest()
         , enforce_upload_slot_("enforce upload", "")
         , use_con_ras_slot_("use_con_ras", "")
         , mesh_warp_size_slot_("mesh_warp_size", "")
+        , cam_aligned_slot_("cam_aligned", "")
 /*
 , clip_thres_slot_("clip distance", "")*/
 {
@@ -83,6 +84,9 @@ megamol::test_gl::rendering::SRTest::SRTest()
     mesh_warp_size_slot_ << new core::param::IntParam(32, 1, 32);
     MakeSlotAvailable(&mesh_warp_size_slot_);
 
+    cam_aligned_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&cam_aligned_slot_);
+
     /*clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
     MakeSlotAvailable(&clip_thres_slot_);*/
 }
@@ -105,6 +109,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
 
         auto shdr_ssbo_vert_options = base_options;
         shdr_ssbo_vert_options.addDefinition("__SRTEST_SSBO__");
+        if (cam_aligned_slot_.Param<core::param::BoolParam>()->Value()) {
+            shdr_ssbo_vert_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        }
         shdr_ssbo_vert_options.addDefinition("BASE_IDX", VERT_BASE_IDX);
         shdr_ssbo_vert_options.addDefinition("INV_IDX", VERT_INV_IDX);
         shdr_ssbo_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);
@@ -112,9 +119,11 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
         auto shdr_ssbo_quads_options = base_options;
         shdr_ssbo_quads_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_quads_options.addDefinition("__SRTEST_QUAD__");
-#ifdef __SRTEST_CAM_ALIGNED__
-        shdr_ssbo_quads_options.addDefinition("__SRTEST_CAM_ALIGNED__");
-#endif
+        core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SRTest] Cam aligned {}", cam_aligned_slot_.Param<core::param::BoolParam>()->Value());
+        if (cam_aligned_slot_.Param<core::param::BoolParam>()->Value()) {
+            shdr_ssbo_quads_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        }
         shdr_ssbo_quads_options.addDefinition("BASE_IDX", QUADS_BASE_IDX);
         shdr_ssbo_quads_options.addDefinition("INV_IDX", QUADS_INV_IDX);
         shdr_ssbo_quads_options.addDefinition("BUMP_IDX", QUADS_BUMP_IDX);
@@ -140,9 +149,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
 
         auto shdr_mesh_geo_options = base_options;
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
-#ifdef __SRTEST_CAM_ALIGNED__
-        shdr_mesh_geo_options.addDefinition("__SRTEST_CAM_ALIGNED__");
-#endif
+        if (cam_aligned_slot_.Param<core::param::BoolParam>()->Value()) {
+            shdr_mesh_geo_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        }
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
         shdr_mesh_geo_options.addDefinition("WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
 
@@ -408,10 +417,11 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
         upload_mode_slot_.ResetDirty();
         method_slot_.ResetDirty();
     }
-    if (mesh_warp_size_slot_.IsDirty()) {
+    if (mesh_warp_size_slot_.IsDirty() || cam_aligned_slot_.IsDirty()) {
         updateUploadSetting();
         new_data = true;
         mesh_warp_size_slot_.ResetDirty();
+        cam_aligned_slot_.ResetDirty();
     }
     auto method = static_cast<method_e>(method_slot_.Param<core::param::EnumParam>()->Value());
     auto& rt = rendering_tasks_[method];
