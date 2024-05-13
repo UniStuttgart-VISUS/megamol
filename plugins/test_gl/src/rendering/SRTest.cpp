@@ -818,7 +818,7 @@ bool megamol::test_gl::rendering::vao_rt::upload(data_package_t const& package) 
             package.positions[i].data(), 0);
         glEnableVertexArrayAttrib(vaos_[i], 0);
         glVertexArrayAttribFormat(vaos_[i], 0, 4, GL_FLOAT, GL_FALSE, 0);
-        glVertexArrayVertexBuffer(vaos_[i], 0, vbos_[0], 0, 4 * sizeof(float));
+        glVertexArrayVertexBuffer(vaos_[i], 0, vbos_[i], 0, 4 * sizeof(float));
         glVertexArrayAttribBinding(vaos_[i], 0, 0);
 
         glNamedBufferStorage(cbos_[i],
@@ -826,7 +826,7 @@ bool megamol::test_gl::rendering::vao_rt::upload(data_package_t const& package) 
             package.colors[i].data(), 0);
         glEnableVertexArrayAttrib(vaos_[i], 1);
         glVertexArrayAttribFormat(vaos_[i], 1, 4, GL_FLOAT, GL_FALSE, 0);
-        glVertexArrayVertexBuffer(vaos_[i], 1, cbos_[0], 0, 4 * sizeof(float));
+        glVertexArrayVertexBuffer(vaos_[i], 1, cbos_[i], 0, 4 * sizeof(float));
         glVertexArrayAttribBinding(vaos_[i], 1, 1);
     }
 
