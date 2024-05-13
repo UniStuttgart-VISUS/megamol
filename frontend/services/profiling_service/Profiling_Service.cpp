@@ -231,8 +231,8 @@ void Profiling_Service::fill_lua_callbacks() {
         "mmSetProfilingLogging", "(bool on)", [&](bool on) -> void { this->profiling_logging.active = on; });
 
     luaApi->RegisterCallback("mmGenerateCameraScenes",
-        "(string entrypoint, string camera_path_pattern, uint num_samples)",
-        [&graph, &luaApi](std::string entrypoint, std::string camera_path_pattern, int num_samples) -> std::string {
+        "(string entrypoint, string camera_path_pattern, uint num_samples, float dis)",
+        [&graph, &luaApi](std::string entrypoint, std::string camera_path_pattern, int num_samples, float dis) -> std::string {
             const auto entry = graph.FindModule(entrypoint);
             if (!entry)
                 luaApi->ThrowError("could not find entrypoint");
@@ -242,7 +242,7 @@ void Profiling_Service::fill_lua_callbacks() {
             auto cam_func = megamol::core::utility::GetCamScenesFunctional(camera_path_pattern);
             if (!cam_func)
                 luaApi->ThrowError("could not request camera path pattern");
-            auto camera_samples = megamol::core::utility::SampleCameraScenes(view, cam_func, num_samples);
+            auto camera_samples = megamol::core::utility::SampleCameraScenes(view, cam_func, num_samples, dis);
             if (camera_samples.empty())
                 luaApi->ThrowError("could not sample camera");
             return camera_samples;
