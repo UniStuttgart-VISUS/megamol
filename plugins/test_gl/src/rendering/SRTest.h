@@ -35,7 +35,7 @@ public:
 
     virtual ~vao_rt() = default;
 
-    bool render(GLuint ubo) override;
+    bool render(GLuint ubo, GLuint val = 0) override;
 
     bool upload(data_package_t const& package) override;
 
@@ -67,16 +67,18 @@ private:
 #define MUZIC_INV_IDX "gl_VertexID % 4" //"gl_VertexID % 4 + 1"
 #define MUZIC_BUMP_IDX "0"              //"-1"
 
-static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
-static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_TRIANGLES, 0, num_points * 6); };
-static draw_cmd_t dc_quads = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
-static draw_cmd_t dc_strip = [](unsigned int num_points) {
+static draw_cmd_t dc_points = [](unsigned int num_points, unsigned int) { glDrawArrays(GL_POINTS, 0, num_points); };
+static draw_cmd_t dc_verts = [](unsigned int num_points, unsigned int) {
+    glDrawArrays(GL_TRIANGLES, 0, num_points * 6);
+};
+static draw_cmd_t dc_quads = [](unsigned int num_points, unsigned int) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
+static draw_cmd_t dc_strip = [](unsigned int num_points, unsigned int) {
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, num_points);
 };
 static auto dc_muzic = [](unsigned int num_points, std::vector<uint32_t> const& indices) -> void {
     glDrawElements(GL_TRIANGLE_STRIP, num_points * 6 - 2, GL_UNSIGNED_INT, indices.data());
 };
-static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / MESH_WARP_SIZE + 1); };
+static draw_cmd_t dc_mesh = [](unsigned int num_points, unsigned int msize) { glDrawMeshTasksNV(0, num_points / msize + 1); };
 
 class ssbo_rt : public ssbo_shader_task {
 public:
@@ -119,7 +121,7 @@ public:
 
     virtual ~ssbo_muzic_rt() = default;
 
-    bool render(GLuint ubo) override;
+    bool render(GLuint ubo, GLuint val = 0) override;
 
     bool upload(data_package_t const& package) override;
 
@@ -241,6 +243,8 @@ private:
     core::param::ParamSlot enforce_upload_slot_;
 
     core::param::ParamSlot use_con_ras_slot_;
+
+    core::param::ParamSlot mesh_warp_size_slot_;
 
     // core::param::ParamSlot clip_thres_slot_;
 

@@ -11,6 +11,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd/light/DistantLight.h"
 
@@ -30,6 +31,7 @@ megamol::test_gl::rendering::SRTest::SRTest()
         , upload_mode_slot_("upload mode", "")
         , enforce_upload_slot_("enforce upload", "")
         , use_con_ras_slot_("use_con_ras", "")
+        , mesh_warp_size_slot_("mesh_warp_size", "")
 /*
 , clip_thres_slot_("clip distance", "")*/
 {
@@ -77,6 +79,9 @@ megamol::test_gl::rendering::SRTest::SRTest()
 
     use_con_ras_slot_ << new core::param::BoolParam(false);
     MakeSlotAvailable(&use_con_ras_slot_);
+
+    mesh_warp_size_slot_ << new core::param::IntParam(32, 1, 32);
+    MakeSlotAvailable(&mesh_warp_size_slot_);
 
     /*clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
     MakeSlotAvailable(&clip_thres_slot_);*/
@@ -127,9 +132,11 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
         shdr_ssbo_muzic_options.addDefinition("INV_IDX", MUZIC_INV_IDX);
         shdr_ssbo_muzic_options.addDefinition("BUMP_IDX", MUZIC_BUMP_IDX);
 
+        core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SRTest] Warp size is %d", mesh_warp_size_slot_.Param<core::param::IntParam>()->Value());
         auto shdr_mesh_options = base_options;
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
-        shdr_mesh_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
+        shdr_mesh_options.addDefinition("WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
 
         auto shdr_mesh_geo_options = base_options;
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
@@ -137,7 +144,7 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
         shdr_mesh_geo_options.addDefinition("__SRTEST_CAM_ALIGNED__");
 #endif
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
-        shdr_mesh_geo_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
+        shdr_mesh_geo_options.addDefinition("WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
 
         auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
 
@@ -401,6 +408,11 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
         upload_mode_slot_.ResetDirty();
         method_slot_.ResetDirty();
     }
+    if (mesh_warp_size_slot_.IsDirty()) {
+        updateUploadSetting();
+        new_data = true;
+        mesh_warp_size_slot_.ResetDirty();
+    }
     auto method = static_cast<method_e>(method_slot_.Param<core::param::EnumParam>()->Value());
     auto& rt = rendering_tasks_[method];
 
@@ -498,7 +510,7 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
                              .c_str());
 #endif
 
-        rt->render(ubo_);
+        rt->render(ubo_, mesh_warp_size_slot_.Param<core::param::IntParam>()->Value());
 
 #ifdef USE_NVPERF
         nvperf.PopRange();
@@ -743,7 +755,7 @@ megamol::test_gl::rendering::vao_rt::vao_rt(msf::ShaderFactoryOptionsOpenGL cons
               std::filesystem::path("test_gl/srtest/srtest.frag.glsl")) {}
 
 
-bool megamol::test_gl::rendering::vao_rt::render(GLuint ubo) {
+bool megamol::test_gl::rendering::vao_rt::render(GLuint ubo, GLuint val) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
@@ -883,7 +895,7 @@ megamol::test_gl::rendering::ssbo_muzic_rt::ssbo_muzic_rt(
               std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
 
-bool megamol::test_gl::rendering::ssbo_muzic_rt::render(GLuint ubo) {
+bool megamol::test_gl::rendering::ssbo_muzic_rt::render(GLuint ubo, GLuint val) {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
