@@ -198,7 +198,7 @@ bool SequenceRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
 
     // prepare the data
     if (!this->dataPrepared) {
-        unsigned int oldRowHeight = (unsigned int)this->rowHeight;
+        unsigned int oldRowHeight = (unsigned int) this->rowHeight;
         this->dataPrepared = this->PrepareData(mol, bs);
         if (oldRowHeight != this->rowHeight) {
             this->dataPrepared = this->PrepareData(mol, bs);
@@ -412,7 +412,7 @@ bool SequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
         // labeling
         for (unsigned int i = 0; i < this->aminoAcidStrings.size(); i++) {
-            for (unsigned int j = 0; j < (unsigned int)this->aminoAcidStrings[i].size(); j++) {
+            for (unsigned int j = 0; j < (unsigned int) this->aminoAcidStrings[i].size(); j++) {
                 // draw the one-letter amino acid code
                 font_.DrawString(mvp, fgColor, static_cast<float>(j) + 0.5f,
                     -(static_cast<float>(i) * this->rowHeight + 1.5f), 1.0f, false,
@@ -543,7 +543,7 @@ bool SequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         // render mouse hover
         if (this->mousePos.x > -1.0f && this->mousePos.x < static_cast<float>(this->resCols) &&
             this->mousePos.y > 0.0f && this->mousePos.y < static_cast<float>(this->resRows + 1) &&
-            this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount) {
+            this->mousePosResIdx > -1 && this->mousePosResIdx < (int) this->resCount) {
             positions = {glm::vec2(this->mousePos.x, -this->rowHeight * (this->mousePos.y - 1.0f)),
                 glm::vec2(this->mousePos.x, -this->rowHeight * (this->mousePos.y) + 0.5f),
                 glm::vec2(this->mousePos.x + 1.0f, -this->rowHeight * (this->mousePos.y) + 0.5f),
@@ -605,7 +605,7 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     // left click
     if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
         if (flags & view::MOUSEFLAG_MODKEY_ALT_DOWN) {
-            if (this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount) {
+            if (this->mousePosResIdx > -1 && this->mousePosResIdx < (int) this->resCount) {
                 if (!this->leftMouseDown) {
                     this->initialClickSelection = !this->selection[this->mousePosResIdx];
                 }
@@ -613,7 +613,7 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
             }
             consumeEvent = true;
         } else {
-            if (this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount) {
+            if (this->mousePosResIdx > -1 && this->mousePosResIdx < (int) this->resCount) {
                 this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
             }
         }

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 namespace megamol::frontend_resources {

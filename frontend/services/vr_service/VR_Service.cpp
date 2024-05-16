@@ -167,9 +167,7 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
     m_entry_points_registry.rename_entry_point = [&](auto const& name, auto const& newname) -> bool { return true; };
     m_entry_points_registry.clear_entry_points = [&]() -> void { vr_device(clear_entry_points()); };
     m_entry_points_registry.subscribe_to_entry_point_changes = [&](auto const& func) -> void {};
-    m_entry_points_registry.get_entry_point = [&](std::string const& name) -> auto{
-        return std::nullopt;
-    };
+    m_entry_points_registry.get_entry_point = [&](std::string const& name) -> auto { return std::nullopt; };
 
     auto& megamol_graph = m_requestedResourceReferences[1].getResource<core::MegaMolGraph>();
 #ifdef MEGAMOL_USE_VR_INTEROP

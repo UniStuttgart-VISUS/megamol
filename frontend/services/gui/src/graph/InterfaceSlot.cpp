@@ -313,7 +313,7 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
             // Drag & Drop
             if (ImGui::BeginDragDropTarget()) {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE)) {
-                    auto* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
+                    auto* dragged_slot_uid_ptr = (ImGuiID*) payload->Data;
                     state.interact.slot_drag_drop_uids.first = (*dragged_slot_uid_ptr);
                     state.interact.slot_drag_drop_uids.second = this->uid;
                 }

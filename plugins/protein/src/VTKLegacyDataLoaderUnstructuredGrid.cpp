@@ -242,12 +242,12 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                 std::cout << (int)fr->PeekPointDataByName("concentration")->PeekData()[i] << std::endl;
             }*/
 
-            for (int64_t i = 0; i < (int64_t)fr->GetNumberOfPoints(); i++) {
+            for (int64_t i = 0; i < (int64_t) fr->GetNumberOfPoints(); i++) {
                 // std::cout << conPtr[i] << std::endl;
-                dataVec[(unsigned int)i * 4 + 0] = velPtr[(unsigned int)i * 3 + 0];
-                dataVec[(unsigned int)i * 4 + 1] = velPtr[(unsigned int)i * 3 + 1];
-                dataVec[(unsigned int)i * 4 + 2] = velPtr[(unsigned int)i * 3 + 2];
-                dataVec[(unsigned int)i * 4 + 3] = conPtr[(unsigned int)i];
+                dataVec[(unsigned int) i * 4 + 0] = velPtr[(unsigned int) i * 3 + 0];
+                dataVec[(unsigned int) i * 4 + 1] = velPtr[(unsigned int) i * 3 + 1];
+                dataVec[(unsigned int) i * 4 + 2] = velPtr[(unsigned int) i * 3 + 2];
+                dataVec[(unsigned int) i * 4 + 3] = conPtr[(unsigned int) i];
 
                 /*if (i > 1) {
                     std::cout << dataVec[i * 4] << " " << dataVec[i * 4 + 1] << " " << dataVec[i * 4 + 2] << " " <<
@@ -259,7 +259,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
 #endif
             // Set vertex positions
             mpdc->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-                (const void*)(fr->GetData()->PeekPoints()));
+                (const void*) (fr->GetData()->PeekPoints()));
 
             mpdc->SetUnlocker(new VTKUnlocker(*fr));
 
@@ -294,7 +294,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
         this->resetFrameCache();
         if (this->nFrames > 0) {
             // Set number of frames
-            this->setFrameCount((unsigned int)std::min(
+            this->setFrameCount((unsigned int) std::min(
                 static_cast<size_t>(this->maxFramesSlot.Param<core::param::IntParam>()->Value()), this->nFrames));
             // Start the loading thread
             this->initFrameCache(this->maxCacheSizeSlot.Param<core::param::IntParam>()->Value());
@@ -310,7 +310,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
         this->maxCacheSizeSlot.ResetDirty();
         this->resetFrameCache();
         // Set number of frames
-        this->setFrameCount((unsigned int)std::min(
+        this->setFrameCount((unsigned int) std::min(
             static_cast<size_t>(this->maxFramesSlot.Param<core::param::IntParam>()->Value()), this->nFrames));
 
         // Start the loading thread
@@ -322,7 +322,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
     if (dc != NULL) {
 
         // Set frame count
-        dc->SetFrameCount((unsigned int)std::min(
+        dc->SetFrameCount((unsigned int) std::min(
             static_cast<size_t>(this->maxFramesSlot.Param<core::param::IntParam>()->Value()), this->nFrames));
 
         dc->AccessBoundingBoxes().Clear();
@@ -333,7 +333,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
         geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
         if (mpdc != NULL) {
             // Set frame count
-            mpdc->SetFrameCount((unsigned int)std::min(
+            mpdc->SetFrameCount((unsigned int) std::min(
                 static_cast<size_t>(this->maxFramesSlot.Param<core::param::IntParam>()->Value()), this->nFrames));
 
             mpdc->AccessBoundingBoxes().Clear();
@@ -373,9 +373,9 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
         this->filenamesDigits = b - a + 1;
 
         this->filenamesPrefix.Clear();
-        this->filenamesPrefix = filename.Substring(0, (int)a);
+        this->filenamesPrefix = filename.Substring(0, (int) a);
         this->filenamesSuffix.Clear();
-        this->filenamesSuffix = filename.Substring((int)b + 2);
+        this->filenamesSuffix = filename.Substring((int) b + 2);
 
         //        printf("DIGITS %i\n", this->filenamesDigits);
         //        printf("PREFIX %s\n", this->filenamesPrefix.PeekBuffer());
@@ -421,7 +421,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
         this->nFrames); // DEBUG
 
     // Set number of frames
-    this->setFrameCount((unsigned int)std::min(
+    this->setFrameCount((unsigned int) std::min(
         static_cast<size_t>(this->maxFramesSlot.Param<core::param::IntParam>()->Value()), this->nFrames));
 
 
@@ -458,7 +458,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 #endif // defined(VERBOSE)
 
     // Read data file to char buffer
-    char* buffer = new char[(unsigned int)fileSize];
+    char* buffer = new char[(unsigned int) fileSize];
     file.Open(
         frameFile, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY);
     file.Read(buffer, fileSize);
@@ -553,22 +553,22 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 //                                ((float*)(buffPt))[v*3+1],
 //                                ((float*)(buffPt))[v*3+2]);
 #ifdef NORMALIZE_RADIUS
-                        this->bbox.Set(((float*)(buffPt))[v * 3 + 0] /
+                        this->bbox.Set(((float*) (buffPt))[v * 3 + 0] /
                                            this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            ((float*)(buffPt))[v * 3 + 1] /
+                            ((float*) (buffPt))[v * 3 + 1] /
                                 this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            ((float*)(buffPt))[v * 3 + 2] /
+                            ((float*) (buffPt))[v * 3 + 2] /
                                 this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            ((float*)(buffPt))[v * 3 + 0] /
+                            ((float*) (buffPt))[v * 3 + 0] /
                                 this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            ((float*)(buffPt))[v * 3 + 1] /
+                            ((float*) (buffPt))[v * 3 + 1] /
                                 this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            ((float*)(buffPt))[v * 3 + 2] /
+                            ((float*) (buffPt))[v * 3 + 2] /
                                 this->globalRadiusParam.Param<core::param::FloatParam>()->Value());
 #else
-                        this->bbox.Set(((float*)(buffPt))[v * 3 + 0], ((float*)(buffPt))[v * 3 + 1],
-                            ((float*)(buffPt))[v * 3 + 2], ((float*)(buffPt))[v * 3 + 0], ((float*)(buffPt))[v * 3 + 1],
-                            ((float*)(buffPt))[v * 3 + 2]);
+                        this->bbox.Set(((float*) (buffPt))[v * 3 + 0], ((float*) (buffPt))[v * 3 + 1],
+                            ((float*) (buffPt))[v * 3 + 2], ((float*) (buffPt))[v * 3 + 0],
+                            ((float*) (buffPt))[v * 3 + 1], ((float*) (buffPt))[v * 3 + 2]);
 #endif
 
                         //                        printf("Bounding box %f %f %f %f %f %f\n",
@@ -581,15 +581,15 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 
                     } else {
 #ifdef NORMALIZE_RADIUS
-                        this->bbox.GrowToPoint(((float*)(buffPt))[v * 3 + 0] /
+                        this->bbox.GrowToPoint(((float*) (buffPt))[v * 3 + 0] /
                                                    this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            ((float*)(buffPt))[v * 3 + 1] /
+                            ((float*) (buffPt))[v * 3 + 1] /
                                 this->globalRadiusParam.Param<core::param::FloatParam>()->Value(),
-                            ((float*)(buffPt))[v * 3 + 2] /
+                            ((float*) (buffPt))[v * 3 + 2] /
                                 this->globalRadiusParam.Param<core::param::FloatParam>()->Value());
 #else
-                        this->bbox.GrowToPoint(((float*)(buffPt))[v * 3 + 0], ((float*)(buffPt))[v * 3 + 1],
-                            ((float*)(buffPt))[v * 3 + 2]);
+                        this->bbox.GrowToPoint(((float*) (buffPt))[v * 3 + 0], ((float*) (buffPt))[v * 3 + 1],
+                            ((float*) (buffPt))[v * 3 + 2]);
 #endif
                         //                        printf("VERTEX %f %f %f\n",
                         //                                ((float*)(buffPt))[v*3+0],
@@ -669,7 +669,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(core::view::AnimDataModule::
 #endif // defined(VERBOSE)
 
     // Read data file to char buffer
-    char* buffer = new char[(unsigned int)fileSize];
+    char* buffer = new char[(unsigned int) fileSize];
     file.Open(
         frameFile, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::OPEN_ONLY);
     file.Read(buffer, fileSize);
@@ -777,7 +777,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::readASCIIFloats(char*& buffPt, float* 
         token = this->readNextToken(buffPt);
         //        if (i%1000==0) printf("Token %i: %f\n", i, atof(token.PeekBuffer()));
         //        printf("Token %i: %f\n", i, atof(token.PeekBuffer()));
-        out[i] = (float)atof(token.PeekBuffer());
+        out[i] = (float) atof(token.PeekBuffer());
         this->seekNextToken(buffPt);
     }
 }
@@ -842,7 +842,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::readCells(char*& buffPt, core::view::A
 #ifdef SWAP_BYTES
         this->swapBytes(buffPt, 4, cellDataSize);
 #endif
-        fr->SetCellIndexData((const int*)(buffPt), cellDataSize);
+        fr->SetCellIndexData((const int*) (buffPt), cellDataSize);
     }
 
     // Increment buffer pointer
@@ -890,7 +890,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::readCellTypes(char*& buffPt, core::vie
 #ifdef SWAP_BYTES
         this->swapBytes(buffPt, 4, cellCnt);
 #endif
-        fr->SetCellTypes((const int*)(buffPt), cellCnt);
+        fr->SetCellTypes((const int*) (buffPt), cellCnt);
     }
 
     buffPt += cellCnt * sizeof(int);
@@ -995,10 +995,10 @@ void VTKLegacyDataLoaderUnstructuredGrid::readPoints(char*& buffPt, core::view::
 #endif
 #ifdef NORMALIZE_RADIUS
         for (unsigned int i = 0; i < vertexCnt * 3; i++) {
-            ((float*)(buffPt))[i] /= this->globalRadiusParam.Param<core::param::FloatParam>()->Value();
+            ((float*) (buffPt))[i] /= this->globalRadiusParam.Param<core::param::FloatParam>()->Value();
         }
 #endif
-        fr->SetPoints((const float*)(buffPt), vertexCnt);
+        fr->SetPoints((const float*) (buffPt), vertexCnt);
         // Increment buffer pointer
         buffPt += vertexCnt * 3 * sizeof(float); // TODO assumes float
     }
@@ -1053,7 +1053,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::readFieldData(
             if (t == AbstractVTKLegacyData::FLOAT) {
                 float* tempBuff = new float[nComponents * nTupel];
                 this->readASCIIFloats(buffPt, tempBuff, nComponents * nTupel);
-                fr->AddPointData((const char*)(tempBuff), nTupel, nComponents, t, fieldId);
+                fr->AddPointData((const char*) (tempBuff), nTupel, nComponents, t, fieldId);
                 delete[] tempBuff;
             } else {
                 printf("TODO\n"); // TODO?
@@ -1118,7 +1118,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::readDataArray(char*& buffPt, core::vie
         if (t == AbstractVTKLegacyData::FLOAT) {
             float* tempBuff = new float[nTupels * nComponents];
             this->readASCIIFloats(buffPt, tempBuff, nTupels);
-            fr->AddPointData((const char*)(tempBuff), nTupels, nComponents, t, fieldId);
+            fr->AddPointData((const char*) (tempBuff), nTupels, nComponents, t, fieldId);
             delete[] tempBuff;
         } else {
             printf("TODO\n"); // TODO?

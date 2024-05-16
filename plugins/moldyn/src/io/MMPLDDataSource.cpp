@@ -207,7 +207,7 @@ void MMPLDDataSource::Frame::SetData(
             p += sizeof(unsigned int);
             ci->sizeofPlainData = *this->dat.AsAt<size_t>(p);
             p += sizeof(size_t);
-            ci->plainData = (unsigned int*)malloc(ci->sizeofPlainData);
+            ci->plainData = (unsigned int*) malloc(ci->sizeofPlainData);
             memcpy(ci->plainData, this->dat.At(p), ci->sizeofPlainData);
             p += ci->sizeofPlainData;
             pts.SetClusterInfos(ci);
@@ -408,8 +408,8 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
     if (this->limitMemorySlot.Param<core::param::BoolParam>()->Value()) {
-        mem = vislib::math::Min(
-            mem, (UINT64)(this->limitMemorySizeSlot.Param<core::param::IntParam>()->Value()) * (UINT64)(1024u * 1024u));
+        mem = vislib::math::Min(mem,
+            (UINT64) (this->limitMemorySizeSlot.Param<core::param::IntParam>()->Value()) * (UINT64) (1024u * 1024u));
     }
     unsigned int cacheSize = static_cast<unsigned int>(mem / size);
 

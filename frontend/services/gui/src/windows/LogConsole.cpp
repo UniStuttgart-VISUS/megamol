@@ -70,7 +70,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
         }
 
         // Build a list of candidates
-        const std::string input = std::string(word_start, (int)(word_end - word_start));
+        const std::string input = std::string(word_start, (int) (word_end - word_start));
         user_data->autocomplete_candidates.clear();
         for (int i = 0; i < user_data->commands.size(); i++) {
             if (gui_utils::CaseInsensitiveStringContain(user_data->commands[i].first, input)) {
@@ -89,7 +89,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
         } else {
             // Multiple matches. Complete as much as we can..
             // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
-            int match_len = (int)(word_end - word_start);
+            int match_len = (int) (word_end - word_start);
             for (;;) {
                 int c = 0;
                 bool all_candidates_matches = true;
@@ -104,7 +104,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
             }
 
             if (match_len > 0) {
-                data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+                data->DeleteChars((int) (word_start - data->Buf), (int) (word_end - word_start));
                 data->InsertChars(data->CursorPos, user_data->autocomplete_candidates[0].first.data(),
                     user_data->autocomplete_candidates[0].first.data() + match_len);
             }
@@ -215,7 +215,7 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , input_shared_data(nullptr)
         , input_reclaim_focus(false)
         , input_buffer()
-        , input_lua_func(nullptr)
+        , luaApi(nullptr)
         , is_autocomplete_popup_open(false) {
     auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(this->echo_log_stream);
     sink->set_pattern(core::utility::log::Log::std_pattern);
@@ -347,7 +347,7 @@ bool megamol::gui::LogConsole::Draw() {
     ImGui::BeginChild("log_messages",
         ImVec2(0.0f,
             ImGui::GetWindowHeight() - (3.0f * ImGui::GetFrameHeightWithSpacing()) - (3.0f * style.FramePadding.y)),
-        true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar);
+        ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
     auto message_count = 0ull;
     if (this->win_log_level != megamol::core::utility::log::Log::log_level::none) {
@@ -420,19 +420,19 @@ bool megamol::gui::LogConsole::Draw() {
                                            ImGuiInputTextFlags_CallbackCompletion |
                                            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
     if (ImGui::InputText("###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback,
-            (void*)this->input_shared_data.get())) {
+            (void*) this->input_shared_data.get())) {
         std::string command = this->input_buffer;
-        auto result = (*this->input_lua_func)(command);
-        if (std::get<0>(result)) {
+        auto result = this->luaApi->RunString(command);
+        if (result.valid()) {
             // command was fine, no editing required
-            auto blah = std::get<1>(result);
+            auto blah = luaApi->TypeToString(result);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(blah.c_str());
             this->input_shared_data->history.back() = this->input_buffer;
             this->input_shared_data->history.emplace_back("");
             this->input_shared_data->history_index = this->input_shared_data->history.size() - 1;
             this->input_buffer.clear();
         } else {
-            auto blah = std::get<1>(result);
+            auto blah = luaApi->GetError(result);
             megamol::core::utility::log::Log::DefaultLog.WriteError(blah.c_str());
         }
         this->input_reclaim_focus = true;
@@ -492,13 +492,13 @@ bool megamol::gui::LogConsole::Draw() {
 }
 
 
-void LogConsole::SetLuaFunc(lua_func_type* func) {
-    this->input_lua_func = func;
+void LogConsole::SetLuaAPI(core::LuaAPI* luaApi) {
+    this->luaApi = luaApi;
 
     if (this->input_shared_data->commands.empty()) {
-        auto result = (*this->input_lua_func)("return mmHelp()");
-        if (std::get<0>(result)) {
-            auto res = std::get<1>(result);
+        auto result = luaApi->RunString("return mmHelp()");
+        if (result.valid()) {
+            auto res = result.get<std::string>();
             std::regex cmd_regex("mm[A-Z]\\w+(.*)", std::regex_constants::ECMAScript);
             auto cmd_begin = std::sregex_iterator(res.begin(), res.end(), cmd_regex);
             auto cmd_end = std::sregex_iterator();

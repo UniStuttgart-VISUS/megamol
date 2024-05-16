@@ -19,7 +19,7 @@
 #ifdef __cplusplus
 #define NULL (0)
 #else
-#define NULL ((void*)0)
+#define NULL ((void*) 0)
 #endif /* __cplusplus */
 #endif /* NULL */
 
@@ -42,7 +42,7 @@
 #ifndef ARY_SAFE_DELETE
 #define ARY_SAFE_DELETE(ptr) \
     if ((ptr) != NULL) {     \
-        delete[](ptr);       \
+        delete[] (ptr);      \
         (ptr) = NULL;        \
     }
 #endif /* !ARY_SAFE_DELETE */

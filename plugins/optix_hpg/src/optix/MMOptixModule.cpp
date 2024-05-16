@@ -70,7 +70,7 @@ std::tuple<CUmodule, CUfunction> get_bounds_function(std::string const& ptx_code
         CU_JIT_ERROR_LOG_BUFFER,
         CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
     };
-    void* optionValues[] = {(void*)0, (char*)log, (unsigned int*)&log_size};
+    void* optionValues[] = {(void*) 0, (char*) log, (unsigned int*) &log_size};
     CUDA_CHECK_ERROR(cuModuleLoadDataEx(&bounds_module, ptx_out.c_str(), 3, options, optionValues));
 #if DEBUG
     if (log_size > 1) {
@@ -274,7 +274,7 @@ void megamol::optix_hpg::MMOptixModule::ComputeBounds(
 
     glm::uvec3 gridDims(numBlocks_x, numBlocks_y, numBlocks_z);
 
-    void* args[] = {&data_in, &bounds_out, (void*)&num_elements};
+    void* args[] = {&data_in, &bounds_out, (void*) &num_elements};
 
     CUDA_CHECK_ERROR(cuLaunchKernel(bounds_function_, gridDims.x, gridDims.y, gridDims.z, blockDims.x, blockDims.y,
         blockDims.z, 0, stream, args, nullptr));

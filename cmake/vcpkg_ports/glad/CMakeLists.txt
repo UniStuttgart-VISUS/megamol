@@ -10,7 +10,7 @@ set(source_files
 set(header_files
   include/glad/gl.h
   include/glad/vulkan.h
-  include/KHR/khrplatform.h
+  #include/KHR/khrplatform.h
   include/vk_platform.h)
 
 if (UNIX)
@@ -21,11 +21,15 @@ elseif (WIN32)
   list(APPEND header_files "include/glad/wgl.h")
 endif ()
 
+# See note in portfile.cmake on external khrplatform.h
+find_path(KHRPLATFORM_INCLUDE_DIR "KHR/khrplatform.h")
+
 add_library(${PROJECT_NAME} STATIC ${source_files} ${header_files})
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${KHRPLATFORM_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS})
 

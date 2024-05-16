@@ -11,18 +11,20 @@ RUN dnf -y update && dnf -y install \
   ninja-build \
   git \
   clang \
-# vcpkg
+# vcpkg:
   curl zip unzip tar \
+# vcpkg meson (for libsystemd): \
+  diffutils python3-jinja2 \
 # ci checks:
   clang-tools-extra \
-# openssl
+# openssl:
   perl-core \
-# glfw
+# glfw:
   libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel \
-# gmp
+# gmp:
   libtool \
-# mpfr
+# mpfr:
   autoconf-archive \
-# OpenGL
+# OpenGL:
   mesa-libGL-devel mesa-libGLU-devel \
   && dnf clean all

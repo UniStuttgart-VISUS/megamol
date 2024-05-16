@@ -512,9 +512,9 @@ bool MDDriverConnector::sendHeader() {
  */
 int MDDriverConnector::byteSwap(int input) {
     char output[4];
-    output[0] = ((char*)&input)[3];
-    output[1] = ((char*)&input)[2];
-    output[2] = ((char*)&input)[1];
-    output[3] = ((char*)&input)[0];
-    return *((int*)output);
+    output[0] = ((char*) &input)[3];
+    output[1] = ((char*) &input)[2];
+    output[2] = ((char*) &input)[1];
+    output[3] = ((char*) &input)[0];
+    return *((int*) output);
 }

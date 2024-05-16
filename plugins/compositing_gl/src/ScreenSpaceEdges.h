@@ -11,6 +11,7 @@
 
 #include <glowl/glowl.h>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -101,6 +102,15 @@ private:
 
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot camera_slot_;
+
+    /**
+     * \brief Updates texture format variables and recompiles shaders.
+     *
+     * @return 'true' if successfully updated, 'false' otherwise
+     */
+    bool textureFormatUpdate();
+
+    CompositingOutHandler outHandler_;
 };
 
 } // namespace megamol::compositing_gl

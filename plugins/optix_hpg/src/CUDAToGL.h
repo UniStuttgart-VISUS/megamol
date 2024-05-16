@@ -42,7 +42,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<glowl::Framebuff
 
     fbo = std::make_shared<CUDAFramebuffer>();
 
-    glGenTextures(1, (GLuint*)&fbo->data.col_tex);
+    glGenTextures(1, (GLuint*) &fbo->data.col_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.col_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -66,7 +66,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<glowl::Framebuff
 
     CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->colorBuffer, &surf_desc));
 
-    glGenTextures(1, (GLuint*)&fbo->data.depth_tex);
+    glGenTextures(1, (GLuint*) &fbo->data.depth_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.depth_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

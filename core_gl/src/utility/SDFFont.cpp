@@ -297,13 +297,13 @@ void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm, const f
         return;
 
     // Bind glyph data in batch cache
-    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+    for (unsigned int i = 0; i < (unsigned int) this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
-        if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat),
+        if (this->vbos[i].index == (GLuint) VBOAttrib::POSITION) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) this->posBatchCache.size() * sizeof(GLfloat),
                 &this->posBatchCache.front(), GL_STATIC_DRAW);
-        } else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat),
+        } else if (this->vbos[i].index == (GLuint) VBOAttrib::TEXTURE) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) this->texBatchCache.size() * sizeof(GLfloat),
                 &this->texBatchCache.front(), GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -311,7 +311,7 @@ void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm, const f
 
     // Draw batch cache
     unsigned int glyphCnt =
-        ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
+        ((unsigned int) this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
     this->render(mvm, pm, glyphCnt, &col);
 }
 
@@ -322,16 +322,16 @@ void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const {
         return;
 
     // Bind glyph data in batch cache
-    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+    for (unsigned int i = 0; i < (unsigned int) this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
-        if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->posBatchCache.size() * sizeof(GLfloat),
+        if (this->vbos[i].index == (GLuint) VBOAttrib::POSITION) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) this->posBatchCache.size() * sizeof(GLfloat),
                 &this->posBatchCache.front(), GL_STATIC_DRAW);
-        } else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->texBatchCache.size() * sizeof(GLfloat),
+        } else if (this->vbos[i].index == (GLuint) VBOAttrib::TEXTURE) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) this->texBatchCache.size() * sizeof(GLfloat),
                 &this->texBatchCache.front(), GL_STATIC_DRAW);
-        } else if (this->vbos[i].index == (GLuint)VBOAttrib::COLOR) {
-            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)this->colBatchCache.size() * sizeof(GLfloat),
+        } else if (this->vbos[i].index == (GLuint) VBOAttrib::COLOR) {
+            glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) this->colBatchCache.size() * sizeof(GLfloat),
                 &this->colBatchCache.front(), GL_STATIC_DRAW);
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -339,7 +339,7 @@ void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const {
 
     // Draw batch cache
     unsigned int glyphCnt =
-        ((unsigned int)this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
+        ((unsigned int) this->posBatchCache.size() / 18); // 18 = 2 Triangles * 3 Vertices * 3 Coordinates
     this->render(mvm, pm, glyphCnt, nullptr);
 }
 
@@ -352,7 +352,7 @@ void SDFFont::Deinitialise() {
     this->shadervertcol.reset();
 
     // VBOs
-    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+    for (unsigned int i = 0; i < (unsigned int) this->vbos.size(); i++) {
         glDeleteBuffers(1, &this->vbos[i].handle);
     }
     this->vbos.clear();
@@ -454,20 +454,21 @@ int* SDFFont::buildGlyphRun(const char* txt, float maxWidth) const {
             idx = static_cast<unsigned int>(byte);
         } else { // ... else if byte >= 128 => UTF8-Byte: 1XXXXXXX
             // Supporting UTF8 for up to 3 bytes:
-            if (byte >= (unsigned char)(0b11100000)) { // => >224 - 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
+            if (byte >=
+                (unsigned char) (0b11100000)) { // => >224 - 1110XXXX -> start 3-Byte UTF8, 2 bytes are following
                 folBytes = 2;
-                idx = (unsigned int)(byte & (unsigned char)(0b00001111)); // => consider only last 4 bits
-                idx = (idx << 12);                                        // => 2*6 Bits are following
+                idx = (unsigned int) (byte & (unsigned char) (0b00001111)); // => consider only last 4 bits
+                idx = (idx << 12);                                          // => 2*6 Bits are following
                 continue;
             } else if (byte >=
-                       (unsigned char)(0b11000000)) { // => >192 - 110XXXXX -> start 2-Byte UTF8, 1 byte is following
+                       (unsigned char) (0b11000000)) { // => >192 - 110XXXXX -> start 2-Byte UTF8, 1 byte is following
                 folBytes = 1;
-                idx = (unsigned int)(byte & (unsigned char)(0b00011111)); // => consider only last 5 bits
-                idx = (idx << 6);                                         // => 1*6 Bits are following
+                idx = (unsigned int) (byte & (unsigned char) (0b00011111)); // => consider only last 5 bits
+                idx = (idx << 6);                                           // => 1*6 Bits are following
                 continue;
-            } else if (byte >= (unsigned char)(0b10000000)) { // => >128 - 10XXXXXX -> "following" 1-2 bytes
+            } else if (byte >= (unsigned char) (0b10000000)) { // => >128 - 10XXXXXX -> "following" 1-2 bytes
                 folBytes--;
-                tmpIdx = (unsigned int)(byte & (unsigned char)(0b00111111)); // => consider only last 6 bits
+                tmpIdx = (unsigned int) (byte & (unsigned char) (0b00111111)); // => consider only last 6 bits
                 idx = (idx | (tmpIdx << (folBytes *
                                          6))); // => shift tmpIdx depending on following byte and 'merge' (|) with idx
                 if (folBytes > 0)
@@ -475,7 +476,7 @@ int* SDFFont::buildGlyphRun(const char* txt, float maxWidth) const {
             }
         }
         // Check if glyph info is available
-        if (idx > (unsigned int)this->glyphIdcs.size()) {
+        if (idx > (unsigned int) this->glyphIdcs.size()) {
             /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] Glyph index greater than available: \"%i\" > max. Index = \"%i\".\n", idx, this->idxCnt);
             continue;
         }
@@ -739,12 +740,12 @@ void SDFFont::drawGlyphs(const glm::mat4& mvm, const glm::mat4& pm, const float 
         }
     } else {
         // ... or draw glyphs instantly.
-        for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+        for (unsigned int i = 0; i < (unsigned int) this->vbos.size(); i++) {
             glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
-            if (this->vbos[i].index == (GLuint)VBOAttrib::POSITION) {
-                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)posCnt * sizeof(GLfloat), posData, GL_STATIC_DRAW);
-            } else if (this->vbos[i].index == (GLuint)VBOAttrib::TEXTURE) {
-                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)texCnt * sizeof(GLfloat), texData, GL_STATIC_DRAW);
+            if (this->vbos[i].index == (GLuint) VBOAttrib::POSITION) {
+                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) posCnt * sizeof(GLfloat), posData, GL_STATIC_DRAW);
+            } else if (this->vbos[i].index == (GLuint) VBOAttrib::TEXTURE) {
+                glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) texCnt * sizeof(GLfloat), texData, GL_STATIC_DRAW);
             }
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
@@ -817,7 +818,7 @@ void SDFFont::render(
     }
     usedShader->setUniform("smoothMode", static_cast<int>(this->smoothMode));
 
-    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)glyph_count * 6); // 2 triangles per glyph -> 6 vertices
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei) glyph_count * 6); // 2 triangles per glyph -> 6 vertices
 
     glUseProgram(0); // instead of usedShader->Disable() => because draw() is CONST
     glBindVertexArray(0);
@@ -904,7 +905,7 @@ bool SDFFont::loadFontBuffers() {
     if (glIsVertexArray(this->vaoHandle)) {
         glDeleteVertexArrays(1, &this->vaoHandle);
     }
-    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+    for (unsigned int i = 0; i < (unsigned int) this->vbos.size(); i++) {
         glDeleteBuffers(1, &this->vbos[i].handle);
     }
     this->vbos.clear();
@@ -917,19 +918,19 @@ bool SDFFont::loadFontBuffers() {
 
     // VBO for position data
     newVBO.name = "inPos";
-    newVBO.index = (GLuint)VBOAttrib::POSITION;
+    newVBO.index = (GLuint) VBOAttrib::POSITION;
     newVBO.dim = 3;
     this->vbos.push_back(newVBO);
 
     // VBO for texture data
     newVBO.name = "inTexCoord";
-    newVBO.index = (GLuint)VBOAttrib::TEXTURE;
+    newVBO.index = (GLuint) VBOAttrib::TEXTURE;
     newVBO.dim = 2;
     this->vbos.push_back(newVBO);
 
     // VBO for texture data
     newVBO.name = "inColor";
-    newVBO.index = (GLuint)VBOAttrib::COLOR;
+    newVBO.index = (GLuint) VBOAttrib::COLOR;
     newVBO.dim = 4;
     this->vbos.push_back(newVBO);
 
@@ -939,20 +940,20 @@ bool SDFFont::loadFontBuffers() {
     glGenVertexArrays(1, &this->vaoHandle);
     glBindVertexArray(this->vaoHandle);
 
-    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+    for (unsigned int i = 0; i < (unsigned int) this->vbos.size(); i++) {
         glGenBuffers(1, &this->vbos[i].handle);
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
         // Create empty buffer
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
         // Bind buffer to vertex attribute
         glEnableVertexAttribArray(this->vbos[i].index);
-        glVertexAttribPointer(this->vbos[i].index, this->vbos[i].dim, GL_FLOAT, GL_FALSE, 0, (GLubyte*)nullptr);
+        glVertexAttribPointer(this->vbos[i].index, this->vbos[i].dim, GL_FLOAT, GL_FALSE, 0, (GLubyte*) nullptr);
     }
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
+    for (unsigned int i = 0; i < (unsigned int) this->vbos.size(); i++) {
         glDisableVertexAttribArray(this->vbos[i].index);
     }
 
@@ -1001,48 +1002,48 @@ bool SDFFont::loadFontInfo(std::filesystem::path filepath) {
         if (line.rfind("common ", 0) == 0) { // starts with
 
             idx = line.find("scaleW=", 0);
-            texWidth = (float)std::atof(line.substr(idx + 7, 4).c_str());
+            texWidth = (float) std::atof(line.substr(idx + 7, 4).c_str());
 
             idx = line.find("scaleH=", 0);
-            texHeight = (float)std::atof(line.substr(idx + 7, 4).c_str());
+            texHeight = (float) std::atof(line.substr(idx + 7, 4).c_str());
 
             idx = line.find("lineHeight=", 0);
-            lineHeight = (float)std::atof(line.substr(idx + 11, 4).c_str());
+            lineHeight = (float) std::atof(line.substr(idx + 11, 4).c_str());
         }
         // (2) Parse character info
         else if (line.rfind("char ", 0) == 0) {
             SDFGlyphInfo newChar;
 
             idx = line.find("id=", 0);
-            newChar.id = (unsigned int)std::atoi(line.substr(idx + 3, 5).c_str());
+            newChar.id = (unsigned int) std::atoi(line.substr(idx + 3, 5).c_str());
 
             if (maxId < newChar.id) {
                 maxId = newChar.id;
             }
 
             idx = line.find("x=", 0);
-            newChar.texX0 = (float)std::atof(line.substr(idx + 2, 4).c_str()) / texWidth;
+            newChar.texX0 = (float) std::atof(line.substr(idx + 2, 4).c_str()) / texWidth;
 
             idx = line.find("y=", 0);
-            newChar.texY0 = (float)std::atof(line.substr(idx + 2, 4).c_str()) / texHeight;
+            newChar.texY0 = (float) std::atof(line.substr(idx + 2, 4).c_str()) / texHeight;
 
             idx = line.find("width=", 0);
-            width = (float)std::atof(line.substr(idx + 6, 4).c_str());
+            width = (float) std::atof(line.substr(idx + 6, 4).c_str());
 
             idx = line.find("height=", 0);
-            height = (float)std::atof(line.substr(idx + 7, 4).c_str());
+            height = (float) std::atof(line.substr(idx + 7, 4).c_str());
 
             newChar.width = width / lineHeight;
             newChar.height = height / lineHeight;
 
             idx = line.find("xoffset=", 0);
-            newChar.xoffset = (float)std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
+            newChar.xoffset = (float) std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
 
             idx = line.find("yoffset=", 0);
-            newChar.yoffset = (float)std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
+            newChar.yoffset = (float) std::atof(line.substr(idx + 8, 4).c_str()) / lineHeight;
 
             idx = line.find("xadvance=", 0);
-            newChar.xadvance = (float)std::atof(line.substr(idx + 9, 4).c_str()) / lineHeight;
+            newChar.xadvance = (float) std::atof(line.substr(idx + 9, 4).c_str()) / lineHeight;
 
             newChar.kernCnt = 0;
             newChar.kerns = nullptr;
@@ -1058,13 +1059,13 @@ bool SDFFont::loadFontInfo(std::filesystem::path filepath) {
             SDFGlyphKerning newKern;
 
             idx = line.find("first=", 0);
-            newKern.previous = (unsigned int)std::atoi(line.substr(idx + 6, 4).c_str());
+            newKern.previous = (unsigned int) std::atoi(line.substr(idx + 6, 4).c_str());
 
             idx = line.find("second=", 0);
-            newKern.current = (unsigned int)std::atoi(line.substr(idx + 7, 4).c_str());
+            newKern.current = (unsigned int) std::atoi(line.substr(idx + 7, 4).c_str());
 
             idx = line.find("amount=", 0);
-            newKern.xamount = (float)std::atof(line.substr(idx + 7, 4).c_str()) / lineHeight;
+            newKern.xamount = (float) std::atof(line.substr(idx + 7, 4).c_str()) / lineHeight;
 
             tmpKerns.push_back(newKern);
         }
@@ -1078,9 +1079,9 @@ bool SDFFont::loadFontInfo(std::filesystem::path filepath) {
         this->glyphIdcs.push_back(nullptr);
     }
     // Set pointers to available glyph info
-    for (unsigned int i = 0; i < (unsigned int)this->glyphs.size(); i++) {
+    for (unsigned int i = 0; i < (unsigned int) this->glyphs.size(); i++) {
         // Filling character index array --------------------------------------
-        if (this->glyphs[i].id > (unsigned int)this->glyphIdcs.size()) {
+        if (this->glyphs[i].id > (unsigned int) this->glyphIdcs.size()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SDFFont] Character is out of range: \"%i\". [%s, %s, line %d]\n", this->glyphs[i].id, __FILE__,
                 __FUNCTION__, __LINE__);
@@ -1089,14 +1090,14 @@ bool SDFFont::loadFontInfo(std::filesystem::path filepath) {
         this->glyphIdcs[this->glyphs[i].id] = &this->glyphs[i];
         // Assigning glyphKrns -------------------------------------------------
         // Get count of glyphKrns for current glyph
-        for (unsigned int j = 0; j < (unsigned int)tmpKerns.size(); j++) {
+        for (unsigned int j = 0; j < (unsigned int) tmpKerns.size(); j++) {
             if (this->glyphs[i].id == tmpKerns[j].current) {
                 this->glyphs[i].kernCnt++;
             }
         }
         unsigned int c = 0;
         this->glyphs[i].kerns = new SDFGlyphKerning[this->glyphs[i].kernCnt];
-        for (unsigned int j = 0; j < (unsigned int)tmpKerns.size(); j++) {
+        for (unsigned int j = 0; j < (unsigned int) tmpKerns.size(); j++) {
             if (this->glyphs[i].id == tmpKerns[j].current) {
                 this->glyphs[i].kerns[c] = tmpKerns[j];
                 c++;

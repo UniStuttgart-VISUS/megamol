@@ -17,6 +17,10 @@ vcpkg_extract_source_archive(
   NO_REMOVE_ONE_LEVEL
 )
 
+# include/KHR/khrplatform.h conflicts with the `egl-registry` port. Both install the same file.
+# To workaround the conflict we remove the glad internal khrplatform.h here and explicitly depend on `egl-registry`.
+file(REMOVE_RECURSE "${GLAD_DIR}/include/KHR")
+
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${GLAD_DIR}")
 
 vcpkg_cmake_configure(SOURCE_PATH ${GLAD_DIR})

@@ -67,7 +67,7 @@ public:
 #endif
 
     Inform& operator<<(double);
-    Inform& operator<<(Inform& (*f)(Inform&));
+    Inform& operator<<(Inform& (*f)(Inform&) );
 
     void mute() {
         muted = 1;

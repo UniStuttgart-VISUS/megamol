@@ -342,13 +342,13 @@ bool SphereRenderer::create() {
     // timer_.SetMaximumFrames(20, 100);
 
 #ifdef MEGAMOL_USE_PROFILING
-    perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
-        &frontend_resources.get<frontend_resources::PerformanceManager>());
-    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+    perf_manager_ = const_cast<frontend_resources::performance::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::performance::PerformanceManager>());
+    frontend_resources::performance::basic_timer_config upload_timer, render_timer;
     upload_timer.name = "upload";
-    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    upload_timer.api = frontend_resources::performance::query_api::OPENGL;
     render_timer.name = "render";
-    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.api = frontend_resources::performance::query_api::OPENGL;
     timers_ = perf_manager_->add_timers(this, {upload_timer, render_timer});
 #endif
 
@@ -653,7 +653,7 @@ bool SphereRenderer::createResources() {
 
             // TODO glowl implementation of GLSLprogram misses this functionality
             auto ubo_idx = glGetUniformBlockIndex(lighting_prgm_->getHandle(), "cone_buffer");
-            glUniformBlockBinding(lighting_prgm_->getHandle(), ubo_idx, (GLuint)AO_DIR_UBO_BINDING_POINT);
+            glUniformBlockBinding(lighting_prgm_->getHandle(), ubo_idx, (GLuint) AO_DIR_UBO_BINDING_POINT);
 
             // Init volume generator
             this->vol_gen_ = new misc::MDAOVolumeGenerator();
@@ -861,8 +861,8 @@ bool SphereRenderer::isFlagStorageAvailable() {
     auto flagc = this->read_flags_slot_.CallAs<mmstd_gl::FlagCallRead_GL>();
 
     // Update parameter visibility
-    this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
-    this->soft_select_color_param_.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
+    this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible((bool) (flagc != nullptr));
+    this->soft_select_color_param_.Param<param::ColorParam>()->SetGUIVisible((bool) (flagc != nullptr));
 
     if (flagc == nullptr) {
         this->flags_available_ = false;
@@ -1202,11 +1202,11 @@ bool SphereRenderer::renderSimple(mmstd_gl::CallRender3DGL& call, MultiParticleD
         }
 
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->start_timer(timers_[1]);
+        auto& region1 = perf_manager_->start_timer(timers_[1]);
 #endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->stop_timer(timers_[1]);
+        region1.end_region();
 #endif
 
         if (this->render_mode_ == RenderMode::SIMPLE_CLUSTERED) {
@@ -1295,7 +1295,7 @@ bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDat
                 auto& buf_a = this->buf_array_[i];
                 if (this->state_invalid_ || (buf_a.GetNumChunks() == 0)) {
                     buf_a.SetDataWithSize(parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(),
-                        (GLuint)(2 * 1024 * 1024 * 1024 - 1));
+                        (GLuint) (2 * 1024 * 1024 * 1024 - 1));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                 }
                 const GLuint num_chunks = buf_a.GetNumChunks();
@@ -1312,7 +1312,7 @@ bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDat
                 }
             } else {
                 const GLuint num_chunks = this->streamer_.SetDataWithSize(
-                    parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024));
+                    parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(), 3, (GLuint) (32 * 1024 * 1024));
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer_.GetHandle());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle());
 
@@ -1338,7 +1338,7 @@ bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDat
                 auto& col_a = this->col_buf_array_[i];
                 if (this->state_invalid_ || (buf_a.GetNumChunks() == 0)) {
                     buf_a.SetDataWithSize(parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(),
-                        (GLuint)(2 * 1024 * 1024 * 1024 - 1));
+                        (GLuint) (2 * 1024 * 1024 * 1024 - 1));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
                     col_a.SetDataWithItems(parts.GetColourData(), col_stride, col_stride, parts.GetCount(),
                         buf_a.GetMaxNumItemsPerChunk());
@@ -1362,7 +1362,7 @@ bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDat
                 }
             } else {
                 const GLuint num_chunks = this->streamer_.SetDataWithSize(
-                    parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024));
+                    parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(), 3, (GLuint) (32 * 1024 * 1024));
                 const GLuint col_size = this->col_streamer_.SetDataWithItems(parts.GetColourData(), col_stride,
                     col_stride, parts.GetCount(), 3, this->streamer_.GetMaxNumItemsPerChunk());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer_.GetHandle());
@@ -1770,7 +1770,7 @@ bool SphereRenderer::renderAmbientOcclusion(mmstd_gl::CallRender3DGL& call, Mult
     glUniform3fv(the_shader->getUniformLocation("camIn"), 1, glm::value_ptr(this->cur_cam_view_));
     glUniform4fv(the_shader->getUniformLocation("clipDat"), 1, glm::value_ptr(this->cur_clip_dat_));
     glUniform4fv(the_shader->getUniformLocation("clipCol"), 1, glm::value_ptr(this->cur_clip_col_));
-    glUniform1i(the_shader->getUniformLocation("inUseHighPrecision"), (int)high_precision);
+    glUniform1i(the_shader->getUniformLocation("inUseHighPrecision"), (int) high_precision);
 
     GLuint flag_parts_count = 0;
     for (unsigned int i = 0; i < this->gpu_data_.size(); i++) {
@@ -2303,7 +2303,7 @@ void SphereRenderer::getGLSLVersion(int& out_major, int& out_minor) const {
 
     out_major = -1;
     out_minor = -1;
-    std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+    std::string glslVerStr((char*) glGetString(GL_SHADING_LANGUAGE_VERSION));
     std::size_t found = glslVerStr.find(".");
     if (found != std::string::npos) {
         out_major = std::atoi(glslVerStr.substr(0, 1).c_str());
@@ -2517,7 +2517,7 @@ void SphereRenderer::renderDeferredPass(mmstd_gl::CallRender3DGL& call) {
 
     this->lighting_prgm_->use();
 
-    ao_dir_ubo_->bind((GLuint)AO_DIR_UBO_BINDING_POINT);
+    ao_dir_ubo_->bind((GLuint) AO_DIR_UBO_BINDING_POINT);
 
     this->lighting_prgm_->setUniform("inColorTex", static_cast<int>(0));
     this->lighting_prgm_->setUniform("inNormalsTex", static_cast<int>(1));

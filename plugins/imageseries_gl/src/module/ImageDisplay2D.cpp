@@ -75,7 +75,7 @@ ImageDisplay2D::ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFact
     }
 }
 
-ImageDisplay2D::~ImageDisplay2D() {
+ImageDisplay2D::~ImageDisplay2D() noexcept {
     glDeleteBuffers(1, &node_radius_buffer);
     glDeleteBuffers(1, &node_type_buffer);
     glDeleteBuffers(1, &edge_weight_buffer);

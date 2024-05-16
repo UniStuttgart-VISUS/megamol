@@ -36,7 +36,7 @@ bool megamol::remote::MPICommFabric::Bind(std::string const& address) {
 bool megamol::remote::MPICommFabric::Send(std::vector<char> const& buf, send_type const type) {
 #ifdef MEGAMOL_USE_MPI
     // TODO this is wrong. mpiprovider gives you the correct comm
-    auto status = MPI_Send((void*)buf.data(), buf.size(), MPI_CHAR, target_rank_, 0, MPI_COMM_WORLD);
+    auto status = MPI_Send((void*) buf.data(), buf.size(), MPI_CHAR, target_rank_, 0, MPI_COMM_WORLD);
     return status == MPI_SUCCESS;
 #else
     return false;

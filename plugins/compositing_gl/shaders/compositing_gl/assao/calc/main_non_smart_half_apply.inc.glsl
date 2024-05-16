@@ -32,5 +32,5 @@ void main()
     float d = textureLod(g_FinalSSAOLinearClamp, vec3( inUV, 3 ), 0.0 ).x;
     float avg = (a+d) * 0.5;
 
-    imageStore(g_FinalOutput, ivec2(inPos.xy), vec4(avg.xxx, 1.f));
+    imageStore(g_FinalOutput, ivec2(inPos.xy), vec4(avg.x));
 }

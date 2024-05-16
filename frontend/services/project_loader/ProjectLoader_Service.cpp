@@ -9,7 +9,9 @@
 #include <fstream>
 #include <sstream>
 
+#include "LuaApiResource.h"
 #include "Window_Events.h"
+#include "mmcore/LuaAPI.h"
 #include "mmcore/utility/String.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
@@ -54,7 +56,7 @@ bool ProjectLoader_Service::init(const Config& config) {
 
     this->m_providedResourceReferences = {{"ProjectLoader", m_loader}};
 
-    this->m_requestedResourcesNames = {"ExecuteLuaScript", "SetScriptPath", "optional<WindowEvents>"};
+    this->m_requestedResourcesNames = {frontend_resources::LuaAPI_Req_Name, "SetScriptPath", "optional<WindowEvents>"};
 
     log("initialized successfully");
     return true;
@@ -112,26 +114,23 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     }
 
     // run lua
-    using LuaFuncType = std::function<std::tuple<bool, std::string>(std::string const&)>;
-    const LuaFuncType& execute_lua = m_requestedResourceReferences[0].getResource<LuaFuncType>();
+    auto luaApi = m_requestedResourceReferences[0].getResource<core::LuaAPI*>();
 
-    // TODO: remove this resource from Lua when project-centric struture is in place
+    // TODO: remove this resource from Lua when project-centric structure is in place
     using SetScriptPath = std::function<void(std::string const&)>;
     const SetScriptPath& set_script_path = m_requestedResourceReferences[1].getResource<SetScriptPath>();
 
     set_script_path(filename.generic_string());
 
-    auto result = execute_lua(script);
-    bool script_ok = std::get<0>(result);
-    std::string script_error = std::get<1>(result);
+    auto result = luaApi->RunString(script);
 
-    if (!script_ok) {
-        log_error("failed to load file " + filename.generic_string() + "\n\t" + script_error);
+    if (!result.valid()) {
+        log_error("failed to load file " + filename.generic_string() + "\n\t" + luaApi->GetError(result));
         set_script_path("");
         return false;
     }
 
-    log("loaded file " + filename.generic_string() + ((script_error.size()) ? "\n\t" + script_error : ""));
+    log("loaded file " + filename.generic_string());
     return true;
 }
 
@@ -174,9 +173,13 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
     auto possible_files = window_events.dropped_path_events;
 
     for (auto& events : possible_files)
-        std::remove_if(events.begin(), events.end(), [&](auto& filename) -> bool { return this->load_file(filename); });
+        events.erase(std::remove_if(events.begin(), events.end(),
+                         [&](auto& filename) -> bool { return this->load_file(filename); }),
+            events.end());
 
-    std::remove_if(possible_files.begin(), possible_files.end(), [&](auto& events) -> bool { return events.empty(); });
+    possible_files.erase(std::remove_if(possible_files.begin(), possible_files.end(),
+                             [&](auto& events) -> bool { return events.empty(); }),
+        possible_files.end());
 
     // restore, this gets cleared by the service outside of the recursion again
     window_events.dropped_path_events = possible_files;

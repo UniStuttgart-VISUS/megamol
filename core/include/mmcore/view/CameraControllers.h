@@ -556,8 +556,8 @@ public:
      * This event handler can be reimplemented to receive mouse move events.
      */
     virtual void OnMouseMove(double x, double y, int wndWidth, int wndHeight) {
-        this->_mouseX = (float)static_cast<int>(x);
-        this->_mouseY = (float)static_cast<int>(y);
+        this->_mouseX = (float) static_cast<int>(x);
+        this->_mouseY = (float) static_cast<int>(y);
 
         glm::vec3 newPos;
 

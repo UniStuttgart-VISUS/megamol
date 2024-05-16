@@ -7,6 +7,8 @@
 #pragma once
 
 #include "AbstractFrontendService.hpp"
+#include "FrameStatistics.h"
+#include "FrontendResourcesMap.h"
 
 // ImageData struct and interfaces for screenshot sources/writers
 #include "Screenshots.h"

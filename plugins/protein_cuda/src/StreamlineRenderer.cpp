@@ -260,7 +260,7 @@ bool StreamlineRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
         // Integrate streamlines
         if (!this->strLines.IntegrateRK4(this->seedPoints.PeekElements(), this->streamlineStep,
-                (float*)vtiCall->GetPointDataByIdx(1, 0), // TODO Do not hardcode array
+                (float*) vtiCall->GetPointDataByIdx(1, 0), // TODO Do not hardcode array
                 make_int3(vtiCall->GetGridsize().GetX(), vtiCall->GetGridsize().GetY(), vtiCall->GetGridsize().GetZ()),
                 make_float3(vtiCall->GetOrigin().GetX(), vtiCall->GetOrigin().GetY(), vtiCall->GetOrigin().GetZ()),
                 make_float3(
@@ -270,7 +270,7 @@ bool StreamlineRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
         // Sample the density field to the alpha component
         if (!this->strLines.SampleScalarFieldToAlpha(
-                (float*)vtiCall->GetPointDataByIdx(0, 0), // TODO do not hardcode array
+                (float*) vtiCall->GetPointDataByIdx(0, 0), // TODO do not hardcode array
                 make_int3(vtiCall->GetGridsize().GetX(), vtiCall->GetGridsize().GetY(), vtiCall->GetGridsize().GetZ()),
                 make_float3(vtiCall->GetOrigin().GetX(), vtiCall->GetOrigin().GetY(), vtiCall->GetOrigin().GetZ()),
                 make_float3(
@@ -283,7 +283,7 @@ bool StreamlineRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         //            return false;
         //        }
 
-        if (!this->strLines.SampleVecFieldToRGB((float*)vtiCall->GetPointDataByIdx(1, 0), // TODO do not hardcode array
+        if (!this->strLines.SampleVecFieldToRGB((float*) vtiCall->GetPointDataByIdx(1, 0), // TODO do not hardcode array
                 make_int3(vtiCall->GetGridsize().GetX(), vtiCall->GetGridsize().GetY(), vtiCall->GetGridsize().GetZ()),
                 make_float3(vtiCall->GetOrigin().GetX(), vtiCall->GetOrigin().GetY(), vtiCall->GetOrigin().GetZ()),
                 make_float3(
@@ -358,7 +358,7 @@ void StreamlineRenderer::genSeedPoints(protein_calls::VTIDataCall* vti, float zC
         //printf("Random pos %f %f %f\n", pos.GetX(), pos.GetY(), pos.GetZ());
 
         float sample = this->sampleFieldAtPosTrilin(
-            vti, make_float3(pos.GetX(), pos.GetY(), pos.GetZ()), (float*)vti->GetPointDataByIdx(0, 0));
+            vti, make_float3(pos.GetX(), pos.GetY(), pos.GetZ()), (float*) vti->GetPointDataByIdx(0, 0));
 
         // Sample density value
         //if (vislib::math::Abs(sample - isoval) < 0.05) {
@@ -391,12 +391,12 @@ float StreamlineRenderer::sampleFieldAtPosTrilin(protein_calls::VTIDataCall* vti
     f.x = (pos.x - gridOrg_D.x) / gridDelta_D.x;
     f.y = (pos.y - gridOrg_D.y) / gridDelta_D.y;
     f.z = (pos.z - gridOrg_D.z) / gridDelta_D.z;
-    c.x = (int)(f.x);
-    c.y = (int)(f.y);
-    c.z = (int)(f.z);
-    f.x = f.x - (float)c.x; // alpha
-    f.y = f.y - (float)c.y; // beta
-    f.z = f.z - (float)c.z; // gamma
+    c.x = (int) (f.x);
+    c.y = (int) (f.y);
+    c.z = (int) (f.z);
+    f.x = f.x - (float) c.x; // alpha
+    f.y = f.y - (float) c.y; // beta
+    f.z = f.z - (float) c.z; // gamma
 
     c.x = vislib::math::Clamp(c.x, int(0), gridSize_D.x - 2);
     c.y = vislib::math::Clamp(c.y, int(0), gridSize_D.y - 2);

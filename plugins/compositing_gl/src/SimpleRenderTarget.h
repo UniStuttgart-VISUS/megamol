@@ -9,6 +9,7 @@
 
 #include <glowl/FramebufferObject.hpp>
 
+#include "CompositingOutHandler.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
@@ -119,6 +120,13 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
     /**
+     * \brief Sets texture format variables.
+     *
+     *  @return 'true' if updates sucessfull, 'false' otherwise
+     */
+    bool textureFormatUpdate();
+
+    /**
      * G-Buffer for deferred rendering. By default if uses three color attachments (and a depth renderbuffer):
      * surface albedo - RGB 16bit per channel
      * normals - RGB 16bit per channel
@@ -141,6 +149,9 @@ private:
 
     /** Slot for accessing the framebuffer object used by this render target module */
     core::CalleeSlot m_framebuffer_slot;
+
+    CompositingOutHandler colorOutHandler_;
+    CompositingOutHandler normalsOutHandler_;
 };
 
 } // namespace megamol::compositing_gl

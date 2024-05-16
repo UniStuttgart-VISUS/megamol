@@ -258,8 +258,8 @@ bool ParticleWorker::getDataCallback(Call& call) {
         } else if (partsIn.GetVertexDataStride() == 3 * sizeof(float) + 4 * sizeof(float)) {
             // highly specific, because we know:
             partsOut.SetVertexData(partsIn.GetVertexDataType(), NULL, partsIn.GetVertexDataStride());
-            partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I, (void*)(NULL + 3 * sizeof(float)),
-                partsIn.GetVertexDataStride());
+            partsOut.SetColourData(MultiParticleDataCall::Particles::COLDATA_FLOAT_I,
+                (void*) (NULL + 3 * sizeof(float)), partsIn.GetVertexDataStride());
 
             partsOut.SetVAOs(glVAO[i], glVB[i], glVB[i]);
             glBindVertexArray(vao);
