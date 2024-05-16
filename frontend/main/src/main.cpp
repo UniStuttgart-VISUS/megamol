@@ -21,6 +21,7 @@
 #include "ProjectLoader_Service.hpp"
 #include "Remote_Service.hpp"
 #include "RuntimeConfig.h"
+#include "RuntimeInfo_Service.hpp"
 #include "Screenshot_Service.hpp"
 #include "VR_Service.hpp"
 #include "mmcore/LuaAPI.h"
@@ -30,6 +31,12 @@
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
+#include <tracy/TracyC.h>
+#endif
+
+#ifdef MEGAMOL_USE_POWER
+#include "Power_Service.hpp"
+#include "power/StringContainer.h"
 #endif
 
 using megamol::core::utility::log::Log;
@@ -55,8 +62,13 @@ void loadPlugins(megamol::frontend_resources::PluginsResource& pluginsRes);
 CMRC_DECLARE(megamol_icons);
 
 int main(const int argc, const char** argv) {
+#if defined(MEGAMOL_DETECT_MEMLEAK) && defined(DEBUG)
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 #ifdef MEGAMOL_USE_TRACY
-    ZoneScoped;
+    tracy::StartupProfiler();
+    //ZoneScoped;
+    TracyCZone(main, true);
 #endif
     megamol::core::LuaAPI lua_api;
 
@@ -78,6 +90,9 @@ int main(const int argc, const char** argv) {
 
     log(config.as_string());
     log(global_value_store.as_string());
+
+    megamol::frontend::RuntimeInfo_Service ri_service;
+    ri_service.setPriority(1);
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
@@ -188,6 +203,18 @@ int main(const int argc, const char** argv) {
     profiling_config.autostart_profiling = config.autostart_profiling;
     profiling_config.include_graph_events = config.include_graph_events;
 
+#ifdef MEGAMOL_USE_POWER
+    megamol::power::StringContainer power_str_container;
+    megamol::frontend::Power_Service power_service;
+    megamol::frontend::Power_Service::Config power_config;
+    power_config.lpt = config.power_lpt;
+    power_config.write_to_files = config.power_write_file;
+    power_config.folder = config.power_folder;
+    power_config.tinker_map_filename = config.tinker_map_filename;
+    power_config.str_container = &power_str_container;
+    power_service.setPriority(1);
+#endif
+
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -208,6 +235,10 @@ int main(const int argc, const char** argv) {
     // clang-format on
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
+    services.add(ri_service, nullptr);
+#ifdef MEGAMOL_USE_POWER
+    services.add(power_service, &power_config);
+#endif
     if (with_gl) {
         services.add(gl_service, &openglConfig);
     }
@@ -392,6 +423,11 @@ int main(const int argc, const char** argv) {
 
     // close glfw context, network connections, other system resources
     services.close();
+
+#ifdef MEGAMOL_USE_TRACY
+    TracyCZoneEnd(main);
+    tracy::ShutdownProfiler();
+#endif
 
     return ret;
 }

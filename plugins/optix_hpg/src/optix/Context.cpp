@@ -51,10 +51,12 @@ megamol::optix_hpg::Context::Context(frontend_resources::CUDA_Context const& ctx
     _pipeline_options.usesPrimitiveTypeFlags = 0;
 
     _pipeline_link_options = {};
+#if OPTIX_VERSION < 80000
 #ifdef DEBUG
     _pipeline_link_options.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_FULL;
 #else
     _pipeline_link_options.debugLevel = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
+#endif
 #endif
     _pipeline_link_options.maxTraceDepth = 2;
     /////////////////////////////////////

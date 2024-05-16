@@ -28,6 +28,12 @@ megamol_feature_option(CUESDK "Enable Corsair CUESDK support." OFF "WIN32")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Inject OpenGL debug groups into calls." OFF "MEGAMOL_USE_OPENGL")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." OFF "WIN32;MEGAMOL_USE_OPENGL")
 
+# MEMLEAK
+option(MEGAMOL_DETECT_MEMLEAK "Enable to use Memleak detection (MSVC only)" OFF)
+
+# GL FLUSH and FINISH
+option(MEGAMOL_GL_FLUSH_FINISH "Use glFlush and glFinish before buffer swap" OFF)
+
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)

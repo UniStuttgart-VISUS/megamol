@@ -107,6 +107,18 @@ if (MEGAMOL_USE_CGAL)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 endif ()
 
+# MEMLEAK
+if (MEGAMOL_DETECT_MEMLEAK)
+  if(MSVC)
+    add_compile_definitions("$<$<CONFIG:DEBUG>:MEGAMOL_DETECT_MEMLEAK>")
+  endif()
+endif()
+
+# GL FLUSH and FINISH
+if (MEGAMOL_GL_FLUSH_FINISH)
+  add_compile_definitions("MEGAMOL_GL_FLUSH_FINISH")
+endif()
+
 # imgui
 # Set IMGUI_USER_CONFIG globally on imgui target for all users.
 find_package(imgui CONFIG REQUIRED)

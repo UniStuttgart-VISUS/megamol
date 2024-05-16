@@ -58,6 +58,10 @@
     "tinygltf",
     "tinyobjloader",
     "tinyply",
+    {
+      "name": "wil",
+      "platform": "windows"
+    },
     "zeromq",
     "zfp",
     "zlib"
@@ -145,7 +149,15 @@
     "power": {
       "description": "Use power consumption measurement",
       "dependencies": [
-        "power-overwhelming"
+        {
+          "name": "arrow",
+          "features": [
+            "parquet"
+          ]
+        },
+        "power-overwhelming",
+        "wil",
+        "dataversepp"
       ]
     },
     "profiling": {

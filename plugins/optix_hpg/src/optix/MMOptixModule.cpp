@@ -162,9 +162,13 @@ megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDevi
     OptixModuleCompileOptions const* module_options, OptixPipelineCompileOptions const* pipeline_options,
     MMOptixProgramGroupKind kind, std::vector<std::pair<MMOptixNameKind, std::string>> const& names) {
     simple_log<2048> log;
-
+#if OPTIX_VERSION < 80000
     OPTIX_CHECK_ERROR(optixModuleCreateFromPTX(
         ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
+#else
+    OPTIX_CHECK_ERROR(
+        optixModuleCreate(ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
+#endif
 #if DEBUG
     if (log.get_log_size() > 1) {
         core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Optix Module creation info: %s", log.read());
@@ -196,8 +200,13 @@ megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDevi
     std::vector<std::pair<MMOptixNameKind, std::string>> const& names) {
     simple_log<2048> log;
 
+#if OPTIX_VERSION < 80000
     OPTIX_CHECK_ERROR(optixModuleCreateFromPTX(
         ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
+#else
+    OPTIX_CHECK_ERROR(
+        optixModuleCreate(ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, log, &module_));
+#endif
 #if DEBUG
     if (log.get_log_size() > 1) {
         core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Optix Module creation info: %s", log.read());
@@ -253,10 +262,15 @@ void megamol::optix_hpg::MMOptixModule::ComputeBounds(
     glm::vec3 blockDims(32, 32, 1);
     uint32_t threadsPerBlock = blockDims.x * blockDims.y * blockDims.z;
 
-    uint32_t numBlocks = (num_elements + threadsPerBlock - 1) / threadsPerBlock;
-    uint32_t numBlocks_x = 1 + uint32_t(powf((float) numBlocks, 1.f / 3.f));
-    uint32_t numBlocks_y = 1 + uint32_t(sqrtf((float) (numBlocks / numBlocks_x)));
-    uint32_t numBlocks_z = (numBlocks + numBlocks_x * numBlocks_y - 1) / numBlocks_x * numBlocks_y;
+    /*uint32_t numBlocks = (num_elements + threadsPerBlock - 1) / threadsPerBlock;
+    uint32_t numBlocks_x = 1 + uint32_t(powf((float)numBlocks, 1.f / 3.f));
+    uint32_t numBlocks_y = 1 + uint32_t(sqrtf((float)(numBlocks / numBlocks_x)));
+    uint32_t numBlocks_z = (numBlocks + numBlocks_x * numBlocks_y - 1) / numBlocks_x * numBlocks_y;*/
+
+    uint32_t numBlocks = std::ceilf(static_cast<float>(num_elements) / static_cast<float>(threadsPerBlock));
+    uint32_t numBlocks_x = 1 + uint32_t(powf((float)numBlocks, 1.f / 3.f));
+    uint32_t numBlocks_y = 1 + uint32_t(sqrtf((float)(numBlocks / numBlocks_x)));
+    uint32_t numBlocks_z = std::ceilf(static_cast<float>(numBlocks) / static_cast<float>(numBlocks_x * numBlocks_y));
 
     glm::uvec3 gridDims(numBlocks_x, numBlocks_y, numBlocks_z);
 

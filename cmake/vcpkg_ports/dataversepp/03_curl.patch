@@ -1,0 +1,14 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1527a32..69f229e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -20,7 +20,9 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/dataverse")
+ 
+ # The command line tool
++if(0)
+ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/dataversecli")
++endif()
+ 
+ # Unit tests
+ if (DATAVERSE_BuildTests)

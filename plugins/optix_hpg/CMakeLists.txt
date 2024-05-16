@@ -9,7 +9,6 @@ megamol_plugin(optix_hpg
     cuda
   DEPENDS_PLUGINS
     mmstd
-    mmstd_gl
     mesh
     geometry_calls)
 
@@ -40,7 +39,7 @@ if (optix_hpg_PLUGIN_ENABLED)
   # Collect source files
   file(GLOB_RECURSE cuda_resource_include_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "cuda_resources/*.h" "cuda_resources/*.cuh")
 
-  include_directories(${GLM_INCLUDES} "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  include_directories(${GLM_INCLUDES} "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/cuda_resources")
   cuda_compile_and_embed(embedded_raygen_programs cuda_resources/raygen.cu)
   cuda_compile_and_embed(embedded_miss_programs cuda_resources/miss.cu)
   cuda_compile_and_embed(embedded_miss_occlusion_programs cuda_resources/miss_occlusion.cu)
@@ -53,4 +52,7 @@ if (optix_hpg_PLUGIN_ENABLED)
 
   target_include_directories(optix_hpg PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cuda_resources/")
   target_link_libraries(optix_hpg PRIVATE CUDA::cuda_driver)
+  if (MEGAMOL_USE_OPENGL)
+    target_link_libraries(optix_hpg PRIVATE mmstd_gl)
+  endif ()
 endif ()

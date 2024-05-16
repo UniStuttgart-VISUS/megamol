@@ -1,0 +1,21 @@
+{
+  "12VHPWR": {
+    "ADD": [ "12VHPWR0_samples", "12VHPWR1_samples", "12VHPWR2_samples", "12VHPWR3_samples", "12VHPWR4_samples", "12VHPWR5_samples" ]
+  },
+  "PEG": {
+    "ADD": [ "PEG0_samples", "PEG1_samples", "PEG2_samples", "PEG3_samples" ]
+  },
+  "12VPEG": { "ADD": [ "12VPEG_samples" ] },
+  "3VPEG": { "ADD": [ "3VPEG_samples" ] },
+  "12VATX": {
+    "ADD": [ "12VATX_samples" ],
+    "SUB": [ "12VPEG_samples" ]
+  },
+  "5VATX": { "ADD": [ "5VATX_samples" ] },
+  "3VATX": {
+    "ADD": [ "3VATX_samples" ],
+    "SUB": [ "3VPEG_samples" ]
+  },
+  "P8": { "ADD": [ "P8_samples" ] },
+  "P4": { "ADD": [ "P4_samples" ] }
+}
