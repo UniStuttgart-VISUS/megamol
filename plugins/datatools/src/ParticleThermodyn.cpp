@@ -56,7 +56,8 @@ datatools::ParticleThermodyn::ParticleThermodyn()
         , particleTree(nullptr)
         , myPts(nullptr)
         , outDataSlot("outData", "Provides intensities based on a local particle metric")
-        , inDataSlot("inData", "Takes the directional particle data") {
+        , inDataSlot("inData", "Takes the directional particle data")
+        , testDataSlot("testData", "") {
 
     this->cyclXSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclXSlot);
@@ -122,14 +123,20 @@ datatools::ParticleThermodyn::ParticleThermodyn()
     this->rhocSlot.SetParameter(new core::param::FloatParam(0.3211f));
     this->MakeSlotAvailable(&this->rhocSlot);
 
-    this->outDataSlot.SetCallback(
+    /*this->outDataSlot.SetCallback(
         geocalls::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
     this->outDataSlot.SetCallback(
-        geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);
+        geocalls::MultiParticleDataCall::ClassName(), "GetExtent", &ParticleThermodyn::getExtentCallback);*/
+    this->outDataSlot.SetCallback<geocalls::MultiParticleDataCall>(0, &ParticleThermodyn::getDataCallback);
+    this->outDataSlot.SetCallback<geocalls::MultiParticleDataCall>(1, &ParticleThermodyn::getExtentCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
 
     this->inDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->inDataSlot);
+
+    testDataSlot.SetCallback<geocalls::MultiParticleDataCall>(0, &ParticleThermodyn::test_data_cb);
+    testDataSlot.SetCallback<geocalls::MultiParticleDataCall>(1, &ParticleThermodyn::test_extent_cb);
+    MakeSlotAvailable(&testDataSlot);
 }
 
 
@@ -693,6 +700,16 @@ float megamol::datatools::ParticleThermodyn::computeDensity(std::vector<nanoflan
     auto parVolume = 4.0f / 3.0f * 3.14f * radius * radius * radius;
 
     return parVolume / minSphereVolume;
+}
+
+std::shared_ptr<geocalls::MultiParticleDataCall::ret_data_t> megamol::datatools::ParticleThermodyn::test_data_cb(
+    geocalls::MultiParticleDataCall::req_t const& req) {
+    return std::shared_ptr<geocalls::MultiParticleDataCall::ret_data_t>();
+}
+
+std::shared_ptr<geocalls::MultiParticleDataCall::ret_extent_t> megamol::datatools::ParticleThermodyn::test_extent_cb(
+    geocalls::MultiParticleDataCall::req_t const& req) {
+    return std::shared_ptr<geocalls::MultiParticleDataCall::ret_extent_t>();
 }
 
 
