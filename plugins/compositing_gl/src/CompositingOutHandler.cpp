@@ -4,32 +4,7 @@
 namespace megamol::compositing_gl {
 
 bool CompositingOutHandler::updateSelectionsExternally(core::param::ParamSlot& slot) {
-    selectedType_ = GL_FLOAT;
-    recentlyChanged_ = true;
-    unsigned int e = availableInternalFormats_[slot.Param<core::param::EnumParam>()->Value()];
-    selectedInternal_ = e;
-    switch (e) {
-    case GL_RGBA32F:
-    case GL_RGBA16F:
-    case GL_RGBA8_SNORM:
-        selectedFormat_ = GL_RGBA;
-        break;
-    case GL_RGB32F:
-    case GL_RGB16F:
-    case GL_RGB8_SNORM:
-        selectedFormat_ = GL_RGB;
-        break;
-    case GL_RG32F:
-    case GL_RG16F:
-    case GL_RG8_SNORM:
-        selectedFormat_ = GL_RG;
-        break;
-    case GL_R32F:
-    case GL_R16F:
-    case GL_R8_SNORM:
-        selectedFormat_ = GL_RED;
-        break;
-    }
+    updateSelections(slot);
     //external update
     return externalUpdateFunc_();
 }
@@ -38,6 +13,7 @@ bool CompositingOutHandler::updateSelections(core::param::ParamSlot& slot) {
     selectedType_ = GL_FLOAT;
     recentlyChanged_ = true;
     unsigned int e = availableInternalFormats_[slot.Param<core::param::EnumParam>()->Value()];
+    //error
     selectedInternal_ = e;
     switch (e) {
     case GL_RGBA32F:
@@ -60,8 +36,10 @@ bool CompositingOutHandler::updateSelections(core::param::ParamSlot& slot) {
     case GL_R8_SNORM:
         selectedFormat_ = GL_RED;
         return true;
+    default:
+        selectedFormat_ = GL_RGBA;
+        return false;
     }
-    return false;
 }
 
 GLenum CompositingOutHandler::getInternalFormat() {
@@ -95,6 +73,7 @@ CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector
     }
     formatSlot_.SetParameter(out_tex_formats);
     formatSlot_.SetUpdateCallback(this, &CompositingOutHandler::updateSelections);
+    updateSelections(formatSlot_);
 }
 
 /**
@@ -114,6 +93,7 @@ CompositingOutHandler::CompositingOutHandler(std::string defineName, std::vector
     }
     formatSlot_.SetParameter(out_tex_formats);
     formatSlot_.SetUpdateCallback(this, &CompositingOutHandler::updateSelectionsExternally);
+    updateSelections(formatSlot_);
 }
 
 megamol::core::AbstractSlot* CompositingOutHandler::getFormatSelectorSlot() {

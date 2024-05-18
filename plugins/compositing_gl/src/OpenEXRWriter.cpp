@@ -91,6 +91,21 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
     if (!(*rhs_call_input)(CallTexture2D::CallGetData))
         return false;
     auto interm = rhs_call_input->getData();
+    if (interm == nullptr) {
+        //errorstate
+        auto output_layout = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1);
+        interm = std::make_shared<glowl::Texture2D>("exr_tx2D", m_output_layout, nullptr);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Texture layout from right hand side module is empty. Please check texture layout. Default texture layout "
+            "assumed.");
+    } else if (!interm->getInternalFormat()) {
+        //errorstate
+        auto output_layout = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1);
+        interm = std::make_shared<glowl::Texture2D>("exr_tx2D", m_output_layout, nullptr);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Texture layout from right hand side module contains empty entry. Please check texture layout. Default "
+            "texture layout assumed.");
+    }
     ++version_;
     lhs_tc->setData(rhs_call_input->getData(), version_);
 
@@ -101,16 +116,11 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
         try {
             int width = rhs_call_input->getData()->getWidth();
             int height = rhs_call_input->getData()->getHeight();
-            std::cout << "w:" << width << " h:" << height << std::endl;
-            Header header(width, height);
-
             int inputTextureChNum = formatToChannelNumber(interm->getFormat());
 
+            Header header(50, 20);
             FrameBuffer fb;
-            PixelType headerType;
-
-            //TODO remove
-            //headerType = PixelType::FLOAT;
+            PixelType headerType = PixelType::FLOAT;
 
             m_channel_name_red.Param<core::param::StringParam>()->SetGUIVisible(false);
             m_channel_name_green.Param<core::param::StringParam>()->SetGUIVisible(false);
@@ -138,7 +148,7 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
                 std::vector<PixelFormat> gPixels(0);
                 std::vector<PixelFormat> bPixels(0);
                 std::vector<PixelFormat> aPixels(0);
-                //only Init needed channels
+                //only Init used channels
                 switch (inputTextureChNum) {
                 case 4:
                     aPixels.resize(width * height);
@@ -216,7 +226,7 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
 
             file.setFrameBuffer(fb);
-            file.writePixels(height);
+            file.writePixels(0);
         } catch (const std::exception& exc) {
             std::cerr << exc.what() << std::endl;
         }
