@@ -372,14 +372,6 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
                 copyTextureData.template operator()<unsigned int>();
             }
 
-
-<<<<<<< Updated upstream
-            OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
-
-            file.setFrameBuffer(fb);
-            file.writePixels(height);
-=======
->>>>>>> Stashed changes
         } catch (const std::exception& exc) {
             std::cerr << exc.what() << std::endl;
         }
