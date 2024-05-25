@@ -209,6 +209,11 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
                     fb.insert(m_channel_name_alpha.Param<core::param::StringParam>()->Value(),
                         Slice(headerType, (char*) &aPixels[0], sizeof(aPixels[0]) * 1, sizeof(aPixels[0]) * width));
                 }
+
+                OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
+
+                file.setFrameBuffer(fb);
+                file.writePixels(height);
             };
 
             if (interm->getType() == GL_FLOAT) {
@@ -368,10 +373,13 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             }
 
 
+<<<<<<< Updated upstream
             OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
 
             file.setFrameBuffer(fb);
             file.writePixels(height);
+=======
+>>>>>>> Stashed changes
         } catch (const std::exception& exc) {
             std::cerr << exc.what() << std::endl;
         }
