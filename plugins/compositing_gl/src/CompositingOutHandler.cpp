@@ -10,36 +10,12 @@ bool CompositingOutHandler::updateSelectionsExternally(core::param::ParamSlot& s
 }
 
 bool CompositingOutHandler::updateSelections(core::param::ParamSlot& slot) {
-    selectedType_ = GL_FLOAT;
     recentlyChanged_ = true;
     unsigned int e = availableInternalFormats_[slot.Param<core::param::EnumParam>()->Value()];
-    //error
     selectedInternal_ = e;
-    switch (e) {
-    case GL_RGBA32F:
-    case GL_RGBA16F:
-    case GL_RGBA8_SNORM:
-        selectedFormat_ = GL_RGBA;
-        return true;
-    case GL_RGB32F:
-    case GL_RGB16F:
-    case GL_RGB8_SNORM:
-        selectedFormat_ = GL_RGB;
-        return true;
-    case GL_RG32F:
-    case GL_RG16F:
-    case GL_RG8_SNORM:
-        selectedFormat_ = GL_RG;
-        return true;
-    case GL_R32F:
-    case GL_R16F:
-    case GL_R8_SNORM:
-        selectedFormat_ = GL_RED;
-        return true;
-    default:
-        selectedFormat_ = GL_RGBA;
-        return false;
-    }
+    selectedFormat_ = enumToFormat(e);
+    selectedType_ = enumToType(e);
+    return (e != 0 && selectedFormat_ != 0 && selectedType_ != 0);
 }
 
 GLenum CompositingOutHandler::getInternalFormat() {
@@ -158,6 +134,50 @@ std::string CompositingOutHandler::enumToDefinition(unsigned int e) {
     }
 }
 
+unsigned int CompositingOutHandler::enumToFormat(unsigned int e) {
+    switch (e) {
+    case GL_RGBA32F:
+    case GL_RGBA16F:
+    case GL_RGBA8_SNORM:
+        return GL_RGBA;
+    case GL_RGB32F:
+    case GL_RGB16F:
+    case GL_RGB8_SNORM:
+        return GL_RGB;
+    case GL_RG32F:
+    case GL_RG16F:
+    case GL_RG8_SNORM:
+        return GL_RG;
+    case GL_R32F:
+    case GL_R16F:
+    case GL_R8_SNORM:
+        return GL_RED;
+    default:
+        return 0;
+    }
+}
+
+unsigned int CompositingOutHandler::enumToType(unsigned int e) {
+    switch (e) {
+    case GL_RGBA32F:
+    case GL_RGB32F:
+    case GL_RG32F:
+    case GL_R32F:
+        return GL_FLOAT;
+    case GL_RGBA16F:
+    case GL_RGB16F:
+    case GL_RG16F:
+    case GL_R16F:
+        return GL_HALF_FLOAT;
+    case GL_RGBA8_SNORM:
+    case GL_RGB8_SNORM:
+    case GL_RG8_SNORM:
+    case GL_R8_SNORM:
+        return GL_INT;
+    default:
+        return 0;
+    }
+}
 
 std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> CompositingOutHandler::addDefinitions(
     msf::ShaderFactoryOptionsOpenGL shdr_options) {
