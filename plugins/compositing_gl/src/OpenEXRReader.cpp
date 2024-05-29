@@ -191,7 +191,6 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
 
         setRelevantParamState();
 
-
         m_output_texture = readToTex2D<float>();
     }
 
@@ -336,7 +335,10 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
         break;
     case 0:
         megamol::core::utility::log::Log::DefaultLog.WriteError("OpenEXR Reader Exception: No channels defined.");
-        return nullptr;
+        //TODO: proper handling of empty texture outputs.
+        m_output_layout = glowl::TextureLayout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_FLOAT, 1);
+        m_output_texture = std::make_shared<glowl::Texture2D>("exr_tx2D", m_output_layout, nullptr);
+        return m_output_texture;
         break;
     }
 
@@ -376,7 +378,7 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
     }
     m_output_texture = std::make_shared<glowl::Texture2D>("exr_tx2D", m_output_layout, nullptr);
     m_output_texture->reload(m_output_layout, &flippedPixels[0]);
-    // TODO: void return type?
+
     return m_output_texture;
 }
 
