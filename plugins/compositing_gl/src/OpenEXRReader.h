@@ -56,7 +56,7 @@ private:
     void setRelevantParamState();
 
     template<typename T>
-    std::shared_ptr<glowl::Texture2D> readToTex2D();
+    std::shared_ptr<glowl::Texture2D> readToTex2D(Imf_3_1::InputFile* file);
 
     /** Slot for loading the file */
     core::param::ParamSlot m_filename_slot;

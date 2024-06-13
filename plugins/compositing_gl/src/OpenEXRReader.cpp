@@ -190,8 +190,9 @@ bool megamol::compositing_gl::OpenEXRReader::getDataCallback(core::Call& caller)
         alpha_mapping_slot.ResetDirty();
 
         setRelevantParamState();
-
-        m_output_texture = readToTex2D<float>();
+        //TODO: handle different types.
+        InputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str()); //(filename)
+        m_output_texture = readToTex2D<float>(&file);
     }
 
     //if (lhs_tc->version() < m_version) {
@@ -227,10 +228,10 @@ int OpenEXRReader::typeStringToIndex(const std::string str) {
 }
 
 template<typename T>
-std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
-    InputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str()); //(filename)
+std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D(InputFile* file) {
+    
     // TODO : double check if correct window is used
-    Box2i dw = file.header().dataWindow();
+    Box2i dw = file->header().dataWindow();
     int width = dw.max.x - dw.min.x + 1;
     int height = dw.max.y - dw.min.y + 1;
 
@@ -274,7 +275,6 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
                                               sizeof(rPixels[0][0]) * 1, sizeof(rPixels[0][0]) * width));
         }
     }
-
     //GREEN
     currentChannelName = green_mapping_slot.Param<core::param::FlexEnumParam>()->Value();
     if (currentChannelName != "-") {
@@ -289,7 +289,6 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
                                               sizeof(gPixels[0][0]) * 1, sizeof(gPixels[0][0]) * width));
         }
     }
-
     //BLUE
     currentChannelName = blue_mapping_slot.Param<core::param::FlexEnumParam>()->Value();
     if (currentChannelName != "-") {
@@ -343,12 +342,12 @@ std::shared_ptr<glowl::Texture2D> OpenEXRReader::readToTex2D() {
     }
 
     try {
-        file.setFrameBuffer(fb);
+        file->setFrameBuffer(fb);
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("OpenEXR Reader Exception: %s", ex.what());
     }
     try {
-        file.readPixels(dw.min.y, dw.max.y);
+        file->readPixels(dw.min.y, dw.max.y);
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("OpenEXR Reader Exception: %s", ex.what());
     }

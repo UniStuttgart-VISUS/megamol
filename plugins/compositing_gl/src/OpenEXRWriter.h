@@ -54,6 +54,9 @@ private:
     /** Slot for loading the file */
     core::param::ParamSlot m_filename_slot;
 
+    /**Slot to decide handling of 8bit integer formats*/
+    core::param::ParamSlot m_bitmode_slot;
+
     /** Button triggering writing of exr file */
     core::param::ParamSlot m_button_slot;
 
@@ -80,6 +83,9 @@ private:
 
     bool triggerButtonClicked(core::param::ParamSlot& slot);
     int formatToChannelNumber(GLenum format);
+    int checkNeedsConversion(GLenum internalFormat);
+    void copyAndConvertTextureData(std::shared_ptr<glowl::Texture2D> interm, Imf_3_1::Header header, Imf_3_1::FrameBuffer fb);
+
 
     /**
      * \brief Method sets interface to only allow editing of the last currently named channel or adding a new one.

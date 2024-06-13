@@ -7,6 +7,7 @@
 #include "OpenEXRWriter.h"
 
 #include <vector>
+#include "limits.h"
 
 #include <OpenEXR/ImfArray.h>
 #include <OpenEXR/ImfChannelList.h>
@@ -16,6 +17,7 @@
 #include <OpenEXR/ImfStringAttribute.h>
 
 #include "compositing_gl/CompositingCalls.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -30,6 +32,8 @@ OpenEXRWriter::OpenEXRWriter()
         : mmstd_gl::ModuleGL()
         , version_(0)
         , m_filename_slot("Filename", "Filename to read from")
+        , m_bitmode_slot("8bit integer as color",
+              "8 bit integer formats will be treated as colors and converted to half float color format before saving.")
         , m_channel_name_red("First Channel Name", "Name of first Channel in exr file. The red component of the input "
                                                    "texture will be written to this channel.")
         , m_channel_name_green("Second Channel Name", "Name of second Channel in exr file. The green component of the "
@@ -45,6 +49,8 @@ OpenEXRWriter::OpenEXRWriter()
     this->m_filename_slot << new core::param::FilePathParam(
         "OPENEXRTESTOUTPUTFILE.exr", core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"exr"});
     this->MakeSlotAvailable(&this->m_filename_slot);
+    this->m_bitmode_slot << new core::param::BoolParam(true);
+    this->MakeSlotAvailable(&this->m_bitmode_slot);
 
     this->m_button_slot << new core::param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
     this->m_button_slot.SetUpdateCallback(&OpenEXRWriter::triggerButtonClicked);
@@ -118,8 +124,8 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
             int height = rhs_call_input->getData()->getHeight();
             int inputTextureChNum = formatToChannelNumber(interm->getFormat());
 
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "%x, %x, %x, %s \n", interm->getFormat(), interm->getType(), interm->getInternalFormat(), interm->getType() == GL_FLOAT ? "true" : "false");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("%x, %x, %x, %s \n", interm->getFormat(),
+                interm->getType(), interm->getInternalFormat(), interm->getType() == GL_FLOAT ? "true" : "false");
 
             Header header(width, height);
             FrameBuffer fb;
@@ -219,15 +225,22 @@ bool OpenEXRWriter::getDataCallback(core::Call& caller) {
                 file.writePixels(height);
             };
 
+            //TODO remove header type from outside template
             if (interm->getType() == GL_FLOAT) {
                 headerType = PixelType::FLOAT;
                 copyTextureData.template operator()<float>();
-            } else if (interm->getType() == GL_HALF_FLOAT) {
+            } else if (interm->getType() == GL_HALF_FLOAT) { //TODO: Snorm conversion?
                 headerType = PixelType::HALF;
                 copyTextureData.template operator()<half>();
-            } else if (interm->getType() == GL_INT) { //TODO: what about unsigned byte etc. ?
-                headerType = PixelType::UINT;
-                copyTextureData.template operator()<unsigned int>();
+            } else if (interm->getType() == GL_INT ||
+                       interm->getType() == GL_UNSIGNED_INT) { //TODO: unsigned int not really supported
+                if (m_bitmode_slot.Param<core::param::BoolParam>()->Value() &&
+                    checkNeedsConversion(interm->getInternalFormat())) {
+                    copyAndConvertTextureData(interm, header, fb);
+                } else {
+                    headerType = PixelType::UINT;
+                    copyTextureData.template operator()<int>();
+                }
             }
 
         } catch (const std::exception& exc) {
@@ -308,4 +321,101 @@ void OpenEXRWriter::setRelevantParamState() {
         m_channel_name_blue.Param<core::param::StringParam>()->SetGUIReadOnly(false);
         m_channel_name_alpha.Param<core::param::StringParam>()->SetGUIReadOnly(false);
     }
+}
+
+int megamol::compositing_gl::OpenEXRWriter::checkNeedsConversion(GLenum internalFormat) {
+    //TODO: more color formats?
+    switch (internalFormat) {
+    case GL_RGBA8:
+    case GL_RGB8:
+    case GL_RG8:
+    case GL_R8:
+        return 1;
+        break;
+    case GL_RGBA8_SNORM:
+    case GL_RGB8_SNORM:
+    case GL_RG8_SNORM:
+    case GL_R8_SNORM:
+        return 2;
+        break;
+    default:
+        return 0;
+    }
+    return 0;
+}
+
+void megamol::compositing_gl::OpenEXRWriter::copyAndConvertTextureData(
+    std::shared_ptr<glowl::Texture2D> interm, Header header, FrameBuffer fb) {
+    //TODO: this is redundant and should be removed somehow
+    int inputTextureChNum = formatToChannelNumber(interm->getFormat());
+    int width = interm->getWidth();
+    int height = interm->getHeight();
+    Imf_3_1::PixelType headerType = Imf_3_1::HALF;
+    std::vector<half> rawPixels(width * height * inputTextureChNum);
+    std::vector<half> rPixels(0);
+    std::vector<half> gPixels(0);
+    std::vector<half> bPixels(0);
+    std::vector<half> aPixels(0);
+    //only Init used channels
+    switch (inputTextureChNum) {
+    case 4:
+        aPixels.resize(width * height);
+    case 3:
+        bPixels.resize(width * height);
+    case 2:
+        gPixels.resize(width * height);
+    case 1:
+        rPixels.resize(width * height);
+        break;
+    }
+
+    interm->bindTexture();
+    glGetTextureImage(interm->getName(), 0, interm->getFormat(), GL_HALF_FLOAT,
+        width * height * inputTextureChNum * sizeof(half), rawPixels.data());
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            // the number of channels in the texture determines the stride in raw pixels and how many single-channel vectors can be filed with pixel data.
+            switch (inputTextureChNum) {
+            case 4:
+                aPixels[x + y * width] =
+                    static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 3]);
+            case 3:
+                bPixels[x + y * width] =
+                    static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 2]);
+            case 2:
+                gPixels[x + y * width] =
+                    static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum + 1]);
+            case 1:
+                rPixels[x + y * width] =
+                    static_cast<half>(rawPixels[(x + (height - y - 1) * width) * inputTextureChNum]);
+                break;
+            }
+        }
+    }
+
+    if (m_channel_name_red.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 1) {
+        header.channels().insert(m_channel_name_red.Param<core::param::StringParam>()->Value(), Channel(headerType));
+        fb.insert(m_channel_name_red.Param<core::param::StringParam>()->Value(),
+            Slice(headerType, (char*) &rPixels[0], sizeof(rPixels[0]), sizeof(rPixels[0]) * width));
+    }
+    if (m_channel_name_green.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 2) {
+        header.channels().insert(m_channel_name_green.Param<core::param::StringParam>()->Value(), Channel(headerType));
+        fb.insert(m_channel_name_green.Param<core::param::StringParam>()->Value(),
+            Slice(headerType, (char*) &gPixels[0], sizeof(gPixels[0]) * 1, sizeof(gPixels[0]) * width));
+    }
+    if (m_channel_name_blue.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum >= 3) {
+        header.channels().insert(m_channel_name_blue.Param<core::param::StringParam>()->Value(), Channel(headerType));
+        fb.insert(m_channel_name_blue.Param<core::param::StringParam>()->Value(),
+            Slice(headerType, (char*) &bPixels[0], sizeof(bPixels[0]) * 1, sizeof(bPixels[0]) * width));
+    }
+    if (m_channel_name_alpha.Param<core::param::StringParam>()->Value() != "" && inputTextureChNum == 4) {
+        header.channels().insert(m_channel_name_alpha.Param<core::param::StringParam>()->Value(), Channel(headerType));
+        fb.insert(m_channel_name_alpha.Param<core::param::StringParam>()->Value(),
+            Slice(headerType, (char*) &aPixels[0], sizeof(aPixels[0]) * 1, sizeof(aPixels[0]) * width));
+    }
+
+    OutputFile file(m_filename_slot.Param<core::param::FilePathParam>()->ValueString().c_str(), header);
+
+    file.setFrameBuffer(fb);
+    file.writePixels(height);
 }
