@@ -38,6 +38,8 @@ private:
 
     std::string enumToString(unsigned int e);
     std::string enumToDefinition(unsigned int e);
+    unsigned int enumToType(unsigned int e);
+    unsigned int enumToFormat(unsigned int e);
 
     /**
      * \brief Updates currently chosen formats. Sets recently changed to true. Does not recompile shaders.
