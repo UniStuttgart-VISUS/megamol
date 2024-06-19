@@ -6,11 +6,11 @@
  */
 
 #include "mmvtkm_gl/mmvtkmRenderer.h"
-#include "mmvtkm/mmvtkmDataCall.h"
+
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include "mmcore/param/EnumParam.h"
-
-#include "vtkm/io/reader/VTKDataSetReader.h"
+#include "mmvtkm/mmvtkmDataCall.h"
 
 
 using namespace megamol;

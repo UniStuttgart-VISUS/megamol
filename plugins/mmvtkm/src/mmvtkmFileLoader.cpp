@@ -8,7 +8,7 @@
 
 #include "mmvtkm/mmvtkmFileLoader.h"
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/io/VTKDataSetReader.h>
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -78,7 +78,7 @@ bool mmvtkmFileLoader::filenameChanged(core::param::ParamSlot& slot) {
 
 
     try {
-        vtkm::io::reader::VTKDataSetReader dataReader(vtkmDataFile_);
+        vtkm::io::VTKDataSetReader dataReader(vtkmDataFile_);
         vtkmData_ = std::make_shared<VtkmData>();
         vtkmData_->data = dataReader.ReadDataSet();
         vtkmMetaData_.minMaxBounds = vtkmData_->data.GetCoordinateSystem(0).GetBounds();
