@@ -10,6 +10,9 @@ megamol_plugin(volume
     geometry_calls)
 
 if (volume_PLUGIN_ENABLED)
+  find_path(DATRAW_INCLUDE_DIRS "datraw.h")
+  target_include_directories(volume PRIVATE ${DATRAW_INCLUDE_DIRS})
+
   #XXX: hacky appraoch to include datraw
   add_subdirectory(datraw)
 
