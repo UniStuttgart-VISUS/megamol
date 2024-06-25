@@ -41,6 +41,7 @@ struct wf_tracy_wrapper {
     static void wf_tracy(std::filesystem::path const& output_folder, std::string const&,
         power::segments_t const& values_map, power::MetaData const* meta) {
 #ifdef MEGAMOL_USE_TRACY
+#ifdef MEGAMOL_USE_TRACY_TIME_PLOT
         for (auto const& vm : values_map) {
             for (auto const& [name, v] : vm) {
                 name_lib.insert(name);
@@ -64,12 +65,14 @@ struct wf_tracy_wrapper {
             }
         }
 #endif
+#endif
     }
 };
 
 inline void wf_tracy(std::filesystem::path const& output_folder, [[maybe_unused]] std::string const&,
     power::segments_t const& values_map, power::MetaData const* meta) {
 #ifdef MEGAMOL_USE_TRACY
+#ifdef MEGAMOL_USE_TRACY_TIME_PLOT
     static std::set<std::string> tpn_library;
     for (std::size_t s_idx = 0; s_idx < values_map.size(); ++s_idx) {
         auto const& vm = values_map[s_idx];
@@ -89,6 +92,7 @@ inline void wf_tracy(std::filesystem::path const& output_folder, [[maybe_unused]
             }
         }
     }
+#endif
 #endif
 }
 

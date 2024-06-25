@@ -27,6 +27,7 @@ megamol_feature_option(VTKM "Enable VTK-m support." OFF)
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support." OFF "WIN32")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Inject OpenGL debug groups into calls." OFF "MEGAMOL_USE_OPENGL")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." OFF "WIN32;MEGAMOL_USE_OPENGL")
+megamol_feature_option(TRACY_TIME_PLOT "Enable custom Tracy timed plotting capabilities." OFF "MEGAMOL_USE_TRACY")
 
 # MEMLEAK
 option(MEGAMOL_DETECT_MEMLEAK "Enable to use Memleak detection (MSVC only)" OFF)

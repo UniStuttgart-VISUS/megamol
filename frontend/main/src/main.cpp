@@ -66,9 +66,7 @@ int main(const int argc, const char** argv) {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 #ifdef MEGAMOL_USE_TRACY
-    tracy::StartupProfiler();
-    //ZoneScoped;
-    TracyCZone(main, true);
+    ZoneScoped;
 #endif
     megamol::core::LuaAPI lua_api;
 
@@ -423,11 +421,6 @@ int main(const int argc, const char** argv) {
 
     // close glfw context, network connections, other system resources
     services.close();
-
-#ifdef MEGAMOL_USE_TRACY
-    TracyCZoneEnd(main);
-    tracy::ShutdownProfiler();
-#endif
 
     return ret;
 }
