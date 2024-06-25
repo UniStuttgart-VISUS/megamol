@@ -32,7 +32,7 @@
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 
-static const std::string service_name = "Power_Service: ";
+static const std::string service_name = "[Power_Service] ";
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -92,7 +92,7 @@ bool Power_Service::init(void* configPtr) {
     try {
         rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);
     } catch (std::exception& ex) {
-        log_error(std::format("RTX devices not available: {}", ex.what()));
+        log_warning(std::format("RTX devices not available: {}", ex.what()));
         rtx_ = nullptr;
     }
 
@@ -176,7 +176,7 @@ bool Power_Service::init(void* configPtr) {
         json_data = power::parse_json_file(conf->tinker_map_filename);
         tinker_transform_func = std::bind(&power::transform_tf_name, std::cref(json_data), std::placeholders::_1);
     } catch (...) {
-        core::utility::log::Log::DefaultLog.WriteError("[Power_Service] Could not parse Tinker json file");
+        core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] Could not parse Tinker json file. Using fallback.");
     }
 
     auto nvml_transform_func = [](std::string const& name) -> std::string { return "NVML[" + name + "]"; };

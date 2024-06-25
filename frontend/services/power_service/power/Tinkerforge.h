@@ -8,15 +8,10 @@
 
 namespace megamol::power {
 nlohmann::json parse_json_file(std::filesystem::path const& path) {
-    try {
-        std::ifstream f(path);
-        auto json_file = nlohmann::json::parse(f);
-        f.close();
-        return json_file;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not open JSON file {}", path.string());
-        throw;
-    }
+    std::ifstream f(path);
+    auto json_file = nlohmann::json::parse(f);
+    f.close();
+    return json_file;
 }
 
 std::string get_tf_name(nlohmann::json const& data, std::string const& search) {
