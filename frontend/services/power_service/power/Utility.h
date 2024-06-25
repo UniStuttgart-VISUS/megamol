@@ -134,8 +134,8 @@ inline std::filesystem::path create_full_path(std::filesystem::path const& outpu
     return output_folder / (device_name + "_s" + std::to_string(s_idx) + ext);
 }
 
-inline std::filesystem::path create_full_path(std::filesystem::path const& output_folder,
-    std::string const& device_name, std::string const& ext = ".parquet") {
+inline std::filesystem::path create_full_path(
+    std::filesystem::path const& output_folder, std::string const& device_name, std::string const& ext = ".parquet") {
     return output_folder / (device_name + ext);
 }
 

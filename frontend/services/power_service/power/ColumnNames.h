@@ -8,4 +8,4 @@ namespace megamol::power {
 /// </summary>
 constexpr char const* global_ts_name = "timestamps";
 constexpr char const* global_samples_name = "samples";
-}
+} // namespace megamol::power

@@ -5,9 +5,9 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <regex>
 #include <thread>
-#include <mutex>
 
 #include "ParallelPortTrigger.h"
 #include "Utility.h"

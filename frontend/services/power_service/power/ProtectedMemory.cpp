@@ -16,7 +16,7 @@ ProtectedMemory::ProtectedMemory(std::size_t const req_size) {
     if (cbMod) {
         data_size_ += CRYPTPROTECTMEMORY_BLOCK_SIZE - cbMod;
     }
-    data_ = (char*)LocalAlloc(LPTR, data_size_);
+    data_ = (char*) LocalAlloc(LPTR, data_size_);
     if (!data_) {
         data_size_ = 0;
         throw std::runtime_error("[ProtectedMemory] Cannot allocate data");

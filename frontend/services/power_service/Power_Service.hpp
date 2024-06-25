@@ -200,7 +200,7 @@ private:
     void hmc_init_trg() {
         for (auto& [n, s] : hmc_sensors_) {
             s.log_file(gen_hmc_filename().c_str(), true, false);
-            auto const path_size = s.log_file((char*)nullptr, 0);
+            auto const path_size = s.log_file((char*) nullptr, 0);
             std::string path;
             path.resize(path_size);
             s.log_file(path.data(), path.size());

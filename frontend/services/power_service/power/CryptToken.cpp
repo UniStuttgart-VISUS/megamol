@@ -24,7 +24,7 @@ CryptToken::CryptToken(std::string const& filename) : token_(CREDUI_MAX_PASSWORD
         in_file.close();
         DATA_BLOB blob_in;
         blob_in.cbData = token_size_;
-        blob_in.pbData = (BYTE*)(file_data.data());
+        blob_in.pbData = (BYTE*) (file_data.data());
         DATA_BLOB blob_out;
         if (!CryptUnprotectData(&blob_in, nullptr, nullptr, nullptr, nullptr, 0, &blob_out)) {
             throw std::runtime_error("[CryptToken] Cannot decrypt data");
@@ -42,14 +42,14 @@ CryptToken::CryptToken(std::string const& filename) : token_(CREDUI_MAX_PASSWORD
 
         DATA_BLOB blob_in;
         blob_in.cbData = strlen(token_.GetPtr());
-        blob_in.pbData = (BYTE*)token_.GetPtr();
+        blob_in.pbData = (BYTE*) token_.GetPtr();
         DATA_BLOB blob_out;
         if (!CryptProtectData(&blob_in, nullptr, nullptr, nullptr, nullptr, 0, &blob_out)) {
             throw std::runtime_error("[CryptToken] Cannot encrypt data");
         }
 
         std::ofstream out_file(filename, std::ios::binary);
-        out_file.write((char const*)blob_out.pbData, blob_out.cbData);
+        out_file.write((char const*) blob_out.pbData, blob_out.cbData);
         out_file.close();
 
         SecureZeroMemory(blob_out.pbData, blob_out.cbData);

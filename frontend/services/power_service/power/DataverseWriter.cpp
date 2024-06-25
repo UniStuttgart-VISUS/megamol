@@ -31,7 +31,8 @@ void DataverseWriter(std::string const& dataverse_path, std::string const& doi, 
                 [](const int error, const char* msg, const char* cat, narrow_string::code_page_type cp, void* context) {
                     std::cerr << msg << std::endl << std::endl;
                     *static_cast<char*>(context) = false;
-                }, &signal);
+                },
+                &signal);
     } catch (...) {
         signal = false;
     }

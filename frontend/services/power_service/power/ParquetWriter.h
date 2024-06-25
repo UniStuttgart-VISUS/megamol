@@ -8,9 +8,9 @@
 #include <variant>
 #include <vector>
 
-#include "Utility.h"
 #include "MetaData.h"
 #include "SampleBuffer.h"
+#include "Utility.h"
 
 namespace megamol::power {
 void ParquetWriter(

@@ -60,9 +60,6 @@ inline void sample_func(
 }
 
 
-
-
-
 //template<typename T>
 //inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
 //    std::chrono::milliseconds const& sample_dis, StringContainer* str_cont, bool const& do_buffer,

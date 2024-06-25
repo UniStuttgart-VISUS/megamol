@@ -26,18 +26,18 @@ void sol_rtx_instrument(sol::state& lua) {
 #endif
 
     rtx_instrument_table["acquisition"] =
-        static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_acquisition&, const bool)>(
+        static_cast<rtx_instrument& (rtx_instrument::*) (const oscilloscope_acquisition&, const bool)>(
             &rtx_instrument::acquisition);
 
     rtx_instrument_table["channel"] =
-        static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_channel&)>(&rtx_instrument::channel);
+        static_cast<rtx_instrument& (rtx_instrument::*) (const oscilloscope_channel&)>(&rtx_instrument::channel);
 
     rtx_instrument_table["reference_position"] =
-        static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_reference_point)>(
+        static_cast<rtx_instrument& (rtx_instrument::*) (const oscilloscope_reference_point)>(
             &rtx_instrument::reference_position);
 
     rtx_instrument_table["trigger"] =
-        static_cast<rtx_instrument& (rtx_instrument::*)(const oscilloscope_trigger&)>(&rtx_instrument::trigger);
+        static_cast<rtx_instrument& (rtx_instrument::*) (const oscilloscope_trigger&)>(&rtx_instrument::trigger);
 
     lua.set_function("find_resources", [](const char*, const char*) {
         std::vector<rtx_instrument> ret;
@@ -57,13 +57,13 @@ void sol_oscilloscope_single_acquisition(sol::state& lua) {
     auto acq_table = lua.new_usertype<oscilloscope_acquisition>(
         "oscilloscope_single_acquisition", sol::constructors<oscilloscope_acquisition()>());
 
-    acq_table["count"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*)(const unsigned int)>(
+    acq_table["count"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*) (const unsigned int)>(
         &oscilloscope_acquisition::count);
 
-    acq_table["points"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*)(const unsigned int)>(
+    acq_table["points"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*) (const unsigned int)>(
         &oscilloscope_acquisition::points);
 
-    acq_table["segmented"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*)(const bool)>(
+    acq_table["segmented"] = static_cast<oscilloscope_acquisition& (oscilloscope_acquisition::*) (const bool)>(
         &oscilloscope_acquisition::segmented);
 }
 
@@ -81,24 +81,25 @@ void sol_oscilloscope_channel(sol::state& lua) {
                                     oscilloscope_channel(const std::uint32_t, const oscilloscope_channel&)>());
 
     channel_table["attenuation"] =
-        static_cast<oscilloscope_channel& (oscilloscope_channel::*)(const oscilloscope_quantity&)>(
+        static_cast<oscilloscope_channel& (oscilloscope_channel::*) (const oscilloscope_quantity&)>(
             &oscilloscope_channel::attenuation);
 
-    channel_table["label"] = static_cast<oscilloscope_channel& (oscilloscope_channel::*)(const oscilloscope_label&)>(
+    channel_table["label"] = static_cast<oscilloscope_channel& (oscilloscope_channel::*) (const oscilloscope_label&)>(
         &oscilloscope_channel::label);
 
     channel_table["state"] =
-        static_cast<oscilloscope_channel& (oscilloscope_channel::*)(const bool)>(&oscilloscope_channel::state);
+        static_cast<oscilloscope_channel& (oscilloscope_channel::*) (const bool)>(&oscilloscope_channel::state);
 
-    channel_table["range"] = static_cast<oscilloscope_channel& (oscilloscope_channel::*)(const oscilloscope_quantity&)>(
-        &oscilloscope_channel::range);
+    channel_table["range"] =
+        static_cast<oscilloscope_channel& (oscilloscope_channel::*) (const oscilloscope_quantity&)>(
+            &oscilloscope_channel::range);
 
     channel_table["offset"] =
-        static_cast<oscilloscope_channel& (oscilloscope_channel::*)(const oscilloscope_quantity&)>(
+        static_cast<oscilloscope_channel& (oscilloscope_channel::*) (const oscilloscope_quantity&)>(
             &oscilloscope_channel::offset);
 
     channel_table["zero_adjust"] =
-        static_cast<oscilloscope_channel& (oscilloscope_channel::*)(float const)>(&oscilloscope_channel::zero_adjust);
+        static_cast<oscilloscope_channel& (oscilloscope_channel::*) (float const)>(&oscilloscope_channel::zero_adjust);
 }
 
 
@@ -107,17 +108,17 @@ void sol_oscilloscope_edge_trigger(sol::state& lua) {
         "oscilloscope_trigger", sol::constructors<oscilloscope_trigger(const char*, const char*)>());
 
     trigger_table["level"] = sol::overload(
-        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*)(const oscilloscope_trigger::input_type,
+        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*) (const oscilloscope_trigger::input_type,
             const oscilloscope_quantity&)>(&oscilloscope_trigger::level),
-        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*)(const oscilloscope_quantity&)>(
+        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*) (const oscilloscope_quantity&)>(
             &oscilloscope_trigger::level));
 
     trigger_table["slope"] =
-        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*)(const oscilloscope_trigger_slope)>(
+        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*) (const oscilloscope_trigger_slope)>(
             &oscilloscope_trigger::slope);
 
     trigger_table["mode"] =
-        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*)(const oscilloscope_trigger_mode)>(
+        static_cast<oscilloscope_trigger& (oscilloscope_trigger::*) (const oscilloscope_trigger_mode)>(
             &oscilloscope_trigger::mode);
 
     lua.new_enum<oscilloscope_trigger_slope>("oscilloscope_trigger_slope",
@@ -151,7 +152,7 @@ void sol_rtx_instrument_configuration(sol::state& lua) {
     config_table["channel"] = &rtx_instrument_configuration::channel;
 
     config_table["trigger_position"] =
-        static_cast<rtx_instrument_configuration& (rtx_instrument_configuration::*)(oscilloscope_quantity const&)>(
+        static_cast<rtx_instrument_configuration& (rtx_instrument_configuration::*) (oscilloscope_quantity const&)>(
             &rtx_instrument_configuration::trigger_position);
 
     //config_table["as_slave"] = &rtx_instrument_configuration::as_slave;

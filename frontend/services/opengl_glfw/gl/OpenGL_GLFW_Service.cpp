@@ -618,8 +618,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
 
     m_requestedResourcesNames = {"FrameStatistics", "FramebufferEvents",
-        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
-        frontend_resources::FrameStatsCallbacks_Req_Name
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, frontend_resources::FrameStatsCallbacks_Req_Name
 #ifdef MEGAMOL_USE_POWER
         ,
         frontend_resources::PowerCallbacks_Req_Name
