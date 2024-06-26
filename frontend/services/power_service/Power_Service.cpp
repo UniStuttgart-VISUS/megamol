@@ -14,10 +14,6 @@
 #include <filesystem>
 #include <format>
 
-#ifdef MEGAMOL_USE_TRACY
-#include <tracy/Tracy.hpp>
-#endif
-
 #include "LuaApiResource.h"
 #include "mmcore/LuaAPI.h"
 
@@ -67,10 +63,6 @@ bool Power_Service::init(void* configPtr) {
     if (configPtr == nullptr)
         return false;
 
-    //sol_state_.open_libraries(sol::lib::base);
-
-    //visus::power_overwhelming::sol_expressions(sol_state_, values_map_);
-
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
     write_to_files_ = conf->write_to_files;
@@ -79,10 +71,7 @@ bool Power_Service::init(void* configPtr) {
     main_trigger_ = std::make_shared<megamol::power::Trigger>(lpt);
     main_trigger_->RegisterPreTrigger("Power_Service_sb", std::bind(&Power_Service::sb_pre_trg, this));
     main_trigger_->RegisterInitTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_init_trg, this));
-    //main_trigger_->RegisterPreTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_pre_trg, this));
-    //main_trigger_->RegisterSignal("Power_Service", std::bind(&Power_Service::sb_sgn_trg, this, std::placeholders::_1));
     main_trigger_->RegisterPostTrigger("Power_Service_sb", std::bind(&Power_Service::sb_post_trg, this));
-    //main_trigger_->RegisterPostTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_post_trg, this));
     main_trigger_->RegisterPostTrigger("Power_Service_seg", std::bind(&Power_Service::seg_post_trg, this));
     main_trigger_->RegisterFinTrigger("Power_Service_hmc", std::bind(&Power_Service::hmc_fin_trg, this));
     main_trigger_->RegisterSignal(
@@ -100,16 +89,6 @@ bool Power_Service::init(void* configPtr) {
     callbacks_.signal_low =
         std::bind(&megamol::power::ParallelPortTrigger::SetBit, main_trigger_->GetHandle(), 7, false);
     callbacks_.signal_frame = [&]() -> void {
-        /*auto m_func = [&]() {
-            trigger_->SetBit(7, true);
-            if (have_triggered_) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(2));
-                have_triggered_ = false;
-            }
-            trigger_->SetBit(7, false);
-        };
-        auto t = std::thread(m_func);
-        t.detach();*/
         main_trigger_->GetHandle()->SetBit(7, true);
         main_trigger_->GetHandle()->SetBit(7, false);
     };
@@ -126,14 +105,6 @@ bool Power_Service::init(void* configPtr) {
     auto msr_discard_func = [](std::string const& name) { return name.find("msr/0/package") == std::string::npos; };
 
     auto adl_discard_func = [](std::string const& name) {
-#if 0
-        static int counter = 0;
-        bool discard = false;
-        if (counter > 0)
-            discard = true;
-        ++counter;
-        return discard;
-#endif
         static bool first = false;
         if (name.find("Radeon") == std::string::npos || first) {
             return true;
@@ -141,25 +112,6 @@ bool Power_Service::init(void* configPtr) {
             first = true;
             return false;
         }
-#if 0
-        static std::unordered_set<std::string> types;
-        std::stringstream ss(name);
-        std::string token;
-        while (std::getline(ss, token, '/')) {
-            if (token.find("ADL") == std::string::npos && token.find("AMD") == std::string::npos) {
-                if (token.find("ASIC") != std::string::npos) {
-                    return false;
-                }
-                auto fit = types.find(token);
-                if (fit == types.end()) {
-                    types.insert(token);
-                    return false;
-                }
-                return true;
-            }
-        }
-        return true;
-#endif
     };
 
     auto tinker_config_func = [](tinkerforge_sensor& sensor) {
@@ -175,31 +127,13 @@ bool Power_Service::init(void* configPtr) {
         json_data = power::parse_json_file(conf->tinker_map_filename);
         tinker_transform_func = std::bind(&power::transform_tf_name, std::cref(json_data), std::placeholders::_1);
     } catch (...) {
-        core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] Could not parse Tinker json file. Using fallback.");
+        core::utility::log::Log::DefaultLog.WriteWarn(
+            "[Power_Service] Could not parse Tinker json file. Using fallback.");
     }
 
     auto nvml_transform_func = [](std::string const& name) -> std::string { return "NVML[" + name + "]"; };
 
-    auto adl_transform_func = [](std::string const& name) -> std::string {
-#if 0
-        return "ADL";
-#endif
-        return "ADL[" + name + "]";
-#if 0
-        static int asic_counter = 0;
-        std::stringstream ss(name);
-        std::string token;
-        while (std::getline(ss, token, '/')) {
-            if (token.find("ADL") == std::string::npos && token.find("AMD") == std::string::npos) {
-                if (token.find("ASIC") != std::string::npos) {
-                    return token + std::to_string(asic_counter++);
-                }
-                return token;
-            }
-        }
-        return "ADL";
-#endif
-    };
+    auto adl_transform_func = [](std::string const& name) -> std::string { return "ADL[" + name + "]"; };
 
     auto msr_transform_func = [](std::string const& name) -> std::string { return "MSR[" + name + "]"; };
 
@@ -259,13 +193,6 @@ bool Power_Service::init(void* configPtr) {
             s.current_range(instrument_range::explicitly, 5);
             s.log_behaviour(std::numeric_limits<float>::lowest(), log_mode::unlimited);
             auto const name = power::get_pwrowg_str(s, &hmc8015_sensor::instrument_name);
-            /*auto const name_size = s.instrument_name(nullptr, 0);
-            std::string name;
-            name.resize(name_size);
-            s.instrument_name(name.data(), name.size());
-            if (!name.empty()) {
-                name.resize(name.size() - 1);
-            }*/
             hmc_sensors_[name] = std::move(s);
         }
     } catch (...) {
@@ -278,11 +205,6 @@ bool Power_Service::init(void* configPtr) {
 }
 
 void Power_Service::close() {
-    /*nvml_sensors_.clear();
-    emi_sensors_.clear();
-    msr_sensors_.clear();
-    tinker_sensors_.clear();
-    adl_sensors_.clear();*/
     hmc_sensors_.clear();
     samplers.reset();
 }
@@ -323,12 +245,6 @@ void Power_Service::resetProvidedResources() {}
 void Power_Service::preGraphRender() {}
 
 void Power_Service::postGraphRender() {}
-
-//std::vector<float> Power_Service::examine_expression(std::string const& name, std::string const& exp_path, int s_idx) {
-//    sol_state_["s_idx"] = s_idx;
-//    sol_state_.script_file(exp_path);
-//    return sol_state_[name];
-//}
 
 void Power_Service::fill_lua_callbacks() {
     auto luaApi = m_requestedResourceReferences[0].getResource<core::LuaAPI*>();
@@ -372,30 +288,8 @@ void Power_Service::fill_lua_callbacks() {
     luaApi->RegisterCallback("mmPowerSetLPTAddress", "(string address)",
         [&](std::string const address) -> void { main_trigger_->SetLPTAddress(address); });
 
-    /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
-        "mmPowerSignalHalt", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            sbroker_.Reset();
-            return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});*/
-
-    /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
-        "mmPowerTrigger", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            trigger();
-            return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});*/
-
     luaApi->RegisterCallback("mmPowerConfig", "(string path, int points, int count, int range_ms, int timeout_ms)",
         [&](std::string path, int points, int count, int range, int timeout) -> void {
-            /*sol_state_["points"] = points;
-            sol_state_["count"] = count;
-            sol_state_["range"] = range;
-            sol_state_["timeout"] = timeout;
-
-            sol_state_.script_file(path);
-
-            visus::power_overwhelming::rtx_instrument_configuration config = sol_state_[name];
-
-            config_map_[name] = config;*/
             if (rtx_) {
                 rtx_->UpdateConfigs(
                     path, points, count, std::chrono::milliseconds(range), std::chrono::milliseconds(timeout));
@@ -406,26 +300,11 @@ void Power_Service::fill_lua_callbacks() {
 
     luaApi->RegisterCallback("mmPowerIsPending", "()", [&]() -> bool { return sbroker_.GetValue(); });
 
-    /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult>(
-        "mmPowerForceTrigger", "()", {[&]() -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            for (auto& i : rtx_instr_) {
-                i.trigger_manually();
-            }
-            return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});*/
-
     luaApi->RegisterCallback("mmPowerSoftwareTrigger", "(bool set)", [&](bool set) -> void {
         if (rtx_) {
             rtx_->SetSoftwareTrigger(set);
         }
     });
-
-    /*callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string>(
-        "mmPowerRegisterTracyExp", "(string name, string path)",
-        {[&](std::string name, std::string path) -> frontend_resources::LuaCallbacksCollection::VoidResult {
-            exp_map_[name] = path;
-            return frontend_resources::LuaCallbacksCollection::VoidResult{};
-        }});*/
 
     luaApi->RegisterCallback("mmPowerDataverseKey", "(string path_to_key)",
         [&](std::string path_to_key) -> void { dataverse_key_ = std::make_unique<power::CryptToken>(path_to_key); });
@@ -447,19 +326,8 @@ void Power_Service::fill_lua_callbacks() {
                 meta_.analysis_recipes[name] = std::string(data.begin(), data.end());
             }
         });
-
-    /*auto& register_callbacks =
-        m_requestedResourceReferences[0]
-            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
-
-    register_callbacks(callbacks);*/
 }
 
-//void clear_sb(power::buffers_t& buffers) {
-//    for (auto& b : buffers) {
-//        b.Clear();
-//    }
-//}
 
 void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
     auto const nvml_path = std::filesystem::path(write_folder_) / ("nvml_s" + std::to_string(seg_cnt) + ".parquet");
@@ -473,124 +341,22 @@ void Power_Service::write_sample_buffers(std::size_t seg_cnt) {
         power::SamplersCollectionWrapper::msr_path_t{msr_path},
         power::SamplersCollectionWrapper::tinker_path_t{tinker_path});
 
-    /*ParquetWriter(nvml_path, nvml_buffers_);
-    ParquetWriter(adl_path, adl_buffers_);
-    ParquetWriter(emi_path, emi_buffers_);
-    ParquetWriter(msr_path, msr_buffers_);
-    ParquetWriter(tinker_path, tinker_buffers_);*/
-
     if (dataverse_key_) {
-        /*if (!nvml_buffers_.empty())
-            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, nvml_path.string(),
-                dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (!adl_buffers_.empty())
-            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, adl_path.string(),
-                dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (!emi_buffers_.empty())
-            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, emi_path.string(),
-                dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (!msr_buffers_.empty())
-            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, msr_path.string(),
-                dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (!tinker_buffers_.empty())
-            power::DataverseWriter(dataverse_config_.base_path, dataverse_config_.doi, tinker_path.string(),
-                dataverse_key_->GetToken(), sbroker_.Get(false));*/
-
-        /*if (samplers.nvml_samplers_)
-            samplers.nvml_samplers_->WriteBuffers(nvml_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
-                dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (samplers.adl_samplers_)
-            samplers.adl_samplers_->WriteBuffers(adl_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
-                dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (samplers.emi_samplers_)
-            samplers.emi_samplers_->WriteBuffers(emi_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
-                dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (samplers.msr_samplers_)
-            samplers.msr_samplers_->WriteBuffers(msr_path, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
-                dataverse_key_->GetToken(), sbroker_.Get(false));
-        if (samplers.tinker_samplers_)
-            samplers.tinker_samplers_->WriteBuffers(tinker_path, &meta_, dataverse_config_.base_path,
-                dataverse_config_.doi,
-                dataverse_key_->GetToken(), sbroker_.Get(false));*/
-
         samplers->visit<power::MetaData const*, std::string const&, std::string const&, char const*, char&>(
             &power::ISamplerCollection::WriteBuffers, tpl, &meta_, dataverse_config_.base_path, dataverse_config_.doi,
             dataverse_key_->GetToken(), sbroker_.Get(false));
     } else {
-        /*if (samplers.nvml_samplers_)
-            samplers.nvml_samplers_->WriteBuffers(nvml_path, &meta_);
-        if (samplers.adl_samplers_)
-            samplers.adl_samplers_->WriteBuffers(adl_path, &meta_);
-        if (samplers.emi_samplers_)
-            samplers.emi_samplers_->WriteBuffers(emi_path, &meta_);
-        if (samplers.msr_samplers_)
-            samplers.msr_samplers_->WriteBuffers(msr_path, &meta_);
-        if (samplers.tinker_samplers_)
-            samplers.tinker_samplers_->WriteBuffers(tinker_path, &meta_);*/
-
         samplers->visit<power::MetaData const*>(&power::ISamplerCollection::WriteBuffers, tpl, &meta_);
     }
 
-    //#if defined(DEBUG) && defined(MEGAMOL_USE_TRACY)
-    //    static std::string name = "nvml_debug";
-    //    for (auto const& b : nvml_buffers_) {
-    //        TracyPlotConfig(name.c_str(), tracy::PlotFormatType::Number, false, true, 0);
-    //        auto const& values = b.ReadSamples();
-    //        auto const& ts = b.ReadTimestamps();
-    //        for (std::size_t v_idx = 0; v_idx < values.size(); ++v_idx) {
-    //            tracy::Profiler::PlotData(name.c_str(), values[v_idx], ts[v_idx]);
-    //        }
-    //    }
-    //#endif
-
     samplers->visit(&power::ISamplerCollection::ResetBuffers);
-
-    /*if (nvml_samplers_)
-        nvml_samplers_->ResetBuffers();
-    if (adl_samplers_)
-        adl_samplers_->ResetBuffers();
-    if (emi_samplers_)
-        emi_samplers_->ResetBuffers();
-    if (msr_samplers_)
-        msr_samplers_->ResetBuffers();
-    if (tinker_samplers_)
-        tinker_samplers_->ResetBuffers();*/
-
-
-    /*clear_sb(nvml_buffers_);
-    clear_sb(adl_buffers_);
-    clear_sb(emi_buffers_);
-    clear_sb(msr_buffers_);
-    clear_sb(tinker_buffers_);*/
 }
 
-//void set_sb_range(power::buffers_t& buffers, std::chrono::milliseconds const& range) {
-//    for (auto& b : buffers) {
-//        b.SetSampleRange(range);
-//    }
-//}
 
 void Power_Service::reset_segment_range(std::chrono::milliseconds const& range) {
     auto const [trg_prefix, trg_postfix, trg_wait] = power::get_trigger_timings(range);
     samplers->visit<std::chrono::milliseconds const&>(
         &power::ISamplerCollection::SetSegmentRange, trg_prefix + trg_postfix + std::chrono::seconds(1));
-
-    /*if (nvml_samplers_)
-        nvml_samplers_->SetSegmentRange(range);
-    if (adl_samplers_)
-        adl_samplers_->SetSegmentRange(range);
-    if (emi_samplers_)
-        emi_samplers_->SetSegmentRange(range);
-    if (msr_samplers_)
-        msr_samplers_->SetSegmentRange(range);
-    if (tinker_samplers_)
-        tinker_samplers_->SetSegmentRange(range);*/
-
-    /*set_sb_range(nvml_buffers_, range);
-    set_sb_range(adl_buffers_, range);
-    set_sb_range(emi_buffers_, range);
-    set_sb_range(msr_buffers_, range);
-    set_sb_range(tinker_buffers_, range);*/
 }
 
 void Power_Service::reset_measurement() {
