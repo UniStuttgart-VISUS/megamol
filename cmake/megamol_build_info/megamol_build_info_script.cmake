@@ -2,7 +2,7 @@
 # Copyright (c) 2021, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.15...3.26 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.19...3.29 FATAL_ERROR)
 
 # Functions
 function(write_file_if_changed filename content)
