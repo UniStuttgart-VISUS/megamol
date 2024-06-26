@@ -1,5 +1,5 @@
 {
-  "PEG": {
+  "PEGAUX": {
     "ADD": [ "PEG0_samples", "PEG1_samples" ]
   },
   "12VPEG": { "ADD": [ "12VPEG_samples" ] },

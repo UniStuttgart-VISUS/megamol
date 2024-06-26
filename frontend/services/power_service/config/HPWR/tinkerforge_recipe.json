@@ -1,5 +1,5 @@
 {
-  "12VHPWR": {
+  "PEGAUX": {
     "ADD": [ "12VHPWR0_samples", "12VHPWR1_samples", "12VHPWR2_samples", "12VHPWR3_samples", "12VHPWR4_samples", "12VHPWR5_samples" ]
   },
   "12VPEG": { "ADD": [ "12VPEG_samples" ] },

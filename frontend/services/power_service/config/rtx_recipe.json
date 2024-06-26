@@ -1,13 +1,8 @@
 {
-  "12VHPWR": {
-    "ADD": [ "A_12VHPWR" ],
+  "PEGAUX": {
+    "ADD": [ "A_PEGAUX" ],
     "SUB": [],
-    "MUL": [ "V_12VHPWR" ]
-  },
-  "PEG": {
-    "ADD": [ "A_12VHPWR" ],
-    "SUB": [],
-    "MUL": [ "V_12VHPWR" ]
+    "MUL": [ "V_PEGAUX" ]
   },
   "12VPEG": {
     "ADD": [ "A_PEG12" ],
