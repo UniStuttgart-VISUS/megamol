@@ -18,8 +18,8 @@
 
 #include "AbstractFrontendService.hpp"
 
-#include "RuntimeInfo.h"
 #include "PowerCallbacks.h"
+#include "RuntimeInfo.h"
 
 #include "power/CryptToken.h"
 #include "power/MetaData.h"
