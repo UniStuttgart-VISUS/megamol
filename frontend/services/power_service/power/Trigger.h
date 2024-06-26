@@ -7,6 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <regex>
+#include <string>
 #include <thread>
 
 #include "ParallelPortTrigger.h"
@@ -55,13 +56,13 @@ public:
     /// After exit of this trigger sequence a final trigger is fired, for instance, to write the recorded buffers of the measurements.
     /// This function locks access to the parallel port handle.
     /// </summary>
-    /// <param name="prefix"></param>
-    /// <param name="postfix"></param>
-    /// <param name="wait"></param>
+    /// <param name="prefix">Runup time for measurement.</param>
+    /// <param name="postfix">Time between trigger and post trigger operations.</param>
+    /// <param name="wait">Wait time at the end of trigger sequence.</param>
     /// <returns>The timestamp of the last main trigger in filetime.</returns>
     filetime_dur_t StartTriggerSequence(std::chrono::milliseconds const& prefix,
         std::chrono::milliseconds const& postfix, std::chrono::milliseconds const& wait) {
-        filetime_dur_t trg_tp;
+        filetime_dur_t trg_tp{0};
         std::unique_lock<std::mutex> trg_lock(trg_mtx_);
         fire_init_trigger();
         while (armed_) {
@@ -76,32 +77,47 @@ public:
         return trg_tp;
     }
 
+    /// <summary>
+    /// Registers a signal. Signals will be notified when trigger is fired.
+    /// </summary>
+    /// <param name="name">Name of the signal.</param>
+    /// <param name="signal">Function to be called when trigger is fired.</param>
     void RegisterSignal(std::string const& name, std::function<void(filetime_dur_t const&)> const& signal) {
         signals_[name] = signal;
     }
 
+    /// <summary>
+    /// Registers a function that is called before a trigger sequence is called.
+    /// </summary>
+    /// <param name="name">Name of the function.</param>
+    /// <param name="trigger">The callable function.</param>
     void RegisterInitTrigger(std::string const& name, std::function<void()> const& trigger) {
         init_trigger_[name] = trigger;
     }
 
+    /// <summary>
+    /// Registers a function that is called with the main trigger.
+    /// </summary>
+    /// <param name="name">Name of the function.</param>
+    /// <param name="trigger">The callable function.</param>
     void RegisterSubTrigger(std::string const& name, std::function<void()> const& trigger) {
         sub_trigger_[name] = trigger;
     }
 
     /// <summary>
-    ///
+    /// Registers a function that is called at the beggining of the prefix time in the trigger sequence.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="pre_trigger"></param>
+    /// <param name="name">Name of the function.</param>
+    /// <param name="pre_trigger">The callable function.</param>
     void RegisterPreTrigger(std::string const& name, std::function<void()> const& pre_trigger) {
         pre_trigger_[name] = pre_trigger;
     }
 
     /// <summary>
-    ///
+    /// Registers a function that is called at the end of the postfix time in the trigger sequence.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="post_trigger"></param>
+    /// <param name="name">Name of the function.</param>
+    /// <param name="post_trigger">The callable function.</param>
     void RegisterPostTrigger(std::string const& name, std::function<void()> const& post_trigger) {
         post_trigger_[name] = post_trigger;
     }
@@ -116,13 +132,17 @@ public:
     }
 
     /// <summary>
-    ///
+    /// Opens the parallel port used for sending the main trigger.
     /// </summary>
-    /// <param name="address"></param>
+    /// <param name="address">Address of the virtual file representing the parallel port.</param>
     void SetLPTAddress(std::string const& address) {
         set_lpt(address);
     }
 
+    /// <summary>
+    /// Return a pointer the parallel port used for sending the main trigger.
+    /// </summary>
+    /// <returns>Pointer to parallel port.</returns>
     ParallelPortTrigger* GetHandle() {
         return trigger_.get();
     }
