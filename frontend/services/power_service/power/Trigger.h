@@ -11,7 +11,7 @@
 #include <thread>
 
 #include "ParallelPortTrigger.h"
-#include "Utility.h"
+#include "Timestamp.h"
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
