@@ -23,12 +23,13 @@ inline filetime_dur_t get_highres_timer() {
     ULARGE_INTEGER tv;
     tv.HighPart = f.dwHighDateTime;
     tv.LowPart = f.dwLowDateTime;
-    return filetime_dur_t(tv.QuadPart);
+    return filetime_dur_t{tv.QuadPart};
 
     /*LARGE_INTEGER t;
     QueryPerformanceCounter(&t);
     return t.QuadPart;*/
 #else
+    return filetime_dur_t{0};
 #endif
 }
 
