@@ -36,7 +36,6 @@
 
 #ifdef MEGAMOL_USE_POWER
 #include "Power_Service.hpp"
-#include "power/StringContainer.h"
 #endif
 
 using megamol::core::utility::log::Log;
@@ -202,14 +201,12 @@ int main(const int argc, const char** argv) {
     profiling_config.include_graph_events = config.include_graph_events;
 
 #ifdef MEGAMOL_USE_POWER
-    megamol::power::StringContainer power_str_container;
     megamol::frontend::Power_Service power_service;
     megamol::frontend::Power_Service::Config power_config;
     power_config.lpt = config.power_lpt;
     power_config.write_to_files = config.power_write_file;
     power_config.folder = config.power_folder;
     power_config.tinker_map_filename = config.tinker_map_filename;
-    power_config.str_container = &power_str_container;
     power_service.setPriority(1);
 #endif
 

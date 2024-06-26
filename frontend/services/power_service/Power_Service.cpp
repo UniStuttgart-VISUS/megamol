@@ -73,7 +73,6 @@ bool Power_Service::init(void* configPtr) {
 
     const auto conf = static_cast<Config*>(configPtr);
     auto const lpt = conf->lpt;
-    str_cont_ = conf->str_container;
     write_to_files_ = conf->write_to_files;
     write_folder_ = conf->folder;
 
@@ -212,8 +211,6 @@ bool Power_Service::init(void* configPtr) {
         nvml_samplers = nullptr;
         core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No NVML sensors available");
     }
-    /*std::tie(nvml_sensors_, nvml_buffers_) = megamol::power::InitSampler<nvml_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
     std::unique_ptr<power::SamplerCollection<adl_sensor>> adl_samplers = nullptr;
     try {
         adl_samplers = std::make_unique<power::SamplerCollection<adl_sensor>>(std::chrono::milliseconds(600),
@@ -222,8 +219,6 @@ bool Power_Service::init(void* configPtr) {
         adl_samplers = nullptr;
         core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No ADL sensors available");
     }
-    /*std::tie(adl_sensors_, adl_buffers_) = megamol::power::InitSampler<adl_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_);*/
     std::unique_ptr<power::SamplerCollection<emi_sensor>> emi_samplers = nullptr;
     try {
         emi_samplers = std::make_unique<power::SamplerCollection<emi_sensor>>(
@@ -232,8 +227,6 @@ bool Power_Service::init(void* configPtr) {
         emi_samplers = nullptr;
         core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No EMI sensors available");
     }
-    /*std::tie(emi_sensors_, emi_buffers_) = megamol::power::InitSampler<emi_sensor>(
-        std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, emi_discard_func);*/
     std::unique_ptr<power::SamplerCollection<msr_sensor>> msr_samplers = nullptr;
     if (!emi_samplers) {
         try {
@@ -243,8 +236,6 @@ bool Power_Service::init(void* configPtr) {
             msr_samplers = nullptr;
             core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No MSR sensors available");
         }
-        /*std::tie(msr_sensors_, msr_buffers_) = megamol::power::InitSampler<msr_sensor>(
-            std::chrono::milliseconds(600), std::chrono::milliseconds(1), str_cont_, do_buffer_, msr_discard_func);*/
     }
     std::unique_ptr<power::SamplerCollection<tinkerforge_sensor>> tinker_samplers = nullptr;
     try {
@@ -254,9 +245,6 @@ bool Power_Service::init(void* configPtr) {
         tinker_samplers = nullptr;
         core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] No Tinkerforge sensors available");
     }
-    /*std::tie(tinker_sensors_, tinker_buffers_) =
-        megamol::power::InitSampler<tinkerforge_sensor>(std::chrono::milliseconds(600), std::chrono::milliseconds(5),
-            str_cont_, do_buffer_, nullptr, tinker_config_func);*/
 
     samplers = std::make_unique<power::SamplersCollectionWrapper>(std::move(nvml_samplers), std::move(adl_samplers),
         std::move(emi_samplers), std::move(msr_samplers), std::move(tinker_samplers));

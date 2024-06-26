@@ -16,7 +16,6 @@
 #include "DataverseWriter.h"
 #include "ParquetWriter.h"
 #include "SampleBuffer.h"
-#include "StringContainer.h"
 #include "Utility.h"
 
 #ifdef MEGAMOL_USE_TRACY

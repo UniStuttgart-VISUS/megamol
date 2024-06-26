@@ -27,7 +27,6 @@
 #include "power/RTXInstruments.h"
 #include "power/SamplerCollection.h"
 #include "power/SignalBroker.h"
-#include "power/StringContainer.h"
 #include "power/Trigger.h"
 #include "power/Utility.h"
 
@@ -60,7 +59,6 @@ public:
         bool write_to_files = false;
         std::string folder = "./";
         std::string tinker_map_filename = "./tinkerforge.json";
-        power::StringContainer* str_container;
     };
 
     std::string serviceName() const override {
@@ -380,8 +378,6 @@ private:
     std::shared_ptr<megamol::power::Trigger> main_trigger_;
 
     //int64_t sb_qpc_offset_100ns_;
-
-    power::StringContainer* str_cont_;
 
     frontend_resources::RuntimeInfo const* ri_;
 
