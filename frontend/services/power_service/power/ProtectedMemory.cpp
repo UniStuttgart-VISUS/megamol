@@ -1,6 +1,7 @@
 #include "ProtectedMemory.h"
 
 #include <stdexcept>
+#include <utility>
 
 #if WIN32
 #include <Windows.h>
