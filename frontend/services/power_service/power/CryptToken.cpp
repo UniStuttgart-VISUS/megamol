@@ -12,9 +12,9 @@
 #endif
 
 namespace megamol::power {
-CryptToken::CryptToken(std::string const& filename) : token_(CREDUI_MAX_PASSWORD_LENGTH + 1), token_size_(0) {
-//std::filesystem::path filepath(filename);
 #if WIN32
+CryptToken::CryptToken(std::string const& filename) : token_(CREDUI_MAX_PASSWORD_LENGTH + 1), token_size_(0) {
+    //std::filesystem::path filepath(filename);
     if (std::filesystem::exists(filename) && std::filesystem::is_regular_file(filename)) {
         token_size_ = std::filesystem::file_size(filename);
         std::string file_data;
@@ -55,8 +55,10 @@ CryptToken::CryptToken(std::string const& filename) : token_(CREDUI_MAX_PASSWORD
         SecureZeroMemory(blob_out.pbData, blob_out.cbData);
         LocalFree(blob_out.pbData);
     }
-#endif
 }
+#else
+CryptToken::CryptToken(std::string const& filename) : token_(0), token_size_(0) {}
+#endif
 
 
 char const* CryptToken::GetToken() const {
