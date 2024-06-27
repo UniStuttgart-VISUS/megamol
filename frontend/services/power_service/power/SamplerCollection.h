@@ -1,13 +1,31 @@
 #pragma once
 
+#ifdef MEGAMOL_USE_POWER
+
+#include <chrono>
+#include <filesystem>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <vector>
+
 #include "DataverseWriter.h"
+#include "MetaData.h"
+#include "ParquetWriter.h"
 #include "SamplerUtility.h"
 
-#ifdef MEGAMOL_USE_POWER
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
 
 using namespace visus::power_overwhelming;
 
 namespace megamol::power {
+/// <summary>
+/// Interface definition for the <see cref="SamplerCollection"/> class.
+/// </summary>
 struct ISamplerCollection {
     virtual void SetSegmentRange(std::chrono::milliseconds const& range) = 0;
 
@@ -28,9 +46,22 @@ struct ISamplerCollection {
     virtual ~ISamplerCollection() = default;
 };
 
+/// <summary>
+/// Class holding all samplers from a specific power-overwhelming sampler type.
+/// Holds the corresponding sample buffers, as well.
+/// </summary>
+/// <typeparam name="T">Power-overwhelming sampler type.</typeparam>
 template<typename T>
 class SamplerCollection final : public ISamplerCollection {
 public:
+    /// <summary>
+    /// Opens and configures all sensors of a specific power-overwhelming sampler type.
+    /// </summary>
+    /// <param name="sample_range">Time range of a measurement segment in milliseconds.</param>
+    /// <param name="sample_dis">Intended time distance between each sample in milliseconds.</param>
+    /// <param name="discard">Power-overwhelming name-based discard function for individual sensors.</param>
+    /// <param name="config">Config function for each sensor.</param>
+    /// <param name="transform">Transform function that converts the power-overwhelming name of a sensor into a MegaMol name.</param>
     SamplerCollection(std::chrono::milliseconds const& sample_range, std::chrono::milliseconds const& sample_dis,
         discard_func_t discard = nullptr, config_func_t<T> config = nullptr, transform_func_t transform = nullptr) {
         using namespace visus::power_overwhelming;
@@ -100,28 +131,54 @@ public:
         return *this;
     }*/
 
+    /// <summary>
+    /// Sets the time range of a measurement segment for potential buffer realloc.
+    /// </summary>
+    /// <param name="range">Time range in milliseconds.</param>
     void SetSegmentRange(std::chrono::milliseconds const& range) override {
         for (auto& b : buffers_) {
             b.SetSampleRange(range);
         }
     }
 
+    /// <summary>
+    /// Clears content of the sample buffers.
+    /// </summary>
     void ResetBuffers() override {
         for (auto& b : buffers_) {
             b.Clear();
         }
     }
 
+    /// <summary>
+    /// Writes sample buffers as Parquet file.
+    /// </summary>
+    /// <param name="path">Path to the output file.</param>
+    /// <param name="meta">Meta information that should be embedded into the output file.</param>
     void WriteBuffers(std::filesystem::path const& path, MetaData const* meta) const override {
         ParquetWriter(path, buffers_, meta);
     }
 
+    /// <summary>
+    /// Writes sample buffers as Parquet file and, additionally, sends their content to a Dataverse dataset.
+    /// </summary>
+    /// <param name="path">Path to the output file.</param>
+    /// <param name="meta">Meta information that should be embedded into the output file.</param>
+    /// <param name="dataverse_path">Path of the Dataverse API endpoint.</param>
+    /// <param name="dataverse_doi">DOI of the dataset in the Dataverse.</param>
+    /// <param name="dataverse_token">Dataverse API token.</param>
+    /// <param name="fin_signal">Inout param that will be set true
+    /// once the data transfer operation is finished (<see cref="SignalBroker"/>).</param>
     void WriteBuffers(std::filesystem::path const& path, MetaData const* meta, std::string const& dataverse_path,
         std::string const& dataverse_doi, char const* dataverse_token, char& fin_signal) const override {
-        ParquetWriter(path, buffers_, meta);
+        WriteBuffers(path, meta);
         DataverseWriter(dataverse_path, dataverse_doi, path.string(), dataverse_token, fin_signal);
     }
 
+    /// <summary>
+    /// Specific reset for tinkerforge sensors.
+    /// Resyncs the internal clocks of the sensors with the system clock.
+    /// </summary>
     void Reset() override {
         if constexpr (std::is_same_v<T, tinkerforge_sensor>) {
             for (auto& [n, s] : sensors_) {
@@ -130,10 +187,16 @@ public:
         }
     }
 
+    /// <summary>
+    /// Starts the recording of samples into the sample buffers.
+    /// </summary>
     void StartRecording() override {
         do_buffer_ = true;
     }
 
+    /// <summary>
+    /// Stops the recording of samples into the sample buffers.
+    /// </summary>
     void StopRecording() override {
         do_buffer_ = false;
     }
@@ -145,6 +208,11 @@ private:
     power::samplers_t<T> sensors_;
 };
 
+/// <summary>
+/// Wrapper for the <see cref="SamplerCollection"/> class.
+/// Abstraction over the template type.
+/// Holds collections of all power-overwhelming sensor types.
+/// </summary>
 class SamplersCollectionWrapper final {
 public:
     struct base_path_t {
@@ -176,11 +244,25 @@ public:
         explicit tinker_path_t(std::filesystem::path const& path) : base_path_t(path) {}
     };
 
+    /// <summary>
+    /// Signature for a <see cref="SamplerCollection"/> function visitor.
+    /// </summary>
+    /// <typeparam name="...Ts">Types of the parameter set to pass to the <see cref="SamplerCollection"/> function.</typeparam>
     template<typename... Ts>
     using to_invoke_f = void (ISamplerCollection::*)(Ts...);
+    /// <summary>
+    /// Signature for a <see cref="SamplerCollection"/> const function visitor.
+    /// </summary>
+    /// <typeparam name="...Ts">Types of the parameter set to be pass to the <see cref="SamplerCollection"/> function.</typeparam>
     template<typename... Ts>
     using to_invoke_f_c = void (ISamplerCollection::*)(Ts...) const;
 
+    /// <summary>
+    /// Visits all available power-overwhelming sensors with a specified <see cref="SamplerCollection"/> function.
+    /// </summary>
+    /// <typeparam name="...Ts">Types of the parameter set to be passed to the <see cref="SamplerCollection"/> function.</typeparam>
+    /// <param name="to_invoke">The <see cref="SamplerCollection"/> function to be visited.</param>
+    /// <param name="...args">Parameter set to be passed to the <see cref="SamplerCollection"/> function.</param>
     template<typename... Ts>
     void visit(to_invoke_f<Ts...> to_invoke, Ts... args) {
         if (nvml_samplers_)
@@ -195,6 +277,14 @@ public:
             (*tinker_samplers_.*to_invoke)(std::forward<Ts>(args)...);
     }
 
+    /// <summary>
+    /// Visits all available power-overwhelming sensors with a specified <see cref="SamplerCollection"/> const function.
+    /// Specialized for the output function with the file path tuple.
+    /// </summary>
+    /// <typeparam name="...Ts">Types of the parameter set to be passed to the <see cref="SamplerCollection"/> function.</typeparam>
+    /// <param name="to_invoke">The <see cref="SamplerCollection"/> function to be visited.</param>
+    /// <param name="paths">Set of file paths for the specific power-overwhelming sensor types.</param>
+    /// <param name="...args">Parameter set to be passed to the <see cref="SamplerCollection"/> function.</param>
     template<typename... Ts>
     void visit(to_invoke_f_c<std::filesystem::path const&, Ts...> to_invoke,
         std::tuple<nvml_path_t, adl_path_t, emi_path_t, msr_path_t, tinker_path_t> const& paths, Ts... args) {
@@ -210,8 +300,19 @@ public:
             (*tinker_samplers_.*to_invoke)(std::get<4>(paths), std::forward<Ts>(args)...);
     }
 
+    /// <summary>
+    /// Ctor.
+    /// </summary>
     SamplersCollectionWrapper() = default;
 
+    /// <summary>
+    /// Specialized ctor taking ownership of <see cref="SamplerCollection"/> for all power-overwhelming sensor types.
+    /// </summary>
+    /// <param name="nvml_samplers"><see cref="SamplerCollection"/> for NVML sensors.</param>
+    /// <param name="adl_samplers"><see cref="SamplerCollection"/> for ADL sensors.</param>
+    /// <param name="emi_samplers"><see cref="SamplerCollection"/> for EMI sensors.</param>
+    /// <param name="msr_samplers"><see cref="SamplerCollection"/> for MSR sensors.</param>
+    /// <param name="tinker_samplers"><see cref="SamplerCollection"/> for Tinkerforge sensors.</param>
     SamplersCollectionWrapper(std::unique_ptr<SamplerCollection<nvml_sensor>>&& nvml_samplers,
         std::unique_ptr<SamplerCollection<adl_sensor>>&& adl_samplers,
         std::unique_ptr<SamplerCollection<emi_sensor>>&& emi_samplers,
@@ -223,6 +324,9 @@ public:
             , msr_samplers_{std::move(msr_samplers)}
             , tinker_samplers_{std::move(tinker_samplers)} {}
 
+    /// <summary>
+    /// Move ctor.
+    /// </summary>
     SamplersCollectionWrapper(SamplersCollectionWrapper&& rhs) noexcept
             : nvml_samplers_{std::exchange(rhs.nvml_samplers_, nullptr)}
             , adl_samplers_{std::exchange(rhs.adl_samplers_, nullptr)}
@@ -230,6 +334,9 @@ public:
             , msr_samplers_{std::exchange(rhs.msr_samplers_, nullptr)}
             , tinker_samplers_{std::exchange(rhs.tinker_samplers_, nullptr)} {}
 
+    /// <summary>
+    /// Move assignment.
+    /// </summary>
     SamplersCollectionWrapper& operator=(SamplersCollectionWrapper&& rhs) noexcept {
         nvml_samplers_ = std::exchange(rhs.nvml_samplers_, nullptr);
         adl_samplers_ = std::exchange(rhs.adl_samplers_, nullptr);
@@ -240,6 +347,9 @@ public:
         return *this;
     }
 
+    /// <summary>
+    /// Dtor.
+    /// </summary>
     ~SamplersCollectionWrapper() = default;
 
 private:
