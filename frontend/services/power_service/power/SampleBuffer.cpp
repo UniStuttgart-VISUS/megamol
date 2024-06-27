@@ -11,7 +11,7 @@ SampleBuffer::SampleBuffer(
     SetSampleRange(sample_range);
 }
 
-void SampleBuffer::Add(float const sample, int64_t const timestamp) {
+void SampleBuffer::Add(sample_t const sample, filetime_t const timestamp) {
     samples_.push_back(sample);
     timestamps_.push_back(timestamp);
     if (samples_.size() > 0.95f * samples_.capacity()) {
