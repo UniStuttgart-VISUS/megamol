@@ -2,7 +2,8 @@
 
 #if MEGAMOL_USE_POWER
 
-#include <chrono>
+#include <functional>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -13,10 +14,7 @@
 #include <power_overwhelming/nvml_sensor.h>
 #include <power_overwhelming/tinkerforge_sensor.h>
 
-#include "DataverseWriter.h"
-#include "ParquetWriter.h"
 #include "SampleBuffer.h"
-#include "Utility.h"
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
@@ -26,20 +24,50 @@ using namespace visus::power_overwhelming;
 
 namespace megamol::power {
 
+/// <summary>
+/// Container for a set of samplers from the power-overwhelming library.
+/// (key = std::string, value = T)
+/// </summary>
+/// <typeparam name="T">Sampler type.</typeparam>
 template<typename T>
 using samplers_t = std::unordered_map<std::string, T>;
 
+/// <summary>
+/// Container definitions for a set of SampleBuffers <see cref="SampleBuffer"/>.
+/// </summary>
 using buffers_t = std::vector<SampleBuffer>;
 
+/// <summary>
+/// Type definition for user data of the sampler functions <see cref="sample_func"/>.
+/// </summary>
 using context_t = std::tuple<char const*, SampleBuffer*, bool const&>;
 
+/// <summary>
+/// Signature for functions that discard power-overwhelming sensors based on their name.
+/// </summary>
 using discard_func_t = std::function<bool(std::string const&)>;
 
+/// <summary>
+/// Signature for functions that configure a power-overwhelming sensor.
+/// </summary>
+/// <typeparam name="T"></typeparam>
 template<typename T>
 using config_func_t = std::function<void(T&)>;
 
+/// <summary>
+/// Signature for functions that transform a power-overwhelming sensor name into a MegaMol sensor name.
+/// </summary>
 using transform_func_t = std::function<std::string(std::string const&)>;
 
+/// <summary>
+/// Sampling function for all power-overwhelming samplers.
+/// Samples will stored only when a flag passed as user data is true <see cref="context_t"/>.
+/// If tracy is active, all samples are also recorded as tracy plot.
+/// </summary>
+/// <param name="m">Samples from the power-overwhelimg library.</param>
+/// <param name="n">Number of samples in <c>m</c>.</param>
+/// <param name="usr_ptr">Passed user data that contains the name of the sensor, the buffer for the samples,
+/// and a flag whether samples are currently recorded.</param>
 inline void sample_func(
     wchar_t const*, visus::power_overwhelming::measurement_data const* m, std::size_t const n, void* usr_ptr) {
     auto usr_data = static_cast<context_t*>(usr_ptr);
@@ -57,52 +85,6 @@ inline void sample_func(
         }
     }
 }
-
-
-//template<typename T>
-//inline std::tuple<samplers_t<T>, buffers_t> InitSampler(std::chrono::milliseconds const& sample_range,
-//    std::chrono::milliseconds const& sample_dis, StringContainer* str_cont, bool const& do_buffer,
-//    discard_func_t discard = nullptr, config_func_t<T> config = nullptr) {
-//    using namespace visus::power_overwhelming;
-//    auto sensor_count = T::for_all(nullptr, 0);
-//    std::vector<T> tmp_sensors(sensor_count);
-//    T::for_all(tmp_sensors.data(), tmp_sensors.size());
-//
-//    buffers_t buffers;
-//    buffers.reserve(sensor_count);
-//
-//    samplers_t<T> sensors;
-//    sensors.reserve(sensor_count);
-//
-//    for (auto& sensor : tmp_sensors) {
-//        auto str_ptr = str_cont->Add(unmueller_string(sensor.name()));
-//        if (discard) {
-//            if (discard(*str_ptr))
-//                continue;
-//        }
-//
-//#ifdef MEGAMOL_USE_TRACY
-//        TracyPlotConfig(str_ptr->data(), tracy::PlotFormatType::Number, false, true, 0);
-//#endif
-//
-//        buffers.push_back(SampleBuffer(*str_ptr, sample_range, sample_dis));
-//
-//        sensors[*str_ptr] = std::move(sensor);
-//        if (config) {
-//            config(sensors[*str_ptr]);
-//        }
-//        sensors[*str_ptr].sample(std::move(
-//            async_sampling()
-//                .delivers_measurement_data_to(&sample_func)
-//                .stores_and_passes_context(std::make_tuple(str_ptr->data(), &buffers.back(), std::cref(do_buffer)))
-//                .samples_every(std::chrono::duration_cast<std::chrono::microseconds>(sample_dis).count())
-//                .using_resolution(timestamp_resolution::hundred_nanoseconds)
-//                .from_source(tinkerforge_sensor_source::power)));
-//    }
-//
-//    return std::make_tuple(std::move(sensors), std::move(buffers));
-//}
-
 } // namespace megamol::power
 
 #endif

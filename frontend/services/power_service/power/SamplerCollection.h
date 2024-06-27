@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DataverseWriter.h"
 #include "SamplerUtility.h"
 
 #ifdef MEGAMOL_USE_POWER

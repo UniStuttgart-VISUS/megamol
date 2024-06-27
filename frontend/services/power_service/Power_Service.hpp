@@ -23,6 +23,7 @@
 
 #include "power/CryptToken.h"
 #include "power/MetaData.h"
+#include "power/ParquetWriter.h"
 #include "power/RTXInstruments.h"
 #include "power/SamplerCollection.h"
 #include "power/SignalBroker.h"
