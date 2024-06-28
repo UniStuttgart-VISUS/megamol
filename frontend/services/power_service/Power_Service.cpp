@@ -77,12 +77,16 @@ bool Power_Service::init(void* configPtr) {
     main_trigger_->RegisterSignal(
         "Power_Service_trg", std::bind(&Power_Service::trigger_ts_signal, this, std::placeholders::_1));
 
+#if WIN32
     try {
         rtx_ = std::make_unique<megamol::power::RTXInstruments>(main_trigger_);
     } catch (std::exception& ex) {
         log_warning(std::format("RTX devices not available: {}", ex.what()));
         rtx_ = nullptr;
     }
+#else
+    rtx_ = nullptr;
+#endif
 
     callbacks_.signal_high =
         std::bind(&megamol::power::ParallelPortTrigger::SetBit, main_trigger_->GetHandle(), 7, true);
@@ -306,8 +310,13 @@ void Power_Service::fill_lua_callbacks() {
         }
     });
 
-    luaApi->RegisterCallback("mmPowerDataverseKey", "(string path_to_key)",
-        [&](std::string path_to_key) -> void { dataverse_key_ = std::make_unique<power::CryptToken>(path_to_key); });
+    luaApi->RegisterCallback("mmPowerDataverseKey", "(string path_to_key)", [&](std::string path_to_key) -> void {
+#if WIN32
+        dataverse_key_ = std::make_unique<power::CryptToken>(path_to_key);
+#else
+        core::utility::log::Log::DefaultLog.WriteWarn("[Power_Service] Dataverse access currently Windows only.");
+#endif
+    });
 
     luaApi->RegisterCallback("mmPowerDataverseDataset", "(string base_path, string doi)",
         [&](std::string base_path, std::string doi) -> void {
