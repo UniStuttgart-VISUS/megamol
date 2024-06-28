@@ -3,14 +3,20 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <algorithm>
-#include <bitset>
+#include <chrono>
+#include <exception>
+#include <filesystem>
+#include <functional>
 #include <future>
 #include <stdexcept>
 #include <thread>
+#include <type_traits>
+#include <vector>
 
 #include <mmcore/utility/log/Log.h>
 
 #include "ColumnNames.h"
+#include "Trigger.h"
 #include "sol_rtx_instrument.h"
 
 using namespace visus::power_overwhelming;
@@ -74,8 +80,6 @@ void RTXInstruments::ApplyConfigs(MetaData* meta) {
                 i.synchronise_clock(true);
                 i.reset(rtx_instrument_reset::buffers | rtx_instrument_reset::status | rtx_instrument_reset::stop);
                 // need to stop running measurement otherwise wait on trigger cannot be used to guard start of trigger sequence
-                //i.write("STOP\n");
-                //i.operation_complete();
                 fit->second.beep_on_trigger(true).beep_on_apply(true).beep_on_error(true);
                 if (!fit->second.slave()) {
                     main_instr_ = &i;
@@ -93,8 +97,6 @@ void RTXInstruments::ApplyConfigs(MetaData* meta) {
                 i.operation_complete();
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Configured device %s", name);
             }
-
-            // TODO: store configs in metadata
         });
     } catch (std::exception& ex) {
         core::utility::log::Log::DefaultLog.WriteError(
@@ -131,7 +133,6 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
             }
 
             // magic sleep to wait until devices are ready to recieve other requests
-            //std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             while (!waiting_on_trigger()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
@@ -140,21 +141,6 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
             trigger_->ArmTrigger();
             auto tp_fut = std::async(std::launch::async,
                 std::bind(&Trigger::StartTriggerSequence, trigger_.get(), trg_prefix, trg_postfix, trg_wait));
-            /*while (global_device_counter < rtx_instr_.size()) {
-                core::utility::log::Log::DefaultLog.WriteInfo("Waiting on trigger %d", global_device_counter);
-                if (waiting_on_trigger()) {
-                    core::utility::log::Log::DefaultLog.WriteInfo("Trigger!");
-                    std::tie(last_trigger, last_trigger_ft) = trigger();
-                } else {
-                    trigger_->DisarmTrigger();
-                    break;
-                }
-                std::this_thread::sleep_for(config_range_ * 1.1f);
-            }*/
-            /*while (global_device_counter < rtx_instr_.size()) {
-                std::this_thread::sleep_for(config_range_ / 2);
-            }
-            trigger_->DisarmTrigger();*/
             tp_fut.wait();
             auto const last_trigger_ft = tp_fut.get();
 
@@ -200,7 +186,6 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
 
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Start reading data");
                 auto const start_read = std::chrono::steady_clock::now();
-                //auto const all_waveforms = i.data(oscilloscope_waveform_points::maximum);
                 auto const all_waveforms = all_wf_fut[f_cnt++].get();
 
                 auto const num_segments = i.history_segments();
@@ -209,21 +194,12 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
 
                 for (std::decay_t<decltype(num_segments)> s_idx = 0, fetch_idx = num_segments - 1; s_idx < num_segments;
                      ++s_idx, --fetch_idx) {
-                    //auto const fullpath = output_folder / (instr.first + "_s" + std::to_string(s_idx) + ".parquet");
                     auto const& waveform = all_waveforms[fetch_idx * num_channels].waveform();
                     auto const sample_times = generate_timeline(waveform);
                     auto const segment_times =
                         offset_timeline(sample_times, std::chrono::duration_cast<power::filetime_dur_t>(
                                                           std::chrono::duration<float>(waveform.segment_offset())));
                     auto const timestamps = offset_timeline(segment_times, last_trigger_ft);
-                    /*power::timeline_t timestamps(segment_times.size());
-                    std::transform(segment_times.begin(), segment_times.end(), timestamps.begin(),
-                        [&last_trigger_ft](auto const& base) {
-                            return get_tracy_time(filetime_dur_t(base), filetime_dur_t(last_trigger_ft)).count();
-                        });*/
-
-                    /*values_map[s_idx]["sample_times"] = sample_times;
-                    values_map[s_idx]["segment_times"] = segment_times;*/
                     values_map[s_idx][global_ts_name] = timestamps;
 
                     for (unsigned int c_idx = 0; c_idx < num_channels; ++c_idx) {
@@ -231,8 +207,6 @@ void RTXInstruments::StartMeasurement(std::filesystem::path const& output_folder
                         values_map[s_idx][tpn] =
                             copy_waveform(all_waveforms[fetch_idx * num_channels + c_idx].waveform());
                     }
-
-                    //ParquetWriter(fullpath, values_map[s_idx]);
                 }
                 auto const stop_read = std::chrono::steady_clock::now();
                 core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstruments]: Finished reading data in %dms",
@@ -262,7 +236,6 @@ bool RTXInstruments::waiting_on_trigger() const {
         auto res = i.query("STAT:OPER:COND?\n");
         *strchr(res.as<char>(), '\n') = 0;
         auto const val = std::atoi(res.as<char>());
-        //core::utility::log::Log::DefaultLog.WriteInfo("[RTXInstrument]: Stat Cond: {}", std::bitset<32>(val).to_string());
         if (val & 8) {
             return true;
         }
