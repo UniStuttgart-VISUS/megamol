@@ -2,7 +2,8 @@
 
 #ifdef MEGAMOL_USE_POWER
 
-#include <stdexcept>
+#include <cstdint>
+#include <limits>
 #include <system_error>
 
 #include "mmcore/utility/log/Log.h"
