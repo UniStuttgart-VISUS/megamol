@@ -2,6 +2,17 @@
 
 #ifdef MEGAMOL_USE_POWER
 
+#include <cstdint>
+#include <exception>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
 #include "mmcore/utility/log/Log.h"
 
 #include <arrow/io/file.h>
@@ -10,6 +21,8 @@
 #include <parquet/api/writer.h>
 
 #include "ColumnNames.h"
+#include "MetaData.h"
+#include "Utility.h"
 
 namespace megamol::power {
 template<typename T>
