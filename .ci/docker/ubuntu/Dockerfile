@@ -22,6 +22,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   autoconf libtool \
 # mpfr:
   autoconf-archive \
+# thrift:
+  flex bison \
 # GL/glu.h:
   libglu1-mesa-dev \
   && rm -rf /var/lib/apt/lists/*
