@@ -1,7 +1,10 @@
 #include "CryptToken.h"
 
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
+#include <string>
 
 #if WIN32
 #include <Windows.h>
@@ -41,7 +44,7 @@ CryptToken::CryptToken(std::string const& filename) : token_(CREDUI_MAX_PASSWORD
                 CREDUI_FLAGS_PASSWORD_ONLY_OK | CREDUI_FLAGS_KEEP_USERNAME);
 
         DATA_BLOB blob_in;
-        blob_in.cbData = strlen(token_.GetPtr());
+        blob_in.cbData = std::strlen(token_.GetPtr());
         blob_in.pbData = (BYTE*) token_.GetPtr();
         DATA_BLOB blob_out;
         if (!CryptProtectData(&blob_in, nullptr, nullptr, nullptr, nullptr, 0, &blob_out)) {
