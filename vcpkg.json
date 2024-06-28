@@ -155,9 +155,8 @@
             "parquet"
           ]
         },
-        "power-overwhelming",
-        "wil",
-        "dataversepp"
+        "dataversepp",
+        "power-overwhelming"
       ]
     },
     "profiling": {
