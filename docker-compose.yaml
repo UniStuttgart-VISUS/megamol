@@ -1,0 +1,16 @@
+services:
+  megamol:
+    build:
+      context: .
+      args:
+        USER_ID: 1000
+        GROUP_ID: 1000
+        USERNAME: masta76
+    container_name: megamol-build-env
+    user: "1000:1000"
+    volumes:
+      - "${PWD}:/home/${USER}/megamol"
+    working_dir: "/home/${USER}/megamol"
+    tty: true
+    entrypoint: /bin/bash
+

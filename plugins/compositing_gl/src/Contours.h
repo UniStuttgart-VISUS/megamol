@@ -103,32 +103,25 @@ private:
     /** Slot for the output texture */
     core::CalleeSlot outputTexSlot_;
 
+    /** Slot receiving the input normal texture */
+    core::CallerSlot inputNormalSlot_;
     /** Slot receiving the input color texture */
     core::CallerSlot inputColorSlot_;
-    /** Slot receiving the input depth texture */
-    core::CallerSlot inputDepthSlot_;
 
-    /** Parameter slot for the gauss kernel radius */
-    core::param::ParamSlot kernelRadiusParam_;
-    /** Parameter slot for the effect strength */
-    core::param::ParamSlot lambdaValueParam_;
+    core::CallerSlot inputDepthSlot_;
+    /** Slot receiving the input depth texture */
+    core::CallerSlot cameraSlot_;
+
+    core::param::ParamSlot sobelOperatorThreshold_;
 
     /** version identifier */
     uint32_t version_;
 
-    /** shader program for blurring the depth texture */
-    std::unique_ptr<glowl::GLSLProgram> blurShader_;
-    /** shader performing the actual depth darkening */
-    std::unique_ptr<glowl::GLSLProgram> darkenShader_;
+    /** shader performing the conotur calculations */
+    std::unique_ptr<glowl::GLSLProgram> contoursShader_;
 
-    /** intermediate texture */
-    std::shared_ptr<glowl::Texture2D> intermediateTex_;
-    /** second intermediate texture */
-    std::shared_ptr<glowl::Texture2D> intermediateTex2_;
     /** final output texture */
     std::shared_ptr<glowl::Texture2D> outputTex_;
 
-    /** buffer for the gauss kernel */
-    std::unique_ptr<glowl::BufferObject> gaussValues_;
 };
 } // namespace megamol::compositing_gl
