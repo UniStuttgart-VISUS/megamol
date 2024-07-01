@@ -184,6 +184,9 @@
         }
       ]
     },
+    "tracy-time-plot": {
+      "description": "Custom Tracy timed plotting capabilities"
+    },
     "vr-interop": {
       "description": "Use VR Interop",
       "dependencies": [
