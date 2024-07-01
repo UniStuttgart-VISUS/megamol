@@ -5,29 +5,27 @@
  * Alle Rechte vorbehalten.
  */
 
-// search/replace Power_Service with your class name
-// you should also delete the FAQ comments in these template files after you read and understood them
 #include "Power_Service.hpp"
 
 #ifdef MEGAMOL_USE_POWER
 
 #include <filesystem>
-#include <format>
+
+#include <nlohmann/json.hpp>
 
 #include "LuaApiResource.h"
-#include "mmcore/LuaAPI.h"
-
 #include "ModuleGraphSubscription.h"
-
+#include "mmcore/LuaAPI.h"
+#include "mmcore/utility/log/Log.h"
 #include "power/DataverseWriter.h"
 #include "power/Tinkerforge.h"
 #include "power/WriterUtility.h"
 
-#include <nlohmann/json.hpp>
+#if _WIN32
+#include <format>
+#endif
 
 // local logging wrapper for your convenience until central MegaMol logger established
-#include "mmcore/utility/log/Log.h"
-
 static const std::string service_name = "[Power_Service] ";
 static void log(std::string const& text) {
     const std::string msg = service_name + text;
