@@ -1,8 +1,8 @@
-# MegaMol Fedora CI Environment
+# MegaMol Oracle Linux CI Environment
 
-FROM fedora:37
+FROM oraclelinux:9
 
-RUN dnf -y update && dnf -y install \
+RUN dnf -y update && dnf --enablerepo=ol9_codeready_builder -y install \
   gcc \
   gcc-c++ \
   make \
@@ -25,6 +25,8 @@ RUN dnf -y update && dnf -y install \
   libtool \
 # mpfr:
   autoconf-archive \
+# thrift:
+  flex bison \
 # OpenGL:
   mesa-libGL-devel mesa-libGLU-devel \
   && dnf clean all
