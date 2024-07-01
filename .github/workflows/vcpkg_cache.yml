@@ -26,6 +26,7 @@ jobs:
         -DMEGAMOL_USE_CGAL=ON
         -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
         -DMEGAMOL_USE_OSPRAY=ON
+        -DMEGAMOL_USE_POWER=ON
         -DMEGAMOL_USE_STACKTRACE=ON
         -DMEGAMOL_USE_TRACY=ON
       env:
@@ -56,6 +57,7 @@ jobs:
         -DMEGAMOL_USE_CGAL=ON
         -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
         -DMEGAMOL_USE_OSPRAY=ON
+        -DMEGAMOL_USE_POWER=ON
         -DMEGAMOL_USE_STACKTRACE=ON
         -DMEGAMOL_USE_TRACY=ON
       env:
