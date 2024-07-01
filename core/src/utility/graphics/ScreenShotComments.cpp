@@ -20,8 +20,9 @@
 
 namespace mcu_graphics = megamol::core::utility::graphics;
 
-mcu_graphics::ScreenShotComments::ScreenShotComments(
-    std::string const& project_configuration, const std::optional<comments_storage_map>& additional_comments) {
+mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_configuration,
+    megamol::frontend_resources::RuntimeInfo const* ri,
+    const std::optional<comments_storage_map>& additional_comments) {
 
     the_comments["Title"] = "MegaMol Screen Capture " + utility::DateTime::CurrentDateTimeFormatted();
     //the_comments["Author"] = "";
@@ -34,11 +35,14 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(
 
     the_comments["Remote Branch"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_BRANCH_NAME_FULL();
     the_comments["Remote URL"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_REMOTE_URL();
-    the_comments["Software Environment"] = platform::RuntimeInfo::GetRuntimeLibraries();
-    the_comments["Hardware Environment"] = platform::RuntimeInfo::GetHardwareInfo();
     the_comments["CMakeCache"] = megamol::core::utility::buildinfo::MEGAMOL_CMAKE_CACHE();
     the_comments["Git Diff"] = megamol::core::utility::buildinfo::MEGAMOL_GIT_DIFF();
-    the_comments["Operating System"] = platform::RuntimeInfo::GetOsInfo();
+
+    if (ri) {
+        the_comments["Hardware Environment"] = ri->get_hardware_info();
+        the_comments["Operating System"] = ri->get_os_info();
+        the_comments["Software Environment"] = ri->get_runtime_libraries();
+    }
 
     //the_comments["Disclaimer"] = "";
     //the_comments["Warning"] = "";

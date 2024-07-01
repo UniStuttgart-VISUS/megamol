@@ -5,9 +5,7 @@
   "homepage": "https://github.com/UniStuttgart-VISUS/megamol-shader-factory",
   "license": "BSD-3-Clause",
   "dependencies": [
-    {
-      "name": "glslang"
-    },
+    "glslang",
     {
       "name": "vcpkg-cmake",
       "host": true

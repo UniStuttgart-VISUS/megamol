@@ -1,10 +1,11 @@
 {
   "name": "power-overwhelming",
-  "version": "1.8.0",
+  "version-date": "2024-07-01",
   "description": "Measurement framekwork for GPU power consumption.",
   "homepage": "https://github.com/UniStuttgart-VISUS/power-overwhelming",
   "license": "MIT",
   "dependencies": [
+    "nlohmann-json",
     {
       "name": "vcpkg-cmake",
       "host": true

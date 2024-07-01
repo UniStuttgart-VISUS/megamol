@@ -58,6 +58,10 @@
     "tinygltf",
     "tinyobjloader",
     "tinyply",
+    {
+      "name": "wil",
+      "platform": "windows"
+    },
     "zeromq",
     "zfp",
     "zlib"
@@ -145,6 +149,13 @@
     "power": {
       "description": "Use power consumption measurement",
       "dependencies": [
+        {
+          "name": "arrow",
+          "features": [
+            "parquet"
+          ]
+        },
+        "dataversepp",
         "power-overwhelming"
       ]
     },
@@ -172,6 +183,9 @@
           ]
         }
       ]
+    },
+    "tracy-time-plot": {
+      "description": "Custom Tracy timed plotting capabilities"
     },
     "vr-interop": {
       "description": "Use VR Interop",

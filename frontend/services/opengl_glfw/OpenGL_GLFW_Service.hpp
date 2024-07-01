@@ -18,6 +18,12 @@
 #include "WindowManipulation.h"
 #include "Window_Events.h"
 
+#ifdef MEGAMOL_USE_POWER
+#include "PowerCallbacks.h"
+#endif
+
+#include <memory>
+
 namespace megamol::frontend {
 
 struct WindowPlacement {
@@ -53,6 +59,7 @@ public:
         std::vector<WindowIcon> windowIcons{};
         bool enableKHRDebug = true; // max error reporting
         bool enableVsync = false;   // max frame rate
+        bool enableGlFlushFinish = false;
         bool glContextCoreProfile = false;
         bool forceWindowSize = false;
     };
@@ -130,6 +137,10 @@ private:
     frontend_resources::OpenGL_Context m_opengl_context;
     frontend_resources::OpenGL_Helper m_opengl_helper;
     WindowManipulation m_windowManipulation;
+
+#ifdef MEGAMOL_USE_POWER
+    frontend_resources::PowerCallbacks const* power_callbacks_ = nullptr;
+#endif
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
     // const std::vector<FrontendResource>& getModuleResources() override

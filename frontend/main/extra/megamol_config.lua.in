@@ -65,6 +65,7 @@ mmSetGlobalValue("MachineName", computer) -- CLI: -g MachineName:WhateverYourMac
 -- equals ./megamol.exe --fullscreen=true
 mmSetCliOption("fullscreen",  "off")                   -- CLI: --fullscreen=false
 mmSetCliOption("vsync",       "off")                   -- CLI: --vsync=false
+mmSetCliOption("flushfinish", "off")                   -- CLI: --flushfinish=false
 mmSetCliOption("interactive", "off")                   -- CLI: --interactive=false
 mmSetCliOption("window",      "1920x1080")             -- CLI: --window 1920x1080
 mmSetCliOption("khrdebug",    "off")                   -- CLI: --khrdebug=false
