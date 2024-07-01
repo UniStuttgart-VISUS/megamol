@@ -10,8 +10,7 @@
 
 #include <vtkm/Matrix.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include "mmadios/CallADIOSData.h"
 #include "mmcore/param/BoolParam.h"
@@ -176,7 +175,6 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
             int numElements = elementLabel.size();
             int numNodes = nodeLabels.size();
             vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
-            vtkm::cont::DataSetFieldAdd dataSetFieldAdd;
 
 
             int numSkipped = 0;
@@ -262,10 +260,10 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
             std::string field1 = "hs2";
             std::string field2 = "hs3";
             std::string field3 = "hs";
-            dataSetFieldAdd.AddPointField(vtkmData_->data, field0, pointHs1);
-            dataSetFieldAdd.AddPointField(vtkmData_->data, field1, pointHs2);
-            dataSetFieldAdd.AddPointField(vtkmData_->data, field2, pointHs3);
-            dataSetFieldAdd.AddPointField(vtkmData_->data, field3, pointHs);
+            vtkmData_->data.AddPointField(field0, pointHs1);
+            vtkmData_->data.AddPointField(field1, pointHs2);
+            vtkmData_->data.AddPointField(field2, pointHs3);
+            vtkmData_->data.AddPointField(field3, pointHs);
 
             // vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
             // writer.WriteDataSet(vtkmData_);

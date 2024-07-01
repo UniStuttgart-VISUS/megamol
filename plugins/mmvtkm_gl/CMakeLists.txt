@@ -19,8 +19,8 @@ if (mmvtkm_gl_PLUGIN_ENABLED)
   find_package(VTKm CONFIG REQUIRED)
   target_link_libraries(mmvtkm_gl
     PRIVATE
-      vtkm_cont
-      vtkm_filter
-      vtkm_rendering
-      vtkm_worklet)
+      vtkm::cont
+      vtkm::filter
+      vtkm::rendering
+      vtkm::worklet)
 endif ()

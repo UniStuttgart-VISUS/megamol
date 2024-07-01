@@ -84,6 +84,10 @@ find_package(OpenMP REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+# GLM
+find_package(glm CONFIG REQUIRED)
+add_compile_definitions("GLM_ENABLE_EXPERIMENTAL")
+
 # OpenGL
 if (MEGAMOL_USE_OPENGL)
   find_package(OpenGL REQUIRED)

@@ -8,8 +8,8 @@
 #include "mmvtkm/mmvtkmStreamLines.h"
 
 #include <glm/gtx/transform.hpp>
-#include <vtkm/filter/Streamline.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/filter/flow/Streamline.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -1206,13 +1206,13 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             }
         }
 
-        vtkm::cont::ArrayHandle<vtkm::Particle> seedArray = vtkm::cont::make_ArrayHandle(seeds_);
+        vtkm::cont::ArrayHandle<vtkm::Particle> seedArray = vtkm::cont::make_ArrayHandle(seeds_, vtkm::CopyFlag::Off);
 
         // streamline calculation part here
         try {
             // for non-temporal data (steady flow) it holds that streamlines = streaklines = pathlines
             // therefore we can calculate the pathlines via the streamline filter
-            vtkm::filter::Streamline mmvtkmStreamLines;
+            vtkm::filter::flow::Streamline mmvtkmStreamLines;
             mmvtkmStreamLines.SetActiveField(activeField_);
             mmvtkmStreamLines.SetStepSize(stepSize_);
             mmvtkmStreamLines.SetNumberOfSteps(numSteps_);
@@ -1236,7 +1236,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
 
         // get polylines
-        const vtkm::cont::DynamicCellSet& polylineSet = streamlineOutput_.GetCellSet();
+        const vtkm::cont::UnknownCellSet& polylineSet = streamlineOutput_.GetCellSet();
         const vtkm::cont::CellSet* polylineSetBase = polylineSet.GetCellSetBase();
         int numPolylines = polylineSetBase->GetNumberOfCells();
 
