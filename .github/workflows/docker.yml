@@ -17,8 +17,8 @@ jobs:
         config:
           - dockerfile_dir: ubuntu
             image_name: megamol_ci_ubuntu
-          - dockerfile_dir: fedora
-            image_name: megamol_ci_fedora
+          - dockerfile_dir: oraclelinux
+            image_name: megamol_ci_oraclelinux
     name: Docker-Build
     runs-on: ubuntu-22.04
     permissions:
