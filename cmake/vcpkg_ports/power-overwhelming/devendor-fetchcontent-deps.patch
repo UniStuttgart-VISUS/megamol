@@ -1,0 +1,61 @@
+diff --git a/power_overwhelming/CMakeLists.txt b/power_overwhelming/CMakeLists.txt
+index 3fc7fb7..33daec6 100644
+--- a/power_overwhelming/CMakeLists.txt
++++ b/power_overwhelming/CMakeLists.txt
+@@ -74,8 +74,9 @@ if (WIN32)
+     target_compile_options(${PROJECT_NAME} PRIVATE "-doc")
+ endif ()
+ 
++find_package(nlohmann_json CONFIG REQUIRED)
+ target_link_libraries(${PROJECT_NAME}
+-    PRIVATE adl nlohmann_json nvml tinkerforge)
++    PRIVATE adl nlohmann_json::nlohmann_json nvml tinkerforge)
+ 
+ if (WIN32)
+     target_link_libraries(${PROJECT_NAME} PUBLIC Ws2_32)
+diff --git a/third_party/CMakeLists.txt b/third_party/CMakeLists.txt
+index acbe4cf..5981e04 100644
+--- a/third_party/CMakeLists.txt
++++ b/third_party/CMakeLists.txt
+@@ -12,10 +12,12 @@ mark_as_advanced(FORCE
+     FETCHCONTENT_UPDATES_DISCONNECTED)
+ 
+ # AMD Display Library (this is a bit hacky ...)
++if (0)
+ FetchContent_Declare(adl
+     URL "https://github.com/GPUOpen-LibrariesAndSDKs/display-library/archive/17.1.tar.gz"
+ )
+ FetchContent_MakeAvailable(adl)
++endif ()
+ add_library(adl INTERFACE IMPORTED GLOBAL)
+ set_target_properties(adl PROPERTIES
+     INTERFACE_INCLUDE_DIRECTORIES "${adl_SOURCE_DIR}/include")
+@@ -28,6 +30,7 @@ mark_as_advanced(FORCE
+     FETCHCONTENT_UPDATES_DISCONNECTED_ADL)
+ 
+ # JSON library
++if (0)
+ FetchContent_Declare(nlohmann_json
+     URL "https://github.com/nlohmann/json/archive/v3.11.3.tar.gz"
+ )
+@@ -45,6 +48,7 @@ mark_as_advanced(FORCE
+     JSON_LegacyDiscardedValueComparison
+     JSON_MultipleHeaders
+     JSON_SystemInclude)
++endif ()
+ 
+ # NVIDIA Management Library
+ add_library(nvml INTERFACE IMPORTED GLOBAL)
+@@ -72,6 +76,7 @@ if (NOT WIN32)
+ endif ()
+ 
+ # Windows Implementation Library
++if (0)
+ FetchContent_Declare(wil
+     URL "https://github.com/microsoft/wil/archive/v1.0.230202.1.tar.gz"
+ )
+@@ -89,3 +94,4 @@ mark_as_advanced(FORCE
+     FAST_BUILD
+     WIL_BUILD_PACKAGING
+     WIL_BUILD_TESTS)
++endif ()

@@ -5,6 +5,7 @@
   "homepage": "https://github.com/UniStuttgart-VISUS/power-overwhelming",
   "license": "MIT",
   "dependencies": [
+    "nlohmann-json",
     {
       "name": "vcpkg-cmake",
       "host": true
