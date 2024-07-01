@@ -32,15 +32,12 @@ jobs:
     matrix:
       'VS2019 Release':
         configuration: Release
-        generator: 'Visual Studio 16 2019'
         cmakeExtraArgs: '$(defaultConfig)'
       'VS2019 Debug':
         configuration: Debug
-        generator: 'Visual Studio 16 2019'
         cmakeExtraArgs: '$(defaultConfig)'
       'VS2019 Release (nonGL)':
         configuration: Release
-        generator: 'Visual Studio 16 2019'
         cmakeExtraArgs: '$(nonGlConfig)'
 
   timeoutInMinutes: 720
@@ -61,7 +58,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs)'
+      cmakeArgs: '.. -G "Visual Studio 16 2019" -A"x64" $(cmakeExtraArgs)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
@@ -74,43 +71,23 @@ jobs:
 
   strategy:
     matrix:
-      ## Temporarily disabled until more CI machines are available!
-      #'GCC11 / Make / Release':
-      #  dockerImage: megamol_ci_ubuntu
-      #  cCompiler: gcc-11
-      #  cxxCompiler: g++-11
-      #  configuration: Release
-      #  generator: 'Unix Makefiles'
-      #  cmakeExtraArgs: '$(defaultConfig)'
-      'GCC11 / Make / Debug':
+      'GCC11 / Debug':
         dockerImage: megamol_ci_ubuntu
         cCompiler: gcc-11
         cxxCompiler: g++-11
         configuration: Debug
-        generator: 'Unix Makefiles'
         cmakeExtraArgs: '$(defaultConfig)'
-      ## Temporarily disabled until more CI machines are available!
-      #'GCC11 / Ninja / Release':
-      #  dockerImage: megamol_ci_ubuntu
-      #  cCompiler: gcc-11
-      #  cxxCompiler: g++-11
-      #  configuration: Release
-      #  generator: 'Ninja'
-      #  cmakeExtraArgs: '$(defaultConfig)'
-      ## Temporarily changed to Ninja instead of Make until more CI machines are available!
-      'Clang14 / Ninja / Release':
+      'Clang14 / Release':
         dockerImage: megamol_ci_ubuntu
         cCompiler: clang-14
         cxxCompiler: clang++-14
         configuration: Release
-        generator: 'Ninja'
         cmakeExtraArgs: '$(defaultConfig)'
-      'GCC11 / Ninja / Release (nonGL)':
+      'GCC11 / Release (nonGL)':
         dockerImage: megamol_ci_ubuntu
         cCompiler: gcc-11
         cxxCompiler: g++-11
         configuration: Release
-        generator: 'Ninja'
         cmakeExtraArgs: '$(nonGlConfig)'
 
   timeoutInMinutes: 720
@@ -134,7 +111,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) $(cmakeExtraArgs)'
+      cmakeArgs: '.. -G Ninja -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) $(cmakeExtraArgs)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
