@@ -1,6 +1,6 @@
 {
   "name": "power-overwhelming",
-  "version-date": "2024-06-30",
+  "version-date": "2024-07-01",
   "description": "Measurement framekwork for GPU power consumption.",
   "homepage": "https://github.com/UniStuttgart-VISUS/power-overwhelming",
   "license": "MIT",
