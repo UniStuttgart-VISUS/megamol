@@ -101,6 +101,7 @@ int main(const int argc, const char** argv) {
     }
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
     openglConfig.enableVsync = config.opengl_vsync;
+    openglConfig.enableGlFlushFinish = config.opengl_flush_finish;
     // pass window size and position
     if (config.window_size.has_value()) {
         openglConfig.windowPlacement.size = true;

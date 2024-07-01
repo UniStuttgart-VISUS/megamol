@@ -32,9 +32,6 @@ megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." 
 # MEMLEAK
 option(MEGAMOL_DETECT_MEMLEAK "Enable to use Memleak detection (MSVC only)" OFF)
 
-# GL FLUSH and FINISH
-option(MEGAMOL_GL_FLUSH_FINISH "Use glFlush and glFinish before buffer swap" OFF)
-
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)

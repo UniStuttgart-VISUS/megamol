@@ -118,11 +118,6 @@ if (MEGAMOL_DETECT_MEMLEAK)
   endif()
 endif()
 
-# GL FLUSH and FINISH
-if (MEGAMOL_GL_FLUSH_FINISH)
-  add_compile_definitions("MEGAMOL_GL_FLUSH_FINISH")
-endif()
-
 # imgui
 # Set IMGUI_USER_CONFIG globally on imgui target for all users.
 find_package(imgui CONFIG REQUIRED)
