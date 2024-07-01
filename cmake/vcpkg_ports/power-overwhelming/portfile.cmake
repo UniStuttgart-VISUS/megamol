@@ -4,8 +4,8 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO UniStuttgart-VISUS/power-overwhelming
     #REF "v${VERSION}"
-    REF "28653a9aedc0dc07c8e57c99caa92cf029bd7c59"
-    SHA512 faacef43de4c8942cdfed31227b47dfc4eb66d732a31c5b7e6cb1a3ad009a2e8720760db24aefc96da9bd5aea58b5cd7ea0a40c1e3687b94d6990f6e987d7b39
+    REF "11e58c7c4a9b861e87e40d4345d4aeba9f67b15b" # master on 2024-06-30
+    SHA512 3dc8c6d9d89c30995d07e054f703c134990e6d02caa9957cc110a5b599269cd83b50897591c3cf7a106945effe209d588c93f2b86385a2034632d892942a7644
     HEAD_REF master
 )
 
