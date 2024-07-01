@@ -258,7 +258,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     auto child_bg = style.Colors[ImGuiCol_ChildBg];
     style.Colors[ImGuiCol_ChildBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
     auto global_docking_id =
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
     style.Colors[ImGuiCol_ChildBg] = child_bg;
 
     // Load global docking preset(before first window is drawn!)
