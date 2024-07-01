@@ -27,6 +27,12 @@ endif ()
 add_compile_definitions("$<$<CONFIG:DEBUG>:DEBUG>")
 add_compile_definitions("$<$<CONFIG:DEBUG>:_DEBUG>")
 
+# MEMLEAK
+cmake_dependent_option(MEGAMOL_DETECT_MEMLEAK "Enable to use Memleak detection (MSVC only)" OFF "MSVC" OFF)
+if (MEGAMOL_DETECT_MEMLEAK)
+  add_compile_definitions("$<$<CONFIG:DEBUG>:MEGAMOL_DETECT_MEMLEAK>")
+endif()
+
 # Compiler flags
 # Note: special C++ and C-Compiler flags should be set for each language separately as done below.
 # Otherwise, a possible compilation with CUDA will propagate those flags to the CUDA-Compiler and lead to a crash.
@@ -110,13 +116,6 @@ if (MEGAMOL_USE_CGAL)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
   set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 endif ()
-
-# MEMLEAK
-if (MEGAMOL_DETECT_MEMLEAK)
-  if(MSVC)
-    add_compile_definitions("$<$<CONFIG:DEBUG>:MEGAMOL_DETECT_MEMLEAK>")
-  endif()
-endif()
 
 # imgui
 # Set IMGUI_USER_CONFIG globally on imgui target for all users.
