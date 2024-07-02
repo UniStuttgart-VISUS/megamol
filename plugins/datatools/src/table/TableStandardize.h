@@ -10,7 +10,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/LuaAPI.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
