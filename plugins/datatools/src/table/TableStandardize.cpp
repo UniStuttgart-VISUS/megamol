@@ -1,18 +1,18 @@
-/*
- * TableStandardize.cpp
- *
- * Copyright (C) 2024 by VISUS (University of Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2024, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "TableStandardize.h"
 
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/utility/log/Log.h"
-
-#include <Eigen/Dense>
 #include <algorithm>
 #include <limits>
+
+#include <Eigen/Dense>
+
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::datatools;
 using namespace megamol::datatools::table;

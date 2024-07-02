@@ -1,21 +1,18 @@
-/*
- * TableStandardize.h
- *
- * Copyright (C) 2024 by VISUS (University of Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2024, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/LuaAPI.h"
 #include "mmcore/Module.h"
-
 #include "mmcore/param/ParamSlot.h"
-
-#include "datatools/table/TableDataCall.h"
 
 namespace megamol::datatools::table {
 
