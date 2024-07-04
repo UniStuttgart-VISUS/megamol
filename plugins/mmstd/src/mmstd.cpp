@@ -8,17 +8,12 @@
 #include "mmcore/factories/PluginRegister.h"
 
 #include "event/EventStorage.h"
-#include "job/TickSwitch.h"
-#include "misc/FileStreamProvider.h"
 #include "misc/ResourceTestModule.h"
 #include "mmstd/data/DataWriterCtrlCall.h"
 #include "mmstd/data/DataWriterJob.h"
-#include "mmstd/data/DirectDataWriterCall.h"
 #include "mmstd/event/EventCall.h"
 #include "mmstd/flags/FlagCalls.h"
 #include "mmstd/flags/FlagStorage.h"
-#include "mmstd/job/JobThread.h"
-#include "mmstd/job/TickCall.h"
 #include "mmstd/light/AmbientLight.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd/light/DistantLight.h"
@@ -61,10 +56,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<core::view::light::TriDirectionalLighting>();
         this->module_descriptions.RegisterAutoDescription<core::special::StubModule>();
         this->module_descriptions.RegisterAutoDescription<core::job::DataWriterJob>();
-        this->module_descriptions.RegisterAutoDescription<core::job::TickSwitch>();
-        this->module_descriptions.RegisterAutoDescription<core::job::JobThread>();
         this->module_descriptions.RegisterAutoDescription<core::view::ClipPlane>();
-        this->module_descriptions.RegisterAutoDescription<core::FileStreamProvider>();
         this->module_descriptions.RegisterAutoDescription<core::EventStorage>();
         this->module_descriptions.RegisterAutoDescription<core::ResourceTestModule>();
         this->module_descriptions.RegisterAutoDescription<core::param::FloatParamModule>();
@@ -83,8 +75,6 @@ public:
         this->call_descriptions.RegisterAutoDescription<core::param::IntParamCall>();
         this->call_descriptions.RegisterAutoDescription<core::view::CallGetTransferFunction>();
         this->call_descriptions.RegisterAutoDescription<core::DataWriterCtrlCall>();
-        this->call_descriptions.RegisterAutoDescription<core::job::TickCall>();
-        this->call_descriptions.RegisterAutoDescription<core::DirectDataWriterCall>();
     }
 };
 } // namespace megamol::mmstd
