@@ -248,12 +248,3 @@ bool SIFFWriter::run() {
 
     return true;
 }
-
-
-/*
- * SIFFWriter::getCapabilities
- */
-bool SIFFWriter::getCapabilities(core::DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
-    return true;
-}

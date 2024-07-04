@@ -12,7 +12,6 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "trisoup/trisoupVolumetricDataCall.h"
 #include "trisoup/volumetrics/JobStructures.h"
@@ -26,7 +25,7 @@ namespace megamol::trisoup_gl::volumetrics {
  * of (spherical) glyphs. Several threaded jobs are generated for a number of
  * subvolumes to speed up computation and make your machine feel the pain.
  */
-class VoluMetricJob : public core::job::AbstractThreadedJob, public core::Module {
+class VoluMetricJob : public core::Module {
 public:
     /**
      * Answer the name of this module.
@@ -102,7 +101,7 @@ protected:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    DWORD Run(void* userData) override;
+    DWORD Run(void* userData) /*override*/; // TODO old interfaced used by Jobs, currently has no trigger.
 
 private:
     /**

@@ -236,15 +236,6 @@ bool MMPLDWriter::run() {
 
 
 /*
- * MMPLDWriter::getCapabilities
- */
-bool MMPLDWriter::getCapabilities(core::DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
-    return true;
-}
-
-
-/*
  * MMPLDWriter::writeFrame
  */
 bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDataCall& data) {

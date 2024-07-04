@@ -9,7 +9,6 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/net/DiscoveryListener.h"
 #include "vislib/net/DiscoveryService.h"
@@ -25,9 +24,7 @@ class ClusterControllerClient;
 /**
  * Class implementing the cluster rendering master job
  */
-class ClusterController : public job::AbstractThreadedJob,
-                          public Module,
-                          public vislib::net::cluster::DiscoveryListener {
+class ClusterController : public Module, public vislib::net::cluster::DiscoveryListener {
 public:
     /** DiscoveryService::PeerHandle */
     typedef vislib::net::cluster::DiscoveryService::PeerHandle PeerHandle;
@@ -113,7 +110,7 @@ protected:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    DWORD Run(void* userData) override;
+    DWORD Run(void* userData) /*override*/; // TODO old interfaced used by Jobs, currently has no trigger.
 
     /**
      * This method will be called, if a new computer was found

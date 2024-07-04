@@ -89,15 +89,6 @@ protected:
 
     bool run() override;
 
-    /**
-     * Function querying the writers capabilities
-     *
-     * @param call The call to receive the capabilities
-     *
-     * @return True on success
-     */
-    bool getCapabilities(core::DataWriterCtrlCall& call) override;
-
 private:
     void WriteMesh(const std::string&, const ObjMesh&);
 

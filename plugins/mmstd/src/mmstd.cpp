@@ -9,8 +9,6 @@
 
 #include "event/EventStorage.h"
 #include "misc/ResourceTestModule.h"
-#include "mmstd/data/DataWriterCtrlCall.h"
-#include "mmstd/data/DataWriterJob.h"
 #include "mmstd/event/EventCall.h"
 #include "mmstd/flags/FlagCalls.h"
 #include "mmstd/flags/FlagStorage.h"
@@ -55,7 +53,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<core::view::light::SpotLight>();
         this->module_descriptions.RegisterAutoDescription<core::view::light::TriDirectionalLighting>();
         this->module_descriptions.RegisterAutoDescription<core::special::StubModule>();
-        this->module_descriptions.RegisterAutoDescription<core::job::DataWriterJob>();
         this->module_descriptions.RegisterAutoDescription<core::view::ClipPlane>();
         this->module_descriptions.RegisterAutoDescription<core::EventStorage>();
         this->module_descriptions.RegisterAutoDescription<core::ResourceTestModule>();
@@ -74,7 +71,6 @@ public:
         this->call_descriptions.RegisterAutoDescription<core::param::FloatParamCall>();
         this->call_descriptions.RegisterAutoDescription<core::param::IntParamCall>();
         this->call_descriptions.RegisterAutoDescription<core::view::CallGetTransferFunction>();
-        this->call_descriptions.RegisterAutoDescription<core::DataWriterCtrlCall>();
     }
 };
 } // namespace megamol::mmstd

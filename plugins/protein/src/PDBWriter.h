@@ -12,13 +12,12 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/job/AbstractJob.h"
 #include "mmstd/renderer/TimeControl.h"
 #include "protein_calls/MolecularDataCall.h"
 
 namespace megamol::protein {
 
-class PDBWriter : public core::job::AbstractJob, public core::Module {
+class PDBWriter : public core::Module {
 
 public:
     /**
@@ -36,8 +35,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description() {
-        return "Job writing arbitrary trajectories to a series of PDB or PQR\
-                files.";
+        return "Job writing arbitrary trajectories to a series of PDB or PQR files.";
     }
 
     /**
@@ -58,29 +56,6 @@ public:
      * Dtor
      */
     ~PDBWriter() override;
-
-    /**
-     * Answers whether or not this job is still running.
-     *
-     * @return 'true' if this job is still running, 'false' if it has
-     *         finished.
-     */
-    bool IsRunning() const override;
-
-    /**
-     * Starts the job thread.
-     *
-     * @return true if the job has been successfully started.
-     */
-    bool Start() override;
-
-    /**
-     * Terminates the job thread.
-     *
-     * @return true to acknowledge that the job will finish as soon
-     *         as possible, false if termination is not possible.
-     */
-    bool Terminate() override;
 
 protected:
     /**

@@ -84,16 +84,6 @@ bool trisoup::WavefrontObjWriter::run() {
     return writeLines(ldc);
 }
 
-
-/*
- * trisoup::WavefrontObjWriter::getCapabilities
- */
-bool trisoup::WavefrontObjWriter::getCapabilities(DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
-    return true;
-}
-
-
 bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* ldc) {
     using megamol::core::utility::log::Log;
     vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value().generic_string().c_str());
