@@ -10,9 +10,15 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <numeric>
+#include <vector>
 
 #define CXXOPTS_VECTOR_DELIMITER '\0'
 #include <cxxopts.hpp>
+
+#ifdef _WIN32
+#include "Windows.h"
+#endif
 
 // find user home
 static std::filesystem::path getHomeDir() {

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <map>
 #include <mutex>
 #include <string>
 
@@ -13,8 +14,6 @@
 //#define SOL_NO_EXCEPTIONS 1
 #define SOL_PRINT_ERRORS 0
 #include <sol/sol.hpp>
-
-#include "mmcore/MegaMolGraph.h"
 
 #ifdef MEGAMOL_USE_TRACY
 #include <tracy/Tracy.hpp>
