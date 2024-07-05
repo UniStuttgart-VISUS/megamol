@@ -21,14 +21,14 @@
 
 #include(configure_cuda)
 #find_package(CUDA REQUIRED)
-find_package(OptiX REQUIRED VERSION 7)
+find_package(OptiX REQUIRED)
 
-include_directories(${CUDA_TOOLKIT_INCLUDE})
-include_directories(${OptiX_INCLUDE})
+#include_directories(${CUDA_TOOLKIT_INCLUDE})
+#include_directories(${OptiX_INCLUDE})
 
-if (WIN32)
-  add_definitions(-DNOMINMAX)
-endif()
+#if (WIN32)
+#  add_definitions(-DNOMINMAX)
+#endif()
 
   
 find_program(BIN2C bin2c
@@ -55,6 +55,7 @@ function(embed_ptx)
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_PTX_COMPILATION ON)
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES OFF)
 
+  set(EMBED_PTX_C_FILE ${CMAKE_CURRENT_BINARY_DIR}/${EMBED_PTX_OUTPUT_TARGET}.c)
   get_filename_component(OUTPUT_FILE_NAME ${EMBED_PTX_C_FILE} NAME)
   add_custom_command(
     OUTPUT ${EMBED_PTX_C_FILE}
@@ -78,27 +79,27 @@ endfunction()
 #    that PTX string 'embedded' as a global constant.
 # 4) assign the name of the intermediary .o file to the cmake variable
 #    'output_var', which can then be added to cmake targets.
-macro(cuda_compile_and_embed output_var cuda_file)
-  set(c_var_name ${output_var})
-  if(${CMAKE_BUILD_TYPE} MATCHES "Release")
-    cuda_compile_ptx(ptx_files
-      ${cuda_file}
-      OPTIONS -O3 -DNDEBUG=1 --use_fast_math -arch=compute_${CMAKE_CUDA_ARCHITECTURES}
-      )
-  else()
-    cuda_compile_ptx(ptx_files
-      ${cuda_file}
-      OPTIONS -arch=compute_${CMAKE_CUDA_ARCHITECTURES}
-      )
-  endif()
-  list(GET ptx_files 0 ptx_file)
-  set(embedded_file ${ptx_file}_embedded.c)
-#  message("adding rule to compile and embed ${cuda_file} to \"const char ${var_name}[];\"")
-  add_custom_command(
-    OUTPUT ${embedded_file}
-    COMMAND ${BIN2C} -c --padd 0 --type char --name ${c_var_name} ${ptx_file} > ${embedded_file}
-    DEPENDS ${ptx_file}
-    COMMENT "compiling (and embedding ptx from) ${cuda_file}"
-    )
-  set(${output_var} ${embedded_file})
-endmacro()
+#macro(cuda_compile_and_embed output_var cuda_file)
+#  set(c_var_name ${output_var})
+#  if(${CMAKE_BUILD_TYPE} MATCHES "Release")
+#    cuda_compile_ptx(ptx_files
+#      ${cuda_file}
+#      OPTIONS -O3 -DNDEBUG=1 --use_fast_math -arch=compute_${CMAKE_CUDA_ARCHITECTURES}
+#      )
+#  else()
+#    cuda_compile_ptx(ptx_files
+#      ${cuda_file}
+#      OPTIONS -arch=compute_${CMAKE_CUDA_ARCHITECTURES}
+#      )
+#  endif()
+#  list(GET ptx_files 0 ptx_file)
+#  set(embedded_file ${ptx_file}_embedded.c)
+##  message("adding rule to compile and embed ${cuda_file} to \"const char ${var_name}[];\"")
+#  add_custom_command(
+#    OUTPUT ${embedded_file}
+#    COMMAND ${BIN2C} -c --padd 0 --type char --name ${c_var_name} ${ptx_file} > ${embedded_file}
+#    DEPENDS ${ptx_file}
+#    COMMENT "compiling (and embedding ptx from) ${cuda_file}"
+#    )
+#  set(${output_var} ${embedded_file})
+#endmacro()
