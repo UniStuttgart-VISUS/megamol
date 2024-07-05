@@ -20,7 +20,7 @@ public:
     /**
      * @brief Ctor.
      */
-    ParallelPortTrigger(void) = default;
+    ParallelPortTrigger() = default;
 
     /**
      * @brief Ctor. Opens the specified parallel port.
@@ -45,21 +45,21 @@ public:
      * @return API-specific return code value.
      * @throws std::system_error If write fails.
      */
-    DWORD Write(std::uint8_t data);
+    uint32_t Write(std::uint8_t data);
 
     /**
      * @brief Write high on all output bits.
      * @return API-specific return code value.
      * @throws std::system_error If write fails.
      */
-    DWORD WriteHigh(void);
+    uint32_t WriteHigh();
 
     /**
      * @brief Write low on all output bits.
      * @return API-specific return code value.
      * @throws std::system_error If write fails.
      */
-    DWORD WriteLow(void);
+    uint32_t WriteLow();
 
     /**
      * @brief Sets specified bit to the value in @c set.
@@ -68,7 +68,7 @@ public:
      * @return API-specific return code value.
      * @throws std::system_error If write fails.
      */
-    DWORD SetBit(unsigned char idx, bool state);
+    uint32_t SetBit(unsigned char idx, bool state);
 
 private:
 #ifdef WIN32
