@@ -39,7 +39,7 @@ find_program(BIN2C bin2c
 ## SPDX-License-Identifier: Apache-2.0
 function(embed_ptx)
   set(oneArgs OUTPUT_TARGET)
-  set(multiArgs PTX_LINK_LIBRARIES SOURCES)
+  set(multiArgs PTX_LINK_LIBRARIES PTX_INCLUDE_DIRECTORIES SOURCES)
   cmake_parse_arguments(EMBED_PTX "" "${oneArgs}" "${multiArgs}" ${ARGN})
 
   if (NOT ${NUM_SOURCES} EQUAL 1)
@@ -52,8 +52,10 @@ function(embed_ptx)
   add_library(${PTX_TARGET} OBJECT)
   target_sources(${PTX_TARGET} PRIVATE ${EMBED_PTX_SOURCES})
   target_link_libraries(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
+  target_include_directories(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_INCLUDE_DIRECTORIES})
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_PTX_COMPILATION ON)
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES OFF)
+  set_property(TARGET ${PTX_TARGET} PROPERTY CXX_STANDARD 17)
 
   set(EMBED_PTX_C_FILE ${CMAKE_CURRENT_BINARY_DIR}/${EMBED_PTX_OUTPUT_TARGET}.c)
   get_filename_component(OUTPUT_FILE_NAME ${EMBED_PTX_C_FILE} NAME)
