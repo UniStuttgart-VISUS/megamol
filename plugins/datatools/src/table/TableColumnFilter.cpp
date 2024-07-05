@@ -92,6 +92,15 @@ bool TableColumnFilter::processData(core::Call& c) {
                 ImGui::SetNextWindowCollapsed(false, ImGuiCond_Once);
                 if (ImGui::Begin("TableColumnFilterWin", &showGUI)) {
                     ImGui::InputInt("columns per row", &columnsPerRow);
+                    if (ImGui::Button("select all")) {
+                        std::fill(selectedColumns.begin(), selectedColumns.end(), true);
+                        anything_checked = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("select none")) {
+                        std::fill(selectedColumns.begin(), selectedColumns.end(), false);
+                        anything_checked = true;
+                    }
                     for (auto x = 0; x < column_count; ++x) {
                         bool val = selectedColumns[x];
                         if (ImGui::Checkbox(column_infos[x].Name().c_str(), &val)) {
