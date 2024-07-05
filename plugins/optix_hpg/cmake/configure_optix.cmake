@@ -19,7 +19,7 @@
 #  ${CMAKE_MODULE_PATH}
 #  )
 
-include(configure_cuda)
+#include(configure_cuda)
 #find_package(CUDA REQUIRED)
 find_package(OptiX REQUIRED VERSION 7)
 
@@ -33,6 +33,40 @@ endif()
   
 find_program(BIN2C bin2c
   DOC "Path to the cuda-sdk bin2c executable.")
+
+# adapted from https://github.com/owl-project/owl/blob/master/owl/cmake/embed_ptx.cmake
+## Copyright 2021 Jefferson Amstutz
+## SPDX-License-Identifier: Apache-2.0
+function(embed_ptx)
+  set(oneArgs OUTPUT_TARGET)
+  set(multiArgs PTX_LINK_LIBRARIES SOURCES)
+  cmake_parse_arguments(EMBED_PTX "" "${oneArgs}" "${multiArgs}" ${ARGN})
+
+  if (NOT ${NUM_SOURCES} EQUAL 1)
+    message(FATAL_ERROR
+      "embed_ptx() can only compile and embed one file at a time.")
+  endif()
+
+  set(PTX_TARGET ${EMBED_PTX_OUTPUT_TARGET}_ptx)
+
+  add_library(${PTX_TARGET} OBJECT)
+  target_sources(${PTX_TARGET} PRIVATE ${EMBED_PTX_SOURCES})
+  target_link_libraries(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
+  set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_PTX_COMPILATION ON)
+  set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES OFF)
+
+  get_filename_component(OUTPUT_FILE_NAME ${EMBED_PTX_C_FILE} NAME)
+  add_custom_command(
+    OUTPUT ${EMBED_PTX_C_FILE}
+    COMMAND ${BIN2C} -c --padd 0 --type char --name ${EMBED_PTX_OUTPUT_TARGET} $<TARGET_OBJECTS:${PTX_TARGET}> > ${EMBED_PTX_C_FILE}
+    VERBATIM
+    DEPENDS $<TARGET_OBJECTS:${PTX_TARGET}> ${PTX_TARGET}
+    COMMENT "Generating embedded PTX file: ${OUTPUT_FILE_NAME}"
+  )
+
+  add_library(${EMBED_PTX_OUTPUT_TARGET} OBJECT)
+  target_sources(${EMBED_PTX_OUTPUT_TARGET} PRIVATE ${EMBED_PTX_C_FILE})
+endfunction()
 
 # this macro defines cmake rules that execute the following four steps:
 # 1) compile the given cuda file ${cuda_file} to an intermediary PTX file

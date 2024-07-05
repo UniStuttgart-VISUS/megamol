@@ -31,8 +31,8 @@ if (optix_hpg_PLUGIN_ENABLED)
     set(CMAKE_CUDA_ARCHITECTURES 80)
   endif ()
 
-  include(configure_optix)
   find_package(CUDAToolkit)
+  include(configure_optix)
 
   get_target_property(GLM_INCLUDES glm::glm INTERFACE_INCLUDE_DIRECTORIES)
 
