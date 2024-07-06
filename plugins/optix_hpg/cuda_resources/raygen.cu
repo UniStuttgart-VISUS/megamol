@@ -166,7 +166,7 @@ namespace optix_hpg {
                 return;
             if (pixelID.y >= self.fbSize.y)
                 return;
-            const int pixelIdx = pixelID.x + self.fbSize.x * pixelID.y;
+            //const int pixelIdx = pixelID.x + self.fbSize.x * pixelID.y;
 
             const FrameState* fs = &self.frameStateBuffer[0];
 
