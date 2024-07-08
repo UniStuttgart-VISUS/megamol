@@ -80,6 +80,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , pickedIndicatorIndex_(-1)
         , strokeStart_(glm::vec2(0.0f))
         , strokeEnd_(glm::vec2(0.0f))
+        , needAxisRestriction_(false)
         , needAxisUpdate_(false)
         , needFilterUpdate_(false)
         , needSelectionUpdate_(false)
@@ -199,7 +200,8 @@ bool ParallelCoordinatesRenderer2D::create() {
     try {
         filterProgram_ =
             core::utility::make_glowl_shader("pc_filter", shader_options, "infovis_gl/pc/filter.comp.glsl");
-
+        restrictProgram_ =
+            core::utility::make_glowl_shader("pc_restrict", shader_options, "infovis_gl/pc/restrict.comp.glsl");
         selectPickProgram_ =
             core::utility::make_glowl_shader("pc_select_pick", shader_options, "infovis_gl/pc/select.comp.glsl");
 
@@ -269,6 +271,39 @@ bool ParallelCoordinatesRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
     if (needAxisUpdate_) {
         needAxisUpdate_ = false;
         axisIndirectionBuffer_->rebuffer(axisIndirection_);
+    }
+
+    if (needAxisRestriction_) {
+        needAxisRestriction_ = false;
+
+        // buffer with two floats. Min goes into first item!
+        selectionAxisMinMax_[0] = std::numeric_limits<uint32_t>::max();
+        selectionAxisMinMax_[1] = std::numeric_limits<uint32_t>::lowest();
+        selectionAxisMinMaxBuffer_->rebuffer(selectionAxisMinMax_);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        useProgramAndBindCommon(restrictProgram_);
+        restrictProgram_->setUniform("restrictionAxis", restrictionAxis_);
+        std::array<GLuint, 3> groupCounts{};
+        // compute min/max per axis QUANTIZED to uint32_t!
+        computeDispatchSizes(itemCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+        glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        // fetch buffer
+        glGetNamedBufferSubData(
+            selectionAxisMinMaxBuffer_->getName(), 0, 2 * sizeof(uint32_t), selectionAxisMinMax_.data());
+        // replace min/max filter for the axis
+        // caution: the full range (4294967295) broke the shader, but 65K is probably precise enough as one could not
+        // select that manually either
+        filters_[restrictionAxis_].min =
+            (static_cast<double>(selectionAxisMinMax_[0]) / 65535.0) *
+                (dimensionRanges_[restrictionAxis_].max - dimensionRanges_[restrictionAxis_].min) +
+            dimensionRanges_[restrictionAxis_].min;
+        filters_[restrictionAxis_].max =
+            (static_cast<double>(selectionAxisMinMax_[1]) / 65535.0) *
+                (dimensionRanges_[restrictionAxis_].max - dimensionRanges_[restrictionAxis_].min) +
+            dimensionRanges_[restrictionAxis_].min;
+
+        needFilterUpdate_ = true;
     }
 
     if (needFilterUpdate_) {
@@ -375,6 +410,17 @@ bool ParallelCoordinatesRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
 
 bool ParallelCoordinatesRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+
+    if (button == core::view::MouseButton::BUTTON_RIGHT) {
+        if (mods.test(core::view::Modifier::SHIFT)) {
+            const auto axis = mouseXtoAxis(mouseX_);
+            if (axis != -1) {
+                // we want to narrow the respective filter to the range of the SELECTION
+                needAxisRestriction_ = true;
+                restrictionAxis_ = axis;
+            }
+        }
+    }
 
     // Ignore everything which is not left mouse button.
     if (button != core::view::MouseButton::BUTTON_LEFT) {
@@ -568,6 +614,8 @@ bool ParallelCoordinatesRenderer2D::assertData(mmstd_gl::CallRender2DGL& call) {
         filtersBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, filters_);
         densityMinMaxBuffer_ =
             std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, densityMinMaxInit_, GL_STATIC_COPY);
+        selectionAxisMinMaxBuffer_ =
+            std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, selectionAxisMinMax_, GL_STATIC_COPY);
 
         currentTableDataHash_ = hash;
         currentTableFrameId_ = frameId;
@@ -692,6 +740,7 @@ bool ParallelCoordinatesRenderer2D::useProgramAndBindCommon(std::unique_ptr<glow
     axisIndirectionBuffer_->bind(3);
     filtersBuffer_->bind(4);
     densityMinMaxBuffer_->bind(5);
+    selectionAxisMinMaxBuffer_->bind(6);
 
     if (cameraCopy_.has_value()) {
         program->setUniform("projMx", cameraCopy_.value().getProjectionMatrix());

@@ -34,6 +34,11 @@ layout(std430, binding = 5) coherent buffer DensityMinMax {
     uint densityMax;
 };
 
+layout(std430, binding = 6) coherent buffer selectionAxisMinMax {
+    uint selectionMin;
+    uint selectionMax;
+};
+
 // Uniforms
 uniform mat4 projMx = mat4(1.0f);
 uniform mat4 viewMx = mat4(1.0f);

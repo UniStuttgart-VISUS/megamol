@@ -201,12 +201,15 @@ protected:
     std::unordered_map<std::string, int> dimensionIndex_;
     std::vector<Range> filters_;
     const std::array<uint32_t, 2> densityMinMaxInit_;
+    std::array<uint32_t, 2> selectionAxisMinMax_;
 
     std::unique_ptr<glowl::BufferObject> dataBuffer_;
     std::unique_ptr<glowl::BufferObject> dimensionRangesBuffer_;
     std::unique_ptr<glowl::BufferObject> axisIndirectionBuffer_;
     std::unique_ptr<glowl::BufferObject> filtersBuffer_;
     std::unique_ptr<glowl::BufferObject> densityMinMaxBuffer_;
+    // this stores two INTEGERS that represent the relative min/max of the selection with respect to restrictionAxis
+    std::unique_ptr<glowl::BufferObject> selectionAxisMinMaxBuffer_;
 
     // Layout
     float marginX_;
@@ -226,8 +229,10 @@ protected:
     int pickedAxis_;
     int pickedIndicatorAxis_;
     int pickedIndicatorIndex_;
+    int restrictionAxis_;
     glm::vec2 strokeStart_;
     glm::vec2 strokeEnd_;
+    bool needAxisRestriction_;
     bool needAxisUpdate_;
     bool needFilterUpdate_;
     bool needSelectionUpdate_;
@@ -235,6 +240,7 @@ protected:
 
     // OpenGL
     std::unique_ptr<glowl::GLSLProgram> filterProgram_;
+    std::unique_ptr<glowl::GLSLProgram> restrictProgram_;
     std::unique_ptr<glowl::GLSLProgram> selectPickProgram_;
     std::unique_ptr<glowl::GLSLProgram> selectStrokeProgram_;
     std::unique_ptr<glowl::GLSLProgram> densityMinMaxProgram_;
