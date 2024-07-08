@@ -90,7 +90,7 @@ bool TableColumnFilter::processData(core::Call& c) {
             bool showGUI = this->showGUISlot.Param<core::param::BoolParam>()->Value();
             if (showGUI && last_drawn_frame != frameStatistics->rendered_frames_count) {
                 ImGui::SetNextWindowCollapsed(false, ImGuiCond_Once);
-                if (ImGui::Begin("TableColumnFilterWin", &showGUI)) {
+                if (ImGui::Begin((std::string("TableColumnFilter") + this->Name().PeekBuffer()).c_str(), &showGUI)) {
                     ImGui::InputInt("columns per row", &columnsPerRow);
                     if (ImGui::Button("select all")) {
                         std::fill(selectedColumns.begin(), selectedColumns.end(), true);
