@@ -1,4 +1,4 @@
-name: Vcpkg Cache
+name: Build
 
 on:
   push:
@@ -6,6 +6,19 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+
+env:
+  MM_DEFAULT_CONFIG: >-
+    -DMEGAMOL_VCPKG_DOWNLOAD_CACHE=ON
+    -DMEGAMOL_WARNING_LEVEL="Off"
+    -DMEGAMOL_PLUGIN_MEGAMOL101_GL=ON
+    -DMEGAMOL_PLUGIN_IMAGESERIES=ON
+    -DMEGAMOL_PLUGIN_IMAGESERIES_GL=ON
+    -DMEGAMOL_USE_CGAL=ON
+    -DMEGAMOL_USE_PROFILING=ON
+    -DMEGAMOL_USE_STACKTRACE=ON
+    -DMEGAMOL_USE_TRACY=ON
+    -DMEGAMOL_USE_VTKM=OFF
 
 jobs:
   vcpkg_cache:
@@ -97,3 +110,42 @@ jobs:
           CC: ${{ matrix.job.cc }}
           CXX: ${{ matrix.job.cxx }}
           VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
+  build_windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Release]
+    name: "Windows-Build (${{ matrix.configuration }})"
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: >-
+          cmake -S . -B ${{ github.workspace }}/build -G "Visual Studio 17 2022"
+          ${{ env.MM_DEFAULT_CONFIG }}
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.configuration }} --parallel 2
+  build_linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        docker_image: [megamol_ci_ubuntu]
+        compiler:
+          - cc: clang-14
+            cxx: clang++-14
+        configuration: [Release]
+    name: "Linux-Build (${{ matrix.compiler.cc }}, ${{ matrix.configuration }})"
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/unistuttgart-visus/${{ matrix.docker_image }}:master
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: >-
+          cmake -S . -B ${{ github.workspace }}/build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.configuration }}
+          ${{ env.MM_DEFAULT_CONFIG }}
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
