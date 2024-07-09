@@ -28,14 +28,14 @@ jobs:
             generator: 'Ninja'
             cc: 'gcc-13'
             cxx: 'g++-13'
-            ignore_features: 'POWER'
+            ignore_features: 'CUESDK VR_INTEROP POWER'
           - name: 'Ubuntu-Clang'
             os: 'ubuntu-24.04'
             container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
             generator: 'Ninja'
             cc: 'clang-18'
             cxx: 'clang++-18'
-            ignore_features: 'POWER'
+            ignore_features: 'CUESDK VR_INTEROP POWER'
     name: "Vcpkg-${{ matrix.job.name }}"
     runs-on: ${{ matrix.job.os }}
     container:
