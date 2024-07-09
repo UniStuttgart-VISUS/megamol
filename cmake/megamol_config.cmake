@@ -101,8 +101,10 @@ endif ()
 
 # CUDA
 if (MEGAMOL_USE_CUDA)
+  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES native)
+  endif()
   enable_language(CUDA)
-  set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif ()
 
 # MPI
