@@ -38,10 +38,10 @@ jobs:
       matrix:
         docker_image: [megamol_ci_ubuntu]
         compiler:
-          - cc: clang-14
-            cxx: clang++-14
-          - cc: gcc-11
-            cxx: g++-11
+          - cc: clang-18
+            cxx: clang++-18
+          - cc: gcc-13
+            cxx: g++-13
         opengl: [ON, OFF]
     name: "${{ matrix.docker_image }} (${{ matrix.compiler.cc }}, OpenGL-${{ matrix.opengl }})"
     runs-on: ubuntu-22.04

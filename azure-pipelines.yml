@@ -75,40 +75,40 @@ jobs:
   strategy:
     matrix:
       ## Temporarily disabled until more CI machines are available!
-      #'GCC11 / Make / Release':
+      #'GCC13 / Make / Release':
       #  dockerImage: megamol_ci_ubuntu
-      #  cCompiler: gcc-11
-      #  cxxCompiler: g++-11
+      #  cCompiler: gcc-13
+      #  cxxCompiler: g++-13
       #  configuration: Release
       #  generator: 'Unix Makefiles'
       #  cmakeExtraArgs: '$(defaultConfig)'
-      'GCC11 / Make / Debug':
+      'GCC13 / Make / Debug':
         dockerImage: megamol_ci_ubuntu
-        cCompiler: gcc-11
-        cxxCompiler: g++-11
+        cCompiler: gcc-13
+        cxxCompiler: g++-13
         configuration: Debug
         generator: 'Unix Makefiles'
         cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily disabled until more CI machines are available!
-      #'GCC11 / Ninja / Release':
+      #'GCC13 / Ninja / Release':
       #  dockerImage: megamol_ci_ubuntu
-      #  cCompiler: gcc-11
-      #  cxxCompiler: g++-11
+      #  cCompiler: gcc-13
+      #  cxxCompiler: g++-13
       #  configuration: Release
       #  generator: 'Ninja'
       #  cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily changed to Ninja instead of Make until more CI machines are available!
-      'Clang14 / Ninja / Release':
+      'Clang18 / Ninja / Release':
         dockerImage: megamol_ci_ubuntu
-        cCompiler: clang-14
-        cxxCompiler: clang++-14
+        cCompiler: clang-18
+        cxxCompiler: clang++-18
         configuration: Release
         generator: 'Ninja'
         cmakeExtraArgs: '$(defaultConfig)'
-      'GCC11 / Ninja / Release (nonGL)':
+      'GCC13 / Ninja / Release (nonGL)':
         dockerImage: megamol_ci_ubuntu
-        cCompiler: gcc-11
-        cxxCompiler: g++-11
+        cCompiler: gcc-13
+        cxxCompiler: g++-13
         configuration: Release
         generator: 'Ninja'
         cmakeExtraArgs: '$(nonGlConfig)'
