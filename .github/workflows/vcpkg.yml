@@ -8,59 +8,80 @@ on:
   workflow_dispatch:
 
 jobs:
-  windows:
+  vcpkg_cache:
     # Skip on PR from forked repo as no secrets are available.
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     strategy:
       fail-fast: false
       matrix:
-        opengl: [ON, OFF]
-    name: "Windows (OpenGL-${{ matrix.opengl }})"
-    runs-on: windows-2019
-    steps:
-    - uses: actions/checkout@v3
-    - name: Configure
-      run: >-
-        cmake -S . -B ${{ github.workspace }}/build -G "Visual Studio 16 2019"
-        -DMEGAMOL_STOP_AFTER_VCPKG=ON
-        -DMEGAMOL_USE_CGAL=ON
-        -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
-        -DMEGAMOL_USE_OSPRAY=ON
-        -DMEGAMOL_USE_STACKTRACE=ON
-        -DMEGAMOL_USE_TRACY=ON
-        -DMEGAMOL_USE_VTKM=ON
-      env:
-        VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
-  linux:
-    # Skip on PR from forked repo as no secrets are available.
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-    strategy:
-      fail-fast: false
-      matrix:
-        docker_image: [megamol_ci_ubuntu]
-        compiler:
-          - cc: clang-18
-            cxx: clang++-18
-          - cc: gcc-13
-            cxx: g++-13
-        opengl: [ON, OFF]
-    name: "${{ matrix.docker_image }} (${{ matrix.compiler.cc }}, OpenGL-${{ matrix.opengl }})"
-    runs-on: ubuntu-22.04
+        job:
+          - name: 'Windows'
+            os: 'windows-2022'
+            container: ''
+            generator: 'Visual Studio 17 2022'
+            cc: ''
+            cxx: ''
+          - name: 'Ubuntu-GCC'
+            os: 'ubuntu-24.04'
+            container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
+            generator: 'Ninja'
+            cc: 'gcc-13'
+            cxx: 'g++-13'
+          - name: 'Ubuntu-Clang'
+            os: 'ubuntu-24.04'
+            container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
+            generator: 'Ninja'
+            cc: 'clang-18'
+            cxx: 'clang++-18'
+    name: "Vcpkg-${{ matrix.job.name }}"
+    runs-on: ${{ matrix.job.os }}
     container:
-      image: ghcr.io/unistuttgart-visus/${{ matrix.docker_image }}:master
+      image: ${{ matrix.job.container }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Configure
-      run: >-
-        cmake -S . -B ${{ github.workspace }}/build -G "Unix Makefiles"
-        -DMEGAMOL_STOP_AFTER_VCPKG=ON
-        -DMEGAMOL_USE_CGAL=ON
-        -DMEGAMOL_USE_OPENGL=${{ matrix.opengl }}
-        -DMEGAMOL_USE_OSPRAY=ON
-        -DMEGAMOL_USE_STACKTRACE=ON
-        -DMEGAMOL_USE_TRACY=ON
-        -DMEGAMOL_USE_VTKM=ON
-      env:
-        CC: ${{ matrix.compiler.cc }}
-        CXX: ${{ matrix.compiler.cxx }}
-        VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Download Vcpkg
+        # Download vcpkg in advance, to download only once. MegaMol will detect the vcpkg directory in the repo root
+        # folder automatically.
+        run: |
+          version=$(LC_ALL=C.UTF-8 grep -oP 'set\(MEGAMOL_VCPKG_VERSION "\K[^"]+' CMakeLists.txt)
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          cd vcpkg && git reset --hard $version && cd ..
+        shell: bash
+      - name: Find MegaMol Feature Options
+        run: |
+          import json
+          with open('vcpkg.json') as f:
+              features = json.load(f)['features']
+          features = [f.upper().replace('-', '_') for f in features if 'dependencies' in features[f]]
+          with open('MEGAMOL_FEATURES', 'w') as f:
+              f.write(' '.join(features))
+        shell: python3 {0}
+      - name: Build Vcpkg Ports
+        # Vcpkg ports may are required with different feature sets, based on the MegaMol features, e.g., `megamol`
+        # requires `a` and `megamol[foo]` requires `a[bar]`. We need to build both `a` and `a[foo]` for the cache. The
+        # problem extents to all transitive dependencies. Because we cannot try to build all possible combinations of
+        # enabled MegaMol features, we use the following heuristic to hopefully cover most cases: 1. MegaMol with no
+        # features, 2. MegaMol with all features, 3. For every feature MegaMol with only this feature enabled.
+        run: |
+          echo "::group::Build Cache No Features"
+          cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" -DMEGAMOL_STOP_AFTER_VCPKG=ON -DMEGAMOL_DISABLE_ALL_FEATURES=ON
+          rm -rf "$GITHUB_WORKSPACE/build"
+          echo "::endgroup::"
+          echo "::group::Build Cache All Features"
+          cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" -DMEGAMOL_STOP_AFTER_VCPKG=ON -DMEGAMOL_ENABLE_ALL_FEATURES=ON
+          rm -rf "$GITHUB_WORKSPACE/build"
+          echo "::endgroup::"
+          features=$(<MEGAMOL_FEATURES)
+          for feature in $features; do
+            echo "::group::Build Cache Feature $feature"
+            cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" -DMEGAMOL_STOP_AFTER_VCPKG=ON -DMEGAMOL_DISABLE_ALL_FEATURES=ON -DMEGAMOL_USE_$feature=ON
+            rm -rf "$GITHUB_WORKSPACE/build"
+            echo "::endgroup::"
+          done
+        shell: bash
+        env:
+          CC: ${{ matrix.job.cc }}
+          CXX: ${{ matrix.job.cxx }}
+          VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
