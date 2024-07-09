@@ -21,18 +21,21 @@ jobs:
             generator: 'Visual Studio 17 2022'
             cc: ''
             cxx: ''
+            ignore_features: 'MPI POWER'
           - name: 'Ubuntu-GCC'
             os: 'ubuntu-24.04'
             container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
             generator: 'Ninja'
             cc: 'gcc-13'
             cxx: 'g++-13'
+            ignore_features: 'POWER'
           - name: 'Ubuntu-Clang'
             os: 'ubuntu-24.04'
             container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
             generator: 'Ninja'
             cc: 'clang-18'
             cxx: 'clang++-18'
+            ignore_features: 'POWER'
     name: "Vcpkg-${{ matrix.job.name }}"
     runs-on: ${{ matrix.job.os }}
     container:
@@ -55,6 +58,8 @@ jobs:
           with open('vcpkg.json') as f:
               features = json.load(f)['features']
           features = [f.upper().replace('-', '_') for f in features if 'dependencies' in features[f]]
+          ignored = '${{ matrix.job.ignore_features }}'.split()
+          features = [f for f in features if f not in ignored]
           with open('MEGAMOL_FEATURES', 'w') as f:
               f.write(' '.join(features))
         shell: python3 {0}
@@ -66,17 +71,24 @@ jobs:
         # features, 2. MegaMol with all features, 3. For every feature MegaMol with only this feature enabled.
         run: |
           echo "::group::Build Cache No Features"
-          cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" -DMEGAMOL_STOP_AFTER_VCPKG=ON -DMEGAMOL_DISABLE_ALL_FEATURES=ON
+          cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" \
+              -DMEGAMOL_STOP_AFTER_VCPKG=ON \
+              -DMEGAMOL_DISABLE_ALL_FEATURES=ON
           rm -rf "$GITHUB_WORKSPACE/build"
           echo "::endgroup::"
           echo "::group::Build Cache All Features"
-          cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" -DMEGAMOL_STOP_AFTER_VCPKG=ON -DMEGAMOL_ENABLE_ALL_FEATURES=ON
+          cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" \
+              -DMEGAMOL_STOP_AFTER_VCPKG=ON \
+              -DMEGAMOL_ENABLE_ALL_FEATURES=ON \
+              $(echo "${{ matrix.job.ignore_features }}" | sed -e 's/\([^ ]*\)/-DMEGAMOL_USE_\1=OFF/g')
           rm -rf "$GITHUB_WORKSPACE/build"
           echo "::endgroup::"
           features=$(<MEGAMOL_FEATURES)
           for feature in $features; do
             echo "::group::Build Cache Feature $feature"
-            cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" -DMEGAMOL_STOP_AFTER_VCPKG=ON -DMEGAMOL_DISABLE_ALL_FEATURES=ON -DMEGAMOL_USE_$feature=ON
+            cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" \
+                -DMEGAMOL_STOP_AFTER_VCPKG=ON \
+                -DMEGAMOL_DISABLE_ALL_FEATURES=ON -DMEGAMOL_USE_$feature=ON
             rm -rf "$GITHUB_WORKSPACE/build"
             echo "::endgroup::"
           done
