@@ -71,22 +71,22 @@ jobs:
 
   strategy:
     matrix:
-      'GCC11 / Debug':
+      'GCC13 / Debug':
         dockerImage: megamol_ci_ubuntu
-        cCompiler: gcc-11
-        cxxCompiler: g++-11
+        cCompiler: gcc-13
+        cxxCompiler: g++-13
         configuration: Debug
         cmakeExtraArgs: '$(defaultConfig)'
-      'Clang14 / Release':
+      'Clang18 / Release':
         dockerImage: megamol_ci_ubuntu
-        cCompiler: clang-14
-        cxxCompiler: clang++-14
+        cCompiler: clang-18
+        cxxCompiler: clang++-18
         configuration: Release
         cmakeExtraArgs: '$(defaultConfig)'
-      'GCC11 / Release (nonGL)':
+      'GCC13 / Release (nonGL)':
         dockerImage: megamol_ci_ubuntu
-        cCompiler: gcc-11
-        cxxCompiler: g++-11
+        cCompiler: gcc-13
+        cxxCompiler: g++-13
         configuration: Release
         cmakeExtraArgs: '$(nonGlConfig)'
 
