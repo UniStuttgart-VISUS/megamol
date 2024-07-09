@@ -79,10 +79,10 @@ bool megamol::optix_hpg::SphereGeometry::assertData(geocalls::MultiParticleDataC
     auto const pl_count = call.GetParticleListCount();
 
     for (auto const& el : particle_data_) {
-        CUDA_CHECK_ERROR(cuMemFree(el));
+        CUDA_CHECK_ERROR(cuMemFreeAsync(el, ctx.GetExecStream()));
     }
     for (auto const& el : color_data_) {
-        CUDA_CHECK_ERROR(cuMemFree(el));
+        CUDA_CHECK_ERROR(cuMemFreeAsync(el, ctx.GetExecStream()));
     }
 
     particle_data_.resize(pl_count, 0);
@@ -135,16 +135,17 @@ bool megamol::optix_hpg::SphereGeometry::assertData(geocalls::MultiParticleDataC
                 color_data[p_idx].a = ca_acc->Get_f(p_idx);
             }
             // CUDA_CHECK_ERROR(cuMemFree(color_data_));
-            CUDA_CHECK_ERROR(cuMemAlloc(&color_data_[pl_idx], col_count * sizeof(glm::vec4)));
+            CUDA_CHECK_ERROR(cuMemAllocAsync(&color_data_[pl_idx], col_count * sizeof(glm::vec4), ctx.GetExecStream()));
             CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(
                 color_data_[pl_idx], color_data.data(), col_count * sizeof(glm::vec4), ctx.GetExecStream()));
         }
         // CUDA_CHECK_ERROR(cuMemFree(_particle_data));
-        CUDA_CHECK_ERROR(cuMemAlloc(&particle_data_[pl_idx], p_count * sizeof(device::Particle)));
+        CUDA_CHECK_ERROR(
+            cuMemAllocAsync(&particle_data_[pl_idx], p_count * sizeof(device::Particle), ctx.GetExecStream()));
         CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(
             particle_data_[pl_idx], data.data(), p_count * sizeof(device::Particle), ctx.GetExecStream()));
 
-        CUDA_CHECK_ERROR(cuMemAlloc(&bounds_data[pl_idx], p_count * sizeof(box3f)));
+        CUDA_CHECK_ERROR(cuMemAllocAsync(&bounds_data[pl_idx], p_count * sizeof(box3f), ctx.GetExecStream()));
 
         sphere_module_.ComputeBounds(particle_data_[pl_idx], bounds_data[pl_idx], p_count, ctx.GetExecStream());
 
@@ -203,19 +204,19 @@ bool megamol::optix_hpg::SphereGeometry::assertData(geocalls::MultiParticleDataC
         ctx.GetOptiXContext(), &accelOptions, build_inputs.data(), build_inputs.size(), &bufferSizes));
 
     CUdeviceptr geo_temp;
-    CUDA_CHECK_ERROR(cuMemFree(_geo_buffer));
-    CUDA_CHECK_ERROR(cuMemAlloc(&_geo_buffer, bufferSizes.outputSizeInBytes));
-    CUDA_CHECK_ERROR(cuMemAlloc(&geo_temp, bufferSizes.tempSizeInBytes));
+    CUDA_CHECK_ERROR(cuMemFreeAsync(_geo_buffer, ctx.GetExecStream()));
+    CUDA_CHECK_ERROR(cuMemAllocAsync(&_geo_buffer, bufferSizes.outputSizeInBytes, ctx.GetExecStream()));
+    CUDA_CHECK_ERROR(cuMemAllocAsync(&geo_temp, bufferSizes.tempSizeInBytes, ctx.GetExecStream()));
 
     OptixTraversableHandle geo_handle = 0;
     OPTIX_CHECK_ERROR(optixAccelBuild(ctx.GetOptiXContext(), ctx.GetExecStream(), &accelOptions, build_inputs.data(),
         build_inputs.size(), geo_temp, bufferSizes.tempSizeInBytes, _geo_buffer, bufferSizes.outputSizeInBytes,
         &_geo_handle, nullptr, 0));
 
-    CUDA_CHECK_ERROR(cuMemFree(geo_temp));
+    CUDA_CHECK_ERROR(cuMemFreeAsync(geo_temp, ctx.GetExecStream()));
     // CUDA_CHECK_ERROR(cuMemFree(bounds_data));
     for (auto const& el : bounds_data) {
-        CUDA_CHECK_ERROR(cuMemFree(el));
+        CUDA_CHECK_ERROR(cuMemFreeAsync(el, ctx.GetExecStream()));
     }
 
     //////////////////////////////////////

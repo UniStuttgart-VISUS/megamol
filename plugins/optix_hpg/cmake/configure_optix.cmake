@@ -23,7 +23,7 @@ function(embed_ptx)
   target_link_libraries(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_LINK_LIBRARIES})
   target_include_directories(${PTX_TARGET} PRIVATE ${EMBED_PTX_PTX_INCLUDE_DIRECTORIES})
   set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_PTX_COMPILATION ON)
-  set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES OFF)
+  set_property(TARGET ${PTX_TARGET} PROPERTY CUDA_ARCHITECTURES native)
   set_property(TARGET ${PTX_TARGET} PROPERTY CXX_STANDARD 17)
   target_compile_options(${PTX_TARGET} PRIVATE $<$<CONFIG:Debug>:-lineinfo> -diag-suppress 20012) # warning suppressed due to GLM
 
