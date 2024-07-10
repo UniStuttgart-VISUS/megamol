@@ -778,7 +778,7 @@ Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::GetRow(const int row) const {
 template<class T, unsigned int D, MatrixLayout L, class S,
     template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
 bool AbstractMatrixImpl<T, D, L, S, C>::Invert() {
-#define A(r, c) a[(r) *2 * D + (c)]
+#define A(r, c) a[(r) * 2 * D + (c)]
     double a[2 * D * D]; // input matrix for algorithm
     double f;            // Multiplication factor.
     double max;          // Row pivotising.
@@ -1382,7 +1382,7 @@ unsigned int AbstractMatrixImpl<T, D, L, S, C>::findEigenvaluesSym(
     if (((outEigenvalues == NULL) && (outEigenvectors == NULL)) || (size == 0))
         return 0;
 
-#define A(r, c) a[(r) *D + (c)]
+#define A(r, c) a[(r) * D + (c)]
     double a[D * D]; // input matrix for algorithm
     double d[D];     // diagonal elements
     double e[D];     // off-diagonal elements
