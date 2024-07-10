@@ -12,7 +12,7 @@
 
 namespace megamol::optix_hpg {
 extern "C" const char embedded_sphere_programs[];
-extern "C" const char embedded_sphere_occlusion_programs[];
+//extern "C" const char embedded_sphere_occlusion_programs[];
 } // namespace megamol::optix_hpg
 
 
@@ -62,12 +62,12 @@ void megamol::optix_hpg::SphereGeometry::init(Context const& ctx) {
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds"}});
-    sphere_occlusion_module_ = MMOptixModule(embedded_sphere_occlusion_programs, ctx.GetOptiXContext(),
+    /*sphere_occlusion_module_ = MMOptixModule(embedded_sphere_occlusion_programs, ctx.GetOptiXContext(),
         &ctx.GetModuleCompileOptions(), &ctx.GetPipelineCompileOptions(),
         MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP,
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit_occlusion"},
-            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds_occlusion"}});
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds_occlusion"}});*/
 
     ++program_version;
 
@@ -186,10 +186,10 @@ bool megamol::optix_hpg::SphereGeometry::assertData(geocalls::MultiParticleDataC
         sbt_records_.push_back(sbt_record);
 
         // occlusion stuff
-        SBTRecord<device::SphereGeoData> sbt_record_occlusion;
+        /*SBTRecord<device::SphereGeoData> sbt_record_occlusion;
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_occlusion_module_, &sbt_record_occlusion));
         sbt_record_occlusion.data = sbt_record.data;
-        sbt_records_.push_back(sbt_record_occlusion);
+        sbt_records_.push_back(sbt_record_occlusion);*/
 
         ++sbt_version;
     }
@@ -257,7 +257,7 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
     }
 
     program_groups_[0] = sphere_module_;
-    program_groups_[1] = sphere_occlusion_module_;
+    //program_groups_[1] = sphere_occlusion_module_;
 
     out_geo->set_handle(&_geo_handle);
     out_geo->set_program_groups(program_groups_.data(), program_groups_.size(), program_version);

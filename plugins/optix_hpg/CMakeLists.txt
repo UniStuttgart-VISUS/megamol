@@ -64,16 +64,16 @@ if (optix_hpg_PLUGIN_ENABLED)
       ${ptx_include_dirs}
     SOURCES
       cuda_resources/sphere.cu)
-  embed_ptx(
-    OUTPUT_TARGET
-      embedded_sphere_occlusion_programs
-    PTX_LINK_LIBRARIES
-      glm::glm
-      OptiX::OptiX
-    PTX_INCLUDE_DIRECTORIES
-      ${ptx_include_dirs}
-    SOURCES
-      cuda_resources/sphere_occlusion.cu)
+  #embed_ptx(
+  #  OUTPUT_TARGET
+  #    embedded_sphere_occlusion_programs
+  #  PTX_LINK_LIBRARIES
+  #    glm::glm
+  #    OptiX::OptiX
+  #  PTX_INCLUDE_DIRECTORIES
+  #    ${ptx_include_dirs}
+  #  SOURCES
+  #    cuda_resources/sphere_occlusion.cu)
   embed_ptx(
     OUTPUT_TARGET
       embedded_mesh_programs
@@ -100,7 +100,7 @@ if (optix_hpg_PLUGIN_ENABLED)
     $<TARGET_OBJECTS:embedded_miss_programs>
     $<TARGET_OBJECTS:embedded_miss_occlusion_programs>
     $<TARGET_OBJECTS:embedded_sphere_programs>
-    $<TARGET_OBJECTS:embedded_sphere_occlusion_programs>
+    #$<TARGET_OBJECTS:embedded_sphere_occlusion_programs>
     $<TARGET_OBJECTS:embedded_mesh_programs>
     $<TARGET_OBJECTS:embedded_transitioncalculator_programs>)
 
