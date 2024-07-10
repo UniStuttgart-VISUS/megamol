@@ -9,9 +9,11 @@ on:
 jobs:
   style_check:
     name: Style-Check
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Install clang-format
         run: .ci/install-clang-format.sh
       - name: Run format check
@@ -28,16 +30,20 @@ jobs:
           path: pr/
   plugin_check:
     name: Plugin-Check
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Run plugin check
         run: .ci/check_plugins.sh
   shader_check:
     name: Shader-Check
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
       - name: Download glslang
         run: |
           mkdir bin
