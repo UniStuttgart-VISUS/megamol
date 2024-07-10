@@ -133,12 +133,21 @@ jobs:
     name: "Windows (${{ matrix.job.name }})"
     runs-on: windows-2022
     steps:
+      - name: Install Ninja
+        run: |
+          $ninjaPath = "$env:RUNNER_WORKSPACE\ninja"
+          New-Item -ItemType Directory -Force -Path $ninjaPath
+          Invoke-WebRequest -Uri "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip" -OutFile "$ninjaPath\ninja.zip"
+          Expand-Archive -Path "$ninjaPath\ninja.zip" -DestinationPath $ninjaPath
+          Remove-Item "$ninjaPath\ninja.zip" -Force
+          echo "$ninjaPath" | Out-File -Append -FilePath $env:GITHUB_PATH
+        shell: pwsh
       - uses: actions/checkout@v4
         with:
           show-progress: false
       - name: Configure
         run: >-
-          cmake -S . -B $GITHUB_WORKSPACE/build -G "Visual Studio 17 2022"
+          cmake -S . -B $GITHUB_WORKSPACE/build -G "Ninja"
           ${{ matrix.job.no-gl && env.MM_NO_GL_CONFIG || env.MM_DEFAULT_CONFIG }}
       - name: Build
         run: cmake --build $GITHUB_WORKSPACE/build --config ${{ matrix.job.configuration }} --parallel 2
