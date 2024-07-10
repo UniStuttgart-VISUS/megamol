@@ -121,16 +121,16 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - name: Release
+          - name: 'Release'
             configuration: Release
             no-gl: false
-          - name: Debug
+          - name: 'Debug'
             configuration: Debug
             no-gl: false
-          - name: Release-No-GL
+          - name: 'Release-No-GL'
             configuration: Release
             no-gl: true
-    name: "Windows (${{ matrix.job.name }})"
+    name: "Windows-${{ matrix.job.name }}"
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
@@ -153,25 +153,25 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - name: 'GCC13 Debug'
+          - name: 'GCC-Debug'
             container: megamol_ci_ubuntu
             cc: gcc-13
             cxx: g++-13
             configuration: Debug
             no-gl: false
-          - name: 'Clang18 Release'
+          - name: 'Clang-Release'
             container: megamol_ci_ubuntu
             cc: clang-18
             cxx: clang++-18
             configuration: Release
             no-gl: false
-          - name: 'GCC13 Release No-GL'
+          - name: 'GCC-Release-No-GL'
             container: megamol_ci_ubuntu
             cc: gcc-13
             cxx: g++-13
             configuration: Release
             no-gl: true
-    name: "Linux (${{ matrix.job.name }})"
+    name: "Linux-${{ matrix.job.name }}"
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/unistuttgart-visus/${{ matrix.job.container }}:master
