@@ -16,6 +16,7 @@
     "cppzmq",
     "curl",
     "cxxopts",
+    "datraw",
     "delaunator-cpp",
     "eigen3",
     "glfw3",
