@@ -1,16 +1,9 @@
 #version 460
 
-uniform sampler2D normal_tex_2D;
-uniform sampler2D color_tex_2D;
 uniform sampler2D depth_tex_2D;
-
-uniform vec3 cam_pos;
-
-uniform mat4 inv_view_mx;
-uniform mat4 inv_proj_mx;
+uniform sampler2D color_tex_2D;
 
 uniform float threshold = 1.0;
-
 layout(rgba16) writeonly uniform image2D target_tex;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
@@ -55,9 +48,10 @@ void main() {
 
     float gradient = sqrt(pow(gx, 2) + pow(gy, 2));
     vec4 color_texture = texelFetch(color_tex_2D, pixel_coords, 0);
+    vec4 color_black = vec4(0, 0, 0, 1);
 
     if(gradient > threshold) {
-        imageStore(target_tex, pixel_coords, vec4(0));
+        imageStore(target_tex, pixel_coords, color_black);
     } else {
         imageStore(target_tex, pixel_coords, color_texture);
     }

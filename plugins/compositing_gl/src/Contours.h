@@ -40,7 +40,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description() {
-        return "Compositing module that computes a depth darkening effect in screen space";
+        return "Compositing module that computes contours";
     }
 
     /**
@@ -95,10 +95,17 @@ private:
      */
     void fitTextures(std::shared_ptr<glowl::Texture2D> source);
 
+    void bindTexture(
+        std::unique_ptr<glowl::GLSLProgram>& shader,
+        std::shared_ptr<glowl::Texture2D> texture, 
+        const char* tex_name,
+        int num
+    );
+
     /**
-     * Recalculates the contents of the kernel buffer based on the input
+     * Sets GUI State for different modes
      */
-    void recalcKernel();
+    void setGUIState(int mode);
 
     /** Slot for the output texture */
     core::CalleeSlot outputTexSlot_;
@@ -112,7 +119,17 @@ private:
     /** Slot receiving the input depth texture */
     core::CallerSlot cameraSlot_;
 
-    core::param::ParamSlot sobelOperatorThreshold_;
+    /** Param for Threshold Value in Sobel operator Contour Shader */
+    core::param::ParamSlot sobelThreshold_;
+
+    /** Param for pixel radius suggestive contours */
+    core::param::ParamSlot radius_;
+
+    /** Param for suggestive contour intensitiy threshold */
+    core::param::ParamSlot suggestiveThreshold_;
+
+    /** Mode (Sobel, Suggestive) */
+    core::param::ParamSlot mode_;
 
     /** version identifier */
     uint32_t version_;
@@ -120,8 +137,15 @@ private:
     /** shader performing the conotur calculations */
     std::unique_ptr<glowl::GLSLProgram> contoursShader_;
 
+    std::unique_ptr<glowl::GLSLProgram> suggestiveContoursShader_;
+
+    std::unique_ptr<glowl::GLSLProgram> intensityShader_;
+
     /** final output texture */
     std::shared_ptr<glowl::Texture2D> outputTex_;
 
-};
+    std::shared_ptr<glowl::Texture2D> intensityTex_;
+
+
+    };
 } // namespace megamol::compositing_gl
