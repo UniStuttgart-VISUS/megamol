@@ -319,7 +319,7 @@ bool vislib::sys::ReadTextFile(
     } break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
-    CASE_TEXTFF_UNICODE :
+    CASE_TEXTFF_UNICODE:
 #endif /* _WIN32 */
     {
         vislib::StringW tmp;
@@ -402,7 +402,7 @@ bool vislib::sys::ReadTextFile(
     } break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
-    CASE_TEXTFF_UNICODE :
+    CASE_TEXTFF_UNICODE:
 #endif /* _WIN32 */
     {
         wchar_t* src = outStr.AllocateBuffer(static_cast<unsigned int>((len / sizeof(wchar_t)) + sizeof(wchar_t)));
@@ -615,7 +615,7 @@ bool vislib::sys::WriteTextFile(
         goto CASE_TEXTFF_ASCII;
         break;
     case TEXTFF_ASCII:
-    CASE_TEXTFF_ASCII : {
+    CASE_TEXTFF_ASCII: {
         // no BOM possible
         StringA::Size len = text.Length();
         return (static_cast<StringA::Size>(file.Write(text.PeekBuffer(), len)) == len);
@@ -697,7 +697,7 @@ bool vislib::sys::WriteTextFile(
         break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
-    CASE_TEXTFF_UNICODE :
+    CASE_TEXTFF_UNICODE:
 #endif /* _WIN32 */
     {
 #ifdef _WIN32
@@ -710,7 +710,7 @@ bool vislib::sys::WriteTextFile(
         return (static_cast<StringW::Size>(file.Write(text.PeekBuffer(), len)) == len);
     } break;
     case TEXTFF_UTF8:
-    CASE_TEXTFF_UTF8 : {
+    CASE_TEXTFF_UTF8: {
         vislib::StringA bytes;
         UTF8Encoder::Encode(bytes, text);
         if (bom != TEXTFF_BOM_NO) {

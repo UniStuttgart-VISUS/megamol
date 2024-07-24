@@ -177,7 +177,7 @@ unsigned int AbstractMatrix<T, D, L, S>::FindEigenvalues(
  */
 template<class T, unsigned int D, MatrixLayout L, class S>
 T AbstractMatrix<T, D, L, S>::Determinant() const {
-#define A(r, c) a[(r) *D + (c)]
+#define A(r, c) a[(r) * D + (c)]
     double a[D * D];              // input matrix for algorithm
     double f;                     // Multiplication factor.
     double max;                   // Row pivotising.

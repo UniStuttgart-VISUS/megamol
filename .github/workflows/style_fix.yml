@@ -8,11 +8,11 @@ jobs:
   style_fix:
     name: Style-Fix
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/format' }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Get PR Info
         id: pr-info
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const pr = await github.rest.pulls.get({
@@ -23,18 +23,20 @@ jobs:
             core.setOutput('REPO', pr.data.head.repo.full_name);
             core.setOutput('REF', pr.data.head.ref);
       # Checkout master
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: master
           path: master
           token: ${{ secrets.PAT_MEGAMOLSERVICE }}
+          show-progress: false
       # Checkout PR repo/branch
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: ${{ steps.pr-info.outputs.REPO }}
           ref: ${{ steps.pr-info.outputs.REF }}
           path: pr
           token: ${{ secrets.PAT_MEGAMOLSERVICE }}
+          show-progress: false
       - name: Install clang-format
         run: master/.ci/install-clang-format.sh
       - name: Fix style
@@ -55,7 +57,7 @@ jobs:
           fi
       - name: Comment
         if: ${{ failure() }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             await github.rest.issues.createComment({

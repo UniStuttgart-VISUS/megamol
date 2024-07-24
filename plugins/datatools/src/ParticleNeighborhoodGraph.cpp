@@ -245,7 +245,7 @@ void ParticleNeighborhoodGraph::calcData(geocalls::MultiParticleDataCall* data) 
     float bboxCentY = bboxCent.Y();
     float bboxCentZ = bboxCent.Z();
 
-#define _COORD(x, y, z) ((x) + ((y) + ((z) *y_size)) * x_size)
+#define _COORD(x, y, z) ((x) + ((y) + ((z) * y_size)) * x_size)
 
     std::vector<size_t> grid(d.get_count());
     std::vector<size_t*> gridCell(x_size * y_size * z_size);
