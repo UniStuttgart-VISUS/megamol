@@ -72,7 +72,7 @@ private:
     std::vector<FrontendResource> _requestedResourcesReferences;
 
     frontend_resources::performance::PerformanceManager _perf_man;
-    uint32_t flush_frequency = 0;
+    uint32_t flush_frequency = 1000;
     std::ofstream log_file;
     std::stringstream log_buffer;
     bool include_graph_events = false;

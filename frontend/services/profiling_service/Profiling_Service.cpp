@@ -232,6 +232,9 @@ void Profiling_Service::fill_lua_callbacks() {
         profiling_logging.active = false;
         if (log_file.is_open()) {
             flush_buffer();
+        } else {
+            log_buffer.str(std::string());
+            log_buffer.clear();
         }
         log_file.close();
         log_file = std::ofstream(path, std::ofstream::trunc);
