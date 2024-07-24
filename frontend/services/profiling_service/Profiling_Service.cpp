@@ -83,9 +83,7 @@ bool Profiling_Service::init(void* configPtr) {
                            << std::to_string(the_duration) << std::endl;
             }
             if (frame % flush_frequency == flush_frequency - 1) {
-                log_file << log_buffer.rdbuf();
-                log_buffer.str(std::string());
-                log_buffer.clear();
+                flush_buffer();
             }
         });
     }
@@ -229,6 +227,17 @@ void Profiling_Service::fill_lua_callbacks() {
 
     luaApi->RegisterCallback(
         "mmSetProfilingLogging", "(bool on)", [&](bool on) -> void { this->profiling_logging.active = on; });
+
+    luaApi->RegisterCallback("mmSetProfilingFile", "(string path)", [&](std::string path) -> void {
+        auto const old_state = profiling_logging.active;
+        profiling_logging.active = false;
+        if (log_file.is_open()) {
+            flush_buffer();
+        }
+        log_file.close();
+        log_file = std::ofstream(path, std::ofstream::trunc);
+        profiling_logging.active = old_state;
+    });
 
     luaApi->RegisterCallback("mmGenerateCameraScenes",
         "(string entrypoint, string camera_path_pattern, uint num_samples, float dis)",
