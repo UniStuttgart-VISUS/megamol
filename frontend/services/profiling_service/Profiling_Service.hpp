@@ -56,6 +56,12 @@ private:
     void fill_lua_callbacks();
     void log_graph_event(std::string const& parent, std::string const& name, std::string const& comment);
 
+    void flush_buffer() {
+        log_file << log_buffer.rdbuf();
+        log_buffer.str(std::string());
+        log_buffer.clear();
+    }
+
     std::vector<FrontendResource> _providedResourceReferences;
     std::vector<std::string> _requestedResourcesNames;
     std::vector<FrontendResource> _requestedResourcesReferences;
