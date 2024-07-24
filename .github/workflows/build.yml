@@ -1,0 +1,188 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  MM_DEFAULT_CONFIG: >-
+    -DMEGAMOL_VCPKG_DOWNLOAD_CACHE=ON
+    -DMEGAMOL_WARNING_LEVEL="Off"
+    -DMEGAMOL_PLUGIN_MEGAMOL101_GL=ON
+    -DMEGAMOL_USE_CGAL=ON
+    -DMEGAMOL_USE_PROFILING=ON
+    -DMEGAMOL_USE_STACKTRACE=ON
+    -DMEGAMOL_USE_TRACY=ON
+    -DMEGAMOL_USE_VTKM=ON
+  MM_NO_GL_CONFIG: >-
+    -DMEGAMOL_VCPKG_DOWNLOAD_CACHE=ON
+    -DMEGAMOL_WARNING_LEVEL="Off"
+    -DMEGAMOL_USE_OPENGL=OFF
+
+jobs:
+  vcpkg_cache:
+    # Skip on PR from forked repo as no secrets are available.
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - name: 'Windows'
+            os: 'windows-2022'
+            container: ''
+            generator: 'Visual Studio 17 2022'
+            cc: ''
+            cxx: ''
+            ignore_features: 'MPI POWER'
+          - name: 'Ubuntu-GCC'
+            os: 'ubuntu-24.04'
+            container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
+            generator: 'Ninja'
+            cc: 'gcc-13'
+            cxx: 'g++-13'
+            ignore_features: 'CUESDK VR_INTEROP POWER'
+          - name: 'Ubuntu-Clang'
+            os: 'ubuntu-24.04'
+            container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
+            generator: 'Ninja'
+            cc: 'clang-18'
+            cxx: 'clang++-18'
+            ignore_features: 'CUESDK VR_INTEROP POWER'
+    name: "Vcpkg-${{ matrix.job.name }}"
+    runs-on: ${{ matrix.job.os }}
+    container:
+      image: ${{ matrix.job.container }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Download Vcpkg
+        # Download vcpkg in advance, to download only once. MegaMol will detect the vcpkg directory in the repo root
+        # folder automatically.
+        run: |
+          version=$(LC_ALL=C.UTF-8 grep -oP 'set\(MEGAMOL_VCPKG_VERSION "\K[^"]+' CMakeLists.txt)
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          cd vcpkg && git reset --hard $version && cd ..
+        shell: bash
+      - name: Find MegaMol Feature Options
+        run: |
+          import json
+          with open('vcpkg.json') as f:
+              features = json.load(f)['features']
+          features = [f.upper().replace('-', '_') for f in features if 'dependencies' in features[f]]
+          ignored = '${{ matrix.job.ignore_features }}'.split()
+          features = [f for f in features if f not in ignored]
+          with open('MEGAMOL_FEATURES', 'w') as f:
+              f.write(' '.join(features))
+        shell: python3 {0}
+      - name: Build Vcpkg Ports
+        # Vcpkg ports may are required with different feature sets, based on the MegaMol features, e.g., `megamol`
+        # requires `a` and `megamol[foo]` requires `a[bar]`. We need to build both `a` and `a[foo]` for the cache. The
+        # problem extents to all transitive dependencies. Because we cannot try to build all possible combinations of
+        # enabled MegaMol features, we use the following heuristic to hopefully cover most cases: 1. MegaMol with no
+        # features, 2. MegaMol with all features, 3. For every feature MegaMol with only this feature enabled.
+        run: |
+          echo "::group::Build Cache No Features"
+          cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" \
+              -DMEGAMOL_STOP_AFTER_VCPKG=ON \
+              -DMEGAMOL_DISABLE_ALL_FEATURES=ON
+          rm -rf "$GITHUB_WORKSPACE/build"
+          echo "::endgroup::"
+          echo "::group::Build Cache All Features"
+          cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" \
+              -DMEGAMOL_STOP_AFTER_VCPKG=ON \
+              -DMEGAMOL_ENABLE_ALL_FEATURES=ON \
+              $(echo "${{ matrix.job.ignore_features }}" | sed -e 's/\([^ ]*\)/-DMEGAMOL_USE_\1=OFF/g')
+          rm -rf "$GITHUB_WORKSPACE/build"
+          echo "::endgroup::"
+          features=$(<MEGAMOL_FEATURES)
+          for feature in $features; do
+            echo "::group::Build Cache Feature $feature"
+            cmake -S . -B "$GITHUB_WORKSPACE/build" -G "${{ matrix.job.generator }}" \
+                -DMEGAMOL_STOP_AFTER_VCPKG=ON \
+                -DMEGAMOL_DISABLE_ALL_FEATURES=ON -DMEGAMOL_USE_$feature=ON
+            rm -rf "$GITHUB_WORKSPACE/build"
+            echo "::endgroup::"
+          done
+        shell: bash
+        env:
+          CC: ${{ matrix.job.cc }}
+          CXX: ${{ matrix.job.cxx }}
+          VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
+  build_windows:
+    if: ${{ always() }}
+    needs: vcpkg_cache
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - name: 'Release'
+            configuration: Release
+            no-gl: false
+          - name: 'Debug'
+            configuration: Debug
+            no-gl: false
+          - name: 'Release-No-GL'
+            configuration: Release
+            no-gl: true
+    name: "Windows-${{ matrix.job.name }}"
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+      - uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+        with:
+          destination: $RUNNER_WORKSPACE/ninja-build
+      - name: Configure
+        run: >-
+          cmake -S . -B $GITHUB_WORKSPACE/build -G "Ninja"
+          ${{ matrix.job.no-gl && env.MM_NO_GL_CONFIG || env.MM_DEFAULT_CONFIG }}
+      - name: Build
+        run: cmake --build $GITHUB_WORKSPACE/build --config ${{ matrix.job.configuration }} --parallel 2
+  build_linux:
+    if: ${{ always() }}
+    needs: vcpkg_cache
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - name: 'GCC-Debug'
+            container: megamol_ci_ubuntu
+            cc: gcc-13
+            cxx: g++-13
+            configuration: Debug
+            no-gl: false
+          - name: 'Clang-Release'
+            container: megamol_ci_ubuntu
+            cc: clang-18
+            cxx: clang++-18
+            configuration: Release
+            no-gl: false
+          - name: 'GCC-Release-No-GL'
+            container: megamol_ci_ubuntu
+            cc: gcc-13
+            cxx: g++-13
+            configuration: Release
+            no-gl: true
+    name: "Linux-${{ matrix.job.name }}"
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/unistuttgart-visus/${{ matrix.job.container }}:master
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Configure
+        run: >-
+          cmake -S . -B $GITHUB_WORKSPACE/build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.job.configuration }}
+          ${{ matrix.job.no-gl && env.MM_NO_GL_CONFIG || env.MM_DEFAULT_CONFIG }}
+      - name: Build
+        run: cmake --build $GITHUB_WORKSPACE/build
+    env:
+      CC: ${{ matrix.job.cc }}
+      CXX: ${{ matrix.job.cxx }}

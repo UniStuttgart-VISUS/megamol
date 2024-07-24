@@ -254,7 +254,7 @@ static void wkf_cpuid(unsigned int eax, unsigned int ecx, unsigned int* abcd) {
 #if defined(_MSC_VER)
     __cpuidex((int*) abcd, eax, ecx);
 #else
-                                 //  uint32_t ebx, edx;
+    //  uint32_t ebx, edx;
     unsigned int ebx = 0, edx = 0;
 #if defined(__i386__) && defined(__PIC__)
     /* in case of PIC under 32-bit EBX cannot be clobbered */

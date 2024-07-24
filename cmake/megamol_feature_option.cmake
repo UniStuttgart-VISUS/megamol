@@ -30,9 +30,12 @@ function(megamol_feature_option OPTION_NAME OPTION_DESCRIPTION OPTION_DEFAULT)
     message(FATAL_ERROR "MegaMol feature option \"${OPTION_NAME_LOWER}\" is missing in vcpkg.json")
   endif ()
 
-  # Allow CI to override all features to default to on.
+  # Allow CI to override all features to default to on/off.
   if (MEGAMOL_ENABLE_ALL_FEATURES)
     set(OPTION_DEFAULT ON)
+  endif ()
+  if (MEGAMOL_DISABLE_ALL_FEATURES)
+    set(OPTION_DEFAULT OFF)
   endif ()
 
   if (${ARGC} GREATER 3)
