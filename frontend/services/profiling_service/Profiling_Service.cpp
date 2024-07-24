@@ -37,7 +37,7 @@ bool Profiling_Service::init(void* configPtr) {
     profiling_logging.active = conf->autostart_profiling;
     include_graph_events = conf->include_graph_events;
 
-    const auto unit_name = "ns";
+    //const auto unit_name = "ns";
     using timer_ratio = std::nano;
     using timer_datatype = uint64_t;
     //const auto unit_name = "us";
@@ -46,47 +46,46 @@ bool Profiling_Service::init(void* configPtr) {
     //using timer_ratio = std::milli;
 
     if (conf != nullptr && !conf->log_file.empty()) {
+        flush_frequency = conf->flush_frequency;
         if (!log_file.is_open()) {
             log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
-            flush_frequency = conf->flush_frequency;
         }
-        // header
-        log_buffer << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end ("
-                   << unit_name << ");duration (" << unit_name << ")" << std::endl;
-        _perf_man.subscribe_to_updates([&](const frontend_resources::performance::frame_info& fi) {
-            if (!profiling_logging.active) {
-                return;
-            }
-            auto frame = fi.frame;
-            if (frame > 0) {
-                auto& _frame_stats =
-                    _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
-                log_buffer << frame << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
-                           << _frame_stats.last_rendered_frame_time_microseconds.count() / 1000.0 << std::endl;
-            }
-            for (auto& e : fi.entries) {
-                auto conf = _perf_man.lookup_config(e.handle);
-                auto name = conf.name;
-                auto parent = _perf_man.lookup_parent(e.handle);
-                auto comment = conf.comment;
-
-                const auto the_start =
-                    std::chrono::duration<timer_datatype, timer_ratio>(e.start.time_since_epoch()).count();
-                const auto the_end =
-                    std::chrono::duration<timer_datatype, timer_ratio>(e.end.time_since_epoch()).count();
-                const auto the_duration =
-                    std::chrono::duration<timer_datatype, timer_ratio>(e.duration.time_since_epoch()).count();
-
-                log_buffer << e.frame << ";" << parent_type_string(e.parent) << ";" << parent << ";" << name << ";"
-                           << comment << ";" << e.global_index << ";" << e.frame_index << ";" << query_api_string(e.api)
-                           << ";" << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
-                           << std::to_string(the_duration) << std::endl;
-            }
-            if (frame % flush_frequency == flush_frequency - 1) {
-                flush_buffer();
-            }
-        });
+    } else {
+        profiling_logging.active = false;
     }
+    // header
+    push_header();
+    _perf_man.subscribe_to_updates([&](const frontend_resources::performance::frame_info& fi) {
+        if (!profiling_logging.active) {
+            return;
+        }
+        auto frame = fi.frame;
+        if (frame > 0) {
+            auto& _frame_stats = _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
+            log_buffer << frame << ";MegaMol;MegaMol;FrameTime;;0;0;CPU;;;"
+                       << _frame_stats.last_rendered_frame_time_microseconds.count() / 1000.0 << std::endl;
+        }
+        for (auto& e : fi.entries) {
+            auto conf = _perf_man.lookup_config(e.handle);
+            auto name = conf.name;
+            auto parent = _perf_man.lookup_parent(e.handle);
+            auto comment = conf.comment;
+
+            const auto the_start =
+                std::chrono::duration<timer_datatype, timer_ratio>(e.start.time_since_epoch()).count();
+            const auto the_end = std::chrono::duration<timer_datatype, timer_ratio>(e.end.time_since_epoch()).count();
+            const auto the_duration =
+                std::chrono::duration<timer_datatype, timer_ratio>(e.duration.time_since_epoch()).count();
+
+            log_buffer << e.frame << ";" << parent_type_string(e.parent) << ";" << parent << ";" << name << ";"
+                       << comment << ";" << e.global_index << ";" << e.frame_index << ";" << query_api_string(e.api)
+                       << ";" << std::to_string(the_start) << ";" << std::to_string(the_end) << ";"
+                       << std::to_string(the_duration) << std::endl;
+        }
+        if (frame % flush_frequency == flush_frequency - 1) {
+            flush_buffer();
+        }
+    });
 #endif
 
     _requestedResourcesNames = {frontend_resources::LuaAPI_Req_Name, frontend_resources::MegaMolGraph_Req_Name,
@@ -236,6 +235,7 @@ void Profiling_Service::fill_lua_callbacks() {
         }
         log_file.close();
         log_file = std::ofstream(path, std::ofstream::trunc);
+        push_header();
         profiling_logging.active = old_state;
     });
 
