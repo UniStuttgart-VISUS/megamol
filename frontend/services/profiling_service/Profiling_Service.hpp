@@ -56,6 +56,11 @@ private:
     void fill_lua_callbacks();
     void log_graph_event(std::string const& parent, std::string const& name, std::string const& comment);
 
+    void push_header() {
+        log_buffer << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end ("
+                  << unit_name << ");duration (" << unit_name << ")" << std::endl;
+    }
+
     void flush_buffer() {
         log_file << log_buffer.rdbuf();
         log_buffer.str(std::string());
@@ -72,6 +77,7 @@ private:
     std::stringstream log_buffer;
     bool include_graph_events = false;
     bool first_frame = true;
+    const std::string unit_name = "ns";
     frontend_resources::performance::ProfilingLoggingStatus profiling_logging;
     frontend_resources::performance::ProfilingCallbacks profiling_callbacks;
 #ifdef MEGAMOL_USE_NVPERF
