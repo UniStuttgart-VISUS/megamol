@@ -6,8 +6,7 @@
       "name": "adios2",
       "features": [
         "zfp"
-      ],
-      "version>=": "2.8.3#1"
+      ]
     },
     "bhtsne",
     "blend2d",
@@ -51,10 +50,7 @@
     "snappy",
     "sol2",
     "spdlog",
-    {
-      "name": "tbb",
-      "version>=": "2021.5.0"
-    },
+    "tbb",
     "tinygltf",
     "tinyobjloader",
     "tinyply",
@@ -137,8 +133,7 @@
           "features": [
             "avx",
             "avx2"
-          ],
-          "version>=": "2.10.0"
+          ]
         }
       ]
     },
