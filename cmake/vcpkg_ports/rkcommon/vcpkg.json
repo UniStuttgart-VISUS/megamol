@@ -1,0 +1,22 @@
+{
+  "name": "rkcommon",
+  "version": "1.10.0",
+  "port-version": 1,
+  "homepage": "https://github.com/ospray/rkcommon",
+  "description": "C++/CMake infrastructure",
+  "license": "Apache-2.0",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    },
+    {
+      "name": "tbb",
+      "version>=": "2021.5.0"
+    }
+  ]
+}
