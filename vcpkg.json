@@ -147,6 +147,12 @@
     "power": {
       "description": "Use power consumption measurement",
       "dependencies": [
+        {
+          "name": "arrow",
+          "features": [
+            "parquet"
+          ]
+        },
         "power-overwhelming"
       ]
     },
