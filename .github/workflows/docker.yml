@@ -3,7 +3,9 @@ name: Docker Images
 on:
   push:
     branches: [ master ]
-    paths: [ '.ci/docker/**' ]
+    paths:
+      - '.ci/docker/**'
+      - '.github/workflows/docker.yml'
   workflow_dispatch:
 
 env:

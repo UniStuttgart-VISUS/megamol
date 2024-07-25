@@ -1,0 +1,106 @@
+{
+  "name": "ospray",
+  "version": "2.10.0",
+  "description": "The Open, Scalable, and Portable Ray Tracing Engine",
+  "homepage": "https://https://www.ospray.org/",
+  "license": "Apache-2.0",
+  "dependencies": [
+    "rkcommon",
+    "tbb",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "avx": {
+      "description": "avx ISA support",
+      "dependencies": [
+        {
+          "name": "embree",
+          "features": [
+            "avx"
+          ]
+        },
+        {
+          "name": "openvkl",
+          "features": [
+            "avx"
+          ]
+        }
+      ]
+    },
+    "avx2": {
+      "description": "avx2 ISA support",
+      "dependencies": [
+        {
+          "name": "embree",
+          "features": [
+            "avx2"
+          ]
+        },
+        {
+          "name": "openvkl",
+          "features": [
+            "avx2"
+          ]
+        }
+      ]
+    },
+    "avx512": {
+      "description": "avx512 ISA support",
+      "dependencies": [
+        {
+          "name": "embree",
+          "features": [
+            "avx512"
+          ]
+        },
+        {
+          "name": "openvkl",
+          "features": [
+            "avx512"
+          ]
+        }
+      ]
+    },
+    "sse2": {
+      "description": "sse2 ISA support",
+      "dependencies": [
+        {
+          "name": "embree",
+          "features": [
+            "sse2"
+          ]
+        },
+        {
+          "name": "openvkl",
+          "features": [
+            "sse2"
+          ]
+        }
+      ]
+    },
+    "sse4": {
+      "description": "sse4 ISA support",
+      "dependencies": [
+        {
+          "name": "embree",
+          "features": [
+            "sse42"
+          ]
+        },
+        {
+          "name": "openvkl",
+          "features": [
+            "sse4"
+          ]
+        }
+      ]
+    }
+  }
+}
