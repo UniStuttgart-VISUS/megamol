@@ -1,0 +1,14 @@
+diff --git a/cmake/ospray_options.cmake b/cmake/ospray_options.cmake
+index fd28c44..1422cac 100644
+--- a/cmake/ospray_options.cmake
++++ b/cmake/ospray_options.cmake
+@@ -8,8 +8,7 @@
+ include(GNUInstallDirs)
+ include(CMakeDependentOption)
+ 
+-set(OSPRAY_CMAKECONFIG_DIR
+-    "${CMAKE_INSTALL_LIBDIR}/cmake/ospray-${OSPRAY_VERSION}")
++set(OSPRAY_CMAKECONFIG_DIR "share/ospray")
+ 
+ set(RKCOMMON_VERSION_REQUIRED 1.10.0)
+ set(EMBREE_VERSION_REQUIRED 3.13.1)
