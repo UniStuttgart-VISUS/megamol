@@ -106,14 +106,6 @@ bool DatRawWriter::run() {
 }
 
 /*
- * DatRawWriter::getCapabilities
- */
-bool DatRawWriter::getCapabilities(DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
-    return true;
-}
-
-/*
  * DatRawWriter::writeFrame
  */
 bool DatRawWriter::writeFrame(std::string datpath, std::string rawpath, geocalls::VolumetricDataCall& data) {

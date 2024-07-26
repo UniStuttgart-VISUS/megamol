@@ -85,8 +85,3 @@ bool NullParticleWriter::run() {
 
     return true;
 }
-
-bool NullParticleWriter::getCapabilities(core::DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
-    return true;
-}

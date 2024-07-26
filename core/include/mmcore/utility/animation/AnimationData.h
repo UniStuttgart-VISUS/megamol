@@ -13,8 +13,6 @@
 #include <imgui.h>
 #include <sol/sol.hpp>
 
-#include "mmcore/MegaMolGraph.h"
-
 namespace megamol::core::utility::animation {
 
 using KeyTimeType = int32_t;

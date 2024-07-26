@@ -12,7 +12,6 @@
 
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
-#include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/view/AbstractView.h"
 
@@ -21,7 +20,7 @@ namespace megamol::mmstd_gl::special {
 /**
  * Class implementing the screen shooter job module
  */
-class ScreenShooter : public core::job::AbstractJob, public core::Module, public core::view::AbstractView::Hooks {
+class ScreenShooter : public core::Module, public core::view::AbstractView::Hooks {
 public:
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Module::requested_lifetime_resources(req);
@@ -64,29 +63,6 @@ public:
      * Dtor
      */
     ~ScreenShooter() override;
-
-    /**
-     * Answers whether or not this job is still running.
-     *
-     * @return 'true' if this job is still running, 'false' if it has
-     *         finished.
-     */
-    bool IsRunning() const override;
-
-    /**
-     * Starts the job thread.
-     *
-     * @return true if the job has been successfully started.
-     */
-    bool Start() override;
-
-    /**
-     * Terminates the job thread.
-     *
-     * @return true to acknowledge that the job will finish as soon
-     *         as possible, false if termination is not possible.
-     */
-    bool Terminate() override;
 
 protected:
     /**

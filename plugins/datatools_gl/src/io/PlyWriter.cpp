@@ -310,11 +310,3 @@ bool io::PlyWriter::run() {
 
     return true;
 }
-
-/*
- * io::PlyWriter::getCapabilities
- */
-bool io::PlyWriter::getCapabilities(DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
-    return true;
-}

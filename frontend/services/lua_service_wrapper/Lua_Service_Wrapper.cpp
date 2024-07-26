@@ -20,6 +20,7 @@
 #include "GUIRegisterWindow.h"
 #include "LuaApiResource.h"
 #include "PerformanceManager.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
 

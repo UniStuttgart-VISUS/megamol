@@ -42,8 +42,7 @@ typedef unsigned int uint;
  * PDBWriter::PDBWriter
  */
 PDBWriter::PDBWriter()
-        : AbstractJob()
-        , Module()
+        : Module()
         , dataCallerSlot("getdata", "Connects the writer module with the data source.")
         , writePQRSlot("writePQR", "Parameter to trigger writing of *.pqr files instead of *.pdb")
         , includeSolventAtomsSlot(
@@ -115,26 +114,10 @@ PDBWriter::~PDBWriter() {
     this->Release();
 }
 
-
-/*
- * PDBWriter::IsRunning
- */
-bool PDBWriter::IsRunning() const {
-    return (!(this->jobDone));
-}
-
 /*
  * PDBWriter::buttonCallback
  */
 bool PDBWriter::buttonCallback(core::param::ParamSlot& slot) {
-    return this->Start();
-}
-
-
-/*
- * PDBWriter::Start
- */
-bool PDBWriter::Start() {
 
     uint frameCnt;
 
@@ -220,14 +203,6 @@ bool PDBWriter::Start() {
 
     this->jobDone = true;
     return true;
-}
-
-
-/*
- * PDBWriter::Terminate
- */
-bool PDBWriter::Terminate() {
-    return true; // TODO What does this do?
 }
 
 

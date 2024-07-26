@@ -100,10 +100,6 @@ bool megamol::mesh::WavefrontObjWriter::run() {
     return true;
 }
 
-bool megamol::mesh::WavefrontObjWriter::getCapabilities(core::DataWriterCtrlCall& call) {
-    return true;
-}
-
 void megamol::mesh::WavefrontObjWriter::release() {}
 
 void megamol::mesh::WavefrontObjWriter::WriteMesh(const std::string& fname, const ObjMesh& mesh) {

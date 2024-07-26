@@ -11,7 +11,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/data/AbstractDataWriter.h"
-#include "mmstd/data/DataWriterCtrlCall.h"
 #include <fstream>
 
 namespace megamol::volume {
@@ -73,15 +72,6 @@ protected:
      * @return True on success
      */
     bool run() override;
-
-    /**
-     * Function querying the writers capabilities
-     *
-     * @param call The call to receive the capabilities
-     *
-     * @return True on success
-     */
-    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     /**

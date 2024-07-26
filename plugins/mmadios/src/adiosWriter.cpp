@@ -115,13 +115,6 @@ void adiosWriter::release() { /* empty */
 }
 
 /*
- * adiosWriter::getCapabilities
- */
-bool adiosWriter::getCapabilities(core::DataWriterCtrlCall& call) {
-    return true;
-}
-
-/*
  * adiosWriter::initMPI
  */
 bool adiosWriter::initMPI() {

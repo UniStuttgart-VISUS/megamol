@@ -17,11 +17,9 @@
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "mmstd_gl/renderer/TimeManipulator.h"
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
-#include "mmstd_gl/special/CallbackScreenShooter.h"
 #include "mmstd_gl/special/ChronoGraph.h"
 #include "mmstd_gl/special/DemoRenderer2D.h"
 #include "mmstd_gl/special/ScreenShooter.h"
-#include "mmstd_gl/view/HeadView.h"
 #include "mmstd_gl/view/SplitViewGL.h"
 #include "mmstd_gl/view/View2DGL.h"
 #include "mmstd_gl/view/View3DGL.h"
@@ -45,7 +43,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::view::View2DGL>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::view::View3DGL>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::view::SplitViewGL>();
-        this->module_descriptions.RegisterAutoDescription<mmstd_gl::view::HeadView>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::TransferFunctionGL>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::AnimationRenderer>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::BoundingBoxRenderer>();
@@ -56,7 +53,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ResolutionScaler3D>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::TimeManipulator>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::ScreenShooter>();
-        this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::CallbackScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::ChronoGraph>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::DemoRenderer2D>();
 
@@ -67,7 +63,6 @@ public:
         this->call_descriptions.RegisterAutoDescription<mmstd_gl::CallGetTransferFunctionGL>();
         this->call_descriptions.RegisterAutoDescription<mmstd_gl::FlagCallRead_GL>();
         this->call_descriptions.RegisterAutoDescription<mmstd_gl::FlagCallWrite_GL>();
-        this->call_descriptions.RegisterAutoDescription<mmstd_gl::special::CallbackScreenShooterCall>();
     }
 };
 } // namespace megamol::mmstd_gl

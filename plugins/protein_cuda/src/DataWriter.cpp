@@ -38,8 +38,7 @@ using namespace megamol::core::utility::log;
  * protein_cuda::DataWriter::DataWriter
  */
 protein_cuda::DataWriter::DataWriter()
-        : AbstractJob()
-        , Module()
+        : core::AbstractDataWriter()
         , dataCallerSlot("getdata", "Connects the module with the data source.")
         , jobDone(false)
         , frameData0(NULL)
@@ -84,17 +83,9 @@ protein_cuda::DataWriter::~DataWriter() {
 
 
 /*
- * protein_cuda::DataWriter::IsRunning
- */
-bool protein_cuda::DataWriter::IsRunning(void) const {
-    return (!(this->jobDone));
-}
-
-
-/*
  * protein_cuda::DataWriter::Start
  */
-bool protein_cuda::DataWriter::Start(void) {
+bool protein_cuda::DataWriter::run() {
     using namespace vislib::sys;
 
     protein_calls::CrystalStructureDataCall* dc =
@@ -240,14 +231,6 @@ bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0, unsigned in
         delete[] griddata;
 
     this->jobDone = true;
-    return true;
-}
-
-
-/*
- * protein_cuda::DataWriter::Terminate
- */
-bool protein_cuda::DataWriter::Terminate(void) {
     return true;
 }
 

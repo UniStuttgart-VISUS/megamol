@@ -31,8 +31,7 @@ using namespace megamol::trisoup_gl::volumetrics;
  * VoluMetricJob::VoluMetricJob
  */
 VoluMetricJob::VoluMetricJob()
-        : core::job::AbstractThreadedJob()
-        , core::Module()
+        : core::Module()
         , getDataSlot("getData", "Slot that connects to a MultiParticleDataCall to fetch the particles in the scene")
         , metricsFilenameSlot("metricsFilenameSlot", "File that will contain the "
                                                      "surfaces and volumes of each particle list per frame")

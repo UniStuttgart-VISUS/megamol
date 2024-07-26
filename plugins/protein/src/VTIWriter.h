@@ -13,13 +13,13 @@
 #include "HostArr.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "protein_calls/VTIDataCall.h"
 
 namespace megamol::protein {
 
-class VTIWriter : public core::job::AbstractJob, public core::Module {
+class VTIWriter : public core::AbstractDataWriter {
 
 public:
     /**
@@ -37,8 +37,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description() {
-        return "Writer module for *.vti file format used by the Visualization \
-                Toolkit.";
+        return "Writer module for *.vti file format used by the Visualization Toolkit.";
     }
 
     /**
@@ -60,29 +59,6 @@ public:
      */
     ~VTIWriter() override;
 
-    /**
-     * Answers whether or not this job is still running.
-     *
-     * @return 'true' if this job is still running, 'false' if it has
-     *         finished.
-     */
-    bool IsRunning() const override;
-
-    /**
-     * Starts the job thread.
-     *
-     * @return true if the job has been successfully started.
-     */
-    bool Start() override;
-
-    /**
-     * Terminates the job thread.
-     *
-     * @return true to acknowledge that the job will finish as soon
-     *         as possible, false if termination is not possible.
-     */
-    bool Terminate() override;
-
 protected:
     /**
      * Implementation of 'Create'.
@@ -95,6 +71,8 @@ protected:
      * Implementation of 'Release'.
      */
     void release() override;
+
+    bool run() override;
 
 private:
     /**

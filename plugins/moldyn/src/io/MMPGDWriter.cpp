@@ -10,7 +10,6 @@
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmstd/data/DataWriterCtrlCall.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Thread.h"
@@ -186,15 +185,6 @@ bool MMPGDWriter::run() {
     Log::DefaultLog.WriteInfo("Completed writing data\n");
     file.Close();
 
-    return true;
-}
-
-
-/*
- * MMPGDWriter::getCapabilities
- */
-bool MMPGDWriter::getCapabilities(DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
     return true;
 }
 

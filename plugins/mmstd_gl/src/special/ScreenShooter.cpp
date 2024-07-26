@@ -194,8 +194,7 @@ bool special::ScreenShooter::IsAvailable() {
  * view::special::ScreenShooter::release
  */
 special::ScreenShooter::ScreenShooter(const bool reducedParameters)
-        : core::job::AbstractJob()
-        , Module()
+        : Module()
         , viewNameSlot("view", "The name of the view to be used")
         , imgWidthSlot("imgWidth", "The width in pixels of the resulting image")
         , imgHeightSlot("imgHeight", "The height in pixels of the resulting image")
@@ -294,32 +293,6 @@ special::ScreenShooter::ScreenShooter(const bool reducedParameters)
  */
 special::ScreenShooter::~ScreenShooter() {
     this->Release();
-}
-
-
-/*
- * view::special::ScreenShooter::release
- */
-bool special::ScreenShooter::IsRunning() const {
-    return this->running;
-}
-
-
-/*
- * view::special::ScreenShooter::release
- */
-bool special::ScreenShooter::Start() {
-    this->running = true;
-    return true;
-}
-
-
-/*
- * view::special::ScreenShooter::release
- */
-bool special::ScreenShooter::Terminate() {
-    this->running = false;
-    return true;
 }
 
 

@@ -41,8 +41,7 @@ const char* cluster::ClusterController::DEFAULT_CLUSTERNAME = "MM04RC";
  * cluster::ClusterController::ClusterController
  */
 cluster::ClusterController::ClusterController()
-        : job::AbstractThreadedJob()
-        , Module()
+        : Module()
         , vislib::net::cluster::DiscoveryListener()
         , cdsNameSlot("cdsName", "Name of the rendering cluster")
         , cdsPortSlot("cdsPort", "The ip port to be used by the cluster discovery service.")
@@ -227,7 +226,7 @@ void cluster::ClusterController::release() {
 DWORD cluster::ClusterController::Run(void* userData) {
     const unsigned int sleepTime = 250;
 
-    while (!this->shouldTerminate()) {
+    while (true /*!this->shouldTerminate()*/) { // TODO old interfaced used by Jobs.
 
         // update cluster discovery settings
         if (this->cdsNameSlot.IsDirty() || this->cdsPortSlot.IsDirty() || this->cdsRunSlot.IsDirty()) {
