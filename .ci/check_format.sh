@@ -64,9 +64,6 @@ while read -r file; do
     if [[ $file == *"/boost-stacktrace/"* ]]; then
       continue
     fi
-    if [[ $file == *"/glm/"* ]]; then
-      continue
-    fi
   fi
 
   # ignore 3rd party dirs
