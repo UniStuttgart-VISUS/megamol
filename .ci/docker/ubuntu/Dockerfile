@@ -22,6 +22,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   xorg-dev \
 # libsodium / gmp:
   autoconf libtool \
+# icu:
+  autoconf-archive \
 # thrift:
   flex bison \
 # GL/glu.h:
