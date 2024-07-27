@@ -13,6 +13,10 @@
 
 #include "vislib/assert.h"
 
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#endif
+
 using namespace megamol::core::utility;
 
 SSBOStreamer::SSBOStreamer(const std::string& debugLabel)
@@ -131,6 +135,10 @@ void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int&
     GLsizeiptr& dstLength, const std::function<void(void*, const void*)>& copyOp) {
     if (theData == nullptr || idx > this->numChunks - 1)
         return;
+
+#ifdef MEGAMOL_USE_TRACY
+    ZoneScopedN("SSBOStreamer::UploadChunk");
+#endif
 
     // we did not succeed doing anything yet
     numItems = sync = 0;

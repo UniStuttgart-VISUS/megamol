@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef MEGAMOL_USE_OPENGL
+
 #include <glad/wgl.h>
 
 #include <cuda.h>
@@ -12,6 +14,11 @@
 #include "CallRender3DCUDA.h"
 #include "mmstd_gl/renderer/ContextToGL.h"
 #include "optix/Utils.h"
+
+#ifdef MEGAMOL_USE_TRACY
+#include <tracy/Tracy.hpp>
+#include <tracy/TracyOpenGL.hpp>
+#endif
 
 namespace megamol::optix_hpg {
 
@@ -88,6 +95,10 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<glowl::Framebuff
 inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<glowl::GLSLProgram>& shader,
                                                 std::shared_ptr<glowl::FramebufferObject>& lhs_fbo,
                                                 std::shared_ptr<CUDAFramebuffer>& fbo, int width, int height) -> void {
+#ifdef MEGAMOL_USE_TRACY
+    ZoneScopedN("CUDAToGL::Blit");
+    TracyGpuZone("CUDAToGL::Blit");
+#endif
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
 
@@ -100,4 +111,7 @@ inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<glowl::GLSLProgra
 using CUDAToGL =
     mmstd_gl::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name, cudatogl_desc>;
 
+
 } // namespace megamol::optix_hpg
+
+#endif

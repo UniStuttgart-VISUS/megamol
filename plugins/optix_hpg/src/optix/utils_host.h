@@ -56,6 +56,6 @@ typedef struct RayH {
     glm::vec3 direction;
     float tMin;
     float tMax;
-};
+} RayH;
 } // namespace optix_hpg
 } // namespace megamol

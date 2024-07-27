@@ -59,6 +59,7 @@ struct RuntimeConfig {
 #endif
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
+    bool opengl_flush_finish = false;
     std::optional<std::tuple<unsigned int /*major*/, unsigned int /*minor*/, bool /*true=>core, false=>compat*/>>
         opengl_context_version = {{4, 6, false /*compat*/}};
     std::optional<UintPair> window_size =
@@ -82,6 +83,11 @@ struct RuntimeConfig {
     uint32_t flush_frequency = 1000;
     bool autostart_profiling = true;
     bool include_graph_events = false;
+
+    std::string power_lpt = "lpt1";
+    bool power_write_file = false;
+    std::string power_folder = "./";
+    std::string tinker_map_filename = "./tinkerforge.json";
 
     struct Tile {
         UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling

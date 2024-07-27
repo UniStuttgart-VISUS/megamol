@@ -143,9 +143,15 @@ void megamol::optix_hpg::Renderer::on_change_programs(std::tuple<OptixProgramGro
 
     auto const& optix_ctx = get_context();
     auto& pipeline = get_pipeline();
+    cuStreamSynchronize(optix_ctx->GetExecStream());
+    if (pipeline) {
+        OPTIX_CHECK_ERROR(optixPipelineDestroy(pipeline));
+    }
 
     OPTIX_CHECK_ERROR(optixPipelineCreate(optix_ctx->GetOptiXContext(), &optix_ctx->GetPipelineCompileOptions(),
         &optix_ctx->GetPipelineLinkOptions(), groups.data(), groups.size(), log.data(), &log_size, &pipeline));
+
+    core::utility::log::Log::DefaultLog.WriteInfo("[OptiX]: {}", log);
 }
 
 
