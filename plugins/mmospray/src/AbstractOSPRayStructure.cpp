@@ -145,12 +145,12 @@ void AbstractOSPRayStructure::processClippingPlane() {
         //    ccp->GetPlane().Point().GetX(), ccp->GetPlane().Point().GetY(), ccp->GetPlane().Point().GetZ()};
         //float d = glm::dot(point, normal);
         ClippingPlane& cp = this->structureContainer.clippingPlane;
-        if (cp.coeff[0] != normal.x || cp.coeff[1] != normal.y || cp.coeff[2] != normal.z || cp.coeff[3] != d) {
+        if (cp.coeff[0] != normal.x || cp.coeff[1] != normal.y || cp.coeff[2] != normal.z || cp.coeff[3] != -d) {
             this->structureContainer.clippingPlaneChanged = true;
             cp.coeff[0] = normal.x;
             cp.coeff[1] = normal.y;
             cp.coeff[2] = normal.z;
-            cp.coeff[3] = d;
+            cp.coeff[3] = -d;
         } else {
             this->structureContainer.clippingPlaneChanged = false;
         }

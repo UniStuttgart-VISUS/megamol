@@ -1162,17 +1162,13 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
             if (entry.second.clippingPlane.isValid) {
                 _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("plane"), GEOMETRY);
 
-                ::rkcommon::math::vec4f plane;
-                plane[0] = entry.second.clippingPlane.coeff[0];
-                plane[1] = entry.second.clippingPlane.coeff[1];
-                plane[2] = entry.second.clippingPlane.coeff[2];
-                plane[3] = entry.second.clippingPlane.coeff[3];
                 std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                    .setParam("plane.coefficients", ::ospray::cpp::CopiedData(plane));
+                    .setParam("plane.coefficients", ::ospray::cpp::SharedData(entry.second.clippingPlane.coeff));
                 std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
 
                 _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                _clippingModels[entry.first].back().setParam("invertNormals", true);
                 _clippingModels[entry.first].back().commit();
 
                 _groups[entry.first].setParam(
