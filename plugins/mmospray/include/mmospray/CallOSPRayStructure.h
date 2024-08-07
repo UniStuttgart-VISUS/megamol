@@ -13,6 +13,8 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmospray/CallOSPRayMaterial.h"
 #include "mmospray/CallOSPRayTransformation.h"
+#include "rkcommon/math/vec.h"
+
 #include <map>
 #include <vector>
 
@@ -85,7 +87,7 @@ struct curveStructure {
 };
 
 struct ClippingPlane {
-    std::array<float, 4> coeff = {0, 0, 0, 0};
+    ::rkcommon::math::vec4f coeff = {0, 0, 0, 0};
     bool isValid = false;
 };
 

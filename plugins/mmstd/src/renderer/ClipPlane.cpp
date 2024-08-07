@@ -6,6 +6,7 @@
 
 #include "mmstd/renderer/ClipPlane.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
@@ -29,7 +30,8 @@ view::ClipPlane::ClipPlane()
         , colourSlot("colour", "Defines the colour of the clipping plane")
         , normalSlot("normal", "Defines the normal of the clipping plane")
         , pointSlot("point", "Defines a point in the clipping plane")
-        , distSlot("dist", "The plane-origin distance") {
+        , distSlot("dist", "The plane-origin distance")
+        , normalizeSlot("normalize", "normalizes the normal") {
 
     this->plane.Set(vislib::math::Point<float, 3>(0.0, 0.0f, 0.0f), vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
     this->col[0] = this->col[1] = this->col[2] = 0.5f;
@@ -53,6 +55,9 @@ view::ClipPlane::ClipPlane()
 
     this->distSlot << new param::FloatParam(-this->plane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f)));
     this->MakeSlotAvailable(&this->distSlot);
+
+    this->normalizeSlot << new param::ButtonParam();
+    this->MakeSlotAvailable(&this->normalizeSlot);
 }
 
 
@@ -92,6 +97,12 @@ bool view::ClipPlane::requestPlane(Call& call) {
     if (!this->enableSlot.Param<param::BoolParam>()->Value()) {
         // clipping plane is disabled
         return false;
+    }
+
+    if (this->normalizeSlot.IsDirty()) {
+        auto n = this->normalSlot.Param<param::Vector3fParam>()->Value();
+        n.Normalise();
+        this->normalSlot.Param<param::Vector3fParam>()->SetValue(n);
     }
 
     if (this->colourSlot.IsDirty()) {
