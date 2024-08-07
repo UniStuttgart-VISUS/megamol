@@ -62,7 +62,7 @@ bool adiosWriter::create() {
         if (MpiInitialized) {
             adiosInst = adios2::ADIOS(this->mpi_comm_);
         } else {
-            adiosInst = adios2::ADIOS(adios2::DebugON);
+            adiosInst = adios2::ADIOS();
         }
 #else
     try {
