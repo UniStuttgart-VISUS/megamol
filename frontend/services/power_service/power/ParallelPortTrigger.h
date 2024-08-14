@@ -3,8 +3,7 @@
 #ifdef MEGAMOL_USE_POWER
 
 #include <atomic>
-#include <cinttypes>
-#include <limits>
+#include <cstdint>
 
 #ifdef WIN32
 #include <wil/resource.h>
@@ -12,23 +11,64 @@
 
 namespace megamol::power {
 
+/**
+ * @brief Class representing a trigger device over the parallel port.
+ * Produces signals for external hardware sensors.
+ */
 class ParallelPortTrigger final {
-
 public:
-    ParallelPortTrigger(void) = default;
+    /**
+     * @brief Ctor.
+     */
+    ParallelPortTrigger() = default;
 
+    /**
+     * @brief Ctor. Opens the specified parallel port.
+     * If parallel port cannot be opened, @c handle_ remains nullptr.
+     * @param path Path of the parallel port.
+     */
     explicit ParallelPortTrigger(char const* path);
 
+    /**
+     * @brief Opens the specified parallel port.
+     * If parallel port cannot be opened, @c handle_ remains nullptr.
+     * Resets existing handle.
+     * @param path Path of the parallel port.
+     */
     void Open(char const* path);
 
     //DWORD Write(const void* data, const DWORD cnt) const;
-    DWORD Write(std::uint8_t data);
 
-    DWORD WriteHigh(void);
+    /**
+     * @brief Writes data on opened parallel port.
+     * @param data The data to write.
+     * @return API-specific return code value.
+     * @throws std::system_error If write fails.
+     */
+    uint32_t Write(std::uint8_t data);
 
-    DWORD WriteLow(void);
+    /**
+     * @brief Write high on all output bits.
+     * @return API-specific return code value.
+     * @throws std::system_error If write fails.
+     */
+    uint32_t WriteHigh();
 
-    DWORD SetBit(unsigned char idx, bool state);
+    /**
+     * @brief Write low on all output bits.
+     * @return API-specific return code value.
+     * @throws std::system_error If write fails.
+     */
+    uint32_t WriteLow();
+
+    /**
+     * @brief Sets specified bit to the value in @c set.
+     * @param idx The index of the bit to write.
+     * @param state The value to write on the bit.
+     * @return API-specific return code value.
+     * @throws std::system_error If write fails.
+     */
+    uint32_t SetBit(unsigned char idx, bool state);
 
 private:
 #ifdef WIN32

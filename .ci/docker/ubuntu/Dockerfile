@@ -1,6 +1,6 @@
 # MegaMol Ubuntu CI Environment
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   build-essential \
@@ -12,16 +12,20 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   libomp-dev \
 # vcpkg:
   curl zip unzip tar \
+# vcpkg zeromq:
+  pkg-config \
 # vcpkg meson (for libsystemd):
-  python3-distutils python3-jinja2 \
+  python3-jinja2 \
 # ci checks:
   clang-format clang-tidy \
 # glfw:
   xorg-dev \
-# gmp:
+# libsodium / gmp:
   autoconf libtool \
-# mpfr:
+# icu:
   autoconf-archive \
+# thrift:
+  flex bison \
 # GL/glu.h:
   libglu1-mesa-dev \
   && rm -rf /var/lib/apt/lists/*

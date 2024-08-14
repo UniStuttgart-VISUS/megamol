@@ -2,32 +2,43 @@
 
 #ifdef MEGAMOL_USE_POWER
 
-#include <algorithm>
 #include <chrono>
-#include <codecvt>
 #include <filesystem>
 #include <functional>
+#include <locale>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <variant>
 #include <vector>
 
-#include <power_overwhelming/rtx_instrument.h>
+#include <power_overwhelming/oscilloscope_waveform.h>
 
 #include "MetaData.h"
 #include "Timestamp.h"
 
 namespace megamol::power {
-
+/// <summary>
+/// Type for measurement samples.
+/// </summary>
 using sample_t = float;
 /// <summary>
 /// Container storing a set of samples.
 /// </summary>
 using samples_t = std::vector<sample_t>;
+/// <summary>
+/// Base type for a measurement as key, value map.
+/// </summary>
 using value_map_t = std::unordered_map<std::string, std::variant<samples_t, timeline_t>>;
+/// <summary>
+/// Container storing a set of measurement segments.
+/// </summary>
 using segments_t = std::vector<value_map_t>;
+/// <summary>
+/// Function signature for writers (output_path, device_name, value_map, meta).
+/// </summary>
 using writer_func_t =
     std::function<void(std::filesystem::path const&, std::string const&, segments_t const&, MetaData const*)>;
 
@@ -46,40 +57,12 @@ inline std::string get_pwrowg_str(T const& i, std::size_t (T::*func)(char*, std:
     return std::string{name.data()};
 }
 
-//inline std::string get_name(visus::power_overwhelming::rtx_instrument const& i) {
-//    auto const name_size = i.name(static_cast<char*>(nullptr), 0);
-//    std::vector<char> name(name_size);
-//    i.name(name.data(), name.size());
-//    return std::string{name.data()};
-//    /*std::string name;
-//    name.resize(name_size);
-//    i.name(name.data(), name.size());
-//    if (!name.empty()) {
-//        name.resize(name.size() - 1);
-//    }
-//    return name;*/
-//}
-
-//inline std::string get_identity(visus::power_overwhelming::rtx_instrument const& i) {
-//    auto const id_size = i.identify((char*)nullptr, 0);
-//    std::string id;
-//    id.resize(id_size);
-//    i.identify(id.data(), id.size());
-//    if (!id.empty()) {
-//        id.resize(id.size() - 1);
-//    }
-//    return id;
-//}
-
 /// <summary>
 /// Copy a power_overwhelming waveform into vector.
 /// </summary>
 /// <param name="wave">The waveform.</param>
 /// <returns>Vector with the samples from the waveform.</returns>
 inline std::vector<float> copy_waveform(visus::power_overwhelming::oscilloscope_waveform const& wave) {
-    /*std::vector<float> ret(wave.record_length());
-    std::copy(wave.begin(), wave.end(), ret.begin());
-    return ret;*/
     return std::vector<float>(wave.begin(), wave.end());
 }
 
@@ -127,22 +110,32 @@ std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::str
 /// <param name="device_name">Name of the device the output data is from.
 /// Is used as prefix for the filename.</param>
 /// <param name="s_idx">Segment index. Is included in the filename.</param>
-/// <param name="ext">Extension of the file. (With leading '.')</param>
+/// <param name="ext">Extension of the file. (Expects leading '.')</param>
 /// <returns>Full path to the segment file destination.</returns>
 inline std::filesystem::path create_full_path(std::filesystem::path const& output_folder,
     std::string const& device_name, std::size_t const s_idx, std::string const& ext = ".parquet") {
     return output_folder / (device_name + "_s" + std::to_string(s_idx) + ext);
 }
 
-inline std::filesystem::path create_full_path(std::filesystem::path const& output_folder,
-    std::string const& device_name, std::string const& ext = ".parquet") {
+/// <summary>
+/// Creates a full file path without segment id.
+/// </summary>
+/// <param name="output_folder">Base output folder.</param>
+/// <param name="device_name">Name of the device the output data is from.
+/// Is used as prefix for the filename.</param>
+/// <param name="ext">Extension of the file. (Expects leading '.')</param>
+/// <returns>Full path to the file destination.</returns>
+inline std::filesystem::path create_full_path(
+    std::filesystem::path const& output_folder, std::string const& device_name, std::string const& ext = ".parquet") {
     return output_folder / (device_name + ext);
 }
 
+/// <summary>
+/// Convert a wide char string to std::string.
+/// </summary>
+/// <param name="name">Wide char string.</param>
+/// <returns>Char string.</returns>
 inline std::string unmueller_string(wchar_t const* name) {
-    /*std::string no_mueller =
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}.to_bytes(std::wstring(name));*/
-
     // https://en.cppreference.com/w/cpp/locale/codecvt/out
 
     auto const& f = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(std::locale());
@@ -163,6 +156,11 @@ inline std::string unmueller_string(wchar_t const* name) {
     return external;
 }
 
+/// <summary>
+/// Computes measurement prefix, postfix, and wait time for a specified time range.
+/// </summary>
+/// <param name="range">Base measurement range in milliseconds.</param>
+/// <returns>Tuple with prefix, postfix, and wait time in milliseconds.</returns>
 inline std::tuple<std::chrono::milliseconds, std::chrono::milliseconds, std::chrono::milliseconds> get_trigger_timings(
     std::chrono::milliseconds range) {
     // config_range_ / 12, config_range_ - config_range_ / 12, std::chrono::milliseconds(1000) + config_range_

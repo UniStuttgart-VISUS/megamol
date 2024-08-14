@@ -22,9 +22,20 @@ function(megamol_feature_option OPTION_NAME OPTION_DESCRIPTION OPTION_DEFAULT)
     message(FATAL_ERROR "Option name is only allowed to contain uppercase letters, numbers and underscore, found: ${OPTION_NAME}.")
   endif ()
 
-  # Allow CI to override all features to default to on.
+  string(TOLOWER ${OPTION_NAME} OPTION_NAME_LOWER)
+  string(REPLACE "_" "-" OPTION_NAME_LOWER "${OPTION_NAME_LOWER}")
+
+  # Validate if option was added to vcpkg.json
+  if (NOT "${OPTION_NAME_LOWER}" IN_LIST MEGAMOL_VCPKG_FEATURES)
+    message(FATAL_ERROR "MegaMol feature option \"${OPTION_NAME_LOWER}\" is missing in vcpkg.json")
+  endif ()
+
+  # Allow CI to override all features to default to on/off.
   if (MEGAMOL_ENABLE_ALL_FEATURES)
     set(OPTION_DEFAULT ON)
+  endif ()
+  if (MEGAMOL_DISABLE_ALL_FEATURES)
+    set(OPTION_DEFAULT OFF)
   endif ()
 
   if (${ARGC} GREATER 3)
@@ -35,8 +46,6 @@ function(megamol_feature_option OPTION_NAME OPTION_DESCRIPTION OPTION_DEFAULT)
 
   if (MEGAMOL_USE_${OPTION_NAME})
     # Enable vcpkg feature
-    string(TOLOWER ${OPTION_NAME} OPTION_NAME_LOWER)
-    string(REPLACE "_" "-" OPTION_NAME_LOWER "${OPTION_NAME_LOWER}")
     list(APPEND VCPKG_MANIFEST_FEATURES "${OPTION_NAME_LOWER}")
     set(VCPKG_MANIFEST_FEATURES "${VCPKG_MANIFEST_FEATURES}" PARENT_SCOPE)
 

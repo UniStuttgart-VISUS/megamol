@@ -7,7 +7,6 @@
 #include "mmcore/factories/AbstractPluginInstance.h"
 #include "mmcore/factories/PluginRegister.h"
 
-#include "CUDAToCPU.h"
 #include "CUDAToGL.h"
 #include "optix/MeshGeometry.h"
 #include "optix/Renderer.h"
@@ -38,7 +37,6 @@ public:
 #ifdef MEGAMOL_USE_OPENGL
         this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::CUDAToGL>();
 #endif
-        this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::CUDAToCPU>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::optix_hpg::CallGeometry>();

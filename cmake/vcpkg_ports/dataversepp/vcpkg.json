@@ -1,10 +1,21 @@
 {
   "name": "dataversepp",
-  "version": "0.0.0",
+  "version-date": "2024-07-27",
   "description": "Framework for dataverse data transfer.",
   "homepage": "https://github.com/UniStuttgart-VISUS/dataversepp",
   "license": "MIT",
   "dependencies": [
+    {
+      "name": "curl",
+      "features": [
+        "ssl"
+      ]
+    },
+    {
+      "name": "icu",
+      "platform": "!windows"
+    },
+    "nlohmann-json",
     {
       "name": "vcpkg-cmake",
       "host": true
@@ -14,12 +25,8 @@
       "host": true
     },
     {
-      "name": "curl",
-      "features": [
-        "ssl",
-        "sspi",
-        "schannel"
-      ]   
+      "name": "wil",
+      "platform": "windows"
     }
   ]
 }

@@ -1,0 +1,36 @@
+{
+  "name": "embree",
+  "version": "3.13.4",
+  "description": "High Performance Ray Tracing Kernels",
+  "homepage": "https://www.embree.org/",
+  "license": "Apache-2.0",
+  "dependencies": [
+    "ispc",
+    "tbb",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "avx": {
+      "description": "avx ISA support"
+    },
+    "avx2": {
+      "description": "avx2 ISA support"
+    },
+    "avx512": {
+      "description": "avx512 ISA support"
+    },
+    "sse2": {
+      "description": "sse2 ISA support"
+    },
+    "sse42": {
+      "description": "sse4.2 ISA support"
+    }
+  }
+}

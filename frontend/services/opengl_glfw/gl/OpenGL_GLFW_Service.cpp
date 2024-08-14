@@ -302,10 +302,10 @@ void megamol::frontend_resources::WindowManipulation::swap_buffers() const {
 #ifdef MEGAMOL_USE_TRACY
     ZoneScopedN("swap_buffers");
 #endif
-#if MEGAMOL_GL_FLUSH_FINISH
-    glFlush();
-    glFinish();
-#endif
+    if (enable_gl_flush_finish) {
+        glFlush();
+        glFinish();
+    }
     glfwSwapBuffers(reinterpret_cast<GLFWwindow*>(window_ptr));
 #ifdef MEGAMOL_USE_TRACY
     static unsigned int collect_cnt = 0;
@@ -605,6 +605,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_windowEvents.previous_state.time = glfwGetTime();
 
     m_windowManipulation.window_ptr = window_ptr;
+    m_windowManipulation.enable_gl_flush_finish = m_pimpl->config.enableGlFlushFinish;
 
     m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void { update_glfw_mouse_cursors(cursor_id); };
 
@@ -618,8 +619,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
 
     m_requestedResourcesNames = {"FrameStatistics", "FramebufferEvents",
-        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
-        frontend_resources::FrameStatsCallbacks_Req_Name
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, frontend_resources::FrameStatsCallbacks_Req_Name
 #ifdef MEGAMOL_USE_POWER
         ,
         frontend_resources::PowerCallbacks_Req_Name

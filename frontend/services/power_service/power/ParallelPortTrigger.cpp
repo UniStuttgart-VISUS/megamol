@@ -2,7 +2,8 @@
 
 #ifdef MEGAMOL_USE_POWER
 
-#include <stdexcept>
+#include <cstdint>
+#include <limits>
 #include <system_error>
 
 #include "mmcore/utility/log/Log.h"
@@ -39,29 +40,29 @@ void ParallelPortTrigger::Open(char const* path) {
 //}
 
 
-DWORD ParallelPortTrigger::Write(std::uint8_t data) {
-    DWORD retval = 0;
-
+uint32_t ParallelPortTrigger::Write(std::uint8_t data) {
 #ifdef WIN32
+    DWORD retval = 0;
     if (handle_) {
         if (!::WriteFile(this->handle_.get(), &data, 1, &retval, nullptr)) {
             throw std::system_error(::GetLastError(), std::system_category());
         }
     }
+    return static_cast<uint32_t>(retval);
+#else
+    return 0;
 #endif
-
-    return retval;
 }
 
 
-DWORD ParallelPortTrigger::WriteHigh(void) {
+uint32_t ParallelPortTrigger::WriteHigh() {
     static const auto data = (std::numeric_limits<std::uint8_t>::max)();
     //return this->Write(&data, sizeof(data));
     return Write(data);
 }
 
 
-DWORD ParallelPortTrigger::WriteLow(void) {
+uint32_t ParallelPortTrigger::WriteLow() {
     static const char data = 0;
     //return this->Write(&data, sizeof(data));
     return Write(data);
@@ -74,7 +75,7 @@ std::uint8_t set_bit(std::uint8_t data, unsigned char idx, bool state) {
 }
 
 
-DWORD ParallelPortTrigger::SetBit(unsigned char idx, bool state) {
+uint32_t ParallelPortTrigger::SetBit(unsigned char idx, bool state) {
     if (idx < 8) {
         auto data = data_state_.load();
         while (data_state_.compare_exchange_weak(data, set_bit(data, idx, state))) {}

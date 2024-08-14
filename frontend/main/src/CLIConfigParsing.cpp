@@ -107,6 +107,7 @@ static std::string opengl_context_option = "opengl";
 static std::string khrdebug_option = "khrdebug";
 static std::string disable_opengl_option = "nogl";
 static std::string vsync_option = "vsync";
+static std::string flushfinish_option = "flushfinish";
 static std::string window_option = "w,window";
 static std::string fullscreen_option = "f,fullscreen";
 static std::string force_window_size_option = "force-window-size";
@@ -416,6 +417,11 @@ static void vsync_handler(
     config.opengl_vsync = parsed_options[option_name].as<bool>();
 };
 
+static void flushfinish_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.opengl_flush_finish = parsed_options[option_name].as<bool>();
+};
+
 static void no_opengl_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     // User cannot overwrite default value when there is no openGL present
@@ -575,6 +581,8 @@ std::vector<OptionsListEntry> cli_options_list =
             cxxopts::value<std::string>(), opengl_context_handler},
         {khrdebug_option, "Enable OpenGL KHR debug messages", cxxopts::value<bool>(), khrdebug_handler},
         {vsync_option, "Enable VSync in OpenGL window", cxxopts::value<bool>(), vsync_handler},
+        {flushfinish_option, "Use glFlush and glFinish before buffer swap", cxxopts::value<bool>(),
+            flushfinish_handler},
         {disable_opengl_option, "Disable OpenGL. Always TRUE if not built with OpenGL", cxxopts::value<bool>(),
             no_opengl_handler},
         {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",

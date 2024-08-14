@@ -86,7 +86,7 @@ private:
 
     MMOptixSBT sbt_;
 
-    OptixPipeline pipeline_;
+    OptixPipeline pipeline_ = 0;
 
     device::FrameState frame_state_;
 

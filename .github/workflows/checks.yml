@@ -1,0 +1,55 @@
+name: Checks
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  style_check:
+    name: Style-Check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Install clang-format
+        run: .ci/install-clang-format.sh
+      - name: Run format check
+        run: .ci/check_format.sh
+      - name: Save PR number
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        run: |
+          mkdir -p ./pr
+          echo ${{ github.event.number }} > ./pr/NR
+      - uses: actions/upload-artifact@v3
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        with:
+          name: pr
+          path: pr/
+  plugin_check:
+    name: Plugin-Check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Run plugin check
+        run: .ci/check_plugins.sh
+  shader_check:
+    name: Shader-Check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - name: Download glslang
+        run: |
+          mkdir bin
+          wget "https://github.com/KhronosGroup/glslang/releases/download/main-tot/glslang-main-linux-Release.zip"
+          unzip -j "glslang-main-linux-Release.zip" "bin/glslang" -d ./bin
+          rm "glslang-main-linux-Release.zip"
+          echo "./bin" >> $GITHUB_PATH
+      - name: Run shader check
+        run: .ci/check_shaders.sh

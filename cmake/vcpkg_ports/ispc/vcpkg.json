@@ -1,0 +1,7 @@
+{
+  "name": "ispc",
+  "version": "1.18.0",
+  "description": "Intel Implicit SPMD Program Compiler",
+  "homepage": "https://ispc.github.io",
+  "license": "BSD-3-Clause"
+}

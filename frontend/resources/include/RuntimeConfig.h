@@ -59,6 +59,7 @@ struct RuntimeConfig {
 #endif
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
+    bool opengl_flush_finish = false;
     std::optional<std::tuple<unsigned int /*major*/, unsigned int /*minor*/, bool /*true=>core, false=>compat*/>>
         opengl_context_version = {{4, 6, false /*compat*/}};
     std::optional<UintPair> window_size =

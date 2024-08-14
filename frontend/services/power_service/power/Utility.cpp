@@ -2,6 +2,7 @@
 
 #ifdef MEGAMOL_USE_POWER
 
+#include <chrono>
 #include <regex>
 
 namespace megamol::power {
@@ -88,6 +89,7 @@ std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::str
                                 auto const ms_str = std::string(val_str.begin() + ms_pos + 1, val_str.end());
                                 t_ms = std::stoi(ms_str);
                             }
+#ifdef _WIN32 // TODO this does only work with gcc >= 14
                             std::chrono::utc_clock::time_point tp;
                             std::istringstream time_stream(date_str + "T" + time_str);
                             if (std::chrono::from_stream(time_stream, "%FT%T", tp)) {
@@ -97,7 +99,11 @@ std::tuple<std::string, std::string, power::value_map_t> parse_hmc_file(std::str
                                                  ft_offset)
                                                     .count();
                                 std::get<power::timeline_t>(vals.at(col_names[i])).push_back(ts);
-                            } else {
+                            } else
+#else
+#warning "Fix me!!! Disable time point parsing on Linux as std::chrono::from_stream is only available with gcc >= 14."
+#endif
+                            {
                                 throw std::runtime_error("could not parse UTC time");
                             }
                         } else {

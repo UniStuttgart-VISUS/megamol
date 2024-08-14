@@ -2,10 +2,10 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.15...3.26 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24...3.29 FATAL_ERROR)
 
 # Vcpkg setup
-set(MEGAMOL_VCPKG_VERSION "2023.11.20") # Update default-registry baseline in vcpkg-configuration.json when changing!
+set(MEGAMOL_VCPKG_VERSION "2024.07.12") # Update default-registry baseline in vcpkg.json when changing!
 
 include(cmake/megamol_vcpkg_setup.cmake)
 include(cmake/megamol_feature_option.cmake)
@@ -26,13 +26,8 @@ megamol_feature_option(VTKM "Enable VTK-m support." OFF)
 # MegaMol vcpkg features (dependent options)
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support." OFF "WIN32")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Inject OpenGL debug groups into calls." OFF "MEGAMOL_USE_OPENGL")
+megamol_feature_option(TRACY_TIME_PLOT "Enable custom Tracy timed plotting capabilities." OFF "MEGAMOL_USE_TRACY")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2." OFF "WIN32;MEGAMOL_USE_OPENGL")
-
-# MEMLEAK
-option(MEGAMOL_DETECT_MEMLEAK "Enable to use Memleak detection (MSVC only)" OFF)
-
-# GL FLUSH and FINISH
-option(MEGAMOL_GL_FLUSH_FINISH "Use glFlush and glFinish before buffer swap" OFF)
 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)

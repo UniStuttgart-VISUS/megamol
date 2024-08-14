@@ -4,18 +4,33 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO UniStuttgart-VISUS/power-overwhelming
     #REF "v${VERSION}"
-    REF "28653a9aedc0dc07c8e57c99caa92cf029bd7c59"
-    SHA512 faacef43de4c8942cdfed31227b47dfc4eb66d732a31c5b7e6cb1a3ad009a2e8720760db24aefc96da9bd5aea58b5cd7ea0a40c1e3687b94d6990f6e987d7b39
+    REF "7143f0b11777de934046ef7bd02c1cbf82fa39b9" # master on 2024-07-01
+    SHA512 cc32febef11edeb98d2192e67bba302ef4f3086f4e23572a28bb19a20ce0bf2123680bf28839433cfb98ffc541663ed8e19fd162c2a6e5fdfad6802cb1cea563
+    HEAD_REF master
+    PATCHES
+        devendor-fetchcontent-deps.patch
+)
+
+# power-overwhelming downloads some dependencies with FetchContent.
+# - adl: download here as quick workaround for creating a new port
+# - nlohmann-json: use vcpkg port
+# - wil: is unused (only required for poweb)
+
+vcpkg_from_github(
+    OUT_SOURCE_PATH ADL_SOURCE_PATH
+    REPO GPUOpen-LibrariesAndSDKs/display-library
+    REF "17.1"
+    SHA512 805bc1a7f221b33955d79943833d04838b459f316c2a9ad5fa1831588b07c0bbe5975aca07c90117c10c6ff22ee12a69d5a26a75e7191eb6c40c1dccccd192af
     HEAD_REF master
 )
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
-      -DFETCHCONTENT_FULLY_DISCONNECTED=OFF
       -DPWROWG_BuildDumpSensors=OFF
       -DPWROWG_BuildTests=OFF
       -DPWROWG_CustomTinkerforgeFirmwareMajor=99
+      -Dadl_SOURCE_DIR=${ADL_SOURCE_PATH}
 )
 
 vcpkg_cmake_install()

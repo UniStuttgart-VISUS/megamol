@@ -3,19 +3,16 @@ vcpkg_check_linkage(ONLY_DYNAMIC_LIBRARY)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO UniStuttgart-VISUS/dataversepp
-    REF "master"
-    SHA512 419646e48403e0b8c7bcefd1583bb985203088218c75df756c0ecdf2cdb64f37afc33dcd715b239fb9d73210564433827d2a8abf5310cf6cb66eea5eb5da1927
+    REF 4857d61a899443ae77641e3df730d2b8c26607dc # master on 2024-07-27
+    SHA512 801b2f43ea42698f295ad36069f30495da8891acee5dda23127168b7d989e8d9a67b45f794288ed3747c5333109fbbcb6a78051b46fcf46273de91a46750dd55
     HEAD_REF master
-    PATCHES
-      01_curl.patch
-      02_curl.patch
-      03_curl.patch
 )
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
-      -DFETCHCONTENT_FULLY_DISCONNECTED=OFF
+      -DDATAVERSE_BuildCli=OFF
+      -DDATAVERSE_DownloadThirdParty=OFF
       -DDATAVERSE_BuildTests=OFF
       -DDATAVERSE_Unicode=OFF
 )

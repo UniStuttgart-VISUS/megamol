@@ -88,6 +88,7 @@
 #include "table/TableSelectionTx.h"
 #include "table/TableSort.h"
 #include "table/TableSplit.h"
+#include "table/TableStandardize.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 #include "table/TableWhere.h"
@@ -179,6 +180,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleInstantiator>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::MPDCGrid>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableSplit>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::table::TableStandardize>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::CSVWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::clustering::ParticleIColClustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddParticleColors>();

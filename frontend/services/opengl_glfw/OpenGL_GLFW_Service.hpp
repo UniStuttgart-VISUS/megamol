@@ -59,6 +59,7 @@ public:
         std::vector<WindowIcon> windowIcons{};
         bool enableKHRDebug = true; // max error reporting
         bool enableVsync = false;   // max frame rate
+        bool enableGlFlushFinish = false;
         bool glContextCoreProfile = false;
         bool forceWindowSize = false;
     };
