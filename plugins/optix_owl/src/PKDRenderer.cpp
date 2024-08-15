@@ -14,6 +14,8 @@
 
 #include <glad/gl.h>
 
+#include <cuda_runtime.h>
+
 namespace megamol::optix_owl {
 extern "C" const unsigned char raygenPrograms_ptx[];
 extern "C" const unsigned char pkdPrograms_ptx[];
@@ -171,6 +173,7 @@ bool PKDRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     owlBufferUpload(frameStateBuffer_, &framestate_);
     owlRayGenLaunch2D(raygen_, current_fb_size_.x, current_fb_size_.y);
+    cudaStreamSynchronize(owlContextGetStream(ctx_, 0));
 
     if (colorBuffer_) {
         auto color_ptr = reinterpret_cast<uint8_t const*>(owlBufferGetPointer(colorBuffer_, 0));
