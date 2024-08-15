@@ -68,8 +68,9 @@ OPTIX_INTERSECT_PROGRAM(pkd_intersect)() {
             const float sphere_t1 = fminf(fminf(t_slab_fr, t1), tmp_hit_t);
 
             if (sphere_t0 < sphere_t1) {
-                if (intersectSphere(particle, particleRadius, ray, tmp_hit_t))
+                if (intersectSphere(particle, particleRadius, ray, tmp_hit_t)) {
                     tmp_hit_primID = nodeID;
+                }
             }
 
             // -------------------------------------------------------
@@ -98,9 +99,9 @@ OPTIX_INTERSECT_PROGRAM(pkd_intersect)() {
                 break; // pop ...
 
             if (need_nearSide && need_farSide) {
+                stackPtr->nodeID = farSide_nodeID;
                 stackPtr->t0 = farSide_t0;
                 stackPtr->t1 = farSide_t1;
-                stackPtr->nodeID = farSide_nodeID;
                 ++stackPtr;
 
                 nodeID = nearSide_nodeID;
@@ -126,7 +127,7 @@ OPTIX_INTERSECT_PROGRAM(pkd_intersect)() {
             }
             --stackPtr;
             t0 = stackPtr->t0;
-            t1 = min(stackPtr->t1, tmp_hit_t);
+            t1 = fminf(stackPtr->t1, tmp_hit_t);
             nodeID = stackPtr->nodeID;
             if (t1 <= t0)
                 continue;

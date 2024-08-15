@@ -35,7 +35,7 @@ OPTIX_INTERSECT_PROGRAM(treelets_intersect)() {
 
 
         int nodeID = 0;
-        float tmp_hit_t = ray.tmax;
+        float tmp_hit_t = t1;
         int tmp_hit_primID = -1;
 
         enum { STACK_DEPTH = 12 };
@@ -133,7 +133,7 @@ OPTIX_INTERSECT_PROGRAM(treelets_intersect)() {
                 t0 = stackPtr->t0;
                 t1 = stackPtr->t1;
                 nodeID = stackPtr->nodeID;
-                t1 = min(t1, tmp_hit_t);
+                t1 = fminf(t1, tmp_hit_t);
                 if (t1 <= t0)
                     continue;
                 break;
