@@ -9,6 +9,7 @@
 
 #include "PKDRenderer.h"
 #include "TreeletsRenderer.h"
+#include "FlatRenderer.h"
 
 namespace megamol::MegaMolPlugin {
 class PluginInstance : public megamol::core::factories::AbstractPluginInstance {
@@ -30,6 +31,7 @@ public:
         // register modules
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::PKDRenderer>();
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::TreeletsRenderer>();
+        module_descriptions.RegisterAutoDescription<megamol::optix_owl::FlatRenderer>();
 
         //
         // TODO: Register your plugin's modules here:

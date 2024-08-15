@@ -19,6 +19,25 @@ struct StackEntry {
     unsigned int nodeID;
 };
 
+OPTIX_INTERSECT_PROGRAM(treelet_brute_intersect)() {
+    const int treeletID = optixGetPrimitiveIndex();
+    const auto& self = owl::getProgramData<TreeletsGeomData>();
+    const auto treelet = self.treeletBuffer[treeletID];
+
+    owl::Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
+
+    const int begin = treelet.begin;
+    float tmp_hit_t = ray.tmax;
+    int tmp_hit_primID = -1;
+    for (int particleID = begin; particleID < treelet.end; ++particleID) {
+        const Particle particle = self.particleBuffer[particleID];
+        if (intersectSphere(particle, self.particleRadius, ray, tmp_hit_t))
+            tmp_hit_primID = particleID;
+    }
+    if (tmp_hit_primID >= 0 && tmp_hit_t < ray.tmax)
+        optixReportIntersection(tmp_hit_t, 0, tmp_hit_primID);
+}
+
 OPTIX_INTERSECT_PROGRAM(treelets_intersect)() {
     const int treeletID = optixGetPrimitiveIndex();
     const auto& self = owl::getProgramData<TreeletsGeomData>();

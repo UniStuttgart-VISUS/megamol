@@ -1,4 +1,4 @@
-#include "TreeletsRenderer.h"
+#include "FlatRenderer.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -23,16 +23,16 @@
 namespace megamol::optix_owl {
 extern "C" const unsigned char treeletsPrograms_ptx[];
 
-TreeletsRenderer::TreeletsRenderer() : threshold_slot_("threshold", "") {
+FlatRenderer::FlatRenderer() : threshold_slot_("threshold", "") {
     threshold_slot_ << new core::param::IntParam(2048, 16, 2048);
     MakeSlotAvailable(&threshold_slot_);
 }
 
-TreeletsRenderer::~TreeletsRenderer() {
+FlatRenderer::~FlatRenderer() {
     this->Release();
 }
 
-bool TreeletsRenderer::create() {
+bool FlatRenderer::create() {
     auto const ret = BaseRenderer::create();
     pkd_module_ = owlModuleCreate(ctx_, reinterpret_cast<const char*>(treeletsPrograms_ptx));
 
@@ -44,7 +44,7 @@ bool TreeletsRenderer::create() {
     OWLGeomType treeletsType =
         owlGeomTypeCreate(ctx_, OWL_GEOMETRY_USER, sizeof(device::TreeletsGeomData), treeletsVars, -1);
     owlGeomTypeSetBoundsProg(treeletsType, pkd_module_, "treelets_bounds");
-    owlGeomTypeSetIntersectProg(treeletsType, 0, pkd_module_, "treelets_intersect");
+    owlGeomTypeSetIntersectProg(treeletsType, 0, pkd_module_, "treelet_brute_intersect");
     owlGeomTypeSetClosestHit(treeletsType, 0, pkd_module_, "treelets_ch");
 
     geom_ = owlGeomCreate(ctx_, treeletsType);
@@ -52,7 +52,7 @@ bool TreeletsRenderer::create() {
     return ret;
 }
 
-void TreeletsRenderer::release() {
+void FlatRenderer::release() {
     owlBufferDestroy(treeletBuffer_);
     owlModuleRelease(pkd_module_);
     owlGeomRelease(geom_);
@@ -60,10 +60,7 @@ void TreeletsRenderer::release() {
     BaseRenderer::release();
 }
 
-
-
-
-bool TreeletsRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
+bool FlatRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     auto const pl_count = call.GetParticleListCount();
 
     particles_.clear();
@@ -105,7 +102,7 @@ bool TreeletsRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     });
 
     core::utility::log::Log::DefaultLog.WriteInfo(
-        "[TreeletsRenderer] %d treelets for %d particles", treelets.size(), particles_.size());
+        "[FlatRenderer] %d treelets for %d particles", treelets.size(), particles_.size());
 
     if (particleBuffer_)
         owlBufferDestroy(particleBuffer_);
@@ -114,7 +111,7 @@ bool TreeletsRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     if (treeletBuffer_)
         owlBufferDestroy(treeletBuffer_);
     treeletBuffer_ = owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::PKDlet), treelets.size(), treelets.data());
-       
+
     owlGeomSetPrimCount(geom_, treelets.size());
 
     owlGeomSetBuffer(geom_, "particleBuffer", particleBuffer_);
@@ -133,11 +130,11 @@ bool TreeletsRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     return true;
 }
 
-bool TreeletsRenderer::data_param_is_dirty() {
+bool FlatRenderer::data_param_is_dirty() {
     return threshold_slot_.IsDirty();
 }
 
-void TreeletsRenderer::data_param_reset_dirty() {
+void FlatRenderer::data_param_reset_dirty() {
     threshold_slot_.ResetDirty();
 }
 } // namespace megamol::optix_owl
