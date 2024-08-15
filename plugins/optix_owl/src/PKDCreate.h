@@ -87,23 +87,23 @@ inline void recBuild(size_t /* root node */ P, Particle* particle, size_t N, box
         }
         if (particle[L].pos[dim] > particle[P].pos[dim]) {
             std::swap(particle[L], particle[P]);
-            particle[L].dim = dim;
+            particle[L].set_dim(dim);
         } else if (particle[R].pos[dim] < particle[P].pos[dim]) {
             std::swap(particle[R], particle[P]);
-            particle[R].dim = dim;
+            particle[R].set_dim(dim);
         } else
             /* nothing, root fits */;
     } else if (lValid) {
         if (particle[L].pos[dim] > particle[P].pos[dim]) {
             std::swap(particle[L], particle[P]);
-            particle[L].dim = dim;
+            particle[L].set_dim(dim);
         }
     }
 
     box3f lBounds = bounds;
     box3f rBounds = bounds;
     lBounds.upper[dim] = rBounds.lower[dim] = particle[P].pos[dim];
-    particle[P].dim = dim;
+    particle[P].set_dim(dim);
 
     tbb::parallel_for(0, 2, [&](int childID) {
         if (childID) {

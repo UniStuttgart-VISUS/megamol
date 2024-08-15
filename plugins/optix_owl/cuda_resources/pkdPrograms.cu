@@ -53,7 +53,7 @@ OPTIX_INTERSECT_PROGRAM(pkd_intersect)() {
         while (1) {
             // while we can go down
             const Particle particle = self.particleBuffer[nodeID];
-            int const dim = particle.dim;
+            int const dim = particle.get_dim();
 
             const float t_slab_lo = (particle.pos[dim] - particleRadius - org[dim]) * rdir[dim];
             const float t_slab_hi = (particle.pos[dim] + particleRadius - org[dim]) * rdir[dim];

@@ -3,13 +3,20 @@
 #include <owl/common/math/vec.h>
 #include <owl/common/math/box.h>
 
+#include "CUDAUtils.h"
+
 namespace megamol {
 namespace optix_owl {
 namespace device {
 using namespace owl::common;
 struct Particle {
     vec3f pos;
-    float dim;
+    void set_dim(int dim) {
+        pos.x = (pos.x & ~3) | (dim & 3);
+    }
+    CU_CALLABLE int get_dim() const {
+        return pos.x & 3;
+    }
 };
 
 struct PKDlet {

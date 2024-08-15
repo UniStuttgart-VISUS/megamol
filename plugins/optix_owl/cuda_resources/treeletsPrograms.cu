@@ -77,7 +77,7 @@ OPTIX_INTERSECT_PROGRAM(treelets_intersect)() {
 
                 const int particleID = nodeID + begin;
                 const Particle particle = self.particleBuffer[particleID];
-                int const dim = particle.dim;
+                int const dim = particle.get_dim();
 
                 const float t_slab_lo = (particle.pos[dim] - self.particleRadius - org[dim]) * rdir[dim];
                 const float t_slab_hi = (particle.pos[dim] + self.particleRadius - org[dim]) * rdir[dim];
