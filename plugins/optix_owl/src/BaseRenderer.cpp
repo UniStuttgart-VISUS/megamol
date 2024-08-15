@@ -231,6 +231,8 @@ bool BaseRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     } else {
         framestate_.accumID = 0;
     }
+
+    return true;
 }
    
 
