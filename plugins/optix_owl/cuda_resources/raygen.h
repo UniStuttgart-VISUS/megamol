@@ -15,7 +15,6 @@ struct RayGenData {
     vec2ui fbSize;
     uint32_t* colorBufferPtr;
     float4* accumBufferPtr;
-    Particle* particleBuffer;
     FrameState* frameStateBuffer;
 };
 } // namespace device

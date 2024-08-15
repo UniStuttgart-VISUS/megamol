@@ -55,7 +55,6 @@ bool BaseRenderer::create() {
 
     OWLVarDecl rayGenVars[] = {{"colorBuffer", OWL_BUFPTR, OWL_OFFSETOF(device::RayGenData, colorBufferPtr)},
         {"accumBuffer", OWL_BUFPTR, OWL_OFFSETOF(device::RayGenData, accumBufferPtr)},
-        {"particleBuffer", OWL_BUFPTR, OWL_OFFSETOF(device::RayGenData, particleBuffer)},
         {"frameStateBuffer", OWL_BUFPTR, OWL_OFFSETOF(device::RayGenData, frameStateBuffer)},
         {"fbSize", OWL_INT2, OWL_OFFSETOF(device::RayGenData, fbSize)},
         {"world", OWL_GROUP, OWL_OFFSETOF(device::RayGenData, world)},
@@ -163,7 +162,6 @@ bool BaseRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         framestate_.accumID = 0;
 
         owlRayGenSetGroup(raygen_, "world", world_);
-        owlRayGenSetBuffer(raygen_, "particleBuffer", particleBuffer_);
 
         owlBuildPrograms(ctx_);
         owlBuildPipeline(ctx_);
