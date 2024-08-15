@@ -79,8 +79,8 @@ inline __device__ vec3f traceRay(const RayGenData& self, owl::Ray& ray, Random& 
             return attenuation * ambientLight;
         }
 
-        const Particle particle = self.particleBuffer[prd.particleID];
-        vec3f N = (ray.origin + prd.t * ray.direction) - particle.pos;
+        //const Particle particle = self.particleBuffer[prd.particleID];
+        vec3f N = (ray.origin + prd.t * ray.direction) - prd.pos;
         // printf("normal %f %f %f\n",N.x,N.y,N.z);
         if (dot(N, (vec3f) ray.direction) > 0.f)
             N = -N;

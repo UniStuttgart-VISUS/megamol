@@ -163,8 +163,10 @@ OPTIX_INTERSECT_PROGRAM(treelets_intersect)() {
 
 OPTIX_CLOSEST_HIT_PROGRAM(treelets_ch)() {
     PerRayData& prd = owl::getPRD<PerRayData>();
+    const auto& self = owl::getProgramData<TreeletsGeomData>();
     prd.particleID = optixGetAttribute_0();
     prd.t = optixGetRayTmax();
+    prd.pos = self.particleBuffer[optixGetAttribute_0()].pos;
 }
 
 OPTIX_BOUNDS_PROGRAM(treelets_bounds)(const void* geomData, box3f& primBounds, const int primID) {

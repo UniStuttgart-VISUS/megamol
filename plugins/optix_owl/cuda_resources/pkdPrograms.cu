@@ -138,8 +138,10 @@ OPTIX_INTERSECT_PROGRAM(pkd_intersect)() {
 
 OPTIX_CLOSEST_HIT_PROGRAM(pkd_ch)() {
     PerRayData& prd = owl::getPRD<PerRayData>();
+    const auto& self = owl::getProgramData<PKDGeomData>();
     prd.particleID = optixGetAttribute_0();
     prd.t = optixGetRayTmax();
+    prd.pos = self.particleBuffer[optixGetAttribute_0()].pos;
 }
 
 OPTIX_BOUNDS_PROGRAM(pkd_bounds)(const void* geomData, box3f& primBounds, const int primID) {

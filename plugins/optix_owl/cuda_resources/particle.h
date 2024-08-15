@@ -16,7 +16,7 @@ struct PKDlet {
     //! bounding box of all particles (including the radius)
     box3f bounds;
     //! begin/end range in the common particles array
-    size_t begin, end;
+    unsigned int begin, end;
 };
 } // namespace device
 } // namespace optix_owl
