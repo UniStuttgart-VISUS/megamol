@@ -15,6 +15,14 @@ namespace optix_owl {
 using namespace megamol::optix_owl::device;
 using namespace owl::common;
 
+inline float computeStableEpsilon(float f) {
+    return abs(f) * float(1. / (1 << 21));
+}
+
+inline float computeStableEpsilon(const owl::common::vec3f v) {
+    return max(max(computeStableEpsilon(v.x), computeStableEpsilon(v.y)), computeStableEpsilon(v.z));
+}
+
 inline size_t lChild(size_t P) {
     return 2 * P + 1;
 }

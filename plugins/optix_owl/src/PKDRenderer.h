@@ -13,8 +13,10 @@
 #include "particle.h"
 #include "framestate.h"
 
+#include "BaseRenderer.h"
+
 namespace megamol::optix_owl {
-class PKDRenderer : public mmstd_gl::Renderer3DModuleGL {
+class PKDRenderer : public BaseRenderer {
 public:
     /**
      * Answer the name of this module.
@@ -53,45 +55,14 @@ protected:
     void release() override;
 
 private:
-    bool Render(mmstd_gl::CallRender3DGL& call) override;
+    bool assertData(geocalls::MultiParticleDataCall const& call) override;
 
-    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+    bool data_param_is_dirty() override;
+    void data_param_reset_dirty() override;
 
-    bool assertData(geocalls::MultiParticleDataCall const& call);
-
-    void resizeFramebuffer(owl::common::vec2i const& dim);
-
-    core::CallerSlot data_in_slot_;
-
-    core::param::ParamSlot radius_slot_;
-    core::param::ParamSlot rec_depth_slot_;
-    core::param::ParamSlot spp_slot_;
-
-    OWLContext ctx_;
-
-    OWLModule raygen_module_;
     OWLModule pkd_module_;
-
-    OWLRayGen raygen_;
-    OWLMissProg miss_;
-
-    OWLBuffer frameStateBuffer_;
-    OWLBuffer accumBuffer_ = 0;
-    OWLBuffer colorBuffer_ = 0;
-    OWLBuffer particleBuffer_ = 0;
-
-    OWLGroup world_;
+    OWLGeom geom_;
 
     std::vector<device::Particle> particles_;
-
-    owl::common::vec2i current_fb_size_;
-
-    unsigned int frame_id_ = 0;
-    uint64_t in_data_hash_ = std::numeric_limits<uint64_t>::max();
-
-    device::FrameState framestate_;
-
-    core::view::Camera::Pose old_cam_pose_;
-    core::view::Camera::PerspectiveParameters old_cam_intrinsics_;
 };
 } // namespace megamol::optix_owl
