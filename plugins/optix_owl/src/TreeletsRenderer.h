@@ -66,6 +66,7 @@ private:
     core::param::ParamSlot radius_slot_;
     core::param::ParamSlot rec_depth_slot_;
     core::param::ParamSlot spp_slot_;
+    core::param::ParamSlot accumulate_slot_;
     core::param::ParamSlot threshold_slot_;
 
     OWLContext ctx_;

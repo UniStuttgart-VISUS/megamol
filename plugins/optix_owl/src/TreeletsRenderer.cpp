@@ -1,5 +1,6 @@
 #include "TreeletsRenderer.h"
 
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
@@ -9,8 +10,8 @@
 #include "PKDCreate.h"
 
 #include "framestate.h"
-#include "treelets.h"
 #include "raygen.h"
+#include "treelets.h"
 
 #include <glad/gl.h>
 
@@ -27,6 +28,7 @@ TreeletsRenderer::TreeletsRenderer()
         , radius_slot_("radius", "")
         , rec_depth_slot_("rec_depth", "")
         , spp_slot_("spp", "")
+        , accumulate_slot_("accumulate", "")
         , threshold_slot_("threshold", "") {
     data_in_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
@@ -39,6 +41,9 @@ TreeletsRenderer::TreeletsRenderer()
 
     spp_slot_ << new core::param::IntParam(1, 1);
     MakeSlotAvailable(&spp_slot_);
+
+    accumulate_slot_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&accumulate_slot_);
 
     threshold_slot_ << new core::param::IntParam(2048, 16, 2048);
     MakeSlotAvailable(&threshold_slot_);
@@ -166,11 +171,14 @@ bool TreeletsRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         old_cam_intrinsics_ = cam_intrinsics;
     }
 
-    if (in_data->FrameID() != frame_id_ || in_data->DataHash() != in_data_hash_) {
+    if (in_data->FrameID() != frame_id_ || in_data->DataHash() != in_data_hash_ || threshold_slot_.IsDirty()) {
         if (!assertData(*in_data))
             return false;
         frame_id_ = in_data->FrameID();
         in_data_hash_ = in_data->DataHash();
+        threshold_slot_.ResetDirty();
+
+        framestate_.accumID = 0;
 
         owlRayGenSetGroup(raygen_, "world", world_);
         owlRayGenSetBuffer(raygen_, "particleBuffer", particleBuffer_);
@@ -179,6 +187,19 @@ bool TreeletsRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         owlBuildPipeline(ctx_);
         owlBuildSBT(ctx_);
     }
+
+    if (rec_depth_slot_.IsDirty()) {
+        owlRayGenSet1i(raygen_, "rec_depth", rec_depth_slot_.Param<core::param::IntParam>()->Value());
+        framestate_.accumID = 0;
+
+        owlBuildPrograms(ctx_);
+        owlBuildPipeline(ctx_);
+        owlBuildSBT(ctx_);
+
+        rec_depth_slot_.ResetDirty();
+    }
+
+    framestate_.samplesPerPixel = spp_slot_.Param<core::param::IntParam>()->Value();
 
     owlBufferUpload(frameStateBuffer_, &framestate_);
     owlRayGenLaunch2D(raygen_, current_fb_size_.x, current_fb_size_.y);
@@ -225,6 +246,12 @@ bool TreeletsRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
+    if (accumulate_slot_.Param<core::param::BoolParam>()->Value()) {
+        ++framestate_.accumID;
+    } else {
+        framestate_.accumID = 0;
+    }
+
     return true;
 }
 
@@ -244,7 +271,8 @@ bool TreeletsRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 }
 
 
-std::size_t sort_partition(std::vector<device::Particle>& particles, std::size_t begin, std::size_t end, box3f bounds, int& splitDim) {
+std::size_t sort_partition(
+    std::vector<device::Particle>& particles, std::size_t begin, std::size_t end, box3f bounds, int& splitDim) {
     // -------------------------------------------------------
     // determine split pos
     // -------------------------------------------------------
@@ -285,7 +313,8 @@ std::size_t sort_partition(std::vector<device::Particle>& particles, std::size_t
 //int TreeletParticles::maxTreeletSize = 1000;
 
 template<typename MakeLeafLambda>
-void partitionRecursively(std::vector<device::Particle>& particles, std::size_t begin, std::size_t end, const MakeLeafLambda& makeLeaf) {
+void partitionRecursively(
+    std::vector<device::Particle>& particles, std::size_t begin, std::size_t end, const MakeLeafLambda& makeLeaf) {
     if (makeLeaf(begin, end, false))
         // could make into a leaf, done.
         return;
@@ -388,7 +417,7 @@ bool TreeletsRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
 
     core::utility::log::Log::DefaultLog.WriteInfo(
         "[TreeletsRenderer] %d treelets for %d particles", treelets.size(), particles_.size());
-    
+
     if (particleBuffer_)
         owlBufferDestroy(particleBuffer_);
     particleBuffer_ = owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(particles_[0]), particles_.size(), particles_.data());
@@ -443,5 +472,6 @@ void TreeletsRenderer::resizeFramebuffer(owl::common::vec2i const& dim) {
     owlRayGenSet2i(raygen_, "fbSize", dim.x, dim.y);
 
     current_fb_size_ = dim;
+    framestate_.accumID = 0;
 }
 } // namespace megamol::optix_owl
