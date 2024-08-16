@@ -52,8 +52,16 @@ if (optix_owl_PLUGIN_ENABLED)
     SOURCES
       cuda_resources/treeletsPrograms.cu
   )
+  embed_ptx(
+    OUTPUT_TARGET
+      progquant-ptx
+    PTX_LINK_LIBRARIES
+      owl::owl
+    SOURCES
+      cuda_resources/progquantPrograms.cu
+  )
 
-  target_link_libraries(optix_owl PRIVATE $<TARGET_OBJECTS:raygen-ptx> $<TARGET_OBJECTS:pkd-ptx> $<TARGET_OBJECTS:treelets-ptx>)
+  target_link_libraries(optix_owl PRIVATE $<TARGET_OBJECTS:raygen-ptx> $<TARGET_OBJECTS:pkd-ptx> $<TARGET_OBJECTS:treelets-ptx> $<TARGET_OBJECTS:progquant-ptx>)
   target_include_directories(optix_owl PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/cuda_resources")
 
 endif ()

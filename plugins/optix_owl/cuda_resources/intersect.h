@@ -12,9 +12,9 @@ namespace device {
 using namespace owl::common;
 
 inline __device__ bool intersectSphere(
-    const Particle particle, const float particleRadius, const owl::Ray ray, float& hit_t) {
+    const vec3f pos, const float particleRadius, const owl::Ray& ray, float& hit_t) {
     // Raytracing Gems Intersection Code (Chapter 7)
-    const vec3f oc = ray.origin - particle.pos;
+    const vec3f oc = ray.origin - pos;
     const float sqrRad = particleRadius * particleRadius;
 
     // const float  a = dot(ray.direction, ray.direction);
@@ -38,6 +38,11 @@ inline __device__ bool intersectSphere(
     }
 
     return false;
+}
+
+inline __device__ bool intersectSphere(
+    const Particle particle, const float particleRadius, const owl::Ray& ray, float& hit_t) {
+    return intersectSphere(particle.pos, particleRadius, ray, hit_t);
 }
 
 inline __device__ bool clipToBounds(const owl::Ray& ray, const box3f& bounds, float& t0, float& t1) {

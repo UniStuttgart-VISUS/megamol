@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <vector>
 
 #include <owl/common/math/box.h>
@@ -90,29 +91,53 @@ void partitionRecursively(
     });
 }
 
-inline std::vector<PKDlet> prePartition_inPlace(std::vector<device::Particle>& particles, std::size_t maxSize, float radius) {
+inline std::vector<PKDlet> prePartition_inPlace(std::vector<device::Particle>& particles, std::size_t maxSize, float radius, std::function<bool(box3f const&)> add_cond = nullptr) {
     std::mutex resultMutex;
     std::vector<PKDlet> result;
 
-    partitionRecursively(particles, 0ULL, particles.size(), [&](std::size_t begin, std::size_t end, bool force) {
-        /*bool makeLeaf() :*/
-        const std::size_t size = end - begin;
-        if (size > maxSize && !force)
-            return false;
+    if (add_cond == nullptr) {
+        partitionRecursively(particles, 0ULL, particles.size(), [&](std::size_t begin, std::size_t end, bool force) {
+            /*bool makeLeaf() :*/
+            const std::size_t size = end - begin;
+            if (size > maxSize && !force)
+                return false;
 
-        PKDlet treelet;
-        treelet.begin = begin;
-        treelet.end = end;
-        treelet.bounds = box3f();
-        for (std::size_t i = begin; i < end; i++) {
-            treelet.bounds.extend(particles[i].pos - radius);
-            treelet.bounds.extend(particles[i].pos + radius);
-        }
+            PKDlet treelet;
+            treelet.begin = begin;
+            treelet.end = end;
+            treelet.bounds = box3f();
+            for (std::size_t i = begin; i < end; i++) {
+                treelet.bounds.extend(particles[i].pos - radius);
+                treelet.bounds.extend(particles[i].pos + radius);
+            }
 
-        std::lock_guard<std::mutex> lock(resultMutex);
-        result.push_back(treelet);
-        return true;
-    });
+            std::lock_guard<std::mutex> lock(resultMutex);
+            result.push_back(treelet);
+            return true;
+        });
+    } else {
+        partitionRecursively(particles, 0ULL, particles.size(), [&](std::size_t begin, std::size_t end, bool force) {
+            /*bool makeLeaf() :*/
+            const std::size_t size = end - begin;
+            if (size > maxSize && !force)
+                return false;
+
+            PKDlet treelet;
+            treelet.begin = begin;
+            treelet.end = end;
+            treelet.bounds = box3f();
+            for (std::size_t i = begin; i < end; i++) {
+                treelet.bounds.extend(particles[i].pos - radius);
+                treelet.bounds.extend(particles[i].pos + radius);
+            }
+            if (add_cond(treelet.bounds))
+                return false;
+
+            std::lock_guard<std::mutex> lock(resultMutex);
+            result.push_back(treelet);
+            return true;
+        });
+    }
 
     return std::move(result);
 }

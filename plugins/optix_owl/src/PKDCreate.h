@@ -9,6 +9,7 @@
 #include <tbb/parallel_for.h>
 
 #include "particle.h"
+#include "common.h"
 
 namespace megamol {
 namespace optix_owl {
@@ -21,13 +22,6 @@ inline float computeStableEpsilon(float f) {
 
 inline float computeStableEpsilon(const owl::common::vec3f v) {
     return max(max(computeStableEpsilon(v.x), computeStableEpsilon(v.y)), computeStableEpsilon(v.z));
-}
-
-inline size_t lChild(size_t P) {
-    return 2 * P + 1;
-}
-inline size_t rChild(size_t P) {
-    return 2 * P + 2;
 }
 
 template<class Comp>
