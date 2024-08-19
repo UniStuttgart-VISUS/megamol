@@ -50,6 +50,9 @@ protected:
     core::param::ParamSlot rec_depth_slot_;
     core::param::ParamSlot spp_slot_;
     core::param::ParamSlot accumulate_slot_;
+    core::param::ParamSlot dump_debug_info_slot_;
+    core::param::ParamSlot debug_rdf_slot_;
+    core::param::ParamSlot debug_output_path_slot_;
 
     OWLContext ctx_;
 

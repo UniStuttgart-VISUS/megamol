@@ -3,6 +3,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FilePathParam.h"
 
 #include <owl/common/math/box.h>
 #include <owl/common/math/vec.h>
@@ -24,7 +25,10 @@ BaseRenderer::BaseRenderer()
         , radius_slot_("radius", "")
         , rec_depth_slot_("rec_depth", "")
         , spp_slot_("spp", "")
-        , accumulate_slot_("accumulate", "") {
+        , accumulate_slot_("accumulate", "")
+        , dump_debug_info_slot_("debug::dump", "")
+        , debug_rdf_slot_("debug::rdf", ""),
+        , debug_output_path_slot_("debug::outpath", "") {
     data_in_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
 
@@ -39,6 +43,16 @@ BaseRenderer::BaseRenderer()
 
     accumulate_slot_ << new core::param::BoolParam(true);
     MakeSlotAvailable(&accumulate_slot_);
+
+    dump_debug_info_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&dump_debug_info_slot_);
+
+    debug_rdf_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&debug_rdf_slot_);
+
+    debug_output_path_slot_ << new core::param::FilePathParam(
+        "./debug/", core::param::FilePathParam::FilePathFlags_::Flag_Directory);
+    MakeSlotAvailable(&debug_output_path_slot_);
 }
 
 BaseRenderer::~BaseRenderer() {
