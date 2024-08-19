@@ -12,6 +12,8 @@
 #include "particle.h"
 #include "gridcomp.h"
 
+#include <omp.h>
+
 namespace megamol::optix_owl {
 using namespace owl::common;
 
@@ -47,26 +49,35 @@ std::vector<std::pair<size_t, size_t>> gridify(
         vec3f(std::ceilf(span.x / split_size), std::ceilf(span.y / split_size), std::ceilf(span.z / split_size));
     auto const diff = span / num_cells;
     std::vector<int> cell_idxs(data.size());
-    std::vector<size_t> num_elements(num_cells.x * num_cells.y * num_cells.z, 0);
-    for (size_t i = 0; i < data.size(); ++i) {
+    std::vector<std::vector<size_t>> num_elements(omp_get_max_threads());
+    for (auto& el : num_elements) {
+        el.resize(num_cells.x * num_cells.y * num_cells.z, 0);
+    }
+    //std::vector<size_t> num_elements(num_cells.x * num_cells.y * num_cells.z, 0);
+    #pragma omp parallel for
+    for (int64_t i = 0; i < data.size(); ++i) {
         vec3i cell_idx = vec3i(data[i].pos / diff);
         cell_idx.x = cell_idx.x >= num_cells.x ? num_cells.x - 1 : cell_idx.x;
         cell_idx.y = cell_idx.y >= num_cells.y ? num_cells.y - 1 : cell_idx.y;
         cell_idx.z = cell_idx.z >= num_cells.z ? num_cells.z - 1 : cell_idx.z;
         cell_idxs[i] = cell_idx.x + num_cells.x * (cell_idx.y + num_cells.y * cell_idx.z);
-        ++num_elements[cell_idxs[i]];
+        ++num_elements[omp_get_thread_num()][cell_idxs[i]];
+    }
+    for (int i = 1; i < num_elements.size(); ++i) {
+        std::transform(num_elements[0].begin(), num_elements[0].end(), num_elements[i].begin(), num_elements[0].begin(),
+            std::plus());
     }
     std::vector<std::pair<size_t, size_t>> grid_cells(num_elements.size(), std::make_pair(0, 0));
-    grid_cells[0].second = num_elements[0];
-    for (size_t i = 1; i < num_elements.size(); ++i) {
-        num_elements[i] += num_elements[i - 1];
-        grid_cells[i].first = num_elements[i - 1];
-        grid_cells[i].second = num_elements[i];
+    grid_cells[0].second = num_elements[0][0];
+    for (size_t i = 1; i < num_elements[0].size(); ++i) {
+        num_elements[0][i] += num_elements[0][i - 1];
+        grid_cells[i].first = num_elements[0][i - 1];
+        grid_cells[i].second = num_elements[0][i];
     }
     std::vector<device::Particle> tmp(data.size());
     for (size_t i = 0; i < data.size(); ++i) {
         auto const idx = cell_idxs[i];
-        tmp[--num_elements[idx]] = data[i];
+        tmp[--num_elements[0][idx]] = data[i];
     }
     data = tmp;
     /*auto max_x = (*std::max_element(

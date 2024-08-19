@@ -113,7 +113,8 @@ bool GridCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
         /*std::transform(data.begin() + c.first, data.begin() + c.second, qparticles.begin() + c.first,
             [&box](auto const& p) { return encode_coord(p.pos - box.lower, glm::vec3(), glm::vec3()); });*/
         //std::vector<device::SPKDParticle> tmp_p(c.second - c.first);
-        for (auto const& el : tmp_t) {
+        tbb::parallel_for((size_t) 0, tmp_t.size(), [&](size_t tID) {
+            auto const& el = tmp_t[tID];
             std::transform(particles_.begin() + el.begin, particles_.begin() + el.end, s_particles.begin() + el.begin,
                 [&el, &box](auto const& p) {
                     auto const qp = encode_coord(p.pos - box.lower, vec3f(), vec3f());
@@ -143,8 +144,39 @@ bool GridCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
                     sp.sz_idx = std::distance(el.sz, fit_z);
                     return sp;
                 });
-            //el.bounds = extendBounds(data, el.begin, el.end, particles.GetGlobalRadius());
-        }
+        });
+        /*for (auto const& el : tmp_t) {
+            std::transform(particles_.begin() + el.begin, particles_.begin() + el.end, s_particles.begin() + el.begin,
+                [&el, &box](auto const& p) {
+                    auto const qp = encode_coord(p.pos - box.lower, vec3f(), vec3f());
+                    device::GridCompParticle sp;
+                    byte_cast bc;
+                    bc.ui = 0;
+                    bc.ui = qp.x;
+                    sp.x = bc.parts.a;
+                    auto fit_x = std::find(el.sx, el.sx + device::spkd_array_size, bc.parts.b);
+                    if (fit_x == el.sx + device::spkd_array_size) {
+                        throw std::runtime_error("did not find propper index");
+                    }
+                    sp.sx_idx = std::distance(el.sx, fit_x);
+                    bc.ui = qp.y;
+                    sp.y = bc.parts.a;
+                    auto fit_y = std::find(el.sy, el.sy + device::spkd_array_size, bc.parts.b);
+                    if (fit_y == el.sy + device::spkd_array_size) {
+                        throw std::runtime_error("did not find propper index");
+                    }
+                    sp.sy_idx = std::distance(el.sy, fit_y);
+                    bc.ui = qp.z;
+                    sp.z = bc.parts.a;
+                    auto fit_z = std::find(el.sz, el.sz + device::spkd_array_size, bc.parts.b);
+                    if (fit_z == el.sz + device::spkd_array_size) {
+                        throw std::runtime_error("did not find propper index");
+                    }
+                    sp.sz_idx = std::distance(el.sz, fit_z);
+                    return sp;
+                });*/
+        //el.bounds = extendBounds(data, el.begin, el.end, particles.GetGlobalRadius());
+
 
         // make PKD
         tbb::parallel_for(
