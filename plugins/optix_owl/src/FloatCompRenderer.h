@@ -72,8 +72,6 @@ private:
     OWLBuffer exp_y_buffer_ = 0;
     OWLBuffer exp_z_buffer_ = 0;
 
-    std::vector<device::Particle> particles_;
-
     unsigned int frame_id_ = 0;
     uint64_t in_data_hash_ = std::numeric_limits<uint64_t>::max();
 };

@@ -62,7 +62,5 @@ private:
 
     OWLModule pkd_module_;
     OWLGeom geom_;
-
-    std::vector<device::Particle> particles_;
 };
 } // namespace megamol::optix_owl

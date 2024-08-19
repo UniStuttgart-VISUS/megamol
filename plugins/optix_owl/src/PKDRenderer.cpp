@@ -56,7 +56,7 @@ void PKDRenderer::release() {
 bool PKDRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     auto const pl_count = call.GetParticleListCount();
 
-    particles_.clear();
+    std::vector<device::Particle> particles_;
     owl::common::box3f total_bounds;
     auto const global_radius = radius_slot_.Param<core::param::FloatParam>()->Value();
 
@@ -68,6 +68,8 @@ bool PKDRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
             continue;
         /*if (particles.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)
             continue;*/
+
+        particles_.reserve(particles_.size() + p_count);
 
         std::vector<device::Particle> data(p_count);
 
@@ -90,7 +92,7 @@ bool PKDRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     makePKD(particles_, total_bounds);
     if (particleBuffer_)
         owlBufferDestroy(particleBuffer_);
-    particleBuffer_ = owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(particles_[0]), particles_.size(), particles_.data());
+    particleBuffer_ = owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::Particle), particles_.size(), particles_.data());
 
     core::utility::log::Log::DefaultLog.WriteInfo("[PKDRenderer] Rendering %d particles", particles_.size());
 

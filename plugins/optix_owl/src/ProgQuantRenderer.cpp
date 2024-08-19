@@ -64,7 +64,7 @@ void ProgQuantRenderer::release() {
 bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     auto const pl_count = call.GetParticleListCount();
 
-    particles_.clear();
+    std::vector<device::Particle> particles_;
     owl::common::box3f total_bounds;
     auto const global_radius = radius_slot_.Param<core::param::FloatParam>()->Value();
 
@@ -76,6 +76,8 @@ bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
             continue;
         /*if (particles.GetVertexDataType() == geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)
             continue;*/
+
+        particles_.reserve(particles_.size() + p_count);
 
         std::vector<device::Particle> data(p_count);
 
@@ -108,7 +110,7 @@ bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
         makePKD(particles_, treelets[treeletID].begin, treelets[treeletID].end, treelets[treeletID].bounds);
     });
 
-    comp_particles_.resize(particles_.size());
+    std::vector<device::ProgQuantParticle> comp_particles_(particles_.size());
     tbb::parallel_for((size_t) 0, treelets.size(), [&](size_t treeletID) {
         convert_blets(0, treelets[treeletID].end - treelets[treeletID].begin,
             particles_.data() + treelets[treeletID].begin, comp_particles_.data() + treelets[treeletID].begin,
