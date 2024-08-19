@@ -12,7 +12,7 @@
 
 namespace megamol::optix_owl {
 using namespace owl::common;
-void dump_analysis_data(std::filesystem::path const& output_path, std::shared_ptr<std::vector<vec3f>> op_s,
+inline void dump_analysis_data(std::filesystem::path const& output_path, std::shared_ptr<std::vector<vec3f>> op_s,
     std::shared_ptr<std::vector<vec3f>> sp_s, std::shared_ptr<std::vector<vec3f>> diffs, float radius, bool do_rdf) {
     if (do_rdf) {
         auto rdf = RDF(op_s, sp_s);

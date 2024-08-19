@@ -27,7 +27,7 @@ BaseRenderer::BaseRenderer()
         , spp_slot_("spp", "")
         , accumulate_slot_("accumulate", "")
         , dump_debug_info_slot_("debug::dump", "")
-        , debug_rdf_slot_("debug::rdf", ""),
+        , debug_rdf_slot_("debug::rdf", "")
         , debug_output_path_slot_("debug::outpath", "") {
     data_in_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&data_in_slot_);
