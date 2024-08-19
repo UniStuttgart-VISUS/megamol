@@ -13,21 +13,20 @@
 namespace megamol::optix_owl {
 using namespace owl::common;
 void dump_analysis_data(std::filesystem::path const& output_path, std::shared_ptr<std::vector<vec3f>> op_s,
-    std::shared_ptr<std::vector<vec3f>> sp_s, std::shared_ptr<std::vector<vec3f>> diffs, unsigned int pl_idx,
-    float radius, bool do_rdf) {
+    std::shared_ptr<std::vector<vec3f>> sp_s, std::shared_ptr<std::vector<vec3f>> diffs, float radius, bool do_rdf) {
     if (do_rdf) {
         auto rdf = RDF(op_s, sp_s);
         auto const [org_rdf, new_rdf] = rdf.BuildHistogram(4.0f * radius, 100);
 
         {
-            auto f = std::ofstream(output_path / ("org_rdf_" + std::to_string(pl_idx) + ".blobb"), std::ios::binary);
+            auto f = std::ofstream(output_path / ("org_rdf.blobb"), std::ios::binary);
             f.write(
                 reinterpret_cast<char const*>(org_rdf.data()), org_rdf.size() * sizeof(decltype(org_rdf)::value_type));
             f.close();
         }
 
         {
-            auto f = std::ofstream(output_path / ("new_rdf_" + std::to_string(pl_idx) + ".blobb"), std::ios::binary);
+            auto f = std::ofstream(output_path / ("new_rdf.blobb"), std::ios::binary);
             f.write(
                 reinterpret_cast<char const*>(new_rdf.data()), new_rdf.size() * sizeof(decltype(new_rdf)::value_type));
             f.close();
