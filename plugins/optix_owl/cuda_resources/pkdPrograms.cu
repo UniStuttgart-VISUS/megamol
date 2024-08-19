@@ -45,18 +45,17 @@ OPTIX_INTERSECT_PROGRAM(pkd_intersect)() {
         (fabsf(ray.direction.z) <= 1e-8f) ? 1e8f : 1.f / ray.direction.z,
     };
     unsigned int const numParticles = self.particleCount;
-    float const particleRadius = self.particleRadius;
 
     while (1) {
         // while we have anything to traverse ...
 
         while (1) {
             // while we can go down
-            const Particle particle = self.particleBuffer[nodeID];
+            const Particle& particle = self.particleBuffer[nodeID];
             int const dim = particle.get_dim();
 
-            const float t_slab_lo = (particle.pos[dim] - particleRadius - org[dim]) * rdir[dim];
-            const float t_slab_hi = (particle.pos[dim] + particleRadius - org[dim]) * rdir[dim];
+            const float t_slab_lo = (particle.pos[dim] - self.particleRadius - org[dim]) * rdir[dim];
+            const float t_slab_hi = (particle.pos[dim] + self.particleRadius - org[dim]) * rdir[dim];
 
             const float t_slab_nr = fminf(t_slab_lo, t_slab_hi);
             const float t_slab_fr = fmaxf(t_slab_lo, t_slab_hi);
@@ -68,7 +67,7 @@ OPTIX_INTERSECT_PROGRAM(pkd_intersect)() {
             const float sphere_t1 = fminf(fminf(t_slab_fr, t1), tmp_hit_t);
 
             if (sphere_t0 < sphere_t1) {
-                if (intersectSphere(particle, particleRadius, ray, tmp_hit_t)) {
+                if (intersectSphere(particle, self.particleRadius, ray, tmp_hit_t)) {
                     tmp_hit_primID = nodeID;
                 }
             }

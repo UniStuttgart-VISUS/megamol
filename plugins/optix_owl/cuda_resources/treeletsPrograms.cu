@@ -22,7 +22,7 @@ struct StackEntry {
 OPTIX_INTERSECT_PROGRAM(treelet_brute_intersect)() {
     const int treeletID = optixGetPrimitiveIndex();
     const auto& self = owl::getProgramData<TreeletsGeomData>();
-    const auto treelet = self.treeletBuffer[treeletID];
+    const auto& treelet = self.treeletBuffer[treeletID];
 
     owl::Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
@@ -30,7 +30,7 @@ OPTIX_INTERSECT_PROGRAM(treelet_brute_intersect)() {
     float tmp_hit_t = ray.tmax;
     int tmp_hit_primID = -1;
     for (int particleID = begin; particleID < treelet.end; ++particleID) {
-        const Particle particle = self.particleBuffer[particleID];
+        const Particle& particle = self.particleBuffer[particleID];
         if (intersectSphere(particle, self.particleRadius, ray, tmp_hit_t))
             tmp_hit_primID = particleID;
     }
@@ -41,7 +41,7 @@ OPTIX_INTERSECT_PROGRAM(treelet_brute_intersect)() {
 OPTIX_INTERSECT_PROGRAM(treelets_intersect)() {
     const int treeletID = optixGetPrimitiveIndex();
     const auto& self = owl::getProgramData<TreeletsGeomData>();
-    const auto treelet = self.treeletBuffer[treeletID];
+    const auto& treelet = self.treeletBuffer[treeletID];
 
     owl::Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
@@ -76,7 +76,7 @@ OPTIX_INTERSECT_PROGRAM(treelets_intersect)() {
                 // while we can go down
 
                 const int particleID = nodeID + begin;
-                const Particle particle = self.particleBuffer[particleID];
+                const Particle& particle = self.particleBuffer[particleID];
                 int const dim = particle.get_dim();
 
                 const float t_slab_lo = (particle.pos[dim] - self.particleRadius - org[dim]) * rdir[dim];

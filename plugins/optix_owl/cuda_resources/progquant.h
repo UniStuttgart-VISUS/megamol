@@ -51,8 +51,8 @@ struct ProgQuantGeomData {
 };
 
 CU_CALLABLE inline float t_compensate(float span) {
-    //return span / 1023.f / 0.5f;
-    return 0.0f;
+    return span / 1023.f / 0.5f;
+    //return 0.0f;
 }
 
 CU_CALLABLE inline box3f leftBounds(box3f const& bounds, float split_pos, float radius, int dim) {
