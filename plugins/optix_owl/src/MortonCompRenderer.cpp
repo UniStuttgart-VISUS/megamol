@@ -1,5 +1,7 @@
 #include "MortonCompRenderer.h"
 
+#include <mutex>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -136,10 +138,13 @@ bool MortonCompRenderer::assertData(geocalls::MultiParticleDataCall const& call)
             spos->reserve(particles_.size());
         }
     }
-    for (size_t i = 0; i < treelets.size(); ++i) {
+    std ::mutex debug_data_mtx;
+#pragma omp parallel for
+    for (int64_t i = 0; i < treelets.size(); ++i) {
         auto const [temp_pos, temp_rec, temp_diffs] =
             convert_morton_treelet(treelets[i], particles_, ctreelets[i], cparticles, total_bounds, config);
         if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+            std::lock_guard<std::mutex> guard(debug_data_mtx);
             orgpos->insert(orgpos->end(), temp_pos.begin(), temp_pos.end());
             if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
                 spos->insert(spos->end(), temp_rec.begin(), temp_rec.end());

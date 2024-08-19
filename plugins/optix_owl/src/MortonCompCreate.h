@@ -28,13 +28,15 @@ std::vector<std::pair<uint64_t, uint64_t>> create_morton_codes(
     auto const span = vec3d(bounds.span());
     auto const lower = vec3d(bounds.lower);
 
-    for (size_t i = 0; i < data.size(); ++i) {
+#pragma omp parallel for
+    for (int64_t i = 0; i < data.size(); ++i) {
         auto const pos = (vec3d(data[i].pos) - lower) / span;
         codes[i] = vec3ui(pos * dfactor);
     }
 
     std::vector<std::pair<uint64_t, uint64_t>> mc(codes.size());
-    for (size_t i = 0; i < codes.size(); ++i) {
+#pragma omp parallel for
+    for (int64_t i = 0; i < codes.size(); ++i) {
         mc[i] = std::make_pair(device::morton_encode(codes[i].x, codes[i].y, codes[i].z), i);
     }
 
