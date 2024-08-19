@@ -4,6 +4,7 @@
 #include <tuple>
 #include <vector>
 #include <unordered_set>
+#include <type_traits>
 
 #include <owl/common/math/vec.h>
 
@@ -275,6 +276,112 @@ inline void convert_qlet_dep(device::FloatCompPKDlet const& treelet, std::vector
         auto fit_z = std::find(exponents_z, exponents_z + num_idx, in.exp_z);
         out.exp_z = std::distance(exponents_z, fit_z);
     }
+}
+
+template<typename QTP, bool BDEP = QTP::dep, int BOFFSET = QTP::offset>
+inline void sub_print(std::vector<vec3f>& diffs, std::vector<vec3f>& orgpos, std::vector<vec3f>& newpos,
+    size_t P, vec3f refPos, device::Particle const* particles, QTP const* qparticles, size_t N,
+    device::FloatCompPKDlet const& treelet, char const* exp_x_vec, char const* exp_y_vec, char const* exp_z_vec) {
+    if (P >= N)
+        return;
+
+    auto const& base = particles[P];
+
+    device::QTParticle current;
+    if constexpr (/*std::is_same_v<QTP, device::QTParticle_e4m16> ||*/ std::is_same_v<QTP, device::QTParticle_e5m15>) {
+        current = qparticles[P].getParticle();
+    } else {
+        current = qparticles[P].getParticle(P % 2 == 1, P == 0 ? 0 : particles[parent(P)].get_dim());
+    }
+
+    vec3f pos;
+
+    int dim = current.dim;
+
+    unsigned int x = 0;
+    unsigned int sign_x = current.sign_x;
+    x += (sign_x) << 31;
+    char exp_x = exp_x_vec[current.exp_x];
+    x += ((int) exp_x + 127u) << 23;
+    x += (((unsigned int) current.m_x) << BOFFSET);
+
+    float fx = *reinterpret_cast<float*>(&x);
+
+    unsigned int y = 0;
+    unsigned int sign_y = current.sign_y;
+    y += (sign_y) << 31;
+    char exp_y = exp_y_vec[current.exp_y];
+    y += ((int) exp_y + 127u) << 23;
+    y += (((unsigned int) current.m_y) << BOFFSET);
+
+    float fy = *reinterpret_cast<float*>(&y);
+
+    unsigned int z = 0;
+    unsigned int sign_z = current.sign_z;
+    z += (sign_z) << 31;
+    char exp_z = exp_z_vec[current.exp_z];
+    z += ((int) exp_z + 127u) << 23;
+    z += (((unsigned int) current.m_z) << BOFFSET);
+
+    float fz = *reinterpret_cast<float*>(&z);
+
+    pos = vec3f(fx, fy, fz);
+    pos += refPos;
+
+    vec3d diff;
+    diff.x = static_cast<double>(base.pos.x) - static_cast<double>(pos.x);
+    diff.y = static_cast<double>(base.pos.y) - static_cast<double>(pos.y);
+    diff.z = static_cast<double>(base.pos.z) - static_cast<double>(pos.z);
+
+    diffs[P] = vec3f(diff);
+    orgpos[P] = base.pos;
+    newpos[P] = pos;
+
+    if constexpr (BDEP) {
+        sub_print<QTP>(
+            diffs, orgpos, newpos, lChild(P), pos, particles, qparticles, N, treelet, exp_x_vec, exp_y_vec, exp_z_vec);
+        sub_print<QTP>(
+            diffs, orgpos, newpos, rChild(P), pos, particles, qparticles, N, treelet, exp_x_vec, exp_y_vec, exp_z_vec);
+    } else {
+        sub_print<QTP>(diffs, orgpos, newpos, lChild(P), refPos, particles, qparticles, N, treelet, exp_x_vec,
+            exp_y_vec, exp_z_vec);
+        sub_print<QTP>(diffs, orgpos, newpos, rChild(P), refPos, particles, qparticles, N, treelet, exp_x_vec,
+            exp_y_vec, exp_z_vec);
+    }
+}
+
+inline std::tuple<std::vector<vec3f>, std::vector<vec3f>, std::vector<vec3f>> unified_sub_print(
+    device::FloatCompType selected_type, size_t P, vec3f refPos, device::Particle const* particles,
+    std::shared_ptr<QTPBufferBase> const& qparticles, device::FloatCompPKDlet const& treelet, char const* exp_x_vec,
+    char const* exp_y_vec, char const* exp_z_vec) {
+    std::vector<vec3f> diffs(treelet.end - treelet.begin);
+    std::vector<vec3f> orgpos(treelet.end - treelet.begin);
+    std::vector<vec3f> newpos(treelet.end - treelet.begin);
+    switch (selected_type) {
+    case device::FloatCompType::E5M15: {
+        auto buf = std::dynamic_pointer_cast<QTPBuffer_e5m15>(qparticles);
+        sub_print<device::QTParticle_e5m15>(diffs, orgpos, newpos, 0, treelet.basePos, particles + treelet.begin,
+            buf->buffer.data() + treelet.begin, treelet.end - treelet.begin, treelet, exp_x_vec, exp_y_vec, exp_z_vec);
+    } break;
+    /*case device::FloatCompType::E4M16: {
+        auto buf = std::dynamic_pointer_cast<QTPBuffer_e4m16>(qparticles);
+        sub_print<device::QTParticle_e4m16>(diffs, orgpos, newpos, 0, treelet.basePos, particles + treelet.begin,
+            buf->buffer.data() + treelet.begin, treelet.end - treelet.begin, treelet, exp_x_vec, exp_y_vec, exp_z_vec);
+    } break;*/
+    case device::FloatCompType::E5M15D: {
+        auto buf = std::dynamic_pointer_cast<QTPBuffer_e5m15d>(qparticles);
+        sub_print<device::QTParticle_e5m15d>(diffs, orgpos, newpos, 0, treelet.basePos, particles + treelet.begin,
+            buf->buffer.data() + treelet.begin, treelet.end - treelet.begin, treelet, exp_x_vec, exp_y_vec, exp_z_vec);
+    } break;
+    /*case device::FloatCompType::E4M16D: {
+        auto buf = std::dynamic_pointer_cast<QTPBuffer_e4m16d>(qparticles);
+        sub_print<device::QTParticle_e4m16d>(diffs, orgpos, newpos, 0, treelet.basePos, particles + treelet.begin,
+            buf->buffer.data() + treelet.begin, treelet.end - treelet.begin, treelet, exp_x_vec, exp_y_vec, exp_z_vec);
+    } break;*/
+    default:
+        throw std::runtime_error("unexpected FloatCompType");
+    }
+    return std::make_tuple(diffs, orgpos, newpos);
 }
 
 } // namespace megamol::optix_owl

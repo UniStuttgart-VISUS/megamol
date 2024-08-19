@@ -3,17 +3,21 @@
 #include <memory>
 #include <mutex>
 #include <unordered_set>
+#include <fstream>
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FilePathParam.h"
 
 #include <owl/common/math/box.h>
 #include <owl/common/math/vec.h>
 
 #include "PKDCreate.h"
 #include "TreeletsCreate.h"
+
+#include "CompErrorAnalysis.h"
 
 #include "FloatCompCreate.h"
 #include "floatcomp.h"
@@ -289,6 +293,53 @@ bool FloatCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
         std::cout << "Should not happen" << std::endl;
     }
 
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
+
+        auto diffs = std::make_shared<std::vector<vec3f>>();
+        auto orgpos = std::make_shared<std::vector<vec3f>>();
+        auto newpos = std::make_shared<std::vector<vec3f>>();
+        diffs->reserve(particles_.size());
+        if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
+            orgpos->reserve(particles_.size());
+            newpos->reserve(particles_.size());
+        }
+
+        for (size_t i = 0; i < treelets.size(); ++i) {
+            unsigned int offset = 0;
+
+            if (using_localtables) {
+                offset = i * num_idx;
+            }
+
+            auto const [diffs_t, orgpos_t, newpos_t] =
+                unified_sub_print(selected_type, 0, qtreelets[i].basePos, particles_.data(), qtpbuffer, qtreelets[i],
+                    exp_vec_x.data() + offset, exp_vec_y.data() + offset, exp_vec_z.data() + offset);
+
+            diffs->insert(diffs->end(), diffs_t.begin(), diffs_t.end());
+            if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
+                orgpos->insert(orgpos->end(), orgpos_t.begin(), orgpos_t.end());
+                newpos->insert(newpos->end(), newpos_t.begin(), newpos_t.end());
+            }
+        }
+
+        dump_analysis_data(output_path, orgpos, newpos, diffs, global_radius,
+            debug_rdf_slot_.Param<core::param::BoolParam>()->Value());
+
+        {
+            if (qt_exp_overflow) {
+                auto f = std::ofstream(output_path / "localtables.txt");
+                f << "localtables\n";
+                f.close();
+            }
+            if (qt_exp_overflow > 0) {
+                auto f = std::ofstream(output_path / "overflow.txt");
+                f << qt_exp_overflow << "\n";
+                f.close();
+            }
+        }
+    }
+
     core::utility::log::Log::DefaultLog.WriteInfo(
         "[FloatCompRenderer] %d treelets for %d particles", treelets.size(), particles_.size());
 
@@ -355,6 +406,12 @@ bool FloatCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
     world_ = owlInstanceGroupCreate(ctx_, 1, &ug);
 
     owlGroupBuildAccel(world_);
+
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        size_t memFinal = 0;
+        size_t memPeak = 0;
+        owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+    }
 
     return true;
 }
