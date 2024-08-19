@@ -1,6 +1,7 @@
 #include "ProgQuantRenderer.h"
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
@@ -8,11 +9,14 @@
 #include <owl/common/math/vec.h>
 
 #include "PKDCreate.h"
+#include "ProgQuantCreate.h"
 #include "TreeletsCreate.h"
 
+#include "CompErrorAnalysis.h"
+
 #include "framestate.h"
-#include "raygen.h"
 #include "progquant.h"
+#include "raygen.h"
 
 #include <glad/gl.h>
 
@@ -103,8 +107,8 @@ bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
         return span.x >= spatial_threshold || span.y >= spatial_threshold || span.z >= spatial_threshold;
     };
 
-    auto const treelets =
-        prePartition_inPlace(particles_, threshold_slot_.Param<core::param::IntParam>()->Value(), global_radius, add_cond);
+    auto const treelets = prePartition_inPlace(
+        particles_, threshold_slot_.Param<core::param::IntParam>()->Value(), global_radius, add_cond);
 
     tbb::parallel_for(std::size_t(0), treelets.size(), [&](std::size_t treeletID) {
         makePKD(particles_, treelets[treeletID].begin, treelets[treeletID].end, treelets[treeletID].bounds);
@@ -117,27 +121,38 @@ bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
             global_radius, treelets[treeletID].bounds);
     });
 
-    /*auto diffs = std::make_shared<std::vector<vec3f>>();
-    diffs->resize(particles_.size());
-    auto orgpos = std::make_shared<std::vector<vec3f>>();
-    orgpos->resize(particles_.size());
-    auto newpos = std::make_shared<std::vector<vec3f>>();
-    newpos->resize(particles_.size());
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
 
-    tbb::parallel_for((size_t) 0, treelets.size(), [&](size_t treeletID) {
-        reconstruct_blets(0, treelets[treeletID].end - treelets[treeletID].begin,
-            particles_.data() + treelets[treeletID].begin, comp_particles_.data() + treelets[treeletID].begin,
-            global_radius, treelets[treeletID].bounds, orgpos->data() + treelets[treeletID].begin,
-            newpos->data() + treelets[treeletID].begin, diffs->data() + treelets[treeletID].begin);
-    });*/
+        auto diffs = std::make_shared<std::vector<vec3f>>();
+        auto orgpos = std::make_shared<std::vector<vec3f>>();
+        auto newpos = std::make_shared<std::vector<vec3f>>();
+        diffs->resize(particles_.size());
+        if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
+            orgpos->resize(particles_.size());
+            newpos->resize(particles_.size());
+        }
+
+        tbb::parallel_for((size_t) 0, treelets.size(), [&](size_t treeletID) {
+            reconstruct_blets(0, treelets[treeletID].end - treelets[treeletID].begin,
+                particles_.data() + treelets[treeletID].begin, comp_particles_.data() + treelets[treeletID].begin,
+                global_radius, treelets[treeletID].bounds,
+                orgpos->empty() ? nullptr : orgpos->data() + treelets[treeletID].begin,
+                newpos->empty() ? nullptr : newpos->data() + treelets[treeletID].begin,
+                diffs->data() + treelets[treeletID].begin);
+        });
+
+        dump_analysis_data(output_path, orgpos, newpos, diffs, global_radius,
+            debug_rdf_slot_.Param<core::param::BoolParam>()->Value());
+    }
 
     core::utility::log::Log::DefaultLog.WriteInfo(
         "[ProgQuantRenderer] %d treelets for %d particles", treelets.size(), particles_.size());
 
     if (particleBuffer_)
         owlBufferDestroy(particleBuffer_);
-    particleBuffer_ =
-        owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::ProgQuantParticle), comp_particles_.size(), comp_particles_.data());
+    particleBuffer_ = owlDeviceBufferCreate(
+        ctx_, OWL_USER_TYPE(device::ProgQuantParticle), comp_particles_.size(), comp_particles_.data());
 
     if (treeletBuffer_)
         owlBufferDestroy(treeletBuffer_);
@@ -157,6 +172,12 @@ bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
     world_ = owlInstanceGroupCreate(ctx_, 1, &ug);
 
     owlGroupBuildAccel(world_);
+
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        size_t memFinal = 0;
+        size_t memPeak = 0;
+        owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+    }
 
     return true;
 }
