@@ -56,7 +56,7 @@ inline CU_CALLABLE vec3f decode_spart(GridCompParticle const& part, GridCompPKDl
     bc.ui = 0;
     bc.parts.a = part.x;
     bc.parts.b = treelet.sx[part.sx_idx];
-#ifdef __CUDACC__
+#if 0
     pos.x = fmaf(static_cast<float>(bc.ui), factor, treelet.lower.x);
 #else
     pos.x = static_cast<float>(bc.ui) * factor + treelet.lower.x;
@@ -64,7 +64,7 @@ inline CU_CALLABLE vec3f decode_spart(GridCompParticle const& part, GridCompPKDl
     //qp.x = bc.ui;
     bc.parts.a = part.y;
     bc.parts.b = treelet.sy[part.sy_idx];
-#ifdef __CUDACC__
+#if 0
     pos.y = fmaf(static_cast<float>(bc.ui), factor, treelet.lower.y);
 #else
     pos.y = static_cast<float>(bc.ui) * factor + treelet.lower.y;
@@ -72,7 +72,7 @@ inline CU_CALLABLE vec3f decode_spart(GridCompParticle const& part, GridCompPKDl
     //qp.y = bc.ui;
     bc.parts.a = part.z;
     bc.parts.b = treelet.sz[part.sz_idx];
-#ifdef __CUDACC__
+#if 0
     pos.z = fmaf(static_cast<float>(bc.ui), factor, treelet.lower.z);
 #else
     pos.z = static_cast<float>(bc.ui) * factor + treelet.lower.z;
