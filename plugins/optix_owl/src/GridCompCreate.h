@@ -326,4 +326,26 @@ void makePKD(std::vector<device::GridCompParticle>& particles, device::GridCompP
     recBuild(
         /*node:*/ 0, particles.data() + treelet.begin - begin, treelet.end - treelet.begin, treelet.bounds, treelet);
 }
+
+std::tuple<std::vector<vec3f>, std::vector<vec3f>, std::vector<vec3f>> compute_diffs(
+    std::vector<device::GridCompPKDlet> const& treelets, std::vector<device::GridCompParticle> const& sparticles,
+    std::vector<device::Particle> const& org_data, size_t gbegin, size_t gend) {
+    std::vector<vec3f> diffs(gend - gbegin);
+    std::vector<vec3f> ops(gend - gbegin);
+    std::vector<vec3f> sps(gend - gbegin);
+    tbb::parallel_for((size_t) 0, treelets.size(), [&](auto const tID) {
+        //for (auto const& treelet : treelets) {
+        auto const& treelet = treelets[tID];
+        for (size_t i = treelet.begin; i < treelet.end; ++i) {
+            vec3d const dpos = vec3d(decode_spart(sparticles[i], treelet));
+            vec3d const org_pos = vec3d(org_data[i].pos);
+            vec3d const diff = dpos - org_pos;
+            diffs[i - gbegin] = vec3f(diff);
+            ops[i - gbegin] = vec3f(org_pos);
+            sps[i - gbegin] = vec3f(dpos);
+        }
+        //}
+    });
+    return std::make_tuple(diffs, ops, sps);
+}
 } // namespace megamol::optix_owl

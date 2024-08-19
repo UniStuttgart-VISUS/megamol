@@ -3,6 +3,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FilePathParam.h"
 
 #include <owl/common/math/box.h>
 #include <owl/common/math/vec.h>
@@ -10,6 +11,8 @@
 #include "PKDCreate.h"
 #include "TreeletsCreate.h"
 #include "GridCompCreate.h"
+
+#include "CompErrorAnalysis.h"
 
 #include "framestate.h"
 #include "raygen.h"
@@ -103,6 +106,17 @@ bool GridCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     std::vector<GridCompParticle> s_particles(particles_.size());
     std::vector<GridCompPKDlet> s_treelets;
 
+    auto diffs = std::make_shared<std::vector<vec3f>>();
+    auto orgpos = std::make_shared<std::vector<vec3f>>();
+    auto spos = std::make_shared<std::vector<vec3f>>();
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        diffs->reserve(particles_.size());
+        if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
+            orgpos->reserve(particles_.size());
+            spos->reserve(particles_.size());
+        }
+    }
+
     for (auto const& c : cells) {
         auto const box = extendBounds(particles_, c.first, c.second, global_radius);
         auto tmp_t = partition_data(particles_, c.first, c.second, box.lower,
@@ -177,12 +191,26 @@ bool GridCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
                 });*/
         //el.bounds = extendBounds(data, el.begin, el.end, particles.GetGlobalRadius());
 
+        if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+            auto const [tmp_d, tmp_op, tmp_s] = compute_diffs(tmp_t, s_particles, particles_, c.first, c.second);
+            diffs->insert(diffs->end(), tmp_d.begin(), tmp_d.end());
+            if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
+                orgpos->insert(orgpos->end(), tmp_op.begin(), tmp_op.end());
+                spos->insert(spos->end(), tmp_s.begin(), tmp_s.end());
+            }
+        }
 
         // make PKD
         tbb::parallel_for(
             (size_t) 0, tmp_t.size(), [&](size_t treeletID) { makePKD(s_particles, tmp_t[treeletID], 0); });
         s_treelets.insert(s_treelets.end(), tmp_t.begin(), tmp_t.end());
         //s_particles.insert(s_particles.end(), tmp_p.begin(), tmp_p.end());
+    }
+
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
+        dump_analysis_data(
+            output_path, orgpos, spos, diffs, global_radius, debug_rdf_slot_.Param<core::param::BoolParam>()->Value());
     }
 
     core::utility::log::Log::DefaultLog.WriteInfo(
@@ -211,14 +239,21 @@ bool GridCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
 
     owlGroupBuildAccel(world_);
 
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        size_t memFinal = 0;
+        size_t memPeak = 0;
+        owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+    }
+
     return true;
 }
 
 bool GridCompRenderer::data_param_is_dirty() {
-    return threshold_slot_.IsDirty();
+    return threshold_slot_.IsDirty() || dump_debug_info_slot_.IsDirty();
 }
 
 void GridCompRenderer::data_param_reset_dirty() {
     threshold_slot_.ResetDirty();
+    dump_debug_info_slot_.ResetDirty();
 }
 } // namespace megamol::optix_owl
