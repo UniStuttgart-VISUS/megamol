@@ -1,8 +1,11 @@
 #include "TreeletsRenderer.h"
 
+#include <fstream>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FilePathParam.h"
 
 #include <owl/common/math/box.h>
 #include <owl/common/math/vec.h>
@@ -128,6 +131,20 @@ bool TreeletsRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     world_ = owlInstanceGroupCreate(ctx_, 1, &ug);
 
     owlGroupBuildAccel(world_);
+
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        size_t memFinal = 0;
+        size_t memPeak = 0;
+        owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+
+        size_t comp_data_size = particles_.size() * sizeof(device::Particle) + treelets.size() * sizeof(device::PKDlet);
+
+        auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
+        auto of = std::ofstream(output_path / "size.csv");
+        of << "BVHFinalSize[B],BVHPeakSize[B],CompDataSize[B]\n";
+        of << memFinal << "," << memPeak << "," << comp_data_size << "\n";
+        of.close();
+    }
 
     return true;
 }

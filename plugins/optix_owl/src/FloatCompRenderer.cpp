@@ -411,6 +411,26 @@ bool FloatCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
         size_t memFinal = 0;
         size_t memPeak = 0;
         owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+
+        size_t dtype_size = 0;
+        switch (selected_type) {
+        case device::FloatCompType::E5M15: {
+            dtype_size = sizeof(device::QTParticle_e5m15);
+        } break;
+        case device::FloatCompType::E5M15D: {
+            dtype_size = sizeof(device::QTParticle_e5m15);
+        } break;
+        default:
+            throw std::runtime_error("unexpected FloatCompType");
+        }
+
+        size_t comp_data_size = particles_.size() * dtype_size + qtreelets.size() * sizeof(device::FloatCompPKDlet);
+
+        auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
+        auto of = std::ofstream(output_path / "size.csv");
+        of << "BVHFinalSize[B],BVHPeakSize[B],CompDataSize[B]\n";
+        of << memFinal << "," << memPeak << "," << comp_data_size << "\n";
+        of.close();
     }
 
     return true;

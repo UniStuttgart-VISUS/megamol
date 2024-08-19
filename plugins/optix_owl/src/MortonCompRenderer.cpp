@@ -194,6 +194,15 @@ bool MortonCompRenderer::assertData(geocalls::MultiParticleDataCall const& call)
         size_t memFinal = 0;
         size_t memPeak = 0;
         owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+
+        size_t comp_data_size = cparticles.size() * sizeof(device::MortonCompParticle) +
+                                ctreelets.size() * sizeof(device::MortonCompPKDlet);
+
+        auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
+        auto of = std::ofstream(output_path / "size.csv");
+        of << "BVHFinalSize[B],BVHPeakSize[B],CompDataSize[B]\n";
+        of << memFinal << "," << memPeak << "," << comp_data_size << "\n";
+        of.close();
     }
 
     return true;
