@@ -1,6 +1,7 @@
 #include "MortonCompRenderer.h"
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
@@ -10,6 +11,8 @@
 #include "MortonCompCreate.h"
 #include "PKDCreate.h"
 #include "TreeletsCreate.h"
+
+#include "CompErrorAnalysis.h"
 
 #include "framestate.h"
 #include "mortoncomp.h"
@@ -123,14 +126,38 @@ bool MortonCompRenderer::assertData(geocalls::MultiParticleDataCall const& call)
 
     std::vector<MortonCompPKDlet> ctreelets(treelets.size());
     std::vector<MortonCompParticle> cparticles(particles_.size());
+    auto diffs = std::make_shared<std::vector<vec3f>>();
+    auto orgpos = std::make_shared<std::vector<vec3f>>();
+    auto spos = std::make_shared<std::vector<vec3f>>();
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        diffs->reserve(particles_.size());
+        if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
+            orgpos->reserve(particles_.size());
+            spos->reserve(particles_.size());
+        }
+    }
     for (size_t i = 0; i < treelets.size(); ++i) {
         auto const [temp_pos, temp_rec, temp_diffs] =
             convert_morton_treelet(treelets[i], particles_, ctreelets[i], cparticles, total_bounds, config);
+        if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+            orgpos->insert(orgpos->end(), temp_pos.begin(), temp_pos.end());
+            if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
+                spos->insert(spos->end(), temp_rec.begin(), temp_rec.end());
+                diffs->insert(diffs->end(), temp_diffs.begin(), temp_diffs.end());
+            }
+        }
     }
 
     for (auto& el : ctreelets) {
         adapt_morton_bbox(cparticles, el, total_bounds, global_radius, config);
         makePKD(cparticles, el, total_bounds, config);
+    }
+
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
+
+        dump_analysis_data(
+            output_path, orgpos, spos, diffs, global_radius, debug_rdf_slot_.Param<core::param::BoolParam>()->Value());
     }
 
     core::utility::log::Log::DefaultLog.WriteInfo(
@@ -143,7 +170,8 @@ bool MortonCompRenderer::assertData(geocalls::MultiParticleDataCall const& call)
 
     if (treeletBuffer_)
         owlBufferDestroy(treeletBuffer_);
-    treeletBuffer_ = owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::MortonCompPKDlet), ctreelets.size(), ctreelets.data());
+    treeletBuffer_ =
+        owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::MortonCompPKDlet), ctreelets.size(), ctreelets.data());
 
     owlGeomSetPrimCount(geom_, ctreelets.size());
 
@@ -161,6 +189,12 @@ bool MortonCompRenderer::assertData(geocalls::MultiParticleDataCall const& call)
     world_ = owlInstanceGroupCreate(ctx_, 1, &ug);
 
     owlGroupBuildAccel(world_);
+
+    if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
+        size_t memFinal = 0;
+        size_t memPeak = 0;
+        owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+    }
 
     return true;
 }
