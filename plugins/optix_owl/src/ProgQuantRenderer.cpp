@@ -184,7 +184,9 @@ bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
         auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
         auto of = std::ofstream(output_path / "size.csv");
         of << "BVHFinalSize[B],BVHPeakSize[B],CompDataSize[B]\n";
-        of << memFinal << "," << memPeak << "," << comp_data_size << "\n";
+        of << memFinal << ",";
+        of << memPeak << ",";
+        of << comp_data_size << std::endl;
         of.close();
     }
 
