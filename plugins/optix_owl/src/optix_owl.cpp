@@ -14,6 +14,7 @@
 #include "FloatCompRenderer.h"
 #include "MortonCompRenderer.h"
 #include "GridCompRenderer.h"
+#include "BVHRenderer.h"
 
 namespace megamol::MegaMolPlugin {
 class PluginInstance : public megamol::core::factories::AbstractPluginInstance {
@@ -40,6 +41,7 @@ public:
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::FloatCompRenderer>();
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::MortonCompRenderer>();
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::GridCompRenderer>();
+        module_descriptions.RegisterAutoDescription<megamol::optix_owl::BVHRenderer>();
 
         //
         // TODO: Register your plugin's modules here:
