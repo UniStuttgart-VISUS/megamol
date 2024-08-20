@@ -43,24 +43,24 @@ inline void dump_analysis_data(std::filesystem::path const& output_path, std::sh
         auto const d_acc = std::accumulate(diffs->begin(), diffs->end(), vec3f(0),
             [](auto const& lhs, auto const& rhs) { return abs(lhs) + abs(rhs); });
         auto const csv_file_path = output_path / "comp_stats.csv";
-        if (std::filesystem::exists(csv_file_path)) {
-            // already exists ... append stats
-            auto f = std::ofstream(csv_file_path, std::ios::app);
-            f << dx_minmax.first->x << "," << dx_minmax.second->x << "," << dy_minmax.first->y << ","
-              << dy_minmax.second->y << "," << dz_minmax.first->z << "," << dz_minmax.second->z << ","
-              << d_acc.x / static_cast<float>(diffs->size()) << "," << d_acc.y / static_cast<float>(diffs->size())
-              << "," << d_acc.z / static_cast<float>(diffs->size()) << "\n";
-            f.close();
-        } else {
-            // create file
-            auto f = std::ofstream(csv_file_path);
-            f << "dx_min,dx_max,dy_min,dy_max,dz_min,dz_max,dx_mean,dy_mean,dz_mean\n";
-            f << dx_minmax.first->x << "," << dx_minmax.second->x << "," << dy_minmax.first->y << ","
-              << dy_minmax.second->y << "," << dz_minmax.first->z << "," << dz_minmax.second->z << ","
-              << d_acc.x / static_cast<float>(diffs->size()) << "," << d_acc.y / static_cast<float>(diffs->size())
-              << "," << d_acc.z / static_cast<float>(diffs->size()) << "\n";
-            f.close();
-        }
+        //if (std::filesystem::exists(csv_file_path)) {
+        //    // already exists ... append stats
+        //    auto f = std::ofstream(csv_file_path, std::ios::app);
+        //    f << dx_minmax.first->x << "," << dx_minmax.second->x << "," << dy_minmax.first->y << ","
+        //      << dy_minmax.second->y << "," << dz_minmax.first->z << "," << dz_minmax.second->z << ","
+        //      << d_acc.x / static_cast<float>(diffs->size()) << "," << d_acc.y / static_cast<float>(diffs->size())
+        //      << "," << d_acc.z / static_cast<float>(diffs->size()) << "\n";
+        //    f.close();
+        //} else {
+        // create file
+        auto f = std::ofstream(csv_file_path);
+        f << "dx_min,dx_max,dy_min,dy_max,dz_min,dz_max,dx_mean,dy_mean,dz_mean\n";
+        f << dx_minmax.first->x << "," << dx_minmax.second->x << "," << dy_minmax.first->y << "," << dy_minmax.second->y
+          << "," << dz_minmax.first->z << "," << dz_minmax.second->z << ","
+          << d_acc.x / static_cast<float>(diffs->size()) << "," << d_acc.y / static_cast<float>(diffs->size()) << ","
+          << d_acc.z / static_cast<float>(diffs->size()) << "\n";
+        f.close();
+        //}
     }
 }
 } // namespace megamol::optix_owl
