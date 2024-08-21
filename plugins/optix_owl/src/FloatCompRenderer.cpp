@@ -410,7 +410,7 @@ bool FloatCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
     if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
         size_t memFinal = 0;
         size_t memPeak = 0;
-        owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+        owlGroupGetAccelSize(ug, &memFinal, &memPeak);
 
         size_t dtype_size = 0;
         switch (selected_type) {

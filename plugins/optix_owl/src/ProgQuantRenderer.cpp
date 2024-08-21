@@ -176,7 +176,7 @@ bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
     if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
         size_t memFinal = 0;
         size_t memPeak = 0;
-        owlGroupGetAccelSize(world_, &memFinal, &memPeak);
+        owlGroupGetAccelSize(ug, &memFinal, &memPeak);
 
         size_t comp_data_size =
             comp_particles_.size() * sizeof(device::ProgQuantParticle) + treelets.size() * sizeof(device::PKDlet);
