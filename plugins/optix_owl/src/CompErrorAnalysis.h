@@ -53,7 +53,7 @@ inline void dump_analysis_data(std::filesystem::path const& output_path, std::sh
         //    f.close();
         //} else {
         // create file
-        auto f = std::ofstream(csv_file_path);
+        auto f = std::ofstream(csv_file_path, std::ios::trunc);
         f << "dx_min,dx_max,dy_min,dy_max,dz_min,dz_max,dx_mean,dy_mean,dz_mean\n";
         f << dx_minmax.first->x << "," << dx_minmax.second->x << "," << dy_minmax.first->y << "," << dy_minmax.second->y
           << "," << dz_minmax.first->z << "," << dz_minmax.second->z << ","
