@@ -5,7 +5,7 @@
 #include <tuple>
 
 #include <cuda.h>
-#include <glowl/FramebufferObject.hpp>
+//#include <glowl/FramebufferObject.hpp>
 
 #include "AbstractRenderer.h"
 #include "CUDA_Context.h"

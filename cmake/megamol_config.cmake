@@ -27,6 +27,12 @@ endif ()
 add_compile_definitions("$<$<CONFIG:DEBUG>:DEBUG>")
 add_compile_definitions("$<$<CONFIG:DEBUG>:_DEBUG>")
 
+# MEMLEAK
+cmake_dependent_option(MEGAMOL_DETECT_MEMLEAK "Enable to use Memleak detection (MSVC only)" OFF "MSVC" OFF)
+if (MEGAMOL_DETECT_MEMLEAK)
+  add_compile_definitions("$<$<CONFIG:DEBUG>:MEGAMOL_DETECT_MEMLEAK>")
+endif()
+
 # Compiler flags
 # Note: special C++ and C-Compiler flags should be set for each language separately as done below.
 # Otherwise, a possible compilation with CUDA will propagate those flags to the CUDA-Compiler and lead to a crash.
@@ -95,8 +101,10 @@ endif ()
 
 # CUDA
 if (MEGAMOL_USE_CUDA)
+  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES native)
+  endif()
   enable_language(CUDA)
-  set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif ()
 
 # MPI

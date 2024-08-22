@@ -7,6 +7,7 @@ namespace megamol {
 namespace optix_hpg {
 namespace device {
 struct PerRayData {
+#if 0
     int depth;
 
     glm::vec3 radiance;
@@ -34,6 +35,14 @@ struct PerRayData {
     float intensity;
 
     OptixTraversableHandle world;
+#else
+    int particleID;
+    float t;
+    glm::vec3 pos;
+    glm::vec3 albedo;
+    bool countDepth;
+    float ray_depth;
+#endif
 };
 } // namespace device
 } // namespace optix_hpg
