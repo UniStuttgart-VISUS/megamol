@@ -6,10 +6,14 @@
 
 #include "mmcore/utility/SampleCameraScenes.h"
 
+#include <random>
+
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/utility/LongestEdgeCameraSamples.h"
 #include "mmcore/utility/OrbitalCameraSamples.h"
 #include "mmcore/view/CameraSerializer.h"
+
+#include <glm/glm.hpp>
 
 
 megamol::core::utility::cam_samples_func megamol::core::utility::GetCamScenesFunctional(
@@ -36,12 +40,15 @@ std::string megamol::core::utility::SampleCameraScenes(std::shared_ptr<megamol::
 
     std::vector<megamol::core::view::Camera> cameras(cam_positions.size());
 
+    auto distr = std::uniform_real_distribution<float>(-1.f, 1.f);
+    auto rng = std::mt19937(64);
+
     std::transform(cam_positions.begin(), cam_positions.end(), cam_directions.begin(), cameras.begin(),
-        [&base_pose, &cam](auto const& pos, auto const& dir) {
+        [&base_pose, &cam, &distr, &rng](auto const& pos, auto const& dir) {
             auto pose = base_pose;
             pose.position = pos;
             pose.direction = dir;
-            pose.up = glm::vec3(0, 1, 0);
+            pose.up = glm::normalize(glm::vec3(distr(rng), distr(rng), distr(rng)));
             pose.right = glm::normalize(glm::cross(pose.up, dir));
             pose.up = glm::normalize(glm::cross(pose.right, dir));
             cam.setPose(pose);
