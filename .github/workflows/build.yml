@@ -113,7 +113,7 @@ jobs:
           CXX: ${{ matrix.job.cxx }}
           VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
   build_windows:
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     needs: vcpkg_cache
     strategy:
       fail-fast: false
@@ -145,7 +145,7 @@ jobs:
       - name: Build
         run: cmake --build $GITHUB_WORKSPACE/build --config ${{ matrix.job.configuration }} --parallel 2
   build_linux:
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     needs: vcpkg_cache
     strategy:
       fail-fast: false
