@@ -1,6 +1,6 @@
 {
   "name": "power-overwhelming",
-  "version-date": "2024-07-01",
+  "version-date": "2024-08-25",
   "description": "Measurement framekwork for GPU power consumption.",
   "homepage": "https://github.com/UniStuttgart-VISUS/power-overwhelming",
   "license": "MIT",
@@ -14,5 +14,10 @@
       "name": "vcpkg-cmake-config",
       "host": true
     }
-  ]
+  ],
+  "features": {
+    "visa": {
+      "description": "Enable visa sensors"
+    }
+  }
 }

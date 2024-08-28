@@ -3,9 +3,8 @@ vcpkg_check_linkage(ONLY_DYNAMIC_LIBRARY)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO UniStuttgart-VISUS/power-overwhelming
-    #REF "v${VERSION}"
-    REF "7143f0b11777de934046ef7bd02c1cbf82fa39b9" # master on 2024-07-01
-    SHA512 cc32febef11edeb98d2192e67bba302ef4f3086f4e23572a28bb19a20ce0bf2123680bf28839433cfb98ffc541663ed8e19fd162c2a6e5fdfad6802cb1cea563
+    REF "f84cec4e67bf8aa3974d069cf86019507535f595" # master on 2024-08-25
+    SHA512 0251e5baef1c7331f18880e3d9598285d8c40f64b4f98ce4b370c0bb09416336af1d664145c40dc05c3d2692ac55b1a166b518d374c027b374052dba8de2a3bc
     HEAD_REF master
     PATCHES
         devendor-fetchcontent-deps.patch
@@ -24,6 +23,11 @@ vcpkg_from_github(
     HEAD_REF master
 )
 
+vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+    FEATURES
+        visa PWROWG_WithVisa
+)
+
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
@@ -31,6 +35,7 @@ vcpkg_cmake_configure(
       -DPWROWG_BuildTests=OFF
       -DPWROWG_CustomTinkerforgeFirmwareMajor=99
       -Dadl_SOURCE_DIR=${ADL_SOURCE_PATH}
+      ${FEATURE_OPTIONS}
 )
 
 vcpkg_cmake_install()
