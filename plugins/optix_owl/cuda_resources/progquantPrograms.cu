@@ -60,7 +60,7 @@ OPTIX_INTERSECT_PROGRAM(progquant_intersect)() {
 
         vec3f tmp_hit_pos;
 
-        float compensation = 0.f;
+        //float compensation = 0.f;
 
         while (1) {
             // while we have anything to traverse ...
@@ -76,10 +76,12 @@ OPTIX_INTERSECT_PROGRAM(progquant_intersect)() {
                     pos = bpart.from(refBox.span(), refBox.lower);
                 }
 
-                compensation = t_compensate(refBox.span()[dim]);
+                //compensation = t_compensate(refBox.span()[dim]);
 
-                const float t_slab_lo = (pos[dim] - self.particleRadius - org[dim]) * rdir[dim] - compensation;
-                const float t_slab_hi = (pos[dim] + self.particleRadius - org[dim]) * rdir[dim] + compensation;
+                /*const float t_slab_lo = (pos[dim] - self.particleRadius - org[dim]) * rdir[dim] - compensation;
+                const float t_slab_hi = (pos[dim] + self.particleRadius - org[dim]) * rdir[dim] + compensation;*/
+                const float t_slab_lo = (pos[dim] - self.particleRadius - org[dim]) * rdir[dim];
+                const float t_slab_hi = (pos[dim] + self.particleRadius - org[dim]) * rdir[dim];
 
                 const float t_slab_nr = fminf(t_slab_lo, t_slab_hi);
                 const float t_slab_fr = fmaxf(t_slab_lo, t_slab_hi);
@@ -102,10 +104,12 @@ OPTIX_INTERSECT_PROGRAM(progquant_intersect)() {
                 // compute near and far side intervals
                 // -------------------------------------------------------
                 const float nearSide_t0 = t0;
-                const float nearSide_t1 = fminf(fminf(t_slab_fr, t1), tmp_hit_t - compensation);
+                //const float nearSide_t1 = fminf(fminf(t_slab_fr, t1), tmp_hit_t - compensation);
+                const float nearSide_t1 = fminf(fminf(t_slab_fr, t1), tmp_hit_t);
 
                 const float farSide_t0 = fmaxf(t0, t_slab_nr);
-                const float farSide_t1 = fminf(t1, tmp_hit_t + compensation);
+                //const float farSide_t1 = fminf(t1, tmp_hit_t + compensation);
+                const float farSide_t1 = fminf(t1, tmp_hit_t);
 
                 // -------------------------------------------------------
                 // logic
@@ -128,11 +132,15 @@ OPTIX_INTERSECT_PROGRAM(progquant_intersect)() {
                     stackPtr->t1 = farSide_t1;
 
                     if (dir_sign[dim]) {
-                        stackPtr->refBox = leftBounds(refBox, pos[dim], self.particleRadius, dim, compensation);
-                        refBox = rightBounds(refBox, pos[dim], self.particleRadius, dim, compensation);
+                        /*stackPtr->refBox = leftBounds(refBox, pos[dim], self.particleRadius, dim, compensation);
+                        refBox = rightBounds(refBox, pos[dim], self.particleRadius, dim, compensation);*/
+                        stackPtr->refBox = leftBounds(refBox, pos[dim], self.particleRadius, dim);
+                        refBox = rightBounds(refBox, pos[dim], self.particleRadius, dim);
                     } else {
-                        stackPtr->refBox = rightBounds(refBox, pos[dim], self.particleRadius, dim, compensation);
-                        refBox = leftBounds(refBox, pos[dim], self.particleRadius, dim, compensation);
+                        /*stackPtr->refBox = rightBounds(refBox, pos[dim], self.particleRadius, dim, compensation);
+                        refBox = leftBounds(refBox, pos[dim], self.particleRadius, dim, compensation);*/
+                        stackPtr->refBox = rightBounds(refBox, pos[dim], self.particleRadius, dim);
+                        refBox = leftBounds(refBox, pos[dim], self.particleRadius, dim);
                     }
 
                     ++stackPtr;
@@ -148,11 +156,15 @@ OPTIX_INTERSECT_PROGRAM(progquant_intersect)() {
                 t0 = need_nearSide ? nearSide_t0 : farSide_t0;
                 t1 = need_nearSide ? nearSide_t1 : farSide_t1;
                 if (dir_sign[dim]) {
-                    refBox = need_nearSide ? rightBounds(refBox, pos[dim], self.particleRadius, dim, compensation)
-                                           : leftBounds(refBox, pos[dim], self.particleRadius, dim, compensation);
+                    /*refBox = need_nearSide ? rightBounds(refBox, pos[dim], self.particleRadius, dim, compensation)
+                                           : leftBounds(refBox, pos[dim], self.particleRadius, dim, compensation);*/
+                    refBox = need_nearSide ? rightBounds(refBox, pos[dim], self.particleRadius, dim)
+                                           : leftBounds(refBox, pos[dim], self.particleRadius, dim);
                 } else {
-                    refBox = need_nearSide ? leftBounds(refBox, pos[dim], self.particleRadius, dim, compensation)
-                                           : rightBounds(refBox, pos[dim], self.particleRadius, dim, compensation);
+                    /*refBox = need_nearSide ? leftBounds(refBox, pos[dim], self.particleRadius, dim, compensation)
+                                           : rightBounds(refBox, pos[dim], self.particleRadius, dim, compensation);*/
+                    refBox = need_nearSide ? leftBounds(refBox, pos[dim], self.particleRadius, dim)
+                                           : rightBounds(refBox, pos[dim], self.particleRadius, dim);
                 }
             }
             // -------------------------------------------------------

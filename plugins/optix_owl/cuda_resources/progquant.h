@@ -58,14 +58,14 @@ CU_CALLABLE inline float t_compensate(float span) {
 CU_CALLABLE inline box3f leftBounds(box3f const& bounds, float split_pos, float radius, int dim) {
     device::box3f lbounds = bounds;
     lbounds.upper[dim] = split_pos;
-    lbounds.upper[dim] += radius + t_compensate(bounds.span()[dim]);
+    lbounds.upper[dim] += radius/* + t_compensate(bounds.span()[dim])*/;
     return lbounds;
 }
 
 CU_CALLABLE inline box3f rightBounds(box3f const& bounds, float split_pos, float radius, int dim) {
     device::box3f rbounds = bounds;
     rbounds.lower[dim] = split_pos;
-    rbounds.lower[dim] -= radius + t_compensate(bounds.span()[dim]);
+    rbounds.lower[dim] -= radius/* + t_compensate(bounds.span()[dim])*/;
     return rbounds;
 }
 
