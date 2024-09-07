@@ -161,6 +161,17 @@
         "power-overwhelming"
       ]
     },
+    "power-visa": {
+      "description": "Use power measurement visa sensors",
+      "dependencies": [
+        {
+          "name": "power-overwhelming",
+          "features": [
+            "visa"
+          ]
+        }
+      ]
+    },
     "profiling": {
       "description": "Use Profiling"
     },

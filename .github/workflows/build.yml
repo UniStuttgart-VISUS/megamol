@@ -37,21 +37,21 @@ jobs:
             generator: 'Visual Studio 17 2022'
             cc: ''
             cxx: ''
-            ignore_features: 'MPI'
+            ignore_features: 'MPI POWER_VISA'
           - name: 'Ubuntu-GCC'
             os: 'ubuntu-24.04'
             container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
             generator: 'Ninja'
             cc: 'gcc-13'
             cxx: 'g++-13'
-            ignore_features: 'CUESDK VR_INTEROP'
+            ignore_features: 'CUESDK POWER_VISA VR_INTEROP'
           - name: 'Ubuntu-Clang'
             os: 'ubuntu-24.04'
             container: 'ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master'
             generator: 'Ninja'
             cc: 'clang-18'
             cxx: 'clang++-18'
-            ignore_features: 'CUESDK VR_INTEROP'
+            ignore_features: 'CUESDK POWER_VISA VR_INTEROP'
     name: "Vcpkg-${{ matrix.job.name }}"
     runs-on: ${{ matrix.job.os }}
     container:
@@ -114,7 +114,7 @@ jobs:
           CXX: ${{ matrix.job.cxx }}
           VCPKG_BINARY_SOURCES: "clear;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
   build_windows:
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     needs: vcpkg_cache
     strategy:
       fail-fast: false
@@ -146,7 +146,7 @@ jobs:
       - name: Build
         run: cmake --build $GITHUB_WORKSPACE/build --config ${{ matrix.job.configuration }} --parallel 2
   build_linux:
-    if: ${{ always() }}
+    if: ${{ !cancelled() }}
     needs: vcpkg_cache
     strategy:
       fail-fast: false
