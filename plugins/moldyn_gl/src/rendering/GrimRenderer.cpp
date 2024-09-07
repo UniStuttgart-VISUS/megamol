@@ -124,6 +124,15 @@ bool GrimRenderer::create() {
 
     ASSERT(IsAvailable());
 
+#ifdef MEGAMOL_USE_PROFILING
+    auto& pm = const_cast<frontend_resources::performance::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::performance::PerformanceManager>());
+    frontend_resources::performance::basic_timer_config render_timer;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::performance::query_api::OPENGL;
+    timing_handles_ = pm.add_timers(this, {render_timer});
+#endif
+
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     // TODO: RequiredExtensions for glowl::GLSLProgram and glowl::fbo_
     if (!ogl_ctx.isExtAvailable("GL_NV_occlusion_query") || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
@@ -247,6 +256,10 @@ void GrimRenderer::set_cam_uniforms(std::shared_ptr<glowl::GLSLProgram> shader, 
 
 
 bool GrimRenderer::Render(megamol::mmstd_gl::CallRender3DGL& call) {
+#ifdef MEGAMOL_USE_PROFILING
+    auto& pm = const_cast<frontend_resources::performance::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::performance::PerformanceManager>());
+#endif
 
     auto cr = &call;
     if (cr == NULL)
@@ -368,6 +381,11 @@ bool GrimRenderer::Render(megamol::mmstd_gl::CallRender3DGL& call) {
             // light.second.lightIntensity;
         }
     }
+
+#ifdef MEGAMOL_USE_PROFILING
+    pm.set_transient_comment(timing_handles_[0], "GrimRenderer");
+    auto& tm = pm.start_timer(timing_handles_[0]);
+#endif
 
     // update fbo_ size, if required ///////////////////////////////////////////
     if ((this->fbo_.GetWidth() != fbo_->getWidth()) || (this->fbo_.GetHeight() != fbo_->getHeight()) ||
@@ -1843,6 +1861,10 @@ bool GrimRenderer::Render(megamol::mmstd_gl::CallRender3DGL& call) {
     glDisable(GL_LIGHTING);
     glPointSize(1.0f);
     glLineWidth(1.0f);
+
+#ifdef MEGAMOL_USE_PROFILING
+    tm.end_region();
+#endif
 
     return true;
 }
