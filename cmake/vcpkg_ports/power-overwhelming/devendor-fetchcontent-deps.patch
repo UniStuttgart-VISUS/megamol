@@ -1,18 +1,15 @@
 diff --git a/power_overwhelming/CMakeLists.txt b/power_overwhelming/CMakeLists.txt
-index 3fc7fb7..33daec6 100644
+index b81db75..564c8a6 100644
 --- a/power_overwhelming/CMakeLists.txt
 +++ b/power_overwhelming/CMakeLists.txt
-@@ -74,8 +74,9 @@ if (WIN32)
+@@ -73,6 +73,7 @@ if (WIN32)
      target_compile_options(${PROJECT_NAME} PRIVATE "-doc")
  endif ()
  
 +find_package(nlohmann_json CONFIG REQUIRED)
  target_link_libraries(${PROJECT_NAME}
--    PRIVATE adl nlohmann_json nvml tinkerforge)
-+    PRIVATE adl nlohmann_json::nlohmann_json nvml tinkerforge)
+     PRIVATE adl nlohmann_json::nlohmann_json nvml tinkerforge)
  
- if (WIN32)
-     target_link_libraries(${PROJECT_NAME} PUBLIC Ws2_32)
 diff --git a/third_party/CMakeLists.txt b/third_party/CMakeLists.txt
 index acbe4cf..5981e04 100644
 --- a/third_party/CMakeLists.txt
