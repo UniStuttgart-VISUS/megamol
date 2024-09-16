@@ -145,10 +145,10 @@ bool MortonCompRenderer::assertData(geocalls::MultiParticleDataCall const& call)
             convert_morton_treelet(treelets[i], particles_, ctreelets[i], cparticles, total_bounds, config);
         if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
             std::lock_guard<std::mutex> guard(debug_data_mtx);
-            orgpos->insert(orgpos->end(), temp_pos.begin(), temp_pos.end());
+            diffs->insert(diffs->end(), temp_diffs.begin(), temp_diffs.end());
             if (debug_rdf_slot_.Param<core::param::BoolParam>()->Value()) {
+                orgpos->insert(orgpos->end(), temp_pos.begin(), temp_pos.end());
                 spos->insert(spos->end(), temp_rec.begin(), temp_rec.end());
-                diffs->insert(diffs->end(), temp_diffs.begin(), temp_diffs.end());
             }
         }
     }
