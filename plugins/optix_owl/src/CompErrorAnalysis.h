@@ -7,16 +7,17 @@
 #include <vector>
 
 #include <owl/common/math/vec.h>
+#include <owl/common/math/box.h>
 
 #include "RDF.h"
 
 namespace megamol::optix_owl {
 using namespace owl::common;
 inline void dump_analysis_data(std::filesystem::path const& output_path, std::shared_ptr<std::vector<vec3f>> op_s,
-    std::shared_ptr<std::vector<vec3f>> sp_s, std::shared_ptr<std::vector<vec3f>> diffs, float radius, bool do_rdf) {
+    std::shared_ptr<std::vector<vec3f>> sp_s, std::shared_ptr<std::vector<vec3f>> diffs, float radius, bool do_rdf, box3f bbox) {
     if (do_rdf) {
         auto rdf = RDF(op_s, sp_s);
-        auto const [org_rdf, new_rdf] = rdf.BuildHistogram(4.0f * radius, 100);
+        auto const [org_rdf, new_rdf] = rdf.BuildHistogram(4.0f * radius, 100, bbox, op_s->size());
 
         {
             auto f = std::ofstream(output_path / ("org_rdf.blobb"), std::ios::binary);

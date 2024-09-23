@@ -161,8 +161,8 @@ bool MortonCompRenderer::assertData(geocalls::MultiParticleDataCall const& call)
     if (dump_debug_info_slot_.Param<core::param::BoolParam>()->Value()) {
         auto const output_path = debug_output_path_slot_.Param<core::param::FilePathParam>()->Value();
 
-        dump_analysis_data(
-            output_path, orgpos, spos, diffs, global_radius, debug_rdf_slot_.Param<core::param::BoolParam>()->Value());
+        dump_analysis_data(output_path, orgpos, spos, diffs, global_radius,
+            debug_rdf_slot_.Param<core::param::BoolParam>()->Value(), total_bounds);
     }
 
     core::utility::log::Log::DefaultLog.WriteInfo(

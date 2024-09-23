@@ -96,7 +96,7 @@ std::vector<float> compute_volumes(float cut_off, unsigned int num_bins) {
     return volumes;
 }
 
-std::tuple<std::vector<float>, std::vector<float>> RDF::BuildHistogram(float cut_off, unsigned int num_bins) {
+std::tuple<std::vector<float>, std::vector<float>> RDF::BuildHistogram(float cut_off, unsigned int num_bins, box3f bbox, uint64_t num_particles) {
 #if 0
     std::vector<float> org_histo(num_bins);
     std::vector<float> new_histo(num_bins);
@@ -151,6 +151,8 @@ std::tuple<std::vector<float>, std::vector<float>> RDF::BuildHistogram(float cut
         [&num_samples](auto const& val) { return static_cast<float>(val) / static_cast<float>(num_samples); });
 #endif
 
+    auto const ideal_dense = num_particles / bbox.volume();
+
     auto const org_histo = compute_histo(cut_off, num_bins, org_data_, org_particleTree_);
     auto const new_histo = compute_histo(cut_off, num_bins, new_data_, new_particleTree_);
 
@@ -161,6 +163,11 @@ std::tuple<std::vector<float>, std::vector<float>> RDF::BuildHistogram(float cut
 
     std::transform(org_histo.begin(), org_histo.end(), volumes.begin(), org_rdf.begin(), std::divides<float>());
     std::transform(new_histo.begin(), new_histo.end(), volumes.begin(), new_rdf.begin(), std::divides<float>());
+
+    std::transform(
+        org_rdf.begin(), org_rdf.end(), org_rdf.begin(), [&ideal_dense](auto const& val) { return val / ideal_dense; });
+    std::transform(
+        new_rdf.begin(), new_rdf.end(), new_rdf.begin(), [&ideal_dense](auto const& val) { return val / ideal_dense; });
 
 #if 0
     auto f = std::ofstream("org_rdf.blobb");

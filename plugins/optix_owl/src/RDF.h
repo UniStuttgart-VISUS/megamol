@@ -7,6 +7,7 @@
 
 #include <nanoflann.hpp>
 
+#include <owl/common/math/box.h>
 #include <owl/common/math/vec.h>
 
 namespace megamol::optix_owl {
@@ -88,7 +89,8 @@ public:
     RDF(std::shared_ptr<std::vector<vec3f>> org_data, std::shared_ptr<std::vector<vec3f>> new_data);
     ~RDF() = default;
 
-    std::tuple<std::vector<float>, std::vector<float>> BuildHistogram(float cut_off, unsigned int num_bins);
+    std::tuple<std::vector<float>, std::vector<float>> BuildHistogram(
+        float cut_off, unsigned int num_bins, box3f bbox, uint64_t num_particles);
 
 private:
     std::shared_ptr<std::vector<vec3f>> org_data_;

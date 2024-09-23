@@ -143,7 +143,7 @@ bool ProgQuantRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
         });
 
         dump_analysis_data(output_path, orgpos, newpos, diffs, global_radius,
-            debug_rdf_slot_.Param<core::param::BoolParam>()->Value());
+            debug_rdf_slot_.Param<core::param::BoolParam>()->Value(), total_bounds);
     }
 
     core::utility::log::Log::DefaultLog.WriteInfo(
