@@ -327,7 +327,7 @@ bool FloatCompRenderer::assertData(geocalls::MultiParticleDataCall const& call) 
             debug_rdf_slot_.Param<core::param::BoolParam>()->Value(), total_bounds);
 
         {
-            if (qt_exp_overflow) {
+            if (using_localtables) {
                 auto f = std::ofstream(output_path / "localtables.txt");
                 f << "localtables\n";
                 f.close();
