@@ -54,38 +54,6 @@ if (optix_owl_PLUGIN_ENABLED)
   )
   embed_ptx(
     OUTPUT_TARGET
-      progquant-ptx
-    PTX_LINK_LIBRARIES
-      owl::owl
-    SOURCES
-      cuda_resources/progquantPrograms.cu
-  )
-  embed_ptx(
-    OUTPUT_TARGET
-      floatcomp-ptx
-    PTX_LINK_LIBRARIES
-      owl::owl
-    SOURCES
-      cuda_resources/floatcompPrograms.cu
-  )
-  embed_ptx(
-    OUTPUT_TARGET
-      mortoncomp-ptx
-    PTX_LINK_LIBRARIES
-      owl::owl
-    SOURCES
-      cuda_resources/mortoncompPrograms.cu
-  )
-  embed_ptx(
-    OUTPUT_TARGET
-      gridcomp-ptx
-    PTX_LINK_LIBRARIES
-      owl::owl
-    SOURCES
-      cuda_resources/gridcompPrograms.cu
-  )
-  embed_ptx(
-    OUTPUT_TARGET
       bvh-ptx
     PTX_LINK_LIBRARIES
       owl::owl
@@ -97,10 +65,6 @@ if (optix_owl_PLUGIN_ENABLED)
     $<TARGET_OBJECTS:raygen-ptx>
     $<TARGET_OBJECTS:pkd-ptx>
     $<TARGET_OBJECTS:treelets-ptx>
-    $<TARGET_OBJECTS:progquant-ptx>
-    $<TARGET_OBJECTS:floatcomp-ptx>
-    $<TARGET_OBJECTS:mortoncomp-ptx>
-    $<TARGET_OBJECTS:gridcomp-ptx>
     $<TARGET_OBJECTS:bvh-ptx>)
   target_include_directories(optix_owl PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/cuda_resources")
 

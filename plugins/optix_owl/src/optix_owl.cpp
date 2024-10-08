@@ -10,10 +10,6 @@
 #include "PKDRenderer.h"
 #include "TreeletsRenderer.h"
 #include "FlatRenderer.h"
-#include "ProgQuantRenderer.h"
-#include "FloatCompRenderer.h"
-#include "MortonCompRenderer.h"
-#include "GridCompRenderer.h"
 #include "BVHRenderer.h"
 
 namespace megamol::MegaMolPlugin {
@@ -37,10 +33,6 @@ public:
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::PKDRenderer>();
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::TreeletsRenderer>();
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::FlatRenderer>();
-        module_descriptions.RegisterAutoDescription<megamol::optix_owl::ProgQuantRenderer>();
-        module_descriptions.RegisterAutoDescription<megamol::optix_owl::FloatCompRenderer>();
-        module_descriptions.RegisterAutoDescription<megamol::optix_owl::MortonCompRenderer>();
-        module_descriptions.RegisterAutoDescription<megamol::optix_owl::GridCompRenderer>();
         module_descriptions.RegisterAutoDescription<megamol::optix_owl::BVHRenderer>();
 
         //
