@@ -13,6 +13,8 @@
 #include "InteractionRenderTarget.h"
 #include "LocalLighting.h"
 #include "NormalFromDepth.h"
+#include "OpenEXRReader.h"
+#include "OpenEXRWriter.h"
 #include "PNGDataSource.h"
 #include "SSAO.h"
 #include "ScreenSpaceEdges.h"
@@ -49,6 +51,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::PNGDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TexInspectModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::ScreenSpaceEdges>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::OpenEXRWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::OpenEXRReader>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::compositing_gl::CallTexture2D>();

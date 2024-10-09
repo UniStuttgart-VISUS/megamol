@@ -29,7 +29,7 @@ megamol::compositing_gl::DepthDarkening::DepthDarkening()
         , intermediateTex_(nullptr)
         , intermediateTex2_(nullptr)
         , outputTex_(nullptr)
-        , outFormatHandler_("OUTFORMAT", {GL_RGBA8_SNORM, GL_RGBA16F, GL_RGBA32F},
+        , outFormatHandler_("OUTFORMAT", {GL_RGBA8, GL_RGBA16F, GL_RGBA32F},
               std::function<bool()>(std::bind(&DepthDarkening::textureFormatUpdate, this))) {
 
     outputTexSlot_.SetCallback(CallTexture2D::ClassName(), CallTexture2D::FunctionName(CallTexture2D::CallGetData),
