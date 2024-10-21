@@ -11,6 +11,7 @@
 #include "DatRawWriter.h"
 #include "DifferenceVolume.h"
 #include "VolumetricDataSource.h"
+#include "NewDatRawReader.h"
 
 namespace megamol::volume {
 class VolumePluginInstance : public megamol::core::factories::AbstractPluginInstance {
@@ -30,6 +31,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::volume::DatRawWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::volume::DifferenceVolume>();
         this->module_descriptions.RegisterAutoDescription<megamol::volume::VolumetricDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::volume::NewDatRawReader>();
 
         // register calls
     }
