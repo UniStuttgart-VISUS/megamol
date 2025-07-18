@@ -11,6 +11,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd/light/DistantLight.h"
 
@@ -30,6 +31,8 @@ megamol::test_gl::rendering::SRTest::SRTest()
         , upload_mode_slot_("upload mode", "")
         , enforce_upload_slot_("enforce upload", "")
         , use_con_ras_slot_("use_con_ras", "")
+        , mesh_warp_size_slot_("mesh_warp_size", "")
+        , cam_aligned_slot_("cam_aligned", "")
 /*
 , clip_thres_slot_("clip distance", "")*/
 {
@@ -50,8 +53,12 @@ megamol::test_gl::rendering::SRTest::SRTest()
         method_strings[static_cast<method_ut>(method_e::SSBO_VERT)].c_str());
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_QUAD),
         method_strings[static_cast<method_ut>(method_e::SSBO_QUAD)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_QUAD_INST),
+        method_strings[static_cast<method_ut>(method_e::SSBO_QUAD_INST)].c_str());
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_STRIP),
         method_strings[static_cast<method_ut>(method_e::SSBO_STRIP)].c_str());
+    ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_STRIP_DRAW),
+        method_strings[static_cast<method_ut>(method_e::SSBO_STRIP_DRAW)].c_str());
     ep->SetTypePair(static_cast<method_ut>(method_e::SSBO_MUZIC),
         method_strings[static_cast<method_ut>(method_e::SSBO_MUZIC)].c_str());
     ep->SetTypePair(
@@ -78,6 +85,12 @@ megamol::test_gl::rendering::SRTest::SRTest()
     use_con_ras_slot_ << new core::param::BoolParam(false);
     MakeSlotAvailable(&use_con_ras_slot_);
 
+    mesh_warp_size_slot_ << new core::param::IntParam(32, 1, 32);
+    MakeSlotAvailable(&mesh_warp_size_slot_);
+
+    cam_aligned_slot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&cam_aligned_slot_);
+
     /*clip_thres_slot_ << new core::param::FloatParam(0.00001f, 0.0f);
     MakeSlotAvailable(&clip_thres_slot_);*/
 }
@@ -100,6 +113,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
 
         auto shdr_ssbo_vert_options = base_options;
         shdr_ssbo_vert_options.addDefinition("__SRTEST_SSBO__");
+        if (cam_aligned_slot_.Param<core::param::BoolParam>()->Value()) {
+            shdr_ssbo_vert_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        }
         shdr_ssbo_vert_options.addDefinition("BASE_IDX", VERT_BASE_IDX);
         shdr_ssbo_vert_options.addDefinition("INV_IDX", VERT_INV_IDX);
         shdr_ssbo_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);
@@ -107,18 +123,38 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
         auto shdr_ssbo_quads_options = base_options;
         shdr_ssbo_quads_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_quads_options.addDefinition("__SRTEST_QUAD__");
-#ifdef __SRTEST_CAM_ALIGNED__
-        shdr_ssbo_quads_options.addDefinition("__SRTEST_CAM_ALIGNED__");
-#endif
+        core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SRTest] Cam aligned {}", cam_aligned_slot_.Param<core::param::BoolParam>()->Value());
+        if (cam_aligned_slot_.Param<core::param::BoolParam>()->Value()) {
+            shdr_ssbo_quads_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        }
         shdr_ssbo_quads_options.addDefinition("BASE_IDX", QUADS_BASE_IDX);
         shdr_ssbo_quads_options.addDefinition("INV_IDX", QUADS_INV_IDX);
         shdr_ssbo_quads_options.addDefinition("BUMP_IDX", QUADS_BUMP_IDX);
+
+        auto shdr_ssbo_quads_inst_options = base_options;
+        shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_QUAD__");
+        core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SRTest] Cam aligned {}", cam_aligned_slot_.Param<core::param::BoolParam>()->Value());
+        if (cam_aligned_slot_.Param<core::param::BoolParam>()->Value()) {
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        }
+        shdr_ssbo_quads_inst_options.addDefinition("BASE_IDX", QUADS_INST_BASE_IDX);
+        shdr_ssbo_quads_inst_options.addDefinition("INV_IDX", QUADS_INST_INV_IDX);
+        shdr_ssbo_quads_inst_options.addDefinition("BUMP_IDX", QUADS_INST_BUMP_IDX);
 
         auto shdr_ssbo_strip_options = base_options;
         shdr_ssbo_strip_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_strip_options.addDefinition("BASE_IDX", STRIP_BASE_IDX);
         shdr_ssbo_strip_options.addDefinition("INV_IDX", STRIP_INV_IDX);
         shdr_ssbo_strip_options.addDefinition("BUMP_IDX", STRIP_BUMP_IDX);
+
+        auto shdr_ssbo_strip_draw_options = base_options;
+        shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_SSBO__");
+        shdr_ssbo_strip_draw_options.addDefinition("BASE_IDX", STRIP_DRAW_BASE_IDX);
+        shdr_ssbo_strip_draw_options.addDefinition("INV_IDX", STRIP_DRAW_INV_IDX);
+        shdr_ssbo_strip_draw_options.addDefinition("BUMP_IDX", STRIP_DRAW_BUMP_IDX);
 
         auto shdr_ssbo_muzic_options = base_options;
         shdr_ssbo_muzic_options.addDefinition("__SRTEST_SSBO__");
@@ -127,17 +163,21 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
         shdr_ssbo_muzic_options.addDefinition("INV_IDX", MUZIC_INV_IDX);
         shdr_ssbo_muzic_options.addDefinition("BUMP_IDX", MUZIC_BUMP_IDX);
 
+        core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SRTest] Warp size is %d", mesh_warp_size_slot_.Param<core::param::IntParam>()->Value());
         auto shdr_mesh_options = base_options;
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
-        shdr_mesh_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
+        shdr_mesh_options.addDefinition(
+            "WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
 
         auto shdr_mesh_geo_options = base_options;
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
-#ifdef __SRTEST_CAM_ALIGNED__
-        shdr_mesh_geo_options.addDefinition("__SRTEST_CAM_ALIGNED__");
-#endif
+        if (cam_aligned_slot_.Param<core::param::BoolParam>()->Value()) {
+            shdr_mesh_geo_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        }
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
-        shdr_mesh_geo_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
+        shdr_mesh_geo_options.addDefinition(
+            "WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
 
         auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
 
@@ -146,7 +186,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
@@ -155,7 +197,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
@@ -164,7 +208,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
@@ -173,7 +219,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
@@ -183,7 +231,9 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_ssbo_quads_inst_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_ssbo_strip_draw_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
@@ -199,8 +249,12 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             std::make_pair(method_e::SSBO_VERT, std::make_shared<ssbo_vert_rt>(mode, shdr_ssbo_vert_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_QUAD, std::make_shared<ssbo_quad_rt>(mode, shdr_ssbo_quads_options)));
+        rendering_tasks_.insert(std::make_pair(
+            method_e::SSBO_QUAD_INST, std::make_shared<ssbo_quad_inst_rt>(mode, shdr_ssbo_quads_inst_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_STRIP, std::make_shared<ssbo_strip_rt>(mode, shdr_ssbo_strip_options)));
+        rendering_tasks_.insert(std::make_pair(
+            method_e::SSBO_STRIP_DRAW, std::make_shared<ssbo_strip_draw_rt>(mode, shdr_ssbo_strip_draw_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_MUZIC, std::make_shared<ssbo_muzic_rt>(mode, shdr_ssbo_muzic_options)));
 
@@ -231,15 +285,15 @@ bool megamol::test_gl::rendering::SRTest::updateUploadSetting() {
 
 bool megamol::test_gl::rendering::SRTest::create() {
 #ifdef MEGAMOL_USE_PROFILING
-    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
-        frontend_resources.get<frontend_resources::PerformanceManager>());
-    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer, compute_timer;
+    auto& pm = const_cast<frontend_resources::performance::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::performance::PerformanceManager>());
+    frontend_resources::performance::basic_timer_config upload_timer, render_timer, compute_timer;
     upload_timer.name = "upload";
-    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    upload_timer.api = frontend_resources::performance::query_api::OPENGL;
     render_timer.name = "render";
-    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.api = frontend_resources::performance::query_api::OPENGL;
     compute_timer.name = "compute";
-    compute_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    compute_timer.api = frontend_resources::performance::query_api::OPENGL;
     timing_handles_ = pm.add_timers(this, {upload_timer, render_timer, compute_timer});
 #endif
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -318,8 +372,8 @@ void blit_fbo(std::shared_ptr<glowl::FramebufferObject>& org, std::shared_ptr<gl
 
 bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3DGL& cr) {
 #ifdef MEGAMOL_USE_PROFILING
-    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
-        frontend_resources.get<frontend_resources::PerformanceManager>());
+    auto& pm = const_cast<frontend_resources::performance::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::performance::PerformanceManager>());
 #endif
 
 #ifdef USE_NVPERF
@@ -401,6 +455,12 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
         upload_mode_slot_.ResetDirty();
         method_slot_.ResetDirty();
     }
+    if (mesh_warp_size_slot_.IsDirty() || cam_aligned_slot_.IsDirty()) {
+        updateUploadSetting();
+        new_data = true;
+        mesh_warp_size_slot_.ResetDirty();
+        cam_aligned_slot_.ResetDirty();
+    }
     auto method = static_cast<method_e>(method_slot_.Param<core::param::EnumParam>()->Value());
     auto& rt = rendering_tasks_[method];
 
@@ -452,19 +512,21 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
         pm.set_transient_comment(
             timing_handles_[0], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
-        pm.start_timer(timing_handles_[0]);
+        {
+            auto& tm = pm.start_timer(timing_handles_[0]);
 #endif
-        //#ifdef USE_NVPERF
-        //        nvperf.PushRange("Upload");
-        //#endif
+            //#ifdef USE_NVPERF
+            //        nvperf.PushRange("Upload");
+            //#endif
 
-        rt->upload(data_);
+            rt->upload(data_);
 
 //#ifdef USE_NVPERF
 //        nvperf.PopRange();
 //#endif
 #ifdef MEGAMOL_USE_PROFILING
-        pm.stop_timer(timing_handles_[0]);
+            tm.end_region();
+        }
 #endif
 
         new_data = false;
@@ -480,25 +542,47 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
     }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
-    pm.set_transient_comment(timing_handles_[1], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
-                                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
-    pm.start_timer(timing_handles_[1]);
+
+    {
+        GLuint qid = 0, fid = 0;
+        glCreateQueries(GL_SAMPLES_PASSED, 1, &qid);
+        glCreateQueries(GL_FRAGMENT_SHADER_INVOCATIONS, 1, &fid);
+        glBeginQuery(GL_SAMPLES_PASSED, qid);
+        glBeginQuery(GL_FRAGMENT_SHADER_INVOCATIONS, fid);
+        auto& tm = pm.start_timer(timing_handles_[1]);
 #endif
 
 #ifdef USE_NVPERF
-    nvperf.PushRange((method_strings[static_cast<method_ut>(method)] + std::string(" ") +
-                      upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())])
-                         .c_str());
+        nvperf.PushRange((method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                          upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())])
+                             .c_str());
 #endif
 
-    rt->render(ubo_);
+        rt->render(ubo_, mesh_warp_size_slot_.Param<core::param::IntParam>()->Value());
 
 #ifdef USE_NVPERF
-    nvperf.PopRange();
+        nvperf.PopRange();
 #endif
 
 #ifdef MEGAMOL_USE_PROFILING
-    pm.stop_timer(timing_handles_[1]);
+        tm.end_region();
+        glEndQuery(GL_SAMPLES_PASSED);
+        glEndQuery(GL_FRAGMENT_SHADER_INVOCATIONS);
+        GLuint samples_passed = 0, frag_invoc = 0;
+        glGetQueryObjectuiv(qid, GL_QUERY_RESULT, &samples_passed);
+        //core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Num passed samples: %d", samples_passed);
+        glGetQueryObjectuiv(fid, GL_QUERY_RESULT, &frag_invoc);
+        //core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Fragment shader invocations: %d", frag_invoc);
+        glDeleteQueries(1, &qid);
+        glDeleteQueries(1, &fid);
+
+        pm.set_transient_comment(timing_handles_[1],
+            method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())] + std::string(" ") +
+                std::to_string(samples_passed) + std::string(" ") + std::to_string(frag_invoc) + std::string(" ") +
+                std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()) + std::string(" ") +
+                std::to_string(cam_aligned_slot_.Param<core::param::BoolParam>()->Value()));
+    }
 #endif
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -721,7 +805,7 @@ megamol::test_gl::rendering::vao_rt::vao_rt(msf::ShaderFactoryOptionsOpenGL cons
               std::filesystem::path("test_gl/srtest/srtest.frag.glsl")) {}
 
 
-bool megamol::test_gl::rendering::vao_rt::render(GLuint ubo) {
+bool megamol::test_gl::rendering::vao_rt::render(GLuint ubo, GLuint val) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();
@@ -774,7 +858,7 @@ bool megamol::test_gl::rendering::vao_rt::upload(data_package_t const& package) 
             package.positions[i].data(), 0);
         glEnableVertexArrayAttrib(vaos_[i], 0);
         glVertexArrayAttribFormat(vaos_[i], 0, 4, GL_FLOAT, GL_FALSE, 0);
-        glVertexArrayVertexBuffer(vaos_[i], 0, vbos_[0], 0, 4 * sizeof(float));
+        glVertexArrayVertexBuffer(vaos_[i], 0, vbos_[i], 0, 4 * sizeof(float));
         glVertexArrayAttribBinding(vaos_[i], 0, 0);
 
         glNamedBufferStorage(cbos_[i],
@@ -782,7 +866,7 @@ bool megamol::test_gl::rendering::vao_rt::upload(data_package_t const& package) 
             package.colors[i].data(), 0);
         glEnableVertexArrayAttrib(vaos_[i], 1);
         glVertexArrayAttribFormat(vaos_[i], 1, 4, GL_FLOAT, GL_FALSE, 0);
-        glVertexArrayVertexBuffer(vaos_[i], 1, cbos_[0], 0, 4 * sizeof(float));
+        glVertexArrayVertexBuffer(vaos_[i], 1, cbos_[i], 0, 4 * sizeof(float));
         glVertexArrayAttribBinding(vaos_[i], 1, 1);
     }
 
@@ -847,9 +931,23 @@ megamol::test_gl::rendering::ssbo_quad_rt::ssbo_quad_rt(
               std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
 
+megamol::test_gl::rendering::ssbo_quad_inst_rt::ssbo_quad_inst_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_quads_inst, "SRTestSSBOQuadInst", options,
+              std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
+
+
 megamol::test_gl::rendering::ssbo_strip_rt::ssbo_strip_rt(
     upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
         : ssbo_shader_task(mode, dc_strip, "SRTestSSBOStrip", options,
+              std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
+              std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
+
+
+megamol::test_gl::rendering::ssbo_strip_draw_rt::ssbo_strip_draw_rt(
+    upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options)
+        : ssbo_shader_task(mode, dc_strip_draw, "SRTestSSBOStripDraw", options,
               std::filesystem::path("test_gl/srtest/srtest_vert.vert.glsl"),
               std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
@@ -861,7 +959,7 @@ megamol::test_gl::rendering::ssbo_muzic_rt::ssbo_muzic_rt(
               std::filesystem::path("test_gl/srtest/srtest_vert.frag.glsl")) {}
 
 
-bool megamol::test_gl::rendering::ssbo_muzic_rt::render(GLuint ubo) {
+bool megamol::test_gl::rendering::ssbo_muzic_rt::render(GLuint ubo, GLuint val) {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     auto program = get_program();

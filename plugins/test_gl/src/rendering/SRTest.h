@@ -35,7 +35,7 @@ public:
 
     virtual ~vao_rt() = default;
 
-    bool render(GLuint ubo) override;
+    bool render(GLuint ubo, GLuint val = 0) override;
 
     bool upload(data_package_t const& package) override;
 
@@ -59,24 +59,42 @@ private:
 #define QUADS_INV_IDX "gl_VertexID % 4"
 #define QUADS_BUMP_IDX "0"
 
+#define QUADS_INST_BASE_IDX "gl_InstanceID"
+#define QUADS_INST_INV_IDX "gl_VertexID"
+#define QUADS_INST_BUMP_IDX "0"
+
 #define STRIP_BASE_IDX "gl_InstanceID"
 #define STRIP_INV_IDX "gl_VertexID" //"gl_VertexID + 1"
 #define STRIP_BUMP_IDX "0"          //"-1"
+
+#define STRIP_DRAW_BASE_IDX "gl_VertexID / 4"
+#define STRIP_DRAW_INV_IDX "gl_VertexID % 4"
+#define STRIP_DRAW_BUMP_IDX "0"
 
 #define MUZIC_BASE_IDX "gl_VertexID / 4"
 #define MUZIC_INV_IDX "gl_VertexID % 4" //"gl_VertexID % 4 + 1"
 #define MUZIC_BUMP_IDX "0"              //"-1"
 
-static draw_cmd_t dc_points = [](unsigned int num_points) { glDrawArrays(GL_POINTS, 0, num_points); };
-static draw_cmd_t dc_verts = [](unsigned int num_points) { glDrawArrays(GL_TRIANGLES, 0, num_points * 6); };
-static draw_cmd_t dc_quads = [](unsigned int num_points) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
-static draw_cmd_t dc_strip = [](unsigned int num_points) {
+static draw_cmd_t dc_points = [](unsigned int num_points, unsigned int) { glDrawArrays(GL_POINTS, 0, num_points); };
+static draw_cmd_t dc_verts = [](unsigned int num_points, unsigned int) {
+    glDrawArrays(GL_TRIANGLES, 0, num_points * 6);
+};
+static draw_cmd_t dc_quads = [](unsigned int num_points, unsigned int) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
+static draw_cmd_t dc_quads_inst = [](unsigned int num_points, unsigned int) {
+    glDrawArraysInstanced(GL_QUADS, 0, 4, num_points);
+};
+static draw_cmd_t dc_strip = [](unsigned int num_points, unsigned int) {
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, num_points);
+};
+static draw_cmd_t dc_strip_draw = [](unsigned int num_points, unsigned int) {
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, num_points * 4);
 };
 static auto dc_muzic = [](unsigned int num_points, std::vector<uint32_t> const& indices) -> void {
     glDrawElements(GL_TRIANGLE_STRIP, num_points * 6 - 2, GL_UNSIGNED_INT, indices.data());
 };
-static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / MESH_WARP_SIZE + 1); };
+static draw_cmd_t dc_mesh = [](unsigned int num_points, unsigned int msize) {
+    glDrawMeshTasksNV(0, num_points / msize + 1);
+};
 
 class ssbo_rt : public ssbo_shader_task {
 public:
@@ -106,11 +124,25 @@ public:
     virtual ~ssbo_quad_rt() = default;
 };
 
+class ssbo_quad_inst_rt : public ssbo_shader_task {
+public:
+    ssbo_quad_inst_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~ssbo_quad_inst_rt() = default;
+};
+
 class ssbo_strip_rt : public ssbo_shader_task {
 public:
     ssbo_strip_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
 
     virtual ~ssbo_strip_rt() = default;
+};
+
+class ssbo_strip_draw_rt : public ssbo_shader_task {
+public:
+    ssbo_strip_draw_rt(upload_mode const& mode, msf::ShaderFactoryOptionsOpenGL const& options);
+
+    virtual ~ssbo_strip_draw_rt() = default;
 };
 
 class ssbo_muzic_rt : public ssbo_shader_task {
@@ -119,7 +151,7 @@ public:
 
     virtual ~ssbo_muzic_rt() = default;
 
-    bool render(GLuint ubo) override;
+    bool render(GLuint ubo, GLuint val = 0) override;
 
     bool upload(data_package_t const& package) override;
 
@@ -156,7 +188,7 @@ public:
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         /*std::vector<std::string> resources = */ ModuleGL::requested_lifetime_resources(req);
 #ifdef MEGAMOL_USE_PROFILING
-        req.require<frontend_resources::PerformanceManager>();
+        req.require<frontend_resources::performance::PerformanceManager>();
 #endif
         //resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
         //return resources;
@@ -205,7 +237,9 @@ private:
         SSBO_GEO,
         SSBO_VERT,
         SSBO_QUAD,
+        SSBO_QUAD_INST,
         SSBO_STRIP,
+        SSBO_STRIP_DRAW,
         SSBO_MUZIC,
         MESH,
         MESH_GEO,
@@ -217,8 +251,9 @@ private:
     /*std::array<std::string, 10> method_strings = {"VAO", "SSBO", "SSBO_GEO", "SSBO_VERT", "SSBO_QUAD", "SSBO_STRIP",
         "SSBO_MUZIC", "MESH", "MESH_GEO", "MESH_GEO_TASK"};*/
 
-    std::array<std::string, 10> method_strings = {"VAO", "Point_Classic", "Geometry_Shader", "Triangles_Classic",
-        "Quads", "Triangle_Strip", "SSBO_MUZIC", "Point_Mesh_Shader", "Triangles_Mesh_Shader", "MESH_GEO_TASK"};
+    std::array<std::string, 12> method_strings = {"VAO", "Point_Classic", "Geometry_Shader", "Triangles_Classic",
+        "Quads", "Quads_Inst", "Triangle_Strip", "Triangle_Strip_Draw", "SSBO_MUZIC", "Point_Mesh_Shader",
+        "Triangles_Mesh_Shader", "MESH_GEO_TASK"};
 
     bool Render(mmstd_gl::CallRender3DGL& call) override;
 
@@ -242,6 +277,10 @@ private:
 
     core::param::ParamSlot use_con_ras_slot_;
 
+    core::param::ParamSlot mesh_warp_size_slot_;
+
+    core::param::ParamSlot cam_aligned_slot_;
+
     // core::param::ParamSlot clip_thres_slot_;
 
     std::unordered_map<method_e, std::shared_ptr<rendering_task>> rendering_tasks_;
@@ -263,7 +302,7 @@ private:
     bool mesh_shader_avail_ = false;
 
 #ifdef MEGAMOL_USE_PROFILING
-    frontend_resources::PerformanceManager::handle_vector timing_handles_;
+    frontend_resources::performance::handle_vector timing_handles_;
 #endif
 
 #ifdef USE_NVPERF

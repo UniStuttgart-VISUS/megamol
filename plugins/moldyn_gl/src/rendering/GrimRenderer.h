@@ -37,6 +37,8 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 
+#include "PerformanceManager.h"
+
 
 namespace megamol::moldyn_gl::rendering {
 
@@ -46,6 +48,13 @@ namespace megamol::moldyn_gl::rendering {
  */
 class GrimRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        ModuleGL::requested_lifetime_resources(req);
+#ifdef MEGAMOL_USE_PROFILING
+        req.require<frontend_resources::performance::PerformanceManager>();
+#endif
+    }
+
     /**
      * Answer the name of this module.
      *
@@ -285,6 +294,10 @@ private:
 
     /** The hash of the incoming data */
     SIZE_T inhash_;
+
+#ifdef MEGAMOL_USE_PROFILING
+    frontend_resources::performance::handle_vector timing_handles_;
+#endif
 };
 
 } // namespace megamol::moldyn_gl::rendering

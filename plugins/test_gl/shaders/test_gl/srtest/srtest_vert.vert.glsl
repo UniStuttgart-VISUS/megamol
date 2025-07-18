@@ -55,7 +55,11 @@ void main() {
 #endif
     //touchplane(objPos, rad, oc_pos, v);
 #else
+#ifdef __SRTEST_CAM_ALIGNED__
+    touchplane_v2(objPos, rad, oc_pos, v);
+#else
     touchplane_old_v2(objPos, rad, oc_pos, v);
+#endif
 #endif
 
     vec4 pos = v[inv_idx + bump_idx];
