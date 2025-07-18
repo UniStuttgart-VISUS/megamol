@@ -126,10 +126,6 @@ target_include_directories(abstract_frontend_service INTERFACE
 )
 target_link_libraries(abstract_frontend_service INTERFACE frontend_resources)
 
-# sol2
-target_link_libraries(${PROJECT_NAME} INTERFACE sol2)
-target_compile_definitions(${PROJECT_NAME} PUBLIC SOL_ALL_SAFETIES_ON=1)
-
 if (MEGAMOL_USE_CUDA)
   find_package(CUDAToolkit)
   target_compile_definitions(${PROJECT_NAME} PUBLIC MM_CUDA_ENABLED)
@@ -147,11 +143,15 @@ if (MEGAMOL_USE_OPENGL)
 endif ()
 
 if (MEGAMOL_USE_POWER)
-  find_package(Parquet CONFIG REQUIRED)
-  target_link_libraries(${PROJECT_NAME} PRIVATE "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>")
   find_package(power_overwhelming CONFIG REQUIRED)
   find_package(dataverse CONFIG REQUIRED)
-  target_link_libraries(${PROJECT_NAME} PUBLIC power_overwhelming::power_overwhelming dataverse::dataverse)
+  find_package(Parquet CONFIG REQUIRED)
+  target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+      power_overwhelming::power_overwhelming
+      dataverse::dataverse
+    PRIVATE
+      "$<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>")
   if (WIN32)
     find_package(wil REQUIRED)
     target_link_libraries(${PROJECT_NAME} PUBLIC WIL::WIL)
@@ -189,7 +189,11 @@ target_link_libraries(${PROJECT_NAME}
     imguizmoquat::imguizmoquat
     implot::implot
     libzmq
-    cppzmq)
+    cppzmq
+    sol2)
+target_compile_definitions(${PROJECT_NAME}
+  PUBLIC
+    SOL_ALL_SAFETIES_ON=1)
 
 # Install gui resources
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")
