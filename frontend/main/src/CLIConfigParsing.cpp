@@ -113,6 +113,7 @@ static std::string opengl_context_option = "opengl";
 static std::string khrdebug_option = "khrdebug";
 static std::string disable_opengl_option = "nogl";
 static std::string vsync_option = "vsync";
+static std::string flushfinish_option = "flushfinish";
 static std::string window_option = "w,window";
 static std::string fullscreen_option = "f,fullscreen";
 static std::string force_window_size_option = "force-window-size";
@@ -130,6 +131,10 @@ static std::string profile_log_option = "profiling-log";
 static std::string flush_frequency_option = "flush-frequency";
 static std::string profile_log_no_autostart_option = "pause-profiling";
 static std::string profile_log_include_events_option = "profiling-include-events";
+static std::string power_lpt_option = "power-lpt";
+static std::string power_write_file_option = "power-write-file";
+static std::string power_folder_option = "power-folder";
+static std::string power_tinker_map_filename_option = "power-tinker-map-filename";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -203,6 +208,26 @@ static void profile_log_autostart_handler(
 static void profile_log_include_events_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.include_graph_events = parsed_options[option_name].as<bool>();
+}
+
+static void power_lpt_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.power_lpt = parsed_options[option_name].as<std::string>();
+}
+
+static void power_write_file_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.power_write_file = parsed_options[option_name].as<bool>();
+}
+
+static void power_folder_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.power_folder = parsed_options[option_name].as<std::string>();
+}
+
+static void power_tinker_map_filename_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.tinker_map_filename = parsed_options[option_name].as<std::string>();
 }
 
 static void remote_head_handler(
@@ -398,6 +423,11 @@ static void vsync_handler(
     config.opengl_vsync = parsed_options[option_name].as<bool>();
 };
 
+static void flushfinish_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.opengl_flush_finish = parsed_options[option_name].as<bool>();
+};
+
 static void no_opengl_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     // User cannot overwrite default value when there is no openGL present
@@ -557,6 +587,8 @@ std::vector<OptionsListEntry> cli_options_list =
             cxxopts::value<std::string>(), opengl_context_handler},
         {khrdebug_option, "Enable OpenGL KHR debug messages", cxxopts::value<bool>(), khrdebug_handler},
         {vsync_option, "Enable VSync in OpenGL window", cxxopts::value<bool>(), vsync_handler},
+        {flushfinish_option, "Use glFlush and glFinish before buffer swap", cxxopts::value<bool>(),
+            flushfinish_handler},
         {disable_opengl_option, "Disable OpenGL. Always TRUE if not built with OpenGL", cxxopts::value<bool>(),
             no_opengl_handler},
         {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",
@@ -592,6 +624,16 @@ std::vector<OptionsListEntry> cli_options_list =
         {profile_log_include_events_option, "Include graph events in the profiling log", cxxopts::value<bool>(),
             profile_log_include_events_handler}
 
+#endif
+#ifdef MEGAMOL_USE_POWER
+        ,
+        {power_lpt_option, "Set LPT port for trigger out", cxxopts::value<std::string>(), power_lpt_handler},
+        {power_write_file_option, "Set on if power service should write files to disk", cxxopts::value<bool>(),
+            power_write_file_handler},
+        {power_folder_option, "Set output folder for power service", cxxopts::value<std::string>(),
+            power_folder_handler},
+        {power_tinker_map_filename_option, "Set output folder for power service", cxxopts::value<std::string>(),
+            power_tinker_map_filename_handler}
 #endif
         ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",

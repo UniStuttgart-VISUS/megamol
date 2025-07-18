@@ -27,6 +27,11 @@ struct WindowManipulation {
     void set_fullscreen(const Fullscreen action) const GL_VSTUB();
 
     void* window_ptr = nullptr;
+    bool enable_gl_flush_finish = false;
+
+#ifdef MEGAMOL_USE_POWER
+    void const* power_callbacks = nullptr;
+#endif
 };
 
 } // namespace megamol::frontend_resources

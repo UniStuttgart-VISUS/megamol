@@ -21,8 +21,8 @@ if (molecularmaps_PLUGIN_ENABLED)
     message(FATAL_ERROR "Molecularmaps currently only supports CUDA Version 11 or above. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Molecularmaps plugin or install a correct version of CUDA." )
   endif()
 
-  set(CMAKE_CUDA_ARCHITECTURES 52)
-  set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
+  set_target_properties(molecularmaps PROPERTIES CUDA_ARCHITECTURES 52)
+  target_compile_options(molecularmaps PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:RELEASE>>:-O3>)
 
   file(GLOB_RECURSE cuda_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cu")
   file(GLOB_RECURSE cuda_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cuh")
