@@ -13,6 +13,8 @@
 // ImageData struct and interfaces for screenshot sources/writers
 #include "Screenshots.h"
 
+#include "RuntimeInfo.h"
+
 namespace megamol::frontend {
 
 class Screenshot_Service final : public AbstractFrontendService {
@@ -68,6 +70,8 @@ private:
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
+
+    megamol::frontend_resources::RuntimeInfo const* ri_;
 };
 
 } // namespace megamol::frontend

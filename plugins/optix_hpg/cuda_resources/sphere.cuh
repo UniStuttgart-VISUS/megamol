@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sphere.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtx/component_wise.hpp>
 
@@ -94,8 +96,9 @@ namespace optix_hpg {
             PerRayData& prd = getPerRayData<PerRayData>();
             /*prd.primID = primID;
             prd.t = optixGetRayTmax();*/
-
             const auto& self = getProgramData<SphereGeoData>();
+
+#if 0
 
             Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
@@ -113,6 +116,18 @@ namespace optix_hpg {
 
             set_depth(prd, ray.tmax);
             lighting(prd, geo_col, P, ffN);
+#else
+            prd.particleID = primID;
+            const Particle& particle = self.particleBufferPtr[primID];
+            prd.pos = glm::vec3(particle.pos);
+            glm::vec3 geo_col = glm::vec3(self.globalColor);
+            if (self.hasColorData) {
+                geo_col = glm::vec3(self.colorBufferPtr[primID]);
+            }
+            prd.albedo = geo_col;
+            prd.t = optixGetRayTmax();
+            set_depth(prd, optixGetRayTmax());
+#endif
         }
 
         inline __device__ void kernel_bounds(const void* geomData, box3f& primBounds, const unsigned int primID) {

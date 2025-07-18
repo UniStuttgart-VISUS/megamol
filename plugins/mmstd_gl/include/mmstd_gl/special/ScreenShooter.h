@@ -10,6 +10,7 @@
 
 #include <glowl/FramebufferObject.hpp>
 
+#include "RuntimeInfo.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/job/AbstractJob.h"
@@ -26,6 +27,7 @@ public:
     static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Module::requested_lifetime_resources(req);
         req.require<core::MegaMolGraph>();
+        req.require<frontend_resources::RuntimeInfo>();
     }
 
     /**
@@ -166,6 +168,8 @@ private:
     bool running;
 
     std::shared_ptr<glowl::FramebufferObject> currentFbo;
+
+    frontend_resources::RuntimeInfo const* ri_ = nullptr;
 };
 
 } // namespace megamol::mmstd_gl::special

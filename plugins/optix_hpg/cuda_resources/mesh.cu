@@ -50,6 +50,7 @@ namespace optix_hpg {
             PerRayData& prd = getPerRayData<PerRayData>();
 
             const auto& self = getProgramData<MeshGeoData>();
+            #if 0
 
             const Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
@@ -78,6 +79,7 @@ namespace optix_hpg {
 
             set_depth(prd, ray.tmax);
             lighting(prd, geo_col, P, ffN);
+            #endif
         }
 
         MM_OPTIX_CLOSESTHIT_KERNEL(mesh_closesthit_occlusion)() {

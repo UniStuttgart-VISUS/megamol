@@ -12,6 +12,7 @@
 #include <png.h>
 
 #include "ModuleGraphSubscription.h"
+#include "RuntimeInfo.h"
 #include "cinematic/Keyframe.h"
 #include "cinematic_gl/CinematicUtils.h"
 #include "mmcore/CallerSlot.h"
@@ -35,6 +36,7 @@ public:
         Base::requested_lifetime_resources(req);
         req.require<frontend_resources::RuntimeConfig>();
         req.require<core::MegaMolGraph>();
+        req.require<frontend_resources::RuntimeInfo>();
     }
 
     /**
@@ -66,6 +68,8 @@ protected:
      * Renders this View3DGL in the currently active OpenGL context.
      */
     ImageWrapper Render(double time, double instanceTime) override;
+
+    bool create() override;
 
 private:
     typedef std::chrono::system_clock::time_point TimePoint_t;
@@ -113,6 +117,7 @@ private:
     unsigned int fps;
     bool skyboxCubeMode;
     std::shared_ptr<glowl::FramebufferObject> cinematicFbo;
+    megamol::frontend_resources::RuntimeInfo const* ri_ = nullptr;
 
     /**********************************************************************
      * functions

@@ -13,6 +13,7 @@ find_package(glm REQUIRED)
 find_package(TBB CONFIG REQUIRED)
 find_package(Lua REQUIRED)
 find_package(imgui REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
 
 if (MEGAMOL_USE_CUESDK)
   find_package(CUESDK CONFIG REQUIRED)
@@ -41,6 +42,7 @@ target_link_libraries(${PROJECT_NAME}
     OpenMP::OpenMP_CXX
     TBB::tbb
     imgui::imgui
+    sol2
   PRIVATE
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}

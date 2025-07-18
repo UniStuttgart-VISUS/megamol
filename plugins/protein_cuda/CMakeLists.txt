@@ -21,15 +21,15 @@ if (protein_cuda_PLUGIN_ENABLED)
     message(FATAL_ERROR "Protein CUDA currently only supports CUDA Version 11 or above. The version found was CUDA ${CMAKE_CUDA_COMPILER_VERSION}. Please turn off the Protein CUDA plugin or install a correct version of CUDA.")
   endif ()
 
-  set(CMAKE_CUDA_ARCHITECTURES 52)
-  set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
+  set_target_properties(protein_cuda PROPERTIES CUDA_ARCHITECTURES 52)
+  target_compile_options(protein_cuda PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:RELEASE>>:-O3>)
 
   get_filename_component(CUDA_COMPILER_DIRECTORY "${CMAKE_CUDA_COMPILER}" DIRECTORY)
   get_filename_component(CUDA_BIN_DIR ${CMAKE_CUDA_COMPILER} DIRECTORY)
 
   # Suppress CUDA warnings
   if (SUPPRESS_CUDA_WARNINGS)
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler \"-w\"")
+    target_compile_options(protein_cuda PRIVATE $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CONFIG:DEBUG>>:-Xcompiler -w>)
   endif ()
 
   # Collect source files

@@ -34,7 +34,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::Renderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::MeshGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::TransitionCalculator>();
+#ifdef MEGAMOL_USE_OPENGL
         this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::CUDAToGL>();
+#endif
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::optix_hpg::CallGeometry>();

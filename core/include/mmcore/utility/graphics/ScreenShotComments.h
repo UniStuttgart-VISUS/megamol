@@ -14,6 +14,8 @@
 
 #include <png.h>
 
+#include "RuntimeInfo.h"
+
 namespace megamol::core::utility::graphics {
 
 class ScreenShotComments {
@@ -26,7 +28,7 @@ public:
      * constructor and later get out the png_text you need for feeding libpng. Note that the returned png_text array
      * is only valid as long as the ScreenShotComments instance is in scope!
      */
-    ScreenShotComments(std::string const& project_configuration,
+    ScreenShotComments(std::string const& project_configuration, megamol::frontend_resources::RuntimeInfo const* ri,
         const std::optional<comments_storage_map>& additional_comments = std::nullopt);
 
     png_comments GetComments() const;

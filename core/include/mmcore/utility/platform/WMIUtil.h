@@ -9,6 +9,7 @@
 #ifdef _WIN32
 
 #include <iostream>
+#include <wil/com.h>
 
 #define _WIN32_DCOM
 #include <Wbemidl.h>
@@ -27,8 +28,10 @@ public:
     std::string get_value(const std::string& wmi_class, const std::string& attribute);
 
 private:
-    IWbemLocator* locator = nullptr;
-    IWbemServices* service = nullptr;
+    //IWbemLocator* locator = nullptr;
+    //IWbemServices* service = nullptr;
+    wil::com_ptr<IWbemServices> service;
+    //wil::unique_couninitialize_call cleanup;
 };
 } // namespace megamol::core::utility::platform
 
