@@ -37,8 +37,7 @@ using namespace megamol::core::utility::log;
  * VTIWriter::VTIWriter
  */
 VTIWriter::VTIWriter()
-        : AbstractJob()
-        , Module()
+        : core::AbstractDataWriter()
         , dataCallerSlot("getdata", "Connects the writer module with the data source.")
         , minFrameSlot("minFrame", "Parameter to determine the first frame to be written")
         , nFramesSlot("nFrames", "Parameter to determine the number of frames to be written")
@@ -92,18 +91,7 @@ VTIWriter::~VTIWriter() {
 }
 
 
-/*
- * VTIWriter::IsRunning
- */
-bool VTIWriter::IsRunning() const {
-    return (!(this->jobDone));
-}
-
-
-/*
- * VTIWriter::Start
- */
-bool VTIWriter::Start() {
+bool VTIWriter::run() {
 
     protein_calls::VTIDataCall* dc = this->dataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if (dc == NULL) {
@@ -174,14 +162,6 @@ bool VTIWriter::Start() {
 
     this->jobDone = true;
     return true; // TODO
-}
-
-
-/*
- * VTIWriter::Terminate
- */
-bool VTIWriter::Terminate() {
-    return true;
 }
 
 

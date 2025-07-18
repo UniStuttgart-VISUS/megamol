@@ -153,8 +153,3 @@ bool io::MMGDDWriter::run() {
 
     return true;
 }
-
-bool io::MMGDDWriter::getCapabilities(core::DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
-    return true;
-}

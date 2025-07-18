@@ -75,15 +75,6 @@ protected:
      */
     bool run() override;
 
-    /**
-     * Function querying the writers capabilities
-     *
-     * @param call The call to receive the capabilities
-     *
-     * @return True on success
-     */
-    bool getCapabilities(core::DataWriterCtrlCall& call) override;
-
 private:
     /**
      * Writes the data of one frame to the file

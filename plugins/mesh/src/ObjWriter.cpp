@@ -101,10 +101,6 @@ bool megamol::mesh::ObjWriter::run() {
     return true;
 }
 
-bool megamol::mesh::ObjWriter::getCapabilities(core::DataWriterCtrlCall& call) {
-    return true;
-}
-
 void megamol::mesh::ObjWriter::release() {}
 
 void megamol::mesh::ObjWriter::WriteMesh(const std::string& fname, const ObjMesh& mesh) {

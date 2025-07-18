@@ -86,9 +86,3 @@ bool megamol::datatools::CSVWriter::run() {
 
     return true;
 }
-
-
-bool megamol::datatools::CSVWriter::getCapabilities(core::DataWriterCtrlCall& call) {
-    call.SetAbortable(false);
-    return true;
-}

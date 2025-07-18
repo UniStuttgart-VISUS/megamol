@@ -41,8 +41,6 @@ protected:
 
     bool run() override;
 
-    bool getCapabilities(core::DataWriterCtrlCall& call) override;
-
 private:
     core::param::ParamSlot filenameSlot;
     core::CallerSlot dataSlot;
