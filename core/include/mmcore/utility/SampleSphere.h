@@ -34,7 +34,7 @@ glm::vec<3, T> sample_on_sphere_ex(T r, std::uniform_real_distribution<T>& distr
     do {
         ret = glm::vec3(distr(rng), distr(rng), distr(rng));
     } while (glm::length(ret) > 1.f);
-    return r*glm::normalize(ret);
+    return r * glm::normalize(ret);
 }
 
 template<typename T>

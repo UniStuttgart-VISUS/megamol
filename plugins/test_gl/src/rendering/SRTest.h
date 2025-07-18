@@ -80,7 +80,9 @@ static draw_cmd_t dc_verts = [](unsigned int num_points, unsigned int) {
     glDrawArrays(GL_TRIANGLES, 0, num_points * 6);
 };
 static draw_cmd_t dc_quads = [](unsigned int num_points, unsigned int) { glDrawArrays(GL_QUADS, 0, num_points * 4); };
-static draw_cmd_t dc_quads_inst = [](unsigned int num_points, unsigned int) { glDrawArraysInstanced(GL_QUADS, 0, 4, num_points); };
+static draw_cmd_t dc_quads_inst = [](unsigned int num_points, unsigned int) {
+    glDrawArraysInstanced(GL_QUADS, 0, 4, num_points);
+};
 static draw_cmd_t dc_strip = [](unsigned int num_points, unsigned int) {
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, num_points);
 };
@@ -90,7 +92,9 @@ static draw_cmd_t dc_strip_draw = [](unsigned int num_points, unsigned int) {
 static auto dc_muzic = [](unsigned int num_points, std::vector<uint32_t> const& indices) -> void {
     glDrawElements(GL_TRIANGLE_STRIP, num_points * 6 - 2, GL_UNSIGNED_INT, indices.data());
 };
-static draw_cmd_t dc_mesh = [](unsigned int num_points, unsigned int msize) { glDrawMeshTasksNV(0, num_points / msize + 1); };
+static draw_cmd_t dc_mesh = [](unsigned int num_points, unsigned int msize) {
+    glDrawMeshTasksNV(0, num_points / msize + 1);
+};
 
 class ssbo_rt : public ssbo_shader_task {
 public:
@@ -248,7 +252,8 @@ private:
         "SSBO_MUZIC", "MESH", "MESH_GEO", "MESH_GEO_TASK"};*/
 
     std::array<std::string, 12> method_strings = {"VAO", "Point_Classic", "Geometry_Shader", "Triangles_Classic",
-        "Quads", "Quads_Inst", "Triangle_Strip", "Triangle_Strip_Draw", "SSBO_MUZIC", "Point_Mesh_Shader", "Triangles_Mesh_Shader", "MESH_GEO_TASK"};
+        "Quads", "Quads_Inst", "Triangle_Strip", "Triangle_Strip_Draw", "SSBO_MUZIC", "Point_Mesh_Shader",
+        "Triangles_Mesh_Shader", "MESH_GEO_TASK"};
 
     bool Render(mmstd_gl::CallRender3DGL& call) override;
 

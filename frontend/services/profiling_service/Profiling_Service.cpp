@@ -244,7 +244,8 @@ void Profiling_Service::fill_lua_callbacks() {
 
     luaApi->RegisterCallback("mmGenerateCameraScenes",
         "(string entrypoint, string camera_path_pattern, uint num_samples, float dis)",
-        [&graph, &luaApi](std::string entrypoint, std::string camera_path_pattern, int num_samples, float dis) -> std::string {
+        [&graph, &luaApi](
+            std::string entrypoint, std::string camera_path_pattern, int num_samples, float dis) -> std::string {
             const auto entry = graph.FindModule(entrypoint);
             if (!entry)
                 luaApi->ThrowError("could not find entrypoint");

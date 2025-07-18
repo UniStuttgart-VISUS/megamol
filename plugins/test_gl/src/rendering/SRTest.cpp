@@ -167,7 +167,8 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             "[SRTest] Warp size is %d", mesh_warp_size_slot_.Param<core::param::IntParam>()->Value());
         auto shdr_mesh_options = base_options;
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
-        shdr_mesh_options.addDefinition("WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
+        shdr_mesh_options.addDefinition(
+            "WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
 
         auto shdr_mesh_geo_options = base_options;
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
@@ -175,7 +176,8 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             shdr_mesh_geo_options.addDefinition("__SRTEST_CAM_ALIGNED__");
         }
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
-        shdr_mesh_geo_options.addDefinition("WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
+        shdr_mesh_geo_options.addDefinition(
+            "WARP", std::to_string(mesh_warp_size_slot_.Param<core::param::IntParam>()->Value()));
 
         auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
 
@@ -247,12 +249,12 @@ bool megamol::test_gl::rendering::SRTest::createShaders() {
             std::make_pair(method_e::SSBO_VERT, std::make_shared<ssbo_vert_rt>(mode, shdr_ssbo_vert_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_QUAD, std::make_shared<ssbo_quad_rt>(mode, shdr_ssbo_quads_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::SSBO_QUAD_INST, std::make_shared<ssbo_quad_inst_rt>(mode, shdr_ssbo_quads_inst_options)));
+        rendering_tasks_.insert(std::make_pair(
+            method_e::SSBO_QUAD_INST, std::make_shared<ssbo_quad_inst_rt>(mode, shdr_ssbo_quads_inst_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_STRIP, std::make_shared<ssbo_strip_rt>(mode, shdr_ssbo_strip_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::SSBO_STRIP_DRAW, std::make_shared<ssbo_strip_draw_rt>(mode, shdr_ssbo_strip_draw_options)));
+        rendering_tasks_.insert(std::make_pair(
+            method_e::SSBO_STRIP_DRAW, std::make_shared<ssbo_strip_draw_rt>(mode, shdr_ssbo_strip_draw_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_MUZIC, std::make_shared<ssbo_muzic_rt>(mode, shdr_ssbo_muzic_options)));
 
@@ -540,7 +542,7 @@ bool megamol::test_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3D
     }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
-    
+
     {
         GLuint qid = 0, fid = 0;
         glCreateQueries(GL_SAMPLES_PASSED, 1, &qid);
