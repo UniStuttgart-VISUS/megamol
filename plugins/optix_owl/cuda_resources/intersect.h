@@ -11,8 +11,7 @@ namespace optix_owl {
 namespace device {
 using namespace owl::common;
 
-inline __device__ bool intersectSphere(
-    const vec3f pos, const float particleRadius, const owl::Ray& ray, float& hit_t) {
+inline __device__ bool intersectSphere(const vec3f pos, const float particleRadius, const owl::Ray& ray, float& hit_t) {
     // Raytracing Gems Intersection Code (Chapter 7)
     const vec3f oc = ray.origin - pos;
     const float sqrRad = particleRadius * particleRadius;

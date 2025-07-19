@@ -1,9 +1,9 @@
 #include "BaseRenderer.h"
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/FilePathParam.h"
 
 #include <owl/common/math/box.h>
 #include <owl/common/math/vec.h>
@@ -248,7 +248,7 @@ bool BaseRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     return true;
 }
-   
+
 
 bool BaseRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     auto in_data = data_in_slot_.CallAs<geocalls::MultiParticleDataCall>();

@@ -7,10 +7,10 @@
 #include "mmcore/factories/AbstractPluginInstance.h"
 #include "mmcore/factories/PluginRegister.h"
 
+#include "BVHRenderer.h"
+#include "FlatRenderer.h"
 #include "PKDRenderer.h"
 #include "TreeletsRenderer.h"
-#include "FlatRenderer.h"
-#include "BVHRenderer.h"
 
 namespace megamol::MegaMolPlugin {
 class PluginInstance : public megamol::core::factories::AbstractPluginInstance {

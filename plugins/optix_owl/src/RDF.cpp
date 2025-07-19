@@ -96,7 +96,8 @@ std::vector<float> compute_volumes(float cut_off, unsigned int num_bins) {
     return volumes;
 }
 
-std::tuple<std::vector<float>, std::vector<float>> RDF::BuildHistogram(float cut_off, unsigned int num_bins, box3f bbox, uint64_t num_particles) {
+std::tuple<std::vector<float>, std::vector<float>> RDF::BuildHistogram(
+    float cut_off, unsigned int num_bins, box3f bbox, uint64_t num_particles) {
 #if 0
     std::vector<float> org_histo(num_bins);
     std::vector<float> new_histo(num_bins);
@@ -181,4 +182,4 @@ std::tuple<std::vector<float>, std::vector<float>> RDF::BuildHistogram(float cut
 
     return std::make_tuple(org_rdf, new_rdf);
 }
-} // namespace megamol::moldyn
+} // namespace megamol::optix_owl

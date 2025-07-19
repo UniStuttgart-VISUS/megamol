@@ -3,9 +3,9 @@
 #include <fstream>
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/FilePathParam.h"
 
 #include <owl/common/math/box.h>
 #include <owl/common/math/vec.h>
@@ -111,12 +111,13 @@ bool TreeletsRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
 
     if (particleBuffer_)
         owlBufferDestroy(particleBuffer_);
-    particleBuffer_ = owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::Particle), particles_.size(), particles_.data());
+    particleBuffer_ =
+        owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::Particle), particles_.size(), particles_.data());
 
     if (treeletBuffer_)
         owlBufferDestroy(treeletBuffer_);
     treeletBuffer_ = owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::PKDlet), treelets.size(), treelets.data());
-       
+
     owlGeomSetPrimCount(geom_, treelets.size());
 
     owlGeomSetBuffer(geom_, "particleBuffer", particleBuffer_);

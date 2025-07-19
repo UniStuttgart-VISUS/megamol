@@ -7,11 +7,11 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-#include <owl/owl.h>
 #include <owl/common/math/vec.h>
+#include <owl/owl.h>
 
-#include "particle.h"
 #include "framestate.h"
+#include "particle.h"
 
 #include "BaseRenderer.h"
 

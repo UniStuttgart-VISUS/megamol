@@ -11,7 +11,7 @@
 #include <owl/common/math/vec.h>
 
 namespace megamol::optix_owl {
-    using namespace owl::common;
+using namespace owl::common;
 class OWLPointcloud {
 private:
     std::vector<vec3f>* data;

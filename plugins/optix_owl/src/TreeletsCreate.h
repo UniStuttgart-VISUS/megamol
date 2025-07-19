@@ -91,7 +91,8 @@ void partitionRecursively(
     });
 }
 
-inline std::vector<PKDlet> prePartition_inPlace(std::vector<device::Particle>& particles, std::size_t maxSize, float radius, std::function<bool(box3f const&)> add_cond = nullptr) {
+inline std::vector<PKDlet> prePartition_inPlace(std::vector<device::Particle>& particles, std::size_t maxSize,
+    float radius, std::function<bool(box3f const&)> add_cond = nullptr) {
     std::mutex resultMutex;
     std::vector<PKDlet> result;
 

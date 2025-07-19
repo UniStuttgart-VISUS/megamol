@@ -58,7 +58,7 @@ private:
 
     void push_header() {
         log_buffer << "frame;type;parent;name;comment;global_index;frame_index;api;start (" << unit_name << ");end ("
-                  << unit_name << ");duration (" << unit_name << ")" << std::endl;
+                   << unit_name << ");duration (" << unit_name << ")" << std::endl;
     }
 
     void flush_buffer() {

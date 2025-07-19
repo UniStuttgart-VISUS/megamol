@@ -2,14 +2,14 @@
 
 #include <vector>
 
-#include <owl/common/math/vec.h>
 #include <owl/common/math/box.h>
+#include <owl/common/math/vec.h>
 #include <owl/common/parallel/parallel_for.h>
 
 #include <tbb/parallel_for.h>
 
-#include "particle.h"
 #include "common.h"
+#include "particle.h"
 
 namespace megamol {
 namespace optix_owl {

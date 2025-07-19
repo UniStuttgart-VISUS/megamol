@@ -92,7 +92,8 @@ bool PKDRenderer::assertData(geocalls::MultiParticleDataCall const& call) {
     makePKD(particles_, total_bounds);
     if (particleBuffer_)
         owlBufferDestroy(particleBuffer_);
-    particleBuffer_ = owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::Particle), particles_.size(), particles_.data());
+    particleBuffer_ =
+        owlDeviceBufferCreate(ctx_, OWL_USER_TYPE(device::Particle), particles_.size(), particles_.data());
 
     core::utility::log::Log::DefaultLog.WriteInfo("[PKDRenderer] Rendering %d particles", particles_.size());
 
