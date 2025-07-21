@@ -96,7 +96,7 @@ public:
 
     virtual ~rendering_task() = default;
 
-    virtual bool render(GLuint ubo) = 0;
+    virtual bool render(GLuint ubo, GLuint val = 0) = 0;
 
     virtual bool upload(data_package_t const& package) = 0;
 

@@ -3,7 +3,7 @@ name: Style-Check-Comment
 on:
   workflow_run:
     workflows:
-      - Style-Check
+      - Checks-Style
     types:
       - completed
 

@@ -34,7 +34,6 @@ protected:
     bool create() override;
     void release() override;
     bool run() override;
-    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     core::CallerSlot dataSlot;

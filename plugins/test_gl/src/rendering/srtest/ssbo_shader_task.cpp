@@ -12,7 +12,7 @@ megamol::test_gl::rendering::ssbo_shader_task::~ssbo_shader_task() {
 }
 
 
-bool megamol::test_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
+bool megamol::test_gl::rendering::ssbo_shader_task::render(GLuint ubo, GLuint val) {
     auto program = get_program();
     program->use();
 
@@ -34,7 +34,7 @@ bool megamol::test_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
 
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufA.GetHandle(i));
 
-                draw_cmd_(num_prims);
+                draw_cmd_(num_prims, val);
             }
         }
     } else {
@@ -69,7 +69,7 @@ bool megamol::test_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbos_[i]);
             }
 
-            draw_cmd_(num_prims);
+            draw_cmd_(num_prims, val);
         }
     }
     glBindBuffer(GL_UNIFORM_BUFFER, 0);

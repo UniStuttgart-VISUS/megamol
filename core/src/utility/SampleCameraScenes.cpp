@@ -8,6 +8,8 @@
 
 #include <random>
 
+#include <glm/glm.hpp>
+
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/utility/LongestEdgeCameraSamples.h"
 #include "mmcore/utility/OrbitalCameraSamples.h"
@@ -18,9 +20,6 @@
 
 megamol::core::utility::cam_samples_func megamol::core::utility::GetCamScenesFunctional(
     std::string camera_path_pattern) {
-    std::function<std::tuple<std::vector<glm::vec3>, std::vector<glm::vec3>>(
-        megamol::core::BoundingBoxes_2, unsigned int)>
-        sampler;
     if (camera_path_pattern == "orbit") {
         return &megamol::core::utility::orbital_camera_samples;
     } else if (camera_path_pattern == "longest_edge") {

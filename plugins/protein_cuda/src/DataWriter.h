@@ -11,7 +11,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/job/AbstractJob.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "mmstd/renderer/TimeControl.h"
 
 #include "protein_calls/CrystalStructureDataCall.h"
@@ -23,7 +23,7 @@ namespace protein_cuda {
 /**
  * TODO
  */
-class DataWriter : public core::job::AbstractJob, public core::Module {
+class DataWriter : public core::AbstractDataWriter {
 
 public:
     /**
@@ -62,29 +62,6 @@ public:
      * Dtor
      */
     virtual ~DataWriter();
-
-    /**
-     * Answers whether or not this job is still running.
-     *
-     * @return 'true' if this job is still running, 'false' if it has
-     *         finished.
-     */
-    virtual bool IsRunning(void) const;
-
-    /**
-     * Starts the job thread.
-     *
-     * @return true if the job has been successfully started.
-     */
-    virtual bool Start(void);
-
-    /**
-     * Terminates the job thread.
-     *
-     * @return true to acknowledge that the job will finish as soon
-     *         as possible, false if termination is not possible.
-     */
-    virtual bool Terminate(void);
 
     /**
      * Calculate 3d texture of the dipole moment.
@@ -197,6 +174,8 @@ protected:
      * Implementation of 'Release'.
      */
     virtual void release(void);
+
+    bool run() override;
 
     /**
      * Write frame data provided to paraview's VTI image data file format.

@@ -9,11 +9,22 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#ifdef MEGAMOL_USE_PROFILING
+#include "PerformanceManager.h"
+#endif
+
 
 namespace megamol::ospray {
 
 class OSPRayRenderer : public AbstractOSPRayRenderer {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        AbstractOSPRayRenderer::requested_lifetime_resources(req);
+#ifdef MEGAMOL_USE_PROFILING
+        req.require<frontend_resources::performance::PerformanceManager>();
+#endif
+    }
+
     /**
      * Answer the name of this module.
      *
@@ -124,6 +135,11 @@ private:
 
     float _mouse_x;
     float _mouse_y;
+
+#ifdef MEGAMOL_USE_PROFILING
+    frontend_resources::performance::PerformanceManager* perf_man_ = nullptr;
+    frontend_resources::performance::handle_type launch_timer_ = -1;
+#endif
 };
 
 } // namespace megamol::ospray
