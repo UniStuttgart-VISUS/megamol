@@ -56,6 +56,12 @@ OSPRayRenderer::~OSPRayRenderer() {
 ospray::OSPRayRenderer::create
 */
 bool OSPRayRenderer::create() {
+#ifdef MEGAMOL_USE_PROFILING
+    perf_man_ = &const_cast<frontend_resources::performance::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::performance::PerformanceManager>());
+    launch_timer_ = perf_man_->add_timer("osprayLaunch", frontend_resources::performance::query_api::CPU);
+#endif
+
     return true;
 }
 
@@ -282,7 +288,15 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         auto t1 = std::chrono::high_resolution_clock::now();
 
         _framebuffer->clear(); //(OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
-        _framebuffer->renderFrame(*_renderer, *_camera, *_world);
+
+#ifdef MEGAMOL_USE_PROFILING
+        auto& region = perf_man_->start_timer(launch_timer_);
+#endif
+        auto rend_fut = _framebuffer->renderFrame(*_renderer, *_camera, *_world);
+        rend_fut.wait();
+#ifdef MEGAMOL_USE_PROFILING
+        region.end_region();
+#endif
 
         // get the texture from the framebuffer
         auto fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
@@ -341,7 +355,15 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         // setup framebuffer and measure time
         auto t1 = std::chrono::high_resolution_clock::now();
 
-        _framebuffer->renderFrame(*_renderer, *_camera, *_world);
+#ifdef MEGAMOL_USE_PROFILING
+        auto& region = perf_man_->start_timer(launch_timer_);
+#endif
+        auto rend_fut = _framebuffer->renderFrame(*_renderer, *_camera, *_world);
+        rend_fut.wait();
+#ifdef MEGAMOL_USE_PROFILING
+        region.end_region();
+#endif
+
         auto fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
         _fb = std::vector<uint32_t>(fb, fb + _imgSize[0] * _imgSize[1]);
 

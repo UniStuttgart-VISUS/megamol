@@ -12,7 +12,7 @@ megamol::test_gl::rendering::mesh_shader_task::~mesh_shader_task() {
 }
 
 
-bool megamol::test_gl::rendering::mesh_shader_task::render(GLuint ubo) {
+bool megamol::test_gl::rendering::mesh_shader_task::render(GLuint ubo, GLuint val) {
     auto program = get_program();
     program->use();
 

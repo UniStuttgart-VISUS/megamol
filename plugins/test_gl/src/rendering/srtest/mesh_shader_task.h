@@ -17,7 +17,7 @@ public:
 
     virtual ~mesh_shader_task();
 
-    bool render(GLuint ubo) override;
+    bool render(GLuint ubo, GLuint val = 0) override;
 
     bool upload(data_package_t const& package) override;
 

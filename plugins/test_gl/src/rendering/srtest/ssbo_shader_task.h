@@ -12,7 +12,7 @@
 
 namespace megamol::test_gl::rendering {
 
-using draw_cmd_t = std::function<void(unsigned int)>;
+using draw_cmd_t = std::function<void(unsigned int, unsigned int)>;
 
 class ssbo_shader_task : public rendering_task {
 public:
@@ -24,7 +24,7 @@ public:
 
     virtual ~ssbo_shader_task();
 
-    bool render(GLuint ubo) override;
+    bool render(GLuint ubo, GLuint val = 0) override;
 
     bool upload(data_package_t const& package) override;
 
