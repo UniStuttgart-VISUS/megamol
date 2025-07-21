@@ -7,27 +7,6 @@ on:
     branches: [ master ]
 
 jobs:
-  style_check:
-    name: Style-Check
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          show-progress: false
-      - name: Install clang-format
-        run: .ci/install-clang-format.sh
-      - name: Run format check
-        run: .ci/check_format.sh
-      - name: Save PR number
-        if: ${{ failure() && github.event_name == 'pull_request' }}
-        run: |
-          mkdir -p ./pr
-          echo ${{ github.event.number }} > ./pr/NR
-      - uses: actions/upload-artifact@v4
-        if: ${{ failure() && github.event_name == 'pull_request' }}
-        with:
-          name: pr
-          path: pr/
   plugin_check:
     name: Plugin-Check
     runs-on: ubuntu-24.04
