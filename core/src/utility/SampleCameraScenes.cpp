@@ -15,8 +15,6 @@
 #include "mmcore/utility/OrbitalCameraSamples.h"
 #include "mmcore/view/CameraSerializer.h"
 
-#include <glm/glm.hpp>
-
 
 megamol::core::utility::cam_samples_func megamol::core::utility::GetCamScenesFunctional(
     std::string camera_path_pattern) {
