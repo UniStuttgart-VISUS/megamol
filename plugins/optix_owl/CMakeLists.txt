@@ -1,19 +1,16 @@
 # MegaMol
-# Copyright (c) 2021, MegaMol Dev Team
+# Copyright (c) 2024, MegaMol Dev Team
 # All rights reserved.
 #
 
 megamol_plugin(optix_owl
   BUILD_DEFAULT OFF
   DEPENDS_FEATURES
-    # feature1
     cuda
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl
     geometry_calls
-    # plugin1
-    # plugin2
   )
 
 if (optix_owl_PLUGIN_ENABLED)
