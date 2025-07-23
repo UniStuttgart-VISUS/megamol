@@ -97,6 +97,9 @@ private:
 
     /** The plane-origin distance */
     param::ParamSlot distSlot;
+
+    /** A button to normalize the normal */
+    param::ParamSlot normalizeSlot;
 };
 
 } // namespace megamol::core::view
