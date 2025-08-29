@@ -54,3 +54,4 @@ plugins/compositing_gl/shaders/compositing_gl/assao/apply.comp.glsl
 plugins/compositing_gl/shaders/compositing_gl/assao/uniforms/apply_uniforms.glsl
 plugins/compositing_gl/shaders/compositing_gl/assao/non_smart_apply.comp.glsl
 plugins/compositing_gl/shaders/compositing_gl/assao/non_smart_half_apply.comp.glsl
+plugins/compositing_gl/shaders/compositing_gl/DepthOfField/composite.comp.glsl

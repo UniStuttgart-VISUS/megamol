@@ -1,0 +1,3 @@
+The whole implementation is based on the article "Practical Gather-based Bokeh Depth of Field" by Woijciech Sterna published in the book "GPU-Zen 1 - Advanced Rendering Techniques".
+
+Sternas Github-Repo containing his DoF implementation: https://github.com/maxest/MaxestFramework/tree/master/samples/dof/data
