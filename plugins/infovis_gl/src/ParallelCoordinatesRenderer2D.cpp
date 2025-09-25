@@ -59,6 +59,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , scaleToFitParam_("ui::scaleToFit", "fit the diagram in the viewport")
         , resetFiltersParam_("filter::resetFilters", "Reset dimension filters to initial state")
         , filterStateParam_("filter::filterState", "stores filter state for serialization")
+        , debugFloatParam_("debugFloat", "debugging float")
+        , debugFloatBParam_("debugFloat2", "debugging float2")
         , currentTableDataHash_(std::numeric_limits<std::size_t>::max())
         , currentTableFrameId_(std::numeric_limits<unsigned int>::max())
         , dimensionCount_(0)
@@ -88,6 +90,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , selectPickWorkgroupSize_()
         , selectStrokeWorkgroupSize_()
         , densityMinMaxWorkgroupSize_()
+        //, dualWorkgroupSize_()
         , maxWorkgroupCount_()
         , cameraCopy_(std::nullopt)
         , viewRes_(glm::ivec2(1, 1)) {
@@ -107,6 +110,11 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
     drawModes->SetTypePair(DRAW_DISCRETE, "Kernel Blending");
     drawModes->SetTypePair(DRAW_DENSITY, "Kernel Density Estimation");
+    drawModes->SetTypePair(DRAW_DUAL_SPAWN_LINES, "Dual Space, Spawning GLLines");
+    drawModes->SetTypePair(DRAW_DUAL_HOUGH, "Dual Space, Theta-Rho-Space");
+    drawModes->SetTypePair(DRAW_DUAL_AXES_NORMALIZED, "Dual Space, star-end space, raytracing");
+    drawModes->SetTypePair(DRAW_DUAL_MB_SPACE, "Dual Space, gather mb-space");
+    drawModes->SetTypePair(DRAW_DUAL_AXIS_SPACE, "Dual Space, gather axis-space");
     drawModeParam_.SetParameter(drawModes);
     MakeSlotAvailable(&drawModeParam_);
 
@@ -181,6 +189,11 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
 
     filterStateParam_ << new ::core::param::StringParam("");
     MakeSlotAvailable(&filterStateParam_);
+
+    debugFloatParam_ << new ::core::param::FloatParam(0.0);
+    MakeSlotAvailable(&debugFloatParam_);
+    debugFloatBParam_ << new ::core::param::FloatParam(0.0);
+    MakeSlotAvailable(&debugFloatBParam_);
 }
 
 ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
@@ -230,6 +243,38 @@ bool ParallelCoordinatesRenderer2D::create() {
 
         drawIndicatorStrokeProgram_ = core::utility::make_glowl_shader("pc_indicator_stroke", shader_options,
             "infovis_gl/pc/indicator_stroke.vert.glsl", "infovis_gl/pc/indicator_stroke.frag.glsl");
+
+        dualRelAxesC_ //computes data space with incline and left offset
+            = core::utility::make_glowl_shader("pc_dual_Rel_C", shader_options, "infovis_gl/pc/dualM.comp.glsl");
+        dualNormalizedAxesProgramC_ //computes space with start and end points of lines in pixels on each axes
+            = core::utility::make_glowl_shader("pc_dual_C", shader_options, "infovis_gl/pc/dual.comp.glsl");
+        dualHoughProgramC_ //computes space with theta and rho => real hough
+            = core::utility::make_glowl_shader("pc_dual_Hough_C", shader_options, "infovis_gl/pc/dualHough.comp.glsl");
+
+        // Displays result from normalizedAxesC, by placing vertices at coordinates and drawling line primitives
+        dualSpawnLinesProgramD_ = core::utility::make_glowl_shader(
+            "pc_dualSpawnLinesD", shader_options, "infovis_gl/pc/dual.vert.glsl", "infovis_gl/pc/dual.frag.glsl");
+        dualSpawnLinesProgramTF_ = core::utility::make_glowl_shader("pc_dualSpawnLinesTF", shader_options,
+            "infovis_gl/pc/dualSpawnLinesTF.vert.glsl", "infovis_gl/pc/dualSpawnLinesTF.frag.glsl");
+        //Displays result from normalizedAxesC by calculating which lines hit which fragments
+        dualRayProgramD_ = core::utility::make_glowl_shader(
+            "pc_dualRayD", shader_options, "infovis_gl/pc/dualAlt.vert.glsl", "infovis_gl/pc/dualAlt.frag.glsl");
+        //Displays result from relAxesC, calculates which fragment is hit by which line
+        dualRelRayProgramD_ = core::utility::make_glowl_shader(
+            "pc_dualRelRayD", shader_options, "infovis_gl/pc/dualM.vert.glsl", "infovis_gl/pc/dualM.frag.glsl");
+        // Displays result from houghC, according to real hough transformation
+        dualHoughProgramD_ = core::utility::make_glowl_shader(
+            "pc_dualHoughD", shader_options, "infovis_gl/pc/dualHough.vert.glsl", "infovis_gl/pc/dualHough.frag.glsl");
+
+        dualMBSpaceProgramC_ = core::utility::make_glowl_shader(
+            "pc_dual_mb-space", shader_options, "infovis_gl/pc/dual_mb-space.comp.glsl");
+        dualMBSpaceProgramD_ = core::utility::make_glowl_shader("pc_dual_mb-space", shader_options,
+            "infovis_gl/pc/dualHough.vert.glsl", "infovis_gl/pc/dual_mb-space.frag.glsl");
+
+        dualAxisSpaceProgramC_ = core::utility::make_glowl_shader(
+            "pc_dual_axis-space", shader_options, "infovis_gl/pc/dual_axis-space.comp.glsl");
+        dualAxisSpaceProgramD_ = core::utility::make_glowl_shader("pc_dual_axis-space", shader_options,
+            "infovis_gl/pc/dualHough.vert.glsl", "infovis_gl/pc/dual_axis-space.frag.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -239,10 +284,17 @@ bool ParallelCoordinatesRenderer2D::create() {
     glGetProgramiv(selectPickProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectPickWorkgroupSize_.data());
     glGetProgramiv(selectStrokeProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectStrokeWorkgroupSize_.data());
     glGetProgramiv(densityMinMaxProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, densityMinMaxWorkgroupSize_.data());
+    glGetProgramiv(dualRelAxesC_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, dualWorkgroupSize_.data());
+    glGetProgramiv(dualNormalizedAxesProgramC_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, dualWorkgroupSize_.data());
+    glGetProgramiv(dualHoughProgramC_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, dualWorkgroupSize_.data());
+
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount_[0]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount_[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount_[2]);
+
+    //needs to be moved
+    dualDensityTexture_ = nullptr;
 
     return true;
 }
@@ -342,6 +394,13 @@ bool ParallelCoordinatesRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
         break;
     case DRAW_DENSITY:
         drawDensity(call.GetFramebuffer());
+        break;
+    case DRAW_DUAL_SPAWN_LINES:
+    case DRAW_DUAL_HOUGH:
+    case DRAW_DUAL_AXES_NORMALIZED:
+    case DRAW_DUAL_MB_SPACE:
+    case DRAW_DUAL_AXIS_SPACE:
+        drawDual(drawmode, call.GetFramebuffer());
         break;
     }
 
@@ -848,6 +907,259 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
         "sqrtDensity", sqrtDensityParam_.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glUseProgram(0);
+}
+
+void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl::FramebufferObject> const& fbo) {
+    using fst = core::FlagStorageTypes;
+    using bits = fst::flag_bits;
+    constexpr double pi = 3.14159265358979323846;
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    int axes_pixel_height =
+        (cameraCopy_.value().getViewMatrix() * cameraCopy_.value().getProjectionMatrix() * glm::vec4(0, 1.0, 0, 0)).y *
+        axisHeight_ * viewRes_.y / 2;
+    int axes_pixel_width =
+        (cameraCopy_.value().getViewMatrix() * cameraCopy_.value().getProjectionMatrix() * glm::vec4(1.0, 0, 0, 0)).x *
+        (dimensionCount_ - 1) * axisDistance_ * viewRes_.x / 2;
+
+    int dual_space_width = 1;
+    int dual_space_height = 1;
+
+    if (drawmode == DRAW_DUAL_HOUGH) {
+        // number of bins for thetas and rhos of hough space
+        // number chosen to sufficiently differentiate almost horizontal lines
+        // TODO: better compromise between performance and accuracy?
+        //int thetas = static_cast<int>((pi / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_)));
+        dual_space_width = axes_pixel_height;
+        dual_space_height = 0.5 * axes_pixel_height;
+    } else if (drawmode == DRAW_DUAL_SPAWN_LINES) {
+        dual_space_width = axes_pixel_height;
+        dual_space_height = axes_pixel_height;
+    } else {
+        dual_space_width = std::min(axes_pixel_height, 1024);
+        dual_space_height = std::min(axes_pixel_height, 1024);
+    }
+
+    glowl::TextureLayout dual_space_texture_layout(GL_R32UI, dual_space_width, dual_space_height, dimensionCount_ - 1,
+        GL_RED_INTEGER, GL_UNSIGNED_INT, 1,
+        {
+            {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+            {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE},
+            {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+            {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
+        },
+        {});
+
+    // resize dual space when visible axes height changes
+    if (dualDensityTexture_ == nullptr || dualDensityTexture_->getHeigth() != dual_space_height ||
+        dualDensityTexture_->getWidth() != dual_space_width) {
+        dualDensityTexture_ =
+            std::make_unique<glowl::Texture2DArray>("o_dual_density_tex", dual_space_texture_layout, nullptr);
+
+        dualCentroidXTexture_ =
+            std::make_unique<glowl::Texture2DArray>("o_dual_centroidX_tex", dual_space_texture_layout, nullptr);
+
+        dualCentroidYTexture_ =
+            std::make_unique<glowl::Texture2DArray>("o_dual_centroidY_tex", dual_space_texture_layout, nullptr);
+
+        dualCoMomentTexture_ =
+            std::make_unique<glowl::Texture2DArray>("o_dual_comoment_tex", dual_space_texture_layout, nullptr);
+
+        dualSelectTexture_ =
+            std::make_unique<glowl::Texture2DArray>("o_select_dualtex", dual_space_texture_layout, nullptr);
+    }
+    std::shared_ptr<glowl::GLSLProgram> currentCompute;
+    std::unique_ptr<glowl::GLSLProgram> currentDisplay;
+    // mode specific shader programs and uniforms
+    // TODO move to distinct methods?
+    switch (drawmode) {
+    case DRAW_DUAL_SPAWN_LINES:
+        useProgramAndBindCommon(dualNormalizedAxesProgramC_);
+        dualNormalizedAxesProgramC_->setUniform("axPxHeight", axes_pixel_height);
+        break;
+    case DRAW_DUAL_AXES_NORMALIZED:
+        useProgramAndBindCommon(dualNormalizedAxesProgramC_);
+        dualNormalizedAxesProgramC_->setUniform("axPxHeight", axes_pixel_height);
+        break;
+    case DRAW_DUAL_HOUGH:
+        useProgramAndBindCommon(dualHoughProgramC_);
+        dualHoughProgramC_->setUniform("axPxHeight", axes_pixel_height);
+        dualHoughProgramC_->setUniform("thetas", dual_space_width);
+        dualHoughProgramC_->setUniform("rhos", dual_space_height);
+        // TODO selections only implemented for this space yet
+        {
+            constexpr auto testMask = fst::to_integral(bits::ENABLED | bits::FILTERED | bits::SELECTED);
+            constexpr auto passMask = fst::to_integral(bits::ENABLED | bits::SELECTED);
+            dualHoughProgramC_->setUniform("itemTestMask", testMask);
+            dualHoughProgramC_->setUniform("itemPassMask", passMask);
+        }
+        break;
+    case DRAW_DUAL_MB_SPACE:
+        useProgramAndBindCommon(dualMBSpaceProgramC_);
+        dualMBSpaceProgramC_->setUniform("dual_space_width", dual_space_width);
+        dualMBSpaceProgramC_->setUniform("dual_space_height", dual_space_height);
+        // TODO selection
+        {
+            constexpr auto testMask = fst::to_integral(bits::ENABLED | bits::FILTERED | bits::SELECTED);
+            constexpr auto passMask = fst::to_integral(bits::ENABLED | bits::SELECTED);
+            dualMBSpaceProgramC_->setUniform("itemTestMask", testMask);
+            dualMBSpaceProgramC_->setUniform("itemPassMask", passMask);
+        }
+        break;
+    case DRAW_DUAL_AXIS_SPACE:
+        useProgramAndBindCommon(dualAxisSpaceProgramC_);
+        dualAxisSpaceProgramC_->setUniform("dual_space_width", dual_space_width);
+        dualAxisSpaceProgramC_->setUniform("dual_space_height", dual_space_height);
+        // TODO selection
+        {
+            constexpr auto testMask = fst::to_integral(bits::ENABLED | bits::FILTERED | bits::SELECTED);
+            constexpr auto passMask = fst::to_integral(bits::ENABLED | bits::SELECTED);
+            dualAxisSpaceProgramC_->setUniform("itemTestMask", testMask);
+            dualAxisSpaceProgramC_->setUniform("itemPassMask", passMask);
+        }
+        break;
+    }
+    dualDensityTexture_->bindImage(7, GL_WRITE_ONLY);
+    dualCentroidXTexture_->bindImage(8, GL_WRITE_ONLY);
+    dualCentroidYTexture_->bindImage(9, GL_WRITE_ONLY);
+    dualCoMomentTexture_->bindImage(10, GL_WRITE_ONLY);
+    dualSelectTexture_->bindImage(6, GL_WRITE_ONLY);
+
+    glClearTexImage(dualDensityTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+    glClearTexImage(dualCentroidXTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+    glClearTexImage(dualCentroidYTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+    glClearTexImage(dualCoMomentTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+    glClearTexImage(dualSelectTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+
+    std::array<GLuint, 3> groupCounts{};
+    computeDispatchSizes((itemCount_)*dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+
+    auto tfCall = tfSlot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
+    const int fboWidth = fbo->getWidth();
+    const int fboHeight = fbo->getHeight();
+
+    switch (drawmode) {
+    case DRAW_DUAL_SPAWN_LINES:
+        if (densityFbo_ == nullptr || densityFbo_->getWidth() != fboWidth || densityFbo_->getHeight() != fboHeight) {
+            densityFbo_ = std::make_unique<glowl::FramebufferObject>(
+                "densityFbo", fboWidth, fboHeight, glowl::FramebufferObject::NONE);
+            densityFbo_->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);
+        }
+        densityFbo_->bind();
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+        glBlendEquation(GL_FUNC_ADD);
+
+        // blend lines to estimate density
+        useProgramAndBindCommon(dualSpawnLinesProgramD_);
+        tfCall->BindConvenience(dualSpawnLinesProgramD_, GL_TEXTURE5, 5);
+        dualDensityTexture_->bindImage(7, GL_READ_ONLY);
+        dualSpawnLinesProgramD_->setUniform("axPxHeight", axes_pixel_height);
+        dualSpawnLinesProgramD_->setUniform("fboHeight", densityFbo_->getHeight());
+        dualSpawnLinesProgramD_->setUniform("fboWidth", densityFbo_->getWidth());
+        dualSpawnLinesProgramD_->setUniform("debugFloat", debugFloatBParam_.Param<core::param::FloatParam>()->Value());
+        glDrawArraysInstanced(GL_LINES, 0, 2, dimensionCount_ * axes_pixel_height * axes_pixel_height);
+        //TODO reset blending mode, not sure if the following is default
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+        //apply TF to density to get color image
+        useProgramAndBindCommon(dualSpawnLinesProgramTF_);
+        tfCall->BindConvenience(dualSpawnLinesProgramTF_, GL_TEXTURE5, 5);
+        fbo->bind();
+        glActiveTexture(GL_TEXTURE1);
+        densityFbo_->bindColorbuffer(0);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        break;
+    case DRAW_DUAL_AXES_NORMALIZED:
+        useProgramAndBindCommon(dualRayProgramD_);
+        tfCall->BindConvenience(dualRayProgramD_, GL_TEXTURE5, 5);
+        dualRayProgramD_->setUniform("axPxHeight", axes_pixel_height);
+        dualRayProgramD_->setUniform("axPxWidth", axes_pixel_width);
+        dualRayProgramD_->setUniform("debugFloat", debugFloatParam_.Param<core::param::FloatParam>()->Value());
+        glActiveTexture(GL_TEXTURE7);
+        dualDensityTexture_->bindTexture();
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        break;
+    case DRAW_DUAL_HOUGH:
+        useProgramAndBindCommon(dualHoughProgramD_);
+        tfCall->BindConvenience(dualHoughProgramD_, GL_TEXTURE5, 5);
+
+        dualHoughProgramD_->setUniform(
+            "binsNr", static_cast<int>((pi / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_))));
+        dualHoughProgramD_->setUniform("axPxHeight", axes_pixel_height);
+        dualHoughProgramD_->setUniform("axPxWidth", axes_pixel_width);
+
+        dualHoughProgramD_->setUniform("debugFloat", debugFloatParam_.Param<core::param::FloatParam>()->Value());
+        glActiveTexture(GL_TEXTURE7);
+        dualDensityTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE8);
+        dualSelectTexture_->bindTexture();
+
+        glActiveTexture(GL_TEXTURE9);
+        dualCentroidXTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE10);
+        dualCentroidYTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE11);
+        dualCoMomentTexture_->bindTexture();
+
+        dualHoughProgramD_->setUniform("selectMode", false);
+        dualHoughProgramD_->setUniform("thetas", dual_space_width);
+        dualHoughProgramD_->setUniform("rhos", dual_space_height);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        break;
+    case DRAW_DUAL_MB_SPACE:
+        useProgramAndBindCommon(dualMBSpaceProgramD_);
+        tfCall->BindConvenience(dualMBSpaceProgramD_, GL_TEXTURE5, 5);
+
+        glActiveTexture(GL_TEXTURE7);
+        dualDensityTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE8);
+        dualSelectTexture_->bindTexture();
+
+        glActiveTexture(GL_TEXTURE9);
+        dualCentroidXTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE10);
+        dualCentroidYTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE11);
+        dualCoMomentTexture_->bindTexture();
+
+        dualMBSpaceProgramD_->setUniform("selectMode", false);
+        dualMBSpaceProgramD_->setUniform("dual_space_width", dual_space_width);
+        dualMBSpaceProgramD_->setUniform("dual_space_height", dual_space_height);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        break;
+    case DRAW_DUAL_AXIS_SPACE:
+        useProgramAndBindCommon(dualAxisSpaceProgramD_);
+        tfCall->BindConvenience(dualAxisSpaceProgramD_, GL_TEXTURE5, 5);
+
+        glActiveTexture(GL_TEXTURE7);
+        dualDensityTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE8);
+        dualSelectTexture_->bindTexture();
+
+        glActiveTexture(GL_TEXTURE9);
+        dualCentroidXTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE10);
+        dualCentroidYTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE11);
+        dualCoMomentTexture_->bindTexture();
+
+        dualAxisSpaceProgramD_->setUniform("selectMode", false);
+        dualAxisSpaceProgramD_->setUniform("dual_space_width", dual_space_width);
+        dualAxisSpaceProgramD_->setUniform("dual_space_height", dual_space_height);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        break;
+    }
+
     glUseProgram(0);
 }
 
