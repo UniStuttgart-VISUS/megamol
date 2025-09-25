@@ -12,6 +12,7 @@
 #include "GLSLVolumeRenderer.h"
 #include "MoleculeCartoonRenderer.h"
 #include "MoleculeSESRenderer.h"
+#include "MoleculeSESMeshRenderer.h"
 #include "SimpleMoleculeRenderer.h"
 #include "SolPathRenderer.h"
 #include "SombreroMeshRenderer.h"
@@ -61,6 +62,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::CartoonTessellationRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::SombreroMeshRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MoleculeSESMeshRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::UncertaintyCartoonRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MSMSCavityFinder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein_gl::MSMSGenus0Generator>();
