@@ -84,6 +84,7 @@ private:
 
     /** Texture interpolation mode */
     core::param::ParamSlot interpolationParam;
+    core::param::ParamSlot serializeParam;
 };
 
 

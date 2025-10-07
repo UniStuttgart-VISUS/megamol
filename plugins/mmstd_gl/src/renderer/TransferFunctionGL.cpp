@@ -7,6 +7,7 @@
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
 
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 
 
@@ -18,6 +19,7 @@ TransferFunctionGL::TransferFunctionGL()
         : ModuleGL()
         , AbstractTransferFunction()
         , texID(0)
+        , serializeParam("dumpTexture", "write texture to stdout")
         , interpolationParam("textureInterpolation", "Interpolation mode for the transfer function texture.") {
 
     CallGetTransferFunctionGLDescription cgtfd;
@@ -28,6 +30,9 @@ TransferFunctionGL::TransferFunctionGL()
     this->interpolationParam.Param<EnumParam>()->SetTypePair(0, "Linear");
     this->interpolationParam.Param<EnumParam>()->SetTypePair(1, "Nearest neighbor");
     this->MakeSlotAvailable(&this->interpolationParam);
+
+    this->serializeParam << new ButtonParam();
+    this->MakeSlotAvailable(&this->serializeParam);
 
     this->tfParam << new TransferFunctionParam("");
     this->MakeSlotAvailable(&this->tfParam);
@@ -142,6 +147,15 @@ bool TransferFunctionGL::requestTF(core::Call& call) {
         if (!t1de)
             glDisable(GL_TEXTURE_1D);
         ++this->version;
+    }
+
+    if (this->serializeParam.IsDirty()) {
+        this->serializeParam.ResetDirty();
+        printf("\n%u\n", this->texSize);
+        auto data = this->tex.data();
+        for (int y = 0; y < this->texSize; ++y) {
+            printf("%f %f %f %f\n", data[y * 4 + 0], data[y * 4 + 1], data[y * 4 + 2], data[y * 4 + 3]);
+        }
     }
 
     cgtf->SetTexture(this->texID, this->texSize, this->tex.data(), this->texFormat, this->range, this->version);
