@@ -2,9 +2,9 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO andyborrell/imgui_tex_inspect
-    REF ccff03b844cc9845cc3e3c6ef69026fe7051d330 # https://github.com/andyborrell/imgui_tex_inspect/pull/3
-    SHA512 16e73a68bb8c4473bb8b3b1ddbab62453b36f4e4d0deb5f62c209c7b05bbe12173420dee8441e3d1ab9cec25f6dd77f8f4039c1a6f91fe972c88e5c21cfa634f
+    REPO geringsj/imgui_tex_inspect
+    REF c93070751658aad8223ac13bacc0397184bb993a # based on https://github.com/andyborrell/imgui_tex_inspect/pull/3
+    SHA512 ce8a998fd1137c941ca456457041d3a60e858515ba95100e59205737ef1ec5522bbd586d57f75938802db09c7703cb06954ae0cb2643fe82e032b7f8d316ecfe
     HEAD_REF main
     PATCHES
         imgui-changes.patch

@@ -2,7 +2,7 @@
   "name": "imgui-software-renderer",
   "version-date": "2018-07-12",
   "description": "A Software Renderer for Dear ImGui",
-  "homepage": "https://github.com/emilk/imgui_software_renderer",
+  "homepage": "https://github.com/geringsj/imgui_software_renderer",
   "dependencies": [
     "imgui",
     {
