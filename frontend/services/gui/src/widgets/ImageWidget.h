@@ -103,10 +103,10 @@ private:
         return (this->toggle_tex_ptr->getName() != 0); // OpenGL texture id
     }
     ImTextureID getImTextureID() const {
-        return reinterpret_cast<ImTextureID>(static_cast<uint64_t>(this->tex_ptr->getName()));
+        return static_cast<ImTextureID>(static_cast<uint64_t>(this->tex_ptr->getName()));
     }
     ImTextureID getToggleImTextureID() const {
-        return reinterpret_cast<ImTextureID>(static_cast<uint64_t>(this->toggle_tex_ptr->getName()));
+        return static_cast<ImTextureID>(static_cast<uint64_t>(this->toggle_tex_ptr->getName()));
     }
 
 #else

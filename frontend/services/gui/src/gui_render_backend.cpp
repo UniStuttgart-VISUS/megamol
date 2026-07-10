@@ -273,7 +273,8 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
     }
 #ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
-        return ImGui_ImplOpenGL3_CreateFontsTexture();
+        // font textures created and handled by imgui automatically 
+        return true;
     } break;
 #endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {

@@ -110,7 +110,7 @@ void TextureInspector::ShowWindow() {
             SetFlag(flags_, ImGuiTexInspect::InspectorFlags_FlipY);
 
         // Call function to render currently example scene
-        (*(scenes[selected_scene].draw_fn))({tex_.texture, ImVec2{tex_.x, tex_.y}}, flags_);
+        (*(scenes[selected_scene].draw_fn))({reinterpret_cast<ImTextureID>(tex_.texture), ImVec2{tex_.x, tex_.y}}, flags_);
 
         ImGui::Separator();
 

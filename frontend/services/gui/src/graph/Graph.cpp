@@ -2107,7 +2107,7 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 
     float child_height = ImGui::GetFrameHeightWithSpacing();
-    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
+    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiChildFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
 
     ImGui::BeginMenuBar();
@@ -2569,7 +2569,7 @@ void megamol::gui::Graph::draw_parameters(ImVec2 position, ImVec2 size) {
 
     float search_child_height = ImGui::GetFrameHeightWithSpacing() * 3.5f;
     child_flags =
-        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
+        ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiChildFlags_NavFlattened;
     ImGui::BeginChild("parameter_search_child", ImVec2(size.x, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Parameters");
@@ -2595,8 +2595,8 @@ void megamol::gui::Graph::draw_parameters(ImVec2 position, ImVec2 size) {
 
     // ------------------------------------------------------------------------
 
-    child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened |
-                  ImGuiWindowFlags_AlwaysUseWindowPadding;
+    child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiChildFlags_NavFlattened |
+                  ImGuiChildFlags_AlwaysUseWindowPadding;
     ImGui::BeginChild("parameter_param_frame_child", ImVec2(size.x, 0.0f), false, child_flags);
 
     if (!this->gui_graph_state.interact.modules_selected_uids.empty()) {
@@ -3294,7 +3294,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     ImGui::SetNextWindowPos(position);
 
     float child_height = ImGui::GetFrameHeightWithSpacing();
-    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
+    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiChildFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
     ImGui::BeginChild("profiling_menu", ImVec2(size.x, child_height), false, child_flags);
 
     ImGui::BeginMenuBar();

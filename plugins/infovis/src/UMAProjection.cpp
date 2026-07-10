@@ -8,7 +8,7 @@
 
 #include <sstream>
 
-#include <umappp/Umap.hpp>
+#include <umappp/umappp.hpp>
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/param/BoolParam.h"
@@ -19,7 +19,46 @@
 using namespace megamol;
 using namespace megamol::infovis;
 
-using Umap = umappp::Umap<double>;
+namespace {
+    /// Taken from 
+    /// https://github.com/libscran/umappp/blob/4a0ff313f967c794bbfe292891677b4847d94447/include/umappp/Umap.hpp
+    /// After this commit the Umap class and Defaults struct have been removed
+    struct UmapDefaults {
+        using Float = double;
+
+        static constexpr Float local_connectivity = 1.0;
+
+        static constexpr Float bandwidth = 1;
+
+        static constexpr Float mix_ratio = 1;
+
+        static constexpr Float spread = 1;
+
+        static constexpr Float min_dist = 0.01;
+
+        static constexpr Float a = 0;
+
+        static constexpr Float b = 0;
+
+        static constexpr Float repulsion_strength = 1;
+
+        //static constexpr InitMethod initialize = SPECTRAL;
+
+        static constexpr int num_epochs = -1;
+
+        static constexpr Float learning_rate = 1; 
+
+        static constexpr Float negative_sample_rate = 5;
+
+        static constexpr int num_neighbors = 15;
+
+        static constexpr uint64_t seed = 1234567890;
+
+        static constexpr int num_threads = 1;
+
+        static constexpr int parallel_optimization = false;
+    };
+}
 
 UMAProjection::UMAProjection()
         : megamol::core::Module()
@@ -85,40 +124,42 @@ UMAProjection::UMAProjection()
     nDimsSlot << new ::megamol::core::param::IntParam(2);
     this->MakeSlotAvailable(&nDimsSlot);
 
-    randomSeedSlot << new ::megamol::core::param::IntParam(Umap::Defaults::seed);
+    randomSeedSlot << new ::megamol::core::param::IntParam(UmapDefaults::seed);
     this->MakeSlotAvailable(&randomSeedSlot);
 
-    nEpochsSlot << new ::megamol::core::param::IntParam(Umap::Defaults::num_epochs);
+    nEpochsSlot << new ::megamol::core::param::IntParam(UmapDefaults::num_epochs);
     this->MakeSlotAvailable(&nEpochsSlot);
 
-    learningRateSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::learning_rate);
+    learningRateSlot << new ::megamol::core::param::FloatParam(UmapDefaults::learning_rate);
     this->MakeSlotAvailable(&learningRateSlot);
 
-    localConnectivitySlot << new ::megamol::core::param::FloatParam(Umap::Defaults::local_connectivity);
+    localConnectivitySlot << new ::megamol::core::param::FloatParam(UmapDefaults::local_connectivity);
     this->MakeSlotAvailable(&localConnectivitySlot);
 
-    bandwidthSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::bandwidth);
+    bandwidthSlot << new ::megamol::core::param::FloatParam(UmapDefaults::bandwidth);
     this->MakeSlotAvailable(&bandwidthSlot);
 
 
-    mixRatioSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::mix_ratio);
+    mixRatioSlot << new ::megamol::core::param::FloatParam(UmapDefaults::mix_ratio);
     this->MakeSlotAvailable(&mixRatioSlot);
 
-    spreadSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::spread);
+    spreadSlot << new ::megamol::core::param::FloatParam(UmapDefaults::spread);
     this->MakeSlotAvailable(&spreadSlot);
 
-    minDistSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::min_dist);
+    minDistSlot << new ::megamol::core::param::FloatParam(UmapDefaults::min_dist);
     this->MakeSlotAvailable(&minDistSlot);
 
-    aSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::a);
+    aSlot << new ::megamol::core::param::FloatParam(UmapDefaults::a);
     this->MakeSlotAvailable(&aSlot);
 
-    bSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::b);
+    bSlot << new ::megamol::core::param::FloatParam(UmapDefaults::b);
     this->MakeSlotAvailable(&bSlot);
 
-    repulsionStrengthSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::repulsion_strength);
+    repulsionStrengthSlot << new ::megamol::core::param::FloatParam(UmapDefaults::repulsion_strength);
     this->MakeSlotAvailable(&repulsionStrengthSlot);
 
+    // problem: enum changed to
+    // enum InitializeMethod : char { SPECTRAL, RANDOM, NONE };
     initializeSlot << new ::megamol::core::param::EnumParam(0);
     initializeSlot.Param<param::EnumParam>()->SetTypePair(0, "spectral (fallback: random)");
     initializeSlot.Param<param::EnumParam>()->SetTypePair(1, "spectral (fallback: existing)");
@@ -126,10 +167,10 @@ UMAProjection::UMAProjection()
     //initializeSlot.Param<param::EnumParam>()->SetTypePair(3, "existing");
     this->MakeSlotAvailable(&initializeSlot);
 
-    negativeSampleRateSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::negative_sample_rate);
+    negativeSampleRateSlot << new ::megamol::core::param::FloatParam(UmapDefaults::negative_sample_rate);
     this->MakeSlotAvailable(&negativeSampleRateSlot);
 
-    nNeighborsSlot << new ::megamol::core::param::IntParam(Umap::Defaults::num_neighbors);
+    nNeighborsSlot << new ::megamol::core::param::IntParam(UmapDefaults::num_neighbors);
     this->MakeSlotAvailable(&nNeighborsSlot);
 }
 
@@ -253,24 +294,45 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     std::vector<double> embeddingData(nDims * obsCount, 0.0);
 
     // Run UMAP algorithm.
-    Umap umap;
-    umap.set_seed(randomSeed);
-    umap.set_num_epochs(nEpochs);
-    umap.set_learning_rate(learningRate);
-    umap.set_local_connectivity(localConnectivity);
-    umap.set_bandwidth(bandwidth);
-    umap.set_mix_ratio(mixRatio);
-    umap.set_spread(spread);
-    umap.set_min_dist(minDist);
-    umap.set_a(a);
-    umap.set_b(b);
-    umap.set_repulsion_strength(repulsionStrength);
-    umap.set_initialize(static_cast<umappp::InitMethod>(initialize));
-    umap.set_negative_sample_rate(negativeSampleRate);
-    umap.set_num_neighbors(nNeighbors);
-    auto status = umap.run(dimCount, obsCount, inputData.data(), nDims, embeddingData.data(), 0);
+    umappp::Options opt;
+    opt.optimize_seed = randomSeed;
+    opt.num_epochs = nEpochs;
+    opt.learning_rate = learningRate;
+    opt.local_connectivity = localConnectivity;
+    opt.bandwidth = bandwidth;
+    opt.mix_ratio = mixRatio;
+    opt.spread = spread;
+    opt.min_dist = minDist;
+    opt.a = a;
+    opt.b = b;
+    opt.repulsion_strength = repulsionStrength;
+    opt.negative_sample_rate = negativeSampleRate;
+    opt.num_neighbors = nNeighbors;
+
+    opt.initialize_method = static_cast<umappp::InitializeMethod>(initialize);
+
+    knncolle::VptreeBuilder<int, double, double> vp_builder(
+        std::make_shared<knncolle::EuclideanDistance<double, double> >()
+    );
+
+    auto status = umappp::initialize(
+        dimCount, 
+        (int)obsCount, 
+        inputData.data(), 
+        vp_builder, 
+        nDims, 
+        embeddingData.data(), 
+        opt);
+
+    status.run(embeddingData.data());
+
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("Epoch %d of %d; a: %lf b: %lf, obs: %d\n"),
-        status.epoch(), status.num_epochs(), status.rparams.a, status.rparams.b, status.nobs());
+        status.epoch(), 
+        status.num_epochs(), 
+        opt.a.value(), 
+        opt.b.value(), 
+        status.num_observations()
+    );
 
     // Search extreme values.
     std::vector<double> minimas(nDims, 0.0);

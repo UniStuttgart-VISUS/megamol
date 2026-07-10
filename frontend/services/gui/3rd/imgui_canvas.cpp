@@ -129,6 +129,8 @@ bool ImGuiEx::Canvas::Begin(ImGuiID id, const ImVec2& size)
     // Record cursor max to prevent scrollbars from appearing.
     m_WindowCursorMaxBackup = ImGui::GetCurrentWindow()->DC.CursorMaxPos;
 
+    ImGui::SetNextItemAllowOverlap();
+
     EnterLocalSpace();
 
     // Emit dummy widget matching bounds of the canvas.
@@ -161,8 +163,6 @@ void ImGuiEx::Canvas::End()
     LeaveLocalSpace();
 
     ImGui::GetCurrentWindow()->DC.CursorMaxPos = m_WindowCursorMaxBackup;
-
-    ImGui::SetItemAllowOverlap();
 
     // Emit dummy widget matching bounds of the canvas.
     ImGui::SetCursorScreenPos(m_WidgetPosition);

@@ -290,9 +290,9 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
                         // Button
                         ImGui::SetCursorScreenPos(call_rect_min);
-                        ImGui::SetItemAllowOverlap();
+                        ImGui::SetNextItemAllowOverlap();
                         ImGui::InvisibleButton(button_label.c_str(), rect_size, ImGuiButtonFlags_NoSetKeyOwner);
-                        ImGui::SetItemAllowOverlap();
+                        ImGui::SetNextItemAllowOverlap();
 
                         /// Draw simple line if zooming is too small for nice bezier curves.
                         auto mouse_pos = ImGui::GetMousePos();
