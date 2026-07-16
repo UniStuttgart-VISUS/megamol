@@ -190,7 +190,7 @@ target_link_libraries(${PROJECT_NAME}
     implot::implot
     libzmq
     cppzmq
-    sol2)
+  )
 target_compile_definitions(${PROJECT_NAME}
   PUBLIC
     SOL_ALL_SAFETIES_ON=1)
