@@ -241,9 +241,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
 
                 // Button
                 ImGui::SetCursorScreenPos(module_rect_min);
-                ImGui::SetItemAllowOverlap();
+                ImGui::SetNextItemAllowOverlap();
                 ImGui::InvisibleButton(button_label.c_str(), module_size, ImGuiButtonFlags_NoSetKeyOwner);
-                ImGui::SetItemAllowOverlap();
+                ImGui::SetNextItemAllowOverlap();
                 if (this->gui_set_active || ImGui::IsItemActivated()) {
                     state.interact.button_active_uid = this->uid;
                     this->gui_set_active = false;
@@ -480,7 +480,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                 state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_FALSE;
                             }
                         }
-                        ImGui::SetItemAllowOverlap();
+                        ImGui::SetNextItemAllowOverlap();
                         if (this->gui_hovered) {
                             std::string tooltip_label;
                             if (is_graph_entry) {
@@ -515,7 +515,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                 state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
                             }
                         }
-                        ImGui::SetItemAllowOverlap();
+                        ImGui::SetNextItemAllowOverlap();
                         if (this->gui_hovered) {
                             ImGui::PushFont(state.canvas.gui_font_ptr);
                             this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
@@ -544,7 +544,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                 state.interact.profiling_show = true;
                             }
                         }
-                        ImGui::SetItemAllowOverlap();
+                        ImGui::SetNextItemAllowOverlap();
                         if (this->gui_hovered) {
                             ImGui::PushFont(state.canvas.gui_font_ptr);
                             this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Profiling");

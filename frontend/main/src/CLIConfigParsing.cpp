@@ -554,7 +554,7 @@ static void vr_service_handler(
 
         exit("vr service cli option needs to be one of the following: " +
              std::accumulate(options.begin(), options.end(), std::string{},
-                 [](auto const& a, auto const& b) { return a + "  " + b.first; }));
+                 [](auto const& a, auto const& b) { return a + "  " + b.first; }) + ", but has: " + string);
     };
 
     config.vr_mode = match(string);

@@ -7,7 +7,7 @@ namespace ImGuiTexInspect {
 // Source: https://github.com/andyborrell/imgui_tex_inspect/blob/80ffc679e8f3f477d861d7a806e072098e94158c/imgui_tex_inspect_demo.h#L8-L12
 struct Texture
 {
-    void* texture;
+    ImTextureID texture;
     ImVec2 size;
 };
 

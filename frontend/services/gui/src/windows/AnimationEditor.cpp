@@ -818,7 +818,7 @@ void AnimationEditor::DrawParams() {
         for (int32_t a = 0; a < allAnimations.size(); ++a) {
             ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth |
                                        ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_FramePadding |
-                                       ImGuiTreeNodeFlags_AllowItemOverlap;
+                                       ImGuiTreeNodeFlags_AllowOverlap;
             if (selectedAnimation == a) {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
@@ -1250,9 +1250,9 @@ void AnimationEditor::DrawCurves() {
             } else {
                 factor = 0.8f * std::abs(gui_mouse_wheel);
             }
-            if (ImGui::IsKeyDown(ImGuiKey_ModShift)) {
+            if (ImGui::IsKeyDown(ImGuiMod_Shift)) {
                 custom_zoom.y *= factor;
-            } else if (ImGui::IsKeyDown(ImGuiKey_ModCtrl)) {
+            } else if (ImGui::IsKeyDown(ImGuiMod_Ctrl)) {
                 custom_zoom.x *= factor;
             } else {
                 custom_zoom *= factor;

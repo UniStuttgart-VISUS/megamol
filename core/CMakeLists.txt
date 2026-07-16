@@ -42,7 +42,6 @@ target_link_libraries(${PROJECT_NAME}
     OpenMP::OpenMP_CXX
     TBB::tbb
     imgui::imgui
-    sol2
   PRIVATE
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}

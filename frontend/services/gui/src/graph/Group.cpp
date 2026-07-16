@@ -420,9 +420,9 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             // Button
             std::string button_label = "group_" + std::to_string(this->uid);
             ImGui::SetCursorScreenPos(group_rect_min);
-            ImGui::SetItemAllowOverlap();
+            ImGui::SetNextItemAllowOverlap();
             ImGui::InvisibleButton(button_label.c_str(), group_size, ImGuiButtonFlags_NoSetKeyOwner);
-            ImGui::SetItemAllowOverlap();
+            ImGui::SetNextItemAllowOverlap();
             if (ImGui::IsItemActivated()) {
                 state.interact.button_active_uid = this->uid;
             }

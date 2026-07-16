@@ -3,7 +3,7 @@
   "vcpkg-configuration": {
     "default-registry": {
       "kind": "builtin",
-      "baseline": "1de2026f28ead93ff1773e6e680387643e914ea1"
+      "baseline": "f3e10653cc27d62a37a3763cd84b38bca07c6075"
     }
   },
   "name": "megamol",
@@ -41,7 +41,7 @@
       "platform": "!windows"
     },
     "libpng",
-    "ltla-umappp",
+    "libscran-umappp",
     "lua",
     "mmpld-io",
     "nanoflann",

@@ -2,9 +2,9 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO emilk/imgui_software_renderer
-    REF b5ae63a9e42eccf7db3bf64696761a53424c53dd
-    SHA512 ab318b6aed050c1869dd71e467b2830ce031bb35a8310320b51c92a1fe47c13472000b078bb8cae5b251275ba383a297246c7d589fc24d171ebb6b4bb18a9cf1
+    REPO geringsj/imgui_software_renderer
+    REF e0c04666616da4738e0e0e3ced7aaa9fd5d47aa2
+    SHA512     a68938b7a8697cb3bb677ae458998a81ff8f11331a370369908d3d3d39ccec101d278d39dd8ebfe7d36afd72e70b99cefbcb206058717c16eebd97a2c0130721
     HEAD_REF master
     PATCHES
       fix-include.patch

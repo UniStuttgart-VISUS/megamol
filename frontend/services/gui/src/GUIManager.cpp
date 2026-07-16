@@ -441,9 +441,9 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
     auto imgui_key_index = gui_utils::GlfwKeyToImGuiKey(key);
     io.AddKeyEvent(imgui_key_index, (core::view::KeyAction::PRESS == action));
 
-    io.AddKeyEvent(ImGuiKey_ModCtrl, (mods.equals(megamol::frontend_resources::Modifier::CTRL)));
-    io.AddKeyEvent(ImGuiKey_ModShift, (mods.equals(megamol::frontend_resources::Modifier::SHIFT)));
-    io.AddKeyEvent(ImGuiKey_ModAlt, (mods.equals(megamol::frontend_resources::Modifier::ALT)));
+    io.AddKeyEvent(ImGuiMod_Ctrl, (mods.equals(megamol::frontend_resources::Modifier::CTRL)));
+    io.AddKeyEvent(ImGuiMod_Shift, (mods.equals(megamol::frontend_resources::Modifier::SHIFT)));
+    io.AddKeyEvent(ImGuiMod_Alt, (mods.equals(megamol::frontend_resources::Modifier::ALT)));
 
     // Pass NUM 'Enter' as alternative for 'Return' to ImGui
     if (imgui_key_index == ImGuiKey_KeypadEnter) {
@@ -467,7 +467,6 @@ bool GUIManager::OnChar(unsigned int codePoint) {
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.ClearInputCharacters();
     if (codePoint > 0 && codePoint < 0x10000) {
         io.AddInputCharacter((unsigned short) codePoint);
     }
@@ -507,9 +506,9 @@ bool GUIManager::OnMouseButton(
     auto buttonIndex = static_cast<size_t>(button);
     ImGuiIO& io = ImGui::GetIO();
 
-    io.AddKeyEvent(ImGuiKey_ModCtrl, (mods.equals(megamol::frontend_resources::Modifier::CTRL)));
-    io.AddKeyEvent(ImGuiKey_ModShift, (mods.equals(megamol::frontend_resources::Modifier::SHIFT)));
-    io.AddKeyEvent(ImGuiKey_ModAlt, (mods.equals(megamol::frontend_resources::Modifier::ALT)));
+    io.AddKeyEvent(ImGuiMod_Ctrl, (mods.equals(megamol::frontend_resources::Modifier::CTRL)));
+    io.AddKeyEvent(ImGuiMod_Shift, (mods.equals(megamol::frontend_resources::Modifier::SHIFT)));
+    io.AddKeyEvent(ImGuiMod_Alt, (mods.equals(megamol::frontend_resources::Modifier::ALT)));
 
     io.AddMouseButtonEvent(buttonIndex, down);
 
@@ -629,7 +628,6 @@ bool GUIManager::create_context() {
         ImGuiIO& current_io = ImGui::GetIO();
         font_atlas = current_io.Fonts;
         default_font = current_io.FontDefault;
-        ImGui::GetCurrentContext()->FontAtlasOwnedByContext = false;
     }
 
     // Create ImGui context ---------------------------------------------------
@@ -724,7 +722,6 @@ bool GUIManager::destroy_context() {
                 // Shutdown API only if only one context is left
                 this->render_backend.ShutdownBackend();
                 // Last context should delete font atlas
-                ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
 
             if (this->implot_context != nullptr) {
